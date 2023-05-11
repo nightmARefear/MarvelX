@@ -8,5 +8,5 @@
 
     <!-- CHARACTER STRINGS -->
     <string name="no_characters_were_found_error_message">No characters were found!</string>
-    <string name="no_character_description">Character description not available.</string>
+    <string name="no_character_description">Character description is not available.</string>
 </resources>
