@@ -9,7 +9,7 @@ import java.time.Instant
 sealed class Interceptors : Interceptor {
     object AuthenticationTokenInterceptor : Interceptors() {
         override fun intercept(chain: Interceptor.Chain): Response {
-            val timestampString = Instant.EPOCH.toString()
+            val timestampString = (System.currentTimeMillis() / 1000).toString()
             val hash =
                 "$timestampString${BuildConfig.API_PRIVATE_KEY}${BuildConfig.API_PUBLIC_KEY}".toMd5()
 
@@ -19,7 +19,7 @@ sealed class Interceptors : Interceptor {
                 .newBuilder()
                 .addQueryParameter("ts", timestampString)
                 .addQueryParameter("apikey", BuildConfig.API_PUBLIC_KEY)
-                .addQueryParameter("hash", hash)
+                .addQueryParameter("hash", hash) // handle error
                 .build()
             return chain.proceed(
                 chain

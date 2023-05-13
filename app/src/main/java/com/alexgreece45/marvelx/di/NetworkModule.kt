@@ -43,7 +43,7 @@ object NetworkModule {
             )
             .build(),
         GsonConverterFactory.create(
-            getGsonTypeAdapters()
+            provideGson()
         )
     ).create(
         ApiService::class.java
@@ -61,7 +61,9 @@ object NetworkModule {
         .client(okHttpClient)
         .build()
 
-    private fun getGsonTypeAdapters(): Gson = GsonBuilder()
+    @Provides
+    @Singleton
+    fun provideGson(): Gson = GsonBuilder()
         .registerTypeAdapter(
             OffsetDateTime::class.java,
             OffsetDateTimeAdapter()

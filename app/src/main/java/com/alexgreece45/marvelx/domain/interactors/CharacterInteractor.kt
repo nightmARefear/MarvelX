@@ -13,6 +13,7 @@ import javax.inject.Inject
 
 interface CharacterInteractor {
     suspend fun getAllCharacters(): Flow<CharacterPartialState>
+    suspend fun getCharacter(characterId: Int): Flow<CharacterPartialState>
 }
 
 class CharacterInteractorImpl @Inject constructor(
@@ -26,7 +27,7 @@ class CharacterInteractorImpl @Inject constructor(
                 response.body()?.data?.let { it ->
                     if (it.results.isNotEmpty()) {
                         emit(
-                            CharacterPartialState.Success(
+                            CharacterPartialState.SuccessAllCharacters(
                                 it.results.toDomain()
                             )
                         )
@@ -65,10 +66,61 @@ class CharacterInteractorImpl @Inject constructor(
             }
         }
     }
+
+    override suspend fun getCharacter(characterId: Int): Flow<CharacterPartialState> = flow {
+        val response = repository.getCharacter(characterId)
+        when (response.isSuccessful) {
+            true -> {
+                response.body()?.data?.let {
+                    if (it.results.isNotEmpty()) {
+                        emit(
+                            CharacterPartialState.SuccessCharacter(
+                                it.results[0].toDomain()
+                            )
+                        )
+                    } else {
+                        emit(
+                            CharacterPartialState.Failed(
+                                resourceProvider.getString(
+                                    R.string.character_with_specific_id_not_found,
+                                    characterId
+                                )
+                            )
+                        )
+                    }
+                } ?: emit(
+                    CharacterPartialState.Failed(
+                        resourceProvider.getString(R.string.character_error_loading)
+                    )
+                )
+            }
+            false -> {
+                emit(
+                    CharacterPartialState.Failed(
+                        response.errorBody().toString()
+                    )
+                )
+            }
+        }
+    }.safeAsync {
+        when (it) {
+            is IOException -> {
+                CharacterPartialState.NoInternetConnection(
+                    resourceProvider.getString(R.string.no_internet_connection_error_message)
+                )
+            }
+            else -> {
+                CharacterPartialState.Failed(
+                    it.localizedMessage ?: resourceProvider.getString(R.string.unknown_error)
+                )
+            }
+        }
+    }
 }
 
 sealed class CharacterPartialState {
-    data class Success(val results: List<CharacterDomain>) : CharacterPartialState()
+    data class SuccessAllCharacters(val results: List<CharacterDomain>) : CharacterPartialState()
+    data class SuccessCharacter(val character: CharacterDomain) : CharacterPartialState()
 
     data class Failed(val errorMessage: String) : CharacterPartialState()
 
