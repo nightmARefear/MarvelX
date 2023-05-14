@@ -11,4 +11,7 @@
     <string name="no_character_description">Character description is not available.</string>
     <string name="character_with_specific_id_not_found">The character with id \"%1$s\" could not be found!</string>
     <string name="character_error_loading">An error occurred while loading this character!</string>
+    
+    <!-- All Characters Screen -->
+    <string name="all_characters_screen_toolbar_title">Characters</string>
 </resources>

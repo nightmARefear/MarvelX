@@ -1,4 +1,4 @@
-package com.alexgreece45.marvelx.domain.models
+package com.alexgreece45.marvelx.domain.viewmodels
 
 import com.alexgreece45.marvelx.data.domains.CharacterDomain
 import com.alexgreece45.marvelx.domain.interactors.CharacterInteractor
@@ -7,6 +7,7 @@ import com.alexgreece45.marvelx.ui.base.BaseEffect
 import com.alexgreece45.marvelx.ui.base.BaseEvent
 import com.alexgreece45.marvelx.ui.base.BaseState
 import com.alexgreece45.marvelx.ui.base.BaseViewModel
+import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
 sealed class CharacterEvent : BaseEvent {
@@ -25,6 +26,7 @@ data class CharacterState(
     val errorMessage: String? = null
 ) : BaseState
 
+@HiltViewModel
 class CharacterViewModel @Inject constructor(
     private val interactor: CharacterInteractor
 ) : BaseViewModel<CharacterEvent, CharacterState, CharacterEffect>() {
@@ -37,7 +39,7 @@ class CharacterViewModel @Inject constructor(
     override suspend fun handleEvents(event: CharacterEvent) {
         when (event) {
             is CharacterEvent.LoadCharacter -> {
-                setStateCompose {
+                setState {
                     copy(
                         isLoading = true,
                         hasInternetConnection = true,
@@ -48,7 +50,7 @@ class CharacterViewModel @Inject constructor(
                 interactor.getCharacter(event.characterId).collect {
                     when (it) {
                         is CharacterPartialState.SuccessCharacter -> {
-                            setStateCompose {
+                            setState {
                                 copy(
                                     isLoading = false,
                                     character = it.character
@@ -56,7 +58,7 @@ class CharacterViewModel @Inject constructor(
                             }
                         }
                         is CharacterPartialState.Failed -> {
-                            setStateCompose {
+                            setState {
                                 copy(
                                     isLoading = false,
                                     errorMessage = it.errorMessage
@@ -64,7 +66,7 @@ class CharacterViewModel @Inject constructor(
                             }
                         }
                         is CharacterPartialState.NoInternetConnection -> {
-                            setStateCompose {
+                            setState {
                                 copy(
                                     isLoading = false,
                                     hasInternetConnection = false
@@ -76,7 +78,7 @@ class CharacterViewModel @Inject constructor(
                 }
             }
 
-            CharacterEvent.OnBackClick -> {
+            is CharacterEvent.OnBackClick -> {
                 setEffect {
                     CharacterEffect.OnBackClick
                 }

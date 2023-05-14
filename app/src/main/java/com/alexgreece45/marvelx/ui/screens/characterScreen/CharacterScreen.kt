@@ -1,4 +1,4 @@
-package com.alexgreece45.marvelx.ui.character_screen
+package com.alexgreece45.marvelx.ui.screens.characterScreen
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.MaterialTheme
@@ -7,6 +7,8 @@ import androidx.compose.material.Text
 import androidx.compose.material.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -21,34 +23,33 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.data.domains.CharacterDomain
-import com.alexgreece45.marvelx.domain.models.CharacterEffect
-import com.alexgreece45.marvelx.domain.models.CharacterEvent
-import com.alexgreece45.marvelx.domain.models.CharacterViewModel
-import com.alexgreece45.marvelx.ui.AllCharactersScreen
-import com.alexgreece45.marvelx.ui.destinations.AllCharactersScreenDestination
+import com.alexgreece45.marvelx.domain.viewmodels.CharacterEffect
+import com.alexgreece45.marvelx.domain.viewmodels.CharacterEvent
+import com.alexgreece45.marvelx.domain.viewmodels.CharacterViewModel
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
-import kotlinx.coroutines.flow.onEach
 
-@Destination(route="allCharacters/character")
+@Destination(/*route="allCharacters/character/{characterId}"*/)
 @Composable
 fun CharacterScreen(
     navigator: DestinationsNavigator,
     viewModel : CharacterViewModel = hiltViewModel(),
     characterId: Int,
 ) {
+    val state by viewModel.uiState.collectAsState()
+
     viewModel.setEvent(CharacterEvent.LoadCharacter(characterId))
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
     ) { padding ->
-        if (viewModel.viewState.value.errorMessage.isNullOrBlank().not()) {
+        if (state.errorMessage.isNullOrBlank().not()) {
             // show error screen
+            return@Scaffold
         }
 
-        if (viewModel.viewState.value.character != null) {
-            val character = viewModel.viewState.value.character!!
+        if (state.character != null) {
+            val character = state.character!!
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -84,7 +85,7 @@ fun CharacterScreen(
                         .fillMaxWidth()
                         .height(225.dp)
                 )
-                if (character.description.isNullOrEmpty()) {
+                if (character.description.isBlank()) {
                     Text(
                         modifier = Modifier.align(Alignment.Start),
                         text = stringResource(R.string.no_character_description),
@@ -109,13 +110,13 @@ fun CharacterScreen(
             }
             return@Scaffold
         }
+    }
 
-        LaunchedEffect(Unit) {
-            viewModel.effect.onEach { effect ->
-                when (effect) {
-                    CharacterEffect.OnBackClick -> {
-                        navigator.navigate(AllCharactersScreenDestination())
-                    }
+    LaunchedEffect(Unit) {
+        viewModel.effect.collect { effect ->
+            when (effect) {
+                CharacterEffect.OnBackClick -> {
+                    navigator.popBackStack()
                 }
             }
         }

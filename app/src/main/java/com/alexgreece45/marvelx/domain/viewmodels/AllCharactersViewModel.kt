@@ -1,4 +1,4 @@
-package com.alexgreece45.marvelx.domain.models
+package com.alexgreece45.marvelx.domain.viewmodels
 
 import com.alexgreece45.marvelx.ui.base.BaseEffect
 import com.alexgreece45.marvelx.ui.base.BaseEvent
@@ -11,12 +11,12 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
 sealed class AllCharactersEvent : BaseEvent {
-    object GetAllCharacters : AllCharactersEvent()
+    object LoadAllCharacters : AllCharactersEvent()
     data class LoadCharacter(val characterId: Int) : AllCharactersEvent()
 }
 
 sealed class AllCharactersEffect : BaseEffect {
-    data class ShowCharacterDetails(val characterId: Int) : AllCharactersEffect()
+    data class NavigateToCharacterDetails(val characterId: Int) : AllCharactersEffect()
 }
 
 data class AllCharactersState(
@@ -33,10 +33,14 @@ class AllCharactersViewModel @Inject constructor(
 ) : BaseViewModel<AllCharactersEvent, AllCharactersState, AllCharactersEffect>() {
     override fun setInitialState(): AllCharactersState = AllCharactersState()
 
+    init {
+        setEvent(AllCharactersEvent.LoadAllCharacters)
+    }
+
     override suspend fun handleEvents(event: AllCharactersEvent) {
         when (event) {
-            AllCharactersEvent.GetAllCharacters -> {
-                setStateCompose {
+            AllCharactersEvent.LoadAllCharacters -> {
+                setState {
                     copy(
                         isLoading = true,
                         characters = mutableListOf(),
@@ -47,7 +51,7 @@ class AllCharactersViewModel @Inject constructor(
                 interactor.getAllCharacters().collect {
                     when (it) {
                         is CharacterPartialState.SuccessAllCharacters -> {
-                            setStateCompose {
+                            setState {
                                 copy(
                                     isLoading = false,
                                     characters = it.results
@@ -55,7 +59,7 @@ class AllCharactersViewModel @Inject constructor(
                             }
                         }
                         is CharacterPartialState.Failed -> {
-                            setStateCompose {
+                            setState {
                                 copy(
                                     isLoading = false,
                                     errorMessage = it.errorMessage
@@ -63,7 +67,7 @@ class AllCharactersViewModel @Inject constructor(
                             }
                         }
                         is CharacterPartialState.NoInternetConnection -> {
-                            setStateCompose {
+                            setState {
                                 copy(
                                     isLoading = false,
                                     errorMessage = it.errorMessage
@@ -75,54 +79,26 @@ class AllCharactersViewModel @Inject constructor(
                 }
             }
             is AllCharactersEvent.LoadCharacter -> {
-//                setEffect {
-//                    AllCharactersEffect.ShowCharacterDetails(
-//                        event.characterId
-//                    )
-//                }
-                setStateCompose {
+                setState {
                     copy(
-                        isLoading = true,
+                        isLoading = false, // todo: change later
                         hasInternetConnection = true,
                         character = null,
                         errorMessage = null
                     )
                 }
-                interactor.getCharacter(event.characterId).collect {
-                    when (it) {
-                        is CharacterPartialState.SuccessCharacter -> {
-                            setStateCompose {
-                                copy(
-                                    isLoading = false,
-                                    character = it.character
-                                )
-                            }
-                        }
-                        is CharacterPartialState.Failed -> {
-                            setStateCompose {
-                                copy(
-                                    isLoading = false,
-                                    errorMessage = it.errorMessage
-                                )
-                            }
-                        }
-                        is CharacterPartialState.NoInternetConnection -> {
-                            setStateCompose {
-                                copy(
-                                    isLoading = false,
-                                    hasInternetConnection = false
-                                )
-                            }
-                        }
-                        else -> {}
-                    }
+                setEffect {
+                    AllCharactersEffect.NavigateToCharacterDetails(
+                        characterId = event.characterId
+                    )
                 }
+
             }
         }
     }
 
     fun setCharacterToNull() {
-        setStateCompose {
+        setState {
             copy(
                 character = null
             )
