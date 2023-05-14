@@ -11,9 +11,12 @@ import javax.inject.Inject
 
 sealed class CharacterEvent : BaseEvent {
     data class LoadCharacter(val characterId: Int) : CharacterEvent()
+    object OnBackClick : CharacterEvent()
 }
 
-sealed class CharacterEffect : BaseEffect {}
+sealed class CharacterEffect : BaseEffect {
+    object OnBackClick : CharacterEffect()
+}
 
 data class CharacterState(
     val isLoading: Boolean = false,
@@ -26,6 +29,10 @@ class CharacterViewModel @Inject constructor(
     private val interactor: CharacterInteractor
 ) : BaseViewModel<CharacterEvent, CharacterState, CharacterEffect>() {
     override fun setInitialState(): CharacterState = CharacterState()
+
+    /*init {
+        this.setEvent(CharacterEvent.LoadCharacter(100))
+    }*/
 
     override suspend fun handleEvents(event: CharacterEvent) {
         when (event) {
@@ -66,6 +73,12 @@ class CharacterViewModel @Inject constructor(
                         }
                         else -> {}
                     }
+                }
+            }
+
+            CharacterEvent.OnBackClick -> {
+                setEffect {
+                    CharacterEffect.OnBackClick
                 }
             }
         }

@@ -1,11 +1,12 @@
 package com.alexgreece45.marvelx.data.domains
 
+import android.os.Parcelable
 import com.alexgreece45.marvelx.data.models.character.*
 import com.alexgreece45.marvelx.util.extensions.toOffsetDateTime
 import com.google.gson.annotations.SerializedName
+import kotlinx.parcelize.Parcelize
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import java.util.Date
 
 data class CharacterDomain(
     @SerializedName("id") val id: Int,
