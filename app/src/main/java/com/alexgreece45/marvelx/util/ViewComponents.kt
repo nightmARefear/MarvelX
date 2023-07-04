@@ -30,7 +30,7 @@ fun ContentScreen(
     fab: Boolean = false,
     fabIcon: Icon? = null,
     fabAction: (() -> Unit)? = null,
-    screenBackgroundColor: Color = Color.White,
+    screenBackgroundColor: Color = MaterialTheme.colors.background,
     contentColor: Color = Color.White,
     content: @Composable (PaddingValues) -> Unit
 ) {
@@ -43,10 +43,10 @@ fun ContentScreen(
                     contentColor = MaterialTheme.colors.primaryVariant,
                     elevation = 0.dp
                 ) {
-                    toolbarTitle?.let {
+                    toolbarTitle?.let { titleResource ->
                         Text(
                           modifier = Modifier.weight(1f),
-                          text = stringResource(toolbarTitle),
+                          text = stringResource(titleResource),
                           style = MaterialTheme.typography.h6
                         )
                     }
