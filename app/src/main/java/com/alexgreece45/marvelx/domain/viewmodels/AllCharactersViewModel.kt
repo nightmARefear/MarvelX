@@ -7,16 +7,23 @@ import com.alexgreece45.marvelx.ui.base.BaseViewModel
 import com.alexgreece45.marvelx.data.domains.CharacterDomain
 import com.alexgreece45.marvelx.domain.interactors.CharacterInteractor
 import com.alexgreece45.marvelx.domain.interactors.CharacterPartialState
+import com.alexgreece45.marvelx.util.ResourceProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import javax.inject.Inject
 
-sealed class AllCharactersEvent : BaseEvent {
-    object LoadAllCharacters : AllCharactersEvent()
-    data class LoadCharacter(val characterId: Int) : AllCharactersEvent()
+sealed interface AllCharactersEvent : BaseEvent {
+    object LoadAllCharacters : AllCharactersEvent
+    data class LoadCharacter(val characterId: Int) : AllCharactersEvent
+    data class OnFavoriteCharacterClick(val characterName: String): AllCharactersEvent
 }
 
-sealed class AllCharactersEffect : BaseEffect {
-    data class NavigateToCharacterDetails(val characterId: Int) : AllCharactersEffect()
+sealed interface AllCharactersEffect : BaseEffect {
+    data class NavigateToCharacterDetails(val characterId: Int) : AllCharactersEffect
+    sealed interface FavoriteCharacter : AllCharactersEffect {
+        data class Success(val successMessage: String) : FavoriteCharacter
+        data class Failed(val errorMessage: String) : FavoriteCharacter
+    }
 }
 
 data class AllCharactersState(
@@ -29,7 +36,8 @@ data class AllCharactersState(
 
 @HiltViewModel
 class AllCharactersViewModel @Inject constructor(
-    private val interactor: CharacterInteractor
+    private val interactor: CharacterInteractor,
+    private val resourceProvider: ResourceProvider
 ) : BaseViewModel<AllCharactersEvent, AllCharactersState, AllCharactersEffect>() {
     override fun setInitialState(): AllCharactersState = AllCharactersState()
 
@@ -51,6 +59,7 @@ class AllCharactersViewModel @Inject constructor(
                 interactor.getAllCharacters().collect {
                     when (it) {
                         is CharacterPartialState.SuccessAllCharacters -> {
+                            delay(2000L)
                             setState {
                                 copy(
                                     isLoading = false,
@@ -58,7 +67,7 @@ class AllCharactersViewModel @Inject constructor(
                                 )
                             }
                         }
-                        is CharacterPartialState.Failed -> {
+                        is CharacterPartialState.Error -> {
                             setState {
                                 copy(
                                     isLoading = false,
@@ -93,6 +102,13 @@ class AllCharactersViewModel @Inject constructor(
                     )
                 }
 
+            }
+
+            is AllCharactersEvent.OnFavoriteCharacterClick -> {
+                // todo: favorite character
+                setEffect {
+                    AllCharactersEffect.FavoriteCharacter.Success(event.characterName)
+                }
             }
         }
     }

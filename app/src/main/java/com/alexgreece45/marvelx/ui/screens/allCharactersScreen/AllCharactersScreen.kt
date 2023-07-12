@@ -1,18 +1,30 @@
 package com.alexgreece45.marvelx.ui.screens.allCharactersScreen
 
+import android.widget.Toast
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.Card
+import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -27,14 +39,17 @@ import coil.request.ImageRequest
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.data.domains.CharacterDomain
 import com.alexgreece45.marvelx.domain.viewmodels.AllCharactersEffect
+import com.alexgreece45.marvelx.domain.viewmodels.AllCharactersEvent
 import com.alexgreece45.marvelx.domain.viewmodels.AllCharactersViewModel
+import com.alexgreece45.marvelx.ui.screens.destinations.CharacterScreenDestination
 import com.alexgreece45.marvelx.util.ContentScreen
+import com.alexgreece45.marvelx.util.DEFAULT_SCREEN_PADDING
 import com.alexgreece45.marvelx.util.GeneralErrorScreen
-import com.alexgreece45.marvelx.util.MAX_CHARACTER_IMAGE_HEIGHT
+import com.alexgreece45.marvelx.util.LoadingScreen
+import com.alexgreece45.marvelx.util.VSpacer
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootNavGraph
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
-import kotlinx.coroutines.flow.collectLatest
 
 @RootNavGraph(start = true)
 @Destination
@@ -44,33 +59,63 @@ fun AllCharacterScreen(
     viewModel: AllCharactersViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
 
     LaunchedEffect(Unit) {
-        viewModel.effect.collectLatest { effect ->
+        viewModel.effect.collect { effect ->
             when (effect) {
-                is AllCharactersEffect.NavigateToCharacterDetails -> TODO()
+                is AllCharactersEffect.NavigateToCharacterDetails -> {
+                    navigator.navigate(CharacterScreenDestination(characterId = effect.characterId))
+                }
+
+                is AllCharactersEffect.FavoriteCharacter.Success -> {
+                    Toast.makeText(context, effect.successMessage, Toast.LENGTH_SHORT).show()
+                }
+
+                is AllCharactersEffect.FavoriteCharacter.Failed -> {
+
+                }
             }
         }
     }
 
-    ContentScreen(
-        toolBar = true,
-        toolbarTitle = R.string.all_characters_screen_toolbar_title
-    ) { padding ->
-        LazyColumn(contentPadding = padding) {
-            item {
-                state.errorMessage?.let {
-                    GeneralErrorScreen(errorMessage = it)
-                }
-            }
-
-            if (state.characters.isNotEmpty()) {
-                items(state.characters,
-                    key = { character ->
-                        character.id
+    LoadingScreen(isLoading = state.isLoading) {
+        ContentScreen(
+            toolBar = true,
+            toolbarTitle = stringResource(R.string.all_characters_screen_toolbar_title)
+        ) { padding ->
+            LazyColumn(
+                contentPadding = padding,
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                item {
+                    state.errorMessage?.let {
+                        GeneralErrorScreen(errorMessage = it)
                     }
-                ) { character ->
-                    CharacterItem(character = character)
+                }
+
+                if (state.characters.isNotEmpty()) {
+                    items(state.characters,
+                        key = { character ->
+                            character.id
+                        }
+                    ) { character ->
+                        CharacterItem(
+                            character = character,
+                            onClick = {
+                                viewModel.setEvent(
+                                    AllCharactersEvent.LoadCharacter(characterId = character.id)
+                                )
+                            },
+                            onFavoriteClick = {
+                                viewModel.setEvent(
+                                    AllCharactersEvent.OnFavoriteCharacterClick(
+                                        characterName = character.name
+                                    )
+                                )
+                            }
+                        )
+                    }
                 }
             }
         }
@@ -78,50 +123,100 @@ fun AllCharacterScreen(
 }
 
 @Composable
-fun CharacterItem(
-    character: CharacterDomain
+private fun CharacterItem(
+    character: CharacterDomain,
+    onClick: () -> Unit,
+    onFavoriteClick: () -> Unit
 ) {
     val context = LocalContext.current
 
-    Column(
+    Card(
         modifier = Modifier
+            .clickable { onClick() }
             .fillMaxWidth()
             .wrapContentHeight()
     ) {
-        // Name.
-        Text(
-            text = character.name
-        )
-
-        // Image.
-        AsyncImage(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(MAX_CHARACTER_IMAGE_HEIGHT.dp),
-            model = ImageRequest.Builder(context)
-                .data(character.thumbnail.path + "." + character.thumbnail.extension)
-                .crossfade(true)
-                .build(),
-            contentDescription = "${character.name} image",
-            contentScale = ContentScale.Fit,
-            error = painterResource(R.drawable.ic_broken_image)
-        )
-
-        if (character.description.isBlank().not()) {
+        Column(
+            modifier = Modifier.padding(DEFAULT_SCREEN_PADDING)
+        ) {
+            // Name.
             Text(
-                text = character.description,
-                style = MaterialTheme.typography.body1.copy(
-                    textAlign = TextAlign.Justify
-                )
+                modifier = Modifier.align(alignment = Alignment.CenterHorizontally),
+                text = character.name,
+                style = MaterialTheme.typography.h6,
+                textAlign = TextAlign.Center
             )
-        } else {
-            Text(
-                text = stringResource(R.string.no_character_description),
-                style = MaterialTheme.typography.body1.copy(
-                    color = Color.Gray,
-                    fontStyle = FontStyle.Italic
-                )
+
+            VSpacer.Small()
+
+            // Image.
+            val borderWidth = 2.dp
+            AsyncImage(
+                modifier = Modifier
+                    .size(300.dp)
+                    .border(
+                        BorderStroke(
+                            width = borderWidth,
+                            color = MaterialTheme.colors.primaryVariant
+                        ),
+                        CircleShape
+                    )
+                    .padding(borderWidth)
+                    .clip(CircleShape)
+                    .align(Alignment.CenterHorizontally),
+                model = ImageRequest.Builder(context)
+                    .data(character.thumbnail.path + "." + character.thumbnail.extension)
+                    .crossfade(true)
+                    .build(),
+                contentDescription = "${character.name} image",
+                contentScale = ContentScale.Fit,
+                error = painterResource(R.drawable.ic_broken_image)
             )
+
+            VSpacer.Small()
+
+            // Description.
+            if (character.description.isBlank().not()) {
+                Text(
+                    text = character.description,
+                    style = MaterialTheme.typography.body1.copy(
+                        textAlign = TextAlign.Justify,
+                        color = MaterialTheme.colors.onBackground
+                    )
+                )
+            } else {
+                Text(
+                    text = stringResource(R.string.no_character_description),
+                    style = MaterialTheme.typography.body1.copy(
+                        color = Color.Gray,
+                        fontStyle = FontStyle.Italic
+                    )
+                )
+            }
+
+            // Favorite IconButton
+            IconButton(
+                modifier = Modifier.align(Alignment.End),
+                onClick = { onFavoriteClick() }
+            ) {
+                when (character.isFavorite) {
+                    true -> {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_favorite_filled_24),
+                            contentDescription = "favorite",
+                            tint = MaterialTheme.colors.primaryVariant
+                        )
+                    }
+
+                    false -> {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_favorite_empty_24),
+                            contentDescription = "not favorite",
+                            tint = MaterialTheme.colors.primaryVariant
+                        )
+                    }
+                }
+            }
         }
     }
 }

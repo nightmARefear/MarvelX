@@ -1,9 +1,8 @@
 package com.alexgreece45.marvelx.di
 
 import android.content.Context
-import com.alexgreece45.marvelx.data.models.character.CharacterDataWrapper
 import com.alexgreece45.marvelx.data.api.ApiClient
-import com.alexgreece45.marvelx.data.api.ApiService
+import com.alexgreece45.marvelx.data.models.character.CharacterDataWrapper
 import com.google.gson.Gson
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -16,12 +15,22 @@ import javax.inject.Inject
 @Module
 @InstallIn(SingletonComponent::class)
 class ApiClientImpl @Inject constructor(
-    private val api: ApiService,
     @ApplicationContext private val context: Context,
     private val gson: Gson
 ) : ApiClient {
 
     override suspend fun getCharacters(): Response<CharacterDataWrapper> {
+        return Response.success(
+            200,
+            gson.fromJson(
+                readFileContents("mock_get_characters.json"),
+                CharacterDataWrapper::class.java
+            )
+        )
+    }
+
+    override suspend fun getCharacter(characterId: Int): Response<CharacterDataWrapper> {
+        // todo: alter the below code to make it read a specific character
         return Response.success(
             200,
             gson.fromJson(

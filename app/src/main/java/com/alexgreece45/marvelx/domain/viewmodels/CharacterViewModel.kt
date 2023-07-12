@@ -1,6 +1,7 @@
 package com.alexgreece45.marvelx.domain.viewmodels
 
 import com.alexgreece45.marvelx.data.domains.CharacterDomain
+import com.alexgreece45.marvelx.data.domains.ComicDomain
 import com.alexgreece45.marvelx.domain.interactors.CharacterInteractor
 import com.alexgreece45.marvelx.domain.interactors.CharacterPartialState
 import com.alexgreece45.marvelx.ui.base.BaseEffect
@@ -11,7 +12,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
 sealed class CharacterEvent : BaseEvent {
-    data class LoadCharacter(val characterId: Int) : CharacterEvent()
+    data class InitView(val characterId: Int) : CharacterEvent()
     object OnBackClick : CharacterEvent()
 }
 
@@ -20,10 +21,14 @@ sealed class CharacterEffect : BaseEffect {
 }
 
 data class CharacterState(
+    // Base states.
     val isLoading: Boolean = false,
     val hasInternetConnection: Boolean = false,
+    val errorMessage: String? = null,
+
+    // Data.
     val character: CharacterDomain? = null,
-    val errorMessage: String? = null
+    val comics: List<ComicDomain> = listOf()
 ) : BaseState
 
 @HiltViewModel
@@ -32,55 +37,107 @@ class CharacterViewModel @Inject constructor(
 ) : BaseViewModel<CharacterEvent, CharacterState, CharacterEffect>() {
     override fun setInitialState(): CharacterState = CharacterState()
 
-    /*init {
-        this.setEvent(CharacterEvent.LoadCharacter(100))
-    }*/
-
     override suspend fun handleEvents(event: CharacterEvent) {
         when (event) {
-            is CharacterEvent.LoadCharacter -> {
-                setState {
-                    copy(
-                        isLoading = true,
-                        hasInternetConnection = true,
-                        character = null,
-                        errorMessage = null
-                    )
-                }
-                interactor.getCharacter(event.characterId).collect {
-                    when (it) {
-                        is CharacterPartialState.SuccessCharacter -> {
-                            setState {
-                                copy(
-                                    isLoading = false,
-                                    character = it.character
-                                )
-                            }
-                        }
-                        is CharacterPartialState.Failed -> {
-                            setState {
-                                copy(
-                                    isLoading = false,
-                                    errorMessage = it.errorMessage
-                                )
-                            }
-                        }
-                        is CharacterPartialState.NoInternetConnection -> {
-                            setState {
-                                copy(
-                                    isLoading = false,
-                                    hasInternetConnection = false
-                                )
-                            }
-                        }
-                        else -> {}
-                    }
-                }
+            is CharacterEvent.InitView -> {
+                initView(characterId = event.characterId)
             }
 
             is CharacterEvent.OnBackClick -> {
                 setEffect {
                     CharacterEffect.OnBackClick
+                }
+            }
+        }
+    }
+
+    private suspend fun initView(characterId: Int) {
+        setState {
+            copy(
+                isLoading = true,
+                hasInternetConnection = true,
+                errorMessage = null,
+                character = null,
+                comics = listOf()
+            )
+        }
+        loadCharacter(characterId = characterId)
+    }
+
+    private suspend fun loadCharacter(characterId: Int) {
+        interactor.getCharacter(characterId).collect {
+            when (it) {
+                is CharacterPartialState.SuccessCharacter -> {
+                    setState {
+                        copy(
+                            isLoading = false,
+                            character = it.character
+                        )
+                    }
+
+                    // Load Comics.
+                    loadComics(characterId = characterId)
+                }
+
+                is CharacterPartialState.Error -> {
+                    setState {
+                        copy(
+                            isLoading = false,
+                            errorMessage = it.errorMessage
+                        )
+                    }
+                }
+
+                is CharacterPartialState.NoInternetConnection -> {
+                    setState {
+                        copy(
+                            isLoading = false,
+                            hasInternetConnection = false
+                        )
+                    }
+                }
+
+                else -> {}
+            }
+        }
+    }
+
+    private suspend fun loadComics(characterId: Int) {
+        interactor.getCharacterComics(characterId).collect {
+            when (it) {
+                is CharacterPartialState.Error -> {
+                    setState {
+                        copy(
+                            isLoading = false,
+                            errorMessage = it.errorMessage
+                        )
+                    }
+                }
+
+                is CharacterPartialState.NoInternetConnection -> {
+                    setState {
+                        copy(
+                            isLoading = false,
+                            errorMessage = it.errorMessage
+                        )
+                    }
+                }
+
+                is CharacterPartialState.Success -> {
+                    setState {
+                        copy(
+                            isLoading = false,
+                            comics = it.data
+                        )
+                    }
+                }
+
+                else -> {
+                    setState {
+                        copy(
+                            isLoading = false
+                        )
+                    }
                 }
             }
         }

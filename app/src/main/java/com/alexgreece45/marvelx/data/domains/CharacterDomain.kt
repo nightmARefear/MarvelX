@@ -1,12 +1,16 @@
 package com.alexgreece45.marvelx.data.domains
 
-import android.os.Parcelable
-import com.alexgreece45.marvelx.data.models.character.*
+import com.alexgreece45.marvelx.data.models.character.CharacterResponse
+import com.alexgreece45.marvelx.data.models.character.ComicList
+import com.alexgreece45.marvelx.data.models.character.EventList
+import com.alexgreece45.marvelx.data.models.character.Image
+import com.alexgreece45.marvelx.data.models.character.SeriesList
+import com.alexgreece45.marvelx.data.models.character.StoryList
+import com.alexgreece45.marvelx.data.models.character.Url
 import com.alexgreece45.marvelx.util.extensions.toOffsetDateTime
-import com.google.gson.annotations.SerializedName
-import kotlinx.parcelize.Parcelize
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import kotlin.random.Random
 
 data class CharacterDomain(
     val id: Int,
@@ -19,7 +23,8 @@ data class CharacterDomain(
     val comics: ComicList,
     val stories: StoryList,
     val events: EventList,
-    val series: SeriesList
+    val series: SeriesList,
+    val isFavorite: Boolean = Random.nextInt(1, 3) == 2
 )
 
 fun CharacterDomain.toResponse(): CharacterResponse {
@@ -35,6 +40,22 @@ fun CharacterDomain.toResponse(): CharacterResponse {
         stories = this.stories,
         events = this.events,
         series = this.series
+    )
+}
+
+fun List<CharacterDomain>.toResponse(): List<CharacterResponse> = this.map { character ->
+    CharacterResponse(
+        id = character.id,
+        name = character.name,
+        description = character.description,
+        modified = character.modified.toOffsetDateTime(),
+        resourceURI = character.resourceURI,
+        urls = character.urls.toTypedArray(),
+        thumbnail = character.thumbnail,
+        comics = character.comics,
+        stories = character.stories,
+        events = character.events,
+        series = character.series
     )
 }
 

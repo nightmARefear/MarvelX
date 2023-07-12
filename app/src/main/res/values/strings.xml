@@ -5,6 +5,7 @@
     <string name="no_internet_connection_error_message">No internet connection! Please try again!</string>
     <string name="unknown_error">An unknown error has occurred!</string>
     <string name="fatal_error">A fatal error has occurred!</string>
+    <string name="no_data_was_found">No data was found!</string>
 
     <!-- CHARACTER STRINGS -->
     <string name="no_characters_were_found_error_message">No characters were found!</string>
