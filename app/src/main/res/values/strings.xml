@@ -15,4 +15,10 @@
     
     <!-- All Characters Screen -->
     <string name="all_characters_screen_toolbar_title">Characters</string>
+
+    <string name="all_characters_screen_success_favoring_character">This character is now favorite.</string>
+    <string name="all_characters_screen_success_unfavoring_character">This character was removed from your favorites.</string>
+
+    <string name="all_characters_screen_error_favoring_character">An error occurred while favoring this character.</string>
+    <string name="all_characters_screen_error_unfavoring_character">An error occurred while unfavoring this character.</string>
 </resources>

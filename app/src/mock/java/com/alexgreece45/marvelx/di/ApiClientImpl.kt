@@ -3,6 +3,7 @@ package com.alexgreece45.marvelx.di
 import android.content.Context
 import com.alexgreece45.marvelx.data.api.ApiClient
 import com.alexgreece45.marvelx.data.models.character.CharacterDataWrapper
+import com.alexgreece45.marvelx.data.models.character.comic.ComicDataWrapper
 import com.google.gson.Gson
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -38,6 +39,10 @@ class ApiClientImpl @Inject constructor(
                 CharacterDataWrapper::class.java
             )
         )
+    }
+
+    override suspend fun getCharacterComics(characterId: Int): Response<ComicDataWrapper> {
+        TODO("Not yet implemented")
     }
 
     private fun readFileContents(fileName: String): BufferedReader {

@@ -20,6 +20,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.alexgreece45.marvelx.R
@@ -112,6 +114,29 @@ fun LoadingScreen(
                 )
             }
         }
+    }
+}
+
+@Composable
+fun CharacterDescription(
+    description: String,
+) {
+    if (description.isBlank()) {
+        Text(
+            text = stringResource(R.string.no_character_description),
+            style = MaterialTheme.typography.body1.copy(
+                color = Color.Gray,
+                fontStyle = FontStyle.Italic
+            )
+        )
+    } else {
+        Text(
+            text = description,
+            style = MaterialTheme.typography.body1.copy(
+                textAlign = TextAlign.Justify,
+                color = MaterialTheme.colors.onBackground
+            )
+        )
     }
 }
 

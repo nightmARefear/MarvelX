@@ -67,11 +67,11 @@ class CharacterViewModel @Inject constructor(
     private suspend fun loadCharacter(characterId: Int) {
         interactor.getCharacter(characterId).collect {
             when (it) {
-                is CharacterPartialState.SuccessCharacter -> {
+                is CharacterPartialState.Success -> {
                     setState {
                         copy(
                             isLoading = false,
-                            character = it.character
+                            character = it.data
                         )
                     }
 

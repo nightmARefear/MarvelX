@@ -20,7 +20,8 @@ abstract class BaseViewModel<Event : BaseEvent, State : BaseState, Effect : Base
     private val _uiState: MutableStateFlow<State> = MutableStateFlow(initialState)
     val uiState =
         _uiState.asStateFlow() // Used by the views to acquire the current state in a read-only mode.
-    val currentState: State = _uiState.value // Used by the viewModel to acquire the current state.
+    val currentState: State
+        get() = uiState.value // Used by the viewModel to acquire the current state.
 
     private val _effect: Channel<Effect> = Channel()
     var effect: Flow<Effect> = _effect.receiveAsFlow()

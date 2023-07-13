@@ -14,7 +14,7 @@ import kotlin.random.Random
 
 data class CharacterDomain(
     val id: Int,
-    val name: String,
+    val name: String = "",
     val description: String = "",
     val modified: LocalDateTime,
     val resourceURI: String,
@@ -24,7 +24,7 @@ data class CharacterDomain(
     val stories: StoryList,
     val events: EventList,
     val series: SeriesList,
-    val isFavorite: Boolean = Random.nextInt(1, 3) == 2
+    val isFavorite: Boolean = false
 )
 
 fun CharacterDomain.toResponse(): CharacterResponse {

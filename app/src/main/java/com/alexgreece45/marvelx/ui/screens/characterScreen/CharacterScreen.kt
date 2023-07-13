@@ -35,6 +35,7 @@ import com.alexgreece45.marvelx.data.domains.ComicDomain
 import com.alexgreece45.marvelx.domain.viewmodels.CharacterEffect
 import com.alexgreece45.marvelx.domain.viewmodels.CharacterEvent
 import com.alexgreece45.marvelx.domain.viewmodels.CharacterViewModel
+import com.alexgreece45.marvelx.util.CharacterDescription
 import com.alexgreece45.marvelx.util.ContentScreen
 import com.alexgreece45.marvelx.util.GeneralErrorScreen
 import com.alexgreece45.marvelx.util.VSpacer
@@ -136,20 +137,7 @@ private fun CharacterItem(
         VSpacer.Small()
 
         // Description.
-        if (character.description.isBlank().not()) {
-            Text(
-                text = character.description, style = MaterialTheme.typography.body1.copy(
-                    textAlign = TextAlign.Justify
-                )
-            )
-        } else {
-            Text(
-                text = stringResource(R.string.no_character_description),
-                style = MaterialTheme.typography.body1.copy(
-                    color = Color.Gray, fontStyle = FontStyle.Italic
-                )
-            )
-        }
+        CharacterDescription(description = character.description)
     }
 }
 

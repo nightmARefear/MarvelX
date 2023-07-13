@@ -25,12 +25,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -42,6 +40,7 @@ import com.alexgreece45.marvelx.domain.viewmodels.AllCharactersEffect
 import com.alexgreece45.marvelx.domain.viewmodels.AllCharactersEvent
 import com.alexgreece45.marvelx.domain.viewmodels.AllCharactersViewModel
 import com.alexgreece45.marvelx.ui.screens.destinations.CharacterScreenDestination
+import com.alexgreece45.marvelx.util.CharacterDescription
 import com.alexgreece45.marvelx.util.ContentScreen
 import com.alexgreece45.marvelx.util.DEFAULT_SCREEN_PADDING
 import com.alexgreece45.marvelx.util.GeneralErrorScreen
@@ -72,8 +71,16 @@ fun AllCharacterScreen(
                     Toast.makeText(context, effect.successMessage, Toast.LENGTH_SHORT).show()
                 }
 
-                is AllCharactersEffect.FavoriteCharacter.Failed -> {
+                is AllCharactersEffect.FavoriteCharacter.Error -> {
+                    Toast.makeText(context, effect.errorMessage, Toast.LENGTH_SHORT).show()
+                }
 
+                is AllCharactersEffect.UnFavoriteCharacter.Error -> {
+                    Toast.makeText(context, effect.errorMessage, Toast.LENGTH_SHORT).show()
+                }
+
+                is AllCharactersEffect.UnFavoriteCharacter.Success -> {
+                    Toast.makeText(context, effect.successMessage, Toast.LENGTH_SHORT).show()
                 }
             }
         }
@@ -109,8 +116,8 @@ fun AllCharacterScreen(
                             },
                             onFavoriteClick = {
                                 viewModel.setEvent(
-                                    AllCharactersEvent.OnFavoriteCharacterClick(
-                                        characterName = character.name
+                                    AllCharactersEvent.OnHeartClick(
+                                        characterId = character.id
                                     )
                                 )
                             }
@@ -176,23 +183,7 @@ private fun CharacterItem(
             VSpacer.Small()
 
             // Description.
-            if (character.description.isBlank().not()) {
-                Text(
-                    text = character.description,
-                    style = MaterialTheme.typography.body1.copy(
-                        textAlign = TextAlign.Justify,
-                        color = MaterialTheme.colors.onBackground
-                    )
-                )
-            } else {
-                Text(
-                    text = stringResource(R.string.no_character_description),
-                    style = MaterialTheme.typography.body1.copy(
-                        color = Color.Gray,
-                        fontStyle = FontStyle.Italic
-                    )
-                )
-            }
+            CharacterDescription(description = character.description)
 
             // Favorite IconButton
             IconButton(
