@@ -1,16 +1,19 @@
 package com.alexgreece45.marvelx.ui.screens.characterScreen
 
 import android.app.Activity
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.Card
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -18,13 +21,13 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontStyle
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
@@ -61,6 +64,8 @@ fun CharacterScreen(
                 CharacterEffect.OnBackClick -> {
                     navigator.popBackStack()
                 }
+
+                is CharacterEffect.NavigateToComic -> {}
             }
         }
     }
@@ -81,27 +86,21 @@ fun CharacterScreen(
                     CharacterItem(character = character)
 
                     // Comics.
-                    VSpacer.Medium()
-
-                    Text(
-                        text = "Comics",
-                        style = MaterialTheme.typography.h6,
-                        color = Color.White
-                    )
-
-                    VSpacer.Medium()
-
-                    LazyRow(
-                        contentPadding = padding,
-                        horizontalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        items(items = state.comics,
-                            key = { comic ->
-                                comic.id
+                    LazyRowTemplate(
+                        title = stringResource(R.string.character_screen_row_comic_title),
+                        items = state.comics,
+                        itemKey = { comic -> comic.id }
+                    ) { comic ->
+                        ComicItem(
+                            comic = comic,
+                            onClick = {
+                                viewModel.setEvent(
+                                    CharacterEvent.OnComicClick(
+                                        comicId = comic.id
+                                    )
+                                )
                             }
-                        ) { comic ->
-                            ComicItem(comic = comic)
-                        }
+                        )
                     }
 
                     // Events.
@@ -134,7 +133,7 @@ private fun CharacterItem(
             error = painterResource(R.drawable.ic_broken_image)
         )
 
-        VSpacer.Small()
+        VSpacer.Medium()
 
         // Description.
         CharacterDescription(description = character.description)
@@ -142,21 +141,57 @@ private fun CharacterItem(
 }
 
 @Composable
-private fun ComicItem(
-    comic: ComicDomain
+fun <T> LazyRowTemplate(
+    title: String,
+    items: List<T>,
+    itemKey: ((item: T) -> Any)? = null,
+    content: @Composable (T) -> Unit,
 ) {
-    Card {
-        Column {
-            AsyncImage(
-                modifier = Modifier.size(150.dp),
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(comic.thumbnail.path + "." + comic.thumbnail.extension)
-                    .crossfade(true)
-                    .build(),
-                contentDescription = comic.description,
-                contentScale = ContentScale.Fit,
-                error = painterResource(R.drawable.ic_broken_image)
-            )
+    VSpacer.Medium()
+
+    Text(
+        text = title,
+        style = MaterialTheme.typography.h6,
+        color = MaterialTheme.colors.onBackground
+    )
+
+    VSpacer.Small()
+
+    LazyRow(horizontalArrangement = Arrangement.spacedBy(0.dp)) {
+        items(
+            items = items,
+            key = itemKey
+        ) {
+            content(it)
         }
+    }
+}
+
+@Composable
+private fun ComicItem(
+    backgroundColor: Color = Color.Transparent,
+    comic: ComicDomain,
+    onClick: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .background(backgroundColor)
+            .padding(0.dp),
+    ) {
+        AsyncImage(
+            modifier = Modifier
+                .size(150.dp)
+                .clip(RectangleShape)
+                .clickable {
+                    onClick()
+                },
+            model = ImageRequest.Builder(LocalContext.current)
+                .data(comic.thumbnail.path + "." + comic.thumbnail.extension)
+                .crossfade(true)
+                .build(),
+            contentDescription = comic.description,
+            contentScale = ContentScale.Fit,
+            error = painterResource(R.drawable.ic_broken_image)
+        )
     }
 }

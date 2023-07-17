@@ -8,14 +8,17 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material.ContentAlpha
 import androidx.compose.material.FloatingActionButton
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
+import androidx.compose.material.LocalContentAlpha
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
 import androidx.compose.material.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -41,7 +44,6 @@ fun ContentScreen(
     fabIcon: Icon? = null,
     fabAction: (() -> Unit)? = null,
     screenBackgroundColor: Color = MaterialTheme.colors.background,
-    contentColor: Color = MaterialTheme.colors.onBackground,
     content: @Composable (PaddingValues) -> Unit
 ) {
     Scaffold(
@@ -51,24 +53,26 @@ fun ContentScreen(
                     modifier = Modifier.fillMaxWidth(),
                     elevation = 0.dp
                 ) {
-                    onBack?.let {
-                        IconButton(onClick = { it.invoke() }) {
-                            Icon(
-                                painter = painterResource(R.drawable.ic_back_32),
-                                contentDescription = null,
+                    CompositionLocalProvider(LocalContentAlpha provides ContentAlpha.high) {
+                        onBack?.let {
+                            IconButton(onClick = { it.invoke() }) {
+                                Icon(
+                                    painter = painterResource(R.drawable.ic_back_32),
+                                    contentDescription = null,
 //                                tint = MaterialTheme.colors.primary
+                                )
+                            }
+                        }
+
+                        HSpacer.Medium()
+
+                        toolbarTitle?.let { toolbarTitle ->
+                            Text(
+                                modifier = Modifier.weight(1f),
+                                text = toolbarTitle,
+                                style = MaterialTheme.typography.h6
                             )
                         }
-                    }
-
-                    HSpacer.Medium()
-
-                    toolbarTitle?.let { toolbarTitle ->
-                        Text(
-                            modifier = Modifier.weight(1f),
-                            text = toolbarTitle,
-                            style = MaterialTheme.typography.h6
-                        )
                     }
                 }
             }

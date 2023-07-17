@@ -3,9 +3,11 @@ package com.alexgreece45.marvelx.domain.interactors
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.data.domains.CharacterDomain
 import com.alexgreece45.marvelx.data.domains.ComicDomain
+import com.alexgreece45.marvelx.data.models.character.comic.toDomain
 import com.alexgreece45.marvelx.data.models.character.toDomain
 import com.alexgreece45.marvelx.domain.database.FavoriteCharacterEntity
 import com.alexgreece45.marvelx.domain.repositories.CharacterRepository
+import com.alexgreece45.marvelx.domain.repositories.CharacterRepositoryPartialState
 import com.alexgreece45.marvelx.domain.repositories.FavoriteCharactersRepository
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.extensions.safeAsync
@@ -144,7 +146,30 @@ class CharacterInteractorImpl @Inject constructor(
     override suspend fun getCharacterComics(characterId: Int): Flow<CharacterPartialState<List<ComicDomain>>> =
         flow {
             characterRepository.getCharacterComics(characterId).collect {
-                emit(it)
+                when (it) {
+                    is CharacterRepositoryPartialState.Error -> {
+                        emit(
+                            CharacterPartialState.Error(
+                                errorCode = it.errorCode,
+                                errorMessage = it.errorMessage
+                            )
+                        )
+                    }
+                    is CharacterRepositoryPartialState.NoInternetConnection -> {
+                        emit(
+                            CharacterPartialState.NoInternetConnection(
+                                errorMessage = it.errorMessage
+                            )
+                        )
+                    }
+                    is CharacterRepositoryPartialState.Success -> {
+                        emit(
+                            CharacterPartialState.Success(
+                                data = it.data.toDomain()
+                            )
+                        )
+                    }
+                }
             }
         }
 
@@ -215,13 +240,13 @@ class CharacterInteractorImpl @Inject constructor(
         }
 }
 
-sealed interface CharacterPartialState<out T> {
-    data class Success<T>(val data: T) : CharacterPartialState<T>
+sealed class CharacterPartialState<out T> {
+    data class Success<T>(val data: T) : CharacterPartialState<T>()
 
     data class Error(
         val errorCode: Int? = null,
         val errorMessage: String
-    ) : CharacterPartialState<Nothing>
+    ) : CharacterPartialState<Nothing>()
 
-    data class NoInternetConnection(val errorMessage: String) : CharacterPartialState<Nothing>
+    data class NoInternetConnection(val errorMessage: String) : CharacterPartialState<Nothing>()
 }

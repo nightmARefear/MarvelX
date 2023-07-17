@@ -14,8 +14,8 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
 sealed interface AllCharactersEvent : BaseEvent {
-    object LoadAllCharacters : AllCharactersEvent
-    data class LoadCharacter(val characterId: Int) : AllCharactersEvent
+    object InitView : AllCharactersEvent
+    data class OnCharacterClick(val characterId: Int) : AllCharactersEvent
     data class OnHeartClick(val characterId: Int) : AllCharactersEvent
 }
 
@@ -47,12 +47,12 @@ class AllCharactersViewModel @Inject constructor(
     override fun setInitialState(): AllCharactersState = AllCharactersState()
 
     init {
-        setEvent(AllCharactersEvent.LoadAllCharacters)
+        setEvent(AllCharactersEvent.InitView)
     }
 
     override suspend fun handleEvents(event: AllCharactersEvent) {
         when (event) {
-            AllCharactersEvent.LoadAllCharacters -> {
+            AllCharactersEvent.InitView -> {
                 setState {
                     copy(
                         isLoading = true,
@@ -117,7 +117,7 @@ class AllCharactersViewModel @Inject constructor(
                 }
             }
 
-            is AllCharactersEvent.LoadCharacter -> {
+            is AllCharactersEvent.OnCharacterClick -> {
                 setState {
                     copy(
                         isLoading = false, // todo: change later

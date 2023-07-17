@@ -2,13 +2,13 @@ package com.alexgreece45.marvelx.domain.repositories
 
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.data.api.ApiClient
-import com.alexgreece45.marvelx.data.domains.ComicDomain
 import com.alexgreece45.marvelx.data.models.character.CharacterDataWrapper
-import com.alexgreece45.marvelx.data.models.character.comic.toDomain
+import com.alexgreece45.marvelx.data.models.character.comic.ComicResponse
 import com.alexgreece45.marvelx.domain.interactors.CharacterPartialState
 import com.alexgreece45.marvelx.util.ResourceProvider
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import logcat.LogPriority
 import logcat.logcat
 import okio.IOException
 import retrofit2.Response
@@ -19,7 +19,7 @@ interface CharacterRepository {
 
     suspend fun getCharacter(characterId: Int): Response<CharacterDataWrapper>
 
-    suspend fun getCharacterComics(characterId: Int): Flow<CharacterPartialState<List<ComicDomain>>>
+    suspend fun getCharacterComics(characterId: Int): Flow<CharacterRepositoryPartialState>
 }
 
 class CharacterRepositoryImpl @Inject constructor(
@@ -34,43 +34,58 @@ class CharacterRepositoryImpl @Inject constructor(
         return api.getCharacter(characterId)
     }
 
-    override suspend fun getCharacterComics(characterId: Int): Flow<CharacterPartialState<List<ComicDomain>>> =
+    override suspend fun getCharacterComics(characterId: Int): Flow<CharacterRepositoryPartialState> =
         flow {
             try {
                 val response = api.getCharacterComics(characterId)
 
                 if (response.isSuccessful) {
                     response.body()?.let {
-                        emit(CharacterPartialState.Success(data = it.data.results.toDomain()))
-                    } ?: {
-                        CharacterPartialState.Error(
+                        emit(
+                            CharacterRepositoryPartialState.Success(
+                                data = it.data.results
+                            )
+                        )
+                    } ?: run {
+                        CharacterRepositoryPartialState.Error(
                             errorCode = response.code(),
                             errorMessage = resourceProvider.getString(R.string.unknown_error)
                         )
                     }
                 } else {
                     emit(
-                        CharacterPartialState.Error(
+                        CharacterRepositoryPartialState.Error(
                             errorCode = response.code(),
                             errorMessage = resourceProvider.getString(R.string.no_data_was_found)
                         )
                     )
                 }
             } catch (e: IOException) {
-                logcat { e.toString() }
+                logcat(LogPriority.ERROR) { e.toString() }
                 emit(
-                    CharacterPartialState.NoInternetConnection(
+                    CharacterRepositoryPartialState.NoInternetConnection(
                         errorMessage = resourceProvider.getString(R.string.no_internet_connection_error_message)
                     )
                 )
             } catch (e: Exception) {
-                logcat { e.toString() }
+                logcat(LogPriority.ERROR) { e.toString() }
                 emit(
-                    CharacterPartialState.Error(
+                    CharacterRepositoryPartialState.Error(
                         errorMessage = e.localizedMessage
                             ?: resourceProvider.getString(R.string.unknown_error)
                     )
                 )
             }
         }
+}
+
+sealed interface CharacterRepositoryPartialState {
+    data class Success(val data: List<ComicResponse>) : CharacterRepositoryPartialState
+
+    data class Error(
+        val errorCode: Int? = null,
+        val errorMessage: String
+    ) : CharacterRepositoryPartialState
+
+    data class NoInternetConnection(val errorMessage: String) : CharacterRepositoryPartialState
 }

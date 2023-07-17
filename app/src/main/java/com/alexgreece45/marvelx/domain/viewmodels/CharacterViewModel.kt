@@ -14,10 +14,13 @@ import javax.inject.Inject
 sealed class CharacterEvent : BaseEvent {
     data class InitView(val characterId: Int) : CharacterEvent()
     object OnBackClick : CharacterEvent()
+
+    data class OnComicClick(val comicId: Int) : CharacterEvent()
 }
 
 sealed class CharacterEffect : BaseEffect {
     object OnBackClick : CharacterEffect()
+    data class NavigateToComic(val comicId: Int) : CharacterEffect()
 }
 
 data class CharacterState(
@@ -46,6 +49,12 @@ class CharacterViewModel @Inject constructor(
             is CharacterEvent.OnBackClick -> {
                 setEffect {
                     CharacterEffect.OnBackClick
+                }
+            }
+
+            is CharacterEvent.OnComicClick -> {
+                setEffect {
+                    CharacterEffect.NavigateToComic(comicId = event.comicId)
                 }
             }
         }
@@ -128,14 +137,6 @@ class CharacterViewModel @Inject constructor(
                         copy(
                             isLoading = false,
                             comics = it.data
-                        )
-                    }
-                }
-
-                else -> {
-                    setState {
-                        copy(
-                            isLoading = false
                         )
                     }
                 }

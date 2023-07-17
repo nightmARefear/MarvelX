@@ -24,90 +24,21 @@ data class ComicResponse(
     @SerializedName("issn") val issn: String,
     @SerializedName("format") val format: String,
     @SerializedName("pageCount") val pageCount: Int,
-    @SerializedName("textObjects") val textObjects: Array<TextObject>,
+    @SerializedName("textObjects") val textObjects: List<TextObject>,
     @SerializedName("resourceURI") val resourceURI: String,
     @SerializedName("series") val series: SeriesSummary,
-    @SerializedName("variants") val variants: Array<ComicSummary>,
-    @SerializedName("collections") val collections: Array<ComicSummary>,
-    @SerializedName("collectedIssues") val collectedIssues: Array<ComicSummary>,
-    @SerializedName("dates") val dates: Array<ComicDate>,
-    @SerializedName("prices") val prices: Array<ComicPrice>,
+    @SerializedName("variants") val variants: List<ComicSummary>,
+    @SerializedName("collections") val collections: List<ComicSummary>,
+    @SerializedName("collectedIssues") val collectedIssues: List<ComicSummary>,
+    @SerializedName("dates") val dates: List<ComicDate>,
+    @SerializedName("prices") val prices: List<ComicPrice>,
     @SerializedName("thumbnail") val thumbnail: Image,
-    @SerializedName("images") val images: Array<Image>,
+    @SerializedName("images") val images: List<Image>,
     @SerializedName("creators") val creators: CreatorList,
     @SerializedName("characters") val characters: CharacterList,
     @SerializedName("stories") val stories: StoryList,
     @SerializedName("events") val events: EventList,
-) {
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as ComicResponse
-
-        if (id != other.id) return false
-        if (digitalId != other.digitalId) return false
-        if (title != other.title) return false
-        if (issueNumber != other.issueNumber) return false
-        if (variantDescription != other.variantDescription) return false
-        if (description != other.description) return false
-        if (modified != other.modified) return false
-        if (isbn != other.isbn) return false
-        if (upc != other.upc) return false
-        if (diamondCode != other.diamondCode) return false
-        if (ean != other.ean) return false
-        if (issn != other.issn) return false
-        if (format != other.format) return false
-        if (pageCount != other.pageCount) return false
-        if (!textObjects.contentEquals(other.textObjects)) return false
-        if (resourceURI != other.resourceURI) return false
-        if (series != other.series) return false
-        if (!variants.contentEquals(other.variants)) return false
-        if (!collections.contentEquals(other.collections)) return false
-        if (!collectedIssues.contentEquals(other.collectedIssues)) return false
-        if (!dates.contentEquals(other.dates)) return false
-        if (!prices.contentEquals(other.prices)) return false
-        if (thumbnail != other.thumbnail) return false
-        if (!images.contentEquals(other.images)) return false
-        if (creators != other.creators) return false
-        if (characters != other.characters) return false
-        if (stories != other.stories) return false
-        if (events != other.events) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = id
-        result = 31 * result + digitalId
-        result = 31 * result + title.hashCode()
-        result = 31 * result + issueNumber.hashCode()
-        result = 31 * result + modified.hashCode()
-        result = 31 * result + isbn.hashCode()
-        result = 31 * result + upc.hashCode()
-        result = 31 * result + diamondCode.hashCode()
-        result = 31 * result + ean.hashCode()
-        result = 31 * result + issn.hashCode()
-        result = 31 * result + format.hashCode()
-        result = 31 * result + pageCount
-        result = 31 * result + textObjects.contentHashCode()
-        result = 31 * result + resourceURI.hashCode()
-        result = 31 * result + series.hashCode()
-        result = 31 * result + variants.contentHashCode()
-        result = 31 * result + collections.contentHashCode()
-        result = 31 * result + collectedIssues.contentHashCode()
-        result = 31 * result + dates.contentHashCode()
-        result = 31 * result + prices.contentHashCode()
-        result = 31 * result + thumbnail.hashCode()
-        result = 31 * result + images.contentHashCode()
-        result = 31 * result + creators.hashCode()
-        result = 31 * result + characters.hashCode()
-        result = 31 * result + stories.hashCode()
-        result = 31 * result + events.hashCode()
-        return result
-    }
-}
-
+)
 fun ComicResponse.toDomain(): ComicDomain = ComicDomain(
     id = this.id,
     digitalId = this.digitalId,
@@ -139,7 +70,7 @@ fun ComicResponse.toDomain(): ComicDomain = ComicDomain(
     events = this.events
 )
 
-fun Array<ComicResponse>.toDomain(): List<ComicDomain> =
+fun List<ComicResponse>.toDomain(): List<ComicDomain> =
     this.map {
         ComicDomain(
             id = it.id,

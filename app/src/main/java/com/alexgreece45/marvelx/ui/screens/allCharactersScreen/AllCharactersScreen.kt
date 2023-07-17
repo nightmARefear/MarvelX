@@ -111,7 +111,7 @@ fun AllCharacterScreen(
                             character = character,
                             onClick = {
                                 viewModel.setEvent(
-                                    AllCharactersEvent.LoadCharacter(characterId = character.id)
+                                    AllCharactersEvent.OnCharacterClick(characterId = character.id)
                                 )
                             },
                             onFavoriteClick = {
