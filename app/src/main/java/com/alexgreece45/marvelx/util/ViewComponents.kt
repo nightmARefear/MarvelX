@@ -105,7 +105,6 @@ fun LoadingScreen(
         if (isLoading) {
             Column(
                 modifier = Modifier
-                    .background(MaterialTheme.colors.background)
                     .fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
@@ -149,8 +148,16 @@ fun GeneralErrorScreen(errorMessage: String) {
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
-        Text(
-            text = errorMessage
-        )
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = errorMessage,
+                style = MaterialTheme.typography.h4,
+                textAlign = TextAlign.Center
+            )
+        }
     }
 }

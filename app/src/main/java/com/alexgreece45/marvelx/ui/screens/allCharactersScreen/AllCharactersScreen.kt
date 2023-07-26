@@ -194,7 +194,7 @@ private fun CharacterItem(
                     true -> {
                         Icon(
                             painter = painterResource(R.drawable.ic_favorite_filled_24),
-                            contentDescription = "favorite",
+                            contentDescription = stringResource(R.string.all_characters_screen_favorite_character_icon_description),
                             tint = MaterialTheme.colors.primaryVariant
                         )
                     }
@@ -202,7 +202,7 @@ private fun CharacterItem(
                     false -> {
                         Icon(
                             painter = painterResource(R.drawable.ic_favorite_empty_24),
-                            contentDescription = "not favorite",
+                            contentDescription = stringResource(R.string.all_characters_screen_not_favorite_character_icon_description),
                             tint = MaterialTheme.colors.primaryVariant
                         )
                     }
