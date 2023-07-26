@@ -146,7 +146,8 @@ fun CharacterDescription(
 @Composable
 fun GeneralErrorScreen(errorMessage: String) {
     Box(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
     ) {
         Column(
             modifier = Modifier.fillMaxSize(),

@@ -9,6 +9,7 @@ import com.alexgreece45.marvelx.ui.base.BaseEvent
 import com.alexgreece45.marvelx.ui.base.BaseState
 import com.alexgreece45.marvelx.ui.base.BaseViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.coroutineScope
 import javax.inject.Inject
 
 sealed class CharacterEvent : BaseEvent {
@@ -74,70 +75,72 @@ class CharacterViewModel @Inject constructor(
     }
 
     private suspend fun loadCharacter(characterId: Int) {
-        interactor.getCharacter(characterId).collect {
-            when (it) {
-                is CharacterPartialState.Success -> {
-                    setState {
-                        copy(
-                            isLoading = false,
-                            character = it.data
-                        )
+        coroutineScope {
+            interactor.getCharacter(characterId).collect {
+                when (it) {
+                    is CharacterPartialState.Success -> {
+                        setState {
+                            copy(
+                                isLoading = false,
+                                character = it.data
+                            )
+                        }
+
+                        // Load Comics.
+                        loadComics(characterId = characterId)
                     }
 
-                    // Load Comics.
-                    loadComics(characterId = characterId)
-                }
+                    is CharacterPartialState.Error -> {
+                        setState {
+                            copy(
+                                isLoading = false,
+                                errorMessage = it.errorMessage
+                            )
+                        }
+                    }
 
-                is CharacterPartialState.Error -> {
-                    setState {
-                        copy(
-                            isLoading = false,
-                            errorMessage = it.errorMessage
-                        )
+                    is CharacterPartialState.NoInternetConnection -> {
+                        setState {
+                            copy(
+                                isLoading = false,
+                                hasInternetConnection = false
+                            )
+                        }
                     }
                 }
-
-                is CharacterPartialState.NoInternetConnection -> {
-                    setState {
-                        copy(
-                            isLoading = false,
-                            hasInternetConnection = false
-                        )
-                    }
-                }
-
-                else -> {}
             }
         }
     }
 
     private suspend fun loadComics(characterId: Int) {
-        interactor.getCharacterComics(characterId).collect {
-            when (it) {
-                is CharacterPartialState.Error -> {
-                    setState {
-                        copy(
-                            isLoading = false,
-                            errorMessage = it.errorMessage
-                        )
+        coroutineScope {
+            interactor.getCharacterComics(characterId).collect {
+                when (it) {
+                    is CharacterPartialState.Error -> {
+                        setState {
+                            copy(
+                                isLoading = false,
+                                errorMessage = it.errorMessage
+                            )
+                        }
                     }
-                }
 
-                is CharacterPartialState.NoInternetConnection -> {
-                    setState {
-                        copy(
-                            isLoading = false,
-                            errorMessage = it.errorMessage
-                        )
+                    is CharacterPartialState.NoInternetConnection -> {
+                        setState {
+                            copy(
+                                isLoading = false,
+                                errorMessage = it.errorMessage
+                            )
+                        }
                     }
-                }
 
-                is CharacterPartialState.Success -> {
-                    setState {
-                        copy(
-                            isLoading = false,
-                            comics = it.data
-                        )
+                    is CharacterPartialState.Success -> {
+                        setState {
+                            copy(
+                                isLoading = false,
+                                comics = it.data
+                            )
+                        }
                     }
                 }
             }
