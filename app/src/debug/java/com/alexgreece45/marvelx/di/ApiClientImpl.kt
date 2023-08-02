@@ -21,14 +21,6 @@ class ApiClientImpl @Inject constructor(
 ) : ApiClient {
 
     override suspend fun getCharacters(): Response<CharacterDataWrapper> {
-        // todo: change later to api call
-//        return Response.success(
-//            200,
-//            gson.fromJson(
-//                readFileContents("mock_get_characters.json"),
-//                CharacterDataWrapper::class.java
-//            )
-//        )
         return api.getCharacters()
     }
 
@@ -38,6 +30,10 @@ class ApiClientImpl @Inject constructor(
 
     override suspend fun getCharacterComics(characterId: Int): Response<ComicDataWrapper> {
         return api.getCharacterComics(characterId)
+    }
+
+    override suspend fun getComicById(comicId: Int): Response<ComicDataWrapper> {
+        return api.getComicById(comicId)
     }
 }
 

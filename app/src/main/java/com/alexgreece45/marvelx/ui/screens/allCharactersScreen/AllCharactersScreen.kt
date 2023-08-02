@@ -11,7 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.Card
 import androidx.compose.material.Icon
@@ -92,21 +92,20 @@ fun AllCharacterScreen(
             toolbarTitle = stringResource(R.string.all_characters_screen_toolbar_title)
         ) { padding ->
             LazyColumn(
-                contentPadding = padding,
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                contentPadding = padding
             ) {
-                item {
-                    state.errorMessage?.let {
+                state.errorMessage?.let {
+                    item {
                         GeneralErrorScreen(errorMessage = it)
                     }
                 }
 
                 if (state.characters.isNotEmpty()) {
-                    items(state.characters,
-                        key = { character ->
+                    itemsIndexed(state.characters,
+                        key = { _, character ->
                             character.id
                         }
-                    ) { character ->
+                    ) { index, character ->
                         CharacterItem(
                             character = character,
                             onClick = {
@@ -122,6 +121,11 @@ fun AllCharacterScreen(
                                 )
                             }
                         )
+
+                        // Adds vertical padding at the end of each item.
+                        if (index != state.characters.lastIndex) {
+                            VSpacer.Medium()
+                        }
                     }
                 }
             }

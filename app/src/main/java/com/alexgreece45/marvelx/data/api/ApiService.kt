@@ -15,4 +15,7 @@ interface ApiService {
 
     @GET("/v1/public/characters/{characterId}/comics")
     suspend fun getCharacterComics(@Path(value = "characterId") characterId: Int): Response<ComicDataWrapper>
+
+    @GET("/v1/public/comics/{comicId}")
+    suspend fun getComicById(@Path(value = "comicId") comicId: Int) : Response<ComicDataWrapper>
 }

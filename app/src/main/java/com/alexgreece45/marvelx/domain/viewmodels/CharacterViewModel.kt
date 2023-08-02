@@ -1,5 +1,6 @@
 package com.alexgreece45.marvelx.domain.viewmodels
 
+import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.data.domains.CharacterDomain
 import com.alexgreece45.marvelx.data.domains.ComicDomain
 import com.alexgreece45.marvelx.domain.interactors.CharacterInteractor
@@ -10,6 +11,7 @@ import com.alexgreece45.marvelx.ui.base.BaseState
 import com.alexgreece45.marvelx.ui.base.BaseViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 sealed class CharacterEvent : BaseEvent {
@@ -75,7 +77,7 @@ class CharacterViewModel @Inject constructor(
     }
 
     private suspend fun loadCharacter(characterId: Int) {
-        coroutineScope {
+        viewModelScope.launch {
             interactor.getCharacter(characterId).collect {
                 when (it) {
                     is CharacterPartialState.Success -> {
@@ -113,7 +115,7 @@ class CharacterViewModel @Inject constructor(
     }
 
     private suspend fun loadComics(characterId: Int) {
-        coroutineScope {
+        viewModelScope.launch {
             interactor.getCharacterComics(characterId).collect {
                 when (it) {
                     is CharacterPartialState.Error -> {

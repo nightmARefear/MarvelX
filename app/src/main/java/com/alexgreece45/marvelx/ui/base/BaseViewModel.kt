@@ -18,21 +18,37 @@ abstract class BaseViewModel<Event : BaseEvent, State : BaseState, Effect : Base
     private val _event: MutableSharedFlow<Event> = MutableSharedFlow()
 
     private val _uiState: MutableStateFlow<State> = MutableStateFlow(initialState)
+
+    /**
+     * Used by the views to acquire the current state (read-only mode).
+     */
     val uiState =
-        _uiState.asStateFlow() // Used by the views to acquire the current state in a read-only mode.
+        _uiState.asStateFlow()
+
+    /**
+     * Used by the viewModel to acquire the current state.
+     */
     val currentState: State
-        get() = uiState.value // Used by the viewModel to acquire the current state.
+        get() = uiState.value
 
     private val _effect: Channel<Effect> = Channel()
-    var effect: Flow<Effect> = _effect.receiveAsFlow()
+
+    /**
+     * Used by the views to acquire the current effect.
+     */
+    val effect: Flow<Effect> = _effect.receiveAsFlow()
 
     private val _viewStateHistory: Channel<State> = Channel()
-    val viewStateHistory get() = _viewStateHistory.receiveAsFlow()
+    val viewStateHistory: Flow<State>
+        get() = _viewStateHistory.receiveAsFlow()
 
     init {
         subscribeToEvents()
     }
 
+    /**
+     * Sets an effect.
+     */
     fun setEffect(builder: () -> Effect) {
         val effectValue = builder()
         viewModelScope.launch {
@@ -40,6 +56,10 @@ abstract class BaseViewModel<Event : BaseEvent, State : BaseState, Effect : Base
         }
     }
 
+
+    /**
+     * Sets the initial state's value.
+     */
     abstract fun setInitialState(): State
 
     protected fun setState(reducer: State.() -> State) {

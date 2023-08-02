@@ -14,9 +14,8 @@ import com.alexgreece45.marvelx.util.extensions.safeAsync
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import logcat.logcat
-import java.io.IOException
+import okio.IOException
 import javax.inject.Inject
-import kotlin.math.log
 
 interface CharacterInteractor {
     suspend fun getAllCharacters(): Flow<CharacterPartialState<List<CharacterDomain>>>
@@ -30,7 +29,7 @@ interface CharacterInteractor {
 
     suspend fun deleteFavoriteCharacterById(characterId: Int): Flow<CharacterPartialState<Int>>
 
-    suspend fun getFavoriteCharacters(): Flow<CharacterPartialState<List<FavoriteCharacterEntity>>>
+    suspend fun getFavoriteCharacters(): Flow<GetFavoriteCharactersPartialState>
 }
 
 class CharacterInteractorImpl @Inject constructor(
@@ -57,11 +56,13 @@ class CharacterInteractorImpl @Inject constructor(
                                 )
                             )
                         }
-                    } ?: emit(
-                        CharacterPartialState.Error(
-                            errorMessage = resourceProvider.getString(R.string.no_characters_were_found_error_message)
+                    } ?: run {
+                        emit(
+                            CharacterPartialState.Error(
+                                errorMessage = resourceProvider.getString(R.string.no_characters_were_found_error_message)
+                            )
                         )
-                    )
+                    }
                 }
 
                 false -> {
@@ -111,11 +112,13 @@ class CharacterInteractorImpl @Inject constructor(
                                 )
                             )
                         }
-                    } ?: emit(
-                        CharacterPartialState.Error(
-                            errorMessage = resourceProvider.getString(R.string.character_error_loading)
+                    } ?: run {
+                        emit(
+                            CharacterPartialState.Error(
+                                errorMessage = resourceProvider.getString(R.string.character_error_loading)
+                            )
                         )
-                    )
+                    }
                 }
 
                 false -> {
@@ -155,6 +158,7 @@ class CharacterInteractorImpl @Inject constructor(
                             )
                         )
                     }
+
                     is CharacterRepositoryPartialState.NoInternetConnection -> {
                         emit(
                             CharacterPartialState.NoInternetConnection(
@@ -162,6 +166,7 @@ class CharacterInteractorImpl @Inject constructor(
                             )
                         )
                     }
+
                     is CharacterRepositoryPartialState.Success -> {
                         emit(
                             CharacterPartialState.Success(
@@ -169,6 +174,21 @@ class CharacterInteractorImpl @Inject constructor(
                             )
                         )
                     }
+                }
+            }
+        }.safeAsync {
+            when (it) {
+                is IOException -> {
+                    CharacterPartialState.NoInternetConnection(
+                        errorMessage = resourceProvider.getString(R.string.no_internet_connection_error_message)
+                    )
+                }
+
+                else -> {
+                    CharacterPartialState.Error(
+                        errorMessage = it.localizedMessage
+                            ?: resourceProvider.getString(R.string.unknown_error)
+                    )
                 }
             }
         }
@@ -197,14 +217,15 @@ class CharacterInteractorImpl @Inject constructor(
             )
         }
 
-    override suspend fun insertFavoriteCharacterById(characterId: Int): Flow<CharacterPartialState<Int>> = flow<CharacterPartialState<Int>> {
-
-    }.safeAsync {
-        logcat { it.localizedMessage ?: "" }
-        CharacterPartialState.Error(
-            errorMessage = resourceProvider.getString(R.string.all_characters_screen_error_favoring_character)
-        )
-    }
+    override suspend fun insertFavoriteCharacterById(characterId: Int): Flow<CharacterPartialState<Int>> =
+        flow<CharacterPartialState<Int>> {
+            TODO("Not implemented yet!")
+        }.safeAsync {
+            logcat { it.localizedMessage ?: "" }
+            CharacterPartialState.Error(
+                errorMessage = resourceProvider.getString(R.string.all_characters_screen_error_favoring_character)
+            )
+        }
 
     override suspend fun deleteFavoriteCharacterById(characterId: Int): Flow<CharacterPartialState<Int>> =
         flow {
@@ -230,10 +251,10 @@ class CharacterInteractorImpl @Inject constructor(
             )
         }
 
-    override suspend fun getFavoriteCharacters(): Flow<CharacterPartialState<List<FavoriteCharacterEntity>>> =
+    override suspend fun getFavoriteCharacters(): Flow<GetFavoriteCharactersPartialState> =
         flow {
             emit(
-                CharacterPartialState.Success(
+                GetFavoriteCharactersPartialState.Success(
                     favoriteCharactersRepository.getAllCharacters()
                 )
             )
@@ -249,4 +270,10 @@ sealed class CharacterPartialState<out T> {
     ) : CharacterPartialState<Nothing>()
 
     data class NoInternetConnection(val errorMessage: String) : CharacterPartialState<Nothing>()
+}
+
+sealed class GetFavoriteCharactersPartialState {
+    data class Success(val favoriteCharacters: List<FavoriteCharacterEntity>) : GetFavoriteCharactersPartialState()
+
+    data class Error(val errorMessage: String) : GetFavoriteCharactersPartialState()
 }

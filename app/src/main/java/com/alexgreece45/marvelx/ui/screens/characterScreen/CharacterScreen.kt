@@ -36,6 +36,7 @@ import com.alexgreece45.marvelx.data.domains.ComicDomain
 import com.alexgreece45.marvelx.domain.viewmodels.CharacterEffect
 import com.alexgreece45.marvelx.domain.viewmodels.CharacterEvent
 import com.alexgreece45.marvelx.domain.viewmodels.CharacterViewModel
+import com.alexgreece45.marvelx.ui.screens.destinations.ComicScreenDestination
 import com.alexgreece45.marvelx.util.CharacterDescription
 import com.alexgreece45.marvelx.util.ContentScreen
 import com.alexgreece45.marvelx.util.GeneralErrorScreen
@@ -63,7 +64,11 @@ fun CharacterScreen(
                     navigator.popBackStack()
                 }
 
-                is CharacterEffect.NavigateToComic -> {}
+                is CharacterEffect.NavigateToComic -> {
+                    navigator.navigate(
+                        ComicScreenDestination(comicId = effect.comicId)
+                    )
+                }
             }
         }
     }
@@ -176,8 +181,7 @@ private fun ComicItem(
 ) {
     Box(
         modifier = Modifier
-            .background(backgroundColor)
-            ,
+            .background(backgroundColor),
     ) {
         // Add roundedcornershape 4dp
         AsyncImage(

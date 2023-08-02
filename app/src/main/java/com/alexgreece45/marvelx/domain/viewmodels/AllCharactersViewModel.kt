@@ -1,17 +1,19 @@
 package com.alexgreece45.marvelx.domain.viewmodels
 
+import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.data.domains.CharacterDomain
 import com.alexgreece45.marvelx.domain.database.FavoriteCharacterEntity
 import com.alexgreece45.marvelx.domain.interactors.CharacterInteractor
 import com.alexgreece45.marvelx.domain.interactors.CharacterPartialState
+import com.alexgreece45.marvelx.domain.interactors.GetFavoriteCharactersPartialState
 import com.alexgreece45.marvelx.ui.base.BaseEffect
 import com.alexgreece45.marvelx.ui.base.BaseEvent
 import com.alexgreece45.marvelx.ui.base.BaseState
 import com.alexgreece45.marvelx.ui.base.BaseViewModel
 import com.alexgreece45.marvelx.util.ResourceProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 sealed interface AllCharactersEvent : BaseEvent {
@@ -88,32 +90,30 @@ class AllCharactersViewModel @Inject constructor(
             )
         }
 
-        coroutineScope {
+        viewModelScope.launch {
             interactor.getAllCharacters().collect {
                 when (it) {
                     is CharacterPartialState.Success -> {
-//                            delay(2000L) // todo: to be removed
                         // Load saved characters.
                         interactor.getFavoriteCharacters()
                             .collect { favoriteCharacterPartialState ->
                                 when (favoriteCharacterPartialState) {
-                                    is CharacterPartialState.Success -> {
-                                        val newCharacterList =
-                                            it.data.map { character ->
-                                                character.copy(isFavorite = favoriteCharacterPartialState.data.firstOrNull { favoriteCharacterEntity ->
-                                                    favoriteCharacterEntity.characterId == character.id
-                                                }?.favorite ?: false)
-                                            }
-
+                                    is GetFavoriteCharactersPartialState.Success -> {
+                                        // Move favorite characters data from local storage to the CharacterDomain list.
                                         setState {
                                             copy(
                                                 isLoading = false,
-                                                characters = newCharacterList
+                                                characters = it.data.map { character ->
+                                                    character.copy(isFavorite = favoriteCharacterPartialState.favoriteCharacters.firstOrNull { favoriteCharacterEntity ->
+                                                        favoriteCharacterEntity.characterId == character.id
+                                                    }?.favorite ?: false)
+                                                }
                                             )
                                         }
                                     }
 
-                                    else -> {
+                                    is GetFavoriteCharactersPartialState.Error -> {
+                                        // Could not retrieve favorite characters data.
                                         setState {
                                             copy(
                                                 isLoading = false,
@@ -163,7 +163,7 @@ class AllCharactersViewModel @Inject constructor(
                     favoriteCharacterById(characterId = characterId)
                 }
             }
-        } ?: {
+        } ?: run {
             setEffect {
                 AllCharactersEffect.FavoriteCharacter.Error(
                     errorMessage = resourceProvider.getString(R.string.unknown_error)
@@ -173,7 +173,7 @@ class AllCharactersViewModel @Inject constructor(
     }
 
     private suspend fun unFavoriteCharacterById(characterId: Int) {
-        coroutineScope {
+        viewModelScope.launch {
             interactor.deleteFavoriteCharacterById(characterId = characterId).collect {
                 when (it) {
                     is CharacterPartialState.Success -> {
@@ -214,7 +214,7 @@ class AllCharactersViewModel @Inject constructor(
     }
 
     private suspend fun favoriteCharacterById(characterId: Int) {
-        coroutineScope {
+        viewModelScope.launch {
             interactor.insertFavoriteCharacters(
                 FavoriteCharacterEntity(
                     characterId = characterId,

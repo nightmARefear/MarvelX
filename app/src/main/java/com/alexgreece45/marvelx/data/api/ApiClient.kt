@@ -10,4 +10,6 @@ interface ApiClient {
     suspend fun getCharacter(characterId: Int): Response<CharacterDataWrapper>
 
     suspend fun getCharacterComics(characterId: Int): Response<ComicDataWrapper>
+
+    suspend fun getComicById(comicId: Int) : Response<ComicDataWrapper>
 }
