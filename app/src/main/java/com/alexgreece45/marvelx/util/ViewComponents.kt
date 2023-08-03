@@ -1,13 +1,14 @@
 package com.alexgreece45.marvelx.util
 
 import android.graphics.drawable.Icon
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.lazy.LazyItemScope
+import androidx.compose.material.Button
 import androidx.compose.material.ContentAlpha
 import androidx.compose.material.FloatingActionButton
 import androidx.compose.material.Icon
@@ -43,7 +44,6 @@ fun ContentScreen(
     fab: Boolean = false,
     fabIcon: Icon? = null,
     fabAction: (() -> Unit)? = null,
-    screenBackgroundColor: Color = MaterialTheme.colors.background,
     content: @Composable (PaddingValues) -> Unit
 ) {
     Scaffold(
@@ -88,7 +88,6 @@ fun ContentScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(screenBackgroundColor)
         ) {
             content(padding.applyPadding())
         }
@@ -103,17 +102,14 @@ fun LoadingScreen(
     Box(modifier = Modifier.fillMaxSize()) {
         content()
         if (isLoading) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = "loading.....",
                     textAlign = TextAlign.Center,
                     style = MaterialTheme.typography.h3,
-                    color = MaterialTheme.colors.onBackground
                 )
             }
         }
@@ -143,21 +139,55 @@ fun CharacterDescription(
     }
 }
 
+data class ActionButtonData(
+    val label: String,
+    val onClick: () -> Unit
+)
+
 @Composable
-fun GeneralErrorScreen(errorMessage: String) {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
+fun LazyItemScope.GenericErrorScreen(
+    errorMessage: String,
+) {
+    Column(
+        modifier = Modifier.fillParentMaxSize(),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
+        Text(
+            text = errorMessage,
+            textAlign = TextAlign.Center,
+            style = MaterialTheme.typography.h4.copy(
+                color = MaterialTheme.colors.error
+            )
+        )
+    }
+}
+
+@Composable
+fun LazyItemScope.NoInternetErrorScreen(
+    onRetryClick: () -> Unit
+) {
+    Column(
+        modifier = Modifier.fillParentMaxSize(),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = stringResource(R.string.no_internet_connection_error_message),
+            textAlign = TextAlign.Center,
+            style = MaterialTheme.typography.h4.copy(
+                color = MaterialTheme.colors.error
+            )
+        )
+
+        VSpacer.Medium()
+
+        Button(
+            onClick = { onRetryClick() }
         ) {
             Text(
-                text = errorMessage,
-                style = MaterialTheme.typography.h4,
-                textAlign = TextAlign.Center
+                text = stringResource(R.string.retry).uppercase(),
+                style = MaterialTheme.typography.h5
             )
         }
     }

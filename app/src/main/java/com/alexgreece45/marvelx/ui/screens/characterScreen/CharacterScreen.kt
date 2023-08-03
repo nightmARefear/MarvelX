@@ -1,6 +1,5 @@
 package com.alexgreece45.marvelx.ui.screens.characterScreen
 
-import android.app.Activity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -35,11 +34,13 @@ import com.alexgreece45.marvelx.data.domains.CharacterDomain
 import com.alexgreece45.marvelx.data.domains.ComicDomain
 import com.alexgreece45.marvelx.domain.viewmodels.CharacterEffect
 import com.alexgreece45.marvelx.domain.viewmodels.CharacterEvent
+import com.alexgreece45.marvelx.domain.viewmodels.CharacterState
 import com.alexgreece45.marvelx.domain.viewmodels.CharacterViewModel
 import com.alexgreece45.marvelx.ui.screens.destinations.ComicScreenDestination
 import com.alexgreece45.marvelx.util.CharacterDescription
 import com.alexgreece45.marvelx.util.ContentScreen
-import com.alexgreece45.marvelx.util.GeneralErrorScreen
+import com.alexgreece45.marvelx.util.GenericErrorScreen
+import com.alexgreece45.marvelx.util.NoInternetErrorScreen
 import com.alexgreece45.marvelx.util.VSpacer
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
@@ -52,8 +53,6 @@ fun CharacterScreen(
     characterId: Int,
 ) {
     val state by viewModel.uiState.collectAsState()
-    val context = LocalContext.current
-    val activity = (context as? Activity)
 
     LaunchedEffect(Unit) {
         viewModel.setEvent(CharacterEvent.InitView(characterId))
@@ -81,8 +80,17 @@ fun CharacterScreen(
         LazyColumn(contentPadding = padding) {
             item {
                 state.errorMessage?.let { errorMessage ->
-                    // Show error screen.
-                    GeneralErrorScreen(errorMessage = errorMessage)
+                    GenericErrorScreen(errorMessage = errorMessage)
+                }
+
+                if (!state.hasInternetConnection) {
+                    NoInternetErrorScreen {
+                        viewModel.setEvent(
+                            CharacterEvent.InitView(
+                                characterId = characterId
+                            )
+                        )
+                    }
                 }
 
                 state.character?.let { character ->

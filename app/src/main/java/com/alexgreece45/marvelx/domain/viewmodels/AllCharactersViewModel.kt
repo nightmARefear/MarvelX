@@ -37,10 +37,20 @@ sealed interface AllCharactersEffect : BaseEffect {
 
 data class AllCharactersState(
     val isLoading: Boolean = true,
-    val hasInternetConnection: Boolean = false,
+    val hasInternetConnection: Boolean = true,
     val characters: List<CharacterDomain> = mutableListOf(),
     val errorMessage: String? = null
-) : BaseState
+) : BaseState {
+    companion object {
+        fun getDefaultValues(): AllCharactersState =
+            AllCharactersState(
+                isLoading = true,
+                hasInternetConnection = true,
+                characters = mutableListOf(),
+                errorMessage = null
+            )
+    }
+}
 
 @HiltViewModel
 class AllCharactersViewModel @Inject constructor(
@@ -83,11 +93,7 @@ class AllCharactersViewModel @Inject constructor(
 
     private suspend fun initView() {
         setState {
-            copy(
-                isLoading = true,
-                characters = mutableListOf(),
-                errorMessage = null
-            )
+            AllCharactersState.getDefaultValues()
         }
 
         viewModelScope.launch {
@@ -138,7 +144,7 @@ class AllCharactersViewModel @Inject constructor(
                         setState {
                             copy(
                                 isLoading = false,
-                                errorMessage = it.errorMessage
+                                hasInternetConnection = false
                             )
                         }
                     }

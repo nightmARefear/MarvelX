@@ -28,14 +28,25 @@ sealed class CharacterEffect : BaseEffect {
 
 data class CharacterState(
     // Base states.
-    val isLoading: Boolean = false,
-    val hasInternetConnection: Boolean = false,
+    val isLoading: Boolean = true,
+    val hasInternetConnection: Boolean = true,
     val errorMessage: String? = null,
 
     // Data.
     val character: CharacterDomain? = null,
     val comics: List<ComicDomain> = listOf()
-) : BaseState
+) : BaseState {
+    companion object {
+        fun getDefaultValues() : CharacterState =
+            CharacterState(
+                isLoading = true,
+                hasInternetConnection = true,
+                errorMessage = null,
+                character = null,
+                comics = listOf()
+            )
+    }
+}
 
 @HiltViewModel
 class CharacterViewModel @Inject constructor(
@@ -65,13 +76,7 @@ class CharacterViewModel @Inject constructor(
 
     private suspend fun initView(characterId: Int) {
         setState {
-            copy(
-                isLoading = true,
-                hasInternetConnection = true,
-                errorMessage = null,
-                character = null,
-                comics = listOf()
-            )
+            CharacterState.getDefaultValues()
         }
         loadCharacter(characterId = characterId)
     }
@@ -131,7 +136,7 @@ class CharacterViewModel @Inject constructor(
                         setState {
                             copy(
                                 isLoading = false,
-                                errorMessage = it.errorMessage
+                                hasInternetConnection = false
                             )
                         }
                     }

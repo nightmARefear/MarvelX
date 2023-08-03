@@ -8,6 +8,7 @@ import com.alexgreece45.marvelx.ui.base.BaseEffect
 import com.alexgreece45.marvelx.ui.base.BaseEvent
 import com.alexgreece45.marvelx.ui.base.BaseState
 import com.alexgreece45.marvelx.ui.base.BaseViewModel
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -16,19 +17,30 @@ sealed interface ComicEvent : BaseEvent {
 }
 
 data class ComicState(
-    val isLoading: Boolean = false,
+    val isLoading: Boolean = true,
     val hasInternetConnection: Boolean = true,
     val errorMessage: String? = null,
 
     // Data.
     val comic: ComicDomain? = null
 
-) : BaseState
+) : BaseState {
+    companion object {
+        fun getDefaultValues(): ComicState =
+            ComicState(
+                isLoading = true,
+                hasInternetConnection = true,
+                errorMessage = null,
+                comic = null
+            )
+    }
+}
 
 sealed interface ComicEffect : BaseEffect {
 
 }
 
+@HiltViewModel
 class ComicViewModel @Inject constructor(
     private val interactor: ComicInteractor
 ) : BaseViewModel<ComicEvent, ComicState, ComicEffect>() {
@@ -44,9 +56,7 @@ class ComicViewModel @Inject constructor(
 
     private fun initView(comicId: Int) {
         setState {
-            copy(
-                isLoading = true
-            )
+            ComicState.getDefaultValues()
         }
 
         viewModelScope.launch {

@@ -4,7 +4,6 @@ import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -43,12 +42,14 @@ import com.alexgreece45.marvelx.ui.screens.destinations.CharacterScreenDestinati
 import com.alexgreece45.marvelx.util.CharacterDescription
 import com.alexgreece45.marvelx.util.ContentScreen
 import com.alexgreece45.marvelx.util.DEFAULT_SCREEN_PADDING
-import com.alexgreece45.marvelx.util.GeneralErrorScreen
+import com.alexgreece45.marvelx.util.GenericErrorScreen
 import com.alexgreece45.marvelx.util.LoadingScreen
+import com.alexgreece45.marvelx.util.NoInternetErrorScreen
 import com.alexgreece45.marvelx.util.VSpacer
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootNavGraph
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
+import logcat.logcat
 
 @RootNavGraph(start = true)
 @Destination
@@ -94,9 +95,21 @@ fun AllCharacterScreen(
             LazyColumn(
                 contentPadding = padding
             ) {
-                state.errorMessage?.let {
+                state.errorMessage?.let { errorMessage ->
                     item {
-                        GeneralErrorScreen(errorMessage = it)
+                        GenericErrorScreen(
+                            errorMessage = errorMessage
+                        )
+                    }
+                }
+
+                if (!state.hasInternetConnection) {
+                    item {
+                        NoInternetErrorScreen {
+                            viewModel.setEvent(
+                                AllCharactersEvent.InitView
+                            )
+                        }
                     }
                 }
 

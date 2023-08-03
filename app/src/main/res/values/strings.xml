@@ -1,7 +1,7 @@
 <resources>
 
     <!-- ERROR HANDLING STRINGS -->
-    <string name="retry_message">Retry</string>
+    <string name="retry">Retry</string>
     <string name="no_internet_connection_error_message">No internet connection! Please try again!</string>
     <string name="unknown_error">An unknown error has occurred!</string>
     <string name="fatal_error">A fatal error has occurred!</string>
