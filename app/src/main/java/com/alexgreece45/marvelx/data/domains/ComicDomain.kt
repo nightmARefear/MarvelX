@@ -34,29 +34,11 @@ data class ComicDomain(
     val collections: List<ComicSummary>,
     val collectedIssues: List<ComicSummary>,
     val dates: List<ComicDate>,
-    val prices: List<ComicPriceDomain>,
+    val prices: List<ComicPrice>,
     val thumbnail: Image,
     val images: List<Image>,
     val creators: CreatorList,
     val characters: CharacterList,
     val stories: StoryList,
     val events: EventList,
-)
-
-sealed class ComicPriceType(open val name: String = "", open val formattedName: String = "") {
-    object Print : ComicPriceType(name = "printPrice", formattedName = "Price")
-    object DigitalPurchase : ComicPriceType(name = "digitalPurchasePrice", formattedName = "Digital Purchase")
-    data class Unknown(override val name: String, override val formattedName: String) : ComicPriceType()
-
-    companion object {
-        fun asList(): List<ComicPriceType> = listOf(Print, DigitalPurchase)
-
-        fun getType(name: String): ComicPriceType =
-            asList().firstOrNull { it.name == name } ?: Unknown(name, name)
-    }
-}
-
-data class ComicPriceDomain(
-    val type: ComicPriceType,
-    val price: Float
 )

@@ -3,24 +3,20 @@ package com.alexgreece45.marvelx.domain.viewmodels
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.data.domains.CharacterDomain
 import com.alexgreece45.marvelx.data.domains.ComicDomain
-import com.alexgreece45.marvelx.domain.database.FavoriteCharacterEntity
 import com.alexgreece45.marvelx.domain.interactors.CharacterInteractor
 import com.alexgreece45.marvelx.domain.interactors.CharacterPartialState
-import com.alexgreece45.marvelx.domain.interactors.DeleteFavoriteCharacterPartialState
-import com.alexgreece45.marvelx.domain.interactors.IsCharacterFavoritePartialState
 import com.alexgreece45.marvelx.ui.base.BaseEffect
 import com.alexgreece45.marvelx.ui.base.BaseEvent
 import com.alexgreece45.marvelx.ui.base.BaseState
 import com.alexgreece45.marvelx.ui.base.BaseViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 sealed class CharacterEvent : BaseEvent {
     data class InitView(val characterId: Int) : CharacterEvent()
     object OnBackClick : CharacterEvent()
-
-    object OnFavoriteClick : CharacterEvent()
 
     data class OnComicClick(val comicId: Int) : CharacterEvent()
 }
@@ -41,7 +37,7 @@ data class CharacterState(
     val comics: List<ComicDomain> = listOf()
 ) : BaseState {
     companion object {
-        fun getDefaultValues(): CharacterState =
+        fun getDefaultValues() : CharacterState =
             CharacterState(
                 isLoading = true,
                 hasInternetConnection = true,
@@ -75,10 +71,6 @@ class CharacterViewModel @Inject constructor(
                     CharacterEffect.NavigateToComic(comicId = event.comicId)
                 }
             }
-
-            is CharacterEvent.OnFavoriteClick -> {
-                onFavoriteClick()
-            }
         }
     }
 
@@ -90,55 +82,26 @@ class CharacterViewModel @Inject constructor(
     }
 
     private suspend fun loadCharacter(characterId: Int) {
-        setState {
-            copy(
-                isLoading = true
-            )
-        }
         viewModelScope.launch {
-            interactor.getCharacter(characterId).collect { characterPartialState ->
-                when (characterPartialState) {
+            interactor.getCharacter(characterId).collect {
+                when (it) {
                     is CharacterPartialState.Success -> {
-                        // Search if character is favorite.
-                        interactor.isCharacterByIdFavorite(characterId = characterId)
-                            .collect { isCharacterFavoritePartialState ->
-                                when (isCharacterFavoritePartialState) {
-                                    is IsCharacterFavoritePartialState.IsNotFavorite -> {
-                                        setState {
-                                            copy(
-                                                isLoading = false,
-                                                character = characterPartialState.data.copy(
-                                                    isFavorite = false
-                                                )
-                                            )
-                                        }
+                        setState {
+                            copy(
+                                isLoading = false,
+                                character = it.data
+                            )
+                        }
 
-                                        // Load Comics.
-                                        loadComics(characterId = characterId)
-                                    }
-
-                                    is IsCharacterFavoritePartialState.IsFavorite -> {
-                                        setState {
-                                            copy(
-                                                isLoading = false,
-                                                character = characterPartialState.data.copy(
-                                                    isFavorite = true
-                                                )
-                                            )
-                                        }
-
-                                        // Load Comics.
-                                        loadComics(characterId = characterId)
-                                    }
-                                }
-                            }
+                        // Load Comics.
+                        loadComics(characterId = characterId)
                     }
 
                     is CharacterPartialState.Error -> {
                         setState {
                             copy(
                                 isLoading = false,
-                                errorMessage = characterPartialState.errorMessage
+                                errorMessage = it.errorMessage
                             )
                         }
                     }
@@ -188,82 +151,6 @@ class CharacterViewModel @Inject constructor(
                     }
                 }
             }
-        }
-    }
-
-    private suspend fun onFavoriteClick() {
-        currentState.character?.let { characterDomain ->
-            when (characterDomain.isFavorite) {
-                true -> {
-                    viewModelScope.launch {
-                        interactor.deleteFavoriteCharacterById(characterId = characterDomain.id)
-                            .collect { characterPartialState ->
-                                when (characterPartialState) {
-                                    is CharacterPartialState.Error -> {
-                                        setState {
-                                            copy(
-                                                errorMessage = characterPartialState.errorMessage
-                                            )
-                                        }
-                                    }
-
-                                    is CharacterPartialState.NoInternetConnection -> {
-                                        setState {
-                                            copy(
-                                                hasInternetConnection = false
-                                            )
-                                        }
-                                    }
-
-                                    is CharacterPartialState.Success -> {
-                                        setState {
-                                            copy(
-                                                character = characterDomain.copy(isFavorite = false)
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-                    }
-                }
-
-                false -> {
-                    viewModelScope.launch {
-                        interactor.insertFavoriteCharacters(
-                            FavoriteCharacterEntity(characterId = characterDomain.id)
-                        ).collect { characterPartialState ->
-                            when (characterPartialState) {
-                                is CharacterPartialState.Error -> {
-                                    setState {
-                                        copy(
-                                            errorMessage = characterPartialState.errorMessage
-                                        )
-                                    }
-                                }
-
-                                is CharacterPartialState.NoInternetConnection -> {
-                                    setState {
-                                        copy(
-                                            hasInternetConnection = false
-                                        )
-                                    }
-                                }
-
-                                is CharacterPartialState.Success -> {
-                                    setState {
-                                        copy(
-                                            character = characterDomain.copy(isFavorite = true)
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        } ?: run {
-            // show snackbar with error
-            TODO("To be implemented in the future....")
         }
     }
 }

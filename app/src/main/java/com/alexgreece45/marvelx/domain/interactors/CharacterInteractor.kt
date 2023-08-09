@@ -25,11 +25,11 @@ interface CharacterInteractor {
 
     suspend fun insertFavoriteCharacters(vararg favoriteCharacterEntity: FavoriteCharacterEntity): Flow<CharacterPartialState<Int>>
 
+    suspend fun insertFavoriteCharacterById(characterId: Int): Flow<CharacterPartialState<Int>>
+
     suspend fun deleteFavoriteCharacterById(characterId: Int): Flow<CharacterPartialState<Int>>
 
     suspend fun getFavoriteCharacters(): Flow<GetFavoriteCharactersPartialState>
-
-    suspend fun isCharacterByIdFavorite(characterId: Int): Flow<IsCharacterFavoritePartialState>
 }
 
 class CharacterInteractorImpl @Inject constructor(
@@ -42,7 +42,7 @@ class CharacterInteractorImpl @Inject constructor(
             val response = characterRepository.getAllCharacters()
             when (response.isSuccessful) {
                 true -> {
-                    response.body()?.data?.let {
+                    response.body()?.data?.let { it ->
                         if (it.results.isNotEmpty()) {
                             emit(
                                 CharacterPartialState.Success(
@@ -195,9 +195,7 @@ class CharacterInteractorImpl @Inject constructor(
 
     override suspend fun insertFavoriteCharacters(vararg favoriteCharacterEntity: FavoriteCharacterEntity): Flow<CharacterPartialState<Int>> =
         flow {
-            val insertedCharactersSize =
-                favoriteCharactersRepository.insertCharacters(favoriteCharacterEntity = favoriteCharacterEntity).size
-            when (insertedCharactersSize == favoriteCharacterEntity.size) {
+            when (favoriteCharactersRepository.insertCharacters(favoriteCharacterEntity = favoriteCharacterEntity).size == favoriteCharacterEntity.size) {
                 true -> {
                     emit(
                         CharacterPartialState.Success(data = favoriteCharacterEntity.size)
@@ -213,7 +211,17 @@ class CharacterInteractorImpl @Inject constructor(
                 }
             }
         }.safeAsync {
-            logcat { it.localizedMessage.orEmpty() }
+            logcat { it.localizedMessage ?: "" }
+            CharacterPartialState.Error(
+                errorMessage = resourceProvider.getString(R.string.all_characters_screen_error_favoring_character)
+            )
+        }
+
+    override suspend fun insertFavoriteCharacterById(characterId: Int): Flow<CharacterPartialState<Int>> =
+        flow<CharacterPartialState<Int>> {
+            TODO("Not implemented yet!")
+        }.safeAsync {
+            logcat { it.localizedMessage ?: "" }
             CharacterPartialState.Error(
                 errorMessage = resourceProvider.getString(R.string.all_characters_screen_error_favoring_character)
             )
@@ -250,22 +258,6 @@ class CharacterInteractorImpl @Inject constructor(
                     favoriteCharactersRepository.getAllCharacters()
                 )
             )
-        }.safeAsync {
-            logcat { it.localizedMessage ?: "" }
-            GetFavoriteCharactersPartialState.Error(
-                errorMessage = resourceProvider.getString(R.string.all_characters_screen_error_favoring_character)
-            )
-        }
-
-    override suspend fun isCharacterByIdFavorite(characterId: Int): Flow<IsCharacterFavoritePartialState> =
-        flow {
-            emit(
-                IsCharacterFavoritePartialState.IsFavorite(
-                    favoriteCharacter = favoriteCharactersRepository.getCharacterById(characterId)
-                )
-            )
-        }.safeAsync {
-            IsCharacterFavoritePartialState.IsNotFavorite
         }
 }
 
@@ -280,23 +272,8 @@ sealed class CharacterPartialState<out T> {
     data class NoInternetConnection(val errorMessage: String) : CharacterPartialState<Nothing>()
 }
 
-sealed class DeleteFavoriteCharacterPartialState {
-    data class Success(val favoriteCharacter: FavoriteCharacterEntity) :
-        DeleteFavoriteCharacterPartialState()
-
-    data class Error(val errorMessage: String) : DeleteFavoriteCharacterPartialState()
-}
-
 sealed class GetFavoriteCharactersPartialState {
-    data class Success(val favoriteCharacters: List<FavoriteCharacterEntity>) :
-        GetFavoriteCharactersPartialState()
+    data class Success(val favoriteCharacters: List<FavoriteCharacterEntity>) : GetFavoriteCharactersPartialState()
 
     data class Error(val errorMessage: String) : GetFavoriteCharactersPartialState()
-}
-
-sealed class IsCharacterFavoritePartialState {
-    data class IsFavorite(val favoriteCharacter: FavoriteCharacterEntity) :
-        IsCharacterFavoritePartialState()
-
-    object IsNotFavorite : IsCharacterFavoritePartialState()
 }

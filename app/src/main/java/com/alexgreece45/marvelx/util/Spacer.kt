@@ -7,23 +7,23 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
-const val SPACING_TINY = 4
-const val SPACING_SMALL = 8
-const val SPACING_MEDIUM = 16
-const val SPACING_LARGE = 24
+private const val TINY = 4
+private const val SMALL = 8
+private const val MEDIUM = 16
+private const val LARGE = 24
 
 object VSpacer {
     @Composable
-    fun Tiny() = Spacer(modifier = Modifier.height(height = SPACING_TINY.dp))
+    fun Tiny() = Spacer(modifier = Modifier.height(height = TINY.dp))
 
     @Composable
-    fun Small() = Spacer(modifier = Modifier.height(height = SPACING_SMALL.dp))
+    fun Small() = Spacer(modifier = Modifier.height(height = SMALL.dp))
 
     @Composable
-    fun Medium() = Spacer(modifier = Modifier.height(height = SPACING_MEDIUM.dp))
+    fun Medium() = Spacer(modifier = Modifier.height(height = MEDIUM.dp))
 
     @Composable
-    fun Large() = Spacer(modifier = Modifier.height(height = SPACING_LARGE.dp))
+    fun Large() = Spacer(modifier = Modifier.height(height = LARGE.dp))
 
     @Composable
     fun Custom(height: Int) = Spacer(modifier = Modifier.height(height = height.dp))
@@ -37,16 +37,16 @@ object VSpacer {
 
 object HSpacer {
     @Composable
-    fun Tiny() = Spacer(modifier = Modifier.height(height = SPACING_TINY.dp))
+    fun Tiny() = Spacer(modifier = Modifier.height(height = TINY.dp))
 
     @Composable
-    fun Small() = Spacer(modifier = Modifier.width(width = SPACING_SMALL.dp))
+    fun Small() = Spacer(modifier = Modifier.width(width = SMALL.dp))
 
     @Composable
-    fun Medium() = Spacer(modifier = Modifier.width(width = SPACING_MEDIUM.dp))
+    fun Medium() = Spacer(modifier = Modifier.width(width = MEDIUM.dp))
 
     @Composable
-    fun Large() = Spacer(modifier = Modifier.width(width = SPACING_LARGE.dp))
+    fun Large() = Spacer(modifier = Modifier.width(width = LARGE.dp))
 
     @Composable
     fun Custom(width: Int) = Spacer(modifier = Modifier.width(width = width.dp))

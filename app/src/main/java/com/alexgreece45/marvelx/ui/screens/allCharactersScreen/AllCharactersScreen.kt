@@ -21,9 +21,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -42,16 +39,17 @@ import com.alexgreece45.marvelx.domain.viewmodels.AllCharactersEffect
 import com.alexgreece45.marvelx.domain.viewmodels.AllCharactersEvent
 import com.alexgreece45.marvelx.domain.viewmodels.AllCharactersViewModel
 import com.alexgreece45.marvelx.ui.screens.destinations.CharacterScreenDestination
+import com.alexgreece45.marvelx.util.CharacterDescription
 import com.alexgreece45.marvelx.util.ContentScreen
 import com.alexgreece45.marvelx.util.DEFAULT_SCREEN_PADDING
 import com.alexgreece45.marvelx.util.GenericErrorScreen
-import com.alexgreece45.marvelx.util.ItemDescription
 import com.alexgreece45.marvelx.util.LoadingScreen
 import com.alexgreece45.marvelx.util.NoInternetErrorScreen
 import com.alexgreece45.marvelx.util.VSpacer
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootNavGraph
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
+import logcat.logcat
 
 @RootNavGraph(start = true)
 @Destination
@@ -62,17 +60,11 @@ fun AllCharacterScreen(
 ) {
     val state by viewModel.uiState.collectAsState()
     val context = LocalContext.current
-    var initLock: Unit by remember { mutableStateOf(Unit) }
-
-    LaunchedEffect(initLock) {
-        viewModel.setEvent(AllCharactersEvent.InitView)
-    }
 
     LaunchedEffect(Unit) {
         viewModel.effect.collect { effect ->
             when (effect) {
                 is AllCharactersEffect.NavigateToCharacterDetails -> {
-                    initLock = Unit
                     navigator.navigate(CharacterScreenDestination(characterId = effect.characterId))
                 }
 
@@ -208,11 +200,7 @@ private fun CharacterItem(
             VSpacer.Small()
 
             // Description.
-            ItemDescription(
-                description = character.description, emptyDescriptionMessage = stringResource(
-                    R.string.no_character_description
-                )
-            )
+            CharacterDescription(description = character.description)
 
             // Favorite IconButton
             IconButton(
