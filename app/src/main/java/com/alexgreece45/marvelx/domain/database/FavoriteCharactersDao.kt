@@ -8,7 +8,7 @@ import androidx.room.Query
 
 @Dao
 interface FavoriteCharactersDao {
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insertCharacters(vararg favoriteCharacterEntity: FavoriteCharacterEntity): LongArray
 
     @Delete

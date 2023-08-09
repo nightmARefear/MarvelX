@@ -51,7 +51,8 @@ fun ContentScreen(
             if (toolBar) {
                 TopAppBar(
                     modifier = Modifier.fillMaxWidth(),
-                    elevation = 0.dp
+                    elevation = 0.dp,
+                    contentPadding = PaddingValues(0.dp).applyPadding()
                 ) {
                     CompositionLocalProvider(LocalContentAlpha provides ContentAlpha.high) {
                         onBack?.let {
@@ -64,13 +65,12 @@ fun ContentScreen(
                             }
                         }
 
-                        HSpacer.Medium()
-
                         toolbarTitle?.let { toolbarTitle ->
                             Text(
                                 modifier = Modifier.weight(1f),
                                 text = toolbarTitle,
-                                style = MaterialTheme.typography.h6
+                                style = MaterialTheme.typography.h6,
+                                maxLines = 1
                             )
                         }
                     }
@@ -117,12 +117,13 @@ fun LoadingScreen(
 }
 
 @Composable
-fun CharacterDescription(
+fun ItemDescription(
     description: String,
+    emptyDescriptionMessage: String
 ) {
     if (description.isBlank()) {
         Text(
-            text = stringResource(R.string.no_character_description),
+            text = emptyDescriptionMessage,
             style = MaterialTheme.typography.body1.copy(
                 color = Color.Gray,
                 fontStyle = FontStyle.Italic

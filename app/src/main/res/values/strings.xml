@@ -32,4 +32,5 @@
     <string name="comic_screen_toolbar_title">%1$s</string>
 
     <string name="comic_screen_comic_could_not_be_retrieved">Error retrieving comic details</string>
+    <string name="comic_screen_no_description">Comic description is not available.</string>
 </resources>
