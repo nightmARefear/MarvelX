@@ -1,6 +1,8 @@
 package com.alexgreece45.marvelx.data.models.character.comic
 
 import com.alexgreece45.marvelx.data.domains.ComicDomain
+import com.alexgreece45.marvelx.data.domains.ComicPriceDomain
+import com.alexgreece45.marvelx.data.domains.ComicPriceType
 import com.alexgreece45.marvelx.data.models.character.ComicSummary
 import com.alexgreece45.marvelx.data.models.character.EventList
 import com.alexgreece45.marvelx.data.models.character.Image
@@ -39,6 +41,7 @@ data class ComicResponse(
     @SerializedName("stories") val stories: StoryList,
     @SerializedName("events") val events: EventList,
 )
+
 fun ComicResponse.toDomain(): ComicDomain = ComicDomain(
     id = this.id,
     digitalId = this.digitalId,
@@ -61,7 +64,12 @@ fun ComicResponse.toDomain(): ComicDomain = ComicDomain(
     collections = this.collections.toList(),
     collectedIssues = this.collectedIssues.toList(),
     dates = this.dates.toList(),
-    prices = this.prices.toList(),
+    prices = this.prices.map { comicPrice ->
+        ComicPriceDomain(
+            type = ComicPriceType.getType(comicPrice.type),
+            price = comicPrice.price
+        )
+    },
     thumbnail = this.thumbnail,
     images = this.images.toList(),
     creators = this.creators,
@@ -94,7 +102,12 @@ fun List<ComicResponse>.toDomain(): List<ComicDomain> =
             collections = it.collections.toList(),
             collectedIssues = it.collectedIssues.toList(),
             dates = it.dates.toList(),
-            prices = it.prices.toList(),
+            prices = it.prices.map { comicPrice ->
+                ComicPriceDomain(
+                    type = ComicPriceType.getType(comicPrice.type),
+                    price = comicPrice.price
+                )
+            },
             thumbnail = it.thumbnail,
             images = it.images.toList(),
             creators = it.creators,

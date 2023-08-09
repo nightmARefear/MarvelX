@@ -2,6 +2,8 @@ package com.alexgreece45.marvelx.di
 
 import com.alexgreece45.marvelx.BuildConfig
 import com.alexgreece45.marvelx.data.api.ApiService
+import com.alexgreece45.marvelx.data.domains.ComicPriceType
+import com.alexgreece45.marvelx.util.gson.ComicPriceTypeAdapter
 import com.alexgreece45.marvelx.util.gson.OffsetDateTimeAdapter
 import com.alexgreece45.marvelx.util.interceptors.Interceptors
 import com.google.gson.Gson
@@ -67,6 +69,10 @@ object NetworkModule {
         .registerTypeAdapter(
             OffsetDateTime::class.java,
             OffsetDateTimeAdapter()
+        )
+        .registerTypeAdapter(
+            ComicPriceType::class.java,
+            ComicPriceTypeAdapter()
         )
         .create()
 }

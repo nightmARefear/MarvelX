@@ -8,6 +8,7 @@ import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.extensions.safeAsync
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import logcat.logcat
 import okio.IOException
 import javax.inject.Inject
 
@@ -26,17 +27,24 @@ class ComicInteractorImpl @Inject constructor(
             true -> {
                 response.body()?.let { comicDataWrapper ->
                     if (comicDataWrapper.data.results.isEmpty()) {
-                        GetComicPartialState.Error(
-                            errorMessage = resourceProvider.getString(R.string.comic_screen_comic_could_not_be_retrieved)
+                        emit(
+                            GetComicPartialState.Error(
+                                errorMessage = resourceProvider.getString(R.string.comic_screen_comic_could_not_be_retrieved)
+                            )
                         )
                     } else {
-                        GetComicPartialState.Success(
-                            comic = comicDataWrapper.data.results[0].toDomain()
+                        logcat { comicDataWrapper.data.results[0].toDomain().toString() }
+                        emit(
+                            GetComicPartialState.Success(
+                                comic = comicDataWrapper.data.results[0].toDomain()
+                            )
                         )
                     }
                 } ?: run {
-                    GetComicPartialState.Error(
-                        errorMessage = response.errorBody().toString()
+                    emit(
+                        GetComicPartialState.Error(
+                            errorMessage = response.errorBody().toString()
+                        )
                     )
                 }
             }

@@ -9,16 +9,21 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.Card
+import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -34,13 +39,13 @@ import com.alexgreece45.marvelx.data.domains.CharacterDomain
 import com.alexgreece45.marvelx.data.domains.ComicDomain
 import com.alexgreece45.marvelx.domain.viewmodels.CharacterEffect
 import com.alexgreece45.marvelx.domain.viewmodels.CharacterEvent
-import com.alexgreece45.marvelx.domain.viewmodels.CharacterState
 import com.alexgreece45.marvelx.domain.viewmodels.CharacterViewModel
 import com.alexgreece45.marvelx.ui.screens.destinations.ComicScreenDestination
-import com.alexgreece45.marvelx.util.CharacterDescription
 import com.alexgreece45.marvelx.util.ContentScreen
 import com.alexgreece45.marvelx.util.GenericErrorScreen
+import com.alexgreece45.marvelx.util.ItemDescription
 import com.alexgreece45.marvelx.util.NoInternetErrorScreen
+import com.alexgreece45.marvelx.util.SPACING_MEDIUM
 import com.alexgreece45.marvelx.util.VSpacer
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
@@ -94,7 +99,15 @@ fun CharacterScreen(
                 }
 
                 state.character?.let { character ->
-                    CharacterItem(character = character)
+                    // Character.
+                    CharacterItem(
+                        character = character,
+                        onFavoriteClick = {
+                            viewModel.setEvent(
+                                CharacterEvent.OnFavoriteClick
+                            )
+                        }
+                    )
 
                     // Comics.
                     LazyRowTemplate(
@@ -127,30 +140,65 @@ fun CharacterScreen(
 
 @Composable
 private fun CharacterItem(
-    character: CharacterDomain
+    character: CharacterDomain,
+    onFavoriteClick: () -> Unit
 ) {
-    // Adds vertical padding.
-    VSpacer.Medium()
-
-    Column(
-        modifier = Modifier.fillMaxSize()
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
     ) {
-        AsyncImage(
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .height(height = 200.dp),
-            model = ImageRequest.Builder(LocalContext.current)
-                .data(character.thumbnail.path + "." + character.thumbnail.extension)
-                .crossfade(true).build(),
-            contentDescription = "${character.name} image",
-            contentScale = ContentScale.Fit,
-            error = painterResource(R.drawable.ic_broken_image)
-        )
+                .padding(SPACING_MEDIUM.dp)
+                .fillMaxSize()
+        ) {
+            // Image.
+            AsyncImage(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(height = 200.dp),
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(character.thumbnail.path + "." + character.thumbnail.extension)
+                    .crossfade(true).build(),
+                contentDescription = "${character.name} image",
+                contentScale = ContentScale.Fit,
+                error = painterResource(R.drawable.ic_broken_image)
+            )
 
-        VSpacer.Medium()
+            VSpacer.Medium()
 
-        // Description.
-        CharacterDescription(description = character.description)
+            // Description.
+            ItemDescription(
+                description = character.description, emptyDescriptionMessage = stringResource(
+                    R.string.no_character_description
+                )
+            )
+
+            // Favorite button.
+            Box(
+                modifier = Modifier.align(Alignment.End)
+            ) {
+                IconButton(onClick = { onFavoriteClick() }) {
+                    when (character.isFavorite) {
+                        true -> {
+                            Icon(
+                                painter = painterResource(R.drawable.ic_favorite_filled_24),
+                                contentDescription = stringResource(R.string.all_characters_screen_favorite_character_icon_description),
+                                tint = MaterialTheme.colors.primaryVariant
+                            )
+                        }
+
+                        false -> {
+                            Icon(
+                                painter = painterResource(R.drawable.ic_favorite_empty_24),
+                                contentDescription = stringResource(R.string.all_characters_screen_not_favorite_character_icon_description),
+                                tint = MaterialTheme.colors.primaryVariant
+                            )
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -166,7 +214,7 @@ fun <T> LazyRowTemplate(
     Text(
         text = title,
         style = MaterialTheme.typography.h6,
-        color = MaterialTheme.colors.onBackground
+//        color = MaterialTheme.colors.onBackground
     )
 
     VSpacer.Small()
@@ -191,7 +239,7 @@ private fun ComicItem(
         modifier = Modifier
             .background(backgroundColor),
     ) {
-        // Add roundedcornershape 4dp
+        // todo: Add roundedcornershape 4dp
         AsyncImage(
             modifier = Modifier
                 .width(120.dp)
