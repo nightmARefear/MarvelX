@@ -52,6 +52,7 @@ import com.alexgreece45.marvelx.util.VSpacer
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootNavGraph
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
+import logcat.logcat
 
 @RootNavGraph(start = true)
 @Destination
@@ -65,7 +66,9 @@ fun AllCharacterScreen(
     var initLock: Unit by remember { mutableStateOf(Unit) }
 
     LaunchedEffect(initLock) {
-        viewModel.setEvent(AllCharactersEvent.InitView)
+        if (!state.isFirstLaunch) {
+            viewModel.setEvent(AllCharactersEvent.LoadFavoriteCharacters)
+        }
     }
 
     LaunchedEffect(Unit) {

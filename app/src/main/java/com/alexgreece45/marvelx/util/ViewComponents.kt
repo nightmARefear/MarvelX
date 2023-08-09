@@ -14,6 +14,7 @@ import androidx.compose.material.FloatingActionButton
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.LocalContentAlpha
+import androidx.compose.material.LocalContentColor
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
@@ -125,7 +126,8 @@ fun ItemDescription(
         Text(
             text = emptyDescriptionMessage,
             style = MaterialTheme.typography.body1.copy(
-                color = Color.Gray,
+                color = if (MaterialTheme.colors.isLight) Color.Gray
+                else LocalContentColor.current.copy(alpha = LocalContentAlpha.current),
                 fontStyle = FontStyle.Italic
             )
         )
@@ -133,8 +135,7 @@ fun ItemDescription(
         Text(
             text = description,
             style = MaterialTheme.typography.body1.copy(
-                textAlign = TextAlign.Justify,
-                color = MaterialTheme.colors.onBackground
+                textAlign = TextAlign.Justify
             )
         )
     }

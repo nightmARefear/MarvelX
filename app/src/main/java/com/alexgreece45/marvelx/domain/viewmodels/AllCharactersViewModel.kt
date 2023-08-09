@@ -18,7 +18,7 @@ import javax.inject.Inject
 
 sealed interface AllCharactersEvent : BaseEvent {
     object InitView : AllCharactersEvent
-    object LoadCharacters: AllCharactersEvent
+    object LoadFavoriteCharacters : AllCharactersEvent
     data class OnCharacterClick(val characterId: Int) : AllCharactersEvent
     data class OnHeartClick(val characterId: Int) : AllCharactersEvent
 }
@@ -37,18 +37,28 @@ sealed interface AllCharactersEffect : BaseEffect {
 }
 
 data class AllCharactersState(
+    // Base states.
     val isLoading: Boolean = true,
     val hasInternetConnection: Boolean = true,
+    val errorMessage: String? = null,
+
+    // Data.
     val characters: List<CharacterDomain> = mutableListOf(),
-    val errorMessage: String? = null
+
+    /**
+     * This field tracks if the fragment of this ViewModel has been launched for the first time.
+     * The value is set to true by default, and only changes, to false, when navigation occurs to the CharacterScreen.
+     * */
+    val isFirstLaunch: Boolean = true
 ) : BaseState {
     companion object {
         fun getDefaultValues(): AllCharactersState =
             AllCharactersState(
                 isLoading = true,
                 hasInternetConnection = true,
+                errorMessage = null,
                 characters = mutableListOf(),
-                errorMessage = null
+                isFirstLaunch = true
             )
     }
 }
@@ -58,7 +68,7 @@ class AllCharactersViewModel @Inject constructor(
     private val interactor: CharacterInteractor,
     private val resourceProvider: ResourceProvider
 ) : BaseViewModel<AllCharactersEvent, AllCharactersState, AllCharactersEffect>() {
-    override fun setInitialState(): AllCharactersState = AllCharactersState()
+    override fun setInitialState(): AllCharactersState = AllCharactersState.getDefaultValues()
 
     init {
         setEvent(AllCharactersEvent.InitView)
@@ -73,9 +83,7 @@ class AllCharactersViewModel @Inject constructor(
             is AllCharactersEvent.OnCharacterClick -> {
                 setState {
                     copy(
-                        isLoading = false, // todo: change later
-                        hasInternetConnection = true,
-                        errorMessage = null
+                        isFirstLaunch = false
                     )
                 }
                 setEffect {
@@ -83,86 +91,19 @@ class AllCharactersViewModel @Inject constructor(
                         characterId = event.characterId
                     )
                 }
-
             }
 
             is AllCharactersEvent.OnHeartClick -> {
                 onHeartClick(characterId = event.characterId)
             }
 
-            is AllCharactersEvent.LoadCharacters -> {
-                loadCharacters()
+            is AllCharactersEvent.LoadFavoriteCharacters -> {
+                syncFavoriteCharacters()
             }
         }
     }
 
     private suspend fun initView() {
-        setState {
-            AllCharactersState.getDefaultValues()
-        }
-
-        viewModelScope.launch {
-            interactor.getAllCharacters().collect {
-                when (it) {
-                    is CharacterPartialState.Success -> {
-                        // Load saved characters.
-                        interactor.getFavoriteCharacters()
-                            .collect { favoriteCharacterPartialState ->
-                                when (favoriteCharacterPartialState) {
-                                    is GetFavoriteCharactersPartialState.Success -> {
-                                        // Move favorite characters data from local storage to the CharacterDomain list.
-                                        setState {
-                                            copy(
-                                                isLoading = false,
-                                                characters = it.data.map { character ->
-                                                    character.copy(
-                                                        isFavorite = favoriteCharacterPartialState.favoriteCharacters.firstOrNull { favoriteCharacterEntity ->
-                                                            favoriteCharacterEntity.characterId == character.id
-                                                        }?.let {
-                                                            true
-                                                        } ?: false
-                                                    )
-                                                }
-                                            )
-                                        }
-                                    }
-
-                                    is GetFavoriteCharactersPartialState.Error -> {
-                                        // Could not retrieve favorite characters data.
-                                        setState {
-                                            copy(
-                                                isLoading = false,
-                                                characters = it.data
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-                    }
-
-                    is CharacterPartialState.Error -> {
-                        setState {
-                            copy(
-                                isLoading = false,
-                                errorMessage = it.errorMessage
-                            )
-                        }
-                    }
-
-                    is CharacterPartialState.NoInternetConnection -> {
-                        setState {
-                            copy(
-                                isLoading = false,
-                                hasInternetConnection = false
-                            )
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    private fun loadCharacters() {
         setState {
             copy(
                 isLoading = true
@@ -170,10 +111,11 @@ class AllCharactersViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
+            // Load all characters.
             interactor.getAllCharacters().collect {
                 when (it) {
                     is CharacterPartialState.Success -> {
-                        // Load saved characters.
+                        // Load favorite characters.
                         interactor.getFavoriteCharacters()
                             .collect { favoriteCharacterPartialState ->
                                 when (favoriteCharacterPartialState) {
@@ -227,6 +169,51 @@ class AllCharactersViewModel @Inject constructor(
                     }
                 }
             }
+        }
+    }
+
+    /**
+     * Syncs the favorite characters from the local database.
+     * */
+    private fun syncFavoriteCharacters() {
+        setState {
+            copy(
+                isLoading = true
+            )
+        }
+
+        viewModelScope.launch {
+            interactor.getFavoriteCharacters()
+                .collect { favoriteCharacterPartialState ->
+                    when (favoriteCharacterPartialState) {
+                        is GetFavoriteCharactersPartialState.Success -> {
+                            // Move favorite characters data from local storage to the CharacterDomain list.
+                            setState {
+                                copy(
+                                    isLoading = false,
+                                    characters = currentState.characters.map { character ->
+                                        character.copy(
+                                            isFavorite = favoriteCharacterPartialState.favoriteCharacters.firstOrNull { favoriteCharacterEntity ->
+                                                favoriteCharacterEntity.characterId == character.id
+                                            }?.let {
+                                                true
+                                            } ?: false
+                                        )
+                                    }
+                                )
+                            }
+                        }
+
+                        is GetFavoriteCharactersPartialState.Error -> {
+                            // Could not retrieve favorite characters data.
+                            setState {
+                                copy(
+                                    isLoading = false
+                                )
+                            }
+                        }
+                    }
+                }
         }
     }
 

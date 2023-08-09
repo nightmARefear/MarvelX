@@ -1,6 +1,8 @@
 package com.alexgreece45.marvelx.ui.screens.characterScreen
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -8,13 +10,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.Card
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
@@ -25,6 +27,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -43,6 +46,7 @@ import com.alexgreece45.marvelx.domain.viewmodels.CharacterViewModel
 import com.alexgreece45.marvelx.ui.screens.destinations.ComicScreenDestination
 import com.alexgreece45.marvelx.util.ContentScreen
 import com.alexgreece45.marvelx.util.GenericErrorScreen
+import com.alexgreece45.marvelx.util.IMAGE_BORDER_WIDTH
 import com.alexgreece45.marvelx.util.ItemDescription
 import com.alexgreece45.marvelx.util.NoInternetErrorScreen
 import com.alexgreece45.marvelx.util.SPACING_MEDIUM
@@ -143,58 +147,63 @@ private fun CharacterItem(
     character: CharacterDomain,
     onFavoriteClick: () -> Unit
 ) {
-    Card(
+
+    Column(
         modifier = Modifier
+//            .padding(SPACING_MEDIUM.dp)
             .fillMaxWidth()
     ) {
-        Column(
+        // Image.
+        AsyncImage(
             modifier = Modifier
-                .padding(SPACING_MEDIUM.dp)
-                .fillMaxSize()
-        ) {
-            // Image.
-            AsyncImage(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(height = 200.dp),
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(character.thumbnail.path + "." + character.thumbnail.extension)
-                    .crossfade(true).build(),
-                contentDescription = "${character.name} image",
-                contentScale = ContentScale.Fit,
-                error = painterResource(R.drawable.ic_broken_image)
-            )
-
-            VSpacer.Medium()
-
-            // Description.
-            ItemDescription(
-                description = character.description, emptyDescriptionMessage = stringResource(
-                    R.string.no_character_description
+                .size(300.dp)
+                .border(
+                    BorderStroke(
+                        width = IMAGE_BORDER_WIDTH,
+                        color = MaterialTheme.colors.primaryVariant
+                    ),
+                    CircleShape
                 )
+                .padding(IMAGE_BORDER_WIDTH)
+                .clip(CircleShape)
+                .align(Alignment.CenterHorizontally),
+            model = ImageRequest.Builder(LocalContext.current)
+                .data(character.thumbnail.path + "." + character.thumbnail.extension)
+                .crossfade(true).build(),
+            contentDescription = "${character.name} image",
+            contentScale = ContentScale.Fit,
+            error = painterResource(R.drawable.ic_broken_image)
+        )
+
+        VSpacer.Medium()
+
+        // Description.
+        ItemDescription(
+            description = character.description, emptyDescriptionMessage = stringResource(
+                R.string.no_character_description
             )
+        )
 
-            // Favorite button.
-            Box(
-                modifier = Modifier.align(Alignment.End)
-            ) {
-                IconButton(onClick = { onFavoriteClick() }) {
-                    when (character.isFavorite) {
-                        true -> {
-                            Icon(
-                                painter = painterResource(R.drawable.ic_favorite_filled_24),
-                                contentDescription = stringResource(R.string.all_characters_screen_favorite_character_icon_description),
-                                tint = MaterialTheme.colors.primaryVariant
-                            )
-                        }
+        // Favorite button.
+        Box(
+            modifier = Modifier.align(Alignment.End)
+        ) {
+            IconButton(onClick = { onFavoriteClick() }) {
+                when (character.isFavorite) {
+                    true -> {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_favorite_filled_24),
+                            contentDescription = stringResource(R.string.all_characters_screen_favorite_character_icon_description),
+                            tint = MaterialTheme.colors.primaryVariant
+                        )
+                    }
 
-                        false -> {
-                            Icon(
-                                painter = painterResource(R.drawable.ic_favorite_empty_24),
-                                contentDescription = stringResource(R.string.all_characters_screen_not_favorite_character_icon_description),
-                                tint = MaterialTheme.colors.primaryVariant
-                            )
-                        }
+                    false -> {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_favorite_empty_24),
+                            contentDescription = stringResource(R.string.all_characters_screen_not_favorite_character_icon_description),
+                            tint = MaterialTheme.colors.primaryVariant
+                        )
                     }
                 }
             }
