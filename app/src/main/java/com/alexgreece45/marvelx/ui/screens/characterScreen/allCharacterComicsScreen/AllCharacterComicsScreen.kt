@@ -3,15 +3,11 @@ package com.alexgreece45.marvelx.ui.screens.characterScreen.allCharacterComicsSc
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
@@ -26,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
@@ -35,9 +32,11 @@ import com.alexgreece45.marvelx.data.domains.ComicDomain
 import com.alexgreece45.marvelx.domain.viewmodels.AllCharacterComicsEffect
 import com.alexgreece45.marvelx.domain.viewmodels.AllCharacterComicsEvent
 import com.alexgreece45.marvelx.domain.viewmodels.AllCharacterComicsViewModel
+import com.alexgreece45.marvelx.ui.screens.destinations.ComicScreenDestination
 import com.alexgreece45.marvelx.util.ContentScreen
-import com.alexgreece45.marvelx.util.SPACING_MEDIUM
+import com.alexgreece45.marvelx.util.HSpacer
 import com.alexgreece45.marvelx.util.SPACING_SMALL
+import com.alexgreece45.marvelx.util.SPACING_TINY
 import com.alexgreece45.marvelx.util.VSpacer
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
@@ -59,6 +58,10 @@ fun AllCharacterComicsScreen(
                 AllCharacterComicsEffect.NavigateToCharacterScreen -> {
                     navigator.popBackStack()
                 }
+
+                is AllCharacterComicsEffect.NavigateToComicScreen -> {
+                    navigator.navigate(ComicScreenDestination(comicId = effect.comicId))
+                }
             }
         }
     }
@@ -76,11 +79,11 @@ fun AllCharacterComicsScreen(
                 }
             ) { index, comicDomain ->
                 ComicItem(comic = comicDomain) {
-
+                    viewModel.setEvent(AllCharacterComicsEvent.OnComicClick(comicId = comicDomain.id))
                 }
 
                 // Adds vertical padding at the bottom of each item (except for the last item).
-                if (index != state.comics.lastIndex) VSpacer.Medium()
+                if (index != state.comics.lastIndex) VSpacer.Small()
             }
         }
     }
@@ -97,26 +100,28 @@ private fun ComicItem(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() },
-        border = BorderStroke(width = 2.dp, color = MaterialTheme.colors.onBackground)
     ) {
         Row(
-            modifier = Modifier.fillMaxSize(),
-            horizontalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Start,
             verticalAlignment = Alignment.CenterVertically
         ) {
             AsyncImage(
                 modifier = Modifier
-                    .size(width = 300.dp, height = 250.dp)
-                    .clip(RoundedCornerShape(SPACING_SMALL.dp)),
+                    .width(85.dp)
+                    .aspectRatio(ratio = 0.66f)
+                    .clip(MaterialTheme.shapes.medium),
                 model = ImageRequest.Builder(context)
                     .data(comic.thumbnail.downloadUrl)
                     .crossfade(true).build(),
                 contentDescription = comic.thumbnail.contentDescription
             )
 
+            HSpacer.Custom(width = 8)
+
             Text(
                 text = comic.title,
-                style = MaterialTheme.typography.body1
+                style = MaterialTheme.typography.subtitle1
             )
         }
     }

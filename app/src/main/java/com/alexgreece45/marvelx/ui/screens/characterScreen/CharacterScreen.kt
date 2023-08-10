@@ -233,8 +233,6 @@ fun <T> LazyRowTemplate(
     onArrowRightClick: () -> Unit,
     content: @Composable (T) -> Unit,
 ) {
-//    VSpacer.Medium()
-
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,

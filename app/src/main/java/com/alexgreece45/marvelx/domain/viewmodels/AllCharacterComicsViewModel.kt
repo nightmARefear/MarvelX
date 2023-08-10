@@ -16,6 +16,8 @@ import javax.inject.Inject
 sealed class AllCharacterComicsEvent : BaseEvent {
     data class InitView(val characterId: Int) : AllCharacterComicsEvent()
 
+    data class OnComicClick(val comicId: Int) : AllCharacterComicsEvent()
+
     object OnBackClick : AllCharacterComicsEvent()
 }
 
@@ -40,6 +42,7 @@ data class AllCharacterComicsState(
 
 sealed class AllCharacterComicsEffect : BaseEffect {
     object NavigateToCharacterScreen : AllCharacterComicsEffect()
+    data class NavigateToComicScreen(val comicId: Int) : AllCharacterComicsEffect()
 }
 
 @HiltViewModel
@@ -58,6 +61,14 @@ class AllCharacterComicsViewModel @Inject constructor(
             AllCharacterComicsEvent.OnBackClick -> {
                 setEffect {
                     AllCharacterComicsEffect.NavigateToCharacterScreen
+                }
+            }
+
+            is AllCharacterComicsEvent.OnComicClick -> {
+                setEffect {
+                    AllCharacterComicsEffect.NavigateToComicScreen(
+                        comicId = event.comicId
+                    )
                 }
             }
         }
