@@ -2,12 +2,11 @@ package com.alexgreece45.marvelx.data.domains
 
 import com.alexgreece45.marvelx.data.models.character.ComicSummary
 import com.alexgreece45.marvelx.data.models.character.EventList
-import com.alexgreece45.marvelx.data.models.character.Image
+import com.alexgreece45.marvelx.data.models.character.ImageResponse
 import com.alexgreece45.marvelx.data.models.character.SeriesSummary
 import com.alexgreece45.marvelx.data.models.character.StoryList
 import com.alexgreece45.marvelx.data.models.character.comic.CharacterList
 import com.alexgreece45.marvelx.data.models.character.comic.ComicDate
-import com.alexgreece45.marvelx.data.models.character.comic.ComicPrice
 import com.alexgreece45.marvelx.data.models.character.comic.CreatorList
 import com.alexgreece45.marvelx.data.models.character.comic.TextObject
 import java.util.Date
@@ -35,8 +34,8 @@ data class ComicDomain(
     val collectedIssues: List<ComicSummary>,
     val dates: List<ComicDate>,
     val prices: List<ComicPriceDomain>,
-    val thumbnail: Image,
-    val images: List<Image>,
+    val thumbnail: ImageDomain,
+    val images: List<ImageResponse>,
     val creators: CreatorList,
     val characters: CharacterList,
     val stories: StoryList,
@@ -60,3 +59,5 @@ data class ComicPriceDomain(
     val type: ComicPriceType,
     val price: Float
 )
+
+

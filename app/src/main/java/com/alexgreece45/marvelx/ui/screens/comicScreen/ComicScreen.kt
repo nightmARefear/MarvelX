@@ -57,7 +57,7 @@ fun ComicScreen(
 
     ContentScreen(
         onBack = { navigator.popBackStack() },
-        toolBar = true,
+        showToolbar = true,
         toolbarTitle = state.comic?.title.orEmpty(),
     ) { padding ->
         LazyColumn(contentPadding = padding) {

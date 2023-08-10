@@ -40,7 +40,7 @@ fun BottomBar() {
 @Composable
 fun ContentScreen(
     onBack: (() -> Unit)? = null,
-    toolBar: Boolean = false,
+    showToolbar: Boolean = false,
     toolbarTitle: String? = null,
     fab: Boolean = false,
     fabIcon: Icon? = null,
@@ -49,7 +49,7 @@ fun ContentScreen(
 ) {
     Scaffold(
         topBar = {
-            if (toolBar) {
+            if (showToolbar) {
                 TopAppBar(
                     modifier = Modifier.fillMaxWidth(),
                     elevation = 0.dp,

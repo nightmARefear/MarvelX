@@ -1,5 +1,6 @@
 package com.alexgreece45.marvelx.ui.screens.characterScreen
 
+import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -7,8 +8,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -17,6 +18,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
@@ -43,13 +45,14 @@ import com.alexgreece45.marvelx.data.domains.ComicDomain
 import com.alexgreece45.marvelx.domain.viewmodels.CharacterEffect
 import com.alexgreece45.marvelx.domain.viewmodels.CharacterEvent
 import com.alexgreece45.marvelx.domain.viewmodels.CharacterViewModel
+import com.alexgreece45.marvelx.ui.screens.destinations.AllCharacterComicsScreenDestination
 import com.alexgreece45.marvelx.ui.screens.destinations.ComicScreenDestination
 import com.alexgreece45.marvelx.util.ContentScreen
 import com.alexgreece45.marvelx.util.GenericErrorScreen
 import com.alexgreece45.marvelx.util.IMAGE_BORDER_WIDTH
 import com.alexgreece45.marvelx.util.ItemDescription
 import com.alexgreece45.marvelx.util.NoInternetErrorScreen
-import com.alexgreece45.marvelx.util.SPACING_MEDIUM
+import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.VSpacer
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
@@ -62,6 +65,7 @@ fun CharacterScreen(
     characterId: Int,
 ) {
     val state by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
 
     LaunchedEffect(Unit) {
         viewModel.setEvent(CharacterEvent.InitView(characterId))
@@ -77,13 +81,23 @@ fun CharacterScreen(
                         ComicScreenDestination(comicId = effect.comicId)
                     )
                 }
+
+                is CharacterEffect.NavigateToAllComics -> {
+                    navigator.navigate(
+                        AllCharacterComicsScreenDestination(characterId = effect.characterId)
+                    )
+                }
+
+                is CharacterEffect.DisplayError -> {
+                    Toast.makeText(context, effect.errorMessage, Toast.LENGTH_SHORT).show()
+                }
             }
         }
     }
 
     ContentScreen(
         onBack = { viewModel.setEvent(CharacterEvent.OnBackClick) },
-        toolBar = true,
+        showToolbar = true,
         toolbarTitle = state.character?.name
     ) { padding ->
         LazyColumn(contentPadding = padding) {
@@ -117,7 +131,8 @@ fun CharacterScreen(
                     LazyRowTemplate(
                         title = stringResource(R.string.character_screen_row_comic_title),
                         items = state.comics,
-                        itemKey = { comic -> comic.id }
+                        itemKey = { comic -> comic.id },
+                        onArrowRightClick = { viewModel.setEvent(CharacterEvent.OnArrowRightClick) }
                     ) { comic ->
                         ComicItem(
                             comic = comic,
@@ -149,14 +164,12 @@ private fun CharacterItem(
 ) {
 
     Column(
-        modifier = Modifier
-//            .padding(SPACING_MEDIUM.dp)
-            .fillMaxWidth()
+        modifier = Modifier.fillMaxWidth()
     ) {
         // Image.
         AsyncImage(
             modifier = Modifier
-                .size(300.dp)
+                .size(225.dp)
                 .border(
                     BorderStroke(
                         width = IMAGE_BORDER_WIDTH,
@@ -168,9 +181,10 @@ private fun CharacterItem(
                 .clip(CircleShape)
                 .align(Alignment.CenterHorizontally),
             model = ImageRequest.Builder(LocalContext.current)
-                .data(character.thumbnail.path + "." + character.thumbnail.extension)
-                .crossfade(true).build(),
-            contentDescription = "${character.name} image",
+                .data(character.thumbnail.downloadUrl)
+                .crossfade(true)
+                .build(),
+            contentDescription = "${character.name}'s image",
             contentScale = ContentScale.Fit,
             error = painterResource(R.drawable.ic_broken_image)
         )
@@ -216,19 +230,34 @@ fun <T> LazyRowTemplate(
     title: String,
     items: List<T>,
     itemKey: ((item: T) -> Any)? = null,
+    onArrowRightClick: () -> Unit,
     content: @Composable (T) -> Unit,
 ) {
-    VSpacer.Medium()
+//    VSpacer.Medium()
 
-    Text(
-        text = title,
-        style = MaterialTheme.typography.h6,
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.h6,
 //        color = MaterialTheme.colors.onBackground
-    )
+        )
 
-    VSpacer.Small()
+        IconButton(
+            onClick = { onArrowRightClick() }
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.ic_arrow_right_32),
+                contentDescription = stringResource(R.string.character_screen_arrow_right_comic_content_description),
+                tint = MaterialTheme.colors.onBackground
+            )
+        }
+    }
 
-    LazyRow(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+    LazyRow(horizontalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp)) {
         items(
             items = items,
             key = itemKey
@@ -248,11 +277,11 @@ private fun ComicItem(
         modifier = Modifier
             .background(backgroundColor),
     ) {
-        // todo: Add roundedcornershape 4dp
         AsyncImage(
             modifier = Modifier
                 .width(120.dp)
                 .aspectRatio(ratio = 0.66f)
+                .clip(RoundedCornerShape(SPACING_SMALL.dp))
                 .clickable {
                     onClick()
                 },

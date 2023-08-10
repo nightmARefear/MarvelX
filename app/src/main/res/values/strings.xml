@@ -28,9 +28,17 @@
     <!-- Character Screen -->
     <string name="character_screen_row_comic_title">Comics</string>
 
+    <string name="character_screen_arrow_right_comic_content_description">See All Comics</string>
+
+    <string name="character_screen_error_loading_character">An error occurred while loading this character.</string>
+    <string name="character_screen_error_loading_all_comics">An error occurred while loading all the comics.</string>
+
     <!-- Comic Screen -->
     <string name="comic_screen_toolbar_title">%1$s</string>
 
     <string name="comic_screen_comic_could_not_be_retrieved">Error retrieving comic details</string>
     <string name="comic_screen_no_description">Comic description is not available.</string>
+
+    <!-- All Comics Screen -->
+    <string name="all_comics_screen_toolbar_title">Comics</string>
 </resources>

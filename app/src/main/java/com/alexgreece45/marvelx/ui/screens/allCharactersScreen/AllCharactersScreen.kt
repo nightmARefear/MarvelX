@@ -52,7 +52,6 @@ import com.alexgreece45.marvelx.util.VSpacer
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootNavGraph
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
-import logcat.logcat
 
 @RootNavGraph(start = true)
 @Destination
@@ -100,7 +99,7 @@ fun AllCharacterScreen(
 
     LoadingScreen(isLoading = state.isLoading) {
         ContentScreen(
-            toolBar = true,
+            showToolbar = true,
             toolbarTitle = stringResource(R.string.all_characters_screen_toolbar_title)
         ) { padding ->
             LazyColumn(
@@ -146,7 +145,7 @@ fun AllCharacterScreen(
                             }
                         )
 
-                        // Adds vertical padding at the end of each item.
+                        // Adds vertical padding at the bottom of each item (except for the last item).
                         if (index != state.characters.lastIndex) {
                             VSpacer.Medium()
                         }

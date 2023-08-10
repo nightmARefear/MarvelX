@@ -5,9 +5,10 @@ import com.alexgreece45.marvelx.data.domains.ComicPriceDomain
 import com.alexgreece45.marvelx.data.domains.ComicPriceType
 import com.alexgreece45.marvelx.data.models.character.ComicSummary
 import com.alexgreece45.marvelx.data.models.character.EventList
-import com.alexgreece45.marvelx.data.models.character.Image
+import com.alexgreece45.marvelx.data.models.character.ImageResponse
 import com.alexgreece45.marvelx.data.models.character.SeriesSummary
 import com.alexgreece45.marvelx.data.models.character.StoryList
+import com.alexgreece45.marvelx.data.models.character.toDomain
 import com.google.gson.annotations.SerializedName
 import java.util.Date
 
@@ -34,8 +35,8 @@ data class ComicResponse(
     @SerializedName("collectedIssues") val collectedIssues: List<ComicSummary>,
     @SerializedName("dates") val dates: List<ComicDate>,
     @SerializedName("prices") val prices: List<ComicPrice>,
-    @SerializedName("thumbnail") val thumbnail: Image,
-    @SerializedName("images") val images: List<Image>,
+    @SerializedName("thumbnail") val thumbnail: ImageResponse,
+    @SerializedName("images") val images: List<ImageResponse>,
     @SerializedName("creators") val creators: CreatorList,
     @SerializedName("characters") val characters: CharacterList,
     @SerializedName("stories") val stories: StoryList,
@@ -57,21 +58,23 @@ fun ComicResponse.toDomain(): ComicDomain = ComicDomain(
     issn = this.issn,
     format = this.format,
     pageCount = this.pageCount,
-    textObjects = this.textObjects.toList(),
+    textObjects = this.textObjects,
     resourceURI = this.resourceURI,
     series = this.series,
-    variants = this.variants.toList(),
-    collections = this.collections.toList(),
-    collectedIssues = this.collectedIssues.toList(),
-    dates = this.dates.toList(),
+    variants = this.variants,
+    collections = this.collections,
+    collectedIssues = this.collectedIssues,
+    dates = this.dates,
     prices = this.prices.map { comicPrice ->
         ComicPriceDomain(
             type = ComicPriceType.getType(comicPrice.type),
             price = comicPrice.price
         )
     },
-    thumbnail = this.thumbnail,
-    images = this.images.toList(),
+    thumbnail = this.thumbnail.toDomain(
+        containerClassType = this::class
+    ),
+    images = this.images,
     creators = this.creators,
     characters = this.characters,
     stories = this.stories,
@@ -95,21 +98,21 @@ fun List<ComicResponse>.toDomain(): List<ComicDomain> =
             issn = it.issn,
             format = it.format,
             pageCount = it.pageCount,
-            textObjects = it.textObjects.toList(),
+            textObjects = it.textObjects,
             resourceURI = it.resourceURI,
             series = it.series,
-            variants = it.variants.toList(),
-            collections = it.collections.toList(),
-            collectedIssues = it.collectedIssues.toList(),
-            dates = it.dates.toList(),
+            variants = it.variants,
+            collections = it.collections,
+            collectedIssues = it.collectedIssues,
+            dates = it.dates,
             prices = it.prices.map { comicPrice ->
                 ComicPriceDomain(
                     type = ComicPriceType.getType(comicPrice.type),
                     price = comicPrice.price
                 )
             },
-            thumbnail = it.thumbnail,
-            images = it.images.toList(),
+            thumbnail = it.thumbnail.toDomain(containerClassType = it::class),
+            images = it.images,
             creators = it.creators,
             characters = it.characters,
             stories = it.stories,

@@ -3,6 +3,7 @@ package com.alexgreece45.marvelx.domain.interactors
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.data.domains.CharacterDomain
 import com.alexgreece45.marvelx.data.domains.ComicDomain
+import com.alexgreece45.marvelx.data.models.character.comic.ComicResponse
 import com.alexgreece45.marvelx.data.models.character.comic.toDomain
 import com.alexgreece45.marvelx.data.models.character.toDomain
 import com.alexgreece45.marvelx.domain.database.FavoriteCharacterEntity
@@ -21,7 +22,7 @@ interface CharacterInteractor {
     suspend fun getAllCharacters(): Flow<CharacterPartialState<List<CharacterDomain>>>
     suspend fun getCharacter(characterId: Int): Flow<CharacterPartialState<CharacterDomain>>
 
-    suspend fun getCharacterComics(characterId: Int): Flow<CharacterPartialState<List<ComicDomain>>>
+    suspend fun getCharacterComics(characterId: Int): Flow<GetCharacterComicsPartialState>
 
     suspend fun insertFavoriteCharacters(vararg favoriteCharacterEntity: FavoriteCharacterEntity): Flow<CharacterPartialState<Int>>
 
@@ -146,13 +147,13 @@ class CharacterInteractorImpl @Inject constructor(
             }
         }
 
-    override suspend fun getCharacterComics(characterId: Int): Flow<CharacterPartialState<List<ComicDomain>>> =
+    override suspend fun getCharacterComics(characterId: Int): Flow<GetCharacterComicsPartialState> =
         flow {
             characterRepository.getCharacterComics(characterId).collect {
                 when (it) {
                     is CharacterRepositoryPartialState.Error -> {
                         emit(
-                            CharacterPartialState.Error(
+                            GetCharacterComicsPartialState.Error(
                                 errorCode = it.errorCode,
                                 errorMessage = it.errorMessage
                             )
@@ -161,16 +162,14 @@ class CharacterInteractorImpl @Inject constructor(
 
                     is CharacterRepositoryPartialState.NoInternetConnection -> {
                         emit(
-                            CharacterPartialState.NoInternetConnection(
-                                errorMessage = it.errorMessage
-                            )
+                            GetCharacterComicsPartialState.NoInternetConnection
                         )
                     }
 
                     is CharacterRepositoryPartialState.Success -> {
                         emit(
-                            CharacterPartialState.Success(
-                                data = it.data.toDomain()
+                            GetCharacterComicsPartialState.Success(
+                                comics = it.data
                             )
                         )
                     }
@@ -179,13 +178,11 @@ class CharacterInteractorImpl @Inject constructor(
         }.safeAsync {
             when (it) {
                 is IOException -> {
-                    CharacterPartialState.NoInternetConnection(
-                        errorMessage = resourceProvider.getString(R.string.no_internet_connection_error_message)
-                    )
+                    GetCharacterComicsPartialState.NoInternetConnection
                 }
 
                 else -> {
-                    CharacterPartialState.Error(
+                    GetCharacterComicsPartialState.Error(
                         errorMessage = it.localizedMessage
                             ?: resourceProvider.getString(R.string.unknown_error)
                     )
@@ -278,6 +275,17 @@ sealed class CharacterPartialState<out T> {
     ) : CharacterPartialState<Nothing>()
 
     data class NoInternetConnection(val errorMessage: String) : CharacterPartialState<Nothing>()
+}
+
+sealed class GetCharacterComicsPartialState {
+    data class Success(val comics: List<ComicResponse>) : GetCharacterComicsPartialState()
+
+    data class Error(
+        val errorCode: Int? = null,
+        val errorMessage: String
+    ) : GetCharacterComicsPartialState()
+
+    object NoInternetConnection : GetCharacterComicsPartialState()
 }
 
 sealed class DeleteFavoriteCharacterPartialState {

@@ -1,17 +1,21 @@
 package com.alexgreece45.marvelx.domain.viewmodels
 
 import androidx.lifecycle.viewModelScope
+import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.data.domains.CharacterDomain
 import com.alexgreece45.marvelx.data.domains.ComicDomain
+import com.alexgreece45.marvelx.data.models.character.comic.toDomain
 import com.alexgreece45.marvelx.domain.database.FavoriteCharacterEntity
 import com.alexgreece45.marvelx.domain.interactors.CharacterInteractor
 import com.alexgreece45.marvelx.domain.interactors.CharacterPartialState
 import com.alexgreece45.marvelx.domain.interactors.DeleteFavoriteCharacterPartialState
+import com.alexgreece45.marvelx.domain.interactors.GetCharacterComicsPartialState
 import com.alexgreece45.marvelx.domain.interactors.IsCharacterFavoritePartialState
 import com.alexgreece45.marvelx.ui.base.BaseEffect
 import com.alexgreece45.marvelx.ui.base.BaseEvent
 import com.alexgreece45.marvelx.ui.base.BaseState
 import com.alexgreece45.marvelx.ui.base.BaseViewModel
+import com.alexgreece45.marvelx.util.ResourceProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -23,11 +27,17 @@ sealed class CharacterEvent : BaseEvent {
     object OnFavoriteClick : CharacterEvent()
 
     data class OnComicClick(val comicId: Int) : CharacterEvent()
+
+    object OnArrowRightClick : CharacterEvent()
 }
 
 sealed class CharacterEffect : BaseEffect {
     object OnBackClick : CharacterEffect()
     data class NavigateToComic(val comicId: Int) : CharacterEffect()
+
+    data class NavigateToAllComics(val characterId: Int) : CharacterEffect()
+
+    data class DisplayError(val errorMessage: String) : CharacterEffect()
 }
 
 data class CharacterState(
@@ -54,7 +64,8 @@ data class CharacterState(
 
 @HiltViewModel
 class CharacterViewModel @Inject constructor(
-    private val interactor: CharacterInteractor
+    private val interactor: CharacterInteractor,
+    private val resourceProvider: ResourceProvider
 ) : BaseViewModel<CharacterEvent, CharacterState, CharacterEffect>() {
     override fun setInitialState(): CharacterState = CharacterState()
 
@@ -78,6 +89,23 @@ class CharacterViewModel @Inject constructor(
 
             is CharacterEvent.OnFavoriteClick -> {
                 onFavoriteClick()
+            }
+
+            CharacterEvent.OnArrowRightClick -> {
+                currentState.character?.let { characterDomain ->
+                    setEffect {
+                        CharacterEffect.NavigateToAllComics(
+                            characterId = characterDomain.id
+                        )
+                    }
+                } ?: run {
+                    // Character is null, so display a Toast with the related error message. todo: display as snackbar
+                    setEffect {
+                        CharacterEffect.DisplayError(
+                            errorMessage = resourceProvider.getString(R.string.character_screen_error_loading_all_comics)
+                        )
+                    }
+                }
             }
         }
     }
@@ -160,7 +188,7 @@ class CharacterViewModel @Inject constructor(
         viewModelScope.launch {
             interactor.getCharacterComics(characterId).collect {
                 when (it) {
-                    is CharacterPartialState.Error -> {
+                    is GetCharacterComicsPartialState.Error -> {
                         setState {
                             copy(
                                 isLoading = false,
@@ -169,7 +197,7 @@ class CharacterViewModel @Inject constructor(
                         }
                     }
 
-                    is CharacterPartialState.NoInternetConnection -> {
+                    is GetCharacterComicsPartialState.NoInternetConnection -> {
                         setState {
                             copy(
                                 isLoading = false,
@@ -178,11 +206,11 @@ class CharacterViewModel @Inject constructor(
                         }
                     }
 
-                    is CharacterPartialState.Success -> {
+                    is GetCharacterComicsPartialState.Success -> {
                         setState {
                             copy(
                                 isLoading = false,
-                                comics = it.data
+                                comics = it.comics.toDomain()
                             )
                         }
                     }

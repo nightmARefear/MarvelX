@@ -3,14 +3,13 @@ package com.alexgreece45.marvelx.data.domains
 import com.alexgreece45.marvelx.data.models.character.CharacterResponse
 import com.alexgreece45.marvelx.data.models.character.ComicList
 import com.alexgreece45.marvelx.data.models.character.EventList
-import com.alexgreece45.marvelx.data.models.character.Image
+import com.alexgreece45.marvelx.data.models.character.ImageResponse
 import com.alexgreece45.marvelx.data.models.character.SeriesList
 import com.alexgreece45.marvelx.data.models.character.StoryList
 import com.alexgreece45.marvelx.data.models.character.Url
 import com.alexgreece45.marvelx.util.extensions.toOffsetDateTime
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import kotlin.random.Random
 
 data class CharacterDomain(
     val id: Int,
@@ -19,7 +18,7 @@ data class CharacterDomain(
     val modified: LocalDateTime,
     val resourceURI: String,
     val urls: List<Url>,
-    val thumbnail: Image,
+    val thumbnail: ImageDomain,
     val comics: ComicList,
     val stories: StoryList,
     val events: EventList,
@@ -34,8 +33,8 @@ fun CharacterDomain.toResponse(): CharacterResponse {
         description = this.description,
         modified = this.modified.toOffsetDateTime(),
         resourceURI = this.resourceURI,
-        urls = this.urls.toTypedArray(),
-        thumbnail = this.thumbnail,
+        urls = this.urls,
+        thumbnail = this.thumbnail.toResponse(),
         comics = this.comics,
         stories = this.stories,
         events = this.events,
@@ -50,8 +49,8 @@ fun List<CharacterDomain>.toResponse(): List<CharacterResponse> = this.map { cha
         description = character.description,
         modified = character.modified.toOffsetDateTime(),
         resourceURI = character.resourceURI,
-        urls = character.urls.toTypedArray(),
-        thumbnail = character.thumbnail,
+        urls = character.urls,
+        thumbnail = character.thumbnail.toResponse(),
         comics = character.comics,
         stories = character.stories,
         events = character.events,
