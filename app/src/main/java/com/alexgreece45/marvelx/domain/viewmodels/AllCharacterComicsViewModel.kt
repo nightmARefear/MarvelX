@@ -35,7 +35,7 @@ data class AllCharacterComicsState(
 
     // Data.
     val comics: List<ComicDomain> = emptyList(),
-    val sortingType: SortingType = SortingType.Recommended,
+    val sortingType: SortingType = SortingType.Random,
 ) : BaseState {
     companion object {
         fun getDefaultValues(): AllCharacterComicsState = AllCharacterComicsState(
@@ -84,8 +84,13 @@ class AllCharacterComicsViewModel @Inject constructor(
                 // UI becomes too fast. It is for aesthetic purposes only. todo: to be refactored
                 delay(50L)
                 when (event.sortingType) {
-                    SortingType.Recommended -> {
-                        // do nothing
+                    SortingType.Random -> {
+                        setState {
+                            copy(
+                                sortingType = event.sortingType,
+                                comics = currentState.comics.shuffled()
+                            )
+                        }
                     }
 
                     SortingType.TextAscending -> {

@@ -39,9 +39,7 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.data.domains.ComicDomain
 import com.alexgreece45.marvelx.util.extensions.applyPadding
-import kotlin.reflect.KClass
 
 @Composable
 fun BottomBar() {
@@ -186,13 +184,13 @@ fun ItemDescription(
 
 sealed class SortingType(val order: Int, val label: String) {
 
-    object Recommended : SortingType(order = 0, label = "Recommended")
+    object Random : SortingType(order = 0, label = "Random")
     object TextAscending : SortingType(order = 1, label = "A-Z Asc")
 
     object TextDescending : SortingType(order = 2, label = "A-Z Desc")
 
     companion object {
-        fun asList(): List<SortingType> = listOf(Recommended, TextAscending, TextDescending)
+        fun asList(): List<SortingType> = listOf(Random, TextAscending, TextDescending)
     }
 }
 
@@ -240,36 +238,47 @@ fun SortingDropDownMenu(
         }
     }
 
-    DropdownMenu(
-        expanded = isExpanded,
-        onDismissRequest = { onDismissRequest() }
+    Box(
+        modifier = Modifier.fillMaxSize()
     ) {
-        items.forEachIndexed { index, item ->
-            DropdownMenuItem(
-                modifier = Modifier.background(Color.Transparent),
-                onClick = { onItemClick(item) }
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxSize(),
-                    horizontalArrangement = Arrangement.SpaceBetween
+        DropdownMenu(
+            expanded = isExpanded,
+            onDismissRequest = { onDismissRequest() }
+        ) {
+            items.forEachIndexed { index, item ->
+                DropdownMenuItem(
+                    modifier = Modifier.background(Color.Transparent),
+                    onClick = {
+                        // Stops from selecting the same item again.
+                        if (item != sortingType)
+                            onItemClick(item)
+                        else
+                            onDismissRequest()
+                    }
                 ) {
-                    Text(
-                        text = item.label,
-                        style = MaterialTheme.typography.h6
-                    )
-
-                    if (index == sortingType.order) {
-                        Icon(
-                            imageVector = Icons.Filled.Check,
-                            contentDescription = Icons.Filled.Check.name,
-                            tint = MaterialTheme.colors.onBackground
+                    Row(
+                        modifier = Modifier
+                            .fillMaxSize(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = item.label,
+                            style = MaterialTheme.typography.h6
                         )
+
+                        if (index == sortingType.order) {
+                            Icon(
+                                imageVector = Icons.Filled.Check,
+                                contentDescription = Icons.Filled.Check.name,
+                                tint = MaterialTheme.colors.onBackground
+                            )
+                        }
                     }
                 }
             }
         }
     }
+
 }
 
 // ======== START OF ========
