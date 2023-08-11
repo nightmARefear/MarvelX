@@ -50,9 +50,11 @@ import com.alexgreece45.marvelx.ui.screens.destinations.ComicScreenDestination
 import com.alexgreece45.marvelx.util.ContentScreen
 import com.alexgreece45.marvelx.util.GenericErrorScreen
 import com.alexgreece45.marvelx.util.IMAGE_BORDER_WIDTH
+import com.alexgreece45.marvelx.util.IconData
 import com.alexgreece45.marvelx.util.ItemDescription
 import com.alexgreece45.marvelx.util.NoInternetErrorScreen
 import com.alexgreece45.marvelx.util.SPACING_SMALL
+import com.alexgreece45.marvelx.util.ToolbarAction
 import com.alexgreece45.marvelx.util.VSpacer
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
@@ -84,12 +86,19 @@ fun CharacterScreen(
 
                 is CharacterEffect.NavigateToAllComics -> {
                     navigator.navigate(
-                        AllCharacterComicsScreenDestination(characterId = effect.characterId)
+                        AllCharacterComicsScreenDestination(
+                            characterId = effect.characterId,
+                            toolbarTitlePrefix = effect.toolbarTitlePrefix
+                        )
                     )
                 }
 
                 is CharacterEffect.DisplayError -> {
                     Toast.makeText(context, effect.errorMessage, Toast.LENGTH_SHORT).show()
+                }
+
+                is CharacterEffect.DisplayOnFavoriteClickMessage -> {
+                    Toast.makeText(context, effect.message, Toast.LENGTH_SHORT).show()
                 }
             }
         }
@@ -98,7 +107,35 @@ fun CharacterScreen(
     ContentScreen(
         onBack = { viewModel.setEvent(CharacterEvent.OnBackClick) },
         showToolbar = true,
-        toolbarTitle = state.character?.name
+        toolbarTitle = state.character?.name,
+        toolbarActions = state.character?.let {characterDomain ->
+            listOf(
+                // Favorite button.
+                ToolbarAction(
+                    label = stringResource(R.string.character_screen_row_comic_toolbar_action_favorite_title),
+                    order = 0,
+                    iconData = when (characterDomain.isFavorite) {
+                        true -> {
+                            IconData(
+                                iconResource = R.drawable.ic_favorite_filled_24,
+                                contentDescription = stringResource(R.string.ic_favorite_content_description),
+                                colorTint = MaterialTheme.colors.primaryVariant
+                            )
+                        }
+
+                        false -> {
+                            IconData(
+                                iconResource = R.drawable.ic_favorite_empty_24,
+                                contentDescription = stringResource(R.string.ic_not_favorite_content_description),
+                                colorTint = MaterialTheme.colors.primaryVariant
+                            )
+                        }
+                    }
+                ) {
+                    viewModel.setEvent(CharacterEvent.OnFavoriteClick)
+                }
+            )
+        }
     ) { padding ->
         LazyColumn(contentPadding = padding) {
             item {
@@ -119,17 +156,12 @@ fun CharacterScreen(
                 state.character?.let { character ->
                     // Character.
                     CharacterItem(
-                        character = character,
-                        onFavoriteClick = {
-                            viewModel.setEvent(
-                                CharacterEvent.OnFavoriteClick
-                            )
-                        }
+                        character = character
                     )
 
                     // Comics.
                     LazyRowTemplate(
-                        title = stringResource(R.string.character_screen_row_comic_title),
+                        title = stringResource(R.string.character_screen_row_comic_toolbar_title),
                         items = state.comics,
                         itemKey = { comic -> comic.id },
                         onArrowRightClick = { viewModel.setEvent(CharacterEvent.OnArrowRightClick) }
@@ -160,7 +192,6 @@ fun CharacterScreen(
 @Composable
 private fun CharacterItem(
     character: CharacterDomain,
-    onFavoriteClick: () -> Unit
 ) {
 
     Column(
@@ -197,31 +228,6 @@ private fun CharacterItem(
                 R.string.no_character_description
             )
         )
-
-        // Favorite button.
-        Box(
-            modifier = Modifier.align(Alignment.End)
-        ) {
-            IconButton(onClick = { onFavoriteClick() }) {
-                when (character.isFavorite) {
-                    true -> {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_favorite_filled_24),
-                            contentDescription = stringResource(R.string.all_characters_screen_favorite_character_icon_description),
-                            tint = MaterialTheme.colors.primaryVariant
-                        )
-                    }
-
-                    false -> {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_favorite_empty_24),
-                            contentDescription = stringResource(R.string.all_characters_screen_not_favorite_character_icon_description),
-                            tint = MaterialTheme.colors.primaryVariant
-                        )
-                    }
-                }
-            }
-        }
     }
 }
 

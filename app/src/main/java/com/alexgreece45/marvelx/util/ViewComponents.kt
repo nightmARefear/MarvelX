@@ -1,6 +1,7 @@
 package com.alexgreece45.marvelx.util
 
 import android.graphics.drawable.Icon
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -37,11 +38,25 @@ fun BottomBar() {
     //Bottom
 }
 
+data class IconData(
+    @DrawableRes val iconResource: Int,
+    val contentDescription: String,
+    val colorTint: Color? = null
+)
+
+data class ToolbarAction(
+    val label: String,
+    val order: Int,
+    val iconData: IconData,
+    val onClick: () -> Unit
+)
+
 @Composable
 fun ContentScreen(
     onBack: (() -> Unit)? = null,
     showToolbar: Boolean = false,
     toolbarTitle: String? = null,
+    toolbarActions: List<ToolbarAction>? = null,
     fab: Boolean = false,
     fabIcon: Icon? = null,
     fabAction: (() -> Unit)? = null,
@@ -60,8 +75,7 @@ fun ContentScreen(
                             IconButton(onClick = { it.invoke() }) {
                                 Icon(
                                     painter = painterResource(R.drawable.ic_back_32),
-                                    contentDescription = null,
-//                                tint = MaterialTheme.colors.primary
+                                    contentDescription = stringResource(R.string.back),
                                 )
                             }
                         }
@@ -73,6 +87,17 @@ fun ContentScreen(
                                 style = MaterialTheme.typography.h6,
                                 maxLines = 1
                             )
+                        }
+
+                        toolbarActions?.sortedBy { it.order }?.forEach { toolbarAction ->
+                            IconButton(onClick = { toolbarAction.onClick() }) {
+                                Icon(
+                                    painter = painterResource(toolbarAction.iconData.iconResource),
+                                    contentDescription = toolbarAction.iconData.contentDescription,
+                                    tint = toolbarAction.iconData.colorTint
+                                        ?: LocalContentColor.current.copy(alpha = LocalContentAlpha.current)
+                                )
+                            }
                         }
                     }
                 }

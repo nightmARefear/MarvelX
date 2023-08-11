@@ -1,5 +1,13 @@
 <resources>
 
+    <!-- Generic Strings -->
+    <string name="back">Back</string>
+    <string name="ic_favorite_content_description">favorite</string>
+    <string name="favorite_message">This %1$s is now favorite.</string>
+
+    <string name="ic_not_favorite_content_description">not favorite</string>
+    <string name="not_favorite_message">This %1$s was removed from your favorites.</string>
+
     <!-- ERROR HANDLING STRINGS -->
     <string name="retry">Retry</string>
     <string name="no_internet_connection_error_message">No internet connection! Please try again!</string>
@@ -18,15 +26,14 @@
 
     <string name="all_characters_screen_favorite_character_icon_description">favorite</string>
     <string name="all_characters_screen_not_favorite_character_icon_description">not favorite</string>
-    <string name="all_characters_screen_success_favoring_character">This character is now favorite.</string>
-    <string name="all_characters_screen_success_unfavoring_character">This character was removed from your favorites.</string>
 
     <string name="all_characters_screen_error_favoring_character">An error occurred while favoring this character.</string>
     <string name="all_characters_screen_error_unfavoring_character">An error occurred while unfavoring this character.</string>
 
 
     <!-- Character Screen -->
-    <string name="character_screen_row_comic_title">Comics</string>
+    <string name="character_screen_row_comic_toolbar_title">Comics</string>
+    <string name="character_screen_row_comic_toolbar_action_favorite_title">Favorite Character</string>
 
     <string name="character_screen_arrow_right_comic_content_description">See All Comics</string>
 
@@ -39,6 +46,6 @@
     <string name="comic_screen_comic_could_not_be_retrieved">Error retrieving comic details</string>
     <string name="comic_screen_no_description">Comic description is not available.</string>
 
-    <!-- All Comics Screen -->
-    <string name="all_comics_screen_toolbar_title">Comics</string>
+    <!-- All Character Comics Screen -->
+    <string name="all_character_comics_screen_toolbar_title">%1$s Comics</string>
 </resources>

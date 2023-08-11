@@ -7,7 +7,7 @@ import retrofit2.Response
 interface ApiClient {
     suspend fun getCharacters(): Response<CharacterDataWrapper>
 
-    suspend fun getCharacter(characterId: Int): Response<CharacterDataWrapper>
+    suspend fun getCharacterById(characterId: Int): Response<CharacterDataWrapper>
 
     suspend fun getCharacterComics(characterId: Int): Response<ComicDataWrapper>
 

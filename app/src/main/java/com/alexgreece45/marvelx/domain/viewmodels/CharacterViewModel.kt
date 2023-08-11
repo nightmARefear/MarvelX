@@ -8,7 +8,6 @@ import com.alexgreece45.marvelx.data.models.character.comic.toDomain
 import com.alexgreece45.marvelx.domain.database.FavoriteCharacterEntity
 import com.alexgreece45.marvelx.domain.interactors.CharacterInteractor
 import com.alexgreece45.marvelx.domain.interactors.CharacterPartialState
-import com.alexgreece45.marvelx.domain.interactors.DeleteFavoriteCharacterPartialState
 import com.alexgreece45.marvelx.domain.interactors.GetCharacterComicsPartialState
 import com.alexgreece45.marvelx.domain.interactors.IsCharacterFavoritePartialState
 import com.alexgreece45.marvelx.ui.base.BaseEffect
@@ -35,9 +34,12 @@ sealed class CharacterEffect : BaseEffect {
     object OnBackClick : CharacterEffect()
     data class NavigateToComic(val comicId: Int) : CharacterEffect()
 
-    data class NavigateToAllComics(val characterId: Int) : CharacterEffect()
+    data class NavigateToAllComics(val characterId: Int, val toolbarTitlePrefix: String) :
+        CharacterEffect()
 
     data class DisplayError(val errorMessage: String) : CharacterEffect()
+
+    data class DisplayOnFavoriteClickMessage(val message: String) : CharacterEffect()
 }
 
 data class CharacterState(
@@ -95,7 +97,8 @@ class CharacterViewModel @Inject constructor(
                 currentState.character?.let { characterDomain ->
                     setEffect {
                         CharacterEffect.NavigateToAllComics(
-                            characterId = characterDomain.id
+                            characterId = characterDomain.id,
+                            toolbarTitlePrefix = if (characterDomain.name.endsWith("s")) characterDomain.name + "'" else characterDomain.name + "'s"
                         )
                     }
                 } ?: run {
@@ -222,6 +225,7 @@ class CharacterViewModel @Inject constructor(
     private suspend fun onFavoriteClick() {
         currentState.character?.let { characterDomain ->
             when (characterDomain.isFavorite) {
+                // Character is favorite; proceed to remove it from favorites.
                 true -> {
                     viewModelScope.launch {
                         interactor.deleteFavoriteCharacterById(characterId = characterDomain.id)
@@ -249,12 +253,19 @@ class CharacterViewModel @Inject constructor(
                                                 character = characterDomain.copy(isFavorite = false)
                                             )
                                         }
+
+                                        setEffect {
+                                            CharacterEffect.DisplayOnFavoriteClickMessage(
+                                                message = resourceProvider.getString(R.string.not_favorite_message, "character")
+                                            )
+                                        }
                                     }
                                 }
                             }
                     }
                 }
 
+                // Character is not favorite; proceed to make it favorite.
                 false -> {
                     viewModelScope.launch {
                         interactor.insertFavoriteCharacters(
@@ -281,6 +292,12 @@ class CharacterViewModel @Inject constructor(
                                     setState {
                                         copy(
                                             character = characterDomain.copy(isFavorite = true)
+                                        )
+                                    }
+
+                                    setEffect {
+                                        CharacterEffect.DisplayOnFavoriteClickMessage(
+                                            message = resourceProvider.getString(R.string.favorite_message, "character")
                                         )
                                     }
                                 }

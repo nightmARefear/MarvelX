@@ -4,7 +4,6 @@ import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.data.api.ApiClient
 import com.alexgreece45.marvelx.data.models.character.CharacterDataWrapper
 import com.alexgreece45.marvelx.data.models.character.comic.ComicResponse
-import com.alexgreece45.marvelx.domain.interactors.CharacterPartialState
 import com.alexgreece45.marvelx.util.ResourceProvider
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -31,7 +30,7 @@ class CharacterRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getCharacter(characterId: Int): Response<CharacterDataWrapper> {
-        return api.getCharacter(characterId)
+        return api.getCharacterById(characterId)
     }
 
     override suspend fun getCharacterComics(characterId: Int): Flow<CharacterRepositoryPartialState> =

@@ -258,7 +258,7 @@ class AllCharactersViewModel @Inject constructor(
                         }
                         setEffect {
                             AllCharactersEffect.UnFavoriteCharacter.Success(
-                                successMessage = resourceProvider.getString(R.string.all_characters_screen_success_unfavoring_character)
+                                successMessage = resourceProvider.getString(R.string.not_favorite_message, "character")
                             )
                         }
                     }
@@ -301,7 +301,7 @@ class AllCharactersViewModel @Inject constructor(
                         }
                         setEffect {
                             AllCharactersEffect.UnFavoriteCharacter.Success(
-                                successMessage = resourceProvider.getString(R.string.all_characters_screen_success_favoring_character)
+                                successMessage = resourceProvider.getString(R.string.favorite_message, "character")
                             )
                         }
                     }
