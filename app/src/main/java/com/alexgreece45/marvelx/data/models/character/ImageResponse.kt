@@ -29,7 +29,7 @@ data class ImageResponse(
  * ### 1. If the parent class of this [ImageResponse] is of type [CharacterResponse]
  * ```
  * this.thumbnail.toDomain(
- * isCharacter = this::class,
+ * containerClassType = this::class,
  * characterName = this.name
  * )
  * ```
@@ -37,7 +37,7 @@ data class ImageResponse(
  * ### 2. If the parent class of this [ImageResponse] is of type other than [CharacterResponse], such as [ComicResponse], etc.
  * ```
  * this.thumbnail.toDomain(
- * isCharacter = this::class
+ * containerClassType = this::class
  * )
  * ```
  */

@@ -2,15 +2,19 @@ package com.alexgreece45.marvelx.util
 
 import android.graphics.drawable.Icon
 import androidx.annotation.DrawableRes
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.material.Button
 import androidx.compose.material.ContentAlpha
+import androidx.compose.material.DropdownMenu
+import androidx.compose.material.DropdownMenuItem
 import androidx.compose.material.FloatingActionButton
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
@@ -20,6 +24,10 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
 import androidx.compose.material.TopAppBar
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.ArrowDropUp
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
@@ -31,7 +39,9 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.data.domains.ComicDomain
 import com.alexgreece45.marvelx.util.extensions.applyPadding
+import kotlin.reflect.KClass
 
 @Composable
 fun BottomBar() {
@@ -50,6 +60,10 @@ data class ToolbarAction(
     val iconData: IconData,
     val onClick: () -> Unit
 )
+
+// ======== START OF ========
+//        Generic Screens
+// ==========================
 
 @Composable
 fun ContentScreen(
@@ -166,11 +180,101 @@ fun ItemDescription(
     }
 }
 
-data class ActionButtonData(
-    val label: String,
-    val onClick: () -> Unit
-)
+// ======== END OF ========
+//        Generic Screens
+// ==========================
 
+sealed class SortingType(val order: Int, val label: String) {
+
+    object Recommended : SortingType(order = 0, label = "Recommended")
+    object TextAscending : SortingType(order = 1, label = "A-Z Asc")
+
+    object TextDescending : SortingType(order = 2, label = "A-Z Desc")
+
+    companion object {
+        fun asList(): List<SortingType> = listOf(Recommended, TextAscending, TextDescending)
+    }
+}
+
+@Composable
+fun SortingDropDownMenu(
+    isExpanded: Boolean,
+    sortingType: SortingType,
+    onDismissRequest: () -> Unit,
+    onDropDownArrowClick: () -> Unit,
+    onItemClick: (SortingType) -> Unit
+) {
+    val items = SortingType.asList()
+
+    Text(
+        text = "Sort by",
+        color = MaterialTheme.colors.onBackground.copy(alpha = 0.7f),
+        style = MaterialTheme.typography.subtitle1
+    )
+
+    VSpacer.Tiny()
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = sortingType.label,
+            style = MaterialTheme.typography.h6
+        )
+
+        IconButton(onClick = { onDropDownArrowClick() }) {
+            if (isExpanded) {
+                Icon(
+                    imageVector = Icons.Filled.ArrowDropUp,
+                    contentDescription = Icons.Filled.ArrowDropUp.name,
+                    tint = MaterialTheme.colors.onBackground
+                )
+            } else {
+                Icon(
+                    imageVector = Icons.Filled.ArrowDropDown,
+                    contentDescription = Icons.Filled.ArrowDropDown.name,
+                    tint = MaterialTheme.colors.onBackground
+                )
+            }
+        }
+    }
+
+    DropdownMenu(
+        expanded = isExpanded,
+        onDismissRequest = { onDismissRequest() }
+    ) {
+        items.forEachIndexed { index, item ->
+            DropdownMenuItem(
+                modifier = Modifier.background(Color.Transparent),
+                onClick = { onItemClick(item) }
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxSize(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = item.label,
+                        style = MaterialTheme.typography.h6
+                    )
+
+                    if (index == sortingType.order) {
+                        Icon(
+                            imageVector = Icons.Filled.Check,
+                            contentDescription = Icons.Filled.Check.name,
+                            tint = MaterialTheme.colors.onBackground
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+// ======== START OF ========
+//        Error Screens
+// ==========================
 @Composable
 fun LazyItemScope.GenericErrorScreen(
     errorMessage: String,
@@ -219,3 +323,7 @@ fun LazyItemScope.NoInternetErrorScreen(
         }
     }
 }
+
+// ======== END OF ========
+//        Error Screens
+// ==========================

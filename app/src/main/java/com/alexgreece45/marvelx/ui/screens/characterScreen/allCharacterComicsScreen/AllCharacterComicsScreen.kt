@@ -15,6 +15,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -32,6 +35,8 @@ import com.alexgreece45.marvelx.domain.viewmodels.AllCharacterComicsViewModel
 import com.alexgreece45.marvelx.ui.screens.destinations.ComicScreenDestination
 import com.alexgreece45.marvelx.util.ContentScreen
 import com.alexgreece45.marvelx.util.HSpacer
+import com.alexgreece45.marvelx.util.LoadingScreen
+import com.alexgreece45.marvelx.util.SortingDropDownMenu
 import com.alexgreece45.marvelx.util.VSpacer
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
@@ -45,6 +50,7 @@ fun AllCharacterComicsScreen(
     toolbarTitlePrefix: String
 ) {
     val state by viewModel.uiState.collectAsState()
+    var expandedSortingDropDownMenu by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         viewModel.setEvent(AllCharacterComicsEvent.InitView(characterId = characterId))
@@ -62,24 +68,48 @@ fun AllCharacterComicsScreen(
         }
     }
 
-    ContentScreen(
-        onBack = { navigator.popBackStack() },
-        showToolbar = true,
-        toolbarTitle = stringResource(R.string.all_character_comics_screen_toolbar_title, toolbarTitlePrefix)
-    ) { padding ->
-        LazyColumn(contentPadding = padding) {
-            itemsIndexed(
-                items = state.comics,
-                key = { _, comicDomain ->
-                    comicDomain.id
-                }
-            ) { index, comicDomain ->
-                ComicItem(comic = comicDomain) {
-                    viewModel.setEvent(AllCharacterComicsEvent.OnComicClick(comicId = comicDomain.id))
+    LoadingScreen(isLoading = state.isLoading) {
+        ContentScreen(
+            onBack = { navigator.popBackStack() },
+            showToolbar = true,
+            toolbarTitle = stringResource(
+                R.string.all_character_comics_screen_toolbar_title,
+                toolbarTitlePrefix
+            )
+        ) { padding ->
+            LazyColumn(contentPadding = padding) {
+                item {
+                    SortingDropDownMenu(
+                        isExpanded = expandedSortingDropDownMenu,
+                        sortingType = state.sortingType,
+                        onDismissRequest = { expandedSortingDropDownMenu = false },
+                        onDropDownArrowClick = { expandedSortingDropDownMenu = true },
+                        onItemClick = { sortingType ->
+                            expandedSortingDropDownMenu = !expandedSortingDropDownMenu
+                            viewModel.setEvent(
+                                AllCharacterComicsEvent.Sorting.OnItemClick(
+                                    sortingType = sortingType
+                                )
+                            )
+                        }
+                    )
+
+                    VSpacer.Small()
                 }
 
-                // Adds vertical padding at the bottom of each item (except for the last item).
-                if (index != state.comics.lastIndex) VSpacer.Small()
+                itemsIndexed(
+                    items = state.comics,
+                    key = { _, comicDomain ->
+                        comicDomain.id
+                    }
+                ) { index, comicDomain ->
+                    ComicItem(comic = comicDomain) {
+                        viewModel.setEvent(AllCharacterComicsEvent.OnComicClick(comicId = comicDomain.id))
+                    }
+
+                    // Adds vertical padding at the bottom of each item (except for the last item).
+                    if (index != state.comics.lastIndex) VSpacer.Small()
+                }
             }
         }
     }

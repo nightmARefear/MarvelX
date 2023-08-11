@@ -52,6 +52,7 @@ import com.alexgreece45.marvelx.util.GenericErrorScreen
 import com.alexgreece45.marvelx.util.IMAGE_BORDER_WIDTH
 import com.alexgreece45.marvelx.util.IconData
 import com.alexgreece45.marvelx.util.ItemDescription
+import com.alexgreece45.marvelx.util.LoadingScreen
 import com.alexgreece45.marvelx.util.NoInternetErrorScreen
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.ToolbarAction
@@ -104,85 +105,87 @@ fun CharacterScreen(
         }
     }
 
-    ContentScreen(
-        onBack = { viewModel.setEvent(CharacterEvent.OnBackClick) },
-        showToolbar = true,
-        toolbarTitle = state.character?.name,
-        toolbarActions = state.character?.let {characterDomain ->
-            listOf(
-                // Favorite button.
-                ToolbarAction(
-                    label = stringResource(R.string.character_screen_row_comic_toolbar_action_favorite_title),
-                    order = 0,
-                    iconData = when (characterDomain.isFavorite) {
-                        true -> {
-                            IconData(
-                                iconResource = R.drawable.ic_favorite_filled_24,
-                                contentDescription = stringResource(R.string.ic_favorite_content_description),
-                                colorTint = MaterialTheme.colors.primaryVariant
-                            )
-                        }
-
-                        false -> {
-                            IconData(
-                                iconResource = R.drawable.ic_favorite_empty_24,
-                                contentDescription = stringResource(R.string.ic_not_favorite_content_description),
-                                colorTint = MaterialTheme.colors.primaryVariant
-                            )
-                        }
-                    }
-                ) {
-                    viewModel.setEvent(CharacterEvent.OnFavoriteClick)
-                }
-            )
-        }
-    ) { padding ->
-        LazyColumn(contentPadding = padding) {
-            item {
-                state.errorMessage?.let { errorMessage ->
-                    GenericErrorScreen(errorMessage = errorMessage)
-                }
-
-                if (!state.hasInternetConnection) {
-                    NoInternetErrorScreen {
-                        viewModel.setEvent(
-                            CharacterEvent.InitView(
-                                characterId = characterId
-                            )
-                        )
-                    }
-                }
-
-                state.character?.let { character ->
-                    // Character.
-                    CharacterItem(
-                        character = character
-                    )
-
-                    // Comics.
-                    LazyRowTemplate(
-                        title = stringResource(R.string.character_screen_row_comic_toolbar_title),
-                        items = state.comics,
-                        itemKey = { comic -> comic.id },
-                        onArrowRightClick = { viewModel.setEvent(CharacterEvent.OnArrowRightClick) }
-                    ) { comic ->
-                        ComicItem(
-                            comic = comic,
-                            onClick = {
-                                viewModel.setEvent(
-                                    CharacterEvent.OnComicClick(
-                                        comicId = comic.id
-                                    )
+    LoadingScreen(isLoading = state.isLoading) {
+        ContentScreen(
+            onBack = { viewModel.setEvent(CharacterEvent.OnBackClick) },
+            showToolbar = true,
+            toolbarTitle = state.character?.name,
+            toolbarActions = state.character?.let { characterDomain ->
+                listOf(
+                    // Favorite button.
+                    ToolbarAction(
+                        label = stringResource(R.string.character_screen_row_comic_toolbar_action_favorite_title),
+                        order = 0,
+                        iconData = when (characterDomain.isFavorite) {
+                            true -> {
+                                IconData(
+                                    iconResource = R.drawable.ic_favorite_filled_24,
+                                    contentDescription = stringResource(R.string.ic_favorite_content_description),
+                                    colorTint = MaterialTheme.colors.primaryVariant
                                 )
                             }
-                        )
+
+                            false -> {
+                                IconData(
+                                    iconResource = R.drawable.ic_favorite_empty_24,
+                                    contentDescription = stringResource(R.string.ic_not_favorite_content_description),
+                                    colorTint = MaterialTheme.colors.primaryVariant
+                                )
+                            }
+                        }
+                    ) {
+                        viewModel.setEvent(CharacterEvent.OnFavoriteClick)
+                    }
+                )
+            }
+        ) { padding ->
+            LazyColumn(contentPadding = padding) {
+                item {
+                    state.errorMessage?.let { errorMessage ->
+                        GenericErrorScreen(errorMessage = errorMessage)
                     }
 
-                    // Events.
+                    if (!state.hasInternetConnection) {
+                        NoInternetErrorScreen {
+                            viewModel.setEvent(
+                                CharacterEvent.InitView(
+                                    characterId = characterId
+                                )
+                            )
+                        }
+                    }
 
-                    // Series.
+                    state.character?.let { character ->
+                        // Character.
+                        CharacterItem(
+                            character = character
+                        )
 
-                    // Stories.
+                        // Comics.
+                        LazyRowTemplate(
+                            title = stringResource(R.string.character_screen_row_comic_toolbar_title),
+                            items = state.comics,
+                            itemKey = { comic -> comic.id },
+                            onArrowRightClick = { viewModel.setEvent(CharacterEvent.OnArrowRightClick) }
+                        ) { comic ->
+                            ComicItem(
+                                comic = comic,
+                                onClick = {
+                                    viewModel.setEvent(
+                                        CharacterEvent.OnComicClick(
+                                            comicId = comic.id
+                                        )
+                                    )
+                                }
+                            )
+                        }
+
+                        // Events.
+
+                        // Series.
+
+                        // Stories.
+                    }
                 }
             }
         }
