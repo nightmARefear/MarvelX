@@ -37,6 +37,7 @@ import com.alexgreece45.marvelx.util.ContentScreen
 import com.alexgreece45.marvelx.util.HSpacer
 import com.alexgreece45.marvelx.util.LoadingScreen
 import com.alexgreece45.marvelx.util.SortingDropDownMenu
+import com.alexgreece45.marvelx.util.SortingDropDownMenu2
 import com.alexgreece45.marvelx.util.VSpacer
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
@@ -84,6 +85,25 @@ fun AllCharacterComicsScreen(
                         sortingType = state.sortingType,
                         onDismissRequest = { expandedSortingDropDownMenu = false },
                         onDropDownArrowClick = { expandedSortingDropDownMenu = true },
+                        onItemClick = { sortingType ->
+                            expandedSortingDropDownMenu = !expandedSortingDropDownMenu
+                            viewModel.setEvent(
+                                AllCharacterComicsEvent.Sorting.OnItemClick(
+                                    sortingType = sortingType
+                                )
+                            )
+                        }
+                    )
+
+                    VSpacer.Medium()
+
+                    SortingDropDownMenu2(
+                        isExpanded = expandedSortingDropDownMenu,
+                        sortingType = state.sortingType,
+                        onDismissRequest = { expandedSortingDropDownMenu = false },
+                        onExpandedChange = {
+                            expandedSortingDropDownMenu = !expandedSortingDropDownMenu
+                        },
                         onItemClick = { sortingType ->
                             expandedSortingDropDownMenu = !expandedSortingDropDownMenu
                             viewModel.setEvent(

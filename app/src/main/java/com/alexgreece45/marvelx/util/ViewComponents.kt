@@ -10,19 +10,26 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.material.Button
 import androidx.compose.material.ContentAlpha
 import androidx.compose.material.DropdownMenu
 import androidx.compose.material.DropdownMenuItem
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.ExposedDropdownMenuBox
+import androidx.compose.material.ExposedDropdownMenuDefaults
 import androidx.compose.material.FloatingActionButton
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.LocalContentAlpha
 import androidx.compose.material.LocalContentColor
 import androidx.compose.material.MaterialTheme
+import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
+import androidx.compose.material.TextFieldDefaults
 import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
@@ -36,6 +43,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.alexgreece45.marvelx.R
@@ -263,7 +271,11 @@ fun SortingDropDownMenu(
                     ) {
                         Text(
                             text = item.label,
-                            style = MaterialTheme.typography.h6
+                            style = MaterialTheme.typography.h6,
+                            color = LocalContentColor.current.copy(
+                                alpha = if (sortingType == item) LocalContentAlpha.current else
+                                    LocalContentAlpha.current.minus(0.3f)
+                            )
                         )
 
                         if (index == sortingType.order) {
@@ -279,6 +291,81 @@ fun SortingDropDownMenu(
         }
     }
 
+}
+
+@OptIn(ExperimentalMaterialApi::class)
+@Composable
+fun SortingDropDownMenu2(
+    isExpanded: Boolean,
+    sortingType: SortingType,
+    onDismissRequest: () -> Unit,
+    onExpandedChange: () -> Unit,
+    onItemClick: (SortingType) -> Unit
+) {
+    Text(
+        text = "Sort by",
+        color = MaterialTheme.colors.onBackground.copy(alpha = 0.7f),
+        style = MaterialTheme.typography.subtitle1
+    )
+
+    ExposedDropdownMenuBox(
+        expanded = isExpanded,
+        onExpandedChange = { onExpandedChange() }
+    ) {
+        OutlinedTextField(
+            value = TextFieldValue(text = sortingType.label),
+            onValueChange = {},
+            readOnly = true,
+            textStyle = MaterialTheme.typography.h6,
+            label = {},
+            trailingIcon = {
+                ExposedDropdownMenuDefaults.TrailingIcon(expanded = isExpanded)
+            },
+            colors = ExposedDropdownMenuDefaults.textFieldColors(
+                backgroundColor = Color.Transparent,
+                cursorColor = Color.Transparent,
+                focusedIndicatorColor = Color.Transparent,
+                unfocusedIndicatorColor = Color.Transparent,
+                trailingIconColor = LocalContentColor.current.copy(alpha = ContentAlpha.high),
+                focusedTrailingIconColor = LocalContentColor.current.copy(alpha = ContentAlpha.high),
+                focusedLabelColor = Color.Transparent,
+                unfocusedLabelColor = Color.Transparent
+            )
+        )
+
+        ExposedDropdownMenu(expanded = isExpanded, onDismissRequest = { onDismissRequest() }) {
+            SortingType.asList().forEach { item ->
+                DropdownMenuItem(
+                    onClick = {
+                        onItemClick(item)
+                    }
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = item.label,
+                            style = MaterialTheme.typography.h6,
+                            color = LocalContentColor.current.copy(
+                                alpha = if (sortingType == item) LocalContentAlpha.current else
+                                    LocalContentAlpha.current.minus(0.3f)
+                            )
+                        )
+
+                        if (sortingType == item) {
+                            Icon(
+                                imageVector = Icons.Filled.Check,
+                                contentDescription = Icons.Filled.Check.name,
+                                tint = MaterialTheme.colors.onBackground
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 // ======== START OF ========
