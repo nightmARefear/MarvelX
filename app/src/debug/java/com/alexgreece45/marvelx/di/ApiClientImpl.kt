@@ -15,16 +15,14 @@ import javax.inject.Inject
 @Module
 @InstallIn(SingletonComponent::class)
 class ApiClientImpl @Inject constructor(
-    private val api: ApiService,
-    private val gson: Gson,
-    private val resourceProvider: ResourceProvider
+    private val api: ApiService
 ) : ApiClient {
 
     override suspend fun getCharacters(): Response<CharacterDataWrapper> {
         return api.getCharacters()
     }
 
-    override suspend fun getCharacter(characterId: Int): Response<CharacterDataWrapper> {
+    override suspend fun getCharacterById(characterId: Int): Response<CharacterDataWrapper> {
         return api.getCharacter(characterId)
     }
 

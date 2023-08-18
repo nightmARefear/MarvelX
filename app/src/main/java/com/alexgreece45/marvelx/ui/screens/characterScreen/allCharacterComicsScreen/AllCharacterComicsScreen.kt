@@ -4,20 +4,29 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.Icon
+import androidx.compose.material.LocalContentAlpha
 import androidx.compose.material.MaterialTheme
+import androidx.compose.material.ModalBottomSheetLayout
+import androidx.compose.material.ModalBottomSheetValue
 import androidx.compose.material.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -36,12 +45,16 @@ import com.alexgreece45.marvelx.ui.screens.destinations.ComicScreenDestination
 import com.alexgreece45.marvelx.util.ContentScreen
 import com.alexgreece45.marvelx.util.HSpacer
 import com.alexgreece45.marvelx.util.LoadingScreen
-import com.alexgreece45.marvelx.util.SortingDropDownMenu
-import com.alexgreece45.marvelx.util.SortingDropDownMenu2
+import com.alexgreece45.marvelx.util.SPACING_LARGE
+import com.alexgreece45.marvelx.util.SPACING_MEDIUM
+import com.alexgreece45.marvelx.util.SPACING_SMALL
+import com.alexgreece45.marvelx.util.SortingModalBottomSheetContent
 import com.alexgreece45.marvelx.util.VSpacer
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
+import kotlinx.coroutines.coroutineScope
 
+@OptIn(ExperimentalMaterialApi::class)
 @Destination
 @Composable
 fun AllCharacterComicsScreen(
@@ -51,7 +64,11 @@ fun AllCharacterComicsScreen(
     toolbarTitlePrefix: String
 ) {
     val state by viewModel.uiState.collectAsState()
-    var expandedSortingDropDownMenu by remember { mutableStateOf(false) }
+    val modalBottomSheetState =
+        rememberModalBottomSheetState(
+            initialValue = ModalBottomSheetValue.Hidden,
+            skipHalfExpanded = false
+        )
 
     LaunchedEffect(Unit) {
         viewModel.setEvent(AllCharacterComicsEvent.InitView(characterId = characterId))
@@ -65,70 +82,95 @@ fun AllCharacterComicsScreen(
                 is AllCharacterComicsEffect.NavigateToComicScreen -> {
                     navigator.navigate(ComicScreenDestination(comicId = effect.comicId))
                 }
+
+                AllCharacterComicsEffect.BottomSheet.Hide -> {
+                    coroutineScope {
+                        modalBottomSheetState.hide()
+                    }
+                }
+
+                AllCharacterComicsEffect.BottomSheet.Show -> {
+                    coroutineScope {
+                        modalBottomSheetState.show()
+                    }
+                }
             }
         }
     }
 
     LoadingScreen(isLoading = state.isLoading) {
-        ContentScreen(
-            onBack = { navigator.popBackStack() },
-            showToolbar = true,
-            toolbarTitle = stringResource(
-                R.string.all_character_comics_screen_toolbar_title,
-                toolbarTitlePrefix
-            )
-        ) { padding ->
-            LazyColumn(contentPadding = padding) {
-                item {
-                    SortingDropDownMenu(
-                        isExpanded = expandedSortingDropDownMenu,
-                        sortingType = state.sortingType,
-                        onDismissRequest = { expandedSortingDropDownMenu = false },
-                        onDropDownArrowClick = { expandedSortingDropDownMenu = true },
-                        onItemClick = { sortingType ->
-                            expandedSortingDropDownMenu = !expandedSortingDropDownMenu
-                            viewModel.setEvent(
-                                AllCharacterComicsEvent.Sorting.OnItemClick(
-                                    sortingType = sortingType
-                                )
+        ModalBottomSheetLayout(
+            modifier = Modifier.fillMaxSize(),
+            sheetState = modalBottomSheetState,
+            sheetShape = RoundedCornerShape(topStart = SPACING_SMALL.dp, topEnd = SPACING_SMALL.dp),
+            scrimColor = MaterialTheme.colors.background.copy(
+                alpha = LocalContentAlpha.current.minus(0.5f)
+            ),
+            sheetContent = {
+                SortingModalBottomSheetContent(
+                    contentPadding = 12.dp,
+                    selectedItem = state.sortingType,
+                    onItemClick = { sortingType ->
+                        viewModel.setEvent(AllCharacterComicsEvent.Sorting.OnItemClick(sortingType))
+                    },
+                    onCloseClick = {
+                        viewModel.setEvent(AllCharacterComicsEvent.Sorting.OnCloseClick)
+                    }
+                )
+            }
+        ) {
+            ContentScreen(
+                onBack = { navigator.popBackStack() },
+                showToolbar = true,
+                toolbarTitle = stringResource(
+                    R.string.all_character_comics_screen_toolbar_title,
+                    toolbarTitlePrefix
+                )
+            ) { padding ->
+                LazyColumn(contentPadding = padding) {
+                    item {
+                        Text(
+                            text = stringResource(R.string.sort_by),
+                            color = MaterialTheme.colors.onBackground.copy(alpha = 0.7f),
+                            style = MaterialTheme.typography.subtitle1
+                        )
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    viewModel.setEvent(AllCharacterComicsEvent.OnDropDownArrowClick)
+                                },
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = state.sortingType.label,
+                                style = MaterialTheme.typography.h6
+                            )
+
+                            Icon(
+                                imageVector = Icons.Filled.ArrowDropDown,
+                                contentDescription = Icons.Filled.ArrowDropDown.name,
+                                tint = MaterialTheme.colors.onBackground
                             )
                         }
-                    )
+                    }
 
-                    VSpacer.Medium()
+                    item { VSpacer.Custom(height = 10) }
 
-                    SortingDropDownMenu2(
-                        isExpanded = expandedSortingDropDownMenu,
-                        sortingType = state.sortingType,
-                        onDismissRequest = { expandedSortingDropDownMenu = false },
-                        onExpandedChange = {
-                            expandedSortingDropDownMenu = !expandedSortingDropDownMenu
-                        },
-                        onItemClick = { sortingType ->
-                            expandedSortingDropDownMenu = !expandedSortingDropDownMenu
-                            viewModel.setEvent(
-                                AllCharacterComicsEvent.Sorting.OnItemClick(
-                                    sortingType = sortingType
-                                )
-                            )
+                    itemsIndexed(
+                        items = state.comics,
+                        key = { _, comicDomain ->
+                            comicDomain.id
                         }
-                    )
+                    ) { index, comicDomain ->
+                        ComicItem(comic = comicDomain) {
+                            viewModel.setEvent(AllCharacterComicsEvent.OnComicClick(comicId = comicDomain.id))
+                        }
 
-                    VSpacer.Small()
-                }
-
-                itemsIndexed(
-                    items = state.comics,
-                    key = { _, comicDomain ->
-                        comicDomain.id
+                        // Adds vertical padding at the bottom of each item (except for the last item).
+                        if (index != state.comics.lastIndex) VSpacer.Small()
                     }
-                ) { index, comicDomain ->
-                    ComicItem(comic = comicDomain) {
-                        viewModel.setEvent(AllCharacterComicsEvent.OnComicClick(comicId = comicDomain.id))
-                    }
-
-                    // Adds vertical padding at the bottom of each item (except for the last item).
-                    if (index != state.comics.lastIndex) VSpacer.Small()
                 }
             }
         }
@@ -163,7 +205,7 @@ private fun ComicItem(
                 contentDescription = comic.thumbnail.contentDescription
             )
 
-            HSpacer.Custom(width = 8)
+            HSpacer.Small()
 
             Text(
                 text = comic.title,

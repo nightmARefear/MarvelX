@@ -20,8 +20,11 @@ sealed class AllCharacterComicsEvent : BaseEvent {
 
     data class OnComicClick(val comicId: Int) : AllCharacterComicsEvent()
 
+    object OnDropDownArrowClick : AllCharacterComicsEvent()
+
     sealed class Sorting : AllCharacterComicsEvent() {
         data class OnItemClick(val sortingType: SortingType) : Sorting()
+        object OnCloseClick : Sorting()
     }
 
     object OnBackClick : AllCharacterComicsEvent()
@@ -50,6 +53,11 @@ data class AllCharacterComicsState(
 sealed class AllCharacterComicsEffect : BaseEffect {
     object NavigateToCharacterScreen : AllCharacterComicsEffect()
     data class NavigateToComicScreen(val comicId: Int) : AllCharacterComicsEffect()
+
+    sealed class BottomSheet : AllCharacterComicsEffect() {
+        object Show : BottomSheet()
+        object Hide : BottomSheet()
+    }
 }
 
 @HiltViewModel
@@ -80,11 +88,17 @@ class AllCharacterComicsViewModel @Inject constructor(
             }
 
             is AllCharacterComicsEvent.Sorting.OnItemClick -> {
-                // We delay the update of the sorting label so that the "Check" inside the DropDownMenuItem is not displayed in a different position and the
-                // UI becomes too fast. It is for aesthetic purposes only. todo: to be refactored
-                delay(50L)
                 when (event.sortingType) {
                     SortingType.Random -> {
+                        setEffect {
+                            AllCharacterComicsEffect.BottomSheet.Hide
+                        }
+
+                        // Stops from re-ordering the list of items if the sortingType is the same.
+                        if (event.sortingType == currentState.sortingType) {
+                            return
+                        }
+
                         setState {
                             copy(
                                 sortingType = event.sortingType,
@@ -94,6 +108,15 @@ class AllCharacterComicsViewModel @Inject constructor(
                     }
 
                     SortingType.TextAscending -> {
+                        setEffect {
+                            AllCharacterComicsEffect.BottomSheet.Hide
+                        }
+
+                        // Stops from re-ordering the list of items if the sortingType is the same.
+                        if (event.sortingType == currentState.sortingType) {
+                            return
+                        }
+
                         setState {
                             copy(
                                 sortingType = event.sortingType,
@@ -103,6 +126,15 @@ class AllCharacterComicsViewModel @Inject constructor(
                     }
 
                     SortingType.TextDescending -> {
+                        setEffect {
+                            AllCharacterComicsEffect.BottomSheet.Hide
+                        }
+
+                        // Stops from re-ordering the list of items if the sortingType is the same.
+                        if (event.sortingType == currentState.sortingType) {
+                            return
+                        }
+
                         setState {
                             copy(
                                 sortingType = event.sortingType,
@@ -110,6 +142,18 @@ class AllCharacterComicsViewModel @Inject constructor(
                             )
                         }
                     }
+                }
+            }
+
+            AllCharacterComicsEvent.Sorting.OnCloseClick -> {
+                setEffect {
+                    AllCharacterComicsEffect.BottomSheet.Hide
+                }
+            }
+
+            AllCharacterComicsEvent.OnDropDownArrowClick -> {
+                setEffect {
+                    AllCharacterComicsEffect.BottomSheet.Show
                 }
             }
         }

@@ -2,7 +2,7 @@ package com.alexgreece45.marvelx.util
 
 import android.graphics.drawable.Icon
 import androidx.annotation.DrawableRes
-import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,41 +10,37 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyItemScope
+import androidx.compose.material.BottomSheetScaffold
+import androidx.compose.material.BottomSheetScaffoldState
 import androidx.compose.material.Button
 import androidx.compose.material.ContentAlpha
-import androidx.compose.material.DropdownMenu
-import androidx.compose.material.DropdownMenuItem
 import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.ExposedDropdownMenuBox
-import androidx.compose.material.ExposedDropdownMenuDefaults
 import androidx.compose.material.FloatingActionButton
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.LocalContentAlpha
 import androidx.compose.material.LocalContentColor
 import androidx.compose.material.MaterialTheme
-import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
-import androidx.compose.material.TextFieldDefaults
 import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.ArrowDropUp
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.util.extensions.applyPadding
@@ -140,6 +136,22 @@ fun ContentScreen(
     }
 }
 
+
+@OptIn(ExperimentalMaterialApi::class)
+@Composable
+fun ModalBottomSheetScaffold(
+    scaffoldState: BottomSheetScaffoldState,
+    sheetContent: @Composable () -> Unit,
+    content: @Composable (PaddingValues) -> Unit
+) {
+    BottomSheetScaffold(
+        sheetContent = { sheetContent() },
+        scaffoldState = scaffoldState
+    ) { padding ->
+        content(padding)
+    }
+}
+
 @Composable
 fun LoadingScreen(
     isLoading: Boolean,
@@ -203,167 +215,107 @@ sealed class SortingType(val order: Int, val label: String) {
 }
 
 @Composable
-fun SortingDropDownMenu(
-    isExpanded: Boolean,
-    sortingType: SortingType,
-    onDismissRequest: () -> Unit,
-    onDropDownArrowClick: () -> Unit,
+fun SortingItems(
+    startPadding: Dp = 0.dp,
+    selectedItem: SortingType,
     onItemClick: (SortingType) -> Unit
 ) {
-    val items = SortingType.asList()
+    SortingType.asList().forEachIndexed { index, sortingType ->
+        val isSelected = selectedItem == sortingType
 
-    Text(
-        text = "Sort by",
-        color = MaterialTheme.colors.onBackground.copy(alpha = 0.7f),
-        style = MaterialTheme.typography.subtitle1
-    )
-
-    VSpacer.Tiny()
-
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = sortingType.label,
-            style = MaterialTheme.typography.h6
-        )
-
-        IconButton(onClick = { onDropDownArrowClick() }) {
-            if (isExpanded) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = startPadding)
+                .clickable {
+                    onItemClick(sortingType)
+                },
+            horizontalArrangement = Arrangement.Start,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            if (isSelected) {
                 Icon(
-                    imageVector = Icons.Filled.ArrowDropUp,
-                    contentDescription = Icons.Filled.ArrowDropUp.name,
+                    imageVector = Icons.Filled.Check,
+                    contentDescription = Icons.Filled.Check.name,
                     tint = MaterialTheme.colors.onBackground
                 )
             } else {
+                // Placeholder for space between the icon and the labels; this ensures that all the labels are perfectly vertically aligned.
                 Icon(
-                    imageVector = Icons.Filled.ArrowDropDown,
-                    contentDescription = Icons.Filled.ArrowDropDown.name,
-                    tint = MaterialTheme.colors.onBackground
+                    imageVector = Icons.Filled.Check,
+                    contentDescription = null,
+                    tint = Color.Transparent
+                )
+            }
+
+            HSpacer.Small()
+
+            Text(
+                text = sortingType.label,
+                style = MaterialTheme.typography.h6,
+                color = if (isSelected) LocalContentColor.current else LocalContentColor.current.copy(
+                    alpha = LocalContentAlpha.current.minus(0.3f)
+                )
+            )
+        }
+
+        // Adds vertical space at the bottom of each item, except for the last one.
+        if (index != SortingType.asList().lastIndex) VSpacer.Medium()
+    }
+}
+
+@Composable
+fun SortingModalBottomSheetContent(
+    contentPadding: Dp = SPACING_SMALL.dp,
+    selectedItem: SortingType,
+    onItemClick: (SortingType) -> Unit,
+    onCloseClick: () -> Unit
+) {
+    val circleBackgroundColor = MaterialTheme.colors.background.copy(
+        alpha = LocalContentAlpha.current.minus(0.4f)
+    )
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .wrapContentHeight()
+            .padding(contentPadding)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = stringResource(R.string.sort_by),
+                style = MaterialTheme.typography.h4
+            )
+
+            IconButton(
+                onClick = { onCloseClick() }
+            ) {
+                Icon(
+                    modifier = Modifier
+                        .size(SPACING_LARGE.dp)
+                        .drawBehind {
+                            drawCircle(
+                                color = circleBackgroundColor,
+                                radius = this.size.maxDimension.div(2) + SPACING_MEDIUM
+                            )
+                        },
+                    painter = painterResource(R.drawable.ic_close_32),
+                    contentDescription = stringResource(R.string.close)
                 )
             }
         }
-    }
 
-    Box(
-        modifier = Modifier.fillMaxSize()
-    ) {
-        DropdownMenu(
-            expanded = isExpanded,
-            onDismissRequest = { onDismissRequest() }
-        ) {
-            items.forEachIndexed { index, item ->
-                DropdownMenuItem(
-                    modifier = Modifier.background(Color.Transparent),
-                    onClick = {
-                        // Stops from selecting the same item again.
-                        if (item != sortingType)
-                            onItemClick(item)
-                        else
-                            onDismissRequest()
-                    }
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxSize(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(
-                            text = item.label,
-                            style = MaterialTheme.typography.h6,
-                            color = LocalContentColor.current.copy(
-                                alpha = if (sortingType == item) LocalContentAlpha.current else
-                                    LocalContentAlpha.current.minus(0.3f)
-                            )
-                        )
+        VSpacer.Medium()
 
-                        if (index == sortingType.order) {
-                            Icon(
-                                imageVector = Icons.Filled.Check,
-                                contentDescription = Icons.Filled.Check.name,
-                                tint = MaterialTheme.colors.onBackground
-                            )
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-}
-
-@OptIn(ExperimentalMaterialApi::class)
-@Composable
-fun SortingDropDownMenu2(
-    isExpanded: Boolean,
-    sortingType: SortingType,
-    onDismissRequest: () -> Unit,
-    onExpandedChange: () -> Unit,
-    onItemClick: (SortingType) -> Unit
-) {
-    Text(
-        text = "Sort by",
-        color = MaterialTheme.colors.onBackground.copy(alpha = 0.7f),
-        style = MaterialTheme.typography.subtitle1
-    )
-
-    ExposedDropdownMenuBox(
-        expanded = isExpanded,
-        onExpandedChange = { onExpandedChange() }
-    ) {
-        OutlinedTextField(
-            value = TextFieldValue(text = sortingType.label),
-            onValueChange = {},
-            readOnly = true,
-            textStyle = MaterialTheme.typography.h6,
-            label = {},
-            trailingIcon = {
-                ExposedDropdownMenuDefaults.TrailingIcon(expanded = isExpanded)
-            },
-            colors = ExposedDropdownMenuDefaults.textFieldColors(
-                backgroundColor = Color.Transparent,
-                cursorColor = Color.Transparent,
-                focusedIndicatorColor = Color.Transparent,
-                unfocusedIndicatorColor = Color.Transparent,
-                trailingIconColor = LocalContentColor.current.copy(alpha = ContentAlpha.high),
-                focusedTrailingIconColor = LocalContentColor.current.copy(alpha = ContentAlpha.high),
-                focusedLabelColor = Color.Transparent,
-                unfocusedLabelColor = Color.Transparent
-            )
-        )
-
-        ExposedDropdownMenu(expanded = isExpanded, onDismissRequest = { onDismissRequest() }) {
-            SortingType.asList().forEach { item ->
-                DropdownMenuItem(
-                    onClick = {
-                        onItemClick(item)
-                    }
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = item.label,
-                            style = MaterialTheme.typography.h6,
-                            color = LocalContentColor.current.copy(
-                                alpha = if (sortingType == item) LocalContentAlpha.current else
-                                    LocalContentAlpha.current.minus(0.3f)
-                            )
-                        )
-
-                        if (sortingType == item) {
-                            Icon(
-                                imageVector = Icons.Filled.Check,
-                                contentDescription = Icons.Filled.Check.name,
-                                tint = MaterialTheme.colors.onBackground
-                            )
-                        }
-                    }
-                }
-            }
+        SortingItems(
+            startPadding = 10.dp,
+            selectedItem = selectedItem
+        ) { sortingType ->
+            onItemClick(sortingType)
         }
     }
 }
