@@ -3,6 +3,7 @@ package com.alexgreece45.marvelx.util
 import android.graphics.drawable.Icon
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,6 +16,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.material.BottomSheetScaffold
+import androidx.compose.material.BottomSheetScaffoldDefaults
 import androidx.compose.material.BottomSheetScaffoldState
 import androidx.compose.material.Button
 import androidx.compose.material.ContentAlpha
@@ -24,18 +26,22 @@ import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.LocalContentAlpha
 import androidx.compose.material.LocalContentColor
+import androidx.compose.material.LocalTextStyle
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
 import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
@@ -86,7 +92,10 @@ fun ContentScreen(
                     elevation = 0.dp,
                     contentPadding = PaddingValues(0.dp).applyPadding()
                 ) {
-                    CompositionLocalProvider(LocalContentAlpha provides ContentAlpha.high) {
+                    CompositionLocalProvider(
+                        LocalContentAlpha provides ContentAlpha.high,
+                        LocalTextStyle provides MaterialTheme.typography.h6
+                    ) {
                         onBack?.let {
                             IconButton(onClick = { it.invoke() }) {
                                 Icon(
@@ -100,7 +109,6 @@ fun ContentScreen(
                             Text(
                                 modifier = Modifier.weight(1f),
                                 text = toolbarTitle,
-                                style = MaterialTheme.typography.h6,
                                 maxLines = 1
                             )
                         }
@@ -126,12 +134,12 @@ fun ContentScreen(
                 }
             }
         }
-    ) { padding ->
+    ) { paddingValues ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
         ) {
-            content(padding.applyPadding())
+            content(paddingValues.applyPadding())
         }
     }
 }
@@ -140,17 +148,76 @@ fun ContentScreen(
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun ModalBottomSheetScaffold(
-    scaffoldState: BottomSheetScaffoldState,
+    modifier: Modifier = Modifier,
+    onBack: (() -> Unit)? = null,
+    showToolbar: Boolean = false,
+    toolbarTitle: String? = null,
+    toolbarActions: List<ToolbarAction>? = null,
     sheetContent: @Composable () -> Unit,
+    bottomSheetScaffoldState: BottomSheetScaffoldState,
+    sheetGesturesEnabled: Boolean = true,
+    sheetShape: Shape = MaterialTheme.shapes.large,
+    sheetElevation: Dp = BottomSheetScaffoldDefaults.SheetElevation,
     content: @Composable (PaddingValues) -> Unit
 ) {
     BottomSheetScaffold(
+        modifier = modifier,
+        topBar = {
+            if (showToolbar) {
+                TopAppBar(
+                    modifier = Modifier.fillMaxWidth(),
+                    elevation = 0.dp,
+                    contentPadding = PaddingValues(0.dp).applyPadding()
+                ) {
+                    CompositionLocalProvider(
+                        LocalContentAlpha provides ContentAlpha.high,
+                        LocalTextStyle provides MaterialTheme.typography.h6
+                    ) {
+                        onBack?.let {
+                            IconButton(onClick = { it.invoke() }) {
+                                Icon(
+                                    painter = painterResource(R.drawable.ic_back_32),
+                                    contentDescription = stringResource(R.string.back),
+                                )
+                            }
+                        }
+
+                        toolbarTitle?.let { toolbarTitle ->
+                            Text(
+                                modifier = Modifier.weight(1f),
+                                text = toolbarTitle,
+                                maxLines = 1
+                            )
+                        }
+
+                        toolbarActions?.sortedBy { it.order }?.forEach { toolbarAction ->
+                            IconButton(onClick = { toolbarAction.onClick() }) {
+                                Icon(
+                                    painter = painterResource(toolbarAction.iconData.iconResource),
+                                    contentDescription = toolbarAction.iconData.contentDescription,
+                                    tint = toolbarAction.iconData.colorTint
+                                        ?: LocalContentColor.current.copy(alpha = LocalContentAlpha.current)
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        },
         sheetContent = { sheetContent() },
-        scaffoldState = scaffoldState
-    ) { padding ->
-        content(padding)
+        scaffoldState = bottomSheetScaffoldState,
+        sheetGesturesEnabled = sheetGesturesEnabled,
+        sheetShape = sheetShape,
+        sheetElevation = sheetElevation
+    ) { paddingValues ->
+        Box(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            content(paddingValues/*.applyPadding()*/)
+        }
     }
 }
+
 
 @Composable
 fun LoadingScreen(
@@ -227,7 +294,11 @@ fun SortingItems(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(start = startPadding)
-                .clickable {
+                // Disables the on tap ripple effect for both simple and long clicks.
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = rememberRipple(radius = 0.dp)
+                ) {
                     onItemClick(sortingType)
                 },
             horizontalArrangement = Arrangement.Start,

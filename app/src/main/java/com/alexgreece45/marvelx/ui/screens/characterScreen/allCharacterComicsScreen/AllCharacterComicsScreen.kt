@@ -1,32 +1,31 @@
 package com.alexgreece45.marvelx.ui.screens.characterScreen.allCharacterComicsScreen
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.BottomSheetValue
 import androidx.compose.material.Card
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Icon
-import androidx.compose.material.LocalContentAlpha
 import androidx.compose.material.MaterialTheme
-import androidx.compose.material.ModalBottomSheetLayout
-import androidx.compose.material.ModalBottomSheetValue
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.rememberModalBottomSheetState
+import androidx.compose.material.rememberBottomSheetScaffoldState
+import androidx.compose.material.rememberBottomSheetState
+import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -42,11 +41,9 @@ import com.alexgreece45.marvelx.domain.viewmodels.AllCharacterComicsEffect
 import com.alexgreece45.marvelx.domain.viewmodels.AllCharacterComicsEvent
 import com.alexgreece45.marvelx.domain.viewmodels.AllCharacterComicsViewModel
 import com.alexgreece45.marvelx.ui.screens.destinations.ComicScreenDestination
-import com.alexgreece45.marvelx.util.ContentScreen
 import com.alexgreece45.marvelx.util.HSpacer
 import com.alexgreece45.marvelx.util.LoadingScreen
-import com.alexgreece45.marvelx.util.SPACING_LARGE
-import com.alexgreece45.marvelx.util.SPACING_MEDIUM
+import com.alexgreece45.marvelx.util.ModalBottomSheetScaffold
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.SortingModalBottomSheetContent
 import com.alexgreece45.marvelx.util.VSpacer
@@ -64,11 +61,12 @@ fun AllCharacterComicsScreen(
     toolbarTitlePrefix: String
 ) {
     val state by viewModel.uiState.collectAsState()
-    val modalBottomSheetState =
-        rememberModalBottomSheetState(
-            initialValue = ModalBottomSheetValue.Hidden,
-            skipHalfExpanded = false
+    val bottomSheetScaffoldState = rememberBottomSheetScaffoldState(
+        bottomSheetState = rememberBottomSheetState(
+            initialValue = BottomSheetValue.Collapsed,
+            confirmStateChange = { false }
         )
+    )
 
     LaunchedEffect(Unit) {
         viewModel.setEvent(AllCharacterComicsEvent.InitView(characterId = characterId))
@@ -85,13 +83,13 @@ fun AllCharacterComicsScreen(
 
                 AllCharacterComicsEffect.BottomSheet.Hide -> {
                     coroutineScope {
-                        modalBottomSheetState.hide()
+                        bottomSheetScaffoldState.bottomSheetState.collapse()
                     }
                 }
 
                 AllCharacterComicsEffect.BottomSheet.Show -> {
                     coroutineScope {
-                        modalBottomSheetState.show()
+                        bottomSheetScaffoldState.bottomSheetState.expand()
                     }
                 }
             }
@@ -99,12 +97,16 @@ fun AllCharacterComicsScreen(
     }
 
     LoadingScreen(isLoading = state.isLoading) {
-        ModalBottomSheetLayout(
-            modifier = Modifier.fillMaxSize(),
-            sheetState = modalBottomSheetState,
-            sheetShape = RoundedCornerShape(topStart = SPACING_SMALL.dp, topEnd = SPACING_SMALL.dp),
-            scrimColor = MaterialTheme.colors.background.copy(
+        /*scrimColor = MaterialTheme.colors.background.copy(
                 alpha = LocalContentAlpha.current.minus(0.5f)
+            )*/
+
+        ModalBottomSheetScaffold(
+            onBack = { navigator.popBackStack() },
+            showToolbar = true,
+            toolbarTitle = stringResource(
+                R.string.all_character_comics_screen_toolbar_title,
+                toolbarTitlePrefix
             ),
             sheetContent = {
                 SortingModalBottomSheetContent(
@@ -113,64 +115,63 @@ fun AllCharacterComicsScreen(
                     onItemClick = { sortingType ->
                         viewModel.setEvent(AllCharacterComicsEvent.Sorting.OnItemClick(sortingType))
                     },
+
                     onCloseClick = {
                         viewModel.setEvent(AllCharacterComicsEvent.Sorting.OnCloseClick)
                     }
                 )
-            }
-        ) {
-            ContentScreen(
-                onBack = { navigator.popBackStack() },
-                showToolbar = true,
-                toolbarTitle = stringResource(
-                    R.string.all_character_comics_screen_toolbar_title,
-                    toolbarTitlePrefix
-                )
-            ) { padding ->
-                LazyColumn(contentPadding = padding) {
-                    item {
+            },
+            bottomSheetScaffoldState = bottomSheetScaffoldState,
+            sheetGesturesEnabled = false,
+            sheetShape = RoundedCornerShape(topStart = SPACING_SMALL.dp, topEnd = SPACING_SMALL.dp),
+            ) { paddingValues ->
+            LazyColumn(contentPadding = paddingValues) {
+                item {
+                    Text(
+                        text = stringResource(R.string.sort_by),
+                        color = MaterialTheme.colors.onBackground.copy(alpha = 0.7f),
+                        style = MaterialTheme.typography.subtitle1
+                    )
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            // Disables the on tap ripple effect for both single and long clicks. It also removes the background color.
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = rememberRipple(radius = 0.dp)
+                            ) {
+                                viewModel.setEvent(AllCharacterComicsEvent.OnDropDownArrowClick)
+                            },
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         Text(
-                            text = stringResource(R.string.sort_by),
-                            color = MaterialTheme.colors.onBackground.copy(alpha = 0.7f),
-                            style = MaterialTheme.typography.subtitle1
+                            text = state.sortingType.label,
+                            style = MaterialTheme.typography.h6
                         )
 
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable {
-                                    viewModel.setEvent(AllCharacterComicsEvent.OnDropDownArrowClick)
-                                },
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = state.sortingType.label,
-                                style = MaterialTheme.typography.h6
-                            )
+                        Icon(
+                            imageVector = Icons.Filled.ArrowDropDown,
+                            contentDescription = Icons.Filled.ArrowDropDown.name,
+                            tint = MaterialTheme.colors.onBackground
+                        )
+                    }
+                }
 
-                            Icon(
-                                imageVector = Icons.Filled.ArrowDropDown,
-                                contentDescription = Icons.Filled.ArrowDropDown.name,
-                                tint = MaterialTheme.colors.onBackground
-                            )
-                        }
+                item { VSpacer.Custom(height = 10) }
+
+                itemsIndexed(
+                    items = state.comics,
+                    key = { _, comicDomain ->
+                        comicDomain.id
+                    }
+                ) { index, comicDomain ->
+                    ComicItem(comic = comicDomain) {
+                        viewModel.setEvent(AllCharacterComicsEvent.OnComicClick(comicId = comicDomain.id))
                     }
 
-                    item { VSpacer.Custom(height = 10) }
-
-                    itemsIndexed(
-                        items = state.comics,
-                        key = { _, comicDomain ->
-                            comicDomain.id
-                        }
-                    ) { index, comicDomain ->
-                        ComicItem(comic = comicDomain) {
-                            viewModel.setEvent(AllCharacterComicsEvent.OnComicClick(comicId = comicDomain.id))
-                        }
-
-                        // Adds vertical padding at the bottom of each item (except for the last item).
-                        if (index != state.comics.lastIndex) VSpacer.Small()
-                    }
+                    // Adds vertical padding at the bottom of each item (except for the last item).
+                    if (index != state.comics.lastIndex) VSpacer.Small()
                 }
             }
         }
