@@ -15,6 +15,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyItemScope
+import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.grid.LazyGridItemScope
+import androidx.compose.foundation.lazy.grid.LazyGridScope
 import androidx.compose.material.BottomSheetScaffold
 import androidx.compose.material.BottomSheetScaffoldDefaults
 import androidx.compose.material.BottomSheetScaffoldState
@@ -28,6 +31,9 @@ import androidx.compose.material.LocalContentAlpha
 import androidx.compose.material.LocalContentColor
 import androidx.compose.material.LocalTextStyle
 import androidx.compose.material.MaterialTheme
+import androidx.compose.material.ModalBottomSheetDefaults
+import androidx.compose.material.ModalBottomSheetLayout
+import androidx.compose.material.ModalBottomSheetState
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
 import androidx.compose.material.TopAppBar
@@ -144,6 +150,29 @@ fun ContentScreen(
     }
 }
 
+@OptIn(ExperimentalMaterialApi::class)
+@Composable
+fun ModalBottomSheet(
+    sheetState: ModalBottomSheetState,
+    sheetShape: Shape = MaterialTheme.shapes.large,
+    sheetElevation: Dp = ModalBottomSheetDefaults.Elevation,
+    scrimColor: Color = ModalBottomSheetDefaults.scrimColor,
+    sheetContent: @Composable () -> Unit,
+    content: @Composable () -> Unit
+) {
+    ModalBottomSheetLayout(
+        modifier = Modifier
+            .fillMaxWidth()
+            .wrapContentHeight(),
+        sheetContent = { sheetContent() },
+        sheetState = sheetState,
+        sheetShape = sheetShape,
+        sheetElevation = sheetElevation,
+        scrimColor = scrimColor,
+    ) {
+        content()
+    }
+}
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable

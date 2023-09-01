@@ -47,7 +47,7 @@ data class AllCharactersState(
 
     /**
      * This field tracks if the fragment of this ViewModel has been launched for the first time.
-     * The value is set to true by default, and only changes, to false, when navigation occurs to the CharacterScreen.
+     * The value is set to true by default, and only changes, to false, when navigation occurs to the [CharacterScreen].
      * */
     val isFirstLaunch: Boolean = true
 ) : BaseState {

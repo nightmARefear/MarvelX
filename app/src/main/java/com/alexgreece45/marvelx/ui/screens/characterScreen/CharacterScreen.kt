@@ -140,12 +140,12 @@ fun CharacterScreen(
             }
         ) { padding ->
             LazyColumn(contentPadding = padding) {
-                item {
-                    state.errorMessage?.let { errorMessage ->
-                        GenericErrorScreen(errorMessage = errorMessage)
-                    }
+                state.errorMessage?.let { errorMessage ->
+                    item { GenericErrorScreen(errorMessage = errorMessage) }
+                }
 
-                    if (!state.hasInternetConnection) {
+                if (!state.hasInternetConnection) {
+                    item {
                         NoInternetErrorScreen {
                             viewModel.setEvent(
                                 CharacterEvent.InitView(
@@ -154,8 +154,10 @@ fun CharacterScreen(
                             )
                         }
                     }
+                }
 
-                    state.character?.let { character ->
+                state.character?.let { character ->
+                    item {
                         // Character.
                         CharacterItem(
                             character = character
@@ -179,13 +181,13 @@ fun CharacterScreen(
                                 }
                             )
                         }
-
-                        // Events.
-
-                        // Series.
-
-                        // Stories.
                     }
+
+                    // Events.
+
+                    // Series.
+
+                    // Stories.
                 }
             }
         }

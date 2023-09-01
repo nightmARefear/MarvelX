@@ -1,20 +1,22 @@
 package com.alexgreece45.marvelx.ui.screens.allCharactersScreen
 
 import android.widget.Toast
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.border
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.Card
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
+import androidx.compose.material.LocalContentAlpha
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -26,11 +28,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -43,12 +45,10 @@ import com.alexgreece45.marvelx.domain.viewmodels.AllCharactersEvent
 import com.alexgreece45.marvelx.domain.viewmodels.AllCharactersViewModel
 import com.alexgreece45.marvelx.ui.screens.destinations.CharacterScreenDestination
 import com.alexgreece45.marvelx.util.ContentScreen
-import com.alexgreece45.marvelx.util.DEFAULT_SCREEN_PADDING
 import com.alexgreece45.marvelx.util.GenericErrorScreen
-import com.alexgreece45.marvelx.util.ItemDescription
 import com.alexgreece45.marvelx.util.LoadingScreen
 import com.alexgreece45.marvelx.util.NoInternetErrorScreen
-import com.alexgreece45.marvelx.util.VSpacer
+import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootNavGraph
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
@@ -102,6 +102,7 @@ fun AllCharacterScreen(
             showToolbar = true,
             toolbarTitle = stringResource(R.string.all_characters_screen_toolbar_title)
         ) { padding ->
+
             LazyColumn(
                 contentPadding = padding
             ) {
@@ -124,30 +125,32 @@ fun AllCharacterScreen(
                 }
 
                 if (state.characters.isNotEmpty()) {
-                    itemsIndexed(state.characters,
-                        key = { _, character ->
-                            character.id
-                        }
-                    ) { index, character ->
-                        CharacterItem(
-                            character = character,
-                            onClick = {
-                                viewModel.setEvent(
-                                    AllCharactersEvent.OnCharacterClick(characterId = character.id)
-                                )
-                            },
-                            onFavoriteClick = {
-                                viewModel.setEvent(
-                                    AllCharactersEvent.OnHeartClick(
-                                        characterId = character.id
-                                    )
+                    item {
+                        LazyVerticalGrid(
+                            modifier = Modifier.fillParentMaxHeight(),
+                            columns = GridCells.Fixed(3),
+                            verticalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp),
+                            horizontalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp)
+                        ) {
+                            items(
+                                state.characters
+                            ) { character ->
+                                CharacterItem(
+                                    character = character,
+                                    onClick = {
+                                        viewModel.setEvent(
+                                            AllCharactersEvent.OnCharacterClick(characterId = character.id)
+                                        )
+                                    },
+                                    onFavoriteClick = {
+                                        viewModel.setEvent(
+                                            AllCharactersEvent.OnHeartClick(
+                                                characterId = character.id
+                                            )
+                                        )
+                                    }
                                 )
                             }
-                        )
-
-                        // Adds vertical padding at the bottom of each item (except for the last item).
-                        if (index != state.characters.lastIndex) {
-                            VSpacer.Medium()
                         }
                     }
                 }
@@ -158,6 +161,7 @@ fun AllCharacterScreen(
 
 @Composable
 private fun CharacterItem(
+    modifier: Modifier = Modifier,
     character: CharacterDomain,
     onClick: () -> Unit,
     onFavoriteClick: () -> Unit
@@ -166,40 +170,19 @@ private fun CharacterItem(
 
     Card(
         modifier = Modifier
-            .clickable { onClick() }
             .fillMaxWidth()
-            .wrapContentHeight()
+            .clickable { onClick() }
     ) {
-        Column(
-            modifier = Modifier.padding(DEFAULT_SCREEN_PADDING)
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
         ) {
-            // Name.
-            Text(
-                modifier = Modifier.align(alignment = Alignment.CenterHorizontally),
-                text = character.name,
-                style = MaterialTheme.typography.h6,
-                textAlign = TextAlign.Center
-            )
-
-            VSpacer.Small()
-
             // Image.
-            val borderWidth = 2.dp
             AsyncImage(
                 modifier = Modifier
-                    .size(300.dp)
-                    .border(
-                        BorderStroke(
-                            width = borderWidth,
-                            color = MaterialTheme.colors.primaryVariant
-                        ),
-                        CircleShape
-                    )
-                    .padding(borderWidth)
-                    .clip(CircleShape)
-                    .align(Alignment.CenterHorizontally),
+                    .heightIn(max = 120.dp),
                 model = ImageRequest.Builder(context)
-                    .data(character.thumbnail.path + "." + character.thumbnail.extension)
+                    .data(character.thumbnail.downloadUrl)
                     .crossfade(true)
                     .build(),
                 contentDescription = "${character.name} image",
@@ -207,18 +190,9 @@ private fun CharacterItem(
                 error = painterResource(R.drawable.ic_broken_image)
             )
 
-            VSpacer.Small()
-
-            // Description.
-            ItemDescription(
-                description = character.description, emptyDescriptionMessage = stringResource(
-                    R.string.no_character_description
-                )
-            )
-
             // Favorite IconButton
             IconButton(
-                modifier = Modifier.align(Alignment.End),
+                modifier = Modifier.align(Alignment.TopEnd),
                 onClick = { onFavoriteClick() }
             ) {
                 when (character.isFavorite) {
@@ -239,6 +213,22 @@ private fun CharacterItem(
                     }
                 }
             }
+
+            // Name.
+            Text(
+                modifier = Modifier
+                    .background(
+                        MaterialTheme.colors.background.copy(
+                            alpha = LocalContentAlpha.current.minus(
+                                0.4f
+                            )
+                        )
+                    )
+                    .align(Alignment.BottomCenter),
+                text = character.name,
+                style = MaterialTheme.typography.subtitle1.copy(fontWeight = FontWeight.Bold),
+                textAlign = TextAlign.Center
+            )
         }
     }
 }
