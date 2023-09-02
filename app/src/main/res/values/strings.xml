@@ -28,6 +28,8 @@
 
     <!-- All Characters Screen -->
     <string name="all_characters_screen_toolbar_title">Characters</string>
+    
+    <string name="all_characters_screen_fab_label">Filter</string>
 
     <string name="all_characters_screen_favorite_character_icon_description">favorite</string>
     <string name="all_characters_screen_not_favorite_character_icon_description">not favorite</string>

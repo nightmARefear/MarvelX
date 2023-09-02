@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 const val SPACING_TINY = 4
@@ -49,11 +50,5 @@ object HSpacer {
     fun Large() = Spacer(modifier = Modifier.width(width = SPACING_LARGE.dp))
 
     @Composable
-    fun Custom(width: Int) = Spacer(modifier = Modifier.width(width = width.dp))
-
-    @Composable
-    fun Custom(width: Double) = Spacer(modifier = Modifier.width(width = width.dp))
-
-    @Composable
-    fun Custom(width: Float) = Spacer(modifier = Modifier.width(width = width.dp))
+    fun Custom(width: Dp) = Spacer(modifier = Modifier.width(width = width))
 }

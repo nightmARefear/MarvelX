@@ -12,8 +12,10 @@ import com.alexgreece45.marvelx.ui.base.BaseEvent
 import com.alexgreece45.marvelx.ui.base.BaseState
 import com.alexgreece45.marvelx.ui.base.BaseViewModel
 import com.alexgreece45.marvelx.util.ResourceProvider
+import com.alexgreece45.marvelx.util.SortingType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
+import java.util.Random
 import javax.inject.Inject
 
 sealed interface AllCharactersEvent : BaseEvent {
@@ -21,6 +23,13 @@ sealed interface AllCharactersEvent : BaseEvent {
     object LoadFavoriteCharacters : AllCharactersEvent
     data class OnCharacterClick(val characterId: Int) : AllCharactersEvent
     data class OnHeartClick(val characterId: Int) : AllCharactersEvent
+
+    object OnFabClick : AllCharactersEvent
+
+    sealed class Sorting : AllCharactersEvent {
+        data class OnItemClick(val sortingType: SortingType) : Sorting()
+        object OnCloseClick : Sorting()
+    }
 }
 
 sealed interface AllCharactersEffect : BaseEffect {
@@ -34,6 +43,11 @@ sealed interface AllCharactersEffect : BaseEffect {
         data class Success(val successMessage: String) : UnFavoriteCharacter
         data class Error(val errorMessage: String) : UnFavoriteCharacter
     }
+
+    sealed interface SortingBottomSheet : AllCharactersEffect {
+        object Show : SortingBottomSheet
+        object Hide : SortingBottomSheet
+    }
 }
 
 data class AllCharactersState(
@@ -44,6 +58,7 @@ data class AllCharactersState(
 
     // Data.
     val characters: List<CharacterDomain> = mutableListOf(),
+    val sortingType: SortingType = SortingType.getDefaultSortingType(),
 
     /**
      * This field tracks if the fragment of this ViewModel has been launched for the first time.
@@ -99,6 +114,55 @@ class AllCharactersViewModel @Inject constructor(
 
             is AllCharactersEvent.LoadFavoriteCharacters -> {
                 syncFavoriteCharacters()
+            }
+
+            AllCharactersEvent.OnFabClick -> {
+                setEffect {
+                    AllCharactersEffect.SortingBottomSheet.Show
+                }
+            }
+
+            AllCharactersEvent.Sorting.OnCloseClick -> {
+                setEffect {
+                    AllCharactersEffect.SortingBottomSheet.Hide
+                }
+            }
+
+            is AllCharactersEvent.Sorting.OnItemClick -> {
+                setEffect {
+                    AllCharactersEffect.SortingBottomSheet.Hide
+                }
+                // Selected sorting type is the same as the old one, so don't perform further actions.
+                if (event.sortingType == currentState.sortingType) return
+
+                when (event.sortingType) {
+                    SortingType.Random -> {
+                        setState {
+                            copy(
+                                characters = currentState.characters.shuffled(),
+                                sortingType = event.sortingType
+                            )
+                        }
+                    }
+
+                    SortingType.TextAscending -> {
+                        setState {
+                            copy(
+                                characters = currentState.characters.sortedBy { it.name },
+                                sortingType = event.sortingType
+                            )
+                        }
+                    }
+
+                    SortingType.TextDescending -> {
+                        setState {
+                            copy(
+                                characters = currentState.characters.sortedByDescending { it.name },
+                                sortingType = event.sortingType
+                            )
+                        }
+                    }
+                }
             }
         }
     }
@@ -258,7 +322,10 @@ class AllCharactersViewModel @Inject constructor(
                         }
                         setEffect {
                             AllCharactersEffect.UnFavoriteCharacter.Success(
-                                successMessage = resourceProvider.getString(R.string.not_favorite_message, "character")
+                                successMessage = resourceProvider.getString(
+                                    R.string.not_favorite_message,
+                                    "character"
+                                )
                             )
                         }
                     }
@@ -301,7 +368,10 @@ class AllCharactersViewModel @Inject constructor(
                         }
                         setEffect {
                             AllCharactersEffect.UnFavoriteCharacter.Success(
-                                successMessage = resourceProvider.getString(R.string.favorite_message, "character")
+                                successMessage = resourceProvider.getString(
+                                    R.string.favorite_message,
+                                    "character"
+                                )
                             )
                         }
                     }

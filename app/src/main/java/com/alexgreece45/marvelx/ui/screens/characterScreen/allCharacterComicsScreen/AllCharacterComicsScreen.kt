@@ -42,6 +42,7 @@ import com.alexgreece45.marvelx.domain.viewmodels.AllCharacterComicsEvent
 import com.alexgreece45.marvelx.domain.viewmodels.AllCharacterComicsViewModel
 import com.alexgreece45.marvelx.ui.screens.destinations.ComicScreenDestination
 import com.alexgreece45.marvelx.util.ContentScreen
+import com.alexgreece45.marvelx.util.DEFAULT_SCREEN_PADDING
 import com.alexgreece45.marvelx.util.HSpacer
 import com.alexgreece45.marvelx.util.LoadingScreen
 import com.alexgreece45.marvelx.util.ModalBottomSheet
@@ -106,7 +107,7 @@ fun AllCharacterComicsScreen(
             ),
             sheetContent = {
                 SortingModalBottomSheetContent(
-                    contentPadding = 12.dp,
+                    contentPadding = DEFAULT_SCREEN_PADDING,
                     selectedItem = state.sortingType,
                     onItemClick = { sortingType ->
                         viewModel.setEvent(AllCharacterComicsEvent.Sorting.OnItemClick(sortingType))

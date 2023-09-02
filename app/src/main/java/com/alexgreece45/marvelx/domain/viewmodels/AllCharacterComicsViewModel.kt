@@ -38,7 +38,7 @@ data class AllCharacterComicsState(
 
     // Data.
     val comics: List<ComicDomain> = emptyList(),
-    val sortingType: SortingType = SortingType.Random,
+    val sortingType: SortingType = SortingType.getDefaultSortingType(),
 ) : BaseState {
     companion object {
         fun getDefaultValues(): AllCharacterComicsState = AllCharacterComicsState(

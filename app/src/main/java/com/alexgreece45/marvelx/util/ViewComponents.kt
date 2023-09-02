@@ -1,7 +1,7 @@
 package com.alexgreece45.marvelx.util
 
-import android.graphics.drawable.Icon
 import androidx.annotation.DrawableRes
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -13,11 +13,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyItemScope
-import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.lazy.grid.LazyGridItemScope
-import androidx.compose.foundation.lazy.grid.LazyGridScope
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.material.BottomSheetScaffold
 import androidx.compose.material.BottomSheetScaffoldDefaults
 import androidx.compose.material.BottomSheetScaffoldState
@@ -37,12 +37,17 @@ import androidx.compose.material.ModalBottomSheetState
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
 import androidx.compose.material.TopAppBar
+import androidx.compose.material.contentColorFor
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
@@ -51,6 +56,7 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -75,6 +81,22 @@ data class ToolbarAction(
     val onClick: () -> Unit
 )
 
+interface FabData
+
+data class NormalFabData(
+    val label: String = "",
+    val iconLabel: String? = null,
+    @DrawableRes val iconResource: Int? = null,
+    val backgroundColor: Color? = null,
+    val contentColor: Color? = null,
+    val onClick: () -> Unit
+) : FabData
+
+data class ExtendedFabData(
+    val extended: Boolean,
+    val normalFabData: NormalFabData
+) : FabData
+
 // ======== START OF ========
 //        Generic Screens
 // ==========================
@@ -85,9 +107,7 @@ fun ContentScreen(
     showToolbar: Boolean = false,
     toolbarTitle: String? = null,
     toolbarActions: List<ToolbarAction>? = null,
-    fab: Boolean = false,
-    fabIcon: Icon? = null,
-    fabAction: (() -> Unit)? = null,
+    fabData: FabData? = null,
     content: @Composable (PaddingValues) -> Unit
 ) {
     Scaffold(
@@ -96,7 +116,12 @@ fun ContentScreen(
                 TopAppBar(
                     modifier = Modifier.fillMaxWidth(),
                     elevation = 0.dp,
-                    contentPadding = PaddingValues(0.dp).applyPadding()
+                    contentPadding = PaddingValues(
+                        top = 0.dp,
+                        end = DEFAULT_SCREEN_PADDING,
+                        bottom = 0.dp,
+                        start = DEFAULT_SCREEN_PADDING
+                    )
                 ) {
                     CompositionLocalProvider(
                         LocalContentAlpha provides ContentAlpha.high,
@@ -134,9 +159,15 @@ fun ContentScreen(
             }
         },
         floatingActionButton = {
-            if (fab) {
-                FloatingActionButton(onClick = { fabAction?.invoke() }) {
+            fabData?.let { fabData ->
+                when (fabData) {
+                    is NormalFabData -> {
+                        NormalFloatingActionButton(normalFabData = fabData)
+                    }
 
+                    is ExtendedFabData -> {
+                        CollapsibleExtendedFloatingActionButton(extendedFabData = fabData)
+                    }
                 }
             }
         }
@@ -146,6 +177,79 @@ fun ContentScreen(
                 .fillMaxSize()
         ) {
             content(paddingValues.applyPadding())
+        }
+    }
+}
+
+@Composable
+fun NormalFloatingActionButton(
+    normalFabData: NormalFabData
+) {
+    val backgroundColor = normalFabData.backgroundColor ?: MaterialTheme.colors.secondary
+
+    FloatingActionButton(
+        backgroundColor = backgroundColor,
+        contentColor = normalFabData.contentColor
+            ?: contentColorFor(backgroundColor = backgroundColor),
+        onClick = { normalFabData.onClick.invoke() }
+    ) {
+        normalFabData.iconResource?.let { iconResource ->
+            Icon(
+                modifier = Modifier.size(SPACING_LARGE.dp),
+                painter = painterResource(iconResource),
+                contentDescription = normalFabData.iconLabel
+            )
+        }
+    }
+}
+
+@Composable
+fun CollapsibleExtendedFloatingActionButton(
+    extendedFabData: ExtendedFabData
+) {
+    val fabData = extendedFabData.normalFabData
+    val backgroundColor = fabData.backgroundColor ?: MaterialTheme.colors.secondary
+
+    // The default fab paddings as provided by the official implementation of the ExtendedFloatingActionButton.
+    val extendedFabSize = 48.dp
+    val extendedFabIconPadding = 12.dp
+    val extendedFabTextPadding = 20.dp
+    FloatingActionButton(
+        modifier = Modifier.sizeIn(
+            minWidth = extendedFabSize,
+            minHeight = extendedFabSize
+        ),
+        backgroundColor = backgroundColor,
+        contentColor = fabData.contentColor ?: contentColorFor(backgroundColor = backgroundColor),
+        onClick = { fabData.onClick() }
+    ) {
+        val startPadding =
+            if (fabData.iconResource == null) extendedFabIconPadding else extendedFabTextPadding
+        Row(
+            modifier = Modifier.padding(
+                start = startPadding,
+                end = extendedFabTextPadding
+            ),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            fabData.iconResource?.let { iconResource ->
+                Icon(
+                    modifier = Modifier.size(SPACING_LARGE.dp),
+                    painter = painterResource(iconResource),
+                    contentDescription = fabData.iconLabel
+                )
+                // Display horizontal padding only if the label is visible.
+                if (extendedFabData.extended) {
+                    HSpacer.Custom(width = extendedFabIconPadding)
+                }
+            }
+
+            AnimatedVisibility(visible = extendedFabData.extended) {
+                Text(
+                    text = fabData.label,
+                    style = MaterialTheme.typography.button.copy(fontWeight = FontWeight.ExtraBold)
+                )
+            }
         }
     }
 }
@@ -307,6 +411,8 @@ sealed class SortingType(val order: Int, val label: String) {
 
     companion object {
         fun asList(): List<SortingType> = listOf(Random, TextAscending, TextDescending)
+
+        fun getDefaultSortingType(): SortingType = Random
     }
 }
 
@@ -475,3 +581,25 @@ fun LazyItemScope.NoInternetErrorScreen(
 // ======== END OF ========
 //        Error Screens
 // ==========================
+
+@Composable
+fun LazyGridState.isScrollingUp(): Boolean {
+    var previousIndex by remember(this) {
+        mutableStateOf(firstVisibleItemIndex)
+    }
+    var previousScrollOffset by remember(this) {
+        mutableStateOf(firstVisibleItemScrollOffset)
+    }
+    return remember(this) {
+        derivedStateOf {
+            if (previousIndex != firstVisibleItemIndex) {
+                previousIndex > firstVisibleItemIndex
+            } else {
+                previousScrollOffset >= firstVisibleItemScrollOffset
+            }.also {
+                previousIndex = firstVisibleItemIndex
+                previousScrollOffset = firstVisibleItemScrollOffset
+            }
+        }
+    }.value
+}
