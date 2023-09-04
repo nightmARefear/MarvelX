@@ -16,8 +16,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyItemScope
-import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.grid.LazyGridState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.BottomSheetScaffold
 import androidx.compose.material.BottomSheetScaffoldDefaults
 import androidx.compose.material.BottomSheetScaffoldState
@@ -36,6 +36,8 @@ import androidx.compose.material.ModalBottomSheetLayout
 import androidx.compose.material.ModalBottomSheetState
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
+import androidx.compose.material.TextField
+import androidx.compose.material.TextFieldDefaults
 import androidx.compose.material.TopAppBar
 import androidx.compose.material.contentColorFor
 import androidx.compose.material.icons.Icons
@@ -238,7 +240,7 @@ fun CollapsibleExtendedFloatingActionButton(
                     painter = painterResource(iconResource),
                     contentDescription = fabData.iconLabel
                 )
-                // Display horizontal padding only if the label is visible.
+                // Apply horizontal padding only if the label is visible.
                 if (extendedFabData.extended) {
                     HSpacer.Custom(width = extendedFabIconPadding)
                 }
@@ -252,6 +254,75 @@ fun CollapsibleExtendedFloatingActionButton(
             }
         }
     }
+}
+
+@Composable
+fun SearchBar(
+    searchTerm: String,
+    hint: String,
+    backgroundColor: Color = MaterialTheme.colors.background,
+    textColor: Color = contentColorFor(backgroundColor),
+    onValueChange: (String) -> Unit,
+    onCloseClick: () -> Unit
+) {
+    CompositionLocalProvider(
+        LocalTextStyle provides MaterialTheme.typography.h6
+    ) {
+        TextField(
+            modifier = Modifier.fillMaxWidth(),
+            value = searchTerm,
+            placeholder = {
+                Text(
+                    text = hint,
+                    style = MaterialTheme.typography.h6,
+                    fontStyle = FontStyle.Italic
+                )
+            },
+            trailingIcon = {
+                if (searchTerm.isNotBlank()) {
+                    val circleAlpha = LocalContentAlpha.current.minus(0.4f)
+                    val circleBackgroundColor =
+                        MaterialTheme.colors.background.copy(alpha = circleAlpha)
+                    IconButton(
+                        onClick = { onCloseClick() }
+                    ) {
+                        Icon(
+                            modifier = Modifier
+                                .size(SPACING_LARGE.dp)
+                                .drawBehind {
+                                    drawCircle(
+                                        color = Color.Gray, // todo: to be changed
+                                        radius = this.size.maxDimension.div(2) + SPACING_SMALL
+                                    )
+                                },
+                            painter = painterResource(R.drawable.ic_close_32),
+                            contentDescription = stringResource(R.string.close),
+                            tint = MaterialTheme.colors.onBackground
+                        )
+                    }
+                }
+            },
+            onValueChange = { newSearchTerm -> onValueChange(newSearchTerm) },
+            shape = CircleShape,
+            colors = TextFieldDefaults.textFieldColors(
+                textColor = textColor,
+                backgroundColor = backgroundColor.copy(
+                    alpha = LocalContentAlpha.current.minus(0.2f) // todo: make it grayer
+                ),
+                focusedIndicatorColor = Color.Transparent,
+                unfocusedIndicatorColor = Color.Transparent,
+                disabledIndicatorColor = Color.Transparent,
+                errorIndicatorColor = Color.Transparent,
+                placeholderColor = MaterialTheme.colors.onBackground.copy(
+                    alpha = LocalContentAlpha.current.minus(
+                        0.3f
+                    )
+                )
+            )
+        )
+    }
+
+    VSpacer.Small()
 }
 
 @OptIn(ExperimentalMaterialApi::class)

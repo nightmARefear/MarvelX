@@ -36,9 +36,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -62,6 +64,7 @@ import com.alexgreece45.marvelx.util.NoInternetErrorScreen
 import com.alexgreece45.marvelx.util.NormalFabData
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.SPACING_TINY
+import com.alexgreece45.marvelx.util.SearchBar
 import com.alexgreece45.marvelx.util.SortingModalBottomSheetContent
 import com.alexgreece45.marvelx.util.isScrollingUp
 import com.ramcosta.composedestinations.annotation.Destination
@@ -69,7 +72,7 @@ import com.ramcosta.composedestinations.annotation.RootNavGraph
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import kotlinx.coroutines.coroutineScope
 
-@OptIn(ExperimentalMaterialApi::class)
+@OptIn(ExperimentalMaterialApi::class, ExperimentalComposeUiApi::class)
 @RootNavGraph(start = true)
 @Destination
 @Composable
@@ -90,6 +93,8 @@ fun AllCharacterScreen(
 
     val verticalScroll = rememberScrollState()
     var fabExtended by remember { mutableStateOf(true) }
+
+    val keyboard = LocalSoftwareKeyboardController.current
 
     LaunchedEffect(initLock) {
         if (!state.isFirstLaunch) {
@@ -139,6 +144,10 @@ fun AllCharacterScreen(
                     coroutineScope {
                         modalBottomSheetState.show()
                     }
+                }
+
+                AllCharactersEffect.CloseKeyboard -> {
+                    keyboard?.hide()
                 }
             }
         }
@@ -199,6 +208,24 @@ fun AllCharacterScreen(
                         }
                     }
 
+                    item {
+                        SearchBar(
+                            searchTerm = state.searchBarTerm,
+                            hint = stringResource(R.string.all_characters_screen_search_bar_hint),
+                            backgroundColor = MaterialTheme.colors.surface,
+                            onValueChange = { newSearchTerm ->
+                                viewModel.setEvent(
+                                    AllCharactersEvent.SearchBar.OnKeyboardType(
+                                        searchTerm = newSearchTerm
+                                    )
+                                )
+                            },
+                            onCloseClick = {
+                                viewModel.setEvent(AllCharactersEvent.SearchBar.OnCloseClick)
+                            }
+                        )
+                    }
+
                     if (state.characters.isNotEmpty()) {
                         item {
                             LazyVerticalGrid(
@@ -209,7 +236,7 @@ fun AllCharacterScreen(
                                 horizontalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp)
                             ) {
                                 items(
-                                    state.characters
+                                    state.filteredCharacters
                                 ) { character ->
                                     CharacterItem(
                                         character = character,

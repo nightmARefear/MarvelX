@@ -15,7 +15,6 @@ import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.SortingType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
-import java.util.Random
 import javax.inject.Inject
 
 sealed interface AllCharactersEvent : BaseEvent {
@@ -29,6 +28,12 @@ sealed interface AllCharactersEvent : BaseEvent {
     sealed class Sorting : AllCharactersEvent {
         data class OnItemClick(val sortingType: SortingType) : Sorting()
         object OnCloseClick : Sorting()
+    }
+
+    sealed class SearchBar : AllCharactersEvent {
+        data class OnKeyboardType(val searchTerm: String) : SearchBar()
+
+        object OnCloseClick : SearchBar()
     }
 }
 
@@ -48,6 +53,8 @@ sealed interface AllCharactersEffect : BaseEffect {
         object Show : SortingBottomSheet
         object Hide : SortingBottomSheet
     }
+
+    object CloseKeyboard: AllCharactersEffect
 }
 
 data class AllCharactersState(
@@ -59,6 +66,14 @@ data class AllCharactersState(
     // Data.
     val characters: List<CharacterDomain> = mutableListOf(),
     val sortingType: SortingType = SortingType.getDefaultSortingType(),
+    /**
+     * The search bar's term.
+     * */
+    val searchBarTerm: String = "",
+    /**
+     * The filtered characters list that is shown; if there is no search term, then all the characters are shown.
+     * */
+    val filteredCharacters: List<CharacterDomain> = mutableListOf(),
 
     /**
      * This field tracks if the fragment of this ViewModel has been launched for the first time.
@@ -139,7 +154,7 @@ class AllCharactersViewModel @Inject constructor(
                     SortingType.Random -> {
                         setState {
                             copy(
-                                characters = currentState.characters.shuffled(),
+                                filteredCharacters = currentState.filteredCharacters.shuffled(),
                                 sortingType = event.sortingType
                             )
                         }
@@ -148,7 +163,7 @@ class AllCharactersViewModel @Inject constructor(
                     SortingType.TextAscending -> {
                         setState {
                             copy(
-                                characters = currentState.characters.sortedBy { it.name },
+                                filteredCharacters = currentState.filteredCharacters.sortedBy { it.name },
                                 sortingType = event.sortingType
                             )
                         }
@@ -157,11 +172,40 @@ class AllCharactersViewModel @Inject constructor(
                     SortingType.TextDescending -> {
                         setState {
                             copy(
-                                characters = currentState.characters.sortedByDescending { it.name },
+                                filteredCharacters = currentState.filteredCharacters.sortedByDescending { it.name },
                                 sortingType = event.sortingType
                             )
                         }
                     }
+                }
+            }
+
+            is AllCharactersEvent.SearchBar.OnKeyboardType -> {
+                if (event.searchTerm != currentState.searchBarTerm) {
+                    setState {
+                        copy(
+                            searchBarTerm = event.searchTerm
+                        )
+                    }
+
+                    setState {
+                        copy(
+                            filteredCharacters = currentState.characters.filter { it.name.lowercase().contains(event.searchTerm.lowercase()) }
+                        )
+                    }
+                }
+            }
+
+            AllCharactersEvent.SearchBar.OnCloseClick -> {
+                setState {
+                    copy(
+                        searchBarTerm = "",
+                        filteredCharacters = currentState.characters
+                    )
+                }
+
+                setEffect {
+                    AllCharactersEffect.CloseKeyboard
                 }
             }
         }
@@ -197,6 +241,13 @@ class AllCharactersViewModel @Inject constructor(
                                                         } ?: false
                                                     )
                                                 }
+                                            )
+                                        }
+
+                                        // Sets the initial filteredCharacters' value.
+                                        setState {
+                                            copy(
+                                                filteredCharacters = currentState.characters
                                             )
                                         }
                                     }
