@@ -159,7 +159,7 @@ fun AllCharacterScreen(
             sheetState = modalBottomSheetState,
             sheetShape = RoundedCornerShape(topStart = SPACING_SMALL.dp, topEnd = SPACING_SMALL.dp),
             scrimColor = MaterialTheme.colors.background.copy(
-                alpha = LocalContentAlpha.current.minus(0.5f)
+                alpha = 0.5f
             ),
             sheetContent = {
                 SortingModalBottomSheetContent(

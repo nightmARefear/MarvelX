@@ -549,7 +549,7 @@ fun SortingModalBottomSheetContent(
     onCloseClick: () -> Unit
 ) {
     val circleBackgroundColor = MaterialTheme.colors.background.copy(
-        alpha = LocalContentAlpha.current.minus(0.4f)
+        alpha = 0.7f
     )
 
     Column(
