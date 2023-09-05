@@ -117,6 +117,9 @@ class AllCharactersViewModel @Inject constructor(
                     )
                 }
                 setEffect {
+                    AllCharactersEffect.CloseKeyboard
+                }
+                setEffect {
                     AllCharactersEffect.NavigateToCharacterDetails(
                         characterId = event.characterId
                     )

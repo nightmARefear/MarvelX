@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.BottomSheetScaffold
 import androidx.compose.material.BottomSheetScaffoldDefaults
 import androidx.compose.material.BottomSheetScaffoldState
@@ -260,13 +261,14 @@ fun CollapsibleExtendedFloatingActionButton(
 fun SearchBar(
     searchTerm: String,
     hint: String,
-    backgroundColor: Color = MaterialTheme.colors.background,
+    backgroundColor: Color = MaterialTheme.colors.surface,
     textColor: Color = contentColorFor(backgroundColor),
     onValueChange: (String) -> Unit,
     onCloseClick: () -> Unit
 ) {
     CompositionLocalProvider(
-        LocalTextStyle provides MaterialTheme.typography.h6
+        LocalTextStyle provides MaterialTheme.typography.h6,
+        LocalContentAlpha provides ContentAlpha.high
     ) {
         TextField(
             modifier = Modifier.fillMaxWidth(),
@@ -280,9 +282,7 @@ fun SearchBar(
             },
             trailingIcon = {
                 if (searchTerm.isNotBlank()) {
-                    val circleAlpha = LocalContentAlpha.current.minus(0.4f)
-                    val circleBackgroundColor =
-                        MaterialTheme.colors.background.copy(alpha = circleAlpha)
+                    val circleBackgroundColor = MaterialTheme.colors.background
                     IconButton(
                         onClick = { onCloseClick() }
                     ) {
@@ -291,7 +291,7 @@ fun SearchBar(
                                 .size(SPACING_LARGE.dp)
                                 .drawBehind {
                                     drawCircle(
-                                        color = Color.Gray, // todo: to be changed
+                                        color = circleBackgroundColor,
                                         radius = this.size.maxDimension.div(2) + SPACING_SMALL
                                     )
                                 },
@@ -303,12 +303,14 @@ fun SearchBar(
                 }
             },
             onValueChange = { newSearchTerm -> onValueChange(newSearchTerm) },
+            keyboardOptions = KeyboardOptions(
+
+            ),
+            singleLine = true,
             shape = CircleShape,
             colors = TextFieldDefaults.textFieldColors(
                 textColor = textColor,
-                backgroundColor = backgroundColor.copy(
-                    alpha = LocalContentAlpha.current.minus(0.2f) // todo: make it grayer
-                ),
+                backgroundColor = backgroundColor,
                 focusedIndicatorColor = Color.Transparent,
                 unfocusedIndicatorColor = Color.Transparent,
                 disabledIndicatorColor = Color.Transparent,
@@ -321,8 +323,6 @@ fun SearchBar(
             )
         )
     }
-
-    VSpacer.Small()
 }
 
 @OptIn(ExperimentalMaterialApi::class)

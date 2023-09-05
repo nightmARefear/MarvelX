@@ -66,6 +66,7 @@ import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.SPACING_TINY
 import com.alexgreece45.marvelx.util.SearchBar
 import com.alexgreece45.marvelx.util.SortingModalBottomSheetContent
+import com.alexgreece45.marvelx.util.VSpacer
 import com.alexgreece45.marvelx.util.isScrollingUp
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootNavGraph
@@ -212,7 +213,6 @@ fun AllCharacterScreen(
                         SearchBar(
                             searchTerm = state.searchBarTerm,
                             hint = stringResource(R.string.all_characters_screen_search_bar_hint),
-                            backgroundColor = MaterialTheme.colors.surface,
                             onValueChange = { newSearchTerm ->
                                 viewModel.setEvent(
                                     AllCharactersEvent.SearchBar.OnKeyboardType(
@@ -224,6 +224,8 @@ fun AllCharacterScreen(
                                 viewModel.setEvent(AllCharactersEvent.SearchBar.OnCloseClick)
                             }
                         )
+
+                        VSpacer.Medium()
                     }
 
                     if (state.characters.isNotEmpty()) {
