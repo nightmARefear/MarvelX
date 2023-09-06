@@ -2,6 +2,7 @@ package com.alexgreece45.marvelx.util
 
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -16,9 +17,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyItemScope
-import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.AppBarDefaults
+import androidx.compose.material.BottomAppBar
+import androidx.compose.material.BottomNavigation
+import androidx.compose.material.BottomNavigationDefaults
+import androidx.compose.material.BottomNavigationItem
 import androidx.compose.material.BottomSheetScaffold
 import androidx.compose.material.BottomSheetScaffoldDefaults
 import androidx.compose.material.BottomSheetScaffoldState
@@ -43,14 +48,11 @@ import androidx.compose.material.TopAppBar
 import androidx.compose.material.contentColorFor
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.primarySurface
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
@@ -63,17 +65,148 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.ui.screens.NavGraphs
+import com.alexgreece45.marvelx.ui.screens.appCurrentDestinationAsState
+import com.alexgreece45.marvelx.ui.screens.startAppDestination
 import com.alexgreece45.marvelx.util.extensions.applyPadding
+import com.ramcosta.composedestinations.navigation.DestinationsNavigator
+import com.ramcosta.composedestinations.navigation.navigate
+import com.ramcosta.composedestinations.spec.DirectionDestinationSpec
 
+data class BottomBarAction(
+    val route: DirectionDestinationSpec,
+    val label: String,
+    val iconData: IconData,
+)
+
+data class BottomBarData(
+    val navigator: DestinationsNavigator,
+    val items: List<BottomBarAction>,
+    val backgroundColor: Color? = null,
+    val contentColor: Color? = null,
+    val cutoutShape: Shape? = null,
+    val elevation: Dp = AppBarDefaults.BottomAppBarElevation,
+    val contentPadding: PaddingValues = AppBarDefaults.ContentPadding
+)
+
+data class BottomNavigationBarData(
+    val navController: NavController,
+    val items: List<BottomBarAction>
+)
+
+/**
+ * An extension of the [BottomAppBar] providing additional functionality.
+ * */
 @Composable
-fun BottomBar() {
-    //Bottom
+private fun BottomBar(
+    navigator: DestinationsNavigator,
+    items: List<BottomBarAction>,
+    backgroundColor: Color = MaterialTheme.colors.primarySurface,
+    contentColor: Color = contentColorFor(backgroundColor),
+    cutoutShape: Shape? = null,
+    elevation: Dp = AppBarDefaults.BottomAppBarElevation,
+    contentPadding: PaddingValues = AppBarDefaults.ContentPadding
+) {
+    if (items.size < 3) throw RuntimeException("The minimum allowed bottom bar actions are 3!")
+    if (items.size > 5) throw RuntimeException("The maximum allowed bottom bar actions are 5!")
+
+    BottomAppBar(
+        modifier = Modifier.fillMaxWidth(),
+        backgroundColor = backgroundColor,
+        contentColor = contentColor,
+        cutoutShape = cutoutShape,
+        elevation = elevation,
+        contentPadding = contentPadding
+    ) {
+        CompositionLocalProvider(
+            LocalContentAlpha provides ContentAlpha.high,
+            LocalTextStyle provides MaterialTheme.typography.caption
+        ) {
+            items.forEach { bottomBarAction ->
+                IconButton(onClick = { navigator.navigate(bottomBarAction.route) }) {
+                    Column {
+                        Icon(
+                            painter = painterResource(bottomBarAction.iconData.iconResource),
+                            contentDescription = bottomBarAction.iconData.contentDescription,
+                            tint = bottomBarAction.iconData.colorTint
+                                ?: LocalContentColor.current.copy(
+                                    alpha = LocalContentAlpha.current
+                                )
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * An extension of the [BottomNavigation] providing additional functionality.
+ * */
+@Composable
+fun BottomNavigationBar(
+    navController: NavController,
+    items: List<BottomBarAction>,
+    backgroundColor: Color = MaterialTheme.colors.primarySurface,
+    contentColor: Color = contentColorFor(backgroundColor),
+    elevation: Dp = BottomNavigationDefaults.Elevation,
+) {
+    if (items.size < 3) throw RuntimeException("The minimum allowed bottom navigation bar actions are 3!")
+    if (items.size > 5) throw RuntimeException("The maximum allowed bottom navigation bar actions are 5!")
+    if (items.any { it.label.length > 10 }) throw RuntimeException("The maximum allowed length for a bottom navigation bar's item label is 10 characters.")
+
+    val currentDestination =
+        navController.appCurrentDestinationAsState().value ?: NavGraphs.root.startAppDestination
+
+    println("(BottomNavigationBar) currentDestination.route = ${currentDestination.route}")
+
+    BottomNavigation(
+        backgroundColor = backgroundColor,
+        contentColor = contentColor,
+        elevation = elevation
+    ) {
+        items.forEach { bottomBarAction ->
+            val isCurrentItemSelected = currentDestination == bottomBarAction.route.also {
+                println("(BottomNavigationBar) currentDestination == bottomBarAction.route = ${currentDestination == bottomBarAction.route}")
+                println(
+                    "(BottomNavigationBar) bottomBarAction.route = $it"
+                )
+                println("(BottomNavigationBar)")
+            }
+            BottomNavigationItem(
+                selected = isCurrentItemSelected,
+                icon = {
+                    Icon(
+                        painter = painterResource(bottomBarAction.iconData.iconResource),
+                        contentDescription = bottomBarAction.iconData.contentDescription,
+                        tint = bottomBarAction.iconData.colorTint
+                            ?: LocalContentColor.current.copy(alpha = LocalContentAlpha.current)
+                    )
+                },
+                label = {
+                    Text(
+                        text = bottomBarAction.label,
+                        style = MaterialTheme.typography.caption
+                    )
+                },
+                onClick = {
+//                    if (!isCurrentItemSelected) {
+                        navController.navigate(bottomBarAction.route) {
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+//                    }
+                }
+            )
+        }
+    }
 }
 
 data class IconData(
     @DrawableRes val iconResource: Int,
-    val contentDescription: String,
+    val contentDescription: String = "",
     val colorTint: Color? = null
 )
 
@@ -110,6 +243,8 @@ fun ContentScreen(
     showToolbar: Boolean = false,
     toolbarTitle: String? = null,
     toolbarActions: List<ToolbarAction>? = null,
+    bottomBarData: BottomBarData? = null,
+    bottomNavigationBarData: BottomNavigationBarData? = null,
     fabData: FabData? = null,
     content: @Composable (PaddingValues) -> Unit
 ) {
@@ -159,6 +294,51 @@ fun ContentScreen(
                         }
                     }
                 }
+            }
+        },
+        bottomBar = {
+            /*bottomBarData?.let { bottomBarData ->
+                // Depending on whether the provided background color is null or not, call the BottomBar
+                // composable with the appropriate parameters, since we cannot provide null as a color.
+                bottomBarData.backgroundColor?.let { backgroundColor ->
+                    // Provide the content color only if it's not null.
+                    if (bottomBarData.contentColor != null) {
+                        BottomBar(
+                            navigator = bottomBarData.navigator,
+                            items = bottomBarData.items,
+                            backgroundColor = backgroundColor,
+                            contentColor = bottomBarData.contentColor
+                        )
+                    } else {
+                        BottomBar(
+                            navigator = bottomBarData.navigator,
+                            items = bottomBarData.items,
+                            backgroundColor = backgroundColor
+                        )
+                    }
+                } ?: run {
+                    // Content color not is null, so provide the items and the content color.
+                    if (bottomBarData.contentColor != null) {
+                        BottomBar(
+                            navigator = bottomBarData.navigator,
+                            items = bottomBarData.items,
+                            contentColor = bottomBarData.contentColor
+                        )
+                    } else {
+                        // Content color is null, so only provide the items.
+                        BottomBar(
+                            navigator = bottomBarData.navigator,
+                            items = bottomBarData.items
+                        )
+                    }
+                }
+            }*/
+
+            bottomNavigationBarData?.let { bottomNavigationBarData ->
+                BottomNavigationBar(
+                    navController = bottomNavigationBarData.navController,
+                    items = bottomNavigationBarData.items
+                )
             }
         },
         floatingActionButton = {
@@ -432,7 +612,9 @@ fun LoadingScreen(
         content()
         if (isLoading) {
             Box(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colors.background),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
@@ -649,12 +831,61 @@ fun LazyItemScope.NoInternetErrorScreen(
     }
 }
 
+@Composable
+fun GenericErrorScreen(
+    errorMessage: String,
+) {
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = errorMessage,
+            textAlign = TextAlign.Center,
+            style = MaterialTheme.typography.h4.copy(
+                color = MaterialTheme.colors.error
+            )
+        )
+    }
+}
+
+@Composable
+fun NoInternetErrorScreen(
+    onRetryClick: () -> Unit
+) {
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = stringResource(R.string.no_internet_connection_error_message),
+            textAlign = TextAlign.Center,
+            style = MaterialTheme.typography.h4.copy(
+                color = MaterialTheme.colors.error
+            )
+        )
+
+        VSpacer.Medium()
+
+        Button(
+            onClick = { onRetryClick() }
+        ) {
+            Text(
+                text = stringResource(R.string.retry).uppercase(),
+                style = MaterialTheme.typography.h5
+            )
+        }
+    }
+}
+
 // ======== END OF ========
 //        Error Screens
 // ==========================
 
-@Composable
-fun LazyGridState.isScrollingUp(): Boolean {
+/*@Composable
+fun LazyStaggeredGridItemScope.isScrollingUp(): Boolean {
     var previousIndex by remember(this) {
         mutableStateOf(firstVisibleItemIndex)
     }
@@ -673,4 +904,4 @@ fun LazyGridState.isScrollingUp(): Boolean {
             }
         }
     }.value
-}
+}*/

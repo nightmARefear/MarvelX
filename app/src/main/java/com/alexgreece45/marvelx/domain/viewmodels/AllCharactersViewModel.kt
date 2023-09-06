@@ -217,7 +217,8 @@ class AllCharactersViewModel @Inject constructor(
     private suspend fun initView() {
         setState {
             copy(
-                isLoading = true
+                isLoading = true,
+                hasInternetConnection = true
             )
         }
 

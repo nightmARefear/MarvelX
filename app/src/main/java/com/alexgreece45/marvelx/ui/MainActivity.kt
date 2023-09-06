@@ -10,9 +10,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.Surface
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.navigation.compose.rememberNavController
 import com.alexgreece45.marvelx.ui.screens.NavGraphs
 import com.alexgreece45.marvelx.ui.theme.MarvelXTheme
-import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import com.google.accompanist.navigation.material.ExperimentalMaterialNavigationApi
 import com.ramcosta.composedestinations.DestinationsNavHost
 import com.ramcosta.composedestinations.animations.defaults.NestedNavGraphDefaultAnimations
@@ -29,7 +29,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             MarvelXTheme {
-                val navController = rememberAnimatedNavController()
+                val navController = rememberNavController()
                 val navHostEngine = rememberAnimatedNavHostEngine(
                     navHostContentAlignment = Alignment.TopCenter,
                     rootDefaultAnimations = RootNavGraphDefaultAnimations.ACCOMPANIST_FADING,

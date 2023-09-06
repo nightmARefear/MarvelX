@@ -11,11 +11,11 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
+import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
+import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
+import androidx.compose.foundation.lazy.staggeredgrid.items
+import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
@@ -46,6 +46,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.alexgreece45.marvelx.R
@@ -53,11 +54,17 @@ import com.alexgreece45.marvelx.data.domains.CharacterDomain
 import com.alexgreece45.marvelx.domain.viewmodels.AllCharactersEffect
 import com.alexgreece45.marvelx.domain.viewmodels.AllCharactersEvent
 import com.alexgreece45.marvelx.domain.viewmodels.AllCharactersViewModel
+import com.alexgreece45.marvelx.ui.screens.destinations.AllCharactersScreenDestination
+import com.alexgreece45.marvelx.ui.screens.destinations.AllFavoriteCharactersScreenDestination
 import com.alexgreece45.marvelx.ui.screens.destinations.CharacterScreenDestination
+import com.alexgreece45.marvelx.ui.screens.destinations.ProfileScreenDestination
+import com.alexgreece45.marvelx.util.BottomBarAction
+import com.alexgreece45.marvelx.util.BottomNavigationBarData
 import com.alexgreece45.marvelx.util.ContentScreen
 import com.alexgreece45.marvelx.util.DEFAULT_SCREEN_PADDING
 import com.alexgreece45.marvelx.util.ExtendedFabData
 import com.alexgreece45.marvelx.util.GenericErrorScreen
+import com.alexgreece45.marvelx.util.IconData
 import com.alexgreece45.marvelx.util.LoadingScreen
 import com.alexgreece45.marvelx.util.ModalBottomSheet
 import com.alexgreece45.marvelx.util.NoInternetErrorScreen
@@ -66,28 +73,32 @@ import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.SPACING_TINY
 import com.alexgreece45.marvelx.util.SearchBar
 import com.alexgreece45.marvelx.util.SortingModalBottomSheetContent
-import com.alexgreece45.marvelx.util.VSpacer
-import com.alexgreece45.marvelx.util.isScrollingUp
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootNavGraph
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import kotlinx.coroutines.coroutineScope
 
-@OptIn(ExperimentalMaterialApi::class, ExperimentalComposeUiApi::class)
+@OptIn(
+    ExperimentalMaterialApi::class, ExperimentalComposeUiApi::class
+)
 @RootNavGraph(start = true)
 @Destination
 @Composable
-fun AllCharacterScreen(
+fun AllCharactersScreen(
     navigator: DestinationsNavigator,
     viewModel: AllCharactersViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
+
     val modalBottomSheetState = rememberModalBottomSheetState(
         initialValue = ModalBottomSheetValue.Hidden,
         confirmValueChange = { it != ModalBottomSheetValue.Hidden },
         skipHalfExpanded = true
     )
-    val lazyGridState = rememberLazyGridState()
+
+    val lazyStaggeredGridState = rememberLazyStaggeredGridState()
+
+    val navController = rememberNavController()
 
     val context = LocalContext.current
     var initLock: Unit by remember { mutableStateOf(Unit) }
@@ -178,7 +189,7 @@ fun AllCharacterScreen(
                 showToolbar = true,
                 toolbarTitle = stringResource(R.string.all_characters_screen_toolbar_title),
                 fabData = ExtendedFabData(
-                    extended = lazyGridState.isScrollingUp(),
+                    extended = /*lazyStaggeredGridState.isScrollingUp()*/true,
                     normalFabData = NormalFabData(
                         label = stringResource(R.string.all_characters_screen_fab_label),
                         iconResource = R.drawable.ic_filter_32,
@@ -186,13 +197,49 @@ fun AllCharacterScreen(
                         contentColor = null,
                         onClick = { viewModel.setEvent(AllCharactersEvent.OnFabClick) }
                     )
+                ),
+                bottomNavigationBarData = BottomNavigationBarData(
+                    navController = navController,
+                    items = listOf(
+                        BottomBarAction(
+                            route = AllCharactersScreenDestination,
+                            label = "Characters",
+                            iconData = IconData(
+                                iconResource = R.drawable.ic_close_32,
+                                contentDescription = "Characters",
+                                colorTint = null
+                            )
+                        ),
+                        BottomBarAction(
+                            route = AllFavoriteCharactersScreenDestination,
+                            label = "Favorites",
+                            iconData = IconData(
+                                iconResource = R.drawable.ic_favorite_filled_24,
+                                contentDescription = "Favorites",
+                                colorTint = null
+                            )
+                        ),
+                        BottomBarAction(
+                            route = ProfileScreenDestination,
+                            label = "Profile",
+                            iconData = IconData(
+                                iconResource = R.drawable.ic_person_32,
+                                contentDescription = "Profile",
+                                colorTint = null
+                            )
+                        )
+                    )
                 )
-            ) { padding ->
-                LazyColumn(
-                    contentPadding = padding
+            ) { contentPadding ->
+                LazyVerticalStaggeredGrid(
+                    columns = StaggeredGridCells.Fixed(2),
+                    state = lazyStaggeredGridState,
+                    contentPadding = contentPadding,
+                    verticalItemSpacing = SPACING_SMALL.dp,
+                    horizontalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp)
                 ) {
                     state.errorMessage?.let { errorMessage ->
-                        item {
+                        item(span = StaggeredGridItemSpan.FullLine) {
                             GenericErrorScreen(
                                 errorMessage = errorMessage
                             )
@@ -200,7 +247,7 @@ fun AllCharacterScreen(
                     }
 
                     if (!state.hasInternetConnection) {
-                        item {
+                        item(span = StaggeredGridItemSpan.FullLine) {
                             NoInternetErrorScreen {
                                 viewModel.setEvent(
                                     AllCharactersEvent.InitView
@@ -209,7 +256,7 @@ fun AllCharacterScreen(
                         }
                     }
 
-                    item {
+                    item(span = StaggeredGridItemSpan.FullLine) {
                         SearchBar(
                             searchTerm = state.searchBarTerm,
                             hint = stringResource(R.string.all_characters_screen_search_bar_hint),
@@ -224,40 +271,29 @@ fun AllCharacterScreen(
                                 viewModel.setEvent(AllCharactersEvent.SearchBar.OnCloseClick)
                             }
                         )
-
-                        VSpacer.Medium()
                     }
 
-                    if (state.characters.isNotEmpty()) {
-                        item {
-                            LazyVerticalGrid(
-                                modifier = Modifier.fillParentMaxHeight(),
-                                columns = GridCells.Fixed(2),
-                                state = lazyGridState,
-                                verticalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp),
-                                horizontalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp)
-                            ) {
-                                items(
-                                    state.filteredCharacters
-                                ) { character ->
-                                    CharacterItem(
-                                        character = character,
-                                        onClick = {
-                                            viewModel.setEvent(
-                                                AllCharactersEvent.OnCharacterClick(characterId = character.id)
-                                            )
-                                        },
-                                        onFavoriteClick = {
-                                            viewModel.setEvent(
-                                                AllCharactersEvent.OnHeartClick(
-                                                    characterId = character.id
-                                                )
-                                            )
-                                        }
-                                    )
-                                }
-                            }
+                    items(
+                        items = state.filteredCharacters,
+                        key = { characterDomain ->
+                            characterDomain.id
                         }
+                    ) { characterDomain ->
+                        CharacterItem(
+                            character = characterDomain,
+                            onClick = {
+                                viewModel.setEvent(
+                                    AllCharactersEvent.OnCharacterClick(characterId = characterDomain.id)
+                                )
+                            },
+                            onFavoriteClick = {
+                                viewModel.setEvent(
+                                    AllCharactersEvent.OnHeartClick(
+                                        characterId = characterDomain.id
+                                    )
+                                )
+                            }
+                        )
                     }
                 }
             }

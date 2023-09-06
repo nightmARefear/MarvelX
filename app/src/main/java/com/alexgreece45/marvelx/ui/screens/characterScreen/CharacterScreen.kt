@@ -37,6 +37,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.alexgreece45.marvelx.R
@@ -45,8 +46,11 @@ import com.alexgreece45.marvelx.data.domains.ComicDomain
 import com.alexgreece45.marvelx.domain.viewmodels.CharacterEffect
 import com.alexgreece45.marvelx.domain.viewmodels.CharacterEvent
 import com.alexgreece45.marvelx.domain.viewmodels.CharacterViewModel
+import com.alexgreece45.marvelx.ui.screens.NavGraphs
+import com.alexgreece45.marvelx.ui.screens.appCurrentDestinationAsState
 import com.alexgreece45.marvelx.ui.screens.destinations.AllCharacterComicsScreenDestination
 import com.alexgreece45.marvelx.ui.screens.destinations.ComicScreenDestination
+import com.alexgreece45.marvelx.ui.screens.startAppDestination
 import com.alexgreece45.marvelx.util.ContentScreen
 import com.alexgreece45.marvelx.util.GenericErrorScreen
 import com.alexgreece45.marvelx.util.IMAGE_BORDER_WIDTH
@@ -69,6 +73,12 @@ fun CharacterScreen(
 ) {
     val state by viewModel.uiState.collectAsState()
     val context = LocalContext.current
+
+    val navController = rememberNavController()
+    val currentDestination =
+        navController.currentDestination
+
+    println("(BottomNavigationBar) (CharacterScreen) currentDestination.route = ${currentDestination?.route}")
 
     LaunchedEffect(Unit) {
         viewModel.setEvent(CharacterEvent.InitView(characterId))
