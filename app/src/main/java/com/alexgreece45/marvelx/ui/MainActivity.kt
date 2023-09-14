@@ -1,6 +1,7 @@
 package com.alexgreece45.marvelx.ui
 
 import android.os.Bundle
+import android.view.Surface
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
@@ -55,7 +56,8 @@ class MainActivity : ComponentActivity() {
                             ) { backStackEntry ->
                                 CharacterScreen(
                                     navController = navController,
-                                    characterId = backStackEntry.arguments?.getInt("characterId") ?: -1
+                                    characterId = backStackEntry.arguments?.getInt("characterId")
+                                        ?: -1
                                 )
                             }
                         }
