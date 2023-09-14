@@ -23,7 +23,6 @@ import androidx.compose.material.AppBarDefaults
 import androidx.compose.material.BottomAppBar
 import androidx.compose.material.BottomNavigation
 import androidx.compose.material.BottomNavigationDefaults
-import androidx.compose.material.BottomNavigationItem
 import androidx.compose.material.BottomSheetScaffold
 import androidx.compose.material.BottomSheetScaffoldDefaults
 import androidx.compose.material.BottomSheetScaffoldState
@@ -67,9 +66,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.ui.screens.NavGraphs
-import com.alexgreece45.marvelx.ui.screens.appCurrentDestinationAsState
-import com.alexgreece45.marvelx.ui.screens.startAppDestination
 import com.alexgreece45.marvelx.util.extensions.applyPadding
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import com.ramcosta.composedestinations.navigation.navigate
@@ -92,8 +88,11 @@ data class BottomBarData(
 )
 
 data class BottomNavigationBarData(
+    val navigator: DestinationsNavigator? = null,
     val navController: NavController,
-    val items: List<BottomBarAction>
+    val items: List<BottomBarAction>,
+    val backgroundColor: Color? = null,
+    val contentColor: Color? = null,
 )
 
 /**
@@ -147,27 +146,29 @@ private fun BottomBar(
  * */
 @Composable
 fun BottomNavigationBar(
+    navigator: DestinationsNavigator?,
     navController: NavController,
     items: List<BottomBarAction>,
-    backgroundColor: Color = MaterialTheme.colors.primarySurface,
-    contentColor: Color = contentColorFor(backgroundColor),
+    backgroundColor: Color? = MaterialTheme.colors.primarySurface,
+    contentColor: Color? = if (backgroundColor == null) contentColorFor(MaterialTheme.colors.primarySurface) else contentColorFor(
+        backgroundColor
+    ),
     elevation: Dp = BottomNavigationDefaults.Elevation,
 ) {
     if (items.size < 3) throw RuntimeException("The minimum allowed bottom navigation bar actions are 3!")
     if (items.size > 5) throw RuntimeException("The maximum allowed bottom navigation bar actions are 5!")
     if (items.any { it.label.length > 10 }) throw RuntimeException("The maximum allowed length for a bottom navigation bar's item label is 10 characters.")
 
-    val currentDestination =
-        navController.appCurrentDestinationAsState().value ?: NavGraphs.root.startAppDestination
-
-    println("(BottomNavigationBar) currentDestination.route = ${currentDestination.route}")
+    val _backgroundColor = backgroundColor ?: MaterialTheme.colors.primarySurface
+    val _contentColor = contentColor ?: contentColorFor(_backgroundColor)
 
     BottomNavigation(
-        backgroundColor = backgroundColor,
-        contentColor = contentColor,
+        backgroundColor = _backgroundColor,
+        contentColor = _contentColor,
         elevation = elevation
     ) {
-        items.forEach { bottomBarAction ->
+        // todo: to be refactored
+        /*items.forEach { bottomBarAction ->
             val isCurrentItemSelected = currentDestination == bottomBarAction.route.also {
                 println("(BottomNavigationBar) currentDestination == bottomBarAction.route = ${currentDestination == bottomBarAction.route}")
                 println(
@@ -175,32 +176,79 @@ fun BottomNavigationBar(
                 )
                 println("(BottomNavigationBar)")
             }
-            BottomNavigationItem(
-                selected = isCurrentItemSelected,
-                icon = {
-                    Icon(
-                        painter = painterResource(bottomBarAction.iconData.iconResource),
-                        contentDescription = bottomBarAction.iconData.contentDescription,
-                        tint = bottomBarAction.iconData.colorTint
-                            ?: LocalContentColor.current.copy(alpha = LocalContentAlpha.current)
-                    )
-                },
-                label = {
-                    Text(
-                        text = bottomBarAction.label,
-                        style = MaterialTheme.typography.caption
-                    )
-                },
-                onClick = {
-//                    if (!isCurrentItemSelected) {
+            CompositionLocalProvider(
+                LocalContentAlpha provides ContentAlpha.high
+            ) {
+                BottomNavigationItem(
+                    selected = isCurrentItemSelected,
+                    icon = {
+                        Icon(
+                            modifier = Modifier.size(32.dp),
+                            painter = painterResource(bottomBarAction.iconData.iconResource),
+                            contentDescription = bottomBarAction.iconData.contentDescription,
+                            tint = bottomBarAction.iconData.colorTint
+                                ?: LocalContentColor.current.copy(alpha = LocalContentAlpha.current)
+                        )
+                    },
+                    label = {
+                        Text(
+                            text = bottomBarAction.label,
+                            style = MaterialTheme.typography.caption
+                        )
+                    },
+                    onClick = {
+                        // old way
+                        // TODO: Change the navigation technique.
+                        if (!isCurrentItemSelected) {
+                            *//*navController.navigate(bottomBarAction.route) {
+                               launchSingleTop = true
+                               restoreState = true
+                           }*//*
+                            *//*navigator.clearBackStack(currentDestination)
+                           navigator.navigate(bottomBarAction.route) {
+                               launchSingleTop = true
+                               restoreState = true
+                           }*//*
+                        }
+
+                        // new way
+                        fun checkForDestinations(
+                            navigationRoutes: List<DirectionDestinationSpec>,
+                            navBackStackEntry: NavBackStackEntry
+                        ): Boolean {
+                            navigationRoutes.forEach {
+                                if (it.route == navBackStackEntry.destination.route) return true
+                            }
+
+                            return false
+                        }
+
                         navController.navigate(bottomBarAction.route) {
+                            launchSingleTop = true
+                            val navigationRoutes = items.map { it.route }
+
+                            val firstBottomBarDestination =
+                                navController.currentBackStack.value.firstOrNull { navBackStackEntry ->
+                                    checkForDestinations(
+                                        navigationRoutes = navigationRoutes,
+                                        navBackStackEntry = navBackStackEntry
+                                    )
+                                }?.destination
+
+                            if (firstBottomBarDestination != null) {
+                                popUpTo(firstBottomBarDestination.id) {
+                                    inclusive = true
+                                    saveState = true
+                                }
+                            }
+
                             launchSingleTop = true
                             restoreState = true
                         }
-//                    }
-                }
-            )
-        }
+                    }
+                )
+            }
+        }*/
     }
 }
 
@@ -336,8 +384,11 @@ fun ContentScreen(
 
             bottomNavigationBarData?.let { bottomNavigationBarData ->
                 BottomNavigationBar(
+                    navigator = bottomNavigationBarData.navigator,
                     navController = bottomNavigationBarData.navController,
-                    items = bottomNavigationBarData.items
+                    items = bottomNavigationBarData.items,
+                    backgroundColor = bottomNavigationBarData.backgroundColor,
+                    contentColor = bottomNavigationBarData.contentColor
                 )
             }
         },

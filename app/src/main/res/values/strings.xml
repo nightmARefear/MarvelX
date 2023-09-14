@@ -1,6 +1,5 @@
 <resources>
-
-    <!-- Generic Strings -->
+    <!-- Generic -->
     <string name="back">Back</string>
     <string name="ic_favorite_content_description">favorite</string>
     <string name="favorite_message">This %1$s is now favorite.</string>
@@ -8,8 +7,7 @@
     <string name="ic_not_favorite_content_description">not favorite</string>
     <string name="not_favorite_message">This %1$s was removed from your favorites.</string>
 
-
-    <!-- ERROR HANDLING STRINGS -->
+    <!-- ERROR HANDLING -->
     <string name="retry">Retry</string>
     <string name="no_internet_connection_error_message">No internet connection! Please try again!</string>
     <string name="unknown_error">An unknown error has occurred!</string>
@@ -20,7 +18,12 @@
     <string name="close">close</string>
     <string name="sort_by">Sort by</string>
 
-    <!-- CHARACTER STRINGS -->
+    <!-- Bottom Navigation (Root Screen: AllCharactersScreen, Other Screens: AllFavoriteCharactersScreen, ProfileScreen) -->
+    <string name="bottom_navigation_label_characters">Characters</string>
+    <string name="bottom_navigation_label_favorites">Favorites</string>
+    <string name="bottom_navigation_label_profile">Profile</string>
+
+    <!-- CHARACTER -->
     <string name="no_characters_were_found_error_message">No characters were found!</string>
     <string name="no_character_description">Character description is not available.</string>
     <string name="character_with_specific_id_not_found">The character with id \"%1$s\" could not be found!</string>
@@ -37,7 +40,6 @@
 
     <string name="all_characters_screen_error_favoring_character">An error occurred while favoring this character.</string>
     <string name="all_characters_screen_error_unfavoring_character">An error occurred while unfavoring this character.</string>
-
 
     <!-- Character Screen -->
     <string name="character_screen_row_comic_toolbar_title">Comics</string>
@@ -56,4 +58,7 @@
 
     <!-- All Character Comics Screen -->
     <string name="all_character_comics_screen_toolbar_title">%1$s Comics</string>
+
+    <!-- Profile Screen -->
+    <string name="profile_screen_toolbar_title">Profile</string>
 </resources>

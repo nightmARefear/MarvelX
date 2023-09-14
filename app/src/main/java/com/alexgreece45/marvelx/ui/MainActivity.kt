@@ -3,52 +3,63 @@ package com.alexgreece45.marvelx.ui
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.Surface
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.navigation.NavType
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
-import com.alexgreece45.marvelx.ui.screens.NavGraphs
+import androidx.navigation.navArgument
+import com.alexgreece45.marvelx.navigation.Screen
+import com.alexgreece45.marvelx.ui.screens.allCharactersScreen.AllCharactersScreen
+import com.alexgreece45.marvelx.ui.screens.characterScreen.CharacterScreen
 import com.alexgreece45.marvelx.ui.theme.MarvelXTheme
-import com.google.accompanist.navigation.material.ExperimentalMaterialNavigationApi
-import com.ramcosta.composedestinations.DestinationsNavHost
-import com.ramcosta.composedestinations.animations.defaults.NestedNavGraphDefaultAnimations
-import com.ramcosta.composedestinations.animations.defaults.RootNavGraphDefaultAnimations
-import com.ramcosta.composedestinations.animations.rememberAnimatedNavHostEngine
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
-    @OptIn(ExperimentalAnimationApi::class, ExperimentalMaterialNavigationApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         setContent {
             MarvelXTheme {
-                val navController = rememberNavController()
-                val navHostEngine = rememberAnimatedNavHostEngine(
-                    navHostContentAlignment = Alignment.TopCenter,
-                    rootDefaultAnimations = RootNavGraphDefaultAnimations.ACCOMPANIST_FADING,
-                    defaultAnimationsForNestedNavGraph = mapOf(
-                        NavGraphs.root to NestedNavGraphDefaultAnimations(
-                            enterTransition = { slideInHorizontally() },
-                            exitTransition = { slideOutHorizontally() }
-                        )
-                    )
-                )
-
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                 ) {
-                    DestinationsNavHost(
-                        navGraph = NavGraphs.root,
+                    val navController = rememberNavController()
+                    NavHost(
                         navController = navController,
-                        engine = navHostEngine
-                    )
+                        startDestination = Screen.getAfterSuccessfulLoginScreen().route
+                    ) {
+                        navigation(
+                            startDestination = Screen.getAfterSuccessfulLoginScreen().route,
+                            route = Screen.getAfterSuccessfulLoginScreen().route
+                        ) {
+                            composable(Screen.AllCharactersScreens.route) {
+                                AllCharactersScreen(
+                                    navController = navController
+                                )
+                            }
+
+                            composable(
+                                route = Screen.CharacterScreen.route + "?characterId={characterId}",
+                                arguments = listOf(
+                                    navArgument("characterId") {
+                                        type = NavType.IntType
+                                        defaultValue = -1
+                                    }
+                                )
+                            ) { backStackEntry ->
+                                CharacterScreen(
+                                    navController = navController,
+                                    characterId = backStackEntry.arguments?.getInt("characterId") ?: -1
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }

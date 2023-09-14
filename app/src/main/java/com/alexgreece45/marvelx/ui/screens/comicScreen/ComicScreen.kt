@@ -19,6 +19,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.alexgreece45.marvelx.R
@@ -35,7 +36,7 @@ import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 @com.ramcosta.composedestinations.annotation.Destination
 @Composable
 fun ComicScreen(
-    navigator: DestinationsNavigator,
+    navController: NavController,
     viewModel: ComicViewModel = hiltViewModel(),
     comicId: Int
 ) {
@@ -56,7 +57,7 @@ fun ComicScreen(
     }
 
     ContentScreen(
-        onBack = { navigator.popBackStack() },
+        onBack = { navController.popBackStack() },
         showToolbar = true,
         toolbarTitle = state.comic?.title.orEmpty(),
     ) { padding ->

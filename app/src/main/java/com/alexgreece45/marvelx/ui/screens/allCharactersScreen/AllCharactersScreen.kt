@@ -46,7 +46,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.compose.rememberNavController
+import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.alexgreece45.marvelx.R
@@ -54,10 +54,7 @@ import com.alexgreece45.marvelx.data.domains.CharacterDomain
 import com.alexgreece45.marvelx.domain.viewmodels.AllCharactersEffect
 import com.alexgreece45.marvelx.domain.viewmodels.AllCharactersEvent
 import com.alexgreece45.marvelx.domain.viewmodels.AllCharactersViewModel
-import com.alexgreece45.marvelx.ui.screens.destinations.AllCharactersScreenDestination
-import com.alexgreece45.marvelx.ui.screens.destinations.AllFavoriteCharactersScreenDestination
-import com.alexgreece45.marvelx.ui.screens.destinations.CharacterScreenDestination
-import com.alexgreece45.marvelx.ui.screens.destinations.ProfileScreenDestination
+import com.alexgreece45.marvelx.navigation.Screen
 import com.alexgreece45.marvelx.util.BottomBarAction
 import com.alexgreece45.marvelx.util.BottomNavigationBarData
 import com.alexgreece45.marvelx.util.ContentScreen
@@ -73,19 +70,14 @@ import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.SPACING_TINY
 import com.alexgreece45.marvelx.util.SearchBar
 import com.alexgreece45.marvelx.util.SortingModalBottomSheetContent
-import com.ramcosta.composedestinations.annotation.Destination
-import com.ramcosta.composedestinations.annotation.RootNavGraph
-import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import kotlinx.coroutines.coroutineScope
 
 @OptIn(
     ExperimentalMaterialApi::class, ExperimentalComposeUiApi::class
 )
-@RootNavGraph(start = true)
-@Destination
 @Composable
 fun AllCharactersScreen(
-    navigator: DestinationsNavigator,
+    navController: NavController,
     viewModel: AllCharactersViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
@@ -97,8 +89,6 @@ fun AllCharactersScreen(
     )
 
     val lazyStaggeredGridState = rememberLazyStaggeredGridState()
-
-    val navController = rememberNavController()
 
     val context = LocalContext.current
     var initLock: Unit by remember { mutableStateOf(Unit) }
@@ -127,7 +117,7 @@ fun AllCharactersScreen(
             when (effect) {
                 is AllCharactersEffect.NavigateToCharacterDetails -> {
                     initLock = Unit
-                    navigator.navigate(CharacterScreenDestination(characterId = effect.characterId))
+                    navController.navigate(Screen.CharacterScreen.route)
                 }
 
                 is AllCharactersEffect.FavoriteCharacter.Success -> {
@@ -202,29 +192,29 @@ fun AllCharactersScreen(
                     navController = navController,
                     items = listOf(
                         BottomBarAction(
-                            route = AllCharactersScreenDestination,
-                            label = "Characters",
+                            route = Screen.AllCharactersScreens.route,
+                            label = stringResource(R.string.bottom_navigation_label_characters),
                             iconData = IconData(
                                 iconResource = R.drawable.ic_close_32,
-                                contentDescription = "Characters",
+                                contentDescription = stringResource(R.string.bottom_navigation_label_characters),
                                 colorTint = null
                             )
                         ),
                         BottomBarAction(
-                            route = AllFavoriteCharactersScreenDestination,
-                            label = "Favorites",
+                            route = Screen.AllFavoriteCharactersScreen.route,
+                            label = stringResource(R.string.bottom_navigation_label_favorites),
                             iconData = IconData(
                                 iconResource = R.drawable.ic_favorite_filled_24,
-                                contentDescription = "Favorites",
+                                contentDescription = stringResource(R.string.bottom_navigation_label_favorites),
                                 colorTint = null
                             )
                         ),
                         BottomBarAction(
-                            route = ProfileScreenDestination,
-                            label = "Profile",
+                            route = Screen.ProfileScreen.route,
+                            label = stringResource(R.string.bottom_navigation_label_profile),
                             iconData = IconData(
                                 iconResource = R.drawable.ic_person_32,
-                                contentDescription = "Profile",
+                                contentDescription = stringResource(R.string.bottom_navigation_label_profile),
                                 colorTint = null
                             )
                         )

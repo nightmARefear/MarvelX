@@ -37,7 +37,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.compose.rememberNavController
+import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.alexgreece45.marvelx.R
@@ -46,11 +46,7 @@ import com.alexgreece45.marvelx.data.domains.ComicDomain
 import com.alexgreece45.marvelx.domain.viewmodels.CharacterEffect
 import com.alexgreece45.marvelx.domain.viewmodels.CharacterEvent
 import com.alexgreece45.marvelx.domain.viewmodels.CharacterViewModel
-import com.alexgreece45.marvelx.ui.screens.NavGraphs
-import com.alexgreece45.marvelx.ui.screens.appCurrentDestinationAsState
-import com.alexgreece45.marvelx.ui.screens.destinations.AllCharacterComicsScreenDestination
-import com.alexgreece45.marvelx.ui.screens.destinations.ComicScreenDestination
-import com.alexgreece45.marvelx.ui.screens.startAppDestination
+import com.alexgreece45.marvelx.navigation.Screen
 import com.alexgreece45.marvelx.util.ContentScreen
 import com.alexgreece45.marvelx.util.GenericErrorScreen
 import com.alexgreece45.marvelx.util.IMAGE_BORDER_WIDTH
@@ -61,24 +57,15 @@ import com.alexgreece45.marvelx.util.NoInternetErrorScreen
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.ToolbarAction
 import com.alexgreece45.marvelx.util.VSpacer
-import com.ramcosta.composedestinations.annotation.Destination
-import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 
-@Destination(/*route="allCharacters/character/{characterId}"*/)
 @Composable
 fun CharacterScreen(
-    navigator: DestinationsNavigator,
+    navController: NavController,
     viewModel: CharacterViewModel = hiltViewModel(),
-    characterId: Int,
+    characterId: Int
 ) {
     val state by viewModel.uiState.collectAsState()
     val context = LocalContext.current
-
-    val navController = rememberNavController()
-    val currentDestination =
-        navController.currentDestination
-
-    println("(BottomNavigationBar) (CharacterScreen) currentDestination.route = ${currentDestination?.route}")
 
     LaunchedEffect(Unit) {
         viewModel.setEvent(CharacterEvent.InitView(characterId))
@@ -86,22 +73,21 @@ fun CharacterScreen(
         viewModel.effect.collect { effect ->
             when (effect) {
                 CharacterEffect.OnBackClick -> {
-                    navigator.popBackStack()
+                    navController.popBackStack()
                 }
 
                 is CharacterEffect.NavigateToComic -> {
-                    navigator.navigate(
-                        ComicScreenDestination(comicId = effect.comicId)
-                    )
+                    navController.navigate(Screen.ComicScreen.route + "/${effect.comicId}")
                 }
 
                 is CharacterEffect.NavigateToAllComics -> {
-                    navigator.navigate(
-                        AllCharacterComicsScreenDestination(
-                            characterId = effect.characterId,
-                            toolbarTitlePrefix = effect.toolbarTitlePrefix
-                        )
-                    )
+                    //todo: refactor later
+                    /* navController.navigate(
+                         AllCharacterComicsScreen(
+                             characterId = effect.characterId,
+                             toolbarTitlePrefix = effect.toolbarTitlePrefix
+                         )
+                     )*/
                 }
 
                 is CharacterEffect.DisplayError -> {

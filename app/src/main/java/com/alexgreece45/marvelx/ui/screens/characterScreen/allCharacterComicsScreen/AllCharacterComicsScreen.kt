@@ -33,6 +33,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.alexgreece45.marvelx.R
@@ -49,15 +50,14 @@ import com.alexgreece45.marvelx.util.ModalBottomSheet
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.SortingModalBottomSheetContent
 import com.alexgreece45.marvelx.util.VSpacer
-import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
+import com.ramcosta.composedestinations.navigation.navigate
 import kotlinx.coroutines.coroutineScope
 
 @OptIn(ExperimentalMaterialApi::class)
-@Destination
 @Composable
 fun AllCharacterComicsScreen(
-    navigator: DestinationsNavigator,
+    navController: NavController,
     viewModel: AllCharacterComicsViewModel = hiltViewModel(),
     characterId: Int,
     toolbarTitlePrefix: String
@@ -76,11 +76,11 @@ fun AllCharacterComicsScreen(
         viewModel.effect.collect { effect ->
             when (effect) {
                 AllCharacterComicsEffect.NavigateToCharacterScreen -> {
-                    navigator.popBackStack()
+                    navController.popBackStack()
                 }
 
                 is AllCharacterComicsEffect.NavigateToComicScreen -> {
-                    navigator.navigate(ComicScreenDestination(comicId = effect.comicId))
+                    navController.navigate(ComicScreenDestination(comicId = effect.comicId))
                 }
 
                 AllCharacterComicsEffect.BottomSheet.Hide -> {
@@ -119,7 +119,7 @@ fun AllCharacterComicsScreen(
             }
         ) {
             ContentScreen(
-                onBack = { navigator.popBackStack() },
+                onBack = { navController.popBackStack() },
                 showToolbar = true,
                 toolbarTitle = stringResource(
                     R.string.all_character_comics_screen_toolbar_title,
