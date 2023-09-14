@@ -67,18 +67,15 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.util.extensions.applyPadding
-import com.ramcosta.composedestinations.navigation.DestinationsNavigator
-import com.ramcosta.composedestinations.navigation.navigate
-import com.ramcosta.composedestinations.spec.DirectionDestinationSpec
 
 data class BottomBarAction(
-    val route: DirectionDestinationSpec,
+    val route: String,
     val label: String,
     val iconData: IconData,
 )
 
 data class BottomBarData(
-    val navigator: DestinationsNavigator,
+    val navController: NavController,
     val items: List<BottomBarAction>,
     val backgroundColor: Color? = null,
     val contentColor: Color? = null,
@@ -88,7 +85,6 @@ data class BottomBarData(
 )
 
 data class BottomNavigationBarData(
-    val navigator: DestinationsNavigator? = null,
     val navController: NavController,
     val items: List<BottomBarAction>,
     val backgroundColor: Color? = null,
@@ -100,7 +96,7 @@ data class BottomNavigationBarData(
  * */
 @Composable
 private fun BottomBar(
-    navigator: DestinationsNavigator,
+    navController: NavController,
     items: List<BottomBarAction>,
     backgroundColor: Color = MaterialTheme.colors.primarySurface,
     contentColor: Color = contentColorFor(backgroundColor),
@@ -124,7 +120,7 @@ private fun BottomBar(
             LocalTextStyle provides MaterialTheme.typography.caption
         ) {
             items.forEach { bottomBarAction ->
-                IconButton(onClick = { navigator.navigate(bottomBarAction.route) }) {
+                IconButton(onClick = { navController.navigate(bottomBarAction.route) }) {
                     Column {
                         Icon(
                             painter = painterResource(bottomBarAction.iconData.iconResource),
@@ -146,7 +142,6 @@ private fun BottomBar(
  * */
 @Composable
 fun BottomNavigationBar(
-    navigator: DestinationsNavigator?,
     navController: NavController,
     items: List<BottomBarAction>,
     backgroundColor: Color? = MaterialTheme.colors.primarySurface,
@@ -384,7 +379,6 @@ fun ContentScreen(
 
             bottomNavigationBarData?.let { bottomNavigationBarData ->
                 BottomNavigationBar(
-                    navigator = bottomNavigationBarData.navigator,
                     navController = bottomNavigationBarData.navController,
                     items = bottomNavigationBarData.items,
                     backgroundColor = bottomNavigationBarData.backgroundColor,

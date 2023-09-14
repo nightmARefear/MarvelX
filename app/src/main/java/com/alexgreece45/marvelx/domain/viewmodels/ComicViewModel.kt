@@ -36,9 +36,7 @@ data class ComicState(
     }
 }
 
-sealed interface ComicEffect : BaseEffect {
-
-}
+sealed interface ComicEffect : BaseEffect
 
 @HiltViewModel
 class ComicViewModel @Inject constructor(

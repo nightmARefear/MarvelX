@@ -31,9 +31,7 @@ import com.alexgreece45.marvelx.util.HSpacer
 import com.alexgreece45.marvelx.util.ItemDescription
 import com.alexgreece45.marvelx.util.SPACING_TINY
 import com.alexgreece45.marvelx.util.VSpacer
-import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 
-@com.ramcosta.composedestinations.annotation.Destination
 @Composable
 fun ComicScreen(
     navController: NavController,
