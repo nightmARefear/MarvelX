@@ -10,18 +10,27 @@ plugins {
 
 android {
     namespace 'com.alexgreece45.marvelx'
-    compileSdk 34
+    compileSdk 33
 
     defaultConfig {
         applicationId "com.alexgreece45.marvelx"
         minSdk 26
-        targetSdk 34
+        targetSdk 33
         versionCode 1
         versionName "1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
         vectorDrawables {
             useSupportLibrary true
+        }
+
+        // Workaround as emoji2 version 1.4.0 is not supported on SDK 33.
+        configurations.configureEach {
+            resolutionStrategy {
+                force("androidx.emoji2:emoji2-views-helper:1.3.0")
+                force("androidx.emoji2:emoji2:1.3.0")
+            }
         }
     }
 
@@ -71,46 +80,23 @@ android {
     }
 
     composeOptions {
-        kotlinCompilerExtensionVersion '1.5.3'
+        kotlinCompilerExtensionVersion '1.4.8'
     }
+
     packagingOptions {
         resources {
             excludes += '/META-INF/{AL2.0,LGPL2.1}'
         }
     }
 
-    applicationVariants.configureEach { variant ->
-        kotlin.sourceSets {
-            named(variant.name) {
-                kotlin.srcDir("build/generated/ksp/${variant.name}/kotlin")
-            }
-        }
-    }
-
-    /*java {
-        toolchain {
-            languageVersion = JavaLanguageVersion.of(17)
-        }
-    }*/
-}
-
-kotlin {
-    sourceSets {
-        release {
-            kotlin.srcDir("build/generated/ksp/release/kotlin")
-        }
-        debug {
-            kotlin.srcDir("build/generated/ksp/debug/kotlin")
-        }
-        mock {
-            kotlin.srcDir("build/generated/ksp/mock/kotlin")
-        }
+    kapt {
+        correctErrorTypes true
     }
 }
 
 dependencies {
-    implementation 'androidx.core:core-ktx:1.12.0'
-    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.6.2'
+    implementation 'androidx.core:core-ktx:1.10.1'
+    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.6.1'
     implementation 'androidx.activity:activity-compose:1.7.2'
     implementation "androidx.compose.ui:ui:$compose_ui_version"
     implementation "androidx.appcompat:appcompat:1.6.1"
@@ -131,13 +117,16 @@ dependencies {
     // Networking
     implementation 'com.squareup.retrofit2:retrofit:2.9.0'
     implementation 'com.google.code.gson:gson:2.10.1'
-    implementation 'com.squareup.okhttp3:logging-interceptor:4.11.0'
+    implementation 'com.squareup.okhttp3:logging-interceptor:4.10.0'
     implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
 
     // Dependency Injection
-    def dagger_version = "2.48"
+    def dagger_version = "2.47"
     implementation "com.google.dagger:hilt-android:$dagger_version"
     kapt "com.google.dagger:hilt-compiler:$dagger_version"
+    testImplementation "com.google.dagger:hilt-android-testing:$dagger_version"
+    kaptTest "com.google.dagger:hilt-compiler:$dagger_version"
+    kapt "org.jetbrains.kotlinx:kotlinx-metadata-jvm:0.4.2"
 
     // Logcat
     implementation 'com.squareup.logcat:logcat:0.1'
@@ -146,10 +135,10 @@ dependencies {
     implementation('io.coil-kt:coil-compose:2.4.0')
 
     // Navigation
-    def nav_version = "2.7.2"
+    def nav_version = "2.4.2"
 
     implementation "androidx.navigation:navigation-compose:$nav_version"
-    implementation "androidx.hilt:hilt-navigation-compose:1.0.0"
+    implementation "androidx.hilt:hilt-navigation-compose:1.1.0-alpha01"
 
     // Database
     def room_version = "2.5.2"
@@ -158,7 +147,7 @@ dependencies {
     implementation "androidx.room:room-ktx:$room_version"
     annotationProcessor "androidx.room:room-compiler:$room_version"
 
-    kapt "androidx.room:room-compiler:$room_version"
+    ksp "androidx.room:room-compiler:$room_version"
 
     // optional - Test helpers
     testImplementation "androidx.room:room-testing:$room_version"

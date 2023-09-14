@@ -73,7 +73,8 @@ import com.alexgreece45.marvelx.util.SortingModalBottomSheetContent
 import kotlinx.coroutines.coroutineScope
 
 @OptIn(
-    ExperimentalMaterialApi::class, ExperimentalComposeUiApi::class
+    ExperimentalMaterialApi::class, ExperimentalComposeUiApi::class,
+    ExperimentalFoundationApi::class
 )
 @Composable
 fun AllCharactersScreen(
