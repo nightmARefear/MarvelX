@@ -7,11 +7,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavController
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.navigation.Screen
 import com.alexgreece45.marvelx.util.BottomBarAction
 import com.alexgreece45.marvelx.util.BottomNavigationBarData
 import com.alexgreece45.marvelx.util.ContentScreen
-import com.alexgreece45.marvelx.util.IconData
 
 @Composable
 fun AllFavoriteCharactersScreen(
@@ -19,44 +17,16 @@ fun AllFavoriteCharactersScreen(
 ) {
     ContentScreen(
         showToolbar = true,
-        toolbarTitle = "Favorite Characters",
+        toolbarTitle = stringResource(R.string.all_favorite_characters_screen_toolbar_title),
         bottomNavigationBarData = BottomNavigationBarData(
             navController = navController,
-            items = listOf(
-                BottomBarAction(
-                    route = Screen.AllCharactersScreen.route,
-                    label = stringResource(R.string.bottom_navigation_label_characters),
-                    iconData = IconData(
-                        iconResource = R.drawable.ic_close_32,
-                        contentDescription = stringResource(R.string.bottom_navigation_label_characters),
-                        colorTint = null
-                    )
-                ),
-                BottomBarAction(
-                    route = Screen.AllFavoriteCharactersScreen.route,
-                    label = stringResource(R.string.bottom_navigation_label_favorites),
-                    iconData = IconData(
-                        iconResource = R.drawable.ic_favorite_filled_24,
-                        contentDescription = stringResource(R.string.bottom_navigation_label_favorites),
-                        colorTint = null
-                    )
-                ),
-                BottomBarAction(
-                    route = Screen.ProfileScreen.route,
-                    label = stringResource(R.string.bottom_navigation_label_profile),
-                    iconData = IconData(
-                        iconResource = R.drawable.ic_person_32,
-                        contentDescription = stringResource(R.string.bottom_navigation_label_profile),
-                        colorTint = null
-                    )
-                )
-            )
+            items = BottomBarAction.getDefaultBottomBarActions()
         )
     ) { paddingValues ->
         LazyColumn(contentPadding = paddingValues) {
             item {
                 Text(
-                    text = "AllFavoriteCharactersScreen",
+                    text = stringResource(R.string.all_favorite_characters_screen_toolbar_title),
                     style = MaterialTheme.typography.h3
                 )
             }

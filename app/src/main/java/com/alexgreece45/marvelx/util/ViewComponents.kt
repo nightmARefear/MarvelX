@@ -2,6 +2,8 @@ package com.alexgreece45.marvelx.util
 
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -18,6 +20,7 @@ import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.AppBarDefaults
 import androidx.compose.material.BottomAppBar
@@ -40,6 +43,7 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.ModalBottomSheetDefaults
 import androidx.compose.material.ModalBottomSheetLayout
 import androidx.compose.material.ModalBottomSheetState
+import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
@@ -48,6 +52,8 @@ import androidx.compose.material.TopAppBar
 import androidx.compose.material.contentColorFor
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.primarySurface
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.Composable
@@ -59,23 +65,59 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.navigation.Screen
 import com.alexgreece45.marvelx.util.extensions.applyPadding
 
 data class BottomBarAction(
     val route: String,
     val label: String,
     val iconData: IconData,
-)
+) {
+    companion object {
+        @Composable
+        fun getDefaultBottomBarActions(): List<BottomBarAction> = listOf(
+            BottomBarAction(
+                route = Screen.AllCharactersScreen.route,
+                label = stringResource(R.string.bottom_navigation_label_characters),
+                iconData = IconData(
+                    iconResource = R.drawable.ic_superhero_32,
+                    contentDescription = stringResource(R.string.bottom_navigation_label_characters)
+                )
+            ),
+            BottomBarAction(
+                route = Screen.AllFavoriteCharactersScreen.route,
+                label = stringResource(R.string.bottom_navigation_label_favorites),
+                iconData = IconData(
+                    iconResource = R.drawable.ic_favorite_filled_24,
+                    contentDescription = stringResource(R.string.bottom_navigation_label_favorites)
+                )
+            ),
+            BottomBarAction(
+                route = Screen.ProfileScreen.route,
+                label = stringResource(R.string.bottom_navigation_label_profile),
+                iconData = IconData(
+                    iconResource = R.drawable.ic_person_32,
+                    contentDescription = stringResource(R.string.bottom_navigation_label_profile)
+                )
+            )
+        )
+    }
+}
 
 data class BottomBarData(
     val navController: NavController,
@@ -197,7 +239,9 @@ fun BottomNavigationBar(
                             launchSingleTop = true
                             restoreState = true
                         }
-                    }
+                    },
+                    selectedContentColor = MaterialTheme.colors.primaryVariant,
+                    unselectedContentColor = MaterialTheme.colors.primary.copy(alpha = ContentAlpha.medium)
                 )
             }
         }
@@ -399,6 +443,7 @@ fun CollapsibleExtendedFloatingActionButton(
     val extendedFabSize = 48.dp
     val extendedFabIconPadding = 12.dp
     val extendedFabTextPadding = 20.dp
+
     FloatingActionButton(
         modifier = Modifier.sizeIn(
             minWidth = extendedFabSize,
@@ -649,6 +694,128 @@ fun ItemDescription(
             style = MaterialTheme.typography.body1.copy(
                 textAlign = TextAlign.Justify
             )
+        )
+    }
+}
+
+sealed interface ValueType {
+    object Text : ValueType
+
+    object Email : ValueType
+
+    data class Password(
+        val isPasswordVisible: Boolean = false,
+        val onVisibilityIconClick: () -> Unit
+    ) : ValueType
+}
+
+@Composable
+fun OutlinedTextFieldValidation(
+    modifier: Modifier = Modifier,
+    value: String,
+    valueType: ValueType = ValueType.Text,
+    onValueChange: (String) -> Unit,
+    label: String = "",
+    placeholder: String? = null,
+    leadingIcon: @Composable (() -> Unit)? = null,
+    errorMessage: String = "",
+    isError: Boolean = false,
+    visualTransformation: VisualTransformation = VisualTransformation.None,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    keyboardActions: KeyboardActions = KeyboardActions.Default,
+    singleLine: Boolean = true,
+    maxLines: Int = if (singleLine) 1 else Int.MAX_VALUE,
+    interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
+    shape: Shape = MaterialTheme.shapes.small
+) {
+    OutlinedTextField(
+        modifier = modifier,
+        value = value,
+        onValueChange = { newValue ->
+            if (newValue != value) {
+                onValueChange(newValue)
+            }
+        },
+        label = {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.caption
+            )
+        },
+        placeholder = {
+            placeholder?.let { placeholder ->
+                Text(
+                    text = placeholder,
+                    fontStyle = FontStyle.Italic,
+                    style = MaterialTheme.typography.subtitle1,
+                )
+            }
+        },
+        leadingIcon = leadingIcon,
+        trailingIcon = {
+            when (valueType) {
+                ValueType.Text, ValueType.Email -> {
+                    if (isError)
+                        Icon(
+                            imageVector = ImageVector.vectorResource(R.drawable.ic_error_32),
+                            contentDescription = stringResource(R.string.error),
+                            tint = MaterialTheme.colors.error
+                        )
+                }
+
+                is ValueType.Password -> {
+                    IconButton(onClick = { valueType.onVisibilityIconClick() }) {
+                        if (valueType.isPasswordVisible) {
+                            Icon(
+                                imageVector = Icons.Filled.VisibilityOff,
+                                contentDescription = stringResource(R.string.is_password_visible_content_description)
+                            )
+                        } else {
+                            Icon(
+                                imageVector = Icons.Filled.Visibility,
+                                contentDescription = stringResource(R.string.is_password_not_visible_content_description)
+                            )
+                        }
+                    }
+                }
+            }
+        },
+        isError = isError,
+        visualTransformation = visualTransformation,
+        keyboardOptions = when (valueType) {
+            ValueType.Text -> {
+                keyboardOptions
+            }
+
+            ValueType.Email -> {
+                keyboardOptions.copy(
+                    keyboardType = KeyboardType.Email
+                )
+            }
+
+            is ValueType.Password -> {
+                // Restricts the implementation so as to avoid exposing the password in the user's keyboard.
+                keyboardOptions.copy(
+                    keyboardType = KeyboardType.Password,
+                )
+            }
+        },
+        keyboardActions = keyboardActions,
+        singleLine = singleLine,
+        maxLines = maxLines,
+        interactionSource = interactionSource,
+        shape = shape
+    )
+
+    AnimatedVisibility(
+        visible = isError && errorMessage.isNotBlank(),
+        enter = fadeIn(),
+        exit = fadeOut()
+    ) {
+        Text(
+            text = errorMessage,
+            color = MaterialTheme.colors.error,
+            modifier = Modifier.padding(start = 0.dp, top = 0.dp)
         )
     }
 }

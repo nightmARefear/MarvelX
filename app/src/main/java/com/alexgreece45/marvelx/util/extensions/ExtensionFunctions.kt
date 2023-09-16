@@ -1,10 +1,6 @@
 package com.alexgreece45.marvelx.util.extensions
 
-import android.content.Context
-import android.content.ContextWrapper
-import androidx.activity.ComponentActivity
-import androidx.appcompat.app.AppCompatActivity
-
+import android.util.Patterns
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.Dp
@@ -26,6 +22,10 @@ fun <T> Flow<T>.safeAsync(with: (Throwable) -> (T)): Flow<T> {
 fun String.toMd5(): String {
     val md = MessageDigest.getInstance("MD5")
     return BigInteger(1, md.digest(this.toByteArray())).toString(16).padStart(32, '0')
+}
+
+fun String.isEmail(): Boolean {
+    return Patterns.EMAIL_ADDRESS.matcher(this).matches()
 }
 
 fun OffsetDateTime.toSystemLocalDateTime(): LocalDateTime =

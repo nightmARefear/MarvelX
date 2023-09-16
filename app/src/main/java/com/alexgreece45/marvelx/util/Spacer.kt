@@ -30,9 +30,6 @@ object VSpacer {
     fun Custom(height: Int) = Spacer(modifier = Modifier.height(height = height.dp))
 
     @Composable
-    fun Custom(height: Double) = Spacer(modifier = Modifier.height(height = height.dp))
-
-    @Composable
     fun Custom(height: Float) = Spacer(modifier = Modifier.height(height = height.dp))
 }
 

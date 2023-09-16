@@ -1,6 +1,12 @@
 <resources>
     <!-- Generic -->
     <string name="back">Back</string>
+    <string name="error">error</string>
+    <string name="male">male</string>
+    <string name="female">female</string>
+    <string name="other">other</string>
+    <string name="is_password_visible_content_description">Hide Password</string>
+    <string name="is_password_not_visible_content_description">Show Password</string>
     <string name="ic_favorite_content_description">favorite</string>
     <string name="favorite_message">This %1$s is now favorite.</string>
 
@@ -59,6 +65,42 @@
     <!-- All Character Comics Screen -->
     <string name="all_character_comics_screen_toolbar_title">%1$s Comics</string>
 
+    <!-- All Favorite Characters Screen -->
+    <string name="all_favorite_characters_screen_toolbar_title">Favorite Characters</string>
+
     <!-- Profile Screen -->
     <string name="profile_screen_toolbar_title">Profile</string>
+
+    <!-- Sign Up Screen -->
+    <string name="sign_up_screen_toolbar_title">Sign Up</string>
+
+    <string name="sign_up_screen_input_field_label_first_name">First Name</string>
+    <string name="sign_up_screen_input_field_label_last_name">Last Name</string>
+    <string name="sign_up_screen_input_field_label_gender">Gender</string>
+    <string name="sign_up_screen_input_field_label_email">Email</string>
+    <string name="sign_up_screen_input_field_label_password">Password</string>
+
+    <string name="sign_up_screen_input_field_placeholder_first_name">John</string>
+    <string name="sign_up_screen_input_field_placeholder_last_name">Doe</string>
+    <string name="sign_up_screen_input_field_placeholder_gender">Male</string>
+    <string name="sign_up_screen_input_field_placeholder_email">john.doe@email.com</string>
+    <string name="sign_up_screen_input_field_placeholder_password">hJRVkVtX39Ud!%XIFn9)ui5+K</string>
+
+    <string name="sign_up_screen_input_field_error_blank_first_name">First name cannot be blank.</string>
+    <string name="sign_up_screen_input_field_error_blank_last_name">Last name cannot be blank.</string>
+    <string name="sign_up_screen_input_field_error_blank_gender">Gender cannot be blank.</string>
+    <string name="sign_up_screen_input_field_error_blank_email">Email cannot be blank.</string>
+    <string name="sign_up_screen_input_field_error_blank_password">Password cannot be blank.</string>
+
+    <string name="sign_up_screen_input_field_error_min_length_first_name">First name\'s length cannot be less than %1$s characters.</string>
+    <string name="sign_up_screen_input_field_error_min_length_last_name">Last name\'s length cannot be less than %1$s characters.</string>
+    <string name="sign_up_screen_input_field_error_min_length_email">Email\'s length cannot be less than %1$s characters.</string>
+    <string name="sign_up_screen_input_field_error_min_length_password">Password\'s length cannot be less than %1$s characters.</string>
+
+    <string name="sign_up_screen_input_field_error_max_length_first_name">First name\'s length cannot be more than %1$s characters.</string>
+    <string name="sign_up_screen_input_field_error_max_length_last_name">Last name\'s length cannot be more than %1$s characters.</string>
+    <string name="sign_up_screen_input_field_error_max_length_email">Email\'s length cannot be more than %1$s characters.</string>
+    <string name="sign_up_screen_input_field_error_max_length_password">Password\'s length cannot be more than %1$s characters.</string>
+
+    <string name="sign_up_screen_input_field_error_validate_email_email">Email is invalid.</string>
 </resources>

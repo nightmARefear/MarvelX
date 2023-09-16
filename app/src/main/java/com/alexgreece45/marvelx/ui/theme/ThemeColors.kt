@@ -12,7 +12,7 @@ fun themeColors(darkTheme: Boolean): ThemeColorsTemplate {
         darkTheme = darkTheme,
         light = ColorsTemplate(
             primary = Color(0xFFEC1D24),
-            primaryVariant = Color(0xFFEC1D24),
+            primaryVariant = Color(0xFFFFFFFF),
             onPrimary = Color(0xFFFFFFFF),
             secondary = Color(0xFFEC1D24),
             secondaryVariant = Color(0xFF000000),
@@ -29,7 +29,7 @@ fun themeColors(darkTheme: Boolean): ThemeColorsTemplate {
         dark = ColorsTemplate(
             primary = Color(0xFFFFFFFF),
             primaryVariant = Color(0xFFE62429),
-            onPrimary = Color(0xFFDD7C7C),
+            onPrimary = Color(0xFFE62429),
             secondary = Color(0xFFD6393D),
             secondaryVariant = Color(0xFF000000),
             onSecondary = Color(0xFF000000),

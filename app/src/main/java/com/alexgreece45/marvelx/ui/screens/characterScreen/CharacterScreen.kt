@@ -197,7 +197,6 @@ fun CharacterScreen(
 private fun CharacterItem(
     character: CharacterDomain,
 ) {
-
     Column(
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -251,7 +250,6 @@ fun <T> LazyRowTemplate(
         Text(
             text = title,
             style = MaterialTheme.typography.h6,
-//        color = MaterialTheme.colors.onBackground
         )
 
         IconButton(

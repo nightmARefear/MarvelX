@@ -34,7 +34,7 @@ data class ComicResponse(
     @SerializedName("collections") val collections: List<ComicSummary>,
     @SerializedName("collectedIssues") val collectedIssues: List<ComicSummary>,
     @SerializedName("dates") val dates: List<ComicDate>,
-    @SerializedName("prices") val prices: List<ComicPrice>,
+    @SerializedName("prices") val prices: List<ComicPrice>? = null,
     @SerializedName("thumbnail") val thumbnail: ImageResponse,
     @SerializedName("images") val images: List<ImageResponse>,
     @SerializedName("creators") val creators: CreatorList,
@@ -65,12 +65,12 @@ fun ComicResponse.toDomain(): ComicDomain = ComicDomain(
     collections = this.collections,
     collectedIssues = this.collectedIssues,
     dates = this.dates,
-    prices = this.prices.map { comicPrice ->
+    prices = this.prices?.map { comicPrice ->
         ComicPriceDomain(
             type = ComicPriceType.getType(comicPrice.type),
             price = comicPrice.price
         )
-    },
+    }.orEmpty(),
     thumbnail = this.thumbnail.toDomain(
         containerClassType = this::class
     ),
@@ -105,12 +105,12 @@ fun List<ComicResponse>.toDomain(): List<ComicDomain> =
             collections = it.collections,
             collectedIssues = it.collectedIssues,
             dates = it.dates,
-            prices = it.prices.map { comicPrice ->
+            prices = it.prices?.map { comicPrice ->
                 ComicPriceDomain(
                     type = ComicPriceType.getType(comicPrice.type),
                     price = comicPrice.price
                 )
-            },
+            }.orEmpty(),
             thumbnail = it.thumbnail.toDomain(containerClassType = it::class),
             images = it.images,
             creators = it.creators,

@@ -10,7 +10,9 @@ import com.alexgreece45.marvelx.ui.screens.allCharactersScreen.AllCharactersScre
 import com.alexgreece45.marvelx.ui.screens.allFavoriteCharactersScreen.AllFavoriteCharactersScreen
 import com.alexgreece45.marvelx.ui.screens.characterScreen.CharacterScreen
 import com.alexgreece45.marvelx.ui.screens.characterScreen.allCharacterComicsScreen.AllCharacterComicsScreen
+import com.alexgreece45.marvelx.ui.screens.comicScreen.ComicScreen
 import com.alexgreece45.marvelx.ui.screens.profileScreen.ProfileScreen
+import com.alexgreece45.marvelx.ui.screens.signUpScreen.SignUpScreen
 
 @Composable
 fun Navigation() {
@@ -18,7 +20,7 @@ fun Navigation() {
 
     NavHost(
         navController = navController,
-        startDestination = Screen.getAfterSuccessfulLoginScreen().route
+        startDestination = Screen.SignUpScreen.route
     ) {
         composable(screen = Screen.AllCharactersScreen) {
             AllCharactersScreen(
@@ -33,6 +35,15 @@ fun Navigation() {
                 navController = navController,
                 characterId = navBackStackEntry.arguments?.getInt(NavItem.Character.key)
                     ?: -1
+            )
+        }
+
+        composable(
+            screen = Screen.ComicScreen
+        ) { navBackStackEntry ->
+            ComicScreen(
+                navController = navController,
+                comicId = navBackStackEntry.arguments?.getInt(NavItem.Comic.key) ?: -1
             )
         }
 
@@ -53,6 +64,10 @@ fun Navigation() {
 
         composable(Screen.ProfileScreen) {
             ProfileScreen(navController = navController)
+        }
+
+        composable(Screen.SignUpScreen) {
+            SignUpScreen(navController = navController)
         }
     }
 }
