@@ -73,8 +73,7 @@ import com.alexgreece45.marvelx.util.SortingModalBottomSheetContent
 import kotlinx.coroutines.coroutineScope
 
 @OptIn(
-    ExperimentalMaterialApi::class, ExperimentalComposeUiApi::class,
-    ExperimentalFoundationApi::class
+    ExperimentalMaterialApi::class, ExperimentalComposeUiApi::class
 )
 @Composable
 fun AllCharactersScreen(
@@ -116,9 +115,13 @@ fun AllCharactersScreen(
     LaunchedEffect(Unit) {
         viewModel.effect.collect { effect ->
             when (effect) {
-                is AllCharactersEffect.NavigateToCharacterDetails -> {
+                is AllCharactersEffect.NavigateToCharacterScreen -> {
                     initLock = Unit
-                    navController.navigate(Screen.CharacterScreen.route)
+                    navController.navigate(
+                        Screen.CharacterScreen.createNavRoute(
+                            characterId = effect.characterId
+                        )
+                    )
                 }
 
                 is AllCharactersEffect.FavoriteCharacter.Success -> {
@@ -193,7 +196,7 @@ fun AllCharactersScreen(
                     navController = navController,
                     items = listOf(
                         BottomBarAction(
-                            route = Screen.AllCharactersScreens.route,
+                            route = Screen.AllCharactersScreen.route,
                             label = stringResource(R.string.bottom_navigation_label_characters),
                             iconData = IconData(
                                 iconResource = R.drawable.ic_close_32,

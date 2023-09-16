@@ -78,7 +78,11 @@ fun AllCharacterComicsScreen(
                 }
 
                 is AllCharacterComicsEffect.NavigateToComicScreen -> {
-                    navController.navigate(Screen.ComicScreen.route + "/comicId/{${effect.comicId}}")
+                    navController.navigate(
+                        Screen.ComicScreen.createNavRoute(
+                            comicId = effect.comicId
+                        )
+                    )
                 }
 
                 AllCharacterComicsEffect.BottomSheet.Hide -> {

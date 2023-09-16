@@ -1,26 +1,72 @@
 package com.alexgreece45.marvelx.navigation
 
+import androidx.navigation.NamedNavArgument
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
+
 sealed class Screen(
-    val route: String
+    protected val baseRoute: String,
+    private val navArgs: List<NavItem> = emptyList()
 ) {
-    object AllCharactersScreens : Screen(route = "allCharactersScreen")
+    /**
+     * The route of the screen with the navigation arguments included.
+     * */
+    val route: String
+        get() = listOf(baseRoute)
+            .plus(navArgs.map { "{${it.key}}" })
+            .joinToString("/")
 
-    object CharacterScreen : Screen(route = "characterScreen")
+    /**
+     * Converts a list of [NavItem]s to a list of [NamedNavArgument]s to be used by NavGraphBuilder#composable.
+     */
+    val navigationArguments = navArgs.map { navItem ->
+        navArgument(name = navItem.key) {
+            type = navItem.type
+        }
+    }
 
-    object AllCharacterComicsScreen : Screen(route = "allCharacterComicsScreen")
+    object AllCharactersScreen : Screen(baseRoute = "allCharactersScreen")
 
-    object ComicScreen : Screen(route = "comicScreen")
+    object CharacterScreen : Screen(
+        baseRoute = "characterScreen",
+        navArgs = listOf(NavItem.Character)
+    ) {
+        fun createNavRoute(characterId: Int) = "$baseRoute/$characterId"
+    }
 
-    object AllFavoriteCharactersScreen : Screen(route = "allFavoriteCharactersScreen")
+    object AllCharacterComicsScreen : Screen(
+        baseRoute = "allCharacterComicsScreen",
+        navArgs = listOf(NavItem.Character, NavItem.ToolbarTitlePrefix)
+    ) {
+        fun createNavRoute(
+            characterId: Int,
+            toolbarTitlePrefix: String
+        ): String = "$baseRoute/$characterId/$toolbarTitlePrefix"
+    }
 
-    object ProfileScreen : Screen(route = "profileScreen")
+    object ComicScreen : Screen(
+        baseRoute = "comicScreen",
+        navArgs = listOf(NavItem.Comic)
+    ) {
+        fun createNavRoute(comicId: Int): String = "$baseRoute/$comicId"
+    }
 
-    object SignUpScreen : Screen(route = "signUpScreen")
+    object AllFavoriteCharactersScreen : Screen(baseRoute = "allFavoriteCharactersScreen")
+
+    object ProfileScreen : Screen(baseRoute = "profileScreen")
+
+    object SignUpScreen : Screen(baseRoute = "signUpScreen")
 
     companion object {
-        fun getAfterSuccessfulLoginScreen(): Screen = AllCharactersScreens
+        fun getAfterSuccessfulLoginScreen(): Screen = AllCharactersScreen
 
         fun getBottomNavigationScreens(): List<Screen> =
-            listOf(AllCharactersScreens, AllFavoriteCharactersScreen, ProfileScreen)
+            listOf(AllCharactersScreen, AllFavoriteCharactersScreen, ProfileScreen)
     }
+}
+
+enum class NavItem(val key: String, val type: NavType<*>) {
+    Character(key = "characterId", NavType.IntType),
+    Comic(key = "comicId", NavType.IntType),
+    ToolbarTitlePrefix(key = "toolbarTitlePrefix", NavType.StringType)
 }

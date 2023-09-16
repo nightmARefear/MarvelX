@@ -24,7 +24,7 @@ fun AllFavoriteCharactersScreen(
             navController = navController,
             items = listOf(
                 BottomBarAction(
-                    route = Screen.AllCharactersScreens.route,
+                    route = Screen.AllCharactersScreen.route,
                     label = stringResource(R.string.bottom_navigation_label_characters),
                     iconData = IconData(
                         iconResource = R.drawable.ic_close_32,

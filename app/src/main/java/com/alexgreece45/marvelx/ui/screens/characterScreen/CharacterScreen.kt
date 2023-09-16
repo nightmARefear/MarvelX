@@ -76,18 +76,21 @@ fun CharacterScreen(
                     navController.popBackStack()
                 }
 
-                is CharacterEffect.NavigateToComic -> {
-                    navController.navigate(Screen.ComicScreen.route + "/${effect.comicId}")
+                is CharacterEffect.NavigateToComicScreen -> {
+                    navController.navigate(
+                        Screen.ComicScreen.createNavRoute(
+                            comicId = effect.comicId
+                        )
+                    )
                 }
 
-                is CharacterEffect.NavigateToAllComics -> {
-                    //todo: refactor later
-                    /* navController.navigate(
-                         AllCharacterComicsScreen(
-                             characterId = effect.characterId,
-                             toolbarTitlePrefix = effect.toolbarTitlePrefix
-                         )
-                     )*/
+                is CharacterEffect.NavigateToAllComicsScreen -> {
+                    navController.navigate(
+                        Screen.AllCharacterComicsScreen.createNavRoute(
+                            characterId = effect.characterId,
+                            toolbarTitlePrefix = effect.toolbarTitlePrefix
+                        )
+                    )
                 }
 
                 is CharacterEffect.DisplayError -> {

@@ -32,9 +32,9 @@ sealed class CharacterEvent : BaseEvent {
 
 sealed class CharacterEffect : BaseEffect {
     object OnBackClick : CharacterEffect()
-    data class NavigateToComic(val comicId: Int) : CharacterEffect()
+    data class NavigateToComicScreen(val comicId: Int) : CharacterEffect()
 
-    data class NavigateToAllComics(val characterId: Int, val toolbarTitlePrefix: String) :
+    data class NavigateToAllComicsScreen(val characterId: Int, val toolbarTitlePrefix: String) :
         CharacterEffect()
 
     data class DisplayError(val errorMessage: String) : CharacterEffect()
@@ -85,7 +85,7 @@ class CharacterViewModel @Inject constructor(
 
             is CharacterEvent.OnComicClick -> {
                 setEffect {
-                    CharacterEffect.NavigateToComic(comicId = event.comicId)
+                    CharacterEffect.NavigateToComicScreen(comicId = event.comicId)
                 }
             }
 
@@ -96,7 +96,7 @@ class CharacterViewModel @Inject constructor(
             CharacterEvent.OnArrowRightClick -> {
                 currentState.character?.let { characterDomain ->
                     setEffect {
-                        CharacterEffect.NavigateToAllComics(
+                        CharacterEffect.NavigateToAllComicsScreen(
                             characterId = characterDomain.id,
                             toolbarTitlePrefix = if (characterDomain.name.endsWith("s")) characterDomain.name + "'" else characterDomain.name + "'s"
                         )

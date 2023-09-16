@@ -38,7 +38,7 @@ sealed interface AllCharactersEvent : BaseEvent {
 }
 
 sealed interface AllCharactersEffect : BaseEffect {
-    data class NavigateToCharacterDetails(val characterId: Int) : AllCharactersEffect
+    data class NavigateToCharacterScreen(val characterId: Int) : AllCharactersEffect
     sealed interface FavoriteCharacter : AllCharactersEffect {
         data class Success(val successMessage: String) : FavoriteCharacter
         data class Error(val errorMessage: String) : FavoriteCharacter
@@ -120,7 +120,7 @@ class AllCharactersViewModel @Inject constructor(
                     AllCharactersEffect.CloseKeyboard
                 }
                 setEffect {
-                    AllCharactersEffect.NavigateToCharacterDetails(
+                    AllCharactersEffect.NavigateToCharacterScreen(
                         characterId = event.characterId
                     )
                 }

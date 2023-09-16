@@ -23,6 +23,7 @@ import androidx.compose.material.AppBarDefaults
 import androidx.compose.material.BottomAppBar
 import androidx.compose.material.BottomNavigation
 import androidx.compose.material.BottomNavigationDefaults
+import androidx.compose.material.BottomNavigationItem
 import androidx.compose.material.BottomSheetScaffold
 import androidx.compose.material.BottomSheetScaffoldDefaults
 import androidx.compose.material.BottomSheetScaffoldState
@@ -51,6 +52,7 @@ import androidx.compose.material.primarySurface
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -65,6 +67,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import androidx.navigation.compose.currentBackStackEntryAsState
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.util.extensions.applyPadding
 
@@ -162,20 +165,15 @@ fun BottomNavigationBar(
         contentColor = _contentColor,
         elevation = elevation
     ) {
-        // todo: to be refactored
-        /*items.forEach { bottomBarAction ->
-            val isCurrentItemSelected = currentDestination == bottomBarAction.route.also {
-                println("(BottomNavigationBar) currentDestination == bottomBarAction.route = ${currentDestination == bottomBarAction.route}")
-                println(
-                    "(BottomNavigationBar) bottomBarAction.route = $it"
-                )
-                println("(BottomNavigationBar)")
-            }
+        val navBackStackEntry by navController.currentBackStackEntryAsState()
+        val currentRoute = navBackStackEntry?.destination?.route
+
+        items.forEach { bottomBarAction ->
             CompositionLocalProvider(
                 LocalContentAlpha provides ContentAlpha.high
             ) {
                 BottomNavigationItem(
-                    selected = isCurrentItemSelected,
+                    selected = currentRoute == bottomBarAction.route,
                     icon = {
                         Icon(
                             modifier = Modifier.size(32.dp),
@@ -192,58 +190,17 @@ fun BottomNavigationBar(
                         )
                     },
                     onClick = {
-                        // old way
-                        // TODO: Change the navigation technique.
-                        if (!isCurrentItemSelected) {
-                            *//*navController.navigate(bottomBarAction.route) {
-                               launchSingleTop = true
-                               restoreState = true
-                           }*//*
-                            *//*navigator.clearBackStack(currentDestination)
-                           navigator.navigate(bottomBarAction.route) {
-                               launchSingleTop = true
-                               restoreState = true
-                           }*//*
-                        }
-
-                        // new way
-                        fun checkForDestinations(
-                            navigationRoutes: List<DirectionDestinationSpec>,
-                            navBackStackEntry: NavBackStackEntry
-                        ): Boolean {
-                            navigationRoutes.forEach {
-                                if (it.route == navBackStackEntry.destination.route) return true
-                            }
-
-                            return false
-                        }
-
                         navController.navigate(bottomBarAction.route) {
-                            launchSingleTop = true
-                            val navigationRoutes = items.map { it.route }
-
-                            val firstBottomBarDestination =
-                                navController.currentBackStack.value.firstOrNull { navBackStackEntry ->
-                                    checkForDestinations(
-                                        navigationRoutes = navigationRoutes,
-                                        navBackStackEntry = navBackStackEntry
-                                    )
-                                }?.destination
-
-                            if (firstBottomBarDestination != null) {
-                                popUpTo(firstBottomBarDestination.id) {
-                                    inclusive = true
-                                    saveState = true
-                                }
+                            popUpTo(navController.graph.startDestinationId) {
+                                saveState = true
                             }
-
                             launchSingleTop = true
                             restoreState = true
                         }
                     }
                 )
             }
-        }*/
+        }
     }
 }
 
