@@ -4,6 +4,8 @@ import com.alexgreece45.marvelx.domain.repositories.CharacterRepository
 import com.alexgreece45.marvelx.domain.repositories.CharacterRepositoryImpl
 import com.alexgreece45.marvelx.domain.repositories.FavoriteCharactersRepository
 import com.alexgreece45.marvelx.domain.repositories.FavoriteCharactersRepositoryImpl
+import com.alexgreece45.marvelx.domain.repositories.UserRepository
+import com.alexgreece45.marvelx.domain.repositories.UserRepositoryImpl
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -21,4 +23,8 @@ interface RepositoryModule {
     @Binds
     @ViewModelScoped
     fun bindsFavoriteCharactersRepository(impl: FavoriteCharactersRepositoryImpl): FavoriteCharactersRepository
+
+    @Binds
+    @ViewModelScoped
+    fun bindsUserRepository(impl: UserRepositoryImpl): UserRepository
 }

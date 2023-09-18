@@ -64,7 +64,7 @@ fun SignUpScreen(
 
     ContentScreen(
         showToolbar = true,
-        toolbarTitle = "Sign Up"
+        toolbarTitle = stringResource(R.string.sign_up_screen_toolbar_title)
     ) { paddingValues ->
         LazyColumn(contentPadding = paddingValues) {
             item {
@@ -146,8 +146,7 @@ fun SignUpScreen(
                         onValueChange = { newValue ->
                             viewModel.setEvent(SignUpEvent.FieldValueChange.Email(email = newValue))
                         },
-                        errorMessage = state.emailValidationResult.messages.firstOrNull().orEmpty()
-                            .toString(),
+                        errorMessage = state.emailValidationResult.messages.firstOrNull().orEmpty(),
                         isError = state.emailValidationResult.isValid.not(),
                         keyboardOptions = KeyboardOptions(
                             keyboardType = KeyboardType.Email,
@@ -175,8 +174,7 @@ fun SignUpScreen(
                         onValueChange = { newValue ->
                             viewModel.setEvent(SignUpEvent.FieldValueChange.Password(password = newValue))
                         },
-                        errorMessage = state.passwordValidationResult.messages.firstOrNull()
-                            .orEmpty(),
+                        errorMessage = state.passwordValidationResult.messages.firstOrNull().orEmpty(),
                         isError = state.passwordValidationResult.isValid.not(),
                         visualTransformation = if (state.isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                         keyboardOptions = KeyboardOptions(
@@ -198,7 +196,7 @@ fun SignUpScreen(
                             onClick = { viewModel.setEvent(SignUpEvent.OnSignUpButtonClick) }
                         ) {
                             Text(
-                                text = "Sign Up".uppercase()
+                                text = stringResource(R.string.sign_up_screen_sign_up_button_text)
                             )
                         }
                     }

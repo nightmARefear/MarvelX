@@ -103,4 +103,6 @@
     <string name="sign_up_screen_input_field_error_max_length_password">Password\'s length cannot be more than %1$s characters.</string>
 
     <string name="sign_up_screen_input_field_error_validate_email_email">Email is invalid.</string>
+
+    <string name="sign_up_screen_sign_up_button_text">SIGN UP</string>
 </resources>
