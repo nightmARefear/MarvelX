@@ -71,7 +71,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
@@ -728,95 +727,102 @@ fun OutlinedTextFieldValidation(
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     shape: Shape = MaterialTheme.shapes.small
 ) {
-    OutlinedTextField(
-        modifier = modifier,
-        value = value,
-        onValueChange = { newValue ->
-            if (newValue != value) {
-                onValueChange(newValue)
-            }
-        },
-        label = {
-            Text(
-                text = label,
-                style = MaterialTheme.typography.caption
-            )
-        },
-        placeholder = {
-            placeholder?.let { placeholder ->
-                Text(
-                    text = placeholder,
-                    fontStyle = FontStyle.Italic,
-                    style = MaterialTheme.typography.subtitle1,
-                )
-            }
-        },
-        leadingIcon = leadingIcon,
-        trailingIcon = {
-            when (valueType) {
-                ValueType.Text, ValueType.Email -> {
-                    if (isError)
-                        Icon(
-                            imageVector = ImageVector.vectorResource(R.drawable.ic_error_32),
-                            contentDescription = stringResource(R.string.error),
-                            tint = MaterialTheme.colors.error
-                        )
+    Box(
+        modifier = modifier
+    ) {
+        OutlinedTextField(
+            modifier = modifier,
+            value = value,
+            onValueChange = { newValue ->
+                if (newValue != value) {
+                    onValueChange(newValue)
                 }
+            },
+            label = {
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.caption
+                )
+            },
+            placeholder = {
+                placeholder?.let { placeholder ->
+                    Text(
+                        text = placeholder,
+                        fontStyle = FontStyle.Italic,
+                        style = MaterialTheme.typography.subtitle1,
+                    )
+                }
+            },
+            leadingIcon = leadingIcon,
+            trailingIcon = {
+                when (valueType) {
+                    ValueType.Text, ValueType.Email -> {
+                        if (isError)
+                            Icon(
+                                modifier = Modifier.size(SPACING_LARGE.dp),
+                                imageVector = ImageVector.vectorResource(R.drawable.ic_error_32),
+                                contentDescription = stringResource(R.string.error),
+                                tint = MaterialTheme.colors.error
+                            )
+                    }
 
-                is ValueType.Password -> {
-                    IconButton(onClick = { valueType.onVisibilityIconClick() }) {
-                        if (valueType.isPasswordVisible) {
-                            Icon(
-                                imageVector = Icons.Filled.VisibilityOff,
-                                contentDescription = stringResource(R.string.is_password_visible_content_description)
-                            )
-                        } else {
-                            Icon(
-                                imageVector = Icons.Filled.Visibility,
-                                contentDescription = stringResource(R.string.is_password_not_visible_content_description)
-                            )
+                    is ValueType.Password -> {
+                        IconButton(onClick = { valueType.onVisibilityIconClick() }) {
+                            if (valueType.isPasswordVisible) {
+                                Icon(
+                                    imageVector = Icons.Filled.VisibilityOff,
+                                    contentDescription = stringResource(R.string.is_password_visible_content_description)
+                                )
+                            } else {
+                                Icon(
+                                    imageVector = Icons.Filled.Visibility,
+                                    contentDescription = stringResource(R.string.is_password_not_visible_content_description)
+                                )
+                            }
                         }
                     }
                 }
-            }
-        },
-        isError = isError,
-        visualTransformation = visualTransformation,
-        keyboardOptions = when (valueType) {
-            ValueType.Text -> {
-                keyboardOptions
-            }
+            },
+            isError = isError,
+            visualTransformation = visualTransformation,
+            keyboardOptions = when (valueType) {
+                ValueType.Text -> {
+                    keyboardOptions
+                }
 
-            ValueType.Email -> {
-                keyboardOptions.copy(
-                    keyboardType = KeyboardType.Email
-                )
-            }
+                ValueType.Email -> {
+                    keyboardOptions.copy(
+                        keyboardType = KeyboardType.Email
+                    )
+                }
 
-            is ValueType.Password -> {
-                // Restricts the implementation so as to avoid exposing the password in the user's keyboard.
-                keyboardOptions.copy(
-                    keyboardType = KeyboardType.Password,
-                )
-            }
-        },
-        keyboardActions = keyboardActions,
-        singleLine = singleLine,
-        maxLines = maxLines,
-        interactionSource = interactionSource,
-        shape = shape
-    )
-
-    AnimatedVisibility(
-        visible = isError && errorMessage.isNotBlank(),
-        enter = fadeIn(),
-        exit = fadeOut()
-    ) {
-        Text(
-            text = errorMessage,
-            color = MaterialTheme.colors.error,
-            modifier = Modifier.padding(start = 0.dp, top = 0.dp)
+                is ValueType.Password -> {
+                    // Restricts the implementation so as to avoid exposing the password in the user's keyboard.
+                    keyboardOptions.copy(
+                        keyboardType = KeyboardType.Password,
+                    )
+                }
+            },
+            keyboardActions = keyboardActions,
+            singleLine = singleLine,
+            maxLines = maxLines,
+            interactionSource = interactionSource,
+            shape = shape
         )
+
+        AnimatedVisibility(
+            modifier = Modifier.align(Alignment.BottomStart),
+            visible = isError && errorMessage.isNotBlank(),
+            enter = fadeIn(),
+            exit = fadeOut()
+        ) {
+            Text(
+                modifier = Modifier.padding(start = SPACING_TINY.dp, top = 64.dp),
+                text = errorMessage,
+                style = MaterialTheme.typography.body2,
+                color = MaterialTheme.colors.error,
+            )
+        }
     }
 }
 
