@@ -817,9 +817,10 @@ fun OutlinedTextFieldValidation(
             exit = fadeOut()
         ) {
             Text(
+                modifier = Modifier.padding(start = SPACING_TINY.dp, top = 64.dp),
                 text = errorMessage,
                 color = MaterialTheme.colors.error,
-                modifier = Modifier.padding(start = SPACING_TINY.dp, top = 64.dp)
+                style = MaterialTheme.typography.body2,
             )
         }
     }
