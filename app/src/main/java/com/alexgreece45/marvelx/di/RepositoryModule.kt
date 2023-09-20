@@ -16,7 +16,7 @@ interface RepositoryModule {
 
     @Binds
     @ViewModelScoped
-    fun bindsCharacterRepository(impl : CharacterRepositoryImpl) : CharacterRepository
+    fun bindsCharacterRepository(impl: CharacterRepositoryImpl): CharacterRepository
 
     @Binds
     @ViewModelScoped

@@ -3,6 +3,9 @@ package com.alexgreece45.marvelx.domain.viewmodels
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.data.models.user.Gender
+import com.alexgreece45.marvelx.data.models.user.UserSignUpRequest
+import com.alexgreece45.marvelx.domain.interactors.UserInteractor
+import com.alexgreece45.marvelx.domain.interactors.UserPartialStatePostSignUp
 import com.alexgreece45.marvelx.ui.base.BaseEffect
 import com.alexgreece45.marvelx.ui.base.BaseEvent
 import com.alexgreece45.marvelx.ui.base.BaseState
@@ -22,11 +25,12 @@ sealed class SignUpEvent : BaseEvent {
     object OnPasswordVisibilityIconClick : SignUpEvent()
 
     sealed class FieldValueChange : SignUpEvent() {
-        data class FirstName(val firstName: String?) : FieldValueChange()
+        data class FirstName(val firstName: String) : FieldValueChange()
 
-        data class LastName(val lastName: String?) : FieldValueChange()
+        data class LastName(val lastName: String) : FieldValueChange()
 
-        data class Gender(val gender: com.alexgreece45.marvelx.data.models.user.Gender) : FieldValueChange()
+        data class Gender(val gender: com.alexgreece45.marvelx.data.models.user.Gender) :
+            FieldValueChange()
 
         data class Email(val email: String?) : FieldValueChange()
 
@@ -77,12 +81,15 @@ sealed class SignUpEffect : BaseEffect {
     object SignUpSuccess : SignUpEffect()
 
     data class DisplayErrorToastMessage(val errorMessage: String) : SignUpEffect()
+
+    object CloseKeyboard : SignUpEffect()
 }
 
 @HiltViewModel
 class SignUpViewModel @Inject constructor(
     private val resourceProvider: ResourceProvider,
-    private val formValidator: FormValidator
+    private val formValidator: FormValidator,
+    private val userInteractor: UserInteractor
 ) : BaseViewModel<SignUpEvent, SignUpState, SignUpEffect>() {
 
     override fun setInitialState(): SignUpState = SignUpState.getDefaultValues()
@@ -100,7 +107,7 @@ class SignUpViewModel @Inject constructor(
             is SignUpEvent.FieldValueChange.FirstName -> {
                 setState {
                     copy(
-                        firstName = event.firstName.orEmpty()
+                        firstName = event.firstName
                     )
                 }
                 validateFirstName(firstName = event.firstName)
@@ -109,7 +116,7 @@ class SignUpViewModel @Inject constructor(
             is SignUpEvent.FieldValueChange.LastName -> {
                 setState {
                     copy(
-                        lastName = event.lastName.orEmpty()
+                        lastName = event.lastName
                     )
                 }
                 validateLastName(lastName = event.lastName)
@@ -143,25 +150,7 @@ class SignUpViewModel @Inject constructor(
             }
 
             SignUpEvent.OnSignUpButtonClick -> {
-                if (areAllFieldsValid()) {
-                    // navigate to the next screen.
-                    // todo: to be refactored
-                    setEffect {
-                        SignUpEffect.SignUpSuccess
-                    }
-                } else {
-                    // One or more fields are invalid, and we don't know which one, so we display an unexpected error message.
-                    setState {
-                        copy(
-                            signUpButton = false
-                        )
-                    }
-                    setEffect {
-                        SignUpEffect.DisplayErrorToastMessage(
-                            errorMessage = resourceProvider.getString(R.string.unknown_error)
-                        )
-                    }
-                }
+                onSignUpButtonClick()
             }
 
             SignUpEvent.OnPasswordVisibilityIconClick -> {
@@ -175,48 +164,45 @@ class SignUpViewModel @Inject constructor(
     }
 
     private fun initView() {
-        // get user's ip address, and device info.
+        // todo: get user's ip address, and device info.
     }
 
-    private fun validateFirstName(firstName: String?) {
-        firstName?.let { _ ->
-            viewModelScope.launch {
-                formValidator.validateForms(listOf(Form(mapOf(getFirstNameValidationRules() to firstName))))
-                    .collect { formsValidationResult ->
-                        setState {
-                            copy(
-                                firstNameValidationResult = formsValidationResult
-                            )
-                        }
-
-                        setState {
-                            copy(
-                                signUpButton = formsValidationResult.isValid && areAllFieldsValid()
-                            )
-                        }
+    private fun validateFirstName(firstName: String) {
+        viewModelScope.launch {
+            formValidator.validateForms(listOf(Form(mapOf(getFirstNameValidationRules() to firstName))))
+                .collect { formsValidationResult ->
+                    setState {
+                        copy(
+                            firstNameValidationResult = formsValidationResult
+                        )
                     }
-            }
+
+                    setState {
+                        copy(
+                            signUpButton = formsValidationResult.isValid && areAllFieldsValid()
+                        )
+                    }
+                }
         }
     }
 
-    private fun validateLastName(lastName: String?) {
-        lastName?.let { _ ->
-            viewModelScope.launch {
-                formValidator.validateForms(listOf(Form(mapOf(getLastNameValidationRules() to lastName))))
-                    .collect { formsValidationResult ->
-                        setState {
-                            copy(
-                                lastNameValidationResult = formsValidationResult
-                            )
-                        }
-
-                        setState {
-                            copy(
-                                signUpButton = formsValidationResult.isValid && areAllFieldsValid()
-                            )
-                        }
+    private fun validateLastName(lastName: String) {
+        viewModelScope.launch {
+            formValidator.validateForms(listOf(Form(mapOf(getLastNameValidationRules() to lastName))))
+                .collect { formsValidationResult ->
+                    setState {
+                        copy(
+                            lastNameValidationResult = formsValidationResult
+                        )
                     }
-            }
+
+                    setState {
+                        copy(
+                            signUpButton = formsValidationResult.isValid && areAllFieldsValid()
+                        )
+                    }
+                }
+
         }
     }
 
@@ -279,6 +265,75 @@ class SignUpViewModel @Inject constructor(
                             )
                         }
                     }
+            }
+        }
+    }
+
+    private fun onSignUpButtonClick() {
+        // First of all, close the keyboard.
+        setEffect {
+            SignUpEffect.CloseKeyboard
+        }
+
+        // Check if all the fields are valid.
+        if (areAllFieldsValid()) {
+            setState {
+                copy(
+                    isLoading = true
+                )
+            }
+            viewModelScope.launch {
+                userInteractor.postSignUp(
+                    userSignUpRequest = getUserSignUpRequest()
+                ).collect { userPartialStatePostSignUp ->
+                    when (userPartialStatePostSignUp) {
+                        is UserPartialStatePostSignUp.Error -> {
+                            setState {
+                                copy(
+                                    isLoading = false,
+                                    errorMessage = userPartialStatePostSignUp.errorMessage
+                                )
+                            }
+                            setEffect {
+                                SignUpEffect.DisplayErrorToastMessage(errorMessage = userPartialStatePostSignUp.errorMessage)
+                            }
+                        }
+
+                        UserPartialStatePostSignUp.NoInternetConnection -> {
+                            setState {
+                                copy(
+                                    isLoading = false,
+                                    hasInternetConnection = false
+                                )
+                            }
+                        }
+
+                        is UserPartialStatePostSignUp.Success -> {
+                            setState {
+                                copy(
+                                    isLoading = false
+                                )
+                            }
+                            // todo: change handling
+                            setEffect {
+                                SignUpEffect.SignUpSuccess
+                            }
+                        }
+                    }
+                }
+            }
+        } else {
+            // One or more fields are invalid, we don't know which one, so we disable the "Sign Up" button
+            // and display an unexpected error message.
+            setState {
+                copy(
+                    signUpButton = false
+                )
+            }
+            setEffect {
+                SignUpEffect.DisplayErrorToastMessage(
+                    errorMessage = resourceProvider.getString(R.string.unknown_error)
+                )
             }
         }
     }
@@ -397,5 +452,18 @@ class SignUpViewModel @Inject constructor(
                 )
             )
         )
+    }
+
+    private fun getUserSignUpRequest(): UserSignUpRequest =
+        UserSignUpRequest(
+            firstName = currentState.firstName,
+            lastName = currentState.lastName,
+            gender = currentState.gender?.key.orEmpty(),
+            email = currentState.email,
+            password = createHashedPassword(currentState.password)
+        )
+
+    private fun createHashedPassword(password: String): String {
+        return password
     }
 }

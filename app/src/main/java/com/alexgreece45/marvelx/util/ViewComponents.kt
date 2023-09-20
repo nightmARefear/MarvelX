@@ -91,7 +91,7 @@ data class BottomBarAction(
         @Composable
         fun getDefaultBottomBarActions(): List<BottomBarAction> = listOf(
             BottomBarAction(
-                route = Screen.AllCharactersScreen.route,
+                route = Screen.BottomNavigationScreens.AllCharactersScreen.route,
                 label = stringResource(R.string.bottom_navigation_label_characters),
                 iconData = IconData(
                     iconResource = R.drawable.ic_superhero_32,
@@ -99,7 +99,7 @@ data class BottomBarAction(
                 )
             ),
             BottomBarAction(
-                route = Screen.AllFavoriteCharactersScreen.route,
+                route = Screen.BottomNavigationScreens.AllFavoriteCharactersScreen.route,
                 label = stringResource(R.string.bottom_navigation_label_favorites),
                 iconData = IconData(
                     iconResource = R.drawable.ic_favorite_filled_24,
@@ -107,7 +107,7 @@ data class BottomBarAction(
                 )
             ),
             BottomBarAction(
-                route = Screen.ProfileScreen.route,
+                route = Screen.BottomNavigationScreens.ProfileScreen.route,
                 label = stringResource(R.string.bottom_navigation_label_profile),
                 iconData = IconData(
                     iconResource = R.drawable.ic_person_32,
@@ -817,10 +817,9 @@ fun OutlinedTextFieldValidation(
             exit = fadeOut()
         ) {
             Text(
-                modifier = Modifier.padding(start = SPACING_TINY.dp, top = 64.dp),
                 text = errorMessage,
-                style = MaterialTheme.typography.body2,
                 color = MaterialTheme.colors.error,
+                modifier = Modifier.padding(start = SPACING_TINY.dp, top = 64.dp)
             )
         }
     }

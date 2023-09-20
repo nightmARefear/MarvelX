@@ -1,0 +1,11 @@
+package com.alexgreece45.marvelx.data.domains.user
+
+import com.google.gson.annotations.SerializedName
+import java.util.UUID
+
+data class UserLogInResponseDomain(
+    @SerializedName("code") val code: Int,
+    @SerializedName("verification_step") val verificationStep: VerificationStep,
+    @SerializedName("epoch") val epoch: Long,
+    @SerializedName("user_token") val userToken: UUID
+)

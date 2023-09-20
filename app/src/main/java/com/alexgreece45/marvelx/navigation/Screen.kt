@@ -25,7 +25,26 @@ sealed class Screen(
         }
     }
 
-    object AllCharactersScreen : Screen(baseRoute = "allCharactersScreen")
+    companion object {
+        fun getStartDestination(): String = RegisterScreens.getNestedGraphRootRoute()
+    }
+
+    sealed class BottomNavigationScreens(baseRoute: String) : Screen(baseRoute) {
+        companion object {
+            private const val nestedGraphRootRoute: String = "mainScreens"
+
+            fun getNestedGraphRootRoute(): String = nestedGraphRootRoute
+
+            fun getStartDestination(): String = AllCharactersScreen.route
+        }
+
+        object AllCharactersScreen : BottomNavigationScreens(baseRoute = "allCharactersScreen")
+
+        object AllFavoriteCharactersScreen :
+            BottomNavigationScreens(baseRoute = "allFavoriteCharactersScreen")
+
+        object ProfileScreen : BottomNavigationScreens(baseRoute = "profileScreen")
+    }
 
     object CharacterScreen : Screen(
         baseRoute = "characterScreen",
@@ -51,17 +70,22 @@ sealed class Screen(
         fun createNavRoute(comicId: Int): String = "$baseRoute/$comicId"
     }
 
-    object AllFavoriteCharactersScreen : Screen(baseRoute = "allFavoriteCharactersScreen")
+    sealed class RegisterScreens(baseRoute: String) : Screen(baseRoute) {
+        companion object {
+            private const val nestedGraphRootRoute: String = "registerScreens"
 
-    object ProfileScreen : Screen(baseRoute = "profileScreen")
+            fun getNestedGraphRootRoute(): String = nestedGraphRootRoute
 
-    object SignUpScreen : Screen(baseRoute = "signUpScreen")
+            fun getStartDestination(): String = HomeScreen.route
+        }
 
-    companion object {
-        fun getAfterSuccessfulLoginScreen(): Screen = AllCharactersScreen
+        object HomeScreen : Screen(baseRoute = "homeScreen")
 
-        fun getBottomNavigationScreens(): List<Screen> =
-            listOf(AllCharactersScreen, AllFavoriteCharactersScreen, ProfileScreen)
+
+        object LogInScreen : Screen(baseRoute = "logInScreen")
+
+
+        object SignUpScreen : Screen(baseRoute = "signUpScreen")
     }
 }
 
