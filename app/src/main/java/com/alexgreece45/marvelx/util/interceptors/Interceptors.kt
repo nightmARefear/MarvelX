@@ -2,9 +2,10 @@ package com.alexgreece45.marvelx.util.interceptors
 
 import com.alexgreece45.marvelx.BuildConfig
 import com.alexgreece45.marvelx.util.extensions.toMd5
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.Interceptor
+import okhttp3.Request
 import okhttp3.Response
-import java.time.Instant
 
 sealed class Interceptors : Interceptor {
     object AuthenticationTokenInterceptor : Interceptors() {
@@ -28,6 +29,34 @@ sealed class Interceptors : Interceptor {
                     .url(finalUrl)
                     .build()
             )
+        }
+    }
+
+    object MarvelXBackEndChangeBaseUrlInterceptor : Interceptors() {
+        override fun intercept(chain: Interceptor.Chain): Response {
+            val originalRequest = chain.request()
+            if (originalRequest.url.toString().removePrefix(BuildConfig.BASE_URL).startsWith(BuildConfig.ENDPOINT_PREFIX_MARVELX_BACKEND)) {
+                val newBaseUrl = BuildConfig.BASE_URL_POST_SIGN_UP.toHttpUrlOrNull()
+                newBaseUrl?.let { baseUrl ->
+                    val modifiedUrl = originalRequest.url.newBuilder()
+                        .scheme(newBaseUrl.scheme)
+                        .host(baseUrl.host)
+                        .port(baseUrl.port)
+                        .build()
+
+                    val modifiedRequest = Request.Builder()
+                        .url(modifiedUrl)
+                        .method(originalRequest.method, originalRequest.body)
+                        .build()
+
+                    println("(MarvelXBackEndChangeBaseUrlInterceptormodified) modified: success")
+                    return chain.proceed(modifiedRequest)
+                } ?: run {
+                    println("(MarvelXBackEndChangeBaseUrlInterceptor) modified: error")
+                }
+            }
+            // Runs either if an error occurred, or if the endpoint's prefix was not from the MarvelX-Backend.
+            return chain.proceed(originalRequest)
         }
     }
 }

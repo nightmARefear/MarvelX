@@ -4,8 +4,10 @@ import com.alexgreece45.marvelx.data.api.ApiClient
 import com.alexgreece45.marvelx.data.api.ApiService
 import com.alexgreece45.marvelx.data.models.character.CharacterDataWrapper
 import com.alexgreece45.marvelx.data.models.character.comic.ComicDataWrapper
-import com.alexgreece45.marvelx.util.ResourceProvider
+import com.alexgreece45.marvelx.data.models.user.UserSignUpRequest
+import com.alexgreece45.marvelx.data.models.user.UserSignUpResponse
 import com.google.gson.Gson
+import com.google.gson.annotations.SerializedName
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
@@ -32,6 +34,10 @@ class ApiClientImpl @Inject constructor(
 
     override suspend fun getComicById(comicId: Int): Response<ComicDataWrapper> {
         return api.getComicById(comicId)
+    }
+
+    override suspend fun postSignUp(userSignUpRequest: UserSignUpRequest): Response<UserSignUpResponse> {
+        return api.postSignUp(userSignUpRequest)
     }
 }
 

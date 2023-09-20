@@ -3,6 +3,9 @@ package com.alexgreece45.marvelx.domain.viewmodels
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.data.models.user.Gender
+import com.alexgreece45.marvelx.data.models.user.UserSignUpRequest
+import com.alexgreece45.marvelx.domain.interactors.UserInteractor
+import com.alexgreece45.marvelx.domain.interactors.UserPartialStatePostSignUp
 import com.alexgreece45.marvelx.ui.base.BaseEffect
 import com.alexgreece45.marvelx.ui.base.BaseEvent
 import com.alexgreece45.marvelx.ui.base.BaseState
@@ -26,7 +29,8 @@ sealed class SignUpEvent : BaseEvent {
 
         data class LastName(val lastName: String?) : FieldValueChange()
 
-        data class Gender(val gender: com.alexgreece45.marvelx.data.models.user.Gender) : FieldValueChange()
+        data class Gender(val gender: com.alexgreece45.marvelx.data.models.user.Gender) :
+            FieldValueChange()
 
         data class Email(val email: String?) : FieldValueChange()
 
@@ -82,7 +86,8 @@ sealed class SignUpEffect : BaseEffect {
 @HiltViewModel
 class SignUpViewModel @Inject constructor(
     private val resourceProvider: ResourceProvider,
-    private val formValidator: FormValidator
+    private val formValidator: FormValidator,
+    private val userInteractor: UserInteractor
 ) : BaseViewModel<SignUpEvent, SignUpState, SignUpEffect>() {
 
     override fun setInitialState(): SignUpState = SignUpState.getDefaultValues()
@@ -143,25 +148,7 @@ class SignUpViewModel @Inject constructor(
             }
 
             SignUpEvent.OnSignUpButtonClick -> {
-                if (areAllFieldsValid()) {
-                    // navigate to the next screen.
-                    // todo: to be refactored
-                    setEffect {
-                        SignUpEffect.SignUpSuccess
-                    }
-                } else {
-                    // One or more fields are invalid, and we don't know which one, so we display an unexpected error message.
-                    setState {
-                        copy(
-                            signUpButton = false
-                        )
-                    }
-                    setEffect {
-                        SignUpEffect.DisplayErrorToastMessage(
-                            errorMessage = resourceProvider.getString(R.string.unknown_error)
-                        )
-                    }
-                }
+                onSignUpButtonClick()
             }
 
             SignUpEvent.OnPasswordVisibilityIconClick -> {
@@ -283,6 +270,63 @@ class SignUpViewModel @Inject constructor(
         }
     }
 
+    private fun onSignUpButtonClick() {
+        if (areAllFieldsValid()) {
+            setState {
+                copy(
+                    isLoading = true
+                )
+            }
+            viewModelScope.launch {
+                userInteractor.postSignUp(
+                    userSignUpRequest = getUserSignUpRequest()
+                ).collect { userPartialStatePostSignUp ->
+                    when (userPartialStatePostSignUp) {
+                        is UserPartialStatePostSignUp.Error -> {
+                            setState {
+                                copy(
+                                    isLoading = false,
+                                    errorMessage = userPartialStatePostSignUp.errorMessage
+                                )
+                            }
+                        }
+                        UserPartialStatePostSignUp.NoInternetConnection -> {
+                            setState {
+                                copy(
+                                    isLoading = false,
+                                    hasInternetConnection = false
+                                )
+                            }
+                        }
+                        is UserPartialStatePostSignUp.Success -> {
+                            setState {
+                                copy(
+                                    isLoading = false
+                                )
+                            }
+                            // todo: change handling
+                            setEffect {
+                                SignUpEffect.SignUpSuccess
+                            }
+                        }
+                    }
+                }
+            }
+        } else {
+            // One or more fields are invalid, and we don't know which one, so we display an unexpected error message.
+            setState {
+                copy(
+                    signUpButton = false
+                )
+            }
+            setEffect {
+                SignUpEffect.DisplayErrorToastMessage(
+                    errorMessage = resourceProvider.getString(R.string.unknown_error)
+                )
+            }
+        }
+    }
+
     private fun areAllFieldsValid(): Boolean {
         if (currentState.firstName.isBlank()) return false
         if (currentState.lastName.isBlank()) return false
@@ -398,4 +442,13 @@ class SignUpViewModel @Inject constructor(
             )
         )
     }
+
+    private fun getUserSignUpRequest(): UserSignUpRequest =
+        UserSignUpRequest(
+            firstName = currentState.firstName,
+            lastName = currentState.lastName,
+            gender = currentState.gender?.key.orEmpty(),
+            email = currentState.email,
+            password = currentState.password
+        )
 }
