@@ -18,6 +18,7 @@
     <string name="no_internet_connection_error_message">No internet connection! Please try again!</string>
     <string name="unknown_error">An unknown error has occurred!</string>
     <string name="fatal_error">A fatal error has occurred!</string>
+    <string name="internal_server_error">An internal server error has occurred!</string>
     <string name="no_data_was_found">No data was found!</string>
 
     <!-- Sorting -->
@@ -70,6 +71,33 @@
 
     <!-- Profile Screen -->
     <string name="profile_screen_toolbar_title">Profile</string>
+
+    <!-- Home Screen -->
+    <string name="home_screen_header">Home Screen</string>
+    <string name="home_screen_label_log_in_button">Login</string>
+    <string name="home_screen_label_sign_up_button">Signup</string>
+
+    <!-- Log In Screen -->
+    <string name="log_in_screen_toolbar_title">Login</string>
+
+    <string name="log_in_screen_input_field_label_email">Email</string>
+    <string name="log_in_screen_input_field_label_password">Password</string>
+
+    <string name="log_in_screen_input_field_placeholder_email">john.doe@email.com</string>
+    <string name="log_in_screen_input_field_placeholder_password">hJRVkVtX39Ud!%XIFn9)ui5+K</string>
+
+    <string name="log_in_screen_input_field_error_blank_email">Email cannot be blank.</string>
+    <string name="log_in_screen_input_field_error_blank_password">Password cannot be blank.</string>
+
+    <string name="log_in_screen_input_field_error_min_length_email">Email\'s length cannot be less than %1$s characters.</string>
+    <string name="log_in_screen_input_field_error_min_length_password">Password\'s length cannot be less than %1$s characters.</string>
+
+    <string name="log_in_screen_input_field_error_max_length_email">Email\'s length cannot be more than %1$s characters.</string>
+    <string name="log_in_screen_input_field_error_max_length_password">Password\'s length cannot be more than %1$s characters.</string>
+
+    <string name="log_in_screen_input_field_error_validate_email_email">Email is invalid.</string>
+
+    <string name="log_in_screen_sign_up_button_text">LOGIN</string>
 
     <!-- Sign Up Screen -->
     <string name="sign_up_screen_toolbar_title">Sign Up</string>

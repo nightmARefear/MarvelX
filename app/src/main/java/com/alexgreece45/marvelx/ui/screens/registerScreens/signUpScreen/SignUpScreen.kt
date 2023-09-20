@@ -1,4 +1,4 @@
-package com.alexgreece45.marvelx.ui.screens.signUpScreen
+package com.alexgreece45.marvelx.ui.screens.registerScreens.signUpScreen
 
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
@@ -15,10 +15,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -38,6 +40,7 @@ import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.VSpacer
 import com.alexgreece45.marvelx.util.ValueType
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun SignUpScreen(
     navController: NavController,
@@ -47,6 +50,7 @@ fun SignUpScreen(
 
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
+    val keyboard = LocalSoftwareKeyboardController.current
 
     LaunchedEffect(Unit) {
         viewModel.effect.collect { effect ->
@@ -56,13 +60,22 @@ fun SignUpScreen(
                 }
 
                 SignUpEffect.SignUpSuccess -> {
-                    navController.navigate(Screen.AllCharactersScreen.route)
+                    navController.navigate(Screen.BottomNavigationScreens.AllCharactersScreen.route) {
+                        popUpTo(Screen.RegisterScreens.getNestedGraphRootRoute()) {
+                            inclusive = true
+                        }
+                    }
+                }
+
+                SignUpEffect.CloseKeyboard -> {
+                    keyboard?.hide()
                 }
             }
         }
     }
 
     ContentScreen(
+        onBack = { navController.popBackStack() },
         showToolbar = true,
         toolbarTitle = stringResource(R.string.sign_up_screen_toolbar_title)
     ) { paddingValues ->
@@ -174,14 +187,17 @@ fun SignUpScreen(
                         onValueChange = { newValue ->
                             viewModel.setEvent(SignUpEvent.FieldValueChange.Password(password = newValue))
                         },
-                        errorMessage = state.passwordValidationResult.messages.firstOrNull().orEmpty(),
+                        errorMessage = state.passwordValidationResult.messages.firstOrNull()
+                            .orEmpty(),
                         isError = state.passwordValidationResult.isValid.not(),
                         visualTransformation = if (state.isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                         keyboardOptions = KeyboardOptions(
                             imeAction = ImeAction.Done
                         ),
                         keyboardActions = KeyboardActions(
-                            onDone = {}
+                            onDone = {
+                                viewModel.setEvent(SignUpEvent.OnSignUpButtonClick)
+                            }
                         ),
                         shape = MaterialTheme.shapes.medium
                     )

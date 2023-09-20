@@ -3,10 +3,10 @@ package com.alexgreece45.marvelx.di
 import com.alexgreece45.marvelx.BuildConfig
 import com.alexgreece45.marvelx.data.api.ApiService
 import com.alexgreece45.marvelx.data.domains.ComicPriceType
-import com.alexgreece45.marvelx.data.models.user.SuccessStep
+import com.alexgreece45.marvelx.data.domains.user.VerificationStep
 import com.alexgreece45.marvelx.util.gson.ComicPriceTypeAdapter
 import com.alexgreece45.marvelx.util.gson.OffsetDateTimeAdapter
-import com.alexgreece45.marvelx.util.gson.SuccessStepAdapter
+import com.alexgreece45.marvelx.util.gson.VerificationStepAdapter
 import com.alexgreece45.marvelx.util.interceptors.Interceptors
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
@@ -20,7 +20,6 @@ import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.time.OffsetDateTime
-import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 
 @Module
@@ -81,8 +80,8 @@ object NetworkModule {
             ComicPriceTypeAdapter()
         )
         .registerTypeAdapter(
-            SuccessStep::class.java,
-            SuccessStepAdapter()
+            VerificationStep::class.java,
+            VerificationStepAdapter()
         )
         .create()
 }

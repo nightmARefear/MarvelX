@@ -71,7 +71,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
@@ -92,7 +91,7 @@ data class BottomBarAction(
         @Composable
         fun getDefaultBottomBarActions(): List<BottomBarAction> = listOf(
             BottomBarAction(
-                route = Screen.AllCharactersScreen.route,
+                route = Screen.BottomNavigationScreens.AllCharactersScreen.route,
                 label = stringResource(R.string.bottom_navigation_label_characters),
                 iconData = IconData(
                     iconResource = R.drawable.ic_superhero_32,
@@ -100,7 +99,7 @@ data class BottomBarAction(
                 )
             ),
             BottomBarAction(
-                route = Screen.AllFavoriteCharactersScreen.route,
+                route = Screen.BottomNavigationScreens.AllFavoriteCharactersScreen.route,
                 label = stringResource(R.string.bottom_navigation_label_favorites),
                 iconData = IconData(
                     iconResource = R.drawable.ic_favorite_filled_24,
@@ -108,7 +107,7 @@ data class BottomBarAction(
                 )
             ),
             BottomBarAction(
-                route = Screen.ProfileScreen.route,
+                route = Screen.BottomNavigationScreens.ProfileScreen.route,
                 label = stringResource(R.string.bottom_navigation_label_profile),
                 iconData = IconData(
                     iconResource = R.drawable.ic_person_32,

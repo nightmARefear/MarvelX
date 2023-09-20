@@ -35,8 +35,8 @@ sealed class Interceptors : Interceptor {
     object MarvelXBackEndChangeBaseUrlInterceptor : Interceptors() {
         override fun intercept(chain: Interceptor.Chain): Response {
             val originalRequest = chain.request()
-            if (originalRequest.url.toString().removePrefix(BuildConfig.BASE_URL).startsWith(BuildConfig.ENDPOINT_PREFIX_MARVELX_BACKEND)) {
-                val newBaseUrl = BuildConfig.BASE_URL_POST_SIGN_UP.toHttpUrlOrNull()
+            if (originalRequest.url.toString().removePrefix(BuildConfig.BASE_URL).startsWith(BuildConfig.MARVELX_BACKEND_ENDPOINT_PREFIX)) {
+                val newBaseUrl = BuildConfig.MARVELX_BACKEND_BASE_URL.toHttpUrlOrNull()
                 newBaseUrl?.let { baseUrl ->
                     val modifiedUrl = originalRequest.url.newBuilder()
                         .scheme(newBaseUrl.scheme)
@@ -49,7 +49,7 @@ sealed class Interceptors : Interceptor {
                         .method(originalRequest.method, originalRequest.body)
                         .build()
 
-                    println("(MarvelXBackEndChangeBaseUrlInterceptormodified) modified: success")
+                    println("(MarvelXBackEndChangeBaseUrlInterceptor) modified: success")
                     return chain.proceed(modifiedRequest)
                 } ?: run {
                     println("(MarvelXBackEndChangeBaseUrlInterceptor) modified: error")

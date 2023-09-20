@@ -2,6 +2,8 @@ package com.alexgreece45.marvelx.data.api
 
 import com.alexgreece45.marvelx.data.models.character.CharacterDataWrapper
 import com.alexgreece45.marvelx.data.models.character.comic.ComicDataWrapper
+import com.alexgreece45.marvelx.data.models.user.UserLogInRequest
+import com.alexgreece45.marvelx.data.models.user.UserLogInResponse
 import com.alexgreece45.marvelx.data.models.user.UserSignUpRequest
 import com.alexgreece45.marvelx.data.models.user.UserSignUpResponse
 import com.alexgreece45.marvelx.di.ApiResult
@@ -17,4 +19,6 @@ interface ApiClient {
     suspend fun getComicById(comicId: Int): Response<ComicDataWrapper>
 
     suspend fun postSignUp(userSignUpRequest: UserSignUpRequest): Response<UserSignUpResponse>
+
+    suspend fun postUserLogIn(userLogInRequest: UserLogInRequest): Response<UserLogInResponse>
 }
