@@ -1,4 +1,4 @@
-package com.alexgreece45.marvelx.data.models.user
+package com.alexgreece45.marvelx.data.models.user.signUp
 
 import com.alexgreece45.marvelx.data.domains.user.VerificationStep
 import com.google.gson.annotations.SerializedName

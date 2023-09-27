@@ -87,10 +87,18 @@ sealed class Screen(
 
         object SignUpScreen : Screen(baseRoute = "signUpScreen")
     }
+
+    object OtpScreen : Screen(
+        baseRoute = "otpScreen",
+        navArgs = listOf(NavItem.User)
+    ) {
+        fun createNavRoute(userId: Int): String = "$baseRoute/$userId"
+    }
 }
 
 enum class NavItem(val key: String, val type: NavType<*>) {
     Character(key = "characterId", NavType.IntType),
-    Comic(key = "comicId", NavType.IntType),
-    ToolbarTitlePrefix(key = "toolbarTitlePrefix", NavType.StringType)
+    Comic(key = "comicId", type = NavType.IntType),
+    ToolbarTitlePrefix(key = "toolbarTitlePrefix", NavType.StringType),
+    User(key = "userId", NavType.IntType)
 }

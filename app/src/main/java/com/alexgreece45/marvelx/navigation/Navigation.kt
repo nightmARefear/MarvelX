@@ -1,17 +1,23 @@
 package com.alexgreece45.marvelx.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.ViewModel
 import androidx.navigation.NavBackStackEntry
+import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navigation
+import com.alexgreece45.marvelx.domain.viewmodels.ActivityViewModel
 import com.alexgreece45.marvelx.ui.screens.allCharactersScreen.AllCharactersScreen
 import com.alexgreece45.marvelx.ui.screens.allFavoriteCharactersScreen.AllFavoriteCharactersScreen
 import com.alexgreece45.marvelx.ui.screens.characterScreen.CharacterScreen
 import com.alexgreece45.marvelx.ui.screens.characterScreen.allCharacterComicsScreen.AllCharacterComicsScreen
 import com.alexgreece45.marvelx.ui.screens.comicScreen.ComicScreen
+import com.alexgreece45.marvelx.ui.screens.otpScreen.OtpScreen
 import com.alexgreece45.marvelx.ui.screens.profileScreen.ProfileScreen
 import com.alexgreece45.marvelx.ui.screens.registerScreens.homeScreen.HomeScreen
 import com.alexgreece45.marvelx.ui.screens.registerScreens.logInScreen.LogInScreen
@@ -34,12 +40,24 @@ fun Navigation() {
                 HomeScreen(navController = navController)
             }
 
-            composable(Screen.RegisterScreens.LogInScreen) {
-                LogInScreen(navController = navController)
+            composable(Screen.RegisterScreens.LogInScreen) { navBackStackEntry ->
+                val activityViewModel =
+                    navBackStackEntry.sharedViewModel<ActivityViewModel>(navController = navController)
+                LogInScreen(
+                    navController = navController,
+                    activityViewModel = activityViewModel
+                )
             }
 
             composable(Screen.RegisterScreens.SignUpScreen) {
                 SignUpScreen(navController = navController)
+            }
+
+            composable(Screen.OtpScreen) { navBackStackEntry ->
+                OtpScreen(
+                    navController = navController,
+                    userId = navBackStackEntry.arguments?.getInt(NavItem.User.key) ?: -1
+                )
             }
         }
 
@@ -48,7 +66,7 @@ fun Navigation() {
             route = Screen.BottomNavigationScreens.getNestedGraphRootRoute(),
             startDestination = Screen.BottomNavigationScreens.getStartDestination()
         ) {
-            composable(screen = Screen.BottomNavigationScreens.AllCharactersScreen) {
+            composable(screen = Screen.BottomNavigationScreens.AllCharactersScreen) { navBackStackEntry ->
                 AllCharactersScreen(
                     navController = navController
                 )
@@ -88,11 +106,28 @@ fun Navigation() {
                 AllFavoriteCharactersScreen(navController = navController)
             }
 
-            composable(Screen.BottomNavigationScreens.ProfileScreen) {
-                ProfileScreen(navController = navController)
+            composable(Screen.BottomNavigationScreens.ProfileScreen) { navBackStackEntry ->
+                val activityViewModel =
+                    navBackStackEntry.sharedViewModel<ActivityViewModel>(navController = navController)
+
+                ProfileScreen(
+                    navController = navController,
+                    activityViewModel = activityViewModel
+                )
             }
         }
     }
+}
+
+@Composable
+inline fun <reified T : ViewModel> NavBackStackEntry.sharedViewModel(
+    navController: NavController
+): T {
+    val navGraphRoute = destination.parent?.route ?: return hiltViewModel()
+    val parentEntry = remember(this) {
+        navController.getBackStackEntry(navGraphRoute)
+    }
+    return hiltViewModel(parentEntry)
 }
 
 private fun NavGraphBuilder.composable(

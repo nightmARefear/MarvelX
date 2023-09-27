@@ -2,6 +2,7 @@ package com.alexgreece45.marvelx.util.interceptors
 
 import com.alexgreece45.marvelx.BuildConfig
 import com.alexgreece45.marvelx.util.extensions.toMd5
+import okhttp3.HttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.Interceptor
 import okhttp3.Request
@@ -35,10 +36,17 @@ sealed class Interceptors : Interceptor {
     object MarvelXBackEndChangeBaseUrlInterceptor : Interceptors() {
         override fun intercept(chain: Interceptor.Chain): Response {
             val originalRequest = chain.request()
-            if (originalRequest.url.toString().removePrefix(BuildConfig.BASE_URL).startsWith(BuildConfig.MARVELX_BACKEND_ENDPOINT_PREFIX)) {
-                val newBaseUrl = BuildConfig.MARVELX_BACKEND_BASE_URL.toHttpUrlOrNull()
+            if (originalRequest.url.toString().removePrefix(BuildConfig.BASE_URL)
+                    .startsWith(BuildConfig.MARVELX_BACKEND_ENDPOINT_PREFIX)
+            ) {
+                // New base url that utilizes the MarvelX backend's base url, and does not contain any query parameters from
+                // the original request.
+                val newBaseUrl =
+                    (BuildConfig.MARVELX_BACKEND_BASE_URL + originalRequest.url.toString()
+                        .removePrefix(BuildConfig.BASE_URL).substringBefore("?")).toHttpUrlOrNull()
                 newBaseUrl?.let { baseUrl ->
-                    val modifiedUrl = originalRequest.url.newBuilder()
+                    // old way
+                    val modifiedUrl = baseUrl.newBuilder()
                         .scheme(newBaseUrl.scheme)
                         .host(baseUrl.host)
                         .port(baseUrl.port)

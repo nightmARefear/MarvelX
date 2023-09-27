@@ -12,22 +12,22 @@ class ThemeTypography : ThemeTypographyTemplate() {
     override val defaultFontFamily: FontFamily
         get() = FontFamily(
             Font(
-                R.font.marvel_regular,
+                R.font.roboto_regular,
                 style = FontStyle.Normal,
                 weight = FontWeight.Normal
             ),
             Font(
-                R.font.marvel_bold,
+                R.font.roboto_bold,
                 style = FontStyle.Normal,
                 weight = FontWeight.Bold
             ),
             Font(
-                R.font.marvel_italic,
+                R.font.roboto_italic,
                 style = FontStyle.Italic,
                 weight = FontWeight.Thin
             ),
             Font(
-                R.font.marvel_bolditalic,
+                R.font.roboto_bold_italic,
                 style = FontStyle.Italic,
                 weight = FontWeight.Bold
             )

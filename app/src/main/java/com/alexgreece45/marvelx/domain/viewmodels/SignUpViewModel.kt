@@ -3,7 +3,7 @@ package com.alexgreece45.marvelx.domain.viewmodels
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.data.models.user.Gender
-import com.alexgreece45.marvelx.data.models.user.UserSignUpRequest
+import com.alexgreece45.marvelx.data.models.user.signUp.UserSignUpRequest
 import com.alexgreece45.marvelx.domain.interactors.UserInteractor
 import com.alexgreece45.marvelx.domain.interactors.UserPartialStatePostSignUp
 import com.alexgreece45.marvelx.ui.base.BaseEffect

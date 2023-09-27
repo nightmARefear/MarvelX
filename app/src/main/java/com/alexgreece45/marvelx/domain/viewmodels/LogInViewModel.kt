@@ -4,8 +4,8 @@ import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.data.domains.user.UserLogInResponseDomain
 import com.alexgreece45.marvelx.data.domains.user.VerificationStep
-import com.alexgreece45.marvelx.data.models.user.UserLogInRequest
-import com.alexgreece45.marvelx.data.models.user.toDomain
+import com.alexgreece45.marvelx.data.models.user.logIn.UserLogInRequest
+import com.alexgreece45.marvelx.data.models.user.logIn.toDomain
 import com.alexgreece45.marvelx.domain.interactors.UserInteractor
 import com.alexgreece45.marvelx.domain.interactors.UserPartialStatePostLogIn
 import com.alexgreece45.marvelx.ui.base.BaseEffect
@@ -19,6 +19,7 @@ import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.Rule
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
+import java.time.Instant
 import javax.inject.Inject
 
 sealed class LogInEvent : BaseEvent {
@@ -39,6 +40,9 @@ data class LogInState(
     // Base states.
     val isLoading: Boolean = true,
     val hasInternetConnection: Boolean = true,
+    /**
+     * Error message retrieved from the MarvelX-Backend API for invalid user input.
+     * */
     val errorMessage: String? = null,
 
     // Data.
@@ -57,8 +61,8 @@ data class LogInState(
     val emailValidationResult: FormsValidationResult = FormsValidationResult(isValid = true),
     val passwordValidationResult: FormsValidationResult = FormsValidationResult(isValid = true),
 
-    // User login response.
-    val userLogInResponseDomain: UserLogInResponseDomain? = null
+    // User login successful response.
+    val userLogInResponseDomain: UserLogInResponseDomain? = null,
 ) : BaseState {
     companion object {
         fun getDefaultValues(): LogInState = LogInState(
@@ -77,7 +81,11 @@ data class LogInState(
 }
 
 sealed class LogInEffect : BaseEffect {
-    object NavigateToAllCharactersScreen : LogInEffect()
+    sealed class Navigation : LogInEffect() {
+        data class NavigateToAllCharactersScreen(val userId: Int) : Navigation()
+
+        data class NavigateToOtpScreen(val userId: Int) : Navigation()
+    }
 
     data class DisplayErrorToastMessage(val errorMessage: String) : LogInEffect()
 
@@ -224,13 +232,13 @@ class LogInViewModel @Inject constructor(
                                 )
                             }
 
-                            // Acts accordingly based on the verification step.
+                            // Act accordingly based on the verification step.
                             currentState.userLogInResponseDomain?.let { userLogInResponseDomain ->
                                 when (userLogInResponseDomain.verificationStep) {
                                     is VerificationStep.None -> {
                                         // No verification step, so navigate to All Characters Screen.
                                         setEffect {
-                                            LogInEffect.NavigateToAllCharactersScreen
+                                            LogInEffect.Navigation.NavigateToAllCharactersScreen(userId = 9999999)
                                         }
                                     }
 
@@ -242,12 +250,17 @@ class LogInViewModel @Inject constructor(
                                         }
                                     }
 
-                                    VerificationStep.PinEmail -> {
-                                        // todo: display appropriate screen
+                                    VerificationStep.OtpEmail -> {
+                                        // Currently we only support otp from email.
+                                        setEffect {
+                                            LogInEffect.Navigation.NavigateToOtpScreen(
+                                                userId = currentState.userLogInResponseDomain!!.userId
+                                            )
+                                        }
                                     }
 
-                                    VerificationStep.PinSms -> {
-                                        // todo: display appropriate screen
+                                    VerificationStep.OtpPhoneNumber -> {
+                                        // TODO: display appropriate screen
                                     }
                                 }
                             }
@@ -333,7 +346,8 @@ class LogInViewModel @Inject constructor(
     private fun getUserLogInRequest(): UserLogInRequest =
         UserLogInRequest(
             email = currentState.email,
-            password = createHashedPassword(currentState.password)
+            password = createHashedPassword(currentState.password),
+            epoch = Instant.EPOCH.epochSecond // TODO: refactor to take into account the user's timezone
         )
 
     private fun createHashedPassword(password: String): String {

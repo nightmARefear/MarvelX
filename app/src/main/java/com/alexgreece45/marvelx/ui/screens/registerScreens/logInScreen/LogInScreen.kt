@@ -1,6 +1,9 @@
 package com.alexgreece45.marvelx.ui.screens.registerScreens.logInScreen
 
 import android.widget.Toast
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -26,9 +29,12 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.domain.viewmodels.ActivityEvent
+import com.alexgreece45.marvelx.domain.viewmodels.ActivityViewModel
 import com.alexgreece45.marvelx.domain.viewmodels.LogInEffect
 import com.alexgreece45.marvelx.domain.viewmodels.LogInEvent
 import com.alexgreece45.marvelx.domain.viewmodels.LogInViewModel
@@ -37,11 +43,13 @@ import com.alexgreece45.marvelx.util.ContentScreen
 import com.alexgreece45.marvelx.util.OutlinedTextFieldValidation
 import com.alexgreece45.marvelx.util.VSpacer
 import com.alexgreece45.marvelx.util.ValueType
+import logcat.logcat
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun LogInScreen(
     navController: NavController,
+    activityViewModel: ActivityViewModel,
     viewModel: LogInViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
@@ -57,12 +65,30 @@ fun LogInScreen(
                     Toast.makeText(context, effect.errorMessage, Toast.LENGTH_LONG).show()
                 }
 
-                LogInEffect.NavigateToAllCharactersScreen -> {
+                is LogInEffect.Navigation.NavigateToAllCharactersScreen -> {
+                    // Login was successful so store the userId in the activity viewmodel's state.
+                    activityViewModel.setEvent(
+                        ActivityEvent.SetUserId(
+                            userId = effect.userId
+                        )
+                    )
+
+                    Toast.makeText(context, "user id (${effect.userId}) in activityViewModel state was inserted.", Toast.LENGTH_SHORT).show()
+
                     navController.navigate(Screen.BottomNavigationScreens.AllCharactersScreen.route) {
                         popUpTo(Screen.RegisterScreens.getNestedGraphRootRoute()) {
                             inclusive = true
                         }
                     }
+                }
+
+                is LogInEffect.Navigation.NavigateToOtpScreen -> {
+                    logcat { "effect.userId = ${effect.userId}" }
+                    navController.navigate(
+                        Screen.OtpScreen.createNavRoute(
+                            userId = effect.userId
+                        )
+                    )
                 }
 
                 LogInEffect.CloseKeyboard -> {
@@ -80,6 +106,24 @@ fun LogInScreen(
         LazyColumn(contentPadding = paddingValues) {
             item {
                 Column(modifier = Modifier.fillMaxWidth()) {
+                    // Error message retrieved from the MarvelX-Backend API for invalid user input.
+                    AnimatedVisibility(
+                        visible = state.errorMessage != null && state.errorMessage?.isNotBlank() == true,
+                        enter = fadeIn(),
+                        exit = fadeOut()
+                    ) {
+                        Text(
+                            modifier = Modifier.fillMaxWidth(),
+                            text = state.errorMessage.toString(),
+                            color = MaterialTheme.colors.error,
+                            textAlign = TextAlign.Center,
+                            style = MaterialTheme.typography.body1,
+                        )
+                    }
+
+                    // Vertical spacing.
+                    VSpacer.Small()
+
                     // Email
                     OutlinedTextFieldValidation(
                         modifier = Modifier.fillMaxWidth(),

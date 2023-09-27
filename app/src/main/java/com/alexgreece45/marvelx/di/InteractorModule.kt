@@ -4,6 +4,8 @@ import com.alexgreece45.marvelx.domain.interactors.CharacterInteractor
 import com.alexgreece45.marvelx.domain.interactors.CharacterInteractorImpl
 import com.alexgreece45.marvelx.domain.interactors.ComicInteractor
 import com.alexgreece45.marvelx.domain.interactors.ComicInteractorImpl
+import com.alexgreece45.marvelx.domain.interactors.OtpInteractor
+import com.alexgreece45.marvelx.domain.interactors.OtpInteractorImpl
 import com.alexgreece45.marvelx.domain.interactors.UserInteractor
 import com.alexgreece45.marvelx.domain.interactors.UserInteractorImpl
 import com.alexgreece45.marvelx.domain.interactors.UserPartialStatePostSignUp
@@ -28,4 +30,8 @@ interface InteractorModule {
     @Binds
     @ViewModelScoped
     fun bindsUserInteractor(impl: UserInteractorImpl): UserInteractor
+
+    @Binds
+    @ViewModelScoped
+    fun bindsOtpInteractor(impl: OtpInteractorImpl): OtpInteractor
 }

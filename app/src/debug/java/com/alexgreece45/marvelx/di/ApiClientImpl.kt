@@ -4,12 +4,12 @@ import com.alexgreece45.marvelx.data.api.ApiClient
 import com.alexgreece45.marvelx.data.api.ApiService
 import com.alexgreece45.marvelx.data.models.character.CharacterDataWrapper
 import com.alexgreece45.marvelx.data.models.character.comic.ComicDataWrapper
-import com.alexgreece45.marvelx.data.models.user.UserLogInRequest
-import com.alexgreece45.marvelx.data.models.user.UserLogInResponse
-import com.alexgreece45.marvelx.data.models.user.UserSignUpRequest
-import com.alexgreece45.marvelx.data.models.user.UserSignUpResponse
-import com.google.gson.Gson
-import com.google.gson.annotations.SerializedName
+import com.alexgreece45.marvelx.data.models.otp.OtpRequest
+import com.alexgreece45.marvelx.data.models.otp.OtpResponse
+import com.alexgreece45.marvelx.data.models.user.logIn.UserLogInRequest
+import com.alexgreece45.marvelx.data.models.user.logIn.UserLogInResponse
+import com.alexgreece45.marvelx.data.models.user.signUp.UserSignUpRequest
+import com.alexgreece45.marvelx.data.models.user.signUp.UserSignUpResponse
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
@@ -43,7 +43,11 @@ class ApiClientImpl @Inject constructor(
     }
 
     override suspend fun postUserLogIn(userLogInRequest: UserLogInRequest): Response<UserLogInResponse> {
-       return api.postLogIn(userLogInRequest)
+        return api.postLogIn(userLogInRequest)
+    }
+
+    override suspend fun getOtp(otpRequest: OtpRequest): Response<OtpResponse> {
+        return api.getOtp(otpRequest)
     }
 }
 

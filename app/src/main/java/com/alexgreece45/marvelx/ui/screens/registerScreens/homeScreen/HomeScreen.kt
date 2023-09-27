@@ -24,7 +24,8 @@ import com.alexgreece45.marvelx.domain.viewmodels.HomeEvent
 import com.alexgreece45.marvelx.domain.viewmodels.HomeViewModel
 import com.alexgreece45.marvelx.navigation.Screen
 import com.alexgreece45.marvelx.util.ContentScreen
-import com.alexgreece45.marvelx.util.SPACING_MEDIUM
+import com.alexgreece45.marvelx.util.SPACING_SMALL
+import com.alexgreece45.marvelx.util.VSpacer
 
 @Composable
 fun HomeScreen(
@@ -65,8 +66,9 @@ fun HomeScreen(
             item {
                 Column(
                     modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(SPACING_MEDIUM.dp)
+                    verticalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp)
                 ) {
+                    // Login button.
                     Button(
                         modifier = Modifier.fillMaxWidth(),
                         onClick = { viewModel.setEvent(HomeEvent.OnLogInButtonClick) }
@@ -75,6 +77,8 @@ fun HomeScreen(
                             text = stringResource(R.string.home_screen_label_log_in_button),
                         )
                     }
+
+                    // Signup button.
                     Button(
                         modifier = Modifier.fillMaxWidth(),
                         onClick = { viewModel.setEvent(HomeEvent.OnSignUpButtonClick) }) {

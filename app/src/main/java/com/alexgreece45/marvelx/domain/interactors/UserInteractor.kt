@@ -3,15 +3,16 @@ package com.alexgreece45.marvelx.domain.interactors
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.data.api.ApiClient
 import com.alexgreece45.marvelx.data.models.user.UserErrorResponse
-import com.alexgreece45.marvelx.data.models.user.UserLogInRequest
-import com.alexgreece45.marvelx.data.models.user.UserLogInResponse
-import com.alexgreece45.marvelx.data.models.user.UserSignUpRequest
-import com.alexgreece45.marvelx.data.models.user.UserSignUpResponse
+import com.alexgreece45.marvelx.data.models.user.logIn.UserLogInRequest
+import com.alexgreece45.marvelx.data.models.user.logIn.UserLogInResponse
+import com.alexgreece45.marvelx.data.models.user.signUp.UserSignUpRequest
+import com.alexgreece45.marvelx.data.models.user.signUp.UserSignUpResponse
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.extensions.safeAsync
 import com.google.gson.Gson
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import okhttp3.ResponseBody
 import okio.IOException
 import javax.inject.Inject
 
@@ -97,7 +98,7 @@ class UserInteractorImpl @Inject constructor(
                 } else {
                     // Error.
                     val deserializedError = gson.fromJson(
-                        response.errorBody().toString(),
+                        (response.errorBody() as ResponseBody).string(),
                         UserErrorResponse::class.java
                     )
 
