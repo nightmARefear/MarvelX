@@ -4,7 +4,7 @@ import com.alexgreece45.marvelx.BuildConfig
 import com.alexgreece45.marvelx.data.models.character.CharacterDataWrapper
 import com.alexgreece45.marvelx.data.models.character.comic.ComicDataWrapper
 import com.alexgreece45.marvelx.data.models.otp.OtpRequest
-import com.alexgreece45.marvelx.data.models.otp.OtpResponse
+import com.alexgreece45.marvelx.data.models.otp.OtpResponseSuccess
 import com.alexgreece45.marvelx.data.models.user.logIn.UserLogInRequest
 import com.alexgreece45.marvelx.data.models.user.logIn.UserLogInResponse
 import com.alexgreece45.marvelx.data.models.user.signUp.UserSignUpRequest
@@ -34,6 +34,6 @@ interface ApiService {
     @POST(BuildConfig.MARVELX_BACKEND_ENDPOINT_POST_LOG_IN)
     suspend fun postLogIn(@Body userLogInRequest: UserLogInRequest): Response<UserLogInResponse>
 
-    @POST(BuildConfig.MARVELX_BACKEND_ENDPOINT_GET_OTP)
-    suspend fun getOtp(@Body otpRequest: OtpRequest) : Response<OtpResponse>
+    @POST(BuildConfig.MARVELX_BACKEND_ENDPOINT_POST_OTP)
+    suspend fun getOtp(@Body otpRequest: OtpRequest) : Response<OtpResponseSuccess>
 }

@@ -6,5 +6,7 @@ import kotlinx.parcelize.Parcelize
 
 @Parcelize
 data class OtpRequest(
-    @SerializedName("user_id") val userId: Int
+    @SerializedName("user_id") val userId: Int,
+    @SerializedName("otp") val otp: Int,
+    @SerializedName("epoch") val epoch: Long
 ) : Parcelable

@@ -19,25 +19,14 @@ class OtpInteractorImpl @Inject constructor(
     private val resourceProvider: ResourceProvider
 ) : OtpInteractor {
     override suspend fun getOtp(otpRequest: OtpRequest): Flow<GetOtpPartialState> = flow {
-        api.getOtp(otpRequest = otpRequest).let { response ->
+        api.postOtp(otpRequest = otpRequest).let { response ->
             if (response.isSuccessful) {
                 response.body()?.let { responseBody ->
-                    if (responseBody.otp.isBlank()) {
-                        // Erroneous response.
-                        // OTP is blank, so display an error.
-                        emit(
-                            GetOtpPartialState.Error(
-                                errorMessage = resourceProvider.getString(R.string.internal_server_error)
-                            )
+                    emit(
+                        GetOtpPartialState.Success(
+                            code = responseBody.code
                         )
-                    } else {
-                        // Successful response.
-                        emit(
-                            GetOtpPartialState.Success(
-                                otp = responseBody.otp
-                            )
-                        )
-                    }
+                    )
                 } ?: run {
                     emit(
                         GetOtpPartialState.Error(
@@ -70,7 +59,7 @@ class OtpInteractorImpl @Inject constructor(
 
 
 sealed class GetOtpPartialState {
-    data class Success(val otp: String) : GetOtpPartialState()
+    data class Success(val code: Int) : GetOtpPartialState()
 
     data class Error(val errorMessage: String) : GetOtpPartialState()
 

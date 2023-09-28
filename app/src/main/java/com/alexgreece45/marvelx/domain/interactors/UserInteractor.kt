@@ -2,7 +2,7 @@ package com.alexgreece45.marvelx.domain.interactors
 
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.data.api.ApiClient
-import com.alexgreece45.marvelx.data.models.user.UserErrorResponse
+import com.alexgreece45.marvelx.data.models.user.UserResponseError
 import com.alexgreece45.marvelx.data.models.user.logIn.UserLogInRequest
 import com.alexgreece45.marvelx.data.models.user.logIn.UserLogInResponse
 import com.alexgreece45.marvelx.data.models.user.signUp.UserSignUpRequest
@@ -50,7 +50,7 @@ class UserInteractorImpl @Inject constructor(
                     val deserializedError =
                         gson.fromJson(
                             response.errorBody().toString(),
-                            UserErrorResponse::class.java
+                            UserResponseError::class.java
                         )
 
                     emit(
@@ -99,7 +99,7 @@ class UserInteractorImpl @Inject constructor(
                     // Error.
                     val deserializedError = gson.fromJson(
                         (response.errorBody() as ResponseBody).string(),
-                        UserErrorResponse::class.java
+                        UserResponseError::class.java
                     )
 
                     emit(

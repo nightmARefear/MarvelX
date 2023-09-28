@@ -5,7 +5,7 @@ import com.alexgreece45.marvelx.data.api.ApiService
 import com.alexgreece45.marvelx.data.models.character.CharacterDataWrapper
 import com.alexgreece45.marvelx.data.models.character.comic.ComicDataWrapper
 import com.alexgreece45.marvelx.data.models.otp.OtpRequest
-import com.alexgreece45.marvelx.data.models.otp.OtpResponse
+import com.alexgreece45.marvelx.data.models.otp.OtpResponseSuccess
 import com.alexgreece45.marvelx.data.models.user.logIn.UserLogInRequest
 import com.alexgreece45.marvelx.data.models.user.logIn.UserLogInResponse
 import com.alexgreece45.marvelx.data.models.user.signUp.UserSignUpRequest
@@ -46,7 +46,7 @@ class ApiClientImpl @Inject constructor(
         return api.postLogIn(userLogInRequest)
     }
 
-    override suspend fun getOtp(otpRequest: OtpRequest): Response<OtpResponse> {
+    override suspend fun postOtp(otpRequest: OtpRequest): Response<OtpResponseSuccess> {
         return api.getOtp(otpRequest)
     }
 }

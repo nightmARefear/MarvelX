@@ -9,6 +9,7 @@ import com.alexgreece45.marvelx.ui.base.BaseEffect
 import com.alexgreece45.marvelx.ui.base.BaseEvent
 import com.alexgreece45.marvelx.ui.base.BaseState
 import com.alexgreece45.marvelx.ui.base.BaseViewModel
+import com.alexgreece45.marvelx.util.DateUtil
 import com.alexgreece45.marvelx.util.Form
 import com.alexgreece45.marvelx.util.FormValidator
 import com.alexgreece45.marvelx.util.FormsValidationResult
@@ -145,7 +146,7 @@ class OtpViewModel @Inject constructor(
                         setState {
                             copy(
                                 isLoading = false,
-                                otp = getOtpPartialState.otp
+                                otp = getOtpPartialState.code
                             )
                         }
                     }
@@ -188,11 +189,16 @@ class OtpViewModel @Inject constructor(
         listOf(
             Rule.ValidateNotBlank("OTP cannot be empty."),
             Rule.ValidateStringLength(6, "OTP must be 6 characters."),
-            Rule.ValidateStringMatch(currentState.otp, "The OTP that you have entered is incorrect.")
+            Rule.ValidateStringMatch(
+                currentState.otp,
+                "The OTP that you have entered is incorrect."
+            )
         )
 
     private fun getOtpRequest(): OtpRequest =
         OtpRequest(
-          userId = currentState.userId?: -1
+            userId = currentState.userId ?: -1,
+            otp = currentState.userEnteredOtp.toInt(),
+            epoch = DateUtil.getTimestamp()
         )
 }
