@@ -1,6 +1,7 @@
 package com.alexgreece45.marvelx.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.State
 import androidx.compose.runtime.remember
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
@@ -11,7 +12,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navigation
-import com.alexgreece45.marvelx.domain.viewmodels.ActivityViewModel
+import com.alexgreece45.marvelx.domain.viewmodels.ActivityState
 import com.alexgreece45.marvelx.ui.screens.allCharactersScreen.AllCharactersScreen
 import com.alexgreece45.marvelx.ui.screens.allFavoriteCharactersScreen.AllFavoriteCharactersScreen
 import com.alexgreece45.marvelx.ui.screens.characterScreen.CharacterScreen
@@ -24,7 +25,10 @@ import com.alexgreece45.marvelx.ui.screens.registerScreens.logInScreen.LogInScre
 import com.alexgreece45.marvelx.ui.screens.registerScreens.signUpScreen.SignUpScreen
 
 @Composable
-fun Navigation() {
+fun Navigation(
+    activityState: State<ActivityState>,
+    onSuccessNavigate: (Int) -> Unit
+) {
     val navController = rememberNavController()
 
     NavHost(
@@ -40,12 +44,12 @@ fun Navigation() {
                 HomeScreen(navController = navController)
             }
 
-            composable(Screen.RegisterScreens.LogInScreen) { navBackStackEntry ->
-                val activityViewModel =
-                    navBackStackEntry.sharedViewModel<ActivityViewModel>(navController = navController)
+            composable(Screen.RegisterScreens.LogInScreen) {
                 LogInScreen(
                     navController = navController,
-                    activityViewModel = activityViewModel
+                    onSuccessNavigate = { userId ->
+                        onSuccessNavigate.invoke(userId)
+                    }
                 )
             }
 
@@ -56,7 +60,10 @@ fun Navigation() {
             composable(Screen.OtpScreen) { navBackStackEntry ->
                 OtpScreen(
                     navController = navController,
-                    userId = navBackStackEntry.arguments?.getInt(NavItem.User.key) ?: -1
+                    userId = navBackStackEntry.arguments?.getInt(NavItem.User.key) ?: -1,
+                    onSuccessNavigate = { userId ->
+                        onSuccessNavigate.invoke(userId)
+                    }
                 )
             }
         }
@@ -106,13 +113,10 @@ fun Navigation() {
                 AllFavoriteCharactersScreen(navController = navController)
             }
 
-            composable(Screen.BottomNavigationScreens.ProfileScreen) { navBackStackEntry ->
-                val activityViewModel =
-                    navBackStackEntry.sharedViewModel<ActivityViewModel>(navController = navController)
-
+            composable(Screen.BottomNavigationScreens.ProfileScreen) {
                 ProfileScreen(
                     navController = navController,
-                    activityViewModel = activityViewModel
+                    activityState = activityState
                 )
             }
         }

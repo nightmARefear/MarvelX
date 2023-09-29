@@ -219,7 +219,8 @@ class LogInViewModel @Inject constructor(
                             setState {
                                 copy(
                                     isLoading = false,
-                                    hasInternetConnection = false
+                                    hasInternetConnection = false,
+                                    errorMessage = null
                                 )
                             }
                         }
@@ -228,6 +229,7 @@ class LogInViewModel @Inject constructor(
                             setState {
                                 copy(
                                     isLoading = false,
+                                    errorMessage = null,
                                     userLogInResponseDomain = userPartialStatePostLogIn.userLogInResponse.toDomain()
                                 )
                             }

@@ -1,5 +1,6 @@
 package com.alexgreece45.marvelx.domain.viewmodels
 
+import androidx.core.text.isDigitsOnly
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.data.models.otp.OtpRequest
@@ -10,8 +11,6 @@ import com.alexgreece45.marvelx.ui.base.BaseEvent
 import com.alexgreece45.marvelx.ui.base.BaseState
 import com.alexgreece45.marvelx.ui.base.BaseViewModel
 import com.alexgreece45.marvelx.util.DateUtil
-import com.alexgreece45.marvelx.util.Form
-import com.alexgreece45.marvelx.util.FormValidator
 import com.alexgreece45.marvelx.util.FormsValidationResult
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.Rule
@@ -25,6 +24,8 @@ sealed class OtpEvent : BaseEvent {
     data class OnOtpFieldValueChange(val otp: String) : OtpEvent()
 
     object OnDoneClick : OtpEvent()
+
+    object OnSendClick : OtpEvent()
 }
 
 data class OtpState(
@@ -38,12 +39,9 @@ data class OtpState(
 
     // Data.
     val userId: Int? = null,
+
     /**
      * The OTP that the user has entered in the TextField.
-     * */
-    val userEnteredOtp: String = "",
-    /**
-     * The actual OTP (retrieved from the MarvelX-Backend).
      * */
     val otp: String = "",
 
@@ -57,8 +55,7 @@ data class OtpState(
                 isLoading = true,
                 hasInternetConnection = true,
                 errorMessage = null,
-                userId = null,
-                userEnteredOtp = ""
+                userId = null
             )
     }
 }
@@ -76,7 +73,6 @@ sealed class OtpEffect : BaseEffect {
 @HiltViewModel
 class OtpViewModel @Inject constructor(
     private val otpInteractor: OtpInteractor,
-    private val formValidator: FormValidator,
     private val resourceProvider: ResourceProvider
 ) : BaseViewModel<OtpEvent, OtpState, OtpEffect>() {
     override fun setInitialState(): OtpState = OtpState.getDefaultValues()
@@ -88,11 +84,15 @@ class OtpViewModel @Inject constructor(
             }
 
             is OtpEvent.OnOtpFieldValueChange -> {
-                validateOtp(event.otp)
+                onOtpFieldValueChange(otp = event.otp)
             }
 
             OtpEvent.OnDoneClick -> {
-                validateOtp(currentState.userEnteredOtp)
+                validateOtp()
+            }
+
+            OtpEvent.OnSendClick -> {
+                validateOtp()
             }
         }
     }
@@ -110,74 +110,89 @@ class OtpViewModel @Inject constructor(
 
         setState {
             copy(
-                isLoading = true,
+                isLoading = false, // todo: change to true
                 userId = userId
             )
         }
+    }
 
-        // Get OTP.
-        viewModelScope.launch {
-            otpInteractor.getOtp(otpRequest = getOtpRequest()).collect { getOtpPartialState ->
-                when (getOtpPartialState) {
-                    is GetOtpPartialState.Error -> {
-                        setState {
-                            copy(
-                                isLoading = false
-                            )
-                        }
-
-                        setEffect {
-                            OtpEffect.Navigation.NavigateToPreviousScreenWithError(
-                                errorMessage = getOtpPartialState.errorMessage
-                            )
-                        }
-                    }
-
-                    GetOtpPartialState.NoInternetConnection -> {
-                        setState {
-                            copy(
-                                isLoading = false,
-                                hasInternetConnection = false
-                            )
-                        }
-                    }
-
-                    is GetOtpPartialState.Success -> {
-                        setState {
-                            copy(
-                                isLoading = false,
-                                otp = getOtpPartialState.code
-                            )
-                        }
-                    }
-                }
+    private fun onOtpFieldValueChange(otp: String) {
+        if (otp.isDigitsOnly() && otp.length <= 6 && otp != currentState.otp) {
+            setState {
+                copy(
+                    otp = otp
+                )
             }
         }
     }
 
-    private fun validateOtp(otp: String) {
-        if (otp != currentState.userEnteredOtp) {
-            setState {
-                copy(
-                    userEnteredOtp = otp
-                )
-            }
-        }
+    private fun validateOtp() {
         // If the user entered OTP is of length 6, then proceed with its validation.
-        if (otp.length == 6) {
+        if (currentState.otp.length == 6) {
             viewModelScope.launch {
-                formValidator.validateForms(listOf(Form(mapOf(getOtpValidationRules() to otp))))
-                    .collect { formsValidationResult ->
-                        setState {
-                            copy(
-                                enteredOtpValidationResult = formsValidationResult
-                            )
-                        }
+                otpInteractor.getOtp(otpRequest = getOtpRequest())
+                    .collect { getOtpPartialState ->
+                        when (getOtpPartialState) {
+                            is GetOtpPartialState.InternalServerError -> {
+                                // Internal server error.
+                                setState {
+                                    copy(
+                                        isLoading = false
+                                    )
+                                }
 
-                        // If the user-entered OTP is the same as the actual OTP, then proceed to login the user.
-                        if (currentState.enteredOtpValidationResult.isValid) {
-                            setEffect {
-                                OtpEffect.Navigation.NavigateToAllCharactersScreen
+                                setEffect {
+                                    OtpEffect.Navigation.NavigateToPreviousScreenWithError(
+                                        errorMessage = getOtpPartialState.errorMessage
+                                    )
+                                }
+                            }
+
+                            GetOtpPartialState.NoInternetConnection -> {
+                                // No internet connection.
+                                setState {
+                                    copy(
+                                        isLoading = false,
+                                        hasInternetConnection = false
+                                    )
+                                }
+                            }
+
+                            is GetOtpPartialState.Success -> {
+                                // OTPs matched.
+                                setState {
+                                    copy(
+                                        isLoading = false,
+                                    )
+                                }
+
+                                setEffect {
+                                    OtpEffect.Navigation.NavigateToAllCharactersScreen
+                                }
+                            }
+
+                            is GetOtpPartialState.ClientError -> {
+                                // This error occurred due to the app sending invalid data.
+                                setState {
+                                    copy(
+                                        isLoading = false
+                                    )
+                                }
+                                setEffect {
+                                    OtpEffect.Navigation.NavigateToPreviousScreenWithError(
+                                        errorMessage = getOtpPartialState.errorMessage
+                                    )
+                                }
+                            }
+
+                            is GetOtpPartialState.UserError -> {
+                                // User-input related error.
+                                setState {
+                                    copy(
+                                        isLoading = false,
+                                        errorMessage = getOtpPartialState.otpErrorCause.cause
+                                    )
+                                }
                             }
                         }
                     }
@@ -188,17 +203,13 @@ class OtpViewModel @Inject constructor(
     private fun getOtpValidationRules(): List<Rule> =
         listOf(
             Rule.ValidateNotBlank("OTP cannot be empty."),
-            Rule.ValidateStringLength(6, "OTP must be 6 characters."),
-            Rule.ValidateStringMatch(
-                currentState.otp,
-                "The OTP that you have entered is incorrect."
-            )
+            Rule.ValidateStringLength(6, "OTP must be 6 characters.")
         )
 
     private fun getOtpRequest(): OtpRequest =
         OtpRequest(
-            userId = currentState.userId ?: -1,
-            otp = currentState.userEnteredOtp.toInt(),
-            epoch = DateUtil.getTimestamp()
+            userId = currentState.userId.toString(),
+            otp = currentState.otp,
+            epoch = DateUtil.getTimestamp().toString()
         )
 }

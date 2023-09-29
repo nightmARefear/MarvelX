@@ -328,6 +328,7 @@ fun ContentScreen(
                         toolbarActions?.sortedBy { it.order }?.forEach { toolbarAction ->
                             IconButton(onClick = { toolbarAction.onClick() }) {
                                 Icon(
+                                    modifier = Modifier.size(SPACING_LARGE.dp),
                                     painter = painterResource(toolbarAction.iconData.iconResource),
                                     contentDescription = toolbarAction.iconData.contentDescription,
                                     tint = toolbarAction.iconData.colorTint

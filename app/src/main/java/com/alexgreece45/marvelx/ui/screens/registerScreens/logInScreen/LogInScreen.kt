@@ -49,7 +49,7 @@ import logcat.logcat
 @Composable
 fun LogInScreen(
     navController: NavController,
-    activityViewModel: ActivityViewModel,
+    onSuccessNavigate: (Int) -> Unit,
     viewModel: LogInViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
@@ -67,11 +67,7 @@ fun LogInScreen(
 
                 is LogInEffect.Navigation.NavigateToAllCharactersScreen -> {
                     // Login was successful so store the userId in the activity viewmodel's state.
-                    activityViewModel.setEvent(
-                        ActivityEvent.SetUserId(
-                            userId = effect.userId
-                        )
-                    )
+                    onSuccessNavigate.invoke(effect.userId)
 
                     Toast.makeText(context, "user id (${effect.userId}) in activityViewModel state was inserted.", Toast.LENGTH_SHORT).show()
 
@@ -112,13 +108,15 @@ fun LogInScreen(
                         enter = fadeIn(),
                         exit = fadeOut()
                     ) {
-                        Text(
-                            modifier = Modifier.fillMaxWidth(),
-                            text = state.errorMessage.toString(),
-                            color = MaterialTheme.colors.error,
-                            textAlign = TextAlign.Center,
-                            style = MaterialTheme.typography.body1,
-                        )
+                        state.errorMessage?.let { errorMessage ->
+                            Text(
+                                modifier = Modifier.fillMaxWidth(),
+                                text = errorMessage,
+                                color = MaterialTheme.colors.error,
+                                textAlign = TextAlign.Center,
+                                style = MaterialTheme.typography.body1,
+                            )
+                        }
                     }
 
                     // Vertical spacing.

@@ -133,4 +133,12 @@
     <string name="sign_up_screen_input_field_error_validate_email_email">Email is invalid.</string>
 
     <string name="sign_up_screen_sign_up_button_text">SIGN UP</string>
+
+    <!-- Otp Screen -->
+    <string name="otp_screen_toolbar_title">OTP</string>
+    <string name="otp_screen_toolbar_action_label_send">Send</string>
+
+    <string name="otp_screen_content_description_send">Send</string>
+
+    <string name="otp_screen_input_field_label">Please enter the OTP that was sent to your email.</string>
 </resources>

@@ -10,8 +10,7 @@ import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.State
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -19,7 +18,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.domain.viewmodels.ActivityViewModel
+import com.alexgreece45.marvelx.domain.viewmodels.ActivityState
 import com.alexgreece45.marvelx.util.BottomBarAction
 import com.alexgreece45.marvelx.util.BottomNavigationBarData
 import com.alexgreece45.marvelx.util.ContentScreen
@@ -29,9 +28,8 @@ import com.alexgreece45.marvelx.util.VSpacer
 @Composable
 fun ProfileScreen(
     navController: NavController,
-    activityViewModel: ActivityViewModel
+    activityState: State<ActivityState>
 ) {
-    val activityState by activityViewModel.uiState.collectAsState()
 
     LaunchedEffect(Unit) {
 
@@ -49,7 +47,7 @@ fun ProfileScreen(
                 // TODO: TO BE REMOVED!
                 // userId
                 Text(
-                    text = activityState.userId.toString(),
+                    text = activityState.value.userId.toString(),
                     style = MaterialTheme.typography.h4
                 )
 
