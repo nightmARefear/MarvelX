@@ -15,6 +15,7 @@ import com.alexgreece45.marvelx.util.FormValidator
 import com.alexgreece45.marvelx.util.FormsValidationResult
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.Rule
+import com.alexgreece45.marvelx.util.SecurityUtil
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -460,10 +461,6 @@ class SignUpViewModel @Inject constructor(
             lastName = currentState.lastName,
             gender = currentState.gender?.key.orEmpty(),
             email = currentState.email,
-            password = createHashedPassword(currentState.password)
+            password = SecurityUtil.getHashedPasswordFromString(currentState.password)
         )
-
-    private fun createHashedPassword(password: String): String {
-        return password
-    }
 }

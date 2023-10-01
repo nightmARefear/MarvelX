@@ -134,7 +134,7 @@ dependencies {
     implementation('io.coil-kt:coil-compose:2.4.0')
 
     // Navigation
-    def nav_version = "2.7.2"
+    def nav_version = "2.7.3"
 
     implementation "androidx.navigation:navigation-compose:$nav_version"
     implementation "androidx.hilt:hilt-navigation-compose:1.0.0"
@@ -153,4 +153,13 @@ dependencies {
 
     // optional - Paging 3 Integration
     implementation "androidx.room:room-paging:$room_version"
+
+    // Security (i.e., storing data locally, password hashing).
+    implementation "androidx.security:security-crypto:1.0.0"
+    implementation "com.lambdapioneer.argon2kt:argon2kt:1.4.0"
+
+    // Lottie.
+    def lottie_version = "6.1.0"
+
+    implementation "com.airbnb.android:lottie-compose:$lottie_version"
 }

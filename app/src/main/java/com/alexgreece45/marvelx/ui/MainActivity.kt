@@ -1,6 +1,7 @@
 package com.alexgreece45.marvelx.ui
 
 import android.os.Bundle
+import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
@@ -29,7 +30,7 @@ class MainActivity : ComponentActivity() {
                 ) {
                     Navigation(
                         activityState = activityViewModel.uiState.collectAsState(),
-                        onSuccessNavigate = { userId ->
+                        setUserId = { userId ->
                             activityViewModel.setEvent(
                                 ActivityEvent.SetUserId(
                                     userId = userId

@@ -58,7 +58,7 @@ fun OtpScreen(
     navController: NavController,
     userId: Int,
     viewModel: OtpViewModel = hiltViewModel(),
-    onSuccessNavigate: (Int) -> Unit
+    setUserId: (Int) -> Unit
 ) {
     val state by viewModel.uiState.collectAsState()
 
@@ -87,7 +87,7 @@ fun OtpScreen(
                 }
 
                 OtpEffect.Navigation.NavigateToAllCharactersScreen -> {
-                    onSuccessNavigate.invoke(userId)
+                    setUserId.invoke(userId)
                     navController.navigate(Screen.BottomNavigationScreens.AllCharactersScreen.route) {
                         popUpTo(Screen.RegisterScreens.getNestedGraphRootRoute()) {
                             inclusive = true

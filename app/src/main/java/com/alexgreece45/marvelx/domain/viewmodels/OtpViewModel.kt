@@ -210,6 +210,6 @@ class OtpViewModel @Inject constructor(
         OtpRequest(
             userId = currentState.userId.toString(),
             otp = currentState.otp,
-            epoch = DateUtil.getTimestamp().toString()
+            epoch = DateUtil.getSecondsFromEpoch().toString()
         )
 }

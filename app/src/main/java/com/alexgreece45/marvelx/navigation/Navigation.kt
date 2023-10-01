@@ -27,7 +27,7 @@ import com.alexgreece45.marvelx.ui.screens.registerScreens.signUpScreen.SignUpSc
 @Composable
 fun Navigation(
     activityState: State<ActivityState>,
-    onSuccessNavigate: (Int) -> Unit
+    setUserId: (Int) -> Unit
 ) {
     val navController = rememberNavController()
 
@@ -47,8 +47,8 @@ fun Navigation(
             composable(Screen.RegisterScreens.LogInScreen) {
                 LogInScreen(
                     navController = navController,
-                    onSuccessNavigate = { userId ->
-                        onSuccessNavigate.invoke(userId)
+                    setUserId = { userId ->
+                        setUserId.invoke(userId)
                     }
                 )
             }
@@ -61,8 +61,8 @@ fun Navigation(
                 OtpScreen(
                     navController = navController,
                     userId = navBackStackEntry.arguments?.getInt(NavItem.User.key) ?: -1,
-                    onSuccessNavigate = { userId ->
-                        onSuccessNavigate.invoke(userId)
+                    setUserId = { userId ->
+                        setUserId.invoke(userId)
                     }
                 )
             }

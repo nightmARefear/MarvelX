@@ -99,7 +99,7 @@ class ThemeTypography : ThemeTypographyTemplate() {
     override val body1: TextStyle
         get() = TextStyle(
             fontFamily = defaultFontFamily,
-            fontWeight = FontWeight.Bold, // change from Normal to Bold due to the font
+            fontWeight = FontWeight.Normal,
             fontSize = 16.sp,
             letterSpacing = 0.5.sp
         )

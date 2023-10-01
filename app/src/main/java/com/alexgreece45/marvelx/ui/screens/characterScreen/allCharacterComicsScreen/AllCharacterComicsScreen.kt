@@ -45,11 +45,11 @@ import com.alexgreece45.marvelx.navigation.Screen
 import com.alexgreece45.marvelx.util.ContentScreen
 import com.alexgreece45.marvelx.util.DEFAULT_SCREEN_PADDING
 import com.alexgreece45.marvelx.util.HSpacer
-import com.alexgreece45.marvelx.util.LoadingScreen
 import com.alexgreece45.marvelx.util.ModalBottomSheet
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.SortingModalBottomSheetContent
 import com.alexgreece45.marvelx.util.VSpacer
+import com.alexgreece45.marvelx.util.WrapperContentScreen
 import kotlinx.coroutines.coroutineScope
 
 @OptIn(ExperimentalMaterialApi::class)
@@ -100,7 +100,18 @@ fun AllCharacterComicsScreen(
         }
     }
 
-    LoadingScreen(isLoading = state.isLoading) {
+    WrapperContentScreen(
+        isLoading = state.isLoading,
+        hasInternetConnection = state.hasInternetConnection,
+        errorMessage = state.errorMessage,
+        onRetryClick = {
+            viewModel.setEvent(
+                AllCharacterComicsEvent.InitView(
+                    characterId = characterId
+                )
+            )
+        }
+    ) {
         ModalBottomSheet(
             sheetState = modalBottomSheetState,
             sheetShape = RoundedCornerShape(topStart = SPACING_SMALL.dp, topEnd = SPACING_SMALL.dp),

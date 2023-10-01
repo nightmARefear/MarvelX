@@ -5,6 +5,8 @@
     <string name="male">male</string>
     <string name="female">female</string>
     <string name="other">other</string>
+    <string name="ok">OK</string>
+    <string name="loading">Please wait…</string>
     <string name="is_password_visible_content_description">Hide Password</string>
     <string name="is_password_not_visible_content_description">Show Password</string>
     <string name="ic_favorite_content_description">favorite</string>

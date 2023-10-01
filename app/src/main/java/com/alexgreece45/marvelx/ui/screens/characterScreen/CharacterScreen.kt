@@ -48,15 +48,13 @@ import com.alexgreece45.marvelx.domain.viewmodels.CharacterEvent
 import com.alexgreece45.marvelx.domain.viewmodels.CharacterViewModel
 import com.alexgreece45.marvelx.navigation.Screen
 import com.alexgreece45.marvelx.util.ContentScreen
-import com.alexgreece45.marvelx.util.GenericErrorScreen
 import com.alexgreece45.marvelx.util.IMAGE_BORDER_WIDTH
 import com.alexgreece45.marvelx.util.IconData
 import com.alexgreece45.marvelx.util.ItemDescription
-import com.alexgreece45.marvelx.util.LoadingScreen
-import com.alexgreece45.marvelx.util.NoInternetErrorScreen
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.ToolbarAction
 import com.alexgreece45.marvelx.util.VSpacer
+import com.alexgreece45.marvelx.util.WrapperContentScreen
 
 @Composable
 fun CharacterScreen(
@@ -104,7 +102,18 @@ fun CharacterScreen(
         }
     }
 
-    LoadingScreen(isLoading = state.isLoading) {
+    WrapperContentScreen(
+        isLoading = state.isLoading,
+        hasInternetConnection = state.hasInternetConnection,
+        errorMessage = state.errorMessage,
+        onRetryClick = {
+            viewModel.setEvent(
+                CharacterEvent.InitView(
+                    characterId = characterId
+                )
+            )
+        }
+    ) {
         ContentScreen(
             onBack = { viewModel.setEvent(CharacterEvent.OnBackClick) },
             showToolbar = true,
@@ -139,22 +148,6 @@ fun CharacterScreen(
             }
         ) { padding ->
             LazyColumn(contentPadding = padding) {
-                state.errorMessage?.let { errorMessage ->
-                    item { GenericErrorScreen(errorMessage = errorMessage) }
-                }
-
-                if (!state.hasInternetConnection) {
-                    item {
-                        NoInternetErrorScreen {
-                            viewModel.setEvent(
-                                CharacterEvent.InitView(
-                                    characterId = characterId
-                                )
-                            )
-                        }
-                    }
-                }
-
                 state.character?.let { character ->
                     item {
                         // Character.

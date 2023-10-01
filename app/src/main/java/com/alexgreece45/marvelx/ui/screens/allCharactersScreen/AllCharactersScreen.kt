@@ -60,16 +60,13 @@ import com.alexgreece45.marvelx.util.BottomNavigationBarData
 import com.alexgreece45.marvelx.util.ContentScreen
 import com.alexgreece45.marvelx.util.DEFAULT_SCREEN_PADDING
 import com.alexgreece45.marvelx.util.ExtendedFabData
-import com.alexgreece45.marvelx.util.GenericErrorScreen
-import com.alexgreece45.marvelx.util.IconData
-import com.alexgreece45.marvelx.util.LoadingScreen
 import com.alexgreece45.marvelx.util.ModalBottomSheet
-import com.alexgreece45.marvelx.util.NoInternetErrorScreen
 import com.alexgreece45.marvelx.util.NormalFabData
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.SPACING_TINY
 import com.alexgreece45.marvelx.util.SearchBar
 import com.alexgreece45.marvelx.util.SortingModalBottomSheetContent
+import com.alexgreece45.marvelx.util.WrapperContentScreen
 import kotlinx.coroutines.coroutineScope
 
 @OptIn(
@@ -159,10 +156,20 @@ fun AllCharactersScreen(
         }
     }
 
-    LoadingScreen(isLoading = state.isLoading) {
+    WrapperContentScreen(
+        isLoading = state.isLoading,
+        hasInternetConnection = state.hasInternetConnection,
+        errorMessage = state.errorMessage,
+        onRetryClick = {
+            viewModel.setEvent(AllCharactersEvent.InitView)
+        }
+    ) {
         ModalBottomSheet(
             sheetState = modalBottomSheetState,
-            sheetShape = RoundedCornerShape(topStart = SPACING_SMALL.dp, topEnd = SPACING_SMALL.dp),
+            sheetShape = RoundedCornerShape(
+                topStart = SPACING_SMALL.dp,
+                topEnd = SPACING_SMALL.dp
+            ),
             scrimColor = MaterialTheme.colors.background.copy(
                 alpha = 0.5f
             ),
@@ -198,30 +205,14 @@ fun AllCharactersScreen(
                 )
             ) { contentPadding ->
                 LazyVerticalStaggeredGrid(
+                    modifier = Modifier
+                        .fillMaxSize(),
                     columns = StaggeredGridCells.Fixed(2),
                     state = lazyStaggeredGridState,
                     contentPadding = contentPadding,
                     verticalItemSpacing = SPACING_SMALL.dp,
                     horizontalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp)
                 ) {
-                    state.errorMessage?.let { errorMessage ->
-                        item(span = StaggeredGridItemSpan.FullLine) {
-                            GenericErrorScreen(
-                                errorMessage = errorMessage
-                            )
-                        }
-                    }
-
-                    if (!state.hasInternetConnection) {
-                        item(span = StaggeredGridItemSpan.FullLine) {
-                            NoInternetErrorScreen {
-                                viewModel.setEvent(
-                                    AllCharactersEvent.InitView
-                                )
-                            }
-                        }
-                    }
-
                     item(span = StaggeredGridItemSpan.FullLine) {
                         SearchBar(
                             searchTerm = state.searchBarTerm,

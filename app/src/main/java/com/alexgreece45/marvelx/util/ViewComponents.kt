@@ -22,6 +22,7 @@ import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.AlertDialog
 import androidx.compose.material.AppBarDefaults
 import androidx.compose.material.BottomAppBar
 import androidx.compose.material.BottomNavigation
@@ -43,9 +44,11 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.ModalBottomSheetDefaults
 import androidx.compose.material.ModalBottomSheetLayout
 import androidx.compose.material.ModalBottomSheetState
+import androidx.compose.material.OutlinedButton
 import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
+import androidx.compose.material.TextButton
 import androidx.compose.material.TextField
 import androidx.compose.material.TextFieldDefaults
 import androidx.compose.material.TopAppBar
@@ -76,8 +79,14 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DialogProperties
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.airbnb.lottie.compose.LottieAnimation
+import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.LottieConstants
+import com.airbnb.lottie.compose.animateLottieCompositionAsState
+import com.airbnb.lottie.compose.rememberLottieComposition
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.navigation.Screen
 import com.alexgreece45.marvelx.util.extensions.applyPadding
@@ -649,25 +658,124 @@ fun ModalBottomSheetScaffold(
     }
 }
 
+@Composable
+fun WrapperContentScreen(
+    isLoading: Boolean,
+    hasInternetConnection: Boolean,
+    errorMessage: String?,
+    onRetryClick: () -> Unit,
+    content: @Composable () -> Unit
+) {
+    Box(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        content()
+        if (isLoading) {
+            LoadingScreen()
+        }
+
+        if (!hasInternetConnection) {
+            NoInternetErrorScreen {
+                onRetryClick()
+            }
+        }
+
+        errorMessage?.let { errorMessage ->
+            GenericErrorScreen(errorMessage = errorMessage)
+        }
+    }
+}
+
+/**
+ * This [Composable] is to be exclusively used by [WrapperContentScreen].
+ * */
+@Composable
+fun LoadingScreen() {
+    val composition by rememberLottieComposition(
+        spec = LottieCompositionSpec.RawRes(
+            resId = R.raw.loading_animation
+        )
+    )
+    val progress by animateLottieCompositionAsState(
+        composition = composition,
+        iterations = LottieConstants.IterateForever
+    )
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colors.background.copy(alpha = 0.8f))
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = {}
+                ),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            LottieAnimation(
+                modifier = Modifier.size(140.dp),
+                composition = composition,
+                progress = { progress }
+            )
+
+            Text(
+                text = stringResource(R.string.loading),
+                textAlign = TextAlign.Center,
+                style = MaterialTheme.typography.h4,
+            )
+        }
+    }
+}
 
 @Composable
 fun LoadingScreen(
     isLoading: Boolean,
     content: @Composable () -> Unit
 ) {
-    Box(modifier = Modifier.fillMaxSize()) {
+    val composition by rememberLottieComposition(
+        spec = LottieCompositionSpec.RawRes(
+            resId = R.raw.loading_animation
+        )
+    )
+    val progress by animateLottieCompositionAsState(
+        composition = composition,
+        iterations = LottieConstants.IterateForever
+    )
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+
+    ) {
         content()
         if (isLoading) {
-            Box(
+            Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(MaterialTheme.colors.background),
-                contentAlignment = Alignment.Center
+                    .background(MaterialTheme.colors.background.copy(alpha = 0.8f))
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                        onClick = {}
+                    ),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                LottieAnimation(
+                    modifier = Modifier.size(140.dp),
+                    composition = composition,
+                    progress = { progress }
+                )
+
                 Text(
-                    text = "loading.....",
+                    text = stringResource(R.string.loading),
                     textAlign = TextAlign.Center,
-                    style = MaterialTheme.typography.h3,
+                    style = MaterialTheme.typography.h4,
                 )
             }
         }
@@ -756,6 +864,13 @@ fun OutlinedTextFieldValidation(
             },
             leadingIcon = leadingIcon,
             trailingIcon = {
+                /** Default trailing Icon color as defined in [TextFieldDefaults.textFieldColors].
+                 *  It should be used by [ValueType.Password] only, as the trailing icon's color
+                 *  is changed if an error has occurred.
+                 * */
+                val defaultIconColor =
+                    MaterialTheme.colors.onSurface.copy(alpha = TextFieldDefaults.IconOpacity)
+
                 when (valueType) {
                     ValueType.Text, ValueType.Email -> {
                         if (isError)
@@ -763,7 +878,6 @@ fun OutlinedTextFieldValidation(
                                 modifier = Modifier.size(SPACING_LARGE.dp),
                                 imageVector = ImageVector.vectorResource(R.drawable.ic_error_32),
                                 contentDescription = stringResource(R.string.error),
-                                tint = MaterialTheme.colors.error
                             )
                     }
 
@@ -772,12 +886,14 @@ fun OutlinedTextFieldValidation(
                             if (valueType.isPasswordVisible) {
                                 Icon(
                                     imageVector = Icons.Filled.VisibilityOff,
-                                    contentDescription = stringResource(R.string.is_password_visible_content_description)
+                                    contentDescription = stringResource(R.string.is_password_visible_content_description),
+                                    tint = defaultIconColor
                                 )
                             } else {
                                 Icon(
                                     imageVector = Icons.Filled.Visibility,
-                                    contentDescription = stringResource(R.string.is_password_not_visible_content_description)
+                                    contentDescription = stringResource(R.string.is_password_not_visible_content_description),
+                                    tint = defaultIconColor
                                 )
                             }
                         }
@@ -818,12 +934,121 @@ fun OutlinedTextFieldValidation(
             exit = fadeOut()
         ) {
             Text(
-                modifier = Modifier.padding(start = SPACING_TINY.dp, top = 64.dp),
+                modifier = Modifier.padding(start = SPACING_SMALL.dp, top = 68.dp),
                 text = errorMessage,
                 color = MaterialTheme.colors.error,
                 style = MaterialTheme.typography.body2,
             )
         }
+    }
+}
+
+sealed class AlertDialogErrorButtonType {
+    object Text : AlertDialogErrorButtonType()
+
+    object Outlined : AlertDialogErrorButtonType()
+
+    object Contained : AlertDialogErrorButtonType()
+
+    companion object {
+        fun getDefaultType(): AlertDialogErrorButtonType = Text
+    }
+}
+
+
+/**
+ * @param buttonType The button type. For the dismiss button, the type is
+ * always [AlertDialogErrorButtonType.Text].
+ * */
+data class AlertDialogButton(
+    val value: String,
+    val buttonType: AlertDialogErrorButtonType = AlertDialogErrorButtonType.getDefaultType(),
+    val onClick: () -> Unit
+)
+
+/**
+ * @param isVisible if set to true the Alert Dialog will appear on the screen, otherwise it will be invincible
+ * @param title the title of the Alert Dialog
+ * @param errorMessage the error message of the Alert Dialog
+ * */
+@Composable
+fun AlertDialogError(
+    modifier: Modifier = Modifier,
+    isVisible: Boolean,
+    title: String,
+    errorMessage: String,
+    dismissButton: AlertDialogButton? = null,
+    confirmButton: AlertDialogButton,
+    shape: Shape = MaterialTheme.shapes.medium,
+    backgroundColor: Color = MaterialTheme.colors.surface,
+    contentColor: Color = contentColorFor(backgroundColor),
+    properties: DialogProperties = DialogProperties(),
+    onDismissRequest: (() -> Unit)? = null
+) {
+    if (isVisible) {
+        AlertDialog(
+            modifier = modifier,
+            title = {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.h6 // Overrides the default style of "subtitle1".
+                )
+            },
+            text = {
+                // Overrides the provided content alpha of "ContentAlpha.medium".
+                CompositionLocalProvider (
+                    LocalContentAlpha provides ContentAlpha.high
+                ) {
+                    Text(
+                        text = errorMessage,
+                        style = MaterialTheme.typography.body1 // Overrides the provided style of "body2".
+                    )
+                }
+            },
+            dismissButton = {
+                dismissButton?.let { button ->
+                    TextButton(onClick = { button.onClick() }) {
+                        Text(
+                            text = button.value
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                confirmButton.let { button ->
+                    when (button.buttonType) {
+                        AlertDialogErrorButtonType.Contained -> {
+                            Button(onClick = { button.onClick() }) {
+                                Text(
+                                    text = button.value
+                                )
+                            }
+                        }
+
+                        AlertDialogErrorButtonType.Outlined -> {
+                            OutlinedButton(onClick = { button.onClick() }) {
+                                Text(
+                                    text = button.value
+                                )
+                            }
+                        }
+
+                        AlertDialogErrorButtonType.Text -> {
+                            TextButton(onClick = { button.onClick() }) {
+                                Text(
+                                    text = button.value
+                                )
+                            }
+                        }
+                    }
+                }
+            },
+            shape = shape,
+            backgroundColor = backgroundColor,
+            contentColor = contentColor,
+            properties = properties,
+            onDismissRequest = { onDismissRequest?.invoke() },
+        )
     }
 }
 
@@ -1008,13 +1233,13 @@ fun LazyItemScope.NoInternetErrorScreen(
 }
 
 @Composable
-fun GenericErrorScreen(
+private fun GenericErrorScreen(
     errorMessage: String,
 ) {
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colors.background)
     ) {
         Text(
             text = errorMessage,
@@ -1031,7 +1256,9 @@ fun NoInternetErrorScreen(
     onRetryClick: () -> Unit
 ) {
     Column(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colors.background),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
