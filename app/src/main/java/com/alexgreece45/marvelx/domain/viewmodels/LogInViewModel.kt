@@ -243,6 +243,13 @@ class LogInViewModel @Inject constructor(
             LogInEffect.CloseKeyboardAndClearFocus
         }
 
+        // Display loading animation to the screen.
+        setState {
+            copy(
+                isLoading = true
+            )
+        }
+
         // TODO: get user's ip address, and device info.
 
         // One or more fields are invalid. We don't know which one, so we disable the "LOGIN" button
@@ -250,6 +257,7 @@ class LogInViewModel @Inject constructor(
         if (!areAllFieldsValid()) {
             setState {
                 LogInState.getDefaultValues().copy(
+                    isLoading = false,
                     logInButton = false
                 )
             }
@@ -260,11 +268,6 @@ class LogInViewModel @Inject constructor(
         }
 
         // All fields are valid.
-        setState {
-            copy(
-                isLoading = true
-            )
-        }
         viewModelScope.launch {
             userInteractor.postLogIn(
                 userLogInRequest = getUserLogInRequest()
