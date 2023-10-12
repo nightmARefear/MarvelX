@@ -55,18 +55,18 @@ import com.alexgreece45.marvelx.domain.viewmodels.AllCharactersEffect
 import com.alexgreece45.marvelx.domain.viewmodels.AllCharactersEvent
 import com.alexgreece45.marvelx.domain.viewmodels.AllCharactersViewModel
 import com.alexgreece45.marvelx.navigation.Screen
-import com.alexgreece45.marvelx.util.BottomBarAction
-import com.alexgreece45.marvelx.util.BottomNavigationBarData
-import com.alexgreece45.marvelx.util.ContentScreen
+import com.alexgreece45.marvelx.ui.BottomBarAction
+import com.alexgreece45.marvelx.ui.BottomNavigationBarData
+import com.alexgreece45.marvelx.ui.ContentScreen
 import com.alexgreece45.marvelx.util.DEFAULT_SCREEN_PADDING
-import com.alexgreece45.marvelx.util.ExtendedFabData
-import com.alexgreece45.marvelx.util.ModalBottomSheet
-import com.alexgreece45.marvelx.util.NormalFabData
+import com.alexgreece45.marvelx.ui.ExtendedFabData
+import com.alexgreece45.marvelx.ui.ModalBottomSheet
+import com.alexgreece45.marvelx.ui.NormalFabData
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.SPACING_TINY
-import com.alexgreece45.marvelx.util.SearchBar
-import com.alexgreece45.marvelx.util.SortingModalBottomSheetContent
-import com.alexgreece45.marvelx.util.WrapperContentScreen
+import com.alexgreece45.marvelx.ui.SearchBar
+import com.alexgreece45.marvelx.ui.SortingModalBottomSheetContent
+import com.alexgreece45.marvelx.ui.WrapperContentScreen
 import kotlinx.coroutines.coroutineScope
 
 @OptIn(

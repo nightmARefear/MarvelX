@@ -34,8 +34,7 @@ class ActivityViewModel @Inject constructor(): BaseViewModel<ActivityEvent, Acti
         return ActivityState.getDefaultValues()
     }
 
-
-    override suspend fun handleEvents(event: ActivityEvent) {
+    override fun handleEvents(event: ActivityEvent) {
         when (event) {
             ActivityEvent.InitView -> {
                 initView()

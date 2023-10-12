@@ -34,11 +34,11 @@ import com.alexgreece45.marvelx.domain.viewmodels.SignUpEffect
 import com.alexgreece45.marvelx.domain.viewmodels.SignUpEvent
 import com.alexgreece45.marvelx.domain.viewmodels.SignUpViewModel
 import com.alexgreece45.marvelx.navigation.Screen
-import com.alexgreece45.marvelx.util.ContentScreen
-import com.alexgreece45.marvelx.util.OutlinedTextFieldValidation
+import com.alexgreece45.marvelx.ui.ContentScreen
+import com.alexgreece45.marvelx.ui.OutlinedTextFieldValidation
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.VSpacer
-import com.alexgreece45.marvelx.util.ValueType
+import com.alexgreece45.marvelx.ui.ValueType
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable

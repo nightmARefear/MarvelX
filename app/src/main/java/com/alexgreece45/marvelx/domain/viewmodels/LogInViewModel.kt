@@ -2,12 +2,10 @@ package com.alexgreece45.marvelx.domain.viewmodels
 
 import android.content.SharedPreferences
 import androidx.lifecycle.viewModelScope
-import com.alexgreece45.marvelx.BuildConfig
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.data.domains.user.UserLogInResponseDomain
 import com.alexgreece45.marvelx.data.domains.user.VerificationStep
 import com.alexgreece45.marvelx.data.models.user.logIn.UserLogInRequest
-import com.alexgreece45.marvelx.data.models.user.logIn.toDomain
 import com.alexgreece45.marvelx.domain.interactors.UserInteractor
 import com.alexgreece45.marvelx.domain.interactors.UserPartialStatePostLogIn
 import com.alexgreece45.marvelx.ui.base.BaseEffect
@@ -21,16 +19,10 @@ import com.alexgreece45.marvelx.util.FormsValidationResult
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.Rule
 import com.alexgreece45.marvelx.util.SecurityUtil
-import com.alexgreece45.marvelx.util.extensions.toMd5
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-
-
-/**
- * The title of the Alert Dialog in [LoginScreen].
- * */
-private const val ALERT_DIALOG_TITLE = "Login failed"
 
 sealed class LogInEvent : BaseEvent {
     object InitView : LogInEvent()
@@ -67,12 +59,12 @@ data class LogInState(
      * */
     val isPasswordVisible: Boolean = false,
 
-    // SignUp button
+    // Login button.
     val logInButton: Boolean = false,
 
     // Alert Dialog.
     val isAlertDialogVisible: Boolean = false,
-    val alertDialogTitle: String = ALERT_DIALOG_TITLE,
+    val alertDialogTitle: String = "",
     val alertDialogErrorMessage: String = "",
 
     // Validations.
@@ -90,7 +82,7 @@ data class LogInState(
             isPasswordVisible = false,
             logInButton = false,
             isAlertDialogVisible = false,
-            alertDialogTitle = ALERT_DIALOG_TITLE,
+            alertDialogTitle = "",
             alertDialogErrorMessage = "",
             emailValidationResult = FormsValidationResult(isValid = false),
             passwordValidationResult = FormsValidationResult(isValid = false),
@@ -107,10 +99,10 @@ sealed class LogInEffect : BaseEffect {
     }
 
     /**
-     ### This effect does two things:
+    ### This effect does two things:
      *
      * • Closes the keyboard.
-      *
+     *
      * • Clears the focus from the last focused UI element.
      * This essentially clears the focus from all UI
      * elements, since the focus only applies to one
@@ -136,7 +128,7 @@ class LogInViewModel @Inject constructor(
         setEvent(LogInEvent.InitView)
     }
 
-    override suspend fun handleEvents(event: LogInEvent) {
+    override fun handleEvents(event: LogInEvent) {
         when (event) {
             LogInEvent.InitView -> {
                 initView()
@@ -284,22 +276,11 @@ class LogInViewModel @Inject constructor(
                         )
                     }
 
-                    UserPartialStatePostLogIn.NoInternetConnection -> {
-                        setState {
-                            LogInState.getDefaultValues().copy(
-                                isLoading = false
-                            )
-                        }
-                        showAlertDialog(
-                            errorMessage = resourceProvider.getString(R.string.no_internet_connection_error_message)
-                        )
-                    }
-
                     is UserPartialStatePostLogIn.Success -> {
                         setState {
                             LogInState.getDefaultValues().copy(
                                 isLoading = false,
-                                userLogInResponseDomain = userPartialStatePostLogIn.userLogInResponse.toDomain()
+                                userLogInResponseDomain = userPartialStatePostLogIn.userLogInResponseDomain
                             )
                         }
 
@@ -398,43 +379,24 @@ class LogInViewModel @Inject constructor(
         )
     }
 
-    private fun getUserLogInRequest(): UserLogInRequest =
+    private suspend fun getUserLogInRequest(): UserLogInRequest =
         UserLogInRequest(
             email = currentState.email,
-            password = SecurityUtil.getHashedPasswordFromString(currentState.password),
+            password = SecurityUtil.getHashedPasswordFromString(currentState.password).single(),
             epoch = DateUtil.getSecondsFromEpoch()
         )
 
-    // TODO: TO BE REMOVED
-    private fun createHashedPassword(password: String): String {
-        // Store password.
-        val editor = sharedPreferences.edit()
-        editor.putString(BuildConfig.ENCRYPTED_SHARED_PREFERENCES_KEY_PASSWORD, password)
-        editor.apply()
-
-        return (sharedPreferences.getString(
-            BuildConfig.ENCRYPTED_SHARED_PREFERENCES_KEY_PASSWORD,
-            "unknown key: ${BuildConfig.ENCRYPTED_SHARED_PREFERENCES_KEY_PASSWORD}"
-        ) ?: "unknown key: ${BuildConfig.ENCRYPTED_SHARED_PREFERENCES_KEY_PASSWORD}").toMd5()
-    }
-
-    private fun resetCredentialStates() {
-        setState {
-            copy(
-                email = "",
-                password = "",
-                isPasswordVisible = false,
-                emailValidationResult = FormsValidationResult(false),
-                passwordValidationResult = FormsValidationResult(false)
-            )
-        }
-    }
+    /**
+     * Returns the title of the Alert Dialog in [com.alexgreece45.marvelx.ui.screens.registerScreens.logInScreen.LogInScreen].
+     */
+    private fun getAlertDialogTitle(): String =
+        resourceProvider.getString(R.string.login_screen_alert_dialog_title)
 
     private fun showAlertDialog(errorMessage: String) {
         setState {
             copy(
                 isAlertDialogVisible = true,
-                alertDialogTitle = ALERT_DIALOG_TITLE,
+                alertDialogTitle = getAlertDialogTitle(),
                 alertDialogErrorMessage = errorMessage
             )
         }
@@ -444,7 +406,7 @@ class LogInViewModel @Inject constructor(
         setState {
             copy(
                 isAlertDialogVisible = false,
-                alertDialogTitle = ALERT_DIALOG_TITLE,
+                alertDialogTitle = "",
                 alertDialogErrorMessage = ""
             )
         }

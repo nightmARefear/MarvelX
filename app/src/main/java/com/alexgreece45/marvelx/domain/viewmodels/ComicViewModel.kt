@@ -44,7 +44,7 @@ class ComicViewModel @Inject constructor(
 ) : BaseViewModel<ComicEvent, ComicState, ComicEffect>() {
     override fun setInitialState(): ComicState = ComicState()
 
-    override suspend fun handleEvents(event: ComicEvent) {
+    override fun handleEvents(event: ComicEvent) {
         when (event) {
             is ComicEvent.InitView -> {
                 initView(comicId = event.comicId)

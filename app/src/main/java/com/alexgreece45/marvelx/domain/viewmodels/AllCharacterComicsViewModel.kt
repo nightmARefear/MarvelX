@@ -9,7 +9,7 @@ import com.alexgreece45.marvelx.ui.base.BaseEffect
 import com.alexgreece45.marvelx.ui.base.BaseEvent
 import com.alexgreece45.marvelx.ui.base.BaseState
 import com.alexgreece45.marvelx.ui.base.BaseViewModel
-import com.alexgreece45.marvelx.util.SortingType
+import com.alexgreece45.marvelx.ui.SortingType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -66,7 +66,7 @@ class AllCharacterComicsViewModel @Inject constructor(
     override fun setInitialState(): AllCharacterComicsState =
         AllCharacterComicsState.getDefaultValues()
 
-    override suspend fun handleEvents(event: AllCharacterComicsEvent) {
+    override fun handleEvents(event: AllCharacterComicsEvent) {
         when (event) {
             is AllCharacterComicsEvent.InitView -> {
                 initView(characterId = event.characterId)

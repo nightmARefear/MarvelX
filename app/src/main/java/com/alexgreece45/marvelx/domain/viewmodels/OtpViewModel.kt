@@ -77,7 +77,7 @@ class OtpViewModel @Inject constructor(
 ) : BaseViewModel<OtpEvent, OtpState, OtpEffect>() {
     override fun setInitialState(): OtpState = OtpState.getDefaultValues()
 
-    override suspend fun handleEvents(event: OtpEvent) {
+    override fun handleEvents(event: OtpEvent) {
         when (event) {
             is OtpEvent.InitView -> {
                 initView(event.userId)

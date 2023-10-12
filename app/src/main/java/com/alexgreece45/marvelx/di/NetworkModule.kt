@@ -1,5 +1,6 @@
 package com.alexgreece45.marvelx.di
 
+import android.content.Context
 import com.alexgreece45.marvelx.BuildConfig
 import com.alexgreece45.marvelx.data.api.ApiService
 import com.alexgreece45.marvelx.data.domains.ComicPriceType
@@ -8,11 +9,13 @@ import com.alexgreece45.marvelx.util.gson.ComicPriceTypeAdapter
 import com.alexgreece45.marvelx.util.gson.OffsetDateTimeAdapter
 import com.alexgreece45.marvelx.util.gson.VerificationStepAdapter
 import com.alexgreece45.marvelx.util.interceptors.Interceptors
+import com.chuckerteam.chucker.api.ChuckerInterceptor
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import logcat.logcat
 import okhttp3.OkHttpClient
@@ -28,7 +31,9 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideApi(): ApiService = provideRetrofit(
+    fun provideApi(
+        @ApplicationContext context: Context
+    ): ApiService = provideRetrofit(
         BuildConfig.BASE_URL,
         OkHttpClient.Builder()
             .addInterceptor(
@@ -48,6 +53,7 @@ object NetworkModule {
                     level = HttpLoggingInterceptor.Level.BODY
                 }
             )
+            .addInterceptor(ChuckerInterceptor(context))
             .build(),
         GsonConverterFactory.create(
             provideGson()

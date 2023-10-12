@@ -38,10 +38,10 @@ import com.alexgreece45.marvelx.domain.viewmodels.OtpEffect
 import com.alexgreece45.marvelx.domain.viewmodels.OtpEvent
 import com.alexgreece45.marvelx.domain.viewmodels.OtpViewModel
 import com.alexgreece45.marvelx.navigation.Screen
-import com.alexgreece45.marvelx.util.ContentScreen
-import com.alexgreece45.marvelx.util.IconData
+import com.alexgreece45.marvelx.ui.ContentScreen
+import com.alexgreece45.marvelx.ui.IconData
 import com.alexgreece45.marvelx.util.OTP_LENGTH
-import com.alexgreece45.marvelx.util.ToolbarAction
+import com.alexgreece45.marvelx.ui.ToolbarAction
 import com.alexgreece45.marvelx.util.VSpacer
 
 

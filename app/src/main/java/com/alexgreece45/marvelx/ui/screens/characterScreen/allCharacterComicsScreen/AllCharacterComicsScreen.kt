@@ -42,14 +42,14 @@ import com.alexgreece45.marvelx.domain.viewmodels.AllCharacterComicsEffect
 import com.alexgreece45.marvelx.domain.viewmodels.AllCharacterComicsEvent
 import com.alexgreece45.marvelx.domain.viewmodels.AllCharacterComicsViewModel
 import com.alexgreece45.marvelx.navigation.Screen
-import com.alexgreece45.marvelx.util.ContentScreen
+import com.alexgreece45.marvelx.ui.ContentScreen
 import com.alexgreece45.marvelx.util.DEFAULT_SCREEN_PADDING
 import com.alexgreece45.marvelx.util.HSpacer
-import com.alexgreece45.marvelx.util.ModalBottomSheet
+import com.alexgreece45.marvelx.ui.ModalBottomSheet
 import com.alexgreece45.marvelx.util.SPACING_SMALL
-import com.alexgreece45.marvelx.util.SortingModalBottomSheetContent
+import com.alexgreece45.marvelx.ui.SortingModalBottomSheetContent
 import com.alexgreece45.marvelx.util.VSpacer
-import com.alexgreece45.marvelx.util.WrapperContentScreen
+import com.alexgreece45.marvelx.ui.WrapperContentScreen
 import kotlinx.coroutines.coroutineScope
 
 @OptIn(ExperimentalMaterialApi::class)

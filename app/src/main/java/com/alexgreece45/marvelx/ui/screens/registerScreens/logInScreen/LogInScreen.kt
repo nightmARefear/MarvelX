@@ -34,14 +34,13 @@ import com.alexgreece45.marvelx.domain.viewmodels.LogInEffect
 import com.alexgreece45.marvelx.domain.viewmodels.LogInEvent
 import com.alexgreece45.marvelx.domain.viewmodels.LogInViewModel
 import com.alexgreece45.marvelx.navigation.Screen
-import com.alexgreece45.marvelx.util.AlertDialogError
-import com.alexgreece45.marvelx.util.AlertDialogButton
-import com.alexgreece45.marvelx.util.ContentScreen
-import com.alexgreece45.marvelx.util.LoadingScreen
-import com.alexgreece45.marvelx.util.OutlinedTextFieldValidation
+import com.alexgreece45.marvelx.ui.AlertDialogError
+import com.alexgreece45.marvelx.ui.AlertDialogButton
+import com.alexgreece45.marvelx.ui.ContentScreen
+import com.alexgreece45.marvelx.ui.LoadingScreen
+import com.alexgreece45.marvelx.ui.OutlinedTextFieldValidation
 import com.alexgreece45.marvelx.util.SPACING_MEDIUM
-import com.alexgreece45.marvelx.util.VSpacer
-import com.alexgreece45.marvelx.util.ValueType
+import com.alexgreece45.marvelx.ui.ValueType
 import logcat.logcat
 
 @OptIn(ExperimentalComposeUiApi::class)
@@ -104,7 +103,7 @@ fun LogInScreen(
         ContentScreen(
             onBack = { navController.popBackStack() },
             showToolbar = true,
-            toolbarTitle = stringResource(R.string.log_in_screen_toolbar_title)
+            toolbarTitle = stringResource(R.string.login_screen_toolbar_title)
         ) { paddingValues ->
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
@@ -131,8 +130,8 @@ fun LogInScreen(
                         OutlinedTextFieldValidation(
                             modifier = Modifier.fillMaxWidth(),
                             value = state.email,
-                            label = stringResource(R.string.log_in_screen_input_field_label_email),
-                            placeholder = stringResource(R.string.log_in_screen_input_field_placeholder_email),
+                            label = stringResource(R.string.login_screen_input_field_label_email),
+                            placeholder = stringResource(R.string.login_screen_input_field_placeholder_email),
                             onValueChange = { newValue ->
                                 viewModel.setEvent(LogInEvent.FieldValueChange.Email(email = newValue))
                             },
@@ -159,7 +158,7 @@ fun LogInScreen(
                                 isPasswordVisible = state.isPasswordVisible,
                                 onVisibilityIconClick = { viewModel.setEvent(LogInEvent.OnPasswordVisibilityIconClick) }
                             ),
-                            label = stringResource(R.string.log_in_screen_input_field_label_password),
+                            label = stringResource(R.string.login_screen_input_field_label_password),
                             placeholder = stringResource(R.string.log_in_screen_input_field_placeholder_password),
                             onValueChange = { newValue ->
                                 viewModel.setEvent(LogInEvent.FieldValueChange.Password(password = newValue))

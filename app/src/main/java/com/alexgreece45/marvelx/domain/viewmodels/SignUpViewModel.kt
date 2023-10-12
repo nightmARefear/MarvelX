@@ -17,6 +17,7 @@ import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.Rule
 import com.alexgreece45.marvelx.util.SecurityUtil
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -99,7 +100,7 @@ class SignUpViewModel @Inject constructor(
         setEvent(SignUpEvent.InitView)
     }
 
-    override suspend fun handleEvents(event: SignUpEvent) {
+    override fun handleEvents(event: SignUpEvent) {
         when (event) {
             SignUpEvent.InitView -> {
                 initView()
@@ -300,14 +301,15 @@ class SignUpViewModel @Inject constructor(
                             }
                         }
 
-                        UserPartialStatePostSignUp.NoInternetConnection -> {
+                        // TODO: REFACTOR
+                       /* UserPartialStatePostSignUp.NoInternetConnection -> {
                             setState {
                                 copy(
                                     isLoading = false,
                                     hasInternetConnection = false
                                 )
                             }
-                        }
+                        }*/
 
                         is UserPartialStatePostSignUp.Success -> {
                             setState {
@@ -455,12 +457,12 @@ class SignUpViewModel @Inject constructor(
         )
     }
 
-    private fun getUserSignUpRequest(): UserSignUpRequest =
+    private suspend fun getUserSignUpRequest(): UserSignUpRequest =
         UserSignUpRequest(
             firstName = currentState.firstName,
             lastName = currentState.lastName,
             gender = currentState.gender?.key.orEmpty(),
             email = currentState.email,
-            password = SecurityUtil.getHashedPasswordFromString(currentState.password)
+            password = SecurityUtil.getHashedPasswordFromString(currentState.password).collect().toString()
         )
 }

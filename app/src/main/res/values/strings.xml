@@ -80,16 +80,18 @@
     <string name="home_screen_label_sign_up_button">Signup</string>
 
     <!-- Log In Screen -->
-    <string name="log_in_screen_toolbar_title">Login</string>
+    <string name="login_screen_toolbar_title">Login</string>
 
-    <string name="log_in_screen_input_field_label_email">Email</string>
-    <string name="log_in_screen_input_field_label_password">Password</string>
+    <string name="login_screen_input_field_label_email">Email</string>
+    <string name="login_screen_input_field_label_password">Password</string>
 
-    <string name="log_in_screen_input_field_placeholder_email">john.doe@email.com</string>
+    <string name="login_screen_input_field_placeholder_email">john.doe@email.com</string>
     <string name="log_in_screen_input_field_placeholder_password">hJRVkVtX39Ud!%XIFn9)ui5+K</string>
 
-    <string name="log_in_screen_input_field_error_blank_email">Email cannot be blank.</string>
-    <string name="log_in_screen_input_field_error_blank_password">Password cannot be blank.</string>
+    <string name="login_screen_alert_dialog_title">Login failed</string>
+
+    <string name="login_screen_input_field_error_blank_email">Email cannot be blank.</string>
+    <string name="login_screen_input_field_error_blank_password">Password cannot be blank.</string>
 
     <string name="log_in_screen_input_field_error_min_length_email">Email\'s length cannot be less than %1$s characters.</string>
     <string name="log_in_screen_input_field_error_min_length_password">Password\'s length cannot be less than %1$s characters.</string>

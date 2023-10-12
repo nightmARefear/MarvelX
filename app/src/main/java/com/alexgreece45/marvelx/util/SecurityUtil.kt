@@ -4,10 +4,14 @@ import com.alexgreece45.marvelx.BuildConfig
 import com.lambdapioneer.argon2kt.Argon2Kt
 import com.lambdapioneer.argon2kt.Argon2KtResult
 import com.lambdapioneer.argon2kt.Argon2Mode
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 import logcat.logcat
 
 object SecurityUtil {
-    fun getHashedPasswordFromString(password: String): String {
+    suspend fun getHashedPasswordFromString(password: String): Flow<String> = flow {
         // Initializes Argon2Kt and loads the native library.
         val argon2Kt = Argon2Kt()
 
@@ -24,7 +28,7 @@ object SecurityUtil {
         )
         logcat { "(getHashedPasswordFromString) end of hashing..." }
 
-        return hashResult.encodedOutputAsByteArray().toString(Charsets.UTF_8)
-            .also { logcat { "(getHashedPasswordFromString) finalPassword: $it" } }
-    }
+        emit(hashResult.encodedOutputAsByteArray().toString(Charsets.UTF_8)
+            .also { logcat { "(getHashedPasswordFromString) finalPassword: $it" } })
+    }.flowOn(Dispatchers.Default)
 }

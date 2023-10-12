@@ -28,7 +28,7 @@ abstract class BaseViewModel<Event : BaseEvent, State : BaseState, Effect : Base
     /**
      * Used by the viewModel to acquire the current state.
      */
-    val currentState: State
+    protected val currentState: State
         get() = uiState.value
 
     private val _effect: Channel<Effect> = Channel()
@@ -86,5 +86,5 @@ abstract class BaseViewModel<Event : BaseEvent, State : BaseState, Effect : Base
         viewModelScope.launch { _viewStateHistory.send(state) }
     }
 
-    abstract suspend fun handleEvents(event: Event)
+    abstract fun handleEvents(event: Event)
 }

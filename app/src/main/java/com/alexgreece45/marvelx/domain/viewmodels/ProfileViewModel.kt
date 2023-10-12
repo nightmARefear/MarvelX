@@ -38,7 +38,7 @@ sealed class ProfileEffect : BaseEffect {
 class ProfileViewModel @Inject constructor(): BaseViewModel<ProfileEvent, ProfileState, ProfileEffect>() {
     override fun setInitialState(): ProfileState = ProfileState.getDefaultValues()
 
-    override suspend fun handleEvents(event: ProfileEvent) {
+    override fun handleEvents(event: ProfileEvent) {
        when (event) {
            is ProfileEvent.InitView -> {
                initView()

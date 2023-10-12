@@ -1,4 +1,4 @@
-package com.alexgreece45.marvelx.util
+package com.alexgreece45.marvelx.ui
 
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.AnimatedVisibility
@@ -89,6 +89,12 @@ import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.navigation.Screen
+import com.alexgreece45.marvelx.util.DEFAULT_SCREEN_PADDING
+import com.alexgreece45.marvelx.util.HSpacer
+import com.alexgreece45.marvelx.util.SPACING_LARGE
+import com.alexgreece45.marvelx.util.SPACING_MEDIUM
+import com.alexgreece45.marvelx.util.SPACING_SMALL
+import com.alexgreece45.marvelx.util.VSpacer
 import com.alexgreece45.marvelx.util.extensions.applyPadding
 
 data class BottomBarAction(

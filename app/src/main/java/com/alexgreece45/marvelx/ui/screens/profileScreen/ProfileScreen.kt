@@ -19,9 +19,9 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.domain.viewmodels.ActivityState
-import com.alexgreece45.marvelx.util.BottomBarAction
-import com.alexgreece45.marvelx.util.BottomNavigationBarData
-import com.alexgreece45.marvelx.util.ContentScreen
+import com.alexgreece45.marvelx.ui.BottomBarAction
+import com.alexgreece45.marvelx.ui.BottomNavigationBarData
+import com.alexgreece45.marvelx.ui.ContentScreen
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.VSpacer
 

@@ -12,7 +12,7 @@ import com.alexgreece45.marvelx.ui.base.BaseEvent
 import com.alexgreece45.marvelx.ui.base.BaseState
 import com.alexgreece45.marvelx.ui.base.BaseViewModel
 import com.alexgreece45.marvelx.util.ResourceProvider
-import com.alexgreece45.marvelx.util.SortingType
+import com.alexgreece45.marvelx.ui.SortingType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -104,7 +104,7 @@ class AllCharactersViewModel @Inject constructor(
         setEvent(AllCharactersEvent.InitView)
     }
 
-    override suspend fun handleEvents(event: AllCharactersEvent) {
+    override fun handleEvents(event: AllCharactersEvent) {
         when (event) {
             AllCharactersEvent.InitView -> {
                 initView()
@@ -214,7 +214,7 @@ class AllCharactersViewModel @Inject constructor(
         }
     }
 
-    private suspend fun initView() {
+    private fun initView() {
         setState {
             copy(
                 isLoading = true,
@@ -336,7 +336,7 @@ class AllCharactersViewModel @Inject constructor(
         }
     }
 
-    private suspend fun onHeartClick(characterId: Int) {
+    private fun onHeartClick(characterId: Int) {
         // Retrieve character.
         val character = currentState.characters.firstOrNull { it.id == characterId }
         character?.let {
@@ -361,7 +361,7 @@ class AllCharactersViewModel @Inject constructor(
         }
     }
 
-    private suspend fun unFavoriteCharacterById(characterId: Int) {
+    private fun unFavoriteCharacterById(characterId: Int) {
         viewModelScope.launch {
             interactor.deleteFavoriteCharacterById(characterId = characterId).collect {
                 when (it) {
@@ -405,7 +405,7 @@ class AllCharactersViewModel @Inject constructor(
         }
     }
 
-    private suspend fun favoriteCharacterById(characterId: Int) {
+    private fun favoriteCharacterById(characterId: Int) {
         viewModelScope.launch {
             interactor.insertFavoriteCharacters(
                 FavoriteCharacterEntity(characterId = characterId)

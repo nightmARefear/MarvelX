@@ -23,9 +23,8 @@ import com.alexgreece45.marvelx.domain.viewmodels.HomeEffect
 import com.alexgreece45.marvelx.domain.viewmodels.HomeEvent
 import com.alexgreece45.marvelx.domain.viewmodels.HomeViewModel
 import com.alexgreece45.marvelx.navigation.Screen
-import com.alexgreece45.marvelx.util.ContentScreen
+import com.alexgreece45.marvelx.ui.ContentScreen
 import com.alexgreece45.marvelx.util.SPACING_SMALL
-import com.alexgreece45.marvelx.util.VSpacer
 
 @Composable
 fun HomeScreen(

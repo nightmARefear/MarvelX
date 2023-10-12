@@ -34,7 +34,7 @@ class HomeViewModel @Inject constructor() : BaseViewModel<HomeEvent, HomeState, 
             errorMessage = null
         )
 
-    override suspend fun handleEvents(event: HomeEvent) {
+    override fun handleEvents(event: HomeEvent) {
         when (event) {
             HomeEvent.InitView -> {
                 initView()

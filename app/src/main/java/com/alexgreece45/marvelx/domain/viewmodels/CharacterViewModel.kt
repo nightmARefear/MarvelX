@@ -71,7 +71,7 @@ class CharacterViewModel @Inject constructor(
 ) : BaseViewModel<CharacterEvent, CharacterState, CharacterEffect>() {
     override fun setInitialState(): CharacterState = CharacterState()
 
-    override suspend fun handleEvents(event: CharacterEvent) {
+    override fun handleEvents(event: CharacterEvent) {
         when (event) {
             is CharacterEvent.InitView -> {
                 initView(characterId = event.characterId)
@@ -113,14 +113,14 @@ class CharacterViewModel @Inject constructor(
         }
     }
 
-    private suspend fun initView(characterId: Int) {
+    private fun initView(characterId: Int) {
         setState {
             CharacterState.getDefaultValues()
         }
         loadCharacter(characterId = characterId)
     }
 
-    private suspend fun loadCharacter(characterId: Int) {
+    private fun loadCharacter(characterId: Int) {
         setState {
             copy(
                 isLoading = true
@@ -187,7 +187,7 @@ class CharacterViewModel @Inject constructor(
         }
     }
 
-    private suspend fun loadComics(characterId: Int) {
+    private fun loadComics(characterId: Int) {
         viewModelScope.launch {
             interactor.getCharacterComics(characterId).collect {
                 when (it) {
@@ -222,7 +222,7 @@ class CharacterViewModel @Inject constructor(
         }
     }
 
-    private suspend fun onFavoriteClick() {
+    private fun onFavoriteClick() {
         currentState.character?.let { characterDomain ->
             when (characterDomain.isFavorite) {
                 // Character is favorite; proceed to remove it from favorites.

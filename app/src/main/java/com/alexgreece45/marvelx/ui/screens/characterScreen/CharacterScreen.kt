@@ -47,14 +47,14 @@ import com.alexgreece45.marvelx.domain.viewmodels.CharacterEffect
 import com.alexgreece45.marvelx.domain.viewmodels.CharacterEvent
 import com.alexgreece45.marvelx.domain.viewmodels.CharacterViewModel
 import com.alexgreece45.marvelx.navigation.Screen
-import com.alexgreece45.marvelx.util.ContentScreen
+import com.alexgreece45.marvelx.ui.ContentScreen
 import com.alexgreece45.marvelx.util.IMAGE_BORDER_WIDTH
-import com.alexgreece45.marvelx.util.IconData
-import com.alexgreece45.marvelx.util.ItemDescription
+import com.alexgreece45.marvelx.ui.IconData
+import com.alexgreece45.marvelx.ui.ItemDescription
 import com.alexgreece45.marvelx.util.SPACING_SMALL
-import com.alexgreece45.marvelx.util.ToolbarAction
+import com.alexgreece45.marvelx.ui.ToolbarAction
 import com.alexgreece45.marvelx.util.VSpacer
-import com.alexgreece45.marvelx.util.WrapperContentScreen
+import com.alexgreece45.marvelx.ui.WrapperContentScreen
 
 @Composable
 fun CharacterScreen(

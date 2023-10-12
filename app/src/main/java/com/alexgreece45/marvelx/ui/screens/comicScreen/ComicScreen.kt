@@ -26,9 +26,9 @@ import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.data.domains.ComicDomain
 import com.alexgreece45.marvelx.domain.viewmodels.ComicEvent
 import com.alexgreece45.marvelx.domain.viewmodels.ComicViewModel
-import com.alexgreece45.marvelx.util.ContentScreen
+import com.alexgreece45.marvelx.ui.ContentScreen
 import com.alexgreece45.marvelx.util.HSpacer
-import com.alexgreece45.marvelx.util.ItemDescription
+import com.alexgreece45.marvelx.ui.ItemDescription
 import com.alexgreece45.marvelx.util.SPACING_TINY
 import com.alexgreece45.marvelx.util.VSpacer
 

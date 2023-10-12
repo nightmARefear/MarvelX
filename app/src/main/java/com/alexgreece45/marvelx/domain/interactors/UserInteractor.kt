@@ -2,9 +2,10 @@ package com.alexgreece45.marvelx.domain.interactors
 
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.data.api.ApiClient
+import com.alexgreece45.marvelx.data.domains.user.UserLogInResponseDomain
 import com.alexgreece45.marvelx.data.models.user.UserResponseError
 import com.alexgreece45.marvelx.data.models.user.logIn.UserLogInRequest
-import com.alexgreece45.marvelx.data.models.user.logIn.UserLogInResponse
+import com.alexgreece45.marvelx.data.models.user.logIn.toDomain
 import com.alexgreece45.marvelx.data.models.user.signUp.UserSignUpRequest
 import com.alexgreece45.marvelx.data.models.user.signUp.UserSignUpResponse
 import com.alexgreece45.marvelx.util.ResourceProvider
@@ -64,8 +65,9 @@ class UserInteractorImpl @Inject constructor(
             // Exception.
             when (it) {
                 is IOException -> {
-                    UserPartialStatePostSignUp.NoInternetConnection
-
+                    UserPartialStatePostSignUp.Error(
+                        errorMessage = resourceProvider.getString(R.string.no_internet_connection_error_message)
+                    )
                 }
 
                 else -> {
@@ -84,7 +86,7 @@ class UserInteractorImpl @Inject constructor(
                         // Success.
                         emit(
                             UserPartialStatePostLogIn.Success(
-                                userLogInResponse = responseBody
+                                userLogInResponseDomain = responseBody.toDomain()
                             )
                         )
                     } ?: run {
@@ -112,7 +114,9 @@ class UserInteractorImpl @Inject constructor(
         }.safeAsync {
             when (it) {
                 is IOException -> {
-                    UserPartialStatePostLogIn.NoInternetConnection
+                    UserPartialStatePostLogIn.Error(
+                        errorMessage = resourceProvider.getString(R.string.no_internet_connection_error_message)
+                    )
                 }
 
                 else -> {
@@ -128,14 +132,10 @@ sealed class UserPartialStatePostSignUp {
     data class Success(val userSignUpResponse: UserSignUpResponse) : UserPartialStatePostSignUp()
 
     data class Error(val errorMessage: String) : UserPartialStatePostSignUp()
-
-    object NoInternetConnection : UserPartialStatePostSignUp()
 }
 
 sealed class UserPartialStatePostLogIn {
-    data class Success(val userLogInResponse: UserLogInResponse) : UserPartialStatePostLogIn()
+    data class Success(val userLogInResponseDomain: UserLogInResponseDomain) : UserPartialStatePostLogIn()
 
     data class Error(val errorMessage: String) : UserPartialStatePostLogIn()
-
-    object NoInternetConnection : UserPartialStatePostLogIn()
 }

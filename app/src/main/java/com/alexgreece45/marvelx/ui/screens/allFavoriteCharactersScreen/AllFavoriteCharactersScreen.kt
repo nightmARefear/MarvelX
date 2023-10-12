@@ -7,9 +7,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavController
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.util.BottomBarAction
-import com.alexgreece45.marvelx.util.BottomNavigationBarData
-import com.alexgreece45.marvelx.util.ContentScreen
+import com.alexgreece45.marvelx.ui.BottomBarAction
+import com.alexgreece45.marvelx.ui.BottomNavigationBarData
+import com.alexgreece45.marvelx.ui.ContentScreen
 
 @Composable
 fun AllFavoriteCharactersScreen(
