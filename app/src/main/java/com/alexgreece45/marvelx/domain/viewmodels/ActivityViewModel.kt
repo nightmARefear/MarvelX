@@ -14,12 +14,12 @@ sealed class ActivityEvent : BaseEvent {
 }
 
 data class ActivityState(
-    val userId: Int? = null
+    val userId: Int = -1
 ) : BaseState {
     companion object {
         fun getDefaultValues(): ActivityState =
             ActivityState(
-                userId = null
+                userId = -1
             )
     }
 }

@@ -1,8 +1,8 @@
 package com.alexgreece45.marvelx.data.models.character.comic
 
-import com.alexgreece45.marvelx.data.domains.ComicDomain
-import com.alexgreece45.marvelx.data.domains.ComicPriceDomain
-import com.alexgreece45.marvelx.data.domains.ComicPriceType
+import com.alexgreece45.marvelx.data.domains.comic.ComicDomain
+import com.alexgreece45.marvelx.data.domains.comic.ComicPriceDomain
+import com.alexgreece45.marvelx.data.domains.comic.ComicPriceType
 import com.alexgreece45.marvelx.data.models.character.ComicSummary
 import com.alexgreece45.marvelx.data.models.character.EventList
 import com.alexgreece45.marvelx.data.models.character.ImageResponse

@@ -50,7 +50,7 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.data.domains.CharacterDomain
+import com.alexgreece45.marvelx.data.domains.character.CharacterDomain
 import com.alexgreece45.marvelx.domain.viewmodels.AllCharactersEffect
 import com.alexgreece45.marvelx.domain.viewmodels.AllCharactersEvent
 import com.alexgreece45.marvelx.domain.viewmodels.AllCharactersViewModel
@@ -110,7 +110,7 @@ fun AllCharactersScreen(
     }
 
     LaunchedEffect(Unit) {
-        viewModel.effect.collect { effect ->
+        viewModel.uiEffect.collect { effect ->
             when (effect) {
                 is AllCharactersEffect.NavigateToCharacterScreen -> {
                     initLock = Unit

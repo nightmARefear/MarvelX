@@ -3,7 +3,7 @@ package com.alexgreece45.marvelx.domain.viewmodels
 import android.content.SharedPreferences
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.data.domains.user.UserLogInResponseDomain
+import com.alexgreece45.marvelx.data.domains.user.login.UserLogInResponseDomain
 import com.alexgreece45.marvelx.data.domains.user.VerificationStep
 import com.alexgreece45.marvelx.data.models.user.logIn.UserLogInRequest
 import com.alexgreece45.marvelx.domain.interactors.UserInteractor

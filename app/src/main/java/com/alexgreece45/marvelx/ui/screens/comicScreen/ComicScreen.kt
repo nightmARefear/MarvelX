@@ -23,7 +23,7 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.data.domains.ComicDomain
+import com.alexgreece45.marvelx.data.domains.comic.ComicDomain
 import com.alexgreece45.marvelx.domain.viewmodels.ComicEvent
 import com.alexgreece45.marvelx.domain.viewmodels.ComicViewModel
 import com.alexgreece45.marvelx.ui.ContentScreen
@@ -47,7 +47,7 @@ fun ComicScreen(
             )
         )
 
-        viewModel.effect.collect { comicEffect ->
+        viewModel.uiEffect.collect { comicEffect ->
             when (comicEffect) {
                 else -> TODO("to be implemented")
             }

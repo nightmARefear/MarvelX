@@ -680,11 +680,12 @@ fun WrapperContentScreen(
             LoadingScreen()
         }
 
-        if (!hasInternetConnection) {
+        // TODO: UNCOMMENT
+        /*if (!hasInternetConnection) {
             NoInternetErrorScreen {
                 onRetryClick()
             }
-        }
+        }*/
 
         errorMessage?.let { errorMessage ->
             GenericErrorScreen(errorMessage = errorMessage)

@@ -53,7 +53,7 @@ fun SignUpScreen(
     val keyboard = LocalSoftwareKeyboardController.current
 
     LaunchedEffect(Unit) {
-        viewModel.effect.collect { effect ->
+        viewModel.uiEffect.collect { effect ->
             when (effect) {
                 is SignUpEffect.DisplayErrorToastMessage -> {
                     Toast.makeText(context, effect.errorMessage, Toast.LENGTH_LONG).show()

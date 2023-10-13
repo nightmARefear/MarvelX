@@ -37,7 +37,7 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.data.domains.ComicDomain
+import com.alexgreece45.marvelx.data.domains.comic.ComicDomain
 import com.alexgreece45.marvelx.domain.viewmodels.AllCharacterComicsEffect
 import com.alexgreece45.marvelx.domain.viewmodels.AllCharacterComicsEvent
 import com.alexgreece45.marvelx.domain.viewmodels.AllCharacterComicsViewModel
@@ -71,7 +71,7 @@ fun AllCharacterComicsScreen(
     LaunchedEffect(Unit) {
         viewModel.setEvent(AllCharacterComicsEvent.InitView(characterId = characterId))
 
-        viewModel.effect.collect { effect ->
+        viewModel.uiEffect.collect { effect ->
             when (effect) {
                 AllCharacterComicsEffect.NavigateToCharacterScreen -> {
                     navController.popBackStack()

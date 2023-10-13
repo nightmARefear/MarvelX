@@ -2,6 +2,7 @@ package com.alexgreece45.marvelx.util
 
 import android.content.Context
 import androidx.annotation.StringRes
+import com.alexgreece45.marvelx.R
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -10,6 +11,8 @@ interface ResourceProvider {
     fun getContext(): Context
 
     fun getString(@StringRes resId: Int, vararg formatArgs: Any?): String
+
+    fun getGenericErrorMessage(): String
 }
 
 @Singleton
@@ -24,4 +27,6 @@ class ResourceProviderImpl @Inject constructor(
         } catch (_: Exception) {
             ""
         }
+
+    override fun getGenericErrorMessage(): String = getString(R.string.unknown_error)
 }

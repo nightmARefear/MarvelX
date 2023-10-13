@@ -5,9 +5,10 @@ import com.alexgreece45.marvelx.data.models.character.comic.ComicDataWrapper
 import com.alexgreece45.marvelx.data.models.otp.OtpRequest
 import com.alexgreece45.marvelx.data.models.otp.OtpResponseSuccess
 import com.alexgreece45.marvelx.data.models.user.logIn.UserLogInRequest
-import com.alexgreece45.marvelx.data.models.user.logIn.UserLogInResponse
+import com.alexgreece45.marvelx.data.models.user.logIn.UserLoginResponse
+import com.alexgreece45.marvelx.data.models.user.profileDetails.UserProfileDetailsResponse
 import com.alexgreece45.marvelx.data.models.user.signUp.UserSignUpRequest
-import com.alexgreece45.marvelx.data.models.user.signUp.UserSignUpResponse
+import com.alexgreece45.marvelx.data.models.user.signUp.UserSignupResponse
 import retrofit2.Response
 
 interface ApiClient {
@@ -19,9 +20,11 @@ interface ApiClient {
 
     suspend fun getComicById(comicId: Int): Response<ComicDataWrapper>
 
-    suspend fun postSignUp(userSignUpRequest: UserSignUpRequest): Response<UserSignUpResponse>
+    suspend fun postSignUp(userSignUpRequest: UserSignUpRequest): Response<UserSignupResponse>
 
-    suspend fun postUserLogIn(userLogInRequest: UserLogInRequest): Response<UserLogInResponse>
+    suspend fun postUserLogIn(userLogInRequest: UserLogInRequest): Response<UserLoginResponse>
 
     suspend fun postOtp(otpRequest: OtpRequest): Response<OtpResponseSuccess>
+
+    suspend fun getUserProfileDetails(userId: Int): Response<UserProfileDetailsResponse>
 }

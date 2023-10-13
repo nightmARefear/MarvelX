@@ -61,7 +61,7 @@ fun LogInScreen(
             LogInEvent.InitView
         )
 
-        viewModel.effect.collect { effect ->
+        viewModel.uiEffect.collect { effect ->
             when (effect) {
                 is LogInEffect.Navigation.NavigateToAllCharactersScreen -> {
                     // Login was successful so store the userId in the activity viewModel's state.

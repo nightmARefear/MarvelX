@@ -71,7 +71,7 @@ fun OtpScreen(
             )
         )
 
-        viewModel.effect.collect { effect ->
+        viewModel.uiEffect.collect { effect ->
             when (effect) {
                 is OtpEffect.Navigation.NavigateToNextScreen -> {
                     navController.navigate(effect.screenRoute) {

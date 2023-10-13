@@ -1,9 +1,10 @@
-package com.alexgreece45.marvelx.data.domains
+package com.alexgreece45.marvelx.data.domains.character
 
+import com.alexgreece45.marvelx.data.domains.ImageDomain
+import com.alexgreece45.marvelx.data.domains.toResponse
 import com.alexgreece45.marvelx.data.models.character.CharacterResponse
 import com.alexgreece45.marvelx.data.models.character.ComicList
 import com.alexgreece45.marvelx.data.models.character.EventList
-import com.alexgreece45.marvelx.data.models.character.ImageResponse
 import com.alexgreece45.marvelx.data.models.character.SeriesList
 import com.alexgreece45.marvelx.data.models.character.StoryList
 import com.alexgreece45.marvelx.data.models.character.Url

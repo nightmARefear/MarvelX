@@ -1,6 +1,6 @@
 package com.alexgreece45.marvelx.util.gson
 
-import com.alexgreece45.marvelx.data.domains.ComicPriceType
+import com.alexgreece45.marvelx.data.domains.comic.ComicPriceType
 import com.google.gson.TypeAdapter
 import com.google.gson.stream.JsonReader
 import com.google.gson.stream.JsonWriter

@@ -1,10 +1,8 @@
 package com.alexgreece45.marvelx.domain.interactors
 
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.data.domains.CharacterDomain
-import com.alexgreece45.marvelx.data.domains.ComicDomain
+import com.alexgreece45.marvelx.data.domains.character.CharacterDomain
 import com.alexgreece45.marvelx.data.models.character.comic.ComicResponse
-import com.alexgreece45.marvelx.data.models.character.comic.toDomain
 import com.alexgreece45.marvelx.data.models.character.toDomain
 import com.alexgreece45.marvelx.domain.database.FavoriteCharacterEntity
 import com.alexgreece45.marvelx.domain.repositories.CharacterRepository

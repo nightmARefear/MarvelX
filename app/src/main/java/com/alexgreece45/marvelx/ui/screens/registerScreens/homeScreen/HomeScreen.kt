@@ -34,7 +34,7 @@ fun HomeScreen(
     val state by viewModel.uiState.collectAsState()
 
     LaunchedEffect(Unit) {
-        viewModel.effect.collect { homeEffect ->
+        viewModel.uiEffect.collect { homeEffect ->
             when (homeEffect) {
                 HomeEffect.NavigateToLogInScreen -> {
                     navController.navigate(Screen.RegisterScreens.LogInScreen.route)

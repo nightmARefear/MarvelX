@@ -36,7 +36,7 @@ abstract class BaseViewModel<Event : BaseEvent, State : BaseState, Effect : Base
     /**
      * Used by the views to acquire the current effect.
      */
-    val effect: Flow<Effect> = _effect.receiveAsFlow()
+    val uiEffect: Flow<Effect> = _effect.receiveAsFlow()
 
     private val _viewStateHistory: Channel<State> = Channel()
     val viewStateHistory: Flow<State>

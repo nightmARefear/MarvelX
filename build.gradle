@@ -1,6 +1,6 @@
 buildscript {
     ext {
-        compose_ui_version = '1.5.1'
+        compose_ui_version = '1.5.3'
     }
 }
 

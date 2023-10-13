@@ -1,7 +1,7 @@
-package com.alexgreece45.marvelx.data.domains.user
+package com.alexgreece45.marvelx.data.domains.user.login
 
+import com.alexgreece45.marvelx.data.domains.user.VerificationStep
 import com.google.gson.annotations.SerializedName
-import java.util.UUID
 
 data class UserLogInResponseDomain(
     @SerializedName("code") val code: Int,
