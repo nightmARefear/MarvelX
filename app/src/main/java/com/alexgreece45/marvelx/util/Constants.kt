@@ -7,3 +7,7 @@ val IMAGE_BORDER_WIDTH = 2.dp
 const val MAX_CHARACTER_IMAGE_HEIGHT = 250
 
 const val OTP_LENGTH = 6
+
+sealed class HeaderConstants(val name: String) {
+    object Authorization : HeaderConstants(name = "Authorization")
+}

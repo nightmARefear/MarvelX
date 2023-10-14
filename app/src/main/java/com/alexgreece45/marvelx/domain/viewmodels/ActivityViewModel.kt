@@ -1,10 +1,12 @@
 package com.alexgreece45.marvelx.domain.viewmodels
 
+import com.alexgreece45.marvelx.domain.controllers.PreferencesController
 import com.alexgreece45.marvelx.ui.base.BaseEffect
 import com.alexgreece45.marvelx.ui.base.BaseEvent
 import com.alexgreece45.marvelx.ui.base.BaseState
 import com.alexgreece45.marvelx.ui.base.BaseViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
+import logcat.logcat
 import javax.inject.Inject
 
 sealed class ActivityEvent : BaseEvent {
@@ -29,7 +31,9 @@ sealed class ActivityEffect : BaseEffect {
 }
 
 @HiltViewModel
-class ActivityViewModel @Inject constructor(): BaseViewModel<ActivityEvent, ActivityState, ActivityEffect>() {
+class ActivityViewModel @Inject constructor(
+    private val preferencesController: PreferencesController
+) : BaseViewModel<ActivityEvent, ActivityState, ActivityEffect>() {
     override fun setInitialState(): ActivityState {
         return ActivityState.getDefaultValues()
     }
@@ -51,6 +55,6 @@ class ActivityViewModel @Inject constructor(): BaseViewModel<ActivityEvent, Acti
     }
 
     private fun initView() {
-
+        preferencesController.getUserToken().also { logcat { "userToken : $it" } }
     }
 }

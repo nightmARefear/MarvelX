@@ -4,6 +4,7 @@ import androidx.core.text.isDigitsOnly
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.data.models.otp.OtpRequest
+import com.alexgreece45.marvelx.domain.controllers.PreferencesController
 import com.alexgreece45.marvelx.domain.interactors.GetOtpPartialState
 import com.alexgreece45.marvelx.domain.interactors.OtpInteractor
 import com.alexgreece45.marvelx.ui.base.BaseEffect
@@ -73,7 +74,8 @@ sealed class OtpEffect : BaseEffect {
 @HiltViewModel
 class OtpViewModel @Inject constructor(
     private val otpInteractor: OtpInteractor,
-    private val resourceProvider: ResourceProvider
+    private val resourceProvider: ResourceProvider,
+    private val preferencesController: PreferencesController
 ) : BaseViewModel<OtpEvent, OtpState, OtpEffect>() {
     override fun setInitialState(): OtpState = OtpState.getDefaultValues()
 
@@ -162,10 +164,18 @@ class OtpViewModel @Inject constructor(
                                 // OTPs matched.
                                 setState {
                                     copy(
-                                        isLoading = false,
+                                        isLoading = false
                                     )
                                 }
 
+                                // Save token to client's device.
+                                getOtpPartialState.token?.let { token ->
+                                    preferencesController.setUserToken(
+                                        token = token
+                                    )
+                                }
+
+                                // Navigate to All Characters Screen.
                                 setEffect {
                                     OtpEffect.Navigation.NavigateToAllCharactersScreen
                                 }

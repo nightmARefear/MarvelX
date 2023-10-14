@@ -1,15 +1,18 @@
 package com.alexgreece45.marvelx.util.interceptors
 
 import com.alexgreece45.marvelx.BuildConfig
+import com.alexgreece45.marvelx.domain.controllers.PreferencesController
+import com.alexgreece45.marvelx.util.HeaderConstants
 import com.alexgreece45.marvelx.util.extensions.toMd5
-import okhttp3.HttpUrl
+import logcat.logcat
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.Interceptor
 import okhttp3.Request
 import okhttp3.Response
+import javax.inject.Inject
 
 sealed class Interceptors : Interceptor {
-    object AuthenticationTokenInterceptor : Interceptors() {
+    class AuthenticationTokenInterceptor : Interceptors() {
         override fun intercept(chain: Interceptor.Chain): Response {
             val timestampString = (System.currentTimeMillis() / 1000).toString()
             val hash =
@@ -21,7 +24,7 @@ sealed class Interceptors : Interceptor {
                 .newBuilder()
                 .addQueryParameter("ts", timestampString)
                 .addQueryParameter("apikey", BuildConfig.API_PUBLIC_KEY)
-                .addQueryParameter("hash", hash) // handle error
+                .addQueryParameter("hash", hash)
                 .build()
             return chain.proceed(
                 chain
@@ -33,7 +36,9 @@ sealed class Interceptors : Interceptor {
         }
     }
 
-    object MarvelXBackEndChangeBaseUrlInterceptor : Interceptors() {
+    class MarvelXBackendChangeBaseUrlInterceptor @Inject constructor(
+//        private val preferencesController: PreferencesController
+    ) : Interceptors() {
         override fun intercept(chain: Interceptor.Chain): Response {
             val originalRequest = chain.request()
             if (originalRequest.url.toString().removePrefix(BuildConfig.BASE_URL)
@@ -45,22 +50,28 @@ sealed class Interceptors : Interceptor {
                     (BuildConfig.MARVELX_BACKEND_BASE_URL + originalRequest.url.toString()
                         .removePrefix(BuildConfig.BASE_URL).substringBefore("?")).toHttpUrlOrNull()
                 newBaseUrl?.let { baseUrl ->
-                    // old way
                     val modifiedUrl = baseUrl.newBuilder()
                         .scheme(newBaseUrl.scheme)
                         .host(baseUrl.host)
                         .port(baseUrl.port)
                         .build()
 
+//                    val token = preferencesController.getUserToken()
+                    val token = null
+
                     val modifiedRequest = Request.Builder()
                         .url(modifiedUrl)
+                        .addHeader(
+                            HeaderConstants.Authorization.name,
+                            "Bearer $token"
+                        ) // Authentication token.
                         .method(originalRequest.method, originalRequest.body)
                         .build()
 
-                    println("(MarvelXBackEndChangeBaseUrlInterceptor) modified: success")
+                    logcat { "(MarvelXBackEndChangeBaseUrlInterceptor) modified: success" }
                     return chain.proceed(modifiedRequest)
                 } ?: run {
-                    println("(MarvelXBackEndChangeBaseUrlInterceptor) modified: error")
+                    logcat { "(MarvelXBackEndChangeBaseUrlInterceptor) modified: error" }
                 }
             }
             // Runs either if an error occurred, or if the endpoint's prefix was not from the MarvelX-Backend.

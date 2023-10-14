@@ -46,10 +46,10 @@ import com.alexgreece45.marvelx.util.VSpacer
 
 
 /**
- * The OTP (One Time Password) screen is used to double check the user's identity either when
- * signing up, or when their token has expired.
+ * The OTP (One Time Password) screen is used to double check the user's identity when
+ * logging in, signing up, or when their token has expired.
  *
- * Navigation **to** and **from** this screen ***must*** be handled very carefully.
+ * Navigation **to** and **from** this screen ***must*** be handled with caution.
  * Navigation to this screen MUST only happen when instructed either by [LogInScreen],
  * or [SignUpScreen].
  * */

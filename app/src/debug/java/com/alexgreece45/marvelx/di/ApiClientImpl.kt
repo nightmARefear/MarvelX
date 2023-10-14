@@ -47,8 +47,8 @@ class ApiClientImpl @Inject constructor(
         return api.postLogIn(userLogInRequest)
     }
 
-    override suspend fun postOtp(otpRequest: OtpRequest): Response<OtpResponseSuccess> {
-        return api.getOtp(otpRequest)
+    override suspend fun validateOtp(otpRequest: OtpRequest): Response<OtpResponseSuccess> {
+        return api.validateOtp(otpRequest)
     }
 
     override suspend fun getUserProfileDetails(userId: Int): Response<UserProfileDetailsResponse> =

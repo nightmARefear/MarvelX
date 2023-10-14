@@ -30,9 +30,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.domain.viewmodels.LogInEffect
-import com.alexgreece45.marvelx.domain.viewmodels.LogInEvent
-import com.alexgreece45.marvelx.domain.viewmodels.LogInViewModel
+import com.alexgreece45.marvelx.domain.viewmodels.LoginEffect
+import com.alexgreece45.marvelx.domain.viewmodels.LoginEvent
+import com.alexgreece45.marvelx.domain.viewmodels.LoginViewModel
 import com.alexgreece45.marvelx.navigation.Screen
 import com.alexgreece45.marvelx.ui.AlertDialogError
 import com.alexgreece45.marvelx.ui.AlertDialogButton
@@ -48,7 +48,7 @@ import logcat.logcat
 fun LogInScreen(
     navController: NavController,
     setUserId: (Int) -> Unit,
-    viewModel: LogInViewModel = hiltViewModel()
+    viewModel: LoginViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
 
@@ -58,12 +58,12 @@ fun LogInScreen(
 
     LaunchedEffect(Unit) {
         viewModel.setEvent(
-            LogInEvent.InitView
+            LoginEvent.InitView
         )
 
         viewModel.uiEffect.collect { effect ->
             when (effect) {
-                is LogInEffect.Navigation.NavigateToAllCharactersScreen -> {
+                is LoginEffect.Navigation.NavigateToAllCharactersScreen -> {
                     // Login was successful so store the userId in the activity viewModel's state.
                     setUserId.invoke(effect.userId)
 
@@ -80,7 +80,7 @@ fun LogInScreen(
                     }
                 }
 
-                is LogInEffect.Navigation.NavigateToOtpScreen -> {
+                is LoginEffect.Navigation.NavigateToOtpScreen -> {
                     logcat { "effect.userId = ${effect.userId}" }
                     navController.navigate(
                         Screen.OtpScreen.createNavRoute(
@@ -89,7 +89,7 @@ fun LogInScreen(
                     )
                 }
 
-                LogInEffect.CloseKeyboardAndClearFocus -> {
+                LoginEffect.CloseKeyboardAndClearFocus -> {
                     keyboard?.hide()
                     focusManager.clearFocus(
                         force = true
@@ -116,7 +116,7 @@ fun LogInScreen(
                         errorMessage = state.alertDialogErrorMessage,
                         confirmButton = AlertDialogButton(
                             value = stringResource(R.string.ok),
-                            onClick = { viewModel.setEvent(LogInEvent.AlertDialog.OnOkClick) }
+                            onClick = { viewModel.setEvent(LoginEvent.AlertDialog.OnOkClick) }
                         )
                     )
                 }
@@ -133,7 +133,7 @@ fun LogInScreen(
                             label = stringResource(R.string.login_screen_input_field_label_email),
                             placeholder = stringResource(R.string.login_screen_input_field_placeholder_email),
                             onValueChange = { newValue ->
-                                viewModel.setEvent(LogInEvent.FieldValueChange.Email(email = newValue))
+                                viewModel.setEvent(LoginEvent.FieldValueChange.Email(email = newValue))
                             },
                             errorMessage = state.emailValidationResult.messages.firstOrNull()
                                 .orEmpty(),
@@ -156,12 +156,12 @@ fun LogInScreen(
                             value = state.password,
                             valueType = ValueType.Password(
                                 isPasswordVisible = state.isPasswordVisible,
-                                onVisibilityIconClick = { viewModel.setEvent(LogInEvent.OnPasswordVisibilityIconClick) }
+                                onVisibilityIconClick = { viewModel.setEvent(LoginEvent.OnPasswordVisibilityIconClick) }
                             ),
                             label = stringResource(R.string.login_screen_input_field_label_password),
                             placeholder = stringResource(R.string.log_in_screen_input_field_placeholder_password),
                             onValueChange = { newValue ->
-                                viewModel.setEvent(LogInEvent.FieldValueChange.Password(password = newValue))
+                                viewModel.setEvent(LoginEvent.FieldValueChange.Password(password = newValue))
                             },
                             errorMessage = state.passwordValidationResult.messages.firstOrNull()
                                 .orEmpty(),
@@ -173,7 +173,7 @@ fun LogInScreen(
                             keyboardActions = KeyboardActions(
                                 onDone = {
                                     viewModel.setEvent(
-                                        LogInEvent.OnDoneClick
+                                        LoginEvent.OnDoneClick
                                     )
                                 }
                             ),
@@ -184,7 +184,7 @@ fun LogInScreen(
                         Button(
                             modifier = Modifier.fillMaxWidth(),
                             enabled = state.logInButton,
-                            onClick = { viewModel.setEvent(LogInEvent.OnLogInButtonClick) }
+                            onClick = { viewModel.setEvent(LoginEvent.OnLoginButtonClick) }
                         ) {
                             Text(
                                 text = stringResource(R.string.log_in_screen_sign_up_button_text)

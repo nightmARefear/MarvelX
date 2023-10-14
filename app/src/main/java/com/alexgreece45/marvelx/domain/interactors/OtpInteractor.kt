@@ -25,12 +25,12 @@ class OtpInteractorImpl @Inject constructor(
     private val gson: Gson
 ) : OtpInteractor {
     override suspend fun getOtp(otpRequest: OtpRequest): Flow<GetOtpPartialState> = flow {
-        api.postOtp(otpRequest = otpRequest).let { response ->
+        api.validateOtp(otpRequest = otpRequest).let { response ->
             if (response.isSuccessful) {
                 response.body()?.let { responseBody ->
                     emit(
                         GetOtpPartialState.Success(
-                            code = responseBody.code
+                            token = responseBody.token
                         )
                     )
                 } ?: run {
@@ -74,7 +74,7 @@ sealed class GetOtpPartialState {
     /**
      * The OTP was correct. User is navigated to the next screen as defined in the viewModel.
      * */
-    data class Success(val code: Int) : GetOtpPartialState()
+    data class Success(val token: String?) : GetOtpPartialState()
 
     /**
      * Represents an internal server error. The displayed error message is "an internal server

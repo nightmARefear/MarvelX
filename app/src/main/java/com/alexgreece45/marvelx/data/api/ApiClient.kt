@@ -24,7 +24,7 @@ interface ApiClient {
 
     suspend fun postUserLogIn(userLogInRequest: UserLogInRequest): Response<UserLoginResponse>
 
-    suspend fun postOtp(otpRequest: OtpRequest): Response<OtpResponseSuccess>
+    suspend fun validateOtp(otpRequest: OtpRequest): Response<OtpResponseSuccess>
 
     suspend fun getUserProfileDetails(userId: Int): Response<UserProfileDetailsResponse>
 }

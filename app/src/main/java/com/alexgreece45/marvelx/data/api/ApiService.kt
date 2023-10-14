@@ -36,7 +36,7 @@ interface ApiService {
     suspend fun postLogIn(@Body userLogInRequest: UserLogInRequest): Response<UserLoginResponse>
 
     @POST(BuildConfig.MARVELX_BACKEND_ENDPOINT_POST_OTP)
-    suspend fun getOtp(@Body otpRequest: OtpRequest): Response<OtpResponseSuccess>
+    suspend fun validateOtp(@Body otpRequest: OtpRequest): Response<OtpResponseSuccess>
 
     @GET("${BuildConfig.MARVELX_BACKEND_ENDPOINT_GET_PROFILE_DETAILS}/{userId}")
     suspend fun getUserProfileDetails(@Path("userId") userId: Int): Response<UserProfileDetailsResponse>

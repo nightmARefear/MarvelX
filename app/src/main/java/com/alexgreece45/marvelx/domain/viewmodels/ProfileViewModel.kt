@@ -2,6 +2,7 @@ package com.alexgreece45.marvelx.domain.viewmodels
 
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.data.domains.user.profileDetails.UserProfileDetailsDomain
+import com.alexgreece45.marvelx.domain.controllers.PreferencesController
 import com.alexgreece45.marvelx.domain.interactors.UserInteractor
 import com.alexgreece45.marvelx.domain.interactors.UserPartialStateGetProfileDetails
 import com.alexgreece45.marvelx.ui.base.BaseEffect
@@ -25,6 +26,7 @@ data class ProfileState(
      * The user ID.
      * */
     val userId: Int = -1,
+    val userToken: String = "",
 
     /**
      * The profile details of the user.
@@ -54,7 +56,8 @@ sealed class ProfileEffect : BaseEffect {
 
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
-    private val userInteractor: UserInteractor
+    private val userInteractor: UserInteractor,
+    private val preferencesController: PreferencesController
 ) :
     BaseViewModel<ProfileEvent, ProfileState, ProfileEffect>() {
     override fun setInitialState(): ProfileState = ProfileState.getDefaultValues()
@@ -71,7 +74,8 @@ class ProfileViewModel @Inject constructor(
         setState {
             copy(
                 userId = userId,
-                isLoading = true
+                isLoading = true,
+                userToken = preferencesController.getUserToken()
             )
         }
         viewModelScope.launch {

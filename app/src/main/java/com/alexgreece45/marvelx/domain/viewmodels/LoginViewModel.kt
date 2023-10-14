@@ -1,11 +1,11 @@
 package com.alexgreece45.marvelx.domain.viewmodels
 
-import android.content.SharedPreferences
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.data.domains.user.login.UserLogInResponseDomain
 import com.alexgreece45.marvelx.data.domains.user.VerificationStep
 import com.alexgreece45.marvelx.data.models.user.logIn.UserLogInRequest
+import com.alexgreece45.marvelx.domain.controllers.PreferencesController
 import com.alexgreece45.marvelx.domain.interactors.UserInteractor
 import com.alexgreece45.marvelx.domain.interactors.UserPartialStatePostLogIn
 import com.alexgreece45.marvelx.ui.base.BaseEffect
@@ -24,29 +24,29 @@ import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-sealed class LogInEvent : BaseEvent {
-    object InitView : LogInEvent()
+sealed class LoginEvent : BaseEvent {
+    object InitView : LoginEvent()
 
-    object OnPasswordVisibilityIconClick : LogInEvent()
+    object OnPasswordVisibilityIconClick : LoginEvent()
 
-    sealed class FieldValueChange : LogInEvent() {
+    sealed class FieldValueChange : LoginEvent() {
         data class Email(val email: String) : FieldValueChange()
 
         data class Password(val password: String) : FieldValueChange()
     }
 
-    object OnDoneClick : LogInEvent()
+    object OnDoneClick : LoginEvent()
 
-    object OnLogInButtonClick : LogInEvent()
+    object OnLoginButtonClick : LoginEvent()
 
-    sealed class AlertDialog : LogInEvent() {
+    sealed class AlertDialog : LoginEvent() {
         object OnOkClick : AlertDialog()
     }
 
-    object OnNoInternetRetryButtonClick : LogInEvent()
+    object OnNoInternetRetryButtonClick : LoginEvent()
 }
 
-data class LogInState(
+data class LoginState(
     // Base states.
     val isLoading: Boolean = false,
 
@@ -75,24 +75,25 @@ data class LogInState(
     val userLogInResponseDomain: UserLogInResponseDomain? = null,
 ) : BaseState {
     companion object {
-        fun getDefaultValues(): LogInState = LogInState(
+        // TODO: RESET TO OLD VALUES
+        fun getDefaultValues(): LoginState = LoginState(
             isLoading = false,
-            email = "",
-            password = "",
+            email = "alexxx@gmail.com",
+            password = "1234567890",
             isPasswordVisible = false,
-            logInButton = false,
+            logInButton = true,
             isAlertDialogVisible = false,
             alertDialogTitle = "",
             alertDialogErrorMessage = "",
-            emailValidationResult = FormsValidationResult(isValid = false),
-            passwordValidationResult = FormsValidationResult(isValid = false),
+            emailValidationResult = FormsValidationResult(isValid = true),
+            passwordValidationResult = FormsValidationResult(isValid = true),
             userLogInResponseDomain = null
         )
     }
 }
 
-sealed class LogInEffect : BaseEffect {
-    sealed class Navigation : LogInEffect() {
+sealed class LoginEffect : BaseEffect {
+    sealed class Navigation : LoginEffect() {
         data class NavigateToAllCharactersScreen(val userId: Int) : Navigation()
 
         data class NavigateToOtpScreen(val userId: Int) : Navigation()
@@ -108,33 +109,33 @@ sealed class LogInEffect : BaseEffect {
      * elements, since the focus only applies to one
      * UI element at a time.
      *
-     * It should be used only in [LogInEvent.OnDoneClick],
-     * and [LogInEvent.OnLogInButtonClick].
+     * It should be used only in [LoginEvent.OnDoneClick],
+     * and [LoginEvent.OnLoginButtonClick].
      * */
-    object CloseKeyboardAndClearFocus : LogInEffect()
+    object CloseKeyboardAndClearFocus : LoginEffect()
 }
 
 @HiltViewModel
-class LogInViewModel @Inject constructor(
+class LoginViewModel @Inject constructor(
     private val resourceProvider: ResourceProvider,
     private val formValidator: FormValidator,
     private val userInteractor: UserInteractor,
-    private val sharedPreferences: SharedPreferences
-) : BaseViewModel<LogInEvent, LogInState, LogInEffect>() {
+    private val preferencesController: PreferencesController
+) : BaseViewModel<LoginEvent, LoginState, LoginEffect>() {
 
-    override fun setInitialState(): LogInState = LogInState.getDefaultValues()
+    override fun setInitialState(): LoginState = LoginState.getDefaultValues()
 
     init {
-        setEvent(LogInEvent.InitView)
+        setEvent(LoginEvent.InitView)
     }
 
-    override fun handleEvents(event: LogInEvent) {
+    override fun handleEvents(event: LoginEvent) {
         when (event) {
-            LogInEvent.InitView -> {
+            LoginEvent.InitView -> {
                 initView()
             }
 
-            is LogInEvent.FieldValueChange.Email -> {
+            is LoginEvent.FieldValueChange.Email -> {
                 setState {
                     copy(
                         email = event.email
@@ -143,7 +144,7 @@ class LogInViewModel @Inject constructor(
                 validateEmail(email = event.email)
             }
 
-            is LogInEvent.FieldValueChange.Password -> {
+            is LoginEvent.FieldValueChange.Password -> {
                 setState {
                     copy(
                         password = event.password
@@ -152,19 +153,19 @@ class LogInViewModel @Inject constructor(
                 validatePassword(password = event.password)
             }
 
-            LogInEvent.OnDoneClick -> {
+            LoginEvent.OnDoneClick -> {
                 if (currentState.logInButton) {
                     setEvent(
-                        LogInEvent.OnLogInButtonClick
+                        LoginEvent.OnLoginButtonClick
                     )
                 }
             }
 
-            LogInEvent.OnLogInButtonClick -> {
+            LoginEvent.OnLoginButtonClick -> {
                 onLogInButtonClick()
             }
 
-            LogInEvent.OnPasswordVisibilityIconClick -> {
+            LoginEvent.OnPasswordVisibilityIconClick -> {
                 setState {
                     copy(
                         isPasswordVisible = currentState.isPasswordVisible.not()
@@ -172,13 +173,13 @@ class LogInViewModel @Inject constructor(
                 }
             }
 
-            LogInEvent.OnNoInternetRetryButtonClick -> {
+            LoginEvent.OnNoInternetRetryButtonClick -> {
                 setEvent(
-                    LogInEvent.InitView
+                    LoginEvent.InitView
                 )
             }
 
-            LogInEvent.AlertDialog.OnOkClick -> {
+            LoginEvent.AlertDialog.OnOkClick -> {
                 hideAlertDialog()
             }
         }
@@ -187,7 +188,7 @@ class LogInViewModel @Inject constructor(
     private fun initView() {
         // Sets all states to their default values.
         setState {
-            LogInState.getDefaultValues()
+            LoginState.getDefaultValues()
         }
     }
 
@@ -232,7 +233,7 @@ class LogInViewModel @Inject constructor(
     private fun onLogInButtonClick() {
         // First of all, close the keyboard, and remove focus from all UI elements.
         setEffect {
-            LogInEffect.CloseKeyboardAndClearFocus
+            LoginEffect.CloseKeyboardAndClearFocus
         }
 
         // Display loading animation to the screen.
@@ -248,7 +249,7 @@ class LogInViewModel @Inject constructor(
         // and display an error message.
         if (!areAllFieldsValid()) {
             setState {
-                LogInState.getDefaultValues().copy(
+                LoginState.getDefaultValues().copy(
                     isLoading = false,
                     logInButton = false
                 )
@@ -267,7 +268,7 @@ class LogInViewModel @Inject constructor(
                 when (userPartialStatePostLogIn) {
                     is UserPartialStatePostLogIn.Error -> {
                         setState {
-                            LogInState.getDefaultValues().copy(
+                            LoginState.getDefaultValues().copy(
                                 isLoading = false
                             )
                         }
@@ -278,7 +279,7 @@ class LogInViewModel @Inject constructor(
 
                     is UserPartialStatePostLogIn.Success -> {
                         setState {
-                            LogInState.getDefaultValues().copy(
+                            LoginState.getDefaultValues().copy(
                                 isLoading = false,
                                 userLogInResponseDomain = userPartialStatePostLogIn.userLogInResponseDomain
                             )
@@ -288,9 +289,16 @@ class LogInViewModel @Inject constructor(
                         currentState.userLogInResponseDomain?.let { userLogInResponseDomain ->
                             when (userLogInResponseDomain.verificationStep) {
                                 is VerificationStep.None -> {
+                                    // Store user token.
+                                    userLogInResponseDomain.userToken?.let { token ->
+                                        preferencesController.setUserToken(
+                                            token = token
+                                        )
+                                    }
+
                                     // No verification step, so navigate to All Characters Screen.
                                     setEffect {
-                                        LogInEffect.Navigation.NavigateToAllCharactersScreen(userId = 9999999)
+                                        LoginEffect.Navigation.NavigateToAllCharactersScreen(userId = userLogInResponseDomain.userId)
                                     }
                                 }
 
@@ -301,9 +309,9 @@ class LogInViewModel @Inject constructor(
                                 }
 
                                 VerificationStep.OtpEmail -> {
-                                    // Currently we only support otp from email.
+                                    // Currently we only support OTP from email.
                                     setEffect {
-                                        LogInEffect.Navigation.NavigateToOtpScreen(
+                                        LoginEffect.Navigation.NavigateToOtpScreen(
                                             userId = currentState.userLogInResponseDomain!!.userId
                                         )
                                     }

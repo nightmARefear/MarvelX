@@ -72,6 +72,12 @@ fun ProfileScreen(
                         style = MaterialTheme.typography.h4
                     )
 
+                    // user's token
+                    Text(
+                        text = state.userToken,
+                        style = MaterialTheme.typography.h2
+                    )
+
                     // Profile picture.
                     // todo: add call to retrieve profile picture
 

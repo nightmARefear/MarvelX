@@ -2,7 +2,6 @@ package com.alexgreece45.marvelx.di
 
 import android.content.Context
 import com.alexgreece45.marvelx.BuildConfig
-import com.alexgreece45.marvelx.data.api.ApiService
 import com.alexgreece45.marvelx.data.domains.comic.ComicPriceType
 import com.alexgreece45.marvelx.data.domains.user.VerificationStep
 import com.alexgreece45.marvelx.util.gson.ComicPriceTypeAdapter
@@ -31,48 +30,52 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideApi(
-        @ApplicationContext context: Context
-    ): ApiService = provideRetrofit(
-        BuildConfig.BASE_URL,
-        OkHttpClient.Builder()
-            .addInterceptor(
-                Interceptors.AuthenticationTokenInterceptor
-            )
-            .addInterceptor(
-                Interceptors.MarvelXBackEndChangeBaseUrlInterceptor
-            )
-            .addInterceptor(
-                HttpLoggingInterceptor(
-                    object : HttpLoggingInterceptor.Logger {
-                        override fun log(message: String) {
-                            logcat { message }
-                        }
+    fun provideOkHttpClient(
+        @ApplicationContext context: Context,
+    ): OkHttpClient {
+        val okHttpClient = OkHttpClient.Builder()
+
+        // Add required interceptors.
+        okHttpClient.addInterceptor(Interceptors.AuthenticationTokenInterceptor())
+        okHttpClient.addInterceptor(Interceptors.MarvelXBackendChangeBaseUrlInterceptor())
+        okHttpClient.addInterceptor(
+            HttpLoggingInterceptor(
+                object : HttpLoggingInterceptor.Logger {
+                    override fun log(message: String) {
+                        logcat { message }
                     }
-                ).apply {
-                    level = HttpLoggingInterceptor.Level.BODY
                 }
-            )
-            .addInterceptor(ChuckerInterceptor(context))
-            .build(),
-        GsonConverterFactory.create(
-            provideGson()
+            ).apply {
+                level = when (BuildConfig.LOG_MODE && BuildConfig.DEBUG) {
+                    true -> HttpLoggingInterceptor.Level.BODY
+                    false -> HttpLoggingInterceptor.Level.NONE
+                }
+            }
         )
-    ).create(
-        ApiService::class.java
-    )
+
+        // Add "ChuckerInterceptor" only in debuggable builds (debug, mock).
+        if (BuildConfig.LOG_MODE && BuildConfig.DEBUG) {
+            okHttpClient.addInterceptor(ChuckerInterceptor(context))
+        }
+
+        return okHttpClient.build()
+    }
 
     @Provides
     @Singleton
     fun provideRetrofit(
-        baseUrl: String,
         okHttpClient: OkHttpClient,
         converterFactory: GsonConverterFactory
     ): Retrofit = Retrofit.Builder()
-        .baseUrl(baseUrl)
+        .baseUrl(BuildConfig.BASE_URL)
         .addConverterFactory(converterFactory)
         .client(okHttpClient)
         .build()
+
+    @Provides
+    @Singleton
+    fun provideGsonConverterFactory(gson: Gson): GsonConverterFactory =
+        GsonConverterFactory.create(gson)
 
     @Provides
     @Singleton
