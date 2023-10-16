@@ -5,6 +5,6 @@ import com.google.gson.annotations.SerializedName
 
 data class UserSignupResponse(
     @SerializedName("code") val code: Int,
-    @SerializedName("success_step") val verificationStep: VerificationStep,
+    @SerializedName("verification_step") val verificationStep: VerificationStep,
     @SerializedName("epoch") val epoch: Long
 )

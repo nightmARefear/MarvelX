@@ -2,14 +2,17 @@ package com.alexgreece45.marvelx.domain.interactors
 
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.data.api.ApiClient
-import com.alexgreece45.marvelx.data.domains.user.login.UserLogInResponseDomain
+import com.alexgreece45.marvelx.data.domains.user.VerificationStep
+import com.alexgreece45.marvelx.data.domains.user.login.UserLoginResponseDomain
+import com.alexgreece45.marvelx.data.domains.user.loginWithToken.UserLoginWithTokenResponseDomain
 import com.alexgreece45.marvelx.data.domains.user.profileDetails.UserProfileDetailsDomain
 import com.alexgreece45.marvelx.data.models.user.UserResponseError
-import com.alexgreece45.marvelx.data.models.user.logIn.UserLogInRequest
-import com.alexgreece45.marvelx.data.models.user.logIn.toDomain
-import com.alexgreece45.marvelx.data.models.user.profileDetails.UserProfileDetailsResponse
+import com.alexgreece45.marvelx.data.models.user.login.UserLoginRequest
+import com.alexgreece45.marvelx.data.models.user.login.toDomain
+import com.alexgreece45.marvelx.data.models.user.loginWithToken.UserLoginWithTokenRequest
+import com.alexgreece45.marvelx.data.models.user.loginWithToken.toUserLoginWithTokenResponseDomain
 import com.alexgreece45.marvelx.data.models.user.profileDetails.toUserProfileDetailsDomain
-import com.alexgreece45.marvelx.data.models.user.signUp.UserSignUpRequest
+import com.alexgreece45.marvelx.data.models.user.signUp.UserSignupRequest
 import com.alexgreece45.marvelx.data.models.user.signUp.UserSignupResponse
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.extensions.safeAsync
@@ -21,9 +24,11 @@ import okio.IOException
 import javax.inject.Inject
 
 interface UserInteractor {
-    suspend fun postSignUp(userSignUpRequest: UserSignUpRequest): Flow<UserPartialStatePostSignUp>
+    suspend fun postSignUp(userSignUpRequest: UserSignupRequest): Flow<UserPartialStatePostSignup>
 
-    suspend fun postLogIn(userLogInRequest: UserLogInRequest): Flow<UserPartialStatePostLogIn>
+    suspend fun postLogin(userLogInRequest: UserLoginRequest): Flow<UserPartialStatePostLogin>
+
+    suspend fun postLoginWithToken(userLoginWithTokenRequest: UserLoginWithTokenRequest): Flow<UserPartialStatePostLoginWithToken>
 
     suspend fun getProfileDetails(userId: Int): Flow<UserPartialStateGetProfileDetails>
 }
@@ -33,22 +38,22 @@ class UserInteractorImpl @Inject constructor(
     private val resourceProvider: ResourceProvider,
     private val gson: Gson
 ) : UserInteractor {
-    override suspend fun postSignUp(userSignUpRequest: UserSignUpRequest): Flow<UserPartialStatePostSignUp> =
+    override suspend fun postSignUp(userSignUpRequest: UserSignupRequest): Flow<UserPartialStatePostSignup> =
         flow {
-            apiClient.postSignUp(userSignUpRequest).let { response ->
+            apiClient.postUserSignup(userSignUpRequest).let { response ->
                 if (response.isSuccessful) {
                     // Success.
                     response.body()?.let { userSignupResponse ->
                         emit(
-                            UserPartialStatePostSignUp.Success(
+                            UserPartialStatePostSignup.Success(
                                 userSignUpResponse = userSignupResponse
                             )
                         )
                     } ?: run {
                         // Null body, thus server responded erroneously.
                         emit(
-                            UserPartialStatePostSignUp.Error(
-                                errorMessage = resourceProvider.getString(R.string.internal_server_error)
+                            UserPartialStatePostSignup.Error(
+                                errorMessage = resourceProvider.getGenericErrorMessage()
                             )
                         )
                     }
@@ -61,7 +66,7 @@ class UserInteractorImpl @Inject constructor(
                         )
 
                     emit(
-                        UserPartialStatePostSignUp.Error(
+                        UserPartialStatePostSignup.Error(
                             errorMessage = deserializedError.errorMessage
                         )
                     )
@@ -71,34 +76,34 @@ class UserInteractorImpl @Inject constructor(
             // Exception.
             when (it) {
                 is IOException -> {
-                    UserPartialStatePostSignUp.Error(
+                    UserPartialStatePostSignup.Error(
                         errorMessage = resourceProvider.getString(R.string.no_internet_connection_error_message)
                     )
                 }
 
                 else -> {
-                    UserPartialStatePostSignUp.Error(
+                    UserPartialStatePostSignup.Error(
                         errorMessage = resourceProvider.getGenericErrorMessage()
                     )
                 }
             }
         }
 
-    override suspend fun postLogIn(userLogInRequest: UserLogInRequest): Flow<UserPartialStatePostLogIn> =
+    override suspend fun postLogin(userLogInRequest: UserLoginRequest): Flow<UserPartialStatePostLogin> =
         flow {
-            apiClient.postUserLogIn(userLogInRequest).let { response ->
+            apiClient.postUserLogin(userLogInRequest).let { response ->
                 if (response.isSuccessful) {
                     response.body()?.let { userLoginResponse ->
                         // Success.
                         emit(
-                            UserPartialStatePostLogIn.Success(
-                                userLogInResponseDomain = userLoginResponse.toDomain()
+                            UserPartialStatePostLogin.Success(
+                                userLoginResponseDomain = userLoginResponse.toDomain()
                             )
                         )
                     } ?: run {
                         // Null body, thus server responded erroneously.
                         emit(
-                            UserPartialStatePostLogIn.Error(
+                            UserPartialStatePostLogin.Error(
                                 errorMessage = resourceProvider.getString(R.string.internal_server_error)
                             )
                         )
@@ -111,7 +116,7 @@ class UserInteractorImpl @Inject constructor(
                     )
 
                     emit(
-                        UserPartialStatePostLogIn.Error(
+                        UserPartialStatePostLogin.Error(
                             errorMessage = deserializedError.errorMessage
                         )
                     )
@@ -120,13 +125,54 @@ class UserInteractorImpl @Inject constructor(
         }.safeAsync {
             when (it) {
                 is IOException -> {
-                    UserPartialStatePostLogIn.Error(
+                    UserPartialStatePostLogin.Error(
                         errorMessage = resourceProvider.getString(R.string.no_internet_connection_error_message)
                     )
                 }
 
                 else -> {
-                    UserPartialStatePostLogIn.Error(
+                    UserPartialStatePostLogin.Error(
+                        errorMessage = resourceProvider.getGenericErrorMessage()
+                    )
+                }
+            }
+        }
+
+    override suspend fun postLoginWithToken(userLoginWithTokenRequest: UserLoginWithTokenRequest): Flow<UserPartialStatePostLoginWithToken> =
+        flow {
+            apiClient.postUserLoginWithToken(userLoginWithTokenRequest).let { response ->
+                if (response.isSuccessful) {
+                    response.body()?.let { userLoginWithTokenResponse ->
+                        emit(
+                            UserPartialStatePostLoginWithToken.Success(
+                                userLoginWithTokenResponseDomain = userLoginWithTokenResponse.toUserLoginWithTokenResponseDomain()
+                            )
+                        )
+                    } ?: run {
+                        emit(
+                            UserPartialStatePostLoginWithToken.Error(
+                                errorMessage = resourceProvider.getString(R.string.internal_server_error)
+                            )
+                        )
+                    }
+                } else {
+                    emit(
+                        UserPartialStatePostLoginWithToken.Error(
+                            errorMessage = resourceProvider.getGenericErrorMessage()
+                        )
+                    )
+                }
+            }
+        }.safeAsync {
+            when (it) {
+                is IOException -> {
+                    UserPartialStatePostLoginWithToken.Error(
+                        errorMessage = resourceProvider.getNoInternetConnectionMessage()
+                    )
+                }
+
+                else -> {
+                    UserPartialStatePostLoginWithToken.Error(
                         errorMessage = resourceProvider.getGenericErrorMessage()
                     )
                 }
@@ -171,17 +217,24 @@ class UserInteractorImpl @Inject constructor(
         }
 }
 
-sealed class UserPartialStatePostSignUp {
-    data class Success(val userSignUpResponse: UserSignupResponse) : UserPartialStatePostSignUp()
+sealed class UserPartialStatePostSignup {
+    data class Success(val userSignUpResponse: UserSignupResponse) : UserPartialStatePostSignup()
 
-    data class Error(val errorMessage: String) : UserPartialStatePostSignUp()
+    data class Error(val errorMessage: String) : UserPartialStatePostSignup()
 }
 
-sealed class UserPartialStatePostLogIn {
-    data class Success(val userLogInResponseDomain: UserLogInResponseDomain) :
-        UserPartialStatePostLogIn()
+sealed class UserPartialStatePostLogin {
+    data class Success(val userLoginResponseDomain: UserLoginResponseDomain) :
+        UserPartialStatePostLogin()
 
-    data class Error(val errorMessage: String) : UserPartialStatePostLogIn()
+    data class Error(val errorMessage: String) : UserPartialStatePostLogin()
+}
+
+sealed class UserPartialStatePostLoginWithToken {
+    data class Success(val userLoginWithTokenResponseDomain: UserLoginWithTokenResponseDomain) :
+        UserPartialStatePostLoginWithToken()
+
+    data class Error(val errorMessage: String) : UserPartialStatePostLoginWithToken()
 }
 
 sealed class UserPartialStateGetProfileDetails {

@@ -5,8 +5,9 @@ import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.data.models.otp.OtpRequest
 import com.alexgreece45.marvelx.domain.controllers.PreferencesController
-import com.alexgreece45.marvelx.domain.interactors.GetOtpPartialState
+import com.alexgreece45.marvelx.domain.controllers.PreferencesKeys
 import com.alexgreece45.marvelx.domain.interactors.OtpInteractor
+import com.alexgreece45.marvelx.domain.interactors.ValidateOtpPartialState
 import com.alexgreece45.marvelx.ui.base.BaseEffect
 import com.alexgreece45.marvelx.ui.base.BaseEvent
 import com.alexgreece45.marvelx.ui.base.BaseState
@@ -75,7 +76,7 @@ sealed class OtpEffect : BaseEffect {
 class OtpViewModel @Inject constructor(
     private val otpInteractor: OtpInteractor,
     private val resourceProvider: ResourceProvider,
-    private val preferencesController: PreferencesController
+    private val preferencesKeys: PreferencesKeys
 ) : BaseViewModel<OtpEvent, OtpState, OtpEffect>() {
     override fun setInitialState(): OtpState = OtpState.getDefaultValues()
 
@@ -132,10 +133,10 @@ class OtpViewModel @Inject constructor(
         // If the user entered OTP is of length 6, then proceed with its validation.
         if (currentState.otp.length == 6) {
             viewModelScope.launch {
-                otpInteractor.getOtp(otpRequest = getOtpRequest())
+                otpInteractor.validateOtp(otpRequest = getOtpRequest())
                     .collect { getOtpPartialState ->
                         when (getOtpPartialState) {
-                            is GetOtpPartialState.InternalServerError -> {
+                            is ValidateOtpPartialState.InternalServerError -> {
                                 // Internal server error.
                                 setState {
                                     copy(
@@ -150,7 +151,7 @@ class OtpViewModel @Inject constructor(
                                 }
                             }
 
-                            GetOtpPartialState.NoInternetConnection -> {
+                            ValidateOtpPartialState.NoInternetConnection -> {
                                 // No internet connection.
                                 setState {
                                     copy(
@@ -160,7 +161,7 @@ class OtpViewModel @Inject constructor(
                                 }
                             }
 
-                            is GetOtpPartialState.Success -> {
+                            is ValidateOtpPartialState.Success -> {
                                 // OTPs matched.
                                 setState {
                                     copy(
@@ -170,8 +171,15 @@ class OtpViewModel @Inject constructor(
 
                                 // Save token to client's device.
                                 getOtpPartialState.token?.let { token ->
-                                    preferencesController.setUserToken(
+                                    preferencesKeys.setUserToken(
                                         token = token
+                                    )
+                                }
+
+                                // Store userId.
+                                currentState.userId?.let { userId ->
+                                    preferencesKeys.setUserId(
+                                        userId
                                     )
                                 }
 
@@ -181,7 +189,7 @@ class OtpViewModel @Inject constructor(
                                 }
                             }
 
-                            is GetOtpPartialState.ClientError -> {
+                            is ValidateOtpPartialState.ClientError -> {
                                 // This error occurred due to the app sending invalid data.
                                 setState {
                                     copy(
@@ -195,7 +203,7 @@ class OtpViewModel @Inject constructor(
                                 }
                             }
 
-                            is GetOtpPartialState.UserError -> {
+                            is ValidateOtpPartialState.UserError -> {
                                 // User-input related error.
                                 setState {
                                     copy(

@@ -3,9 +3,9 @@ package com.alexgreece45.marvelx.domain.viewmodels
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.data.models.user.Gender
-import com.alexgreece45.marvelx.data.models.user.signUp.UserSignUpRequest
+import com.alexgreece45.marvelx.data.models.user.signUp.UserSignupRequest
 import com.alexgreece45.marvelx.domain.interactors.UserInteractor
-import com.alexgreece45.marvelx.domain.interactors.UserPartialStatePostSignUp
+import com.alexgreece45.marvelx.domain.interactors.UserPartialStatePostSignup
 import com.alexgreece45.marvelx.ui.base.BaseEffect
 import com.alexgreece45.marvelx.ui.base.BaseEvent
 import com.alexgreece45.marvelx.ui.base.BaseState
@@ -289,7 +289,7 @@ class SignUpViewModel @Inject constructor(
                     userSignUpRequest = getUserSignUpRequest()
                 ).collect { userPartialStatePostSignUp ->
                     when (userPartialStatePostSignUp) {
-                        is UserPartialStatePostSignUp.Error -> {
+                        is UserPartialStatePostSignup.Error -> {
                             setState {
                                 copy(
                                     isLoading = false,
@@ -311,7 +311,7 @@ class SignUpViewModel @Inject constructor(
                             }
                         }*/
 
-                        is UserPartialStatePostSignUp.Success -> {
+                        is UserPartialStatePostSignup.Success -> {
                             setState {
                                 copy(
                                     isLoading = false
@@ -457,8 +457,8 @@ class SignUpViewModel @Inject constructor(
         )
     }
 
-    private suspend fun getUserSignUpRequest(): UserSignUpRequest =
-        UserSignUpRequest(
+    private suspend fun getUserSignUpRequest(): UserSignupRequest =
+        UserSignupRequest(
             firstName = currentState.firstName,
             lastName = currentState.lastName,
             gender = currentState.gender?.key.orEmpty(),

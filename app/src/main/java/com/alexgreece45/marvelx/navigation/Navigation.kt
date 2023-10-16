@@ -41,7 +41,12 @@ fun Navigation(
             startDestination = Screen.RegisterScreens.getStartDestination()
         ) {
             composable(Screen.RegisterScreens.HomeScreen) {
-                HomeScreen(navController = navController)
+                HomeScreen(
+                    navController = navController,
+                    setUserId = { userId ->
+                        setUserId.invoke(userId)
+                    }
+                )
             }
 
             composable(Screen.RegisterScreens.LogInScreen) {

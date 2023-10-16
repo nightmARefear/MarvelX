@@ -1,6 +1,5 @@
 package com.alexgreece45.marvelx.ui.screens.registerScreens.logInScreen
 
-import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -34,13 +33,13 @@ import com.alexgreece45.marvelx.domain.viewmodels.LoginEffect
 import com.alexgreece45.marvelx.domain.viewmodels.LoginEvent
 import com.alexgreece45.marvelx.domain.viewmodels.LoginViewModel
 import com.alexgreece45.marvelx.navigation.Screen
-import com.alexgreece45.marvelx.ui.AlertDialogError
 import com.alexgreece45.marvelx.ui.AlertDialogButton
+import com.alexgreece45.marvelx.ui.AlertDialogError
 import com.alexgreece45.marvelx.ui.ContentScreen
 import com.alexgreece45.marvelx.ui.LoadingScreen
 import com.alexgreece45.marvelx.ui.OutlinedTextFieldValidation
-import com.alexgreece45.marvelx.util.SPACING_MEDIUM
 import com.alexgreece45.marvelx.ui.ValueType
+import com.alexgreece45.marvelx.util.SPACING_MEDIUM
 import logcat.logcat
 
 @OptIn(ExperimentalComposeUiApi::class)
@@ -67,12 +66,7 @@ fun LogInScreen(
                     // Login was successful so store the userId in the activity viewModel's state.
                     setUserId.invoke(effect.userId)
 
-                    Toast.makeText(
-                        context,
-                        "user id (${effect.userId}) in activityViewModel state was inserted.",
-                        Toast.LENGTH_SHORT
-                    ).show()
-
+                    logcat { "user id (${effect.userId}) in activityViewModel state was inserted." }
                     navController.navigate(Screen.BottomNavigationScreens.AllCharactersScreen.route) {
                         popUpTo(Screen.RegisterScreens.getNestedGraphRootRoute()) {
                             inclusive = true
@@ -95,13 +89,17 @@ fun LogInScreen(
                         force = true
                     )
                 }
+
+                LoginEffect.Navigation.PopBackStack -> {
+                    navController.popBackStack()
+                }
             }
         }
     }
 
     LoadingScreen(isLoading = state.isLoading) {
         ContentScreen(
-            onBack = { navController.popBackStack() },
+            onBack = { viewModel.setEvent(LoginEvent.OnBack) },
             showToolbar = true,
             toolbarTitle = stringResource(R.string.login_screen_toolbar_title)
         ) { paddingValues ->
@@ -183,7 +181,7 @@ fun LogInScreen(
                         // Login button.
                         Button(
                             modifier = Modifier.fillMaxWidth(),
-                            enabled = state.logInButton,
+                            enabled = state.loginButton,
                             onClick = { viewModel.setEvent(LoginEvent.OnLoginButtonClick) }
                         ) {
                             Text(

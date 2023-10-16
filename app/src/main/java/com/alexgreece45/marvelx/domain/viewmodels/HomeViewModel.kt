@@ -1,43 +1,95 @@
 package com.alexgreece45.marvelx.domain.viewmodels
 
+import androidx.lifecycle.viewModelScope
+import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.data.domains.user.VerificationStep
+import com.alexgreece45.marvelx.data.models.user.loginWithToken.UserLoginWithTokenRequest
+import com.alexgreece45.marvelx.domain.controllers.PreferencesController
+import com.alexgreece45.marvelx.domain.controllers.PreferencesKeys
+import com.alexgreece45.marvelx.domain.interactors.UserInteractor
+import com.alexgreece45.marvelx.domain.interactors.UserPartialStatePostLoginWithToken
 import com.alexgreece45.marvelx.ui.base.BaseEffect
 import com.alexgreece45.marvelx.ui.base.BaseEvent
 import com.alexgreece45.marvelx.ui.base.BaseState
 import com.alexgreece45.marvelx.ui.base.BaseViewModel
+import com.alexgreece45.marvelx.util.DateUtil
+import com.alexgreece45.marvelx.util.ResourceProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 sealed class HomeEvent : BaseEvent {
     object InitView : HomeEvent()
 
+    object OnBack : HomeEvent()
+
+    sealed class AlertDialog : HomeEvent() {
+        object OnOkClick : AlertDialog()
+    }
+
     object OnLogInButtonClick : HomeEvent()
+
     object OnSignUpButtonClick : HomeEvent()
 }
 
 data class HomeState(
-    val isLoading: Boolean = true,
+    // Base states.
+    val isLoading: Boolean = false,
     val hasInternetConnection: Boolean = true,
-    val errorMessage: String? = null
-) : BaseState
+    val errorMessage: String? = null,
+
+    // Alert Dialog.
+    val isAlertDialogVisible: Boolean = false,
+    val alertDialogTitle: String = "",
+    val alertDialogErrorMessage: String = "",
+) : BaseState {
+    companion object {
+        fun getDefaultValues(): HomeState =
+            HomeState(
+                isLoading = false,
+                hasInternetConnection = true,
+                errorMessage = null,
+                isAlertDialogVisible = false,
+                alertDialogTitle = "",
+                alertDialogErrorMessage = "",
+            )
+    }
+}
 
 sealed class HomeEffect : BaseEffect {
-    object NavigateToLogInScreen : HomeEffect()
-    object NavigateToSignUpScreen : HomeEffect()
+    sealed class Navigation : HomeEffect() {
+        object PopBackStack : Navigation()
+        object NavigateToLogInScreen : Navigation()
+        object NavigateToSignUpScreen : Navigation()
+        data class NavigateToOtpScreen(val userId: Int) : Navigation()
+        data class NavigateToAllCharactersScreen(val userId: Int) : Navigation()
+    }
 }
 
 @HiltViewModel
-class HomeViewModel @Inject constructor() : BaseViewModel<HomeEvent, HomeState, HomeEffect>() {
-    override fun setInitialState(): HomeState =
-        HomeState(
-            isLoading = true,
-            hasInternetConnection = true,
-            errorMessage = null
-        )
+class HomeViewModel @Inject constructor(
+    private val preferencesKeys: PreferencesKeys,
+    private val resourceProvider: ResourceProvider,
+    private val userInteractor: UserInteractor
+) : BaseViewModel<HomeEvent, HomeState, HomeEffect>() {
+    override fun setInitialState(): HomeState = HomeState.getDefaultValues()
 
     override fun handleEvents(event: HomeEvent) {
         when (event) {
             HomeEvent.InitView -> {
                 initView()
+            }
+
+            HomeEvent.OnBack -> {
+                // Reset states just in case.
+                setState {
+                    HomeState.getDefaultValues()
+                }
+                // Pop back stack.
+                setEffect {
+                    HomeEffect.Navigation.PopBackStack
+                }
             }
 
             HomeEvent.OnLogInButtonClick -> {
@@ -47,20 +99,160 @@ class HomeViewModel @Inject constructor() : BaseViewModel<HomeEvent, HomeState, 
             HomeEvent.OnSignUpButtonClick -> {
                 onSignUpButtonClick()
             }
+
+            HomeEvent.AlertDialog.OnOkClick -> {
+                hideAlertDialog()
+            }
         }
     }
 
-    private fun initView() {}
+    private fun initView() {
+        // No stored token found; do not proceed any further.
+        if (preferencesKeys.getUserToken().isBlank()) {
+            return
+        }
+
+        /* A stored token was found.
+        * Check if it is expired;
+        * - if expired, refresh, and then validate it
+        * - if NOT expired, validate it
+        */
+        setState {
+            copy(
+                isLoading = true
+            )
+        }
+        viewModelScope.launch {
+            delay(2500L)
+            userInteractor.postLoginWithToken(getUserLoginWithTokenRequest()).collect {
+                when (it) {
+                    is UserPartialStatePostLoginWithToken.Error -> {
+                        // An error occurred either due to an invalid token, or user id; proceed to remove the stored user credentials (userId, token).
+                        setState {
+                            copy(
+                                isLoading = false
+                            )
+                        }
+                        preferencesKeys.removeUserCredentials()
+                    }
+
+                    is UserPartialStatePostLoginWithToken.Success -> {
+                        when (it.userLoginWithTokenResponseDomain.verificationStep) {
+                            is VerificationStep.None -> {
+                                setState {
+                                    copy(
+                                        isLoading = false
+                                    )
+                                }
+
+                                // Update stored token if needed.
+                                it.userLoginWithTokenResponseDomain.token?.let { newToken ->
+                                    preferencesKeys.setUserToken(newToken)
+                                }
+
+                                // No verification step, so navigate to AllCharactersScreen.
+                                setEffect {
+                                    HomeEffect.Navigation.NavigateToAllCharactersScreen(
+                                        userId = preferencesKeys.getUserId()
+                                    )
+                                }
+                            }
+
+                            is VerificationStep.OtpEmail -> {
+                                // Currently we only support OTP from email.
+                                setState {
+                                    copy(
+                                        isLoading = false
+                                    )
+                                }
+
+                                // Update stored token if needed.
+                                it.userLoginWithTokenResponseDomain.token?.let { newToken ->
+                                    preferencesKeys.setUserToken(newToken)
+                                }
+
+                                setEffect {
+                                    HomeEffect.Navigation.NavigateToOtpScreen(
+                                        userId = preferencesKeys.getUserId()
+                                    )
+                                }
+                            }
+
+                            is VerificationStep.OtpPhoneNumber -> {
+                                // TODO: display appropriate screen
+                                setState {
+                                    copy(
+                                        isLoading = false
+                                    )
+                                }
+
+                                // Update stored token if needed.
+                                it.userLoginWithTokenResponseDomain.token?.let { newToken ->
+                                    preferencesKeys.setUserToken(newToken)
+                                }
+
+                                TODO("\"VerificationStep.OtpPhoneNumber\" not implemented yet")
+                            }
+
+                            is VerificationStep.Invalid -> {
+                                setState {
+                                    copy(
+                                        isLoading = false
+                                    )
+                                }
+
+                                // An error occurred, so just in case, remove the stored user credentials.
+                                preferencesKeys.removeUserCredentials()
+
+                                showAlertDialog(
+                                    errorMessage = resourceProvider.getGenericErrorMessage()
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     private fun onLogInButtonClick() {
         setEffect {
-            HomeEffect.NavigateToLogInScreen
+            HomeEffect.Navigation.NavigateToLogInScreen
         }
     }
 
     private fun onSignUpButtonClick() {
         setEffect {
-            HomeEffect.NavigateToSignUpScreen
+            HomeEffect.Navigation.NavigateToSignUpScreen
+        }
+    }
+
+    private fun getUserLoginWithTokenRequest(): UserLoginWithTokenRequest =
+        UserLoginWithTokenRequest(
+            userId = preferencesKeys.getUserId(),
+            epoch = DateUtil.getSecondsFromEpoch()
+        )
+
+    private fun getAlertDialogTitle(): String =
+        resourceProvider.getString(R.string.login_screen_alert_dialog_title)
+
+    private fun showAlertDialog(errorMessage: String) {
+        setState {
+            copy(
+                isAlertDialogVisible = true,
+                alertDialogTitle = getAlertDialogTitle(),
+                alertDialogErrorMessage = errorMessage
+            )
+        }
+    }
+
+    private fun hideAlertDialog() {
+        setState {
+            copy(
+                isAlertDialogVisible = false,
+                alertDialogTitle = "",
+                alertDialogErrorMessage = ""
+            )
         }
     }
 }

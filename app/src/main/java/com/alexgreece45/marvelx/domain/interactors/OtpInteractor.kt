@@ -16,7 +16,7 @@ import okio.IOException
 import javax.inject.Inject
 
 interface OtpInteractor {
-    suspend fun getOtp(otpRequest: OtpRequest): Flow<GetOtpPartialState>
+    suspend fun validateOtp(otpRequest: OtpRequest): Flow<ValidateOtpPartialState>
 }
 
 class OtpInteractorImpl @Inject constructor(
@@ -24,18 +24,18 @@ class OtpInteractorImpl @Inject constructor(
     private val resourceProvider: ResourceProvider,
     private val gson: Gson
 ) : OtpInteractor {
-    override suspend fun getOtp(otpRequest: OtpRequest): Flow<GetOtpPartialState> = flow {
+    override suspend fun validateOtp(otpRequest: OtpRequest): Flow<ValidateOtpPartialState> = flow {
         api.validateOtp(otpRequest = otpRequest).let { response ->
             if (response.isSuccessful) {
                 response.body()?.let { responseBody ->
                     emit(
-                        GetOtpPartialState.Success(
+                        ValidateOtpPartialState.Success(
                             token = responseBody.token
                         )
                     )
                 } ?: run {
                     emit(
-                        GetOtpPartialState.InternalServerError(
+                        ValidateOtpPartialState.InternalServerError(
                             errorMessage = resourceProvider.getString(R.string.internal_server_error)
                         )
                     )
@@ -48,7 +48,7 @@ class OtpInteractorImpl @Inject constructor(
                 ).toDomain()
 
                 emit(
-                    GetOtpPartialState.UserError(
+                    ValidateOtpPartialState.UserError(
                         otpErrorCause = deserializedError.errorCause
                     )
                 )
@@ -57,11 +57,11 @@ class OtpInteractorImpl @Inject constructor(
     }.safeAsync {
         when (it) {
             is IOException -> {
-                GetOtpPartialState.NoInternetConnection
+                ValidateOtpPartialState.NoInternetConnection
             }
 
             else -> {
-                GetOtpPartialState.InternalServerError(
+                ValidateOtpPartialState.InternalServerError(
                     errorMessage = resourceProvider.getString(R.string.unknown_error)
                 )
             }
@@ -70,17 +70,17 @@ class OtpInteractorImpl @Inject constructor(
 }
 
 
-sealed class GetOtpPartialState {
+sealed class ValidateOtpPartialState {
     /**
      * The OTP was correct. User is navigated to the next screen as defined in the viewModel.
      * */
-    data class Success(val token: String?) : GetOtpPartialState()
+    data class Success(val token: String?) : ValidateOtpPartialState()
 
     /**
      * Represents an internal server error. The displayed error message is "an internal server
      * error occurred".
      * */
-    data class InternalServerError(val errorMessage: String) : GetOtpPartialState()
+    data class InternalServerError(val errorMessage: String) : ValidateOtpPartialState()
 
     /**
      * This data class is not used to display the actual error message to the screen.
@@ -88,17 +88,17 @@ sealed class GetOtpPartialState {
      * The displayed error message is that an "unknown error occurred".
      * Furthermore, the contents of this data class are used by the app's logs for debugging.
      * */
-    data class ClientError(val errorMessage: String) : GetOtpPartialState()
+    data class ClientError(val errorMessage: String) : ValidateOtpPartialState()
 
 
     /**
      * Represents if the error is due to invalid user-input.
      * */
-    data class UserError(val otpErrorCause: OtpErrorCause) : GetOtpPartialState()
+    data class UserError(val otpErrorCause: OtpErrorCause) : ValidateOtpPartialState()
 
 
     /**
      * When there is no internet connection.
      * */
-    object NoInternetConnection : GetOtpPartialState()
+    object NoInternetConnection : ValidateOtpPartialState()
 }

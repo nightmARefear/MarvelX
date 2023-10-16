@@ -3,6 +3,7 @@ package com.alexgreece45.marvelx.ui.screens.registerScreens.homeScreen
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.Button
@@ -23,67 +24,115 @@ import com.alexgreece45.marvelx.domain.viewmodels.HomeEffect
 import com.alexgreece45.marvelx.domain.viewmodels.HomeEvent
 import com.alexgreece45.marvelx.domain.viewmodels.HomeViewModel
 import com.alexgreece45.marvelx.navigation.Screen
+import com.alexgreece45.marvelx.ui.AlertDialogButton
+import com.alexgreece45.marvelx.ui.AlertDialogError
 import com.alexgreece45.marvelx.ui.ContentScreen
+import com.alexgreece45.marvelx.ui.LoadingScreen
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 
 @Composable
 fun HomeScreen(
     navController: NavController,
+    setUserId: (Int) -> Unit,
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
 
     LaunchedEffect(Unit) {
+        viewModel.setEvent(HomeEvent.InitView)
+
         viewModel.uiEffect.collect { homeEffect ->
             when (homeEffect) {
-                HomeEffect.NavigateToLogInScreen -> {
+                HomeEffect.Navigation.NavigateToLogInScreen -> {
                     navController.navigate(Screen.RegisterScreens.LogInScreen.route)
                 }
 
-                HomeEffect.NavigateToSignUpScreen -> {
+                HomeEffect.Navigation.NavigateToSignUpScreen -> {
                     navController.navigate(Screen.RegisterScreens.SignUpScreen.route)
+                }
+
+                is HomeEffect.Navigation.NavigateToAllCharactersScreen -> {
+                    // Login was successful so store the userId in the activity viewModel's state.
+                    setUserId.invoke(homeEffect.userId)
+
+                    navController.navigate(Screen.BottomNavigationScreens.AllCharactersScreen.route) {
+                        popUpTo(Screen.RegisterScreens.getNestedGraphRootRoute()) {
+                            inclusive = true
+                        }
+                    }
+                }
+
+                is HomeEffect.Navigation.NavigateToOtpScreen -> {
+                    navController.navigate(
+                        Screen.OtpScreen.createNavRoute(
+                            userId = homeEffect.userId
+                        )
+                    )
+                }
+
+                HomeEffect.Navigation.PopBackStack -> {
+                    navController.popBackStack()
                 }
             }
         }
     }
 
-    ContentScreen { paddingValues ->
-        LazyColumn(contentPadding = paddingValues) {
-            item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    Text(
-                        text = stringResource(R.string.home_screen_header),
-                        textAlign = TextAlign.Center,
-                        style = MaterialTheme.typography.h4
+    LoadingScreen(isLoading = state.isLoading) {
+        ContentScreen(
+            onBack = { viewModel.setEvent(HomeEvent.OnBack) },
+        ) { paddingValues ->
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = paddingValues,
+            ) {
+                item {
+                    AlertDialogError(
+                        isVisible = state.isAlertDialogVisible,
+                        title = state.alertDialogTitle,
+                        errorMessage = state.alertDialogErrorMessage,
+                        confirmButton = AlertDialogButton(
+                            value = stringResource(R.string.ok),
+                            onClick = { viewModel.setEvent(HomeEvent.AlertDialog.OnOkClick) }
+                        )
                     )
                 }
-            }
 
-            item {
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp)
-                ) {
-                    // Login button.
-                    Button(
+                item {
+                    Row(
                         modifier = Modifier.fillMaxWidth(),
-                        onClick = { viewModel.setEvent(HomeEvent.OnLogInButtonClick) }
+                        horizontalArrangement = Arrangement.Center
                     ) {
                         Text(
-                            text = stringResource(R.string.home_screen_label_log_in_button),
+                            text = stringResource(R.string.home_screen_toolbar_title),
+                            textAlign = TextAlign.Center,
+                            style = MaterialTheme.typography.h4
                         )
                     }
+                }
 
-                    // Signup button.
-                    Button(
+                item {
+                    Column(
                         modifier = Modifier.fillMaxWidth(),
-                        onClick = { viewModel.setEvent(HomeEvent.OnSignUpButtonClick) }) {
-                        Text(
-                            text = stringResource(R.string.home_screen_label_sign_up_button),
-                        )
+                        verticalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp)
+                    ) {
+                        // Login button.
+                        Button(
+                            modifier = Modifier.fillMaxWidth(),
+                            onClick = { viewModel.setEvent(HomeEvent.OnLogInButtonClick) }
+                        ) {
+                            Text(
+                                text = stringResource(R.string.home_screen_label_log_in_button),
+                            )
+                        }
+
+                        // Signup button.
+                        Button(
+                            modifier = Modifier.fillMaxWidth(),
+                            onClick = { viewModel.setEvent(HomeEvent.OnSignUpButtonClick) }) {
+                            Text(
+                                text = stringResource(R.string.home_screen_label_sign_up_button),
+                            )
+                        }
                     }
                 }
             }

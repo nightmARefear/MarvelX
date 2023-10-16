@@ -4,10 +4,12 @@ import com.alexgreece45.marvelx.data.models.character.CharacterDataWrapper
 import com.alexgreece45.marvelx.data.models.character.comic.ComicDataWrapper
 import com.alexgreece45.marvelx.data.models.otp.OtpRequest
 import com.alexgreece45.marvelx.data.models.otp.OtpResponseSuccess
-import com.alexgreece45.marvelx.data.models.user.logIn.UserLogInRequest
-import com.alexgreece45.marvelx.data.models.user.logIn.UserLoginResponse
+import com.alexgreece45.marvelx.data.models.user.login.UserLoginRequest
+import com.alexgreece45.marvelx.data.models.user.login.UserLoginResponse
+import com.alexgreece45.marvelx.data.models.user.loginWithToken.UserLoginWithTokenRequest
+import com.alexgreece45.marvelx.data.models.user.loginWithToken.UserLoginWithTokenResponse
 import com.alexgreece45.marvelx.data.models.user.profileDetails.UserProfileDetailsResponse
-import com.alexgreece45.marvelx.data.models.user.signUp.UserSignUpRequest
+import com.alexgreece45.marvelx.data.models.user.signUp.UserSignupRequest
 import com.alexgreece45.marvelx.data.models.user.signUp.UserSignupResponse
 import retrofit2.Response
 
@@ -20,9 +22,11 @@ interface ApiClient {
 
     suspend fun getComicById(comicId: Int): Response<ComicDataWrapper>
 
-    suspend fun postSignUp(userSignUpRequest: UserSignUpRequest): Response<UserSignupResponse>
+    suspend fun postUserSignup(userSignupRequest: UserSignupRequest): Response<UserSignupResponse>
 
-    suspend fun postUserLogIn(userLogInRequest: UserLogInRequest): Response<UserLoginResponse>
+    suspend fun postUserLogin(userLoginRequest: UserLoginRequest): Response<UserLoginResponse>
+
+    suspend fun postUserLoginWithToken(userLoginWithTokenRequest: UserLoginWithTokenRequest): Response<UserLoginWithTokenResponse>
 
     suspend fun validateOtp(otpRequest: OtpRequest): Response<OtpResponseSuccess>
 

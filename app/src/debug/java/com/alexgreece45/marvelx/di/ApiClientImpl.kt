@@ -6,10 +6,12 @@ import com.alexgreece45.marvelx.data.models.character.CharacterDataWrapper
 import com.alexgreece45.marvelx.data.models.character.comic.ComicDataWrapper
 import com.alexgreece45.marvelx.data.models.otp.OtpRequest
 import com.alexgreece45.marvelx.data.models.otp.OtpResponseSuccess
-import com.alexgreece45.marvelx.data.models.user.logIn.UserLogInRequest
-import com.alexgreece45.marvelx.data.models.user.logIn.UserLoginResponse
+import com.alexgreece45.marvelx.data.models.user.login.UserLoginRequest
+import com.alexgreece45.marvelx.data.models.user.login.UserLoginResponse
+import com.alexgreece45.marvelx.data.models.user.loginWithToken.UserLoginWithTokenRequest
+import com.alexgreece45.marvelx.data.models.user.loginWithToken.UserLoginWithTokenResponse
 import com.alexgreece45.marvelx.data.models.user.profileDetails.UserProfileDetailsResponse
-import com.alexgreece45.marvelx.data.models.user.signUp.UserSignUpRequest
+import com.alexgreece45.marvelx.data.models.user.signUp.UserSignupRequest
 import com.alexgreece45.marvelx.data.models.user.signUp.UserSignupResponse
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -23,33 +25,29 @@ class ApiClientImpl @Inject constructor(
     private val api: ApiService
 ) : ApiClient {
 
-    override suspend fun getCharacters(): Response<CharacterDataWrapper> {
-        return api.getCharacters()
-    }
+    override suspend fun getCharacters(): Response<CharacterDataWrapper> =
+        api.getCharacters()
 
-    override suspend fun getCharacterById(characterId: Int): Response<CharacterDataWrapper> {
-        return api.getCharacter(characterId)
-    }
+    override suspend fun getCharacterById(characterId: Int): Response<CharacterDataWrapper> =
+        api.getCharacter(characterId)
 
-    override suspend fun getCharacterComics(characterId: Int): Response<ComicDataWrapper> {
-        return api.getCharacterComics(characterId)
-    }
+    override suspend fun getCharacterComics(characterId: Int): Response<ComicDataWrapper> =
+        api.getCharacterComics(characterId)
 
-    override suspend fun getComicById(comicId: Int): Response<ComicDataWrapper> {
-        return api.getComicById(comicId)
-    }
+    override suspend fun getComicById(comicId: Int): Response<ComicDataWrapper> =
+        api.getComicById(comicId)
 
-    override suspend fun postSignUp(userSignUpRequest: UserSignUpRequest): Response<UserSignupResponse> {
-        return api.postSignUp(userSignUpRequest)
-    }
+    override suspend fun postUserSignup(userSignupRequest: UserSignupRequest): Response<UserSignupResponse> =
+        api.postUserSignup(userSignupRequest)
 
-    override suspend fun postUserLogIn(userLogInRequest: UserLogInRequest): Response<UserLoginResponse> {
-        return api.postLogIn(userLogInRequest)
-    }
+    override suspend fun postUserLogin(userLoginRequest: UserLoginRequest): Response<UserLoginResponse> =
+        api.postUserLogin(userLoginRequest)
 
-    override suspend fun validateOtp(otpRequest: OtpRequest): Response<OtpResponseSuccess> {
-        return api.validateOtp(otpRequest)
-    }
+    override suspend fun postUserLoginWithToken(userLoginWithTokenRequest: UserLoginWithTokenRequest): Response<UserLoginWithTokenResponse> =
+        api.postLoginWithToken(userLoginWithTokenRequest)
+
+    override suspend fun validateOtp(otpRequest: OtpRequest): Response<OtpResponseSuccess> =
+        api.validateOtp(otpRequest)
 
     override suspend fun getUserProfileDetails(userId: Int): Response<UserProfileDetailsResponse> =
         api.getUserProfileDetails(userId = userId)

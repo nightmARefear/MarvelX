@@ -2,12 +2,13 @@ package com.alexgreece45.marvelx.domain.viewmodels
 
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.data.domains.user.login.UserLogInResponseDomain
+import com.alexgreece45.marvelx.data.domains.user.login.UserLoginResponseDomain
 import com.alexgreece45.marvelx.data.domains.user.VerificationStep
-import com.alexgreece45.marvelx.data.models.user.logIn.UserLogInRequest
+import com.alexgreece45.marvelx.data.models.user.login.UserLoginRequest
 import com.alexgreece45.marvelx.domain.controllers.PreferencesController
+import com.alexgreece45.marvelx.domain.controllers.PreferencesKeys
 import com.alexgreece45.marvelx.domain.interactors.UserInteractor
-import com.alexgreece45.marvelx.domain.interactors.UserPartialStatePostLogIn
+import com.alexgreece45.marvelx.domain.interactors.UserPartialStatePostLogin
 import com.alexgreece45.marvelx.ui.base.BaseEffect
 import com.alexgreece45.marvelx.ui.base.BaseEvent
 import com.alexgreece45.marvelx.ui.base.BaseState
@@ -26,6 +27,8 @@ import javax.inject.Inject
 
 sealed class LoginEvent : BaseEvent {
     object InitView : LoginEvent()
+
+    object OnBack : LoginEvent()
 
     object OnPasswordVisibilityIconClick : LoginEvent()
 
@@ -59,8 +62,10 @@ data class LoginState(
      * */
     val isPasswordVisible: Boolean = false,
 
-    // Login button.
-    val logInButton: Boolean = false,
+    /**
+     * Controls whether the login button is enabled.
+     * */
+    val loginButton: Boolean = false,
 
     // Alert Dialog.
     val isAlertDialogVisible: Boolean = false,
@@ -68,32 +73,33 @@ data class LoginState(
     val alertDialogErrorMessage: String = "",
 
     // Validations.
-    val emailValidationResult: FormsValidationResult = FormsValidationResult(isValid = true),
-    val passwordValidationResult: FormsValidationResult = FormsValidationResult(isValid = true),
+    val emailValidationResult: FormsValidationResult = FormsValidationResult(isValid = false),
+    val passwordValidationResult: FormsValidationResult = FormsValidationResult(isValid = false),
 
     // User login successful response.
-    val userLogInResponseDomain: UserLogInResponseDomain? = null,
+    val userLoginResponseDomain: UserLoginResponseDomain? = null,
 ) : BaseState {
     companion object {
-        // TODO: RESET TO OLD VALUES
         fun getDefaultValues(): LoginState = LoginState(
             isLoading = false,
-            email = "alexxx@gmail.com",
-            password = "1234567890",
+            email = "",
+            password = "",
             isPasswordVisible = false,
-            logInButton = true,
+            loginButton = false,
             isAlertDialogVisible = false,
             alertDialogTitle = "",
             alertDialogErrorMessage = "",
-            emailValidationResult = FormsValidationResult(isValid = true),
-            passwordValidationResult = FormsValidationResult(isValid = true),
-            userLogInResponseDomain = null
+            emailValidationResult = FormsValidationResult(isValid = false),
+            passwordValidationResult = FormsValidationResult(isValid = false),
+            userLoginResponseDomain = null
         )
     }
 }
 
 sealed class LoginEffect : BaseEffect {
     sealed class Navigation : LoginEffect() {
+        object PopBackStack : Navigation()
+
         data class NavigateToAllCharactersScreen(val userId: Int) : Navigation()
 
         data class NavigateToOtpScreen(val userId: Int) : Navigation()
@@ -120,7 +126,7 @@ class LoginViewModel @Inject constructor(
     private val resourceProvider: ResourceProvider,
     private val formValidator: FormValidator,
     private val userInteractor: UserInteractor,
-    private val preferencesController: PreferencesController
+    private val preferencesKeys: PreferencesKeys
 ) : BaseViewModel<LoginEvent, LoginState, LoginEffect>() {
 
     override fun setInitialState(): LoginState = LoginState.getDefaultValues()
@@ -133,6 +139,17 @@ class LoginViewModel @Inject constructor(
         when (event) {
             LoginEvent.InitView -> {
                 initView()
+            }
+
+            LoginEvent.OnBack -> {
+                // Reset states just in case.
+                setState {
+                    LoginState.getDefaultValues()
+                }
+                // Pop back stack.
+                setEffect {
+                    LoginEffect.Navigation.PopBackStack
+                }
             }
 
             is LoginEvent.FieldValueChange.Email -> {
@@ -154,7 +171,7 @@ class LoginViewModel @Inject constructor(
             }
 
             LoginEvent.OnDoneClick -> {
-                if (currentState.logInButton) {
+                if (currentState.loginButton) {
                     setEvent(
                         LoginEvent.OnLoginButtonClick
                     )
@@ -204,7 +221,7 @@ class LoginViewModel @Inject constructor(
 
                     setState {
                         copy(
-                            logInButton = formsValidationResult.isValid && areAllFieldsValid()
+                            loginButton = formsValidationResult.isValid && areAllFieldsValid()
                         )
                     }
                 }
@@ -223,7 +240,7 @@ class LoginViewModel @Inject constructor(
 
                     setState {
                         copy(
-                            logInButton = formsValidationResult.isValid && areAllFieldsValid()
+                            loginButton = formsValidationResult.isValid && areAllFieldsValid()
                         )
                     }
                 }
@@ -251,7 +268,7 @@ class LoginViewModel @Inject constructor(
             setState {
                 LoginState.getDefaultValues().copy(
                     isLoading = false,
-                    logInButton = false
+                    loginButton = false
                 )
             }
             showAlertDialog(
@@ -262,11 +279,11 @@ class LoginViewModel @Inject constructor(
 
         // All fields are valid.
         viewModelScope.launch {
-            userInteractor.postLogIn(
+            userInteractor.postLogin(
                 userLogInRequest = getUserLogInRequest()
             ).collect { userPartialStatePostLogIn ->
                 when (userPartialStatePostLogIn) {
-                    is UserPartialStatePostLogIn.Error -> {
+                    is UserPartialStatePostLogin.Error -> {
                         setState {
                             LoginState.getDefaultValues().copy(
                                 isLoading = false
@@ -277,24 +294,27 @@ class LoginViewModel @Inject constructor(
                         )
                     }
 
-                    is UserPartialStatePostLogIn.Success -> {
+                    is UserPartialStatePostLogin.Success -> {
                         setState {
                             LoginState.getDefaultValues().copy(
                                 isLoading = false,
-                                userLogInResponseDomain = userPartialStatePostLogIn.userLogInResponseDomain
+                                userLoginResponseDomain = userPartialStatePostLogIn.userLoginResponseDomain
                             )
                         }
 
                         // Act accordingly based on the verification step.
-                        currentState.userLogInResponseDomain?.let { userLogInResponseDomain ->
+                        currentState.userLoginResponseDomain?.let { userLogInResponseDomain ->
                             when (userLogInResponseDomain.verificationStep) {
                                 is VerificationStep.None -> {
                                     // Store user token.
                                     userLogInResponseDomain.userToken?.let { token ->
-                                        preferencesController.setUserToken(
+                                        preferencesKeys.setUserToken(
                                             token = token
                                         )
                                     }
+
+                                    // Store userId.
+                                    preferencesKeys.setUserId(userLogInResponseDomain.userId)
 
                                     // No verification step, so navigate to All Characters Screen.
                                     setEffect {
@@ -304,21 +324,22 @@ class LoginViewModel @Inject constructor(
 
                                 is VerificationStep.Invalid -> {
                                     showAlertDialog(
-                                        errorMessage = resourceProvider.getString(R.string.unknown_error)
+                                        errorMessage = resourceProvider.getGenericErrorMessage()
                                     )
                                 }
 
-                                VerificationStep.OtpEmail -> {
+                                is VerificationStep.OtpEmail -> {
                                     // Currently we only support OTP from email.
                                     setEffect {
                                         LoginEffect.Navigation.NavigateToOtpScreen(
-                                            userId = currentState.userLogInResponseDomain!!.userId
+                                            userId = currentState.userLoginResponseDomain!!.userId
                                         )
                                     }
                                 }
 
-                                VerificationStep.OtpPhoneNumber -> {
+                                is VerificationStep.OtpPhoneNumber -> {
                                     // TODO: display appropriate screen
+                                    TODO("\"VerificationStep.OtpPhoneNumber\" not implemented yet")
                                 }
                             }
                         }
@@ -387,8 +408,8 @@ class LoginViewModel @Inject constructor(
         )
     }
 
-    private suspend fun getUserLogInRequest(): UserLogInRequest =
-        UserLogInRequest(
+    private suspend fun getUserLogInRequest(): UserLoginRequest =
+        UserLoginRequest(
             email = currentState.email,
             password = SecurityUtil.getHashedPasswordFromString(currentState.password).single(),
             epoch = DateUtil.getSecondsFromEpoch()

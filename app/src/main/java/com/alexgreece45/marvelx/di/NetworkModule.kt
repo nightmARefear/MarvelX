@@ -32,12 +32,13 @@ object NetworkModule {
     @Singleton
     fun provideOkHttpClient(
         @ApplicationContext context: Context,
+        interceptor: Interceptors.MarvelXBackendChangeBaseUrlInterceptor
     ): OkHttpClient {
         val okHttpClient = OkHttpClient.Builder()
 
         // Add required interceptors.
         okHttpClient.addInterceptor(Interceptors.AuthenticationTokenInterceptor())
-        okHttpClient.addInterceptor(Interceptors.MarvelXBackendChangeBaseUrlInterceptor())
+        okHttpClient.addInterceptor(interceptor)
         okHttpClient.addInterceptor(
             HttpLoggingInterceptor(
                 object : HttpLoggingInterceptor.Logger {

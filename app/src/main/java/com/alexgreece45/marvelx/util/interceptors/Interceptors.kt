@@ -1,7 +1,8 @@
 package com.alexgreece45.marvelx.util.interceptors
 
 import com.alexgreece45.marvelx.BuildConfig
-import com.alexgreece45.marvelx.domain.controllers.PreferencesController
+import com.alexgreece45.marvelx.domain.controllers.PreferencesKeys
+import com.alexgreece45.marvelx.util.APP_USER_AGENT
 import com.alexgreece45.marvelx.util.HeaderConstants
 import com.alexgreece45.marvelx.util.extensions.toMd5
 import logcat.logcat
@@ -10,6 +11,7 @@ import okhttp3.Interceptor
 import okhttp3.Request
 import okhttp3.Response
 import javax.inject.Inject
+import javax.inject.Singleton
 
 sealed class Interceptors : Interceptor {
     class AuthenticationTokenInterceptor : Interceptors() {
@@ -36,8 +38,9 @@ sealed class Interceptors : Interceptor {
         }
     }
 
+    @Singleton
     class MarvelXBackendChangeBaseUrlInterceptor @Inject constructor(
-//        private val preferencesController: PreferencesController
+        private val preferencesKeys: PreferencesKeys
     ) : Interceptors() {
         override fun intercept(chain: Interceptor.Chain): Response {
             val originalRequest = chain.request()
@@ -56,15 +59,13 @@ sealed class Interceptors : Interceptor {
                         .port(baseUrl.port)
                         .build()
 
-//                    val token = preferencesController.getUserToken()
-                    val token = null
+                    val token = preferencesKeys.getUserToken()
 
                     val modifiedRequest = Request.Builder()
                         .url(modifiedUrl)
-                        .addHeader(
-                            HeaderConstants.Authorization.name,
-                            "Bearer $token"
-                        ) // Authentication token.
+                        .addHeader(HeaderConstants.UserAgent.name, APP_USER_AGENT)
+                        // Authentication token.
+                        .addHeader(HeaderConstants.Authorization.name, "Bearer $token")
                         .method(originalRequest.method, originalRequest.body)
                         .build()
 

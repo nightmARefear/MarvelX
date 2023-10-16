@@ -7,7 +7,9 @@ val IMAGE_BORDER_WIDTH = 2.dp
 const val MAX_CHARACTER_IMAGE_HEIGHT = 250
 
 const val OTP_LENGTH = 6
+const val APP_USER_AGENT = "mobile"
 
 sealed class HeaderConstants(val name: String) {
+    object UserAgent : HeaderConstants(name = "User-Agent")
     object Authorization : HeaderConstants(name = "Authorization")
 }
