@@ -306,10 +306,10 @@ class LoginViewModel @Inject constructor(
                         currentState.userLoginResponseDomain?.let { userLogInResponseDomain ->
                             when (userLogInResponseDomain.verificationStep) {
                                 is VerificationStep.None -> {
-                                    // Store user token.
-                                    userLogInResponseDomain.userToken?.let { token ->
+                                    // Store userToken.
+                                    userLogInResponseDomain.userToken?.let { userToken ->
                                         preferencesKeys.setUserToken(
-                                            token = token
+                                            userToken = userToken
                                         )
                                     }
 

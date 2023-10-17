@@ -4,7 +4,6 @@ import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.data.domains.user.VerificationStep
 import com.alexgreece45.marvelx.data.models.user.loginWithToken.UserLoginWithTokenRequest
-import com.alexgreece45.marvelx.domain.controllers.PreferencesController
 import com.alexgreece45.marvelx.domain.controllers.PreferencesKeys
 import com.alexgreece45.marvelx.domain.interactors.UserInteractor
 import com.alexgreece45.marvelx.domain.interactors.UserPartialStatePostLoginWithToken
@@ -15,7 +14,6 @@ import com.alexgreece45.marvelx.ui.base.BaseViewModel
 import com.alexgreece45.marvelx.util.DateUtil
 import com.alexgreece45.marvelx.util.ResourceProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -107,14 +105,14 @@ class HomeViewModel @Inject constructor(
     }
 
     private fun initView() {
-        // No stored token found; do not proceed any further.
-        if (preferencesKeys.getUserToken().isBlank()) {
+        // No stored userId and/or userToken were found; thus, do not proceed any further.
+        if (!preferencesKeys.containsUserId() || !preferencesKeys.containsUserToken()) {
             return
         }
 
         /* A stored token was found.
         * Check if it is expired;
-        * - if expired, refresh, and then validate it
+        * - if expired, refresh, and then proceed to login
         * - if NOT expired, validate it
         */
         setState {
@@ -123,7 +121,6 @@ class HomeViewModel @Inject constructor(
             )
         }
         viewModelScope.launch {
-            delay(2500L)
             userInteractor.postLoginWithToken(getUserLoginWithTokenRequest()).collect {
                 when (it) {
                     is UserPartialStatePostLoginWithToken.Error -> {
@@ -133,7 +130,14 @@ class HomeViewModel @Inject constructor(
                                 isLoading = false
                             )
                         }
+
+                        // Remove user credentials (userId, userToken) from device.
                         preferencesKeys.removeUserCredentials()
+
+                        // Display erroneous alert dialog.
+                        showAlertDialog(
+                            errorMessage = it.errorMessage
+                        )
                     }
 
                     is UserPartialStatePostLoginWithToken.Success -> {
@@ -201,7 +205,7 @@ class HomeViewModel @Inject constructor(
                                     )
                                 }
 
-                                // An error occurred, so just in case, remove the stored user credentials.
+                                // An error occurred, so just in case, remove the stored user credentials (userId, userToken).
                                 preferencesKeys.removeUserCredentials()
 
                                 showAlertDialog(

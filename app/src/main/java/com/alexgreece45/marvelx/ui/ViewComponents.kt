@@ -265,7 +265,8 @@ fun BottomNavigationBar(
 data class IconData(
     @DrawableRes val iconResource: Int,
     val contentDescription: String = "",
-    val colorTint: Color? = null
+    val colorTint: Color? = null,
+    val enabled: Boolean = true
 )
 
 data class ToolbarAction(
@@ -341,7 +342,10 @@ fun ContentScreen(
                         }
 
                         toolbarActions?.sortedBy { it.order }?.forEach { toolbarAction ->
-                            IconButton(onClick = { toolbarAction.onClick() }) {
+                            IconButton(
+                                onClick = { toolbarAction.onClick() },
+                                enabled = toolbarAction.iconData.enabled
+                            ) {
                                 Icon(
                                     modifier = Modifier.size(SPACING_LARGE.dp),
                                     painter = painterResource(toolbarAction.iconData.iconResource),
@@ -1003,7 +1007,7 @@ fun AlertDialogError(
             },
             text = {
                 // Overrides the provided content alpha of "ContentAlpha.medium".
-                CompositionLocalProvider (
+                CompositionLocalProvider(
                     LocalContentAlpha provides ContentAlpha.high
                 ) {
                     Text(

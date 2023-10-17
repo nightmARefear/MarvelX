@@ -40,6 +40,7 @@ import com.alexgreece45.marvelx.domain.viewmodels.OtpViewModel
 import com.alexgreece45.marvelx.navigation.Screen
 import com.alexgreece45.marvelx.ui.ContentScreen
 import com.alexgreece45.marvelx.ui.IconData
+import com.alexgreece45.marvelx.ui.LoadingScreen
 import com.alexgreece45.marvelx.util.OTP_LENGTH
 import com.alexgreece45.marvelx.ui.ToolbarAction
 import com.alexgreece45.marvelx.util.VSpacer
@@ -97,100 +98,78 @@ fun OtpScreen(
             }
         }
     }
-
-    ContentScreen(
-        onBack = { navController.popBackStack() },
-        showToolbar = true,
-        toolbarTitle = stringResource(R.string.otp_screen_toolbar_title),
-        toolbarActions = listOf(
-            ToolbarAction(
-                label = stringResource(R.string.otp_screen_toolbar_action_label_send),
-                order = 1,
-                iconData = IconData(
-                    iconResource = R.drawable.ic_send_32,
-                    contentDescription = stringResource(R.string.otp_screen_content_description_send)
-                ),
-                onClick = {
-                    viewModel.setEvent(OtpEvent.OnSendClick)
-                }
-            )
-        )
-    ) { paddingValues ->
-        LazyColumn(
-            contentPadding = paddingValues,
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Top
-        ) {
-            item {
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Top
-                ) {
-                    AnimatedVisibility(
-                        visible = state.errorMessage != null && state.errorMessage?.isNotBlank() == true,
-                        enter = fadeIn(),
-                        exit = fadeOut()
-                    ) {
-                        Text(
-                            modifier = Modifier.fillMaxWidth(),
-                            text = state.errorMessage.toString(),
-                            color = MaterialTheme.colors.error,
-                            textAlign = TextAlign.Center,
-                            style = MaterialTheme.typography.body1,
-                        )
+    LoadingScreen(isLoading = state.isLoading) {
+        ContentScreen(
+            onBack = { navController.popBackStack() },
+            showToolbar = true,
+            toolbarTitle = stringResource(R.string.otp_screen_toolbar_title),
+            toolbarActions = listOf(
+                ToolbarAction(
+                    label = stringResource(R.string.otp_screen_toolbar_action_label_send),
+                    order = 1,
+                    iconData = IconData(
+                        iconResource = R.drawable.ic_send_32,
+                        contentDescription = stringResource(R.string.otp_screen_content_description_send),
+                        enabled = state.otp.length == 6 // Enable button if the OTP's length is equal to 6.
+                    ),
+                    onClick = {
+                        viewModel.setEvent(OtpEvent.OnSendClick)
                     }
-
-                    VSpacer.Small()
-
-                    /*OutlinedTextFieldValidation(
+                )
+            )
+        ) { paddingValues ->
+            LazyColumn(
+                contentPadding = paddingValues,
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Top
+            ) {
+                item {
+                    Column(
                         modifier = Modifier.fillMaxWidth(),
-                        value = state.otp,
-                        onValueChange = { newOtp ->
-                            viewModel.setEvent(
-                                OtpEvent.OnOtpFieldValueChange(newOtp)
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Top
+                    ) {
+                        AnimatedVisibility(
+                            visible = state.errorMessage != null && state.errorMessage?.isNotBlank() == true,
+                            enter = fadeIn(),
+                            exit = fadeOut()
+                        ) {
+                            Text(
+                                modifier = Modifier.fillMaxWidth(),
+                                text = state.errorMessage.toString(),
+                                color = MaterialTheme.colors.error,
+                                textAlign = TextAlign.Center,
+                                style = MaterialTheme.typography.body1,
                             )
-                        },
-                        errorMessage = state.enteredOtpValidationResult.messages.firstOrNull()
-                            .orEmpty(),
-                        isError = state.enteredOtpValidationResult.isValid.not(),
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Decimal,
-                            imeAction = ImeAction.Done
-                        ),
-                        keyboardActions = KeyboardActions(
-                            onDone = {
+                        }
+
+                        VSpacer.Small()
+
+                        // OTP
+                        OtpTextField(
+                            modifier = Modifier.fillMaxWidth(),
+                            otp = state.otp,
+                            onValueChange = { value, otpInputFilled ->
                                 viewModel.setEvent(
-                                    OtpEvent.OnDoneClick
+                                    OtpEvent.OnOtpFieldValueChange(
+                                        otp = value
+                                    )
                                 )
+                            },
+                            onDoneClick = {
+                                viewModel.setEvent(OtpEvent.OnDoneClick)
                             }
                         )
-                    )*/
 
-                    // OTP
-                    OtpTextField(
-                        modifier = Modifier.fillMaxWidth(),
-                        otp = state.otp,
-                        onValueChange = { value, otpInputFilled ->
-                            viewModel.setEvent(
-                                OtpEvent.OnOtpFieldValueChange(
-                                    otp = value
-                                )
-                            )
-                        },
-                        onDoneClick = {
-                            viewModel.setEvent(OtpEvent.OnDoneClick)
-                        }
-                    )
+                        VSpacer.Small()
 
-                    VSpacer.Small()
-
-                    Text(
-                        modifier = Modifier.fillMaxWidth(),
-                        text = stringResource(R.string.otp_screen_input_field_label),
-                        textAlign = TextAlign.Start,
-                        style = MaterialTheme.typography.body2
-                    )
+                        Text(
+                            modifier = Modifier.fillMaxWidth(),
+                            text = stringResource(R.string.otp_screen_input_field_label),
+                            textAlign = TextAlign.Start,
+                            style = MaterialTheme.typography.body2
+                        )
+                    }
                 }
             }
         }

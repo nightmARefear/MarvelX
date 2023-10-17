@@ -68,14 +68,14 @@ fun ProfileScreen(
                     // TODO: TO BE REMOVED!
                     // userId
                     Text(
-                        text = activityState.value.userId.toString(),
+                        text = "userId: ".plus(activityState.value.userId.toString()),
                         style = MaterialTheme.typography.h4
                     )
 
                     // user's token
                     Text(
-                        text = state.userToken,
-                        style = MaterialTheme.typography.h2
+                        text = "token: ".plus(state.userToken.take(10).plus("...")),
+                        style = MaterialTheme.typography.h4
                     )
 
                     // Profile picture.

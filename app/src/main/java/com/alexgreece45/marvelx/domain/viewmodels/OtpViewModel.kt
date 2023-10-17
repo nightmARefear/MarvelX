@@ -4,7 +4,6 @@ import androidx.core.text.isDigitsOnly
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.data.models.otp.OtpRequest
-import com.alexgreece45.marvelx.domain.controllers.PreferencesController
 import com.alexgreece45.marvelx.domain.controllers.PreferencesKeys
 import com.alexgreece45.marvelx.domain.interactors.OtpInteractor
 import com.alexgreece45.marvelx.domain.interactors.ValidateOtpPartialState
@@ -32,7 +31,7 @@ sealed class OtpEvent : BaseEvent {
 
 data class OtpState(
     // Base states.
-    val isLoading: Boolean = true,
+    val isLoading: Boolean = false,
     val hasInternetConnection: Boolean = true,
     /**
      * Error message retrieved from the MarvelX-Backend API for invalid user input.
@@ -54,7 +53,7 @@ data class OtpState(
     companion object {
         fun getDefaultValues(): OtpState =
             OtpState(
-                isLoading = true,
+                isLoading = false,
                 hasInternetConnection = true,
                 errorMessage = null,
                 userId = null
@@ -66,6 +65,7 @@ sealed class OtpEffect : BaseEffect {
 
     sealed class Navigation : OtpEffect() {
         data class NavigateToPreviousScreenWithError(val errorMessage: String) : Navigation()
+
         data class NavigateToNextScreen(val screenRoute: String) : Navigation()
 
         object NavigateToAllCharactersScreen : Navigation()
@@ -113,7 +113,6 @@ class OtpViewModel @Inject constructor(
 
         setState {
             copy(
-                isLoading = false, // todo: change to true
                 userId = userId
             )
         }
@@ -130,8 +129,13 @@ class OtpViewModel @Inject constructor(
     }
 
     private fun validateOtp() {
-        // If the user entered OTP is of length 6, then proceed with its validation.
+        // If the user-entered OTP is of length 6, then proceed with its validation.
         if (currentState.otp.length == 6) {
+            setState {
+                copy(
+                    isLoading = true
+                )
+            }
             viewModelScope.launch {
                 otpInteractor.validateOtp(otpRequest = getOtpRequest())
                     .collect { getOtpPartialState ->
@@ -169,17 +173,17 @@ class OtpViewModel @Inject constructor(
                                     )
                                 }
 
-                                // Save token to client's device.
-                                getOtpPartialState.token?.let { token ->
-                                    preferencesKeys.setUserToken(
-                                        token = token
+                                // Store userId to device.
+                                currentState.userId?.let { userId ->
+                                    preferencesKeys.setUserId(
+                                        userId = userId
                                     )
                                 }
 
-                                // Store userId.
-                                currentState.userId?.let { userId ->
-                                    preferencesKeys.setUserId(
-                                        userId
+                                // Store userToken to device.
+                                getOtpPartialState.userToken?.let { userToken ->
+                                    preferencesKeys.setUserToken(
+                                        userToken = userToken
                                     )
                                 }
 
@@ -228,6 +232,6 @@ class OtpViewModel @Inject constructor(
         OtpRequest(
             userId = currentState.userId.toString(),
             otp = currentState.otp,
-            epoch = DateUtil.getSecondsFromEpoch().toString()
+            epoch = DateUtil.getSecondsFromEpoch()
         )
 }

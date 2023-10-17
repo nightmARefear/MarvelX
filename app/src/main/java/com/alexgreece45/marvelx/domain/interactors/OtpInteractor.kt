@@ -30,7 +30,7 @@ class OtpInteractorImpl @Inject constructor(
                 response.body()?.let { responseBody ->
                     emit(
                         ValidateOtpPartialState.Success(
-                            token = responseBody.token
+                            userToken = responseBody.userToken
                         )
                     )
                 } ?: run {
@@ -74,7 +74,7 @@ sealed class ValidateOtpPartialState {
     /**
      * The OTP was correct. User is navigated to the next screen as defined in the viewModel.
      * */
-    data class Success(val token: String?) : ValidateOtpPartialState()
+    data class Success(val userToken: String?) : ValidateOtpPartialState()
 
     /**
      * Represents an internal server error. The displayed error message is "an internal server
@@ -98,7 +98,7 @@ sealed class ValidateOtpPartialState {
 
 
     /**
-     * When there is no internet connection.
+     * If there's no internet connection.
      * */
     object NoInternetConnection : ValidateOtpPartialState()
 }
