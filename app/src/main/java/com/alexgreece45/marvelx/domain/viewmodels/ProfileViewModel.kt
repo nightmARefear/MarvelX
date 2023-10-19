@@ -15,6 +15,8 @@ import javax.inject.Inject
 
 sealed class ProfileEvent : BaseEvent {
     data class InitView(val userId: Int) : ProfileEvent()
+
+    object OnLogoutButtonPressed : ProfileEvent()
 }
 
 data class ProfileState(
@@ -51,7 +53,11 @@ data class ProfileState(
 }
 
 sealed class ProfileEffect : BaseEffect {
+    sealed class Navigation : ProfileEffect() {
+        object NavigateToHomeScreen : Navigation()
+    }
 
+    data class ShowToast(val toastMessage: String) : ProfileEffect()
 }
 
 @HiltViewModel
@@ -65,16 +71,20 @@ class ProfileViewModel @Inject constructor(
     override fun handleEvents(event: ProfileEvent) {
         when (event) {
             is ProfileEvent.InitView -> {
-                initView(userId = event.userId)
+                initView()
+            }
+
+            ProfileEvent.OnLogoutButtonPressed -> {
+                logout()
             }
         }
     }
 
-    private fun initView(userId: Int) {
+    private fun initView() {
         setState {
             copy(
-                userId = userId,
                 isLoading = true,
+                userId = preferencesKeys.getUserId(),
                 userToken = preferencesKeys.getUserToken()
             )
         }
@@ -89,6 +99,7 @@ class ProfileViewModel @Inject constructor(
                             )
                         }
                     }
+
                     is UserPartialStateGetProfileDetails.NoInternetConnection -> {
                         setState {
                             copy(
@@ -97,6 +108,7 @@ class ProfileViewModel @Inject constructor(
                             )
                         }
                     }
+
                     is UserPartialStateGetProfileDetails.Success -> {
                         setState {
                             copy(
@@ -107,6 +119,20 @@ class ProfileViewModel @Inject constructor(
                     }
                 }
             }
+        }
+    }
+
+    private fun logout() {
+        setEffect {
+            ProfileEffect.ShowToast("logout button clicked")
+        }
+
+        // Remove user credentials.
+        preferencesKeys.removeUserCredentials()
+
+        // Navigate to Home Screen.
+        setEffect {
+            ProfileEffect.Navigation.NavigateToHomeScreen
         }
     }
 }

@@ -38,13 +38,21 @@ data class OtpState(
      * */
     val errorMessage: String? = null,
 
-    // Data.
+    /**
+     * The user ID.
+     * */
     val userId: Int? = null,
 
     /**
      * The OTP that the user has entered in the TextField.
      * */
     val otp: String = "",
+
+    /**
+     * Controls whether the send toolbar action button is enabled.
+     * This button is enabled if the OTP's length is equal to 6.
+     * */
+    val sendButton: Boolean = otp.length == 6,
 
     // Validations.
     val enteredOtpValidationResult: FormsValidationResult = FormsValidationResult(true)
@@ -56,7 +64,9 @@ data class OtpState(
                 isLoading = false,
                 hasInternetConnection = true,
                 errorMessage = null,
-                userId = null
+                userId = null,
+                otp = "",
+                sendButton = false
             )
     }
 }

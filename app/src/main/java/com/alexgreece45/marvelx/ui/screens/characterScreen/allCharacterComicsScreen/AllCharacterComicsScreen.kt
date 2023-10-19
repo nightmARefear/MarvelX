@@ -133,6 +133,7 @@ fun AllCharacterComicsScreen(
         ) {
             ContentScreen(
                 onBack = { navController.popBackStack() },
+                isLoading = state.isLoading,
                 showToolbar = true,
                 toolbarTitle = stringResource(
                     R.string.all_character_comics_screen_toolbar_title,

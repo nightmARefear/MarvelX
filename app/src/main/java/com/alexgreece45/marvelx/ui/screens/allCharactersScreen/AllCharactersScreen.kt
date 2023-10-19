@@ -47,6 +47,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.alexgreece45.marvelx.R
@@ -58,15 +60,15 @@ import com.alexgreece45.marvelx.navigation.Screen
 import com.alexgreece45.marvelx.ui.BottomBarAction
 import com.alexgreece45.marvelx.ui.BottomNavigationBarData
 import com.alexgreece45.marvelx.ui.ContentScreen
-import com.alexgreece45.marvelx.util.DEFAULT_SCREEN_PADDING
 import com.alexgreece45.marvelx.ui.ExtendedFabData
+import com.alexgreece45.marvelx.ui.GenericErrorScreen
 import com.alexgreece45.marvelx.ui.ModalBottomSheet
 import com.alexgreece45.marvelx.ui.NormalFabData
-import com.alexgreece45.marvelx.util.SPACING_SMALL
-import com.alexgreece45.marvelx.util.SPACING_TINY
 import com.alexgreece45.marvelx.ui.SearchBar
 import com.alexgreece45.marvelx.ui.SortingModalBottomSheetContent
-import com.alexgreece45.marvelx.ui.WrapperContentScreen
+import com.alexgreece45.marvelx.util.DEFAULT_SCREEN_PADDING
+import com.alexgreece45.marvelx.util.SPACING_SMALL
+import com.alexgreece45.marvelx.util.SPACING_TINY
 import kotlinx.coroutines.coroutineScope
 
 @OptIn(
@@ -156,40 +158,34 @@ fun AllCharactersScreen(
         }
     }
 
-    WrapperContentScreen(
-        isLoading = state.isLoading,
-        hasInternetConnection = state.hasInternetConnection,
-        errorMessage = state.errorMessage,
-        onRetryClick = {
-            viewModel.setEvent(AllCharactersEvent.InitView)
+    ModalBottomSheet(
+        sheetState = modalBottomSheetState,
+        sheetShape = RoundedCornerShape(
+            topStart = SPACING_SMALL.dp,
+            topEnd = SPACING_SMALL.dp
+        ),
+        scrimColor = MaterialTheme.colors.background.copy(
+            alpha = 0.5f
+        ),
+        sheetContent = {
+            SortingModalBottomSheetContent(
+                contentPadding = DEFAULT_SCREEN_PADDING,
+                selectedItem = state.sortingType,
+                onItemClick = { sortingType ->
+                    viewModel.setEvent(AllCharactersEvent.Sorting.OnItemClick(sortingType))
+                },
+                onCloseClick = {
+                    viewModel.setEvent(AllCharactersEvent.Sorting.OnCloseClick)
+                }
+            )
         }
     ) {
-        ModalBottomSheet(
-            sheetState = modalBottomSheetState,
-            sheetShape = RoundedCornerShape(
-                topStart = SPACING_SMALL.dp,
-                topEnd = SPACING_SMALL.dp
-            ),
-            scrimColor = MaterialTheme.colors.background.copy(
-                alpha = 0.5f
-            ),
-            sheetContent = {
-                SortingModalBottomSheetContent(
-                    contentPadding = DEFAULT_SCREEN_PADDING,
-                    selectedItem = state.sortingType,
-                    onItemClick = { sortingType ->
-                        viewModel.setEvent(AllCharactersEvent.Sorting.OnItemClick(sortingType))
-                    },
-                    onCloseClick = {
-                        viewModel.setEvent(AllCharactersEvent.Sorting.OnCloseClick)
-                    }
-                )
-            }
-        ) {
-            ContentScreen(
-                showToolbar = true,
-                toolbarTitle = stringResource(R.string.all_characters_screen_toolbar_title),
-                fabData = ExtendedFabData(
+        ContentScreen(
+            isLoading = state.isLoading,
+            showToolbar = true,
+            toolbarTitle = stringResource(R.string.all_characters_screen_toolbar_title),
+            fabData = if (state.errorMessage == null) { // Display FAB only when there's no error.
+                ExtendedFabData(
                     extended = /*lazyStaggeredGridState.isScrollingUp()*/true,
                     normalFabData = NormalFabData(
                         label = stringResource(R.string.all_characters_screen_fab_label),
@@ -198,60 +194,70 @@ fun AllCharactersScreen(
                         contentColor = null,
                         onClick = { viewModel.setEvent(AllCharactersEvent.OnFabClick) }
                     )
-                ),
-                bottomNavigationBarData = BottomNavigationBarData(
-                    navController = navController,
-                    items = BottomBarAction.getDefaultBottomBarActions()
                 )
-            ) { contentPadding ->
-                LazyVerticalStaggeredGrid(
-                    modifier = Modifier
-                        .fillMaxSize(),
-                    columns = StaggeredGridCells.Fixed(2),
-                    state = lazyStaggeredGridState,
-                    contentPadding = contentPadding,
-                    verticalItemSpacing = SPACING_SMALL.dp,
-                    horizontalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp)
-                ) {
-                    item(span = StaggeredGridItemSpan.FullLine) {
-                        SearchBar(
-                            searchTerm = state.searchBarTerm,
-                            hint = stringResource(R.string.all_characters_screen_search_bar_hint),
-                            onValueChange = { newSearchTerm ->
-                                viewModel.setEvent(
-                                    AllCharactersEvent.SearchBar.OnKeyboardType(
-                                        searchTerm = newSearchTerm
-                                    )
-                                )
-                            },
-                            onCloseClick = {
-                                viewModel.setEvent(AllCharactersEvent.SearchBar.OnCloseClick)
-                            }
-                        )
+            } else null,
+            bottomNavigationBarData = BottomNavigationBarData(
+                navController = navController,
+                items = state.bottomBarActions,
+                backgroundColor = MaterialTheme.colors.background,
+                contentColor = MaterialTheme.colors.onBackground
+            )
+        ) { contentPadding ->
+            LazyVerticalStaggeredGrid(
+                modifier = Modifier
+                    .fillMaxSize(),
+                columns = StaggeredGridCells.Fixed(2),
+                state = lazyStaggeredGridState,
+                contentPadding = contentPadding,
+                verticalItemSpacing = SPACING_SMALL.dp,
+                horizontalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp)
+            ) {
+                // TODO: Refactor later.
+                state.errorMessage?.let { errorMessage ->
+                    item {
+                        GenericErrorScreen(errorMessage = errorMessage)
                     }
+                    return@LazyVerticalStaggeredGrid
+                }
 
-                    items(
-                        items = state.filteredCharacters,
-                        key = { characterDomain ->
-                            characterDomain.id
+                item(span = StaggeredGridItemSpan.FullLine) {
+                    SearchBar(
+                        searchTerm = state.searchBarTerm,
+                        hint = stringResource(R.string.all_characters_screen_search_bar_hint),
+                        onValueChange = { newSearchTerm ->
+                            viewModel.setEvent(
+                                AllCharactersEvent.SearchBar.OnKeyboardType(
+                                    searchTerm = newSearchTerm
+                                )
+                            )
+                        },
+                        onCloseClick = {
+                            viewModel.setEvent(AllCharactersEvent.SearchBar.OnCloseClick)
                         }
-                    ) { characterDomain ->
-                        CharacterItem(
-                            character = characterDomain,
-                            onClick = {
-                                viewModel.setEvent(
-                                    AllCharactersEvent.OnCharacterClick(characterId = characterDomain.id)
-                                )
-                            },
-                            onFavoriteClick = {
-                                viewModel.setEvent(
-                                    AllCharactersEvent.OnHeartClick(
-                                        characterId = characterDomain.id
-                                    )
-                                )
-                            }
-                        )
+                    )
+                }
+
+                items(
+                    items = state.filteredCharacters,
+                    key = { characterDomain ->
+                        characterDomain.id
                     }
+                ) { characterDomain ->
+                    CharacterItem(
+                        character = characterDomain,
+                        onClick = {
+                            viewModel.setEvent(
+                                AllCharactersEvent.OnCharacterClick(characterId = characterDomain.id)
+                            )
+                        },
+                        onFavoriteClick = {
+                            viewModel.setEvent(
+                                AllCharactersEvent.OnHeartClick(
+                                    characterId = characterDomain.id
+                                )
+                            )
+                        }
+                    )
                 }
             }
         }

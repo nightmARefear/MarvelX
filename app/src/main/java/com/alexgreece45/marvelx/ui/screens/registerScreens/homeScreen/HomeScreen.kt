@@ -77,62 +77,61 @@ fun HomeScreen(
         }
     }
 
-    LoadingScreen(isLoading = state.isLoading) {
-        ContentScreen(
-            onBack = { viewModel.setEvent(HomeEvent.OnBack) },
-        ) { paddingValues ->
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = paddingValues,
-            ) {
-                item {
-                    AlertDialogError(
-                        isVisible = state.isAlertDialogVisible,
-                        title = state.alertDialogTitle,
-                        errorMessage = state.alertDialogErrorMessage,
-                        confirmButton = AlertDialogButton(
-                            value = stringResource(R.string.ok),
-                            onClick = { viewModel.setEvent(HomeEvent.AlertDialog.OnOkClick) }
-                        )
+    ContentScreen(
+        onBack = { viewModel.setEvent(HomeEvent.OnBack) },
+        isLoading = state.isLoading,
+    ) { paddingValues ->
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = paddingValues,
+        ) {
+            item {
+                AlertDialogError(
+                    isVisible = state.isAlertDialogVisible,
+                    title = state.alertDialogTitle,
+                    errorMessage = state.alertDialogErrorMessage,
+                    confirmButton = AlertDialogButton(
+                        value = stringResource(R.string.ok),
+                        onClick = { viewModel.setEvent(HomeEvent.AlertDialog.OnOkClick) }
+                    )
+                )
+            }
+
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = stringResource(R.string.home_screen_toolbar_title),
+                        textAlign = TextAlign.Center,
+                        style = MaterialTheme.typography.h4
                     )
                 }
+            }
 
-                item {
-                    Row(
+            item {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp)
+                ) {
+                    // Login button.
+                    Button(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Center
+                        onClick = { viewModel.setEvent(HomeEvent.OnLogInButtonClick) }
                     ) {
                         Text(
-                            text = stringResource(R.string.home_screen_toolbar_title),
-                            textAlign = TextAlign.Center,
-                            style = MaterialTheme.typography.h4
+                            text = stringResource(R.string.home_screen_label_log_in_button),
                         )
                     }
-                }
 
-                item {
-                    Column(
+                    // Signup button.
+                    Button(
                         modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp)
-                    ) {
-                        // Login button.
-                        Button(
-                            modifier = Modifier.fillMaxWidth(),
-                            onClick = { viewModel.setEvent(HomeEvent.OnLogInButtonClick) }
-                        ) {
-                            Text(
-                                text = stringResource(R.string.home_screen_label_log_in_button),
-                            )
-                        }
-
-                        // Signup button.
-                        Button(
-                            modifier = Modifier.fillMaxWidth(),
-                            onClick = { viewModel.setEvent(HomeEvent.OnSignUpButtonClick) }) {
-                            Text(
-                                text = stringResource(R.string.home_screen_label_sign_up_button),
-                            )
-                        }
+                        onClick = { viewModel.setEvent(HomeEvent.OnSignUpButtonClick) }) {
+                        Text(
+                            text = stringResource(R.string.home_screen_label_sign_up_button),
+                        )
                     }
                 }
             }

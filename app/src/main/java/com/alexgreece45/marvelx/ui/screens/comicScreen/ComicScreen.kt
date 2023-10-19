@@ -56,6 +56,7 @@ fun ComicScreen(
 
     ContentScreen(
         onBack = { navController.popBackStack() },
+        isLoading = state.isLoading,
         showToolbar = true,
         toolbarTitle = state.comic?.title.orEmpty(),
     ) { padding ->

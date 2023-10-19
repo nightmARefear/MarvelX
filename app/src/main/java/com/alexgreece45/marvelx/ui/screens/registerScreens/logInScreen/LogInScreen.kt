@@ -97,97 +97,96 @@ fun LogInScreen(
         }
     }
 
-    LoadingScreen(isLoading = state.isLoading) {
-        ContentScreen(
-            onBack = { viewModel.setEvent(LoginEvent.OnBack) },
-            showToolbar = true,
-            toolbarTitle = stringResource(R.string.login_screen_toolbar_title)
-        ) { paddingValues ->
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = paddingValues,
-            ) {
-                item {
-                    AlertDialogError(
-                        isVisible = state.isAlertDialogVisible,
-                        title = state.alertDialogTitle,
-                        errorMessage = state.alertDialogErrorMessage,
-                        confirmButton = AlertDialogButton(
-                            value = stringResource(R.string.ok),
-                            onClick = { viewModel.setEvent(LoginEvent.AlertDialog.OnOkClick) }
-                        )
+    ContentScreen(
+        onBack = { viewModel.setEvent(LoginEvent.OnBack) },
+        isLoading = state.isLoading,
+        showToolbar = true,
+        toolbarTitle = stringResource(R.string.login_screen_toolbar_title)
+    ) { paddingValues ->
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = paddingValues,
+        ) {
+            item {
+                AlertDialogError(
+                    isVisible = state.isAlertDialogVisible,
+                    title = state.alertDialogTitle,
+                    errorMessage = state.alertDialogErrorMessage,
+                    confirmButton = AlertDialogButton(
+                        value = stringResource(R.string.ok),
+                        onClick = { viewModel.setEvent(LoginEvent.AlertDialog.OnOkClick) }
                     )
-                }
+                )
+            }
 
-                item {
-                    Column(
+            item {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(SPACING_MEDIUM.dp)
+                ) {
+                    // Email
+                    OutlinedTextFieldValidation(
                         modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(SPACING_MEDIUM.dp)
+                        value = state.email,
+                        label = stringResource(R.string.login_screen_input_field_label_email),
+                        placeholder = stringResource(R.string.login_screen_input_field_placeholder_email),
+                        onValueChange = { newValue ->
+                            viewModel.setEvent(LoginEvent.FieldValueChange.Email(email = newValue))
+                        },
+                        errorMessage = state.emailValidationResult.messages.firstOrNull()
+                            .orEmpty(),
+                        isError = state.emailValidationResult.isValid.not() && state.emailValidationResult.messages.firstOrNull() != null,
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Email,
+                            imeAction = ImeAction.Next
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onNext = {
+                                focusManager.moveFocus(FocusDirection.Next)
+                            }
+                        ),
+                        shape = MaterialTheme.shapes.medium
+                    )
+
+                    // Password
+                    OutlinedTextFieldValidation(
+                        modifier = Modifier.fillMaxWidth(),
+                        value = state.password,
+                        valueType = ValueType.Password(
+                            isPasswordVisible = state.isPasswordVisible,
+                            onVisibilityIconClick = { viewModel.setEvent(LoginEvent.OnPasswordVisibilityIconClick) }
+                        ),
+                        label = stringResource(R.string.login_screen_input_field_label_password),
+                        placeholder = stringResource(R.string.log_in_screen_input_field_placeholder_password),
+                        onValueChange = { newValue ->
+                            viewModel.setEvent(LoginEvent.FieldValueChange.Password(password = newValue))
+                        },
+                        errorMessage = state.passwordValidationResult.messages.firstOrNull()
+                            .orEmpty(),
+                        isError = state.passwordValidationResult.isValid.not() && state.passwordValidationResult.messages.firstOrNull() != null,
+                        visualTransformation = if (state.isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                        keyboardOptions = KeyboardOptions(
+                            imeAction = ImeAction.Done
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onDone = {
+                                viewModel.setEvent(
+                                    LoginEvent.OnDoneClick
+                                )
+                            }
+                        ),
+                        shape = MaterialTheme.shapes.medium
+                    )
+
+                    // Login button.
+                    Button(
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = state.loginButton,
+                        onClick = { viewModel.setEvent(LoginEvent.OnLoginButtonClick) }
                     ) {
-                        // Email
-                        OutlinedTextFieldValidation(
-                            modifier = Modifier.fillMaxWidth(),
-                            value = state.email,
-                            label = stringResource(R.string.login_screen_input_field_label_email),
-                            placeholder = stringResource(R.string.login_screen_input_field_placeholder_email),
-                            onValueChange = { newValue ->
-                                viewModel.setEvent(LoginEvent.FieldValueChange.Email(email = newValue))
-                            },
-                            errorMessage = state.emailValidationResult.messages.firstOrNull()
-                                .orEmpty(),
-                            isError = state.emailValidationResult.isValid.not() && state.emailValidationResult.messages.firstOrNull() != null,
-                            keyboardOptions = KeyboardOptions(
-                                keyboardType = KeyboardType.Email,
-                                imeAction = ImeAction.Next
-                            ),
-                            keyboardActions = KeyboardActions(
-                                onNext = {
-                                    focusManager.moveFocus(FocusDirection.Next)
-                                }
-                            ),
-                            shape = MaterialTheme.shapes.medium
+                        Text(
+                            text = stringResource(R.string.log_in_screen_sign_up_button_text)
                         )
-
-                        // Password
-                        OutlinedTextFieldValidation(
-                            modifier = Modifier.fillMaxWidth(),
-                            value = state.password,
-                            valueType = ValueType.Password(
-                                isPasswordVisible = state.isPasswordVisible,
-                                onVisibilityIconClick = { viewModel.setEvent(LoginEvent.OnPasswordVisibilityIconClick) }
-                            ),
-                            label = stringResource(R.string.login_screen_input_field_label_password),
-                            placeholder = stringResource(R.string.log_in_screen_input_field_placeholder_password),
-                            onValueChange = { newValue ->
-                                viewModel.setEvent(LoginEvent.FieldValueChange.Password(password = newValue))
-                            },
-                            errorMessage = state.passwordValidationResult.messages.firstOrNull()
-                                .orEmpty(),
-                            isError = state.passwordValidationResult.isValid.not() && state.passwordValidationResult.messages.firstOrNull() != null,
-                            visualTransformation = if (state.isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                            keyboardOptions = KeyboardOptions(
-                                imeAction = ImeAction.Done
-                            ),
-                            keyboardActions = KeyboardActions(
-                                onDone = {
-                                    viewModel.setEvent(
-                                        LoginEvent.OnDoneClick
-                                    )
-                                }
-                            ),
-                            shape = MaterialTheme.shapes.medium
-                        )
-
-                        // Login button.
-                        Button(
-                            modifier = Modifier.fillMaxWidth(),
-                            enabled = state.loginButton,
-                            onClick = { viewModel.setEvent(LoginEvent.OnLoginButtonClick) }
-                        ) {
-                            Text(
-                                text = stringResource(R.string.log_in_screen_sign_up_button_text)
-                            )
-                        }
                     }
                 }
             }

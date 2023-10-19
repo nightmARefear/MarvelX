@@ -31,18 +31,18 @@ interface ApiService {
     @GET("/v1/public/comics/{comicId}")
     suspend fun getComicById(@Path("comicId") comicId: Int): Response<ComicDataWrapper>
 
-    @POST(BuildConfig.MARVELX_BACKEND_ENDPOINT_POST_SIGN_UP)
+    @POST("/api/private/marvelx/user/signup")
     suspend fun postUserSignup(@Body userSignUpRequest: UserSignupRequest): Response<UserSignupResponse>
 
-    @POST(BuildConfig.MARVELX_BACKEND_ENDPOINT_POST_LOG_IN)
+    @POST("/api/private/marvelx/user/login")
     suspend fun postUserLogin(@Body userLogInRequest: UserLoginRequest): Response<UserLoginResponse>
 
-    @POST(BuildConfig.MARVELX_BACKEND_ENDPOINT_POST_LOGIN_WITH_TOKEN)
+    @POST("/api/private/marvelx/user/login_with_token")
     suspend fun postLoginWithToken(@Body userLoginWithTokenRequest: UserLoginWithTokenRequest): Response<UserLoginWithTokenResponse>
 
-    @POST(BuildConfig.MARVELX_BACKEND_ENDPOINT_POST_OTP)
+    @POST("/api/private/marvelx/user/validate_otp")
     suspend fun validateOtp(@Body otpRequest: OtpRequest): Response<OtpResponseSuccess>
 
-    @GET("${BuildConfig.MARVELX_BACKEND_ENDPOINT_GET_PROFILE_DETAILS}/{userId}")
+    @GET("/api/private/marvelx/user/profile_details/{userId}")
     suspend fun getUserProfileDetails(@Path("userId") userId: Int): Response<UserProfileDetailsResponse>
 }

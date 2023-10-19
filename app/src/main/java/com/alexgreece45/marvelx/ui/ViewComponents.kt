@@ -1,10 +1,13 @@
 package com.alexgreece45.marvelx.ui
 
 import androidx.annotation.DrawableRes
+import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -32,7 +35,11 @@ import androidx.compose.material.BottomSheetScaffold
 import androidx.compose.material.BottomSheetScaffoldDefaults
 import androidx.compose.material.BottomSheetScaffoldState
 import androidx.compose.material.Button
+import androidx.compose.material.ButtonColors
+import androidx.compose.material.ButtonDefaults
+import androidx.compose.material.ButtonElevation
 import androidx.compose.material.ContentAlpha
+import androidx.compose.material.Divider
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.FloatingActionButton
 import androidx.compose.material.Icon
@@ -66,9 +73,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Paint
+import androidx.compose.ui.graphics.PaintingStyle
+import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
@@ -80,6 +94,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.zIndex
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.airbnb.lottie.compose.LottieAnimation
@@ -94,39 +109,39 @@ import com.alexgreece45.marvelx.util.HSpacer
 import com.alexgreece45.marvelx.util.SPACING_LARGE
 import com.alexgreece45.marvelx.util.SPACING_MEDIUM
 import com.alexgreece45.marvelx.util.SPACING_SMALL
+import com.alexgreece45.marvelx.util.SPACING_TINY
 import com.alexgreece45.marvelx.util.VSpacer
 import com.alexgreece45.marvelx.util.extensions.applyPadding
 
 data class BottomBarAction(
     val route: String,
-    val label: String,
+    @StringRes val label: Int,
     val iconData: IconData,
 ) {
     companion object {
-        @Composable
         fun getDefaultBottomBarActions(): List<BottomBarAction> = listOf(
             BottomBarAction(
                 route = Screen.BottomNavigationScreens.AllCharactersScreen.route,
-                label = stringResource(R.string.bottom_navigation_label_characters),
+                label = R.string.bottom_navigation_label_characters,
                 iconData = IconData(
                     iconResource = R.drawable.ic_superhero_32,
-                    contentDescription = stringResource(R.string.bottom_navigation_label_characters)
+                    contentDescription = R.string.bottom_navigation_label_characters
                 )
             ),
             BottomBarAction(
                 route = Screen.BottomNavigationScreens.AllFavoriteCharactersScreen.route,
-                label = stringResource(R.string.bottom_navigation_label_favorites),
+                label = R.string.bottom_navigation_label_favorites,
                 iconData = IconData(
                     iconResource = R.drawable.ic_favorite_filled_24,
-                    contentDescription = stringResource(R.string.bottom_navigation_label_favorites)
+                    contentDescription = R.string.bottom_navigation_label_favorites
                 )
             ),
             BottomBarAction(
                 route = Screen.BottomNavigationScreens.ProfileScreen.route,
-                label = stringResource(R.string.bottom_navigation_label_profile),
+                label = R.string.bottom_navigation_label_profile,
                 iconData = IconData(
                     iconResource = R.drawable.ic_person_32,
-                    contentDescription = stringResource(R.string.bottom_navigation_label_profile)
+                    contentDescription = R.string.bottom_navigation_label_profile
                 )
             )
         )
@@ -183,7 +198,7 @@ private fun BottomBar(
                     Column {
                         Icon(
                             painter = painterResource(bottomBarAction.iconData.iconResource),
-                            contentDescription = bottomBarAction.iconData.contentDescription,
+                            contentDescription = stringResource(bottomBarAction.iconData.contentDescription),
                             tint = bottomBarAction.iconData.colorTint
                                 ?: LocalContentColor.current.copy(
                                     alpha = LocalContentAlpha.current
@@ -197,7 +212,7 @@ private fun BottomBar(
 }
 
 /**
- * An extension of the [BottomNavigation] providing additional functionality.
+ * An extension of [BottomNavigation] providing additional functionality.
  * */
 @Composable
 fun BottomNavigationBar(
@@ -211,14 +226,13 @@ fun BottomNavigationBar(
 ) {
     if (items.size < 3) throw RuntimeException("The minimum allowed bottom navigation bar actions are 3!")
     if (items.size > 5) throw RuntimeException("The maximum allowed bottom navigation bar actions are 5!")
-    if (items.any { it.label.length > 10 }) throw RuntimeException("The maximum allowed length for a bottom navigation bar's item label is 10 characters.")
-
-    val _backgroundColor = backgroundColor ?: MaterialTheme.colors.primarySurface
-    val _contentColor = contentColor ?: contentColorFor(_backgroundColor)
+    if (items.any { stringResource(it.label).length > 10 }) throw RuntimeException("The maximum allowed length for a bottom navigation bar's item label is 10 characters.")
 
     BottomNavigation(
-        backgroundColor = _backgroundColor,
-        contentColor = _contentColor,
+        backgroundColor = backgroundColor ?: MaterialTheme.colors.primarySurface,
+        contentColor = if (backgroundColor == null) contentColorFor(MaterialTheme.colors.primarySurface) else contentColorFor(
+            backgroundColor
+        ),
         elevation = elevation
     ) {
         val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -229,29 +243,48 @@ fun BottomNavigationBar(
                 LocalContentAlpha provides ContentAlpha.high
             ) {
                 BottomNavigationItem(
-                    selected = currentRoute == bottomBarAction.route,
+                    modifier = Modifier.then(
+                        // Draws a horizontal line at the top of the selected item.
+                        if (currentRoute == bottomBarAction.route) {
+                            val lineColor = MaterialTheme.colors.primaryVariant.copy(alpha = 0.8f)
+                            Modifier.drawWithContent {
+                                drawContent()
+                                drawLine(
+                                    color = lineColor,
+                                    start = Offset(0f, 0f),
+                                    end = Offset(size.width, 0f),
+                                    strokeWidth = SPACING_TINY.dp.toPx(),
+                                    cap = StrokeCap.Butt
+                                )
+                            }
+                        } else Modifier
+                    ),
                     icon = {
                         Icon(
                             modifier = Modifier.size(32.dp),
                             painter = painterResource(bottomBarAction.iconData.iconResource),
-                            contentDescription = bottomBarAction.iconData.contentDescription,
+                            contentDescription = stringResource(bottomBarAction.iconData.contentDescription),
                             tint = bottomBarAction.iconData.colorTint
                                 ?: LocalContentColor.current.copy(alpha = LocalContentAlpha.current)
                         )
                     },
                     label = {
                         Text(
-                            text = bottomBarAction.label,
+                            text = stringResource(bottomBarAction.label),
                             style = MaterialTheme.typography.caption
                         )
                     },
+                    selected = currentRoute == bottomBarAction.route,
                     onClick = {
-                        navController.navigate(bottomBarAction.route) {
-                            popUpTo(navController.graph.startDestinationId) {
-                                saveState = true
+                        // Navigate ONLY to different route.
+                        if (currentRoute != bottomBarAction.route) {
+                            navController.navigate(bottomBarAction.route) {
+                                popUpTo(navController.graph.startDestinationId) {
+                                    saveState = true
+                                }
+                                launchSingleTop = true
+                                restoreState = true
                             }
-                            launchSingleTop = true
-                            restoreState = true
                         }
                     },
                     selectedContentColor = MaterialTheme.colors.primaryVariant,
@@ -264,7 +297,7 @@ fun BottomNavigationBar(
 
 data class IconData(
     @DrawableRes val iconResource: Int,
-    val contentDescription: String = "",
+    @StringRes val contentDescription: Int,
     val colorTint: Color? = null,
     val enabled: Boolean = true
 )
@@ -299,6 +332,7 @@ data class ExtendedFabData(
 @Composable
 fun ContentScreen(
     onBack: (() -> Unit)? = null,
+    isLoading: Boolean,
     showToolbar: Boolean = false,
     toolbarTitle: String? = null,
     toolbarActions: List<ToolbarAction>? = null,
@@ -349,7 +383,7 @@ fun ContentScreen(
                                 Icon(
                                     modifier = Modifier.size(SPACING_LARGE.dp),
                                     painter = painterResource(toolbarAction.iconData.iconResource),
-                                    contentDescription = toolbarAction.iconData.contentDescription,
+                                    contentDescription = stringResource(toolbarAction.iconData.contentDescription),
                                     tint = toolbarAction.iconData.colorTint
                                         ?: LocalContentColor.current.copy(alpha = LocalContentAlpha.current)
                                 )
@@ -407,23 +441,26 @@ fun ContentScreen(
             }
         },
         floatingActionButton = {
-            fabData?.let { fabData ->
-                when (fabData) {
-                    is NormalFabData -> {
-                        NormalFloatingActionButton(normalFabData = fabData)
-                    }
+            // Display FAB only when loading is false.
+            if (!isLoading) {
+                fabData?.let { fabData ->
+                    when (fabData) {
+                        is NormalFabData -> {
+                            NormalFloatingActionButton(normalFabData = fabData)
+                        }
 
-                    is ExtendedFabData -> {
-                        CollapsibleExtendedFloatingActionButton(extendedFabData = fabData)
+                        is ExtendedFabData -> {
+                            CollapsibleExtendedFloatingActionButton(extendedFabData = fabData)
+                        }
                     }
                 }
             }
         }
     ) { paddingValues ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-        ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            if (isLoading) {
+                LoadingScreen()
+            }
             content(paddingValues.applyPadding())
         }
     }
@@ -522,7 +559,7 @@ fun SearchBar(
             placeholder = {
                 Text(
                     text = hint,
-                    style = MaterialTheme.typography.h6,
+                    style = MaterialTheme.typography.h6, // TODO: may need to be removed due to compositionlocalprovider
                     fontStyle = FontStyle.Italic
                 )
             },
@@ -644,7 +681,7 @@ fun ModalBottomSheetScaffold(
                             IconButton(onClick = { toolbarAction.onClick() }) {
                                 Icon(
                                     painter = painterResource(toolbarAction.iconData.iconResource),
-                                    contentDescription = toolbarAction.iconData.contentDescription,
+                                    contentDescription = stringResource(toolbarAction.iconData.contentDescription),
                                     tint = toolbarAction.iconData.colorTint
                                         ?: LocalContentColor.current.copy(alpha = LocalContentAlpha.current)
                                 )
@@ -715,6 +752,7 @@ fun LoadingScreen() {
     Box(
         modifier = Modifier
             .fillMaxSize()
+            .zIndex(10f)
     ) {
         Column(
             modifier = Modifier
@@ -761,9 +799,53 @@ fun LoadingScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-
     ) {
         content()
+        if (isLoading) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colors.background.copy(alpha = 0.8f))
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                        onClick = {}
+                    ),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                LottieAnimation(
+                    modifier = Modifier.size(140.dp),
+                    composition = composition,
+                    progress = { progress }
+                )
+
+                Text(
+                    text = stringResource(R.string.loading),
+                    textAlign = TextAlign.Center,
+                    style = MaterialTheme.typography.h4,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun LazyItemScope.LoadingScreen(isLoading: Boolean) {
+    val composition by rememberLottieComposition(
+        spec = LottieCompositionSpec.RawRes(
+            resId = R.raw.loading_animation
+        )
+    )
+    val progress by animateLottieCompositionAsState(
+        composition = composition,
+        iterations = LottieConstants.IterateForever
+    )
+
+    Box(
+        modifier = Modifier
+            .fillParentMaxSize()
+    ) {
         if (isLoading) {
             Column(
                 modifier = Modifier
@@ -951,6 +1033,34 @@ fun OutlinedTextFieldValidation(
                 style = MaterialTheme.typography.body2,
             )
         }
+    }
+}
+
+@Composable
+fun ContainedButton(
+    modifier: Modifier,
+    enabled: Boolean = true,
+    label: String,
+    interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
+    elevation: ButtonElevation? = ButtonDefaults.elevation(),
+    shape: Shape = MaterialTheme.shapes.small,
+    border: BorderStroke? = null,
+    colors: ButtonColors = ButtonDefaults.buttonColors(),
+    onClick: () -> Unit
+) {
+    Button(
+        modifier = modifier,
+        enabled = enabled,
+        interactionSource = interactionSource,
+        elevation = elevation,
+        shape = shape,
+        border = border,
+        colors = colors,
+        onClick = { onClick.invoke() }
+    ) {
+        Text(
+            text = label
+        )
     }
 }
 
@@ -1244,12 +1354,13 @@ fun LazyItemScope.NoInternetErrorScreen(
 }
 
 @Composable
-private fun GenericErrorScreen(
+fun GenericErrorScreen(
     errorMessage: String,
 ) {
     Box(
         modifier = Modifier
             .fillMaxSize()
+            .zIndex(100f)
             .background(MaterialTheme.colors.background)
     ) {
         Text(
@@ -1259,38 +1370,6 @@ private fun GenericErrorScreen(
                 color = MaterialTheme.colors.error
             )
         )
-    }
-}
-
-@Composable
-fun NoInternetErrorScreen(
-    onRetryClick: () -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colors.background),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = stringResource(R.string.no_internet_connection_error_message),
-            textAlign = TextAlign.Center,
-            style = MaterialTheme.typography.h4.copy(
-                color = MaterialTheme.colors.error
-            )
-        )
-
-        VSpacer.Medium()
-
-        Button(
-            onClick = { onRetryClick() }
-        ) {
-            Text(
-                text = stringResource(R.string.retry).uppercase(),
-                style = MaterialTheme.typography.h5
-            )
-        }
     }
 }
 

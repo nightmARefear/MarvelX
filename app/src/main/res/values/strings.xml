@@ -74,6 +74,8 @@
     <!-- Profile Screen -->
     <string name="profile_screen_toolbar_title">Profile</string>
 
+    <string name="profile_screen_button_label_logout">Logout</string>
+
     <!-- Home Screen -->
     <string name="home_screen_toolbar_title">Home Screen</string>
     <string name="home_screen_label_log_in_button">Login</string>

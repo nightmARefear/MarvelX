@@ -76,6 +76,7 @@ fun SignUpScreen(
 
     ContentScreen(
         onBack = { navController.popBackStack() },
+        isLoading = state.isLoading,
         showToolbar = true,
         toolbarTitle = stringResource(R.string.sign_up_screen_toolbar_title)
     ) { paddingValues ->

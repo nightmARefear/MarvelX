@@ -116,6 +116,7 @@ fun CharacterScreen(
     ) {
         ContentScreen(
             onBack = { viewModel.setEvent(CharacterEvent.OnBackClick) },
+            isLoading = state.isLoading,
             showToolbar = true,
             toolbarTitle = state.character?.name,
             toolbarActions = state.character?.let { characterDomain ->
@@ -128,7 +129,7 @@ fun CharacterScreen(
                             true -> {
                                 IconData(
                                     iconResource = R.drawable.ic_favorite_filled_24,
-                                    contentDescription = stringResource(R.string.ic_favorite_content_description),
+                                    contentDescription = R.string.ic_favorite_content_description,
                                     colorTint = MaterialTheme.colors.primaryVariant
                                 )
                             }
@@ -136,7 +137,7 @@ fun CharacterScreen(
                             false -> {
                                 IconData(
                                     iconResource = R.drawable.ic_favorite_empty_24,
-                                    contentDescription = stringResource(R.string.ic_not_favorite_content_description),
+                                    contentDescription = R.string.ic_not_favorite_content_description,
                                     colorTint = MaterialTheme.colors.primaryVariant
                                 )
                             }

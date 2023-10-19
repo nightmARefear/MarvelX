@@ -7,6 +7,7 @@ import com.alexgreece45.marvelx.domain.database.FavoriteCharacterEntity
 import com.alexgreece45.marvelx.domain.interactors.CharacterInteractor
 import com.alexgreece45.marvelx.domain.interactors.CharacterPartialState
 import com.alexgreece45.marvelx.domain.interactors.GetFavoriteCharactersPartialState
+import com.alexgreece45.marvelx.ui.BottomBarAction
 import com.alexgreece45.marvelx.ui.base.BaseEffect
 import com.alexgreece45.marvelx.ui.base.BaseEvent
 import com.alexgreece45.marvelx.ui.base.BaseState
@@ -54,7 +55,7 @@ sealed interface AllCharactersEffect : BaseEffect {
         object Hide : SortingBottomSheet
     }
 
-    object CloseKeyboard: AllCharactersEffect
+    object CloseKeyboard : AllCharactersEffect
 }
 
 data class AllCharactersState(
@@ -63,13 +64,20 @@ data class AllCharactersState(
     val hasInternetConnection: Boolean = true,
     val errorMessage: String? = null,
 
+    /**
+     * Bottom bar's actions.
+     * */
+    val bottomBarActions: List<BottomBarAction> = BottomBarAction.getDefaultBottomBarActions(),
+
     // Data.
     val characters: List<CharacterDomain> = mutableListOf(),
     val sortingType: SortingType = SortingType.getDefaultSortingType(),
+
     /**
      * The search bar's term.
      * */
     val searchBarTerm: String = "",
+
     /**
      * The filtered characters list that is shown; if there is no search term, then all the characters are shown.
      * */
@@ -87,6 +95,7 @@ data class AllCharactersState(
                 isLoading = true,
                 hasInternetConnection = true,
                 errorMessage = null,
+                bottomBarActions = BottomBarAction.getDefaultBottomBarActions(),
                 characters = mutableListOf(),
                 isFirstLaunch = true
             )
@@ -193,7 +202,9 @@ class AllCharactersViewModel @Inject constructor(
 
                     setState {
                         copy(
-                            filteredCharacters = currentState.characters.filter { it.name.lowercase().contains(event.searchTerm.lowercase()) }
+                            filteredCharacters = currentState.characters.filter {
+                                it.name.lowercase().contains(event.searchTerm.lowercase())
+                            }
                         )
                     }
                 }

@@ -16,6 +16,7 @@ fun AllFavoriteCharactersScreen(
     navController: NavController
 ) {
     ContentScreen(
+        isLoading = false,
         showToolbar = true,
         toolbarTitle = stringResource(R.string.all_favorite_characters_screen_toolbar_title),
         bottomNavigationBarData = BottomNavigationBarData(

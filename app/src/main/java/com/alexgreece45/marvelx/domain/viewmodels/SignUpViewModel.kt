@@ -44,7 +44,7 @@ sealed class SignUpEvent : BaseEvent {
 
 data class SignUpState(
     // Base states.
-    val isLoading: Boolean = true,
+    val isLoading: Boolean = false,
     val hasInternetConnection: Boolean = true,
     val errorMessage: String? = null,
 
@@ -72,7 +72,7 @@ data class SignUpState(
 ) : BaseState {
     companion object {
         fun getDefaultValues(): SignUpState = SignUpState(
-            isLoading = true,
+            isLoading = false,
             hasInternetConnection = true,
             errorMessage = null
         )
