@@ -80,7 +80,10 @@ fun ProfileScreen(
         toolbarTitle = stringResource(R.string.profile_screen_toolbar_title),
         bottomNavigationBarData = BottomNavigationBarData(
             navController = navController,
-            items = BottomBarAction.getDefaultBottomBarActions()
+            items = BottomBarAction.getDefaultBottomBarActions(),
+            backgroundColor = MaterialTheme.colors.background,
+            contentColor = MaterialTheme.colors.onBackground,
+            elevation = 16.dp
         )
     ) { paddingValues ->
         LazyColumn(
