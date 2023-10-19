@@ -200,7 +200,8 @@ fun AllCharactersScreen(
                 navController = navController,
                 items = state.bottomBarActions,
                 backgroundColor = MaterialTheme.colors.background,
-                contentColor = MaterialTheme.colors.onBackground
+                contentColor = MaterialTheme.colors.onBackground,
+                elevation = 16.dp
             )
         ) { contentPadding ->
             LazyVerticalStaggeredGrid(

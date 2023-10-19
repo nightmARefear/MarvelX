@@ -7,7 +7,6 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -39,7 +38,6 @@ import androidx.compose.material.ButtonColors
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.ButtonElevation
 import androidx.compose.material.ContentAlpha
-import androidx.compose.material.Divider
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.FloatingActionButton
 import androidx.compose.material.Icon
@@ -76,13 +74,9 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Paint
-import androidx.compose.ui.graphics.PaintingStyle
-import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
@@ -109,7 +103,6 @@ import com.alexgreece45.marvelx.util.HSpacer
 import com.alexgreece45.marvelx.util.SPACING_LARGE
 import com.alexgreece45.marvelx.util.SPACING_MEDIUM
 import com.alexgreece45.marvelx.util.SPACING_SMALL
-import com.alexgreece45.marvelx.util.SPACING_TINY
 import com.alexgreece45.marvelx.util.VSpacer
 import com.alexgreece45.marvelx.util.extensions.applyPadding
 
@@ -163,6 +156,7 @@ data class BottomNavigationBarData(
     val items: List<BottomBarAction>,
     val backgroundColor: Color? = null,
     val contentColor: Color? = null,
+    val elevation: Dp = BottomNavigationDefaults.Elevation,
 )
 
 /**
@@ -244,19 +238,21 @@ fun BottomNavigationBar(
             ) {
                 BottomNavigationItem(
                     modifier = Modifier.then(
-                        // Draws a horizontal line at the top of the selected item.
+                        // Applies the following modifiers to the selected item.
                         if (currentRoute == bottomBarAction.route) {
+                            // Draws a horizontal line at the top of the selected item.
                             val lineColor = MaterialTheme.colors.primaryVariant.copy(alpha = 0.8f)
-                            Modifier.drawWithContent {
-                                drawContent()
-                                drawLine(
-                                    color = lineColor,
-                                    start = Offset(0f, 0f),
-                                    end = Offset(size.width, 0f),
-                                    strokeWidth = SPACING_TINY.dp.toPx(),
-                                    cap = StrokeCap.Butt
-                                )
-                            }
+                            Modifier
+                                .drawWithContent {
+                                    drawContent()
+                                    drawLine(
+                                        color = lineColor,
+                                        start = Offset(0f, 0f),
+                                        end = Offset(size.width, 0f),
+                                        strokeWidth = 5.dp.toPx(),
+                                        cap = StrokeCap.Butt
+                                    )
+                                }
                         } else Modifier
                     ),
                     icon = {
@@ -279,7 +275,7 @@ fun BottomNavigationBar(
                         // Navigate ONLY to different route.
                         if (currentRoute != bottomBarAction.route) {
                             navController.navigate(bottomBarAction.route) {
-                                popUpTo(navController.graph.startDestinationId) {
+                                popUpTo(Screen.BottomNavigationScreens.getStartDestination()) {
                                     saveState = true
                                 }
                                 launchSingleTop = true
@@ -734,9 +730,6 @@ fun WrapperContentScreen(
     }
 }
 
-/**
- * This [Composable] is to be exclusively used by [WrapperContentScreen].
- * */
 @Composable
 fun LoadingScreen() {
     val composition by rememberLottieComposition(
@@ -777,100 +770,6 @@ fun LoadingScreen() {
                 textAlign = TextAlign.Center,
                 style = MaterialTheme.typography.h4,
             )
-        }
-    }
-}
-
-@Composable
-fun LoadingScreen(
-    isLoading: Boolean,
-    content: @Composable () -> Unit
-) {
-    val composition by rememberLottieComposition(
-        spec = LottieCompositionSpec.RawRes(
-            resId = R.raw.loading_animation
-        )
-    )
-    val progress by animateLottieCompositionAsState(
-        composition = composition,
-        iterations = LottieConstants.IterateForever
-    )
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-    ) {
-        content()
-        if (isLoading) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(MaterialTheme.colors.background.copy(alpha = 0.8f))
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null,
-                        onClick = {}
-                    ),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                LottieAnimation(
-                    modifier = Modifier.size(140.dp),
-                    composition = composition,
-                    progress = { progress }
-                )
-
-                Text(
-                    text = stringResource(R.string.loading),
-                    textAlign = TextAlign.Center,
-                    style = MaterialTheme.typography.h4,
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun LazyItemScope.LoadingScreen(isLoading: Boolean) {
-    val composition by rememberLottieComposition(
-        spec = LottieCompositionSpec.RawRes(
-            resId = R.raw.loading_animation
-        )
-    )
-    val progress by animateLottieCompositionAsState(
-        composition = composition,
-        iterations = LottieConstants.IterateForever
-    )
-
-    Box(
-        modifier = Modifier
-            .fillParentMaxSize()
-    ) {
-        if (isLoading) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(MaterialTheme.colors.background.copy(alpha = 0.8f))
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null,
-                        onClick = {}
-                    ),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                LottieAnimation(
-                    modifier = Modifier.size(140.dp),
-                    composition = composition,
-                    progress = { progress }
-                )
-
-                Text(
-                    text = stringResource(R.string.loading),
-                    textAlign = TextAlign.Center,
-                    style = MaterialTheme.typography.h4,
-                )
-            }
         }
     }
 }

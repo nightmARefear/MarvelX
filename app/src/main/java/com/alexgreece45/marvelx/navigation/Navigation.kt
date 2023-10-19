@@ -36,110 +36,14 @@ fun Navigation(
         startDestination = Screen.getStartDestination()
     ) {
         // Register screens.
-        navigation(
-            route = Screen.RegisterScreens.getNestedGraphRootRoute(),
-            startDestination = Screen.RegisterScreens.getStartDestination()
-        ) {
-            composable(Screen.RegisterScreens.HomeScreen) {
-                HomeScreen(
-                    navController = navController,
-                    setUserId = { userId ->
-                        setUserId.invoke(userId)
-                    }
-                )
-            }
-
-            composable(Screen.RegisterScreens.LogInScreen) {
-                LogInScreen(
-                    navController = navController,
-                    setUserId = { userId ->
-                        setUserId.invoke(userId)
-                    }
-                )
-            }
-
-            composable(Screen.RegisterScreens.SignUpScreen) {
-                SignUpScreen(navController = navController)
-            }
-
-            composable(Screen.OtpScreen) { navBackStackEntry ->
-                OtpScreen(
-                    navController = navController,
-                    userId = navBackStackEntry.arguments?.getInt(NavItem.User.key) ?: -1,
-                    setUserId = { userId ->
-                        setUserId.invoke(userId)
-                    }
-                )
-            }
-        }
+        RegisterNavGraph(navController = navController, setUserId = setUserId)
 
         // Bottom Navigation screens.
-        navigation(
-            route = Screen.BottomNavigationScreens.getNestedGraphRootRoute(),
-            startDestination = Screen.BottomNavigationScreens.getStartDestination()
-        ) {
-            composable(screen = Screen.BottomNavigationScreens.AllCharactersScreen) { navBackStackEntry ->
-                AllCharactersScreen(
-                    navController = navController
-                )
-            }
-
-            composable(
-                screen = Screen.CharacterScreen
-            ) { navBackStackEntry ->
-                CharacterScreen(
-                    navController = navController,
-                    characterId = navBackStackEntry.arguments?.getInt(NavItem.Character.key)
-                        ?: -1
-                )
-            }
-
-            composable(
-                screen = Screen.ComicScreen
-            ) { navBackStackEntry ->
-                ComicScreen(
-                    navController = navController,
-                    comicId = navBackStackEntry.arguments?.getInt(NavItem.Comic.key) ?: -1
-                )
-            }
-
-            composable(
-                screen = Screen.AllCharacterComicsScreen
-            ) { navBackStackEntry ->
-                AllCharacterComicsScreen(
-                    navController = navController,
-                    characterId = navBackStackEntry.arguments?.getInt(NavItem.Character.key) ?: -1,
-                    toolbarTitlePrefix = navBackStackEntry.arguments?.getString(NavItem.ToolbarTitlePrefix.key)
-                        .orEmpty()
-                )
-            }
-
-            composable(Screen.BottomNavigationScreens.AllFavoriteCharactersScreen) {
-                AllFavoriteCharactersScreen(navController = navController)
-            }
-
-            composable(Screen.BottomNavigationScreens.ProfileScreen) {
-                ProfileScreen(
-                    navController = navController,
-                    activityState = activityState
-                )
-            }
-        }
+        BottomNavigationNavGraph(navController = navController, activityState = activityState)
     }
 }
 
-@Composable
-inline fun <reified T : ViewModel> NavBackStackEntry.sharedViewModel(
-    navController: NavController
-): T {
-    val navGraphRoute = destination.parent?.route ?: return hiltViewModel()
-    val parentEntry = remember(this) {
-        navController.getBackStackEntry(navGraphRoute)
-    }
-    return hiltViewModel(parentEntry)
-}
-
-private fun NavGraphBuilder.composable(
+fun NavGraphBuilder.composable(
     screen: Screen,
     content: @Composable (NavBackStackEntry) -> Unit
 ) {

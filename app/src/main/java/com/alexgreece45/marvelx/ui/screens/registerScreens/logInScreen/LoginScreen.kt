@@ -36,7 +36,6 @@ import com.alexgreece45.marvelx.navigation.Screen
 import com.alexgreece45.marvelx.ui.AlertDialogButton
 import com.alexgreece45.marvelx.ui.AlertDialogError
 import com.alexgreece45.marvelx.ui.ContentScreen
-import com.alexgreece45.marvelx.ui.LoadingScreen
 import com.alexgreece45.marvelx.ui.OutlinedTextFieldValidation
 import com.alexgreece45.marvelx.ui.ValueType
 import com.alexgreece45.marvelx.util.SPACING_MEDIUM

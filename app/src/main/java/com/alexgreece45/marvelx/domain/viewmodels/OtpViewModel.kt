@@ -52,7 +52,7 @@ data class OtpState(
      * Controls whether the send toolbar action button is enabled.
      * This button is enabled if the OTP's length is equal to 6.
      * */
-    val sendButton: Boolean = otp.length == 6,
+    val sendButton: Boolean = false,
 
     // Validations.
     val enteredOtpValidationResult: FormsValidationResult = FormsValidationResult(true)
@@ -132,7 +132,8 @@ class OtpViewModel @Inject constructor(
         if (otp.isDigitsOnly() && otp.length <= 6 && otp != currentState.otp) {
             setState {
                 copy(
-                    otp = otp
+                    otp = otp,
+                    sendButton = otp.length == 6
                 )
             }
         }
