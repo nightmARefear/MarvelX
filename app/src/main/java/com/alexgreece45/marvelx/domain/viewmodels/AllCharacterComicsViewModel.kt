@@ -14,6 +14,11 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+data class AllCharacterComicsScreenErrorView(
+    val errorMessage: String,
+    val onRetryClick: () -> Unit
+)
+
 sealed class AllCharacterComicsEvent : BaseEvent {
     data class InitView(val characterId: Int) : AllCharacterComicsEvent()
 
@@ -33,7 +38,7 @@ data class AllCharacterComicsState(
     // Base States.
     val isLoading: Boolean = true,
     val hasInternetConnection: Boolean = true,
-    val errorMessage: String? = null,
+    val error: AllCharacterComicsScreenErrorView? = null,
 
     // Data.
     val comics: List<ComicDomain> = emptyList(),
@@ -43,7 +48,7 @@ data class AllCharacterComicsState(
         fun getDefaultValues(): AllCharacterComicsState = AllCharacterComicsState(
             isLoading = true,
             hasInternetConnection = true,
-            errorMessage = null,
+            error = null,
             comics = emptyList()
         )
     }
@@ -172,7 +177,9 @@ class AllCharacterComicsViewModel @Inject constructor(
                         setState {
                             copy(
                                 isLoading = false,
-                                errorMessage = getCharacterComicsPartialState.errorMessage
+                                error = AllCharacterComicsScreenErrorView(
+                                    errorMessage = getCharacterComicsPartialState.errorMessage,
+                                    onRetryClick = { initView(characterId) })
                             )
                         }
                     }

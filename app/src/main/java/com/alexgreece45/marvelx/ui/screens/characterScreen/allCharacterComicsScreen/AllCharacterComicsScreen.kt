@@ -5,6 +5,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -43,13 +44,13 @@ import com.alexgreece45.marvelx.domain.viewmodels.AllCharacterComicsEvent
 import com.alexgreece45.marvelx.domain.viewmodels.AllCharacterComicsViewModel
 import com.alexgreece45.marvelx.navigation.Screen
 import com.alexgreece45.marvelx.ui.ContentScreen
+import com.alexgreece45.marvelx.ui.GenericErrorScreen
+import com.alexgreece45.marvelx.ui.ModalBottomSheet
+import com.alexgreece45.marvelx.ui.SortingModalBottomSheetContent
 import com.alexgreece45.marvelx.util.DEFAULT_SCREEN_PADDING
 import com.alexgreece45.marvelx.util.HSpacer
-import com.alexgreece45.marvelx.ui.ModalBottomSheet
 import com.alexgreece45.marvelx.util.SPACING_SMALL
-import com.alexgreece45.marvelx.ui.SortingModalBottomSheetContent
 import com.alexgreece45.marvelx.util.VSpacer
-import com.alexgreece45.marvelx.ui.WrapperContentScreen
 import kotlinx.coroutines.coroutineScope
 
 @OptIn(ExperimentalMaterialApi::class)
@@ -100,96 +101,101 @@ fun AllCharacterComicsScreen(
         }
     }
 
-    WrapperContentScreen(
-        isLoading = state.isLoading,
-        hasInternetConnection = state.hasInternetConnection,
-        errorMessage = state.errorMessage,
-        onRetryClick = {
-            viewModel.setEvent(
-                AllCharacterComicsEvent.InitView(
-                    characterId = characterId
-                )
+    ModalBottomSheet(
+        sheetState = modalBottomSheetState,
+        sheetShape = RoundedCornerShape(topStart = SPACING_SMALL.dp, topEnd = SPACING_SMALL.dp),
+        scrimColor = MaterialTheme.colors.background.copy(
+            alpha = LocalContentAlpha.current.minus(0.5f)
+        ),
+        sheetContent = {
+            SortingModalBottomSheetContent(
+                contentPadding = DEFAULT_SCREEN_PADDING,
+                selectedItem = state.sortingType,
+                onItemClick = { sortingType ->
+                    viewModel.setEvent(AllCharacterComicsEvent.Sorting.OnItemClick(sortingType))
+                },
+                onCloseClick = {
+                    viewModel.setEvent(AllCharacterComicsEvent.Sorting.OnCloseClick)
+                }
             )
         }
     ) {
-        ModalBottomSheet(
-            sheetState = modalBottomSheetState,
-            sheetShape = RoundedCornerShape(topStart = SPACING_SMALL.dp, topEnd = SPACING_SMALL.dp),
-            scrimColor = MaterialTheme.colors.background.copy(
-                alpha = LocalContentAlpha.current.minus(0.5f)
-            ),
-            sheetContent = {
-                SortingModalBottomSheetContent(
-                    contentPadding = DEFAULT_SCREEN_PADDING,
-                    selectedItem = state.sortingType,
-                    onItemClick = { sortingType ->
-                        viewModel.setEvent(AllCharacterComicsEvent.Sorting.OnItemClick(sortingType))
-                    },
-                    onCloseClick = {
-                        viewModel.setEvent(AllCharacterComicsEvent.Sorting.OnCloseClick)
-                    }
-                )
-            }
-        ) {
-            ContentScreen(
-                onBack = { navController.popBackStack() },
-                isLoading = state.isLoading,
-                showToolbar = true,
-                toolbarTitle = stringResource(
-                    R.string.all_character_comics_screen_toolbar_title,
-                    toolbarTitlePrefix
-                )
-            ) { paddingValues ->
-                LazyColumn(contentPadding = paddingValues) {
+        ContentScreen(
+            onBack = { navController.popBackStack() },
+            isLoading = state.isLoading,
+            showToolbar = true,
+            toolbarTitle = stringResource(
+                R.string.all_character_comics_screen_toolbar_title,
+                toolbarTitlePrefix
+            )
+        ) { paddingValues ->
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = paddingValues
+            ) {
+                state.error?.let {
                     item {
-                        Text(
-                            text = stringResource(R.string.sort_by),
-                            color = MaterialTheme.colors.onBackground.copy(alpha = 0.7f),
-                            style = MaterialTheme.typography.subtitle1
-                        )
-
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                // Disables the on tap ripple effect for both single and long clicks. It also removes the background color.
-                                .clickable(
-                                    interactionSource = remember { MutableInteractionSource() },
-                                    indication = rememberRipple(radius = 0.dp)
-                                ) {
-                                    viewModel.setEvent(AllCharacterComicsEvent.OnDropDownArrowClick)
-                                },
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = state.sortingType.label,
-                                style = MaterialTheme.typography.h6
-                            )
-
-                            Icon(
-                                imageVector = Icons.Filled.ArrowDropDown,
-                                contentDescription = Icons.Filled.ArrowDropDown.name,
-                                tint = MaterialTheme.colors.onBackground
-                            )
+                        GenericErrorScreen(errorMessage = it.errorMessage) {
+                            it.onRetryClick.invoke()
                         }
-                    }
-
-                    item { VSpacer.Custom(height = 10) }
-
-                    itemsIndexed(
-                        items = state.comics,
-                        key = { _, comicDomain ->
-                            comicDomain.id
-                        }
-                    ) { index, comicDomain ->
-                        ComicItem(comic = comicDomain) {
-                            viewModel.setEvent(AllCharacterComicsEvent.OnComicClick(comicId = comicDomain.id))
-                        }
-
-                        // Adds vertical padding at the bottom of each item (except for the last item).
-                        if (index != state.comics.lastIndex) VSpacer.Small()
                     }
                 }
 
+                if (!state.hasInternetConnection) {
+                    item {
+                        GenericErrorScreen(errorMessage = stringResource(R.string.no_internet_connection_error_message)) {
+                            viewModel.setEvent(AllCharacterComicsEvent.InitView(characterId = characterId))
+                        }
+                    }
+                }
+
+                item {
+                    Text(
+                        text = stringResource(R.string.sort_by),
+                        color = MaterialTheme.colors.onBackground.copy(alpha = 0.7f),
+                        style = MaterialTheme.typography.subtitle1
+                    )
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            // Disables the on tap ripple effect for both single and long clicks. It also removes the background color.
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = rememberRipple(radius = 0.dp)
+                            ) {
+                                viewModel.setEvent(AllCharacterComicsEvent.OnDropDownArrowClick)
+                            },
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = state.sortingType.label,
+                            style = MaterialTheme.typography.h6
+                        )
+
+                        Icon(
+                            imageVector = Icons.Filled.ArrowDropDown,
+                            contentDescription = Icons.Filled.ArrowDropDown.name,
+                            tint = MaterialTheme.colors.onBackground
+                        )
+                    }
+                }
+
+                item { VSpacer.Custom(height = 10) }
+
+                itemsIndexed(
+                    items = state.comics,
+                    key = { _, comicDomain ->
+                        comicDomain.id
+                    }
+                ) { index, comicDomain ->
+                    ComicItem(comic = comicDomain) {
+                        viewModel.setEvent(AllCharacterComicsEvent.OnComicClick(comicId = comicDomain.id))
+                    }
+
+                    // Adds vertical padding at the bottom of each item (except for the last item).
+                    if (index != state.comics.lastIndex) VSpacer.Small()
+                }
             }
         }
     }

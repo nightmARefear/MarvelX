@@ -36,6 +36,7 @@ import com.alexgreece45.marvelx.ui.BottomNavigationBarData
 import com.alexgreece45.marvelx.ui.ContainedButton
 import com.alexgreece45.marvelx.ui.ContentScreen
 import com.alexgreece45.marvelx.ui.GenericErrorScreen
+import com.alexgreece45.marvelx.ui.NoInternetErrorScreen
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.VSpacer
 import com.alexgreece45.marvelx.util.extensions.shimmer
@@ -92,9 +93,11 @@ fun ProfileScreen(
                 .background(Color.Blue),
             contentPadding = paddingValues
         ) {
-            state.errorMessage?.let { errorMessage ->
+            state.error?.let { error ->
                 item {
-                    GenericErrorScreen(errorMessage = errorMessage)
+                    GenericErrorScreen(
+                        errorMessage = error.errorMessage,
+                        onRetryClick = { error.onRetryClick.invoke() })
                 }
             }
 

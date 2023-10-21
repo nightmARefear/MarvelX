@@ -702,35 +702,6 @@ fun ModalBottomSheetScaffold(
 }
 
 @Composable
-fun WrapperContentScreen(
-    isLoading: Boolean,
-    hasInternetConnection: Boolean,
-    errorMessage: String?,
-    onRetryClick: () -> Unit,
-    content: @Composable () -> Unit
-) {
-    Box(
-        modifier = Modifier.fillMaxSize()
-    ) {
-        content()
-        if (isLoading) {
-            LoadingScreen()
-        }
-
-        // TODO: UNCOMMENT
-        /*if (!hasInternetConnection) {
-            NoInternetErrorScreen {
-                onRetryClick()
-            }
-        }*/
-
-        errorMessage?.let { errorMessage ->
-            GenericErrorScreen(errorMessage = errorMessage)
-        }
-    }
-}
-
-@Composable
 fun LoadingScreen() {
     val composition by rememberLottieComposition(
         spec = LottieCompositionSpec.RawRes(
@@ -750,7 +721,7 @@ fun LoadingScreen() {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(MaterialTheme.colors.background.copy(alpha = 0.8f))
+                .background(MaterialTheme.colors.background)
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null,
@@ -1206,6 +1177,7 @@ fun SortingModalBottomSheetContent(
 @Composable
 fun LazyItemScope.GenericErrorScreen(
     errorMessage: String,
+    onRetryClick: () -> Unit
 ) {
     Column(
         modifier = Modifier.fillParentMaxSize(),
@@ -1219,6 +1191,17 @@ fun LazyItemScope.GenericErrorScreen(
                 color = MaterialTheme.colors.error
             )
         )
+
+        VSpacer.Medium()
+
+        Button(
+            onClick = { onRetryClick() }
+        ) {
+            Text(
+                text = stringResource(R.string.retry).uppercase(),
+                style = MaterialTheme.typography.h5
+            )
+        }
     }
 }
 
@@ -1255,12 +1238,20 @@ fun LazyItemScope.NoInternetErrorScreen(
 @Composable
 fun GenericErrorScreen(
     errorMessage: String,
+    onRetryClick: () -> Unit
 ) {
-    Box(
+    Column(
         modifier = Modifier
             .fillMaxSize()
             .zIndex(100f)
             .background(MaterialTheme.colors.background)
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = {}
+            ),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
             text = errorMessage,
@@ -1269,6 +1260,55 @@ fun GenericErrorScreen(
                 color = MaterialTheme.colors.error
             )
         )
+
+        VSpacer.Medium()
+
+        Button(
+            onClick = { onRetryClick() }
+        ) {
+            Text(
+                text = stringResource(R.string.retry).uppercase(),
+                style = MaterialTheme.typography.h5
+            )
+        }
+    }
+}
+
+@Composable
+fun NoInternetErrorScreen(
+    onRetryClick: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .zIndex(100f)
+            .background(MaterialTheme.colors.background)
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = {}
+            ),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = stringResource(R.string.no_internet_connection_error_message),
+            textAlign = TextAlign.Center,
+            style = MaterialTheme.typography.h4.copy(
+                color = MaterialTheme.colors.error
+            )
+        )
+
+        VSpacer.Medium()
+
+        Button(
+            onClick = { onRetryClick() }
+        ) {
+            Text(
+                text = stringResource(R.string.retry).uppercase(),
+                style = MaterialTheme.typography.h5
+            )
+        }
     }
 }
 

@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
@@ -63,6 +65,7 @@ import com.alexgreece45.marvelx.ui.ContentScreen
 import com.alexgreece45.marvelx.ui.ExtendedFabData
 import com.alexgreece45.marvelx.ui.GenericErrorScreen
 import com.alexgreece45.marvelx.ui.ModalBottomSheet
+import com.alexgreece45.marvelx.ui.NoInternetErrorScreen
 import com.alexgreece45.marvelx.ui.NormalFabData
 import com.alexgreece45.marvelx.ui.SearchBar
 import com.alexgreece45.marvelx.ui.SortingModalBottomSheetContent
@@ -103,15 +106,17 @@ fun AllCharactersScreen(
         }
     }
 
-    LaunchedEffect(verticalScroll) {
+    /*LaunchedEffect(verticalScroll) {
         var prev = 0
         snapshotFlow { verticalScroll.value }.collect {
             fabExtended = it <= prev
             prev = it
         }
-    }
+    }*/
 
     LaunchedEffect(Unit) {
+        viewModel.setEvent(AllCharactersEvent.InitView)
+
         viewModel.uiEffect.collect { effect ->
             when (effect) {
                 is AllCharactersEffect.NavigateToCharacterScreen -> {
@@ -184,7 +189,7 @@ fun AllCharactersScreen(
             isLoading = state.isLoading,
             showToolbar = true,
             toolbarTitle = stringResource(R.string.all_characters_screen_toolbar_title),
-            fabData = if (state.errorMessage == null) { // Display FAB only when there's no error.
+            fabData = if (state.errorMessage == null && state.hasInternetConnection) { // Display FAB only when there's no error, and there is internet connection.
                 ExtendedFabData(
                     extended = /*lazyStaggeredGridState.isScrollingUp()*/true,
                     normalFabData = NormalFabData(
@@ -204,6 +209,18 @@ fun AllCharactersScreen(
                 elevation = 16.dp
             )
         ) { contentPadding ->
+            state.errorMessage?.let { errorMessage ->
+                GenericErrorScreen(
+                    errorMessage = errorMessage
+                ) { viewModel.setEvent(AllCharactersEvent.LoadAllCharacters) }
+            }
+
+            if (!state.hasInternetConnection) {
+                NoInternetErrorScreen {
+                    viewModel.setEvent(AllCharactersEvent.LoadAllCharacters)
+                }
+            }
+
             LazyVerticalStaggeredGrid(
                 modifier = Modifier
                     .fillMaxSize(),
@@ -213,14 +230,6 @@ fun AllCharactersScreen(
                 verticalItemSpacing = SPACING_SMALL.dp,
                 horizontalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp)
             ) {
-                // TODO: Refactor later.
-                state.errorMessage?.let { errorMessage ->
-                    item {
-                        GenericErrorScreen(errorMessage = errorMessage)
-                    }
-                    return@LazyVerticalStaggeredGrid
-                }
-
                 item(span = StaggeredGridItemSpan.FullLine) {
                     SearchBar(
                         searchTerm = state.searchBarTerm,
@@ -261,6 +270,7 @@ fun AllCharactersScreen(
                     )
                 }
             }
+//            }
         }
     }
 }
@@ -293,7 +303,7 @@ private fun CharacterItem(
                     .crossfade(true)
                     .build(),
                 contentDescription = "${character.name} image",
-                contentScale = ContentScale.Fit,
+                contentScale = ContentScale.FillBounds,
                 error = painterResource(R.drawable.ic_broken_image)
             )
 

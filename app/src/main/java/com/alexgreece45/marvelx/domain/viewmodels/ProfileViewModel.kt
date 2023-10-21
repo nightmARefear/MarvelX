@@ -13,8 +13,15 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+data class ProfileScreenErrorView(
+    val errorMessage: String,
+    val onRetryClick: () -> Unit
+)
+
 sealed class ProfileEvent : BaseEvent {
     data class InitView(val userId: Int) : ProfileEvent()
+
+    object LoadProfileDetails : ProfileEvent()
 
     object OnLogoutButtonPressed : ProfileEvent()
 }
@@ -22,7 +29,6 @@ sealed class ProfileEvent : BaseEvent {
 data class ProfileState(
     // Base states.
     val isLoading: Boolean = true,
-    val hasInternetConnection: Boolean = true,
 
     /**
      * The user ID.
@@ -38,16 +44,15 @@ data class ProfileState(
     /**
      * Error message retrieved from the MarvelX-Backend API for invalid user input.
      * */
-    val errorMessage: String? = null,
+    val error: ProfileScreenErrorView? = null,
 ) : BaseState {
     companion object {
         fun getDefaultValues(): ProfileState =
             ProfileState(
                 isLoading = true,
-                hasInternetConnection = true,
                 userId = -1,
                 profileDetails = null,
-                errorMessage = null
+                error = null
             )
     }
 }
@@ -77,10 +82,28 @@ class ProfileViewModel @Inject constructor(
             ProfileEvent.OnLogoutButtonPressed -> {
                 logout()
             }
+
+            ProfileEvent.LoadProfileDetails -> {
+                setState {
+                    copy(
+                        error = null
+                    )
+                }
+                loadProfileDetails()
+            }
         }
     }
 
     private fun initView() {
+        setState {
+            copy(
+                error = null
+            )
+        }
+        loadProfileDetails()
+    }
+
+    private fun loadProfileDetails() {
         setState {
             copy(
                 isLoading = true,
@@ -95,7 +118,9 @@ class ProfileViewModel @Inject constructor(
                         setState {
                             copy(
                                 isLoading = false,
-                                errorMessage = it.errorMessage
+                                error = ProfileScreenErrorView(
+                                    errorMessage = it.errorMessage,
+                                    onRetryClick = { loadProfileDetails() })
                             )
                         }
                     }
@@ -104,7 +129,12 @@ class ProfileViewModel @Inject constructor(
                         setState {
                             copy(
                                 isLoading = false,
-                                hasInternetConnection = false
+                                error = ProfileScreenErrorView(
+                                    errorMessage = it.errorMessage,
+                                    onRetryClick = {
+                                        loadProfileDetails()
+                                    }
+                                )
                             )
                         }
                     }

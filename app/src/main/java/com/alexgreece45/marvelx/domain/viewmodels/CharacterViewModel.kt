@@ -19,8 +19,16 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+data class CharacterScreenErrorView(
+    val errorMessage: String,
+    val onRetryClick: () -> Unit
+)
+
 sealed class CharacterEvent : BaseEvent {
     data class InitView(val characterId: Int) : CharacterEvent()
+
+    data class LoadCharacter(val characterId: Int) : CharacterEvent()
+
     object OnBackClick : CharacterEvent()
 
     object OnFavoriteClick : CharacterEvent()
@@ -46,20 +54,20 @@ data class CharacterState(
     // Base states.
     val isLoading: Boolean = true,
     val hasInternetConnection: Boolean = true,
-    val errorMessage: String? = null,
+    val error: CharacterScreenErrorView? = null,
 
     // Data.
     val character: CharacterDomain? = null,
-    val comics: List<ComicDomain> = listOf()
+    val comics: List<ComicDomain> = emptyList()
 ) : BaseState {
     companion object {
         fun getDefaultValues(): CharacterState =
             CharacterState(
                 isLoading = true,
                 hasInternetConnection = true,
-                errorMessage = null,
+                error = null,
                 character = null,
-                comics = listOf()
+                comics = emptyList()
             )
     }
 }
@@ -75,6 +83,16 @@ class CharacterViewModel @Inject constructor(
         when (event) {
             is CharacterEvent.InitView -> {
                 initView(characterId = event.characterId)
+            }
+
+            is CharacterEvent.LoadCharacter -> {
+                setState {
+                    copy(
+                        hasInternetConnection = true,
+                        error = null
+                    )
+                }
+                loadCharacter(event.characterId)
             }
 
             is CharacterEvent.OnBackClick -> {
@@ -137,7 +155,6 @@ class CharacterViewModel @Inject constructor(
                                     is IsCharacterFavoritePartialState.IsNotFavorite -> {
                                         setState {
                                             copy(
-                                                isLoading = false,
                                                 character = characterPartialState.data.copy(
                                                     isFavorite = false
                                                 )
@@ -151,7 +168,6 @@ class CharacterViewModel @Inject constructor(
                                     is IsCharacterFavoritePartialState.IsFavorite -> {
                                         setState {
                                             copy(
-                                                isLoading = false,
                                                 character = characterPartialState.data.copy(
                                                     isFavorite = true
                                                 )
@@ -169,7 +185,10 @@ class CharacterViewModel @Inject constructor(
                         setState {
                             copy(
                                 isLoading = false,
-                                errorMessage = characterPartialState.errorMessage
+                                error = CharacterScreenErrorView(
+                                    errorMessage = characterPartialState.errorMessage,
+                                    onRetryClick = { loadCharacter(characterId) }
+                                )
                             )
                         }
                     }
@@ -178,7 +197,10 @@ class CharacterViewModel @Inject constructor(
                         setState {
                             copy(
                                 isLoading = false,
-                                hasInternetConnection = false
+                                error = CharacterScreenErrorView(
+                                    errorMessage = characterPartialState.errorMessage,
+                                    onRetryClick = { loadCharacter(characterId) }
+                                )
                             )
                         }
                     }
@@ -195,7 +217,10 @@ class CharacterViewModel @Inject constructor(
                         setState {
                             copy(
                                 isLoading = false,
-                                errorMessage = it.errorMessage
+                                error = CharacterScreenErrorView(
+                                    errorMessage = it.errorMessage,
+                                    onRetryClick = { loadComics(characterId) }
+                                )
                             )
                         }
                     }
@@ -204,7 +229,10 @@ class CharacterViewModel @Inject constructor(
                         setState {
                             copy(
                                 isLoading = false,
-                                hasInternetConnection = false
+                                error = CharacterScreenErrorView(
+                                    errorMessage = resourceProvider.getNoInternetConnectionMessage(),
+                                    onRetryClick = { loadComics(characterId) }
+                                )
                             )
                         }
                     }
@@ -234,7 +262,10 @@ class CharacterViewModel @Inject constructor(
                                     is CharacterPartialState.Error -> {
                                         setState {
                                             copy(
-                                                errorMessage = characterPartialState.errorMessage
+                                                error = CharacterScreenErrorView(
+                                                    errorMessage = characterPartialState.errorMessage,
+                                                    onRetryClick = { onFavoriteClick() }
+                                                )
                                             )
                                         }
                                     }
@@ -242,7 +273,10 @@ class CharacterViewModel @Inject constructor(
                                     is CharacterPartialState.NoInternetConnection -> {
                                         setState {
                                             copy(
-                                                hasInternetConnection = false
+                                                error = CharacterScreenErrorView(
+                                                    errorMessage = characterPartialState.errorMessage,
+                                                    onRetryClick = { onFavoriteClick() }
+                                                )
                                             )
                                         }
                                     }
@@ -256,7 +290,10 @@ class CharacterViewModel @Inject constructor(
 
                                         setEffect {
                                             CharacterEffect.DisplayOnFavoriteClickMessage(
-                                                message = resourceProvider.getString(R.string.not_favorite_message, "character")
+                                                message = resourceProvider.getString(
+                                                    R.string.not_favorite_message,
+                                                    "character"
+                                                )
                                             )
                                         }
                                     }
@@ -275,7 +312,10 @@ class CharacterViewModel @Inject constructor(
                                 is CharacterPartialState.Error -> {
                                     setState {
                                         copy(
-                                            errorMessage = characterPartialState.errorMessage
+                                            error = CharacterScreenErrorView(
+                                                errorMessage = characterPartialState.errorMessage,
+                                                onRetryClick = { onFavoriteClick() }
+                                            )
                                         )
                                     }
                                 }
@@ -283,7 +323,10 @@ class CharacterViewModel @Inject constructor(
                                 is CharacterPartialState.NoInternetConnection -> {
                                     setState {
                                         copy(
-                                            hasInternetConnection = false
+                                            error = CharacterScreenErrorView(
+                                                errorMessage = characterPartialState.errorMessage,
+                                                onRetryClick = { onFavoriteClick() }
+                                            )
                                         )
                                     }
                                 }
@@ -297,7 +340,10 @@ class CharacterViewModel @Inject constructor(
 
                                     setEffect {
                                         CharacterEffect.DisplayOnFavoriteClickMessage(
-                                            message = resourceProvider.getString(R.string.favorite_message, "character")
+                                            message = resourceProvider.getString(
+                                                R.string.favorite_message,
+                                                "character"
+                                            )
                                         )
                                     }
                                 }

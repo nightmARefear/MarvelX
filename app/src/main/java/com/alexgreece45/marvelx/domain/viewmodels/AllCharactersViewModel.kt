@@ -20,6 +20,7 @@ import javax.inject.Inject
 
 sealed interface AllCharactersEvent : BaseEvent {
     object InitView : AllCharactersEvent
+    object LoadAllCharacters : AllCharactersEvent
     object LoadFavoriteCharacters : AllCharactersEvent
     data class OnCharacterClick(val characterId: Int) : AllCharactersEvent
     data class OnHeartClick(val characterId: Int) : AllCharactersEvent
@@ -60,7 +61,7 @@ sealed interface AllCharactersEffect : BaseEffect {
 
 data class AllCharactersState(
     // Base states.
-    val isLoading: Boolean = true,
+    val isLoading: Boolean = false,
     val hasInternetConnection: Boolean = true,
     val errorMessage: String? = null,
 
@@ -92,7 +93,7 @@ data class AllCharactersState(
     companion object {
         fun getDefaultValues(): AllCharactersState =
             AllCharactersState(
-                isLoading = true,
+                isLoading = false,
                 hasInternetConnection = true,
                 errorMessage = null,
                 bottomBarActions = BottomBarAction.getDefaultBottomBarActions(),
@@ -109,14 +110,20 @@ class AllCharactersViewModel @Inject constructor(
 ) : BaseViewModel<AllCharactersEvent, AllCharactersState, AllCharactersEffect>() {
     override fun setInitialState(): AllCharactersState = AllCharactersState.getDefaultValues()
 
-    init {
-        setEvent(AllCharactersEvent.InitView)
-    }
-
     override fun handleEvents(event: AllCharactersEvent) {
         when (event) {
             AllCharactersEvent.InitView -> {
                 initView()
+            }
+
+            AllCharactersEvent.LoadAllCharacters -> {
+                setState {
+                    copy(
+                        hasInternetConnection = true,
+                        errorMessage = null
+                    )
+                }
+                loadAllCharacters()
             }
 
             is AllCharactersEvent.OnCharacterClick -> {
@@ -225,14 +232,12 @@ class AllCharactersViewModel @Inject constructor(
         }
     }
 
-    private fun initView() {
+    private fun loadAllCharacters() {
         setState {
             copy(
-                isLoading = true,
-                hasInternetConnection = true
+                isLoading = true
             )
         }
-
         viewModelScope.launch {
             // Load all characters.
             interactor.getAllCharacters().collect {
@@ -268,6 +273,7 @@ class AllCharactersViewModel @Inject constructor(
                                     }
 
                                     is GetFavoriteCharactersPartialState.Error -> {
+                                        // TODO: REFACTOR
                                         // Could not retrieve favorite characters data.
                                         setState {
                                             copy(
@@ -300,6 +306,16 @@ class AllCharactersViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    private fun initView() {
+        setState {
+            copy(
+                hasInternetConnection = true,
+                errorMessage = null
+            )
+        }
+        loadAllCharacters()
     }
 
     /**
