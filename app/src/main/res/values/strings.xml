@@ -49,6 +49,7 @@
 
     <string name="all_characters_screen_error_favoring_character">An error occurred while favoring this character.</string>
     <string name="all_characters_screen_error_unfavoring_character">An error occurred while unfavoring this character.</string>
+    <string name="all_characters_screen_error_retrieving_favorite_characters">An error occurred while retrieving favorite characters.</string>
 
     <!-- Character Screen -->
     <string name="character_screen_row_comic_toolbar_title">Comics</string>

@@ -248,7 +248,7 @@ class CharacterInteractorImpl @Inject constructor(
         }.safeAsync {
             logcat { it.localizedMessage ?: "" }
             GetFavoriteCharactersPartialState.Error(
-                errorMessage = resourceProvider.getString(R.string.all_characters_screen_error_favoring_character)
+                errorMessage = resourceProvider.getString(R.string.all_characters_screen_error_retrieving_favorite_characters)
             )
         }
 
