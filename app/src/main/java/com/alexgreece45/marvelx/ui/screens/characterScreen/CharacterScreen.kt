@@ -52,7 +52,6 @@ import com.alexgreece45.marvelx.ui.ContentScreen
 import com.alexgreece45.marvelx.ui.GenericErrorScreen
 import com.alexgreece45.marvelx.ui.IconData
 import com.alexgreece45.marvelx.ui.ItemDescription
-import com.alexgreece45.marvelx.ui.NoInternetErrorScreen
 import com.alexgreece45.marvelx.ui.ToolbarAction
 import com.alexgreece45.marvelx.util.IMAGE_BORDER_WIDTH
 import com.alexgreece45.marvelx.util.SPACING_SMALL
@@ -72,7 +71,7 @@ fun CharacterScreen(
 
         viewModel.uiEffect.collect { effect ->
             when (effect) {
-                CharacterEffect.OnBackClick -> {
+                CharacterEffect.PopBackStack -> {
                     navController.popBackStack()
                 }
 

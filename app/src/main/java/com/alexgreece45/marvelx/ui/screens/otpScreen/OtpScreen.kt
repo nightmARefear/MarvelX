@@ -23,10 +23,12 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.ImeAction
@@ -56,6 +58,7 @@ import com.alexgreece45.marvelx.util.VSpacer
  * Navigation to this screen MUST only happen when instructed either by [LogInScreen],
  * or [SignUpScreen].
  * */
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun OtpScreen(
     navController: NavController,
@@ -66,6 +69,7 @@ fun OtpScreen(
     val state by viewModel.uiState.collectAsState()
 
     val context = LocalContext.current
+    val keyboard = LocalSoftwareKeyboardController.current
     val focusRequester = remember { FocusRequester() }
 
     LaunchedEffect(Unit) {
@@ -80,20 +84,13 @@ fun OtpScreen(
 
         viewModel.uiEffect.collect { effect ->
             when (effect) {
-                is OtpEffect.Navigation.NavigateToNextScreen -> {
-                    navController.navigate(effect.screenRoute) {
-                        popUpTo(Screen.OtpScreen.route) {
-                            inclusive = true
-                        }
-                    }
-                }
-
                 is OtpEffect.Navigation.NavigateToPreviousScreenWithError -> {
                     Toast.makeText(context, effect.errorMessage, Toast.LENGTH_LONG).show()
                     navController.popBackStack()
                 }
 
                 OtpEffect.Navigation.NavigateToAllCharactersScreen -> {
+                    keyboard?.hide()
                     setUserId.invoke(userId)
                     navController.navigate(Screen.BottomNavigationScreens.AllCharactersScreen.route) {
                         popUpTo(Screen.RegisterScreens.getNestedGraphRootRoute()) {

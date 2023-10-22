@@ -37,15 +37,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.alexgreece45.marvelx.R
@@ -53,7 +54,7 @@ import com.alexgreece45.marvelx.data.domains.character.CharacterDomain
 import com.alexgreece45.marvelx.domain.viewmodels.AllCharactersEffect
 import com.alexgreece45.marvelx.domain.viewmodels.AllCharactersEvent
 import com.alexgreece45.marvelx.domain.viewmodels.AllCharactersViewModel
-import com.alexgreece45.marvelx.navigation.Screen
+import com.alexgreece45.marvelx.ui.BottomBarAction
 import com.alexgreece45.marvelx.ui.BottomNavigationBarData
 import com.alexgreece45.marvelx.ui.ContentScreen
 import com.alexgreece45.marvelx.ui.ExtendedFabData
@@ -73,7 +74,8 @@ import kotlinx.coroutines.coroutineScope
 )
 @Composable
 fun AllCharactersScreen(
-    navController: NavController,
+    navigateToCharacterScreen: (characterId: Int) -> Unit,
+    bottomNavigationBarData: (items: List<BottomBarAction>, backgroundColor: Color, contentColor: Color, elevation: Dp) -> BottomNavigationBarData,
     viewModel: AllCharactersViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
@@ -102,13 +104,9 @@ fun AllCharactersScreen(
 
         viewModel.uiEffect.collect { effect ->
             when (effect) {
-                is AllCharactersEffect.NavigateToCharacterScreen -> {
+                is AllCharactersEffect.Navigation.NavigateToCharacterScreen -> {
                     initLock = Unit
-                    navController.navigate(
-                        Screen.CharacterScreen.createNavRoute(
-                            characterId = effect.characterId
-                        )
-                    )
+                    navigateToCharacterScreen(effect.characterId)
                 }
 
                 is AllCharactersEffect.FavoriteCharacter.Success -> {
@@ -184,12 +182,11 @@ fun AllCharactersScreen(
                     )
                 )
             } else null,
-            bottomNavigationBarData = BottomNavigationBarData(
-                navController = navController,
-                items = state.bottomBarActions,
-                backgroundColor = MaterialTheme.colors.background,
-                contentColor = MaterialTheme.colors.onBackground,
-                elevation = 16.dp
+            bottomNavigationBarData = bottomNavigationBarData(
+                state.bottomBarActions,
+                MaterialTheme.colors.background,
+                MaterialTheme.colors.onBackground,
+                16.dp
             )
         ) { contentPadding ->
             state.error?.let { error ->

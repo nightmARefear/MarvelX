@@ -76,8 +76,6 @@ sealed class OtpEffect : BaseEffect {
     sealed class Navigation : OtpEffect() {
         data class NavigateToPreviousScreenWithError(val errorMessage: String) : Navigation()
 
-        data class NavigateToNextScreen(val screenRoute: String) : Navigation()
-
         object NavigateToAllCharactersScreen : Navigation()
     }
 }

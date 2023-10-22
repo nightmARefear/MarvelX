@@ -8,6 +8,7 @@ import com.alexgreece45.marvelx.ui.screens.registerScreens.homeScreen.HomeScreen
 import com.alexgreece45.marvelx.ui.screens.registerScreens.logInScreen.LogInScreen
 import com.alexgreece45.marvelx.ui.screens.registerScreens.signUpScreen.SignUpScreen
 
+@Suppress("FunctionName")
 fun NavGraphBuilder.RegisterNavGraph(
     navController: NavController,
     setUserId: (Int) -> Unit

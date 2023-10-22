@@ -5,6 +5,7 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.navigation
 import com.alexgreece45.marvelx.domain.viewmodels.ActivityState
+import com.alexgreece45.marvelx.ui.BottomNavigationBarData
 import com.alexgreece45.marvelx.ui.screens.allCharactersScreen.AllCharactersScreen
 import com.alexgreece45.marvelx.ui.screens.allFavoriteCharactersScreen.AllFavoriteCharactersScreen
 import com.alexgreece45.marvelx.ui.screens.characterScreen.CharacterScreen
@@ -12,6 +13,7 @@ import com.alexgreece45.marvelx.ui.screens.characterScreen.allCharacterComicsScr
 import com.alexgreece45.marvelx.ui.screens.comicScreen.ComicScreen
 import com.alexgreece45.marvelx.ui.screens.profileScreen.ProfileScreen
 
+@Suppress("FunctionName")
 fun NavGraphBuilder.BottomNavigationNavGraph(
     navController: NavController,
     activityState: State<ActivityState>
@@ -20,9 +22,24 @@ fun NavGraphBuilder.BottomNavigationNavGraph(
         route = Screen.BottomNavigationScreens.getNestedGraphRootRoute(),
         startDestination = Screen.BottomNavigationScreens.getStartDestination()
     ) {
-        composable(screen = Screen.BottomNavigationScreens.AllCharactersScreen) { navBackStackEntry ->
+        composable(screen = Screen.BottomNavigationScreens.AllCharactersScreen) {
             AllCharactersScreen(
-                navController = navController
+                navigateToCharacterScreen = { characterId ->
+                    navController.navigate(
+                        Screen.CharacterScreen.createNavRoute(
+                            characterId = characterId
+                        )
+                    )
+                },
+                bottomNavigationBarData = { items, backgroundColor, contentColor, elevation ->
+                    BottomNavigationBarData(
+                        navController = navController,
+                        items = items,
+                        backgroundColor = backgroundColor,
+                        contentColor = contentColor,
+                        elevation = elevation
+                    )
+                }
             )
         }
 

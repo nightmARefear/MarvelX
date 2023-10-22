@@ -39,7 +39,7 @@ sealed class CharacterEvent : BaseEvent {
 }
 
 sealed class CharacterEffect : BaseEffect {
-    object OnBackClick : CharacterEffect()
+    object PopBackStack : CharacterEffect()
     data class NavigateToComicScreen(val comicId: Int) : CharacterEffect()
 
     data class NavigateToAllComicsScreen(val characterId: Int, val toolbarTitlePrefix: String) :
@@ -97,7 +97,7 @@ class CharacterViewModel @Inject constructor(
 
             is CharacterEvent.OnBackClick -> {
                 setEffect {
-                    CharacterEffect.OnBackClick
+                    CharacterEffect.PopBackStack
                 }
             }
 

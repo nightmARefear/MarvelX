@@ -8,12 +8,12 @@ import com.alexgreece45.marvelx.domain.interactors.CharacterInteractor
 import com.alexgreece45.marvelx.domain.interactors.CharacterPartialState
 import com.alexgreece45.marvelx.domain.interactors.GetFavoriteCharactersPartialState
 import com.alexgreece45.marvelx.ui.BottomBarAction
+import com.alexgreece45.marvelx.ui.SortingType
 import com.alexgreece45.marvelx.ui.base.BaseEffect
 import com.alexgreece45.marvelx.ui.base.BaseEvent
 import com.alexgreece45.marvelx.ui.base.BaseState
 import com.alexgreece45.marvelx.ui.base.BaseViewModel
 import com.alexgreece45.marvelx.util.ResourceProvider
-import com.alexgreece45.marvelx.ui.SortingType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -45,7 +45,10 @@ sealed interface AllCharactersEvent : BaseEvent {
 }
 
 sealed interface AllCharactersEffect : BaseEffect {
-    data class NavigateToCharacterScreen(val characterId: Int) : AllCharactersEffect
+    sealed interface Navigation : AllCharactersEffect {
+        data class NavigateToCharacterScreen(val characterId: Int) : Navigation
+    }
+
     sealed interface FavoriteCharacter : AllCharactersEffect {
         data class Success(val successMessage: String) : FavoriteCharacter
         data class Error(val errorMessage: String) : FavoriteCharacter
@@ -86,7 +89,7 @@ data class AllCharactersState(
     /**
      * The filtered characters list that is shown; if there is no search term, then all the characters are shown.
      * */
-    val filteredCharacters: List<CharacterDomain> = mutableListOf(),
+    val filteredCharacters: List<CharacterDomain> = emptyList(),
 
     /**
      * This field tracks if the fragment of this ViewModel has been launched for the first time.
@@ -100,7 +103,7 @@ data class AllCharactersState(
                 isLoading = false,
                 error = null,
                 bottomBarActions = BottomBarAction.getDefaultBottomBarActions(),
-                characters = mutableListOf(),
+                characters = emptyList(),
                 isFirstLaunch = true
             )
     }
@@ -133,7 +136,7 @@ class AllCharactersViewModel @Inject constructor(
                     AllCharactersEffect.CloseKeyboard
                 }
                 setEffect {
-                    AllCharactersEffect.NavigateToCharacterScreen(
+                    AllCharactersEffect.Navigation.NavigateToCharacterScreen(
                         characterId = event.characterId
                     )
                 }
@@ -336,7 +339,7 @@ class AllCharactersViewModel @Inject constructor(
                             setState {
                                 copy(
                                     isLoading = false,
-                                    characters = currentState.filteredCharacters.map { character ->
+                                    filteredCharacters = currentState.filteredCharacters.map { character ->
                                         character.copy(
                                             isFavorite = favoriteCharacterPartialState.favoriteCharacters.firstOrNull { favoriteCharacterEntity ->
                                                 favoriteCharacterEntity.characterId == character.id
@@ -401,7 +404,7 @@ class AllCharactersViewModel @Inject constructor(
                     is CharacterPartialState.Success -> {
                         setState {
                             copy(
-                                characters = currentState.filteredCharacters.map { characterDomain ->
+                                filteredCharacters = currentState.filteredCharacters.map { characterDomain ->
                                     if (characterDomain.id == characterId) characterDomain.copy(
                                         isFavorite = false
                                     ) else characterDomain
@@ -412,7 +415,7 @@ class AllCharactersViewModel @Inject constructor(
                             AllCharactersEffect.UnFavoriteCharacter.Success(
                                 successMessage = resourceProvider.getString(
                                     R.string.not_favorite_message,
-                                    "character"
+                                    resourceProvider.getString(R.string.character)
                                 )
                             )
                         }
@@ -453,7 +456,7 @@ class AllCharactersViewModel @Inject constructor(
                     is CharacterPartialState.Success -> {
                         setState {
                             copy(
-                                characters = currentState.filteredCharacters.map { characterDomain ->
+                                filteredCharacters = currentState.filteredCharacters.map { characterDomain ->
                                     if (characterDomain.id == characterId) characterDomain.copy(
                                         isFavorite = true
                                     ) else characterDomain
@@ -464,7 +467,7 @@ class AllCharactersViewModel @Inject constructor(
                             AllCharactersEffect.UnFavoriteCharacter.Success(
                                 successMessage = resourceProvider.getString(
                                     R.string.favorite_message,
-                                    "character"
+                                    resourceProvider.getString(R.string.character)
                                 )
                             )
                         }
