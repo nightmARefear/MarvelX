@@ -31,12 +31,11 @@ fun NavGraphBuilder.BottomNavigationNavGraph(
                         )
                     )
                 },
-                bottomNavigationBarData = { items, backgroundColor, contentColor, topHorizontalColor, selectedItemTopHorizontalColor, elevation ->
+                bottomNavigationBarData = { items, backgroundColor, topHorizontalColor, selectedItemTopHorizontalColor, elevation ->
                     BottomNavigationBarData(
                         navController = navController,
                         items = items,
                         backgroundColor = backgroundColor,
-                        contentColor = contentColor,
                         topHorizontalColor = topHorizontalColor,
                         selectedItemTopHorizontalColor = selectedItemTopHorizontalColor,
                         elevation = elevation
@@ -77,12 +76,11 @@ fun NavGraphBuilder.BottomNavigationNavGraph(
 
         composable(Screen.BottomNavigationScreens.AllFavoriteCharactersScreen) {
             AllFavoriteCharactersScreen(
-                bottomNavigationBarData = { items, backgroundColor, contentColor, topHorizontalColor, selectedItemTopHorizontalColor, elevation ->
+                bottomNavigationBarData = { items, backgroundColor, topHorizontalColor, selectedItemTopHorizontalColor, elevation ->
                     BottomNavigationBarData(
                         navController = navController,
                         items = items,
                         backgroundColor = backgroundColor,
-                        contentColor = contentColor,
                         topHorizontalColor = topHorizontalColor,
                         selectedItemTopHorizontalColor = selectedItemTopHorizontalColor,
                         elevation = elevation
@@ -100,12 +98,11 @@ fun NavGraphBuilder.BottomNavigationNavGraph(
                         }
                     }
                 },
-                bottomNavigationBarData = { items, backgroundColor, contentColor, topHorizontalColor, selectedItemTopHorizontalColor, elevation ->
+                bottomNavigationBarData = { items, backgroundColor, topHorizontalColor, selectedItemTopHorizontalColor, elevation ->
                     BottomNavigationBarData(
                         navController = navController,
                         items = items,
                         backgroundColor = backgroundColor,
-                        contentColor = contentColor,
                         topHorizontalColor = topHorizontalColor,
                         selectedItemTopHorizontalColor = selectedItemTopHorizontalColor,
                         elevation = elevation

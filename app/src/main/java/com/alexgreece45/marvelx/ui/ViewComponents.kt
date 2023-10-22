@@ -102,6 +102,9 @@ import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.navigation.Screen
+import com.alexgreece45.marvelx.util.BOTTOM_NAVIGATION_BAR_ITEM_LABEL_MAX_LENGTH
+import com.alexgreece45.marvelx.util.BOTTOM_NAVIGATION_BAR_MAX_ITEMS
+import com.alexgreece45.marvelx.util.BOTTOM_NAVIGATION_BAR_MIN_ITEMS
 import com.alexgreece45.marvelx.util.DEFAULT_SCREEN_PADDING
 import com.alexgreece45.marvelx.util.HSpacer
 import com.alexgreece45.marvelx.util.SPACING_LARGE
@@ -159,7 +162,6 @@ data class BottomNavigationBarData(
     val navController: NavController,
     val items: List<BottomBarAction>,
     val backgroundColor: Color? = null,
-    val contentColor: Color? = null,
     val topHorizontalColor: Color? = null,
     val selectedItemTopHorizontalColor: Color? = null,
     val elevation: Dp = BottomNavigationDefaults.Elevation,
@@ -217,7 +219,6 @@ private fun BottomBar(
  * @param navController the [NavController] for navigating to other items
  * @param items the items of this bottom navigation bar
  * @param backgroundColor the background [Color] of all the items
- * @param contentColor the content [Color] of all the items
  * @param topHorizontalColor the [Color] of the whole top horizontal axis of this bottom navigation bar
  * @param selectedItemTopHorizontalColor the [Color] of the top horizontal axis of the selected item
  * */
@@ -226,14 +227,15 @@ fun BottomNavigationBar(
     navController: NavController,
     items: List<BottomBarAction>,
     backgroundColor: Color? = null,
-    contentColor: Color? = null,
     topHorizontalColor: Color? = null,
     selectedItemTopHorizontalColor: Color? = null,
     elevation: Dp = BottomNavigationDefaults.Elevation
 ) {
-    if (items.size < 3) throw RuntimeException("The minimum allowed bottom navigation bar items is 3!")
-    if (items.size > 5) throw RuntimeException("The maximum allowed bottom navigation bar items is 5!")
-    if (items.any { stringResource(it.label).length > 10 }) throw RuntimeException("The maximum allowed length for a bottom navigation bar's item label is 10 characters.")
+    if (items.size < BOTTOM_NAVIGATION_BAR_MIN_ITEMS) throw RuntimeException("The minimum allowed bottom navigation bar items is $BOTTOM_NAVIGATION_BAR_MIN_ITEMS!")
+    if (items.size > BOTTOM_NAVIGATION_BAR_MAX_ITEMS) throw RuntimeException("The maximum allowed bottom navigation bar items is $BOTTOM_NAVIGATION_BAR_MAX_ITEMS!")
+    if (items.any { stringResource(it.label).length > BOTTOM_NAVIGATION_BAR_ITEM_LABEL_MAX_LENGTH }) throw RuntimeException(
+        "The maximum allowed length for a bottom navigation bar's item label is $BOTTOM_NAVIGATION_BAR_ITEM_LABEL_MAX_LENGTH characters."
+    )
 
     BottomNavigation(
         backgroundColor = backgroundColor ?: MaterialTheme.colors.primarySurface,
@@ -278,8 +280,14 @@ fun BottomNavigationBar(
                                         if (currentRoute == bottomBarAction.route) {
                                             drawLine(
                                                 color = lineColor,
-                                                start = Offset(0f, selectedItemTopHorizontalVerticalOffset.toPx()),
-                                                end = Offset(size.width, selectedItemTopHorizontalVerticalOffset.toPx()),
+                                                start = Offset(
+                                                    0f,
+                                                    selectedItemTopHorizontalVerticalOffset.toPx()
+                                                ),
+                                                end = Offset(
+                                                    size.width,
+                                                    selectedItemTopHorizontalVerticalOffset.toPx()
+                                                ),
                                                 strokeWidth = selectedItemTopHorizontalStrokeWidth.toPx(),
                                                 cap = StrokeCap.Butt
                                             )
@@ -465,7 +473,6 @@ fun ContentScreen(
                     navController = bottomNavigationBarData.navController,
                     items = bottomNavigationBarData.items,
                     backgroundColor = bottomNavigationBarData.backgroundColor,
-                    contentColor = bottomNavigationBarData.contentColor,
                     topHorizontalColor = bottomNavigationBarData.topHorizontalColor,
                     selectedItemTopHorizontalColor = bottomNavigationBarData.selectedItemTopHorizontalColor,
                     elevation = bottomNavigationBarData.elevation

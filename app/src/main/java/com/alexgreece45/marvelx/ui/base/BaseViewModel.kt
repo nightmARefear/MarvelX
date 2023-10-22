@@ -40,6 +40,7 @@ abstract class BaseViewModel<Event : BaseEvent, State : BaseState, Effect : Base
     val uiEffect: Flow<Effect> = _effect.receiveAsFlow()
 
     private val _viewStateHistory: Channel<State> = Channel()
+
     val viewStateHistory: Flow<State>
         get() = _viewStateHistory.receiveAsFlow()
 
@@ -58,7 +59,7 @@ abstract class BaseViewModel<Event : BaseEvent, State : BaseState, Effect : Base
     }
 
     /**
-     * Sets the initial state's value.
+     * Sets the initial state value.
      */
     abstract fun setInitialState(): State
 

@@ -205,8 +205,14 @@ class AllCharactersViewModel @Inject constructor(
                     }
 
                     setState {
+                        val currentFilteredCharacters =
+                            currentState.characters.map { allCharactersCharacter ->
+                                currentState.filteredCharacters.firstOrNull { filteredCharactersCharacter ->
+                                    filteredCharactersCharacter.id == allCharactersCharacter.id
+                                } ?: allCharactersCharacter
+                            }
                         copy(
-                            filteredCharacters = currentState.characters.filter { character ->
+                            filteredCharacters = currentFilteredCharacters.filter { character ->
                                 character.name.contains(event.searchTerm, ignoreCase = true)
                             }
                         )

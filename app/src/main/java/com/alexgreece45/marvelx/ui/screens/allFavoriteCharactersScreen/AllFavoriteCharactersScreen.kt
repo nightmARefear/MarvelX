@@ -16,7 +16,7 @@ import com.alexgreece45.marvelx.ui.ContentScreen
 
 @Composable
 fun AllFavoriteCharactersScreen(
-    bottomNavigationBarData: (items: List<BottomBarAction>, backgroundColor: Color, contentColor: Color, topHorizontalColor: Color?, selectedItemTopHorizontalColor: Color?, elevation: Dp) -> BottomNavigationBarData,
+    bottomNavigationBarData: (items: List<BottomBarAction>, backgroundColor: Color, topHorizontalColor: Color?, selectedItemTopHorizontalColor: Color?, elevation: Dp) -> BottomNavigationBarData,
 ) {
     ContentScreen(
         isLoading = false,
@@ -25,7 +25,6 @@ fun AllFavoriteCharactersScreen(
         bottomNavigationBarData = bottomNavigationBarData(
             BottomBarAction.getDefaultBottomBarActions(),
             MaterialTheme.colors.background,
-            MaterialTheme.colors.onBackground,
             MaterialTheme.colors.onBackground,
             MaterialTheme.colors.primaryVariant.copy(alpha = 0.8f),
             16.dp,
