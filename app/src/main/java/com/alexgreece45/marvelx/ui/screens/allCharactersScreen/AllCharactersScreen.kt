@@ -75,7 +75,7 @@ import kotlinx.coroutines.coroutineScope
 @Composable
 fun AllCharactersScreen(
     navigateToCharacterScreen: (characterId: Int) -> Unit,
-    bottomNavigationBarData: (items: List<BottomBarAction>, backgroundColor: Color, contentColor: Color, elevation: Dp) -> BottomNavigationBarData,
+    bottomNavigationBarData: (items: List<BottomBarAction>, backgroundColor: Color, contentColor: Color, topHorizontalColor: Color?, selectedItemTopHorizontalColor: Color?, elevation: Dp) -> BottomNavigationBarData,
     viewModel: AllCharactersViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
@@ -183,10 +183,12 @@ fun AllCharactersScreen(
                 )
             } else null,
             bottomNavigationBarData = bottomNavigationBarData(
-                state.bottomBarActions,
+                BottomBarAction.getDefaultBottomBarActions(),
                 MaterialTheme.colors.background,
                 MaterialTheme.colors.onBackground,
-                16.dp
+                MaterialTheme.colors.onBackground,
+                MaterialTheme.colors.primaryVariant.copy(alpha = 0.8f),
+                16.dp,
             )
         ) { contentPadding ->
             state.error?.let { error ->

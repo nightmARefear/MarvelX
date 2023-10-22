@@ -22,28 +22,27 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavController
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.domain.viewmodels.ActivityState
 import com.alexgreece45.marvelx.domain.viewmodels.ProfileEffect
 import com.alexgreece45.marvelx.domain.viewmodels.ProfileEvent
 import com.alexgreece45.marvelx.domain.viewmodels.ProfileViewModel
-import com.alexgreece45.marvelx.navigation.Screen
 import com.alexgreece45.marvelx.ui.BottomBarAction
 import com.alexgreece45.marvelx.ui.BottomNavigationBarData
 import com.alexgreece45.marvelx.ui.ContainedButton
 import com.alexgreece45.marvelx.ui.ContentScreen
 import com.alexgreece45.marvelx.ui.GenericErrorScreen
-import com.alexgreece45.marvelx.ui.NoInternetErrorScreen
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.VSpacer
 import com.alexgreece45.marvelx.util.extensions.shimmer
 
 @Composable
 fun ProfileScreen(
-    navController: NavController,
+    navigateToHomeScreen: () -> Unit,
+    bottomNavigationBarData: (items: List<BottomBarAction>, backgroundColor: Color, contentColor: Color, topHorizontalColor: Color?, selectedItemTopHorizontalColor: Color?, elevation: Dp) -> BottomNavigationBarData,
     activityState: State<ActivityState>,
     viewModel: ProfileViewModel = hiltViewModel()
 ) {
@@ -61,11 +60,7 @@ fun ProfileScreen(
         viewModel.uiEffect.collect { effect ->
             when (effect) {
                 ProfileEffect.Navigation.NavigateToHomeScreen -> {
-                    navController.navigate(Screen.RegisterScreens.getNestedGraphRootRoute()) {
-                        popUpTo(Screen.BottomNavigationScreens.getNestedGraphRootRoute()) {
-                            inclusive = true
-                        }
-                    }
+                    navigateToHomeScreen.invoke()
                 }
 
                 is ProfileEffect.ShowToast -> {
@@ -79,12 +74,13 @@ fun ProfileScreen(
         isLoading = state.isLoading,
         showToolbar = true,
         toolbarTitle = stringResource(R.string.profile_screen_toolbar_title),
-        bottomNavigationBarData = BottomNavigationBarData(
-            navController = navController,
-            items = BottomBarAction.getDefaultBottomBarActions(),
-            backgroundColor = MaterialTheme.colors.background,
-            contentColor = MaterialTheme.colors.onBackground,
-            elevation = 16.dp
+        bottomNavigationBarData = bottomNavigationBarData(
+            BottomBarAction.getDefaultBottomBarActions(),
+            MaterialTheme.colors.background,
+            MaterialTheme.colors.onBackground,
+            MaterialTheme.colors.onBackground,
+            MaterialTheme.colors.primaryVariant.copy(alpha = 0.8f),
+            16.dp,
         )
     ) { paddingValues ->
         LazyColumn(

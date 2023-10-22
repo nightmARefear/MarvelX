@@ -72,13 +72,8 @@ data class AllCharactersState(
     val isLoading: Boolean = false,
     val error: AllCharactersScreenErrorView? = null,
 
-    /**
-     * Bottom bar's actions.
-     * */
-    val bottomBarActions: List<BottomBarAction> = BottomBarAction.getDefaultBottomBarActions(),
-
     // Data.
-    val characters: List<CharacterDomain> = mutableListOf(),
+    val characters: List<CharacterDomain> = emptyList(),
     val sortingType: SortingType = SortingType.getDefaultSortingType(),
 
     /**
@@ -102,8 +97,10 @@ data class AllCharactersState(
             AllCharactersState(
                 isLoading = false,
                 error = null,
-                bottomBarActions = BottomBarAction.getDefaultBottomBarActions(),
                 characters = emptyList(),
+                sortingType = SortingType.getDefaultSortingType(),
+                searchBarTerm = "",
+                filteredCharacters = emptyList(),
                 isFirstLaunch = true
             )
     }
@@ -221,7 +218,11 @@ class AllCharactersViewModel @Inject constructor(
                 setState {
                     copy(
                         searchBarTerm = "",
-                        filteredCharacters = currentState.characters
+                        filteredCharacters = currentState.characters.map { allCharactersCharacter ->
+                            currentState.filteredCharacters.firstOrNull { filteredCharactersCharacter ->
+                                filteredCharactersCharacter.id == allCharactersCharacter.id
+                            } ?: allCharactersCharacter
+                        }
                     )
                 }
 
@@ -230,6 +231,14 @@ class AllCharactersViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+
+    private fun initView() {
+        setState {
+            AllCharactersState.getDefaultValues()
+        }
+        loadAllCharacters()
     }
 
     private fun loadAllCharacters() {
@@ -310,15 +319,6 @@ class AllCharactersViewModel @Inject constructor(
                 }
             }
         }
-    }
-
-    private fun initView() {
-        setState {
-            copy(
-                error = null
-            )
-        }
-        loadAllCharacters()
     }
 
     /**
@@ -404,10 +404,10 @@ class AllCharactersViewModel @Inject constructor(
                     is CharacterPartialState.Success -> {
                         setState {
                             copy(
-                                filteredCharacters = currentState.filteredCharacters.map { characterDomain ->
-                                    if (characterDomain.id == characterId) characterDomain.copy(
+                                filteredCharacters = currentState.filteredCharacters.map { character ->
+                                    if (character.id == characterId) character.copy(
                                         isFavorite = false
-                                    ) else characterDomain
+                                    ) else character
                                 }
                             )
                         }
@@ -456,10 +456,10 @@ class AllCharactersViewModel @Inject constructor(
                     is CharacterPartialState.Success -> {
                         setState {
                             copy(
-                                filteredCharacters = currentState.filteredCharacters.map { characterDomain ->
-                                    if (characterDomain.id == characterId) characterDomain.copy(
+                                filteredCharacters = currentState.filteredCharacters.map { character ->
+                                    if (character.id == characterId) character.copy(
                                         isFavorite = true
-                                    ) else characterDomain
+                                    ) else character
                                 }
                             )
                         }

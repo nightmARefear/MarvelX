@@ -6,6 +6,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
@@ -17,21 +18,21 @@ abstract class BaseViewModel<Event : BaseEvent, State : BaseState, Effect : Base
 
     private val _event: MutableSharedFlow<Event> = MutableSharedFlow()
 
-    private val _uiState: MutableStateFlow<State> = MutableStateFlow(initialState)
-
-    /**
-     * Used by the views to acquire the current state (read-only mode).
-     */
-    val uiState =
-        _uiState.asStateFlow()
-
-    /**
-     * Used by the viewModel to acquire the current state.
-     */
-    protected val currentState: State
-        get() = uiState.value
+    private val _state: MutableStateFlow<State> = MutableStateFlow(initialState)
 
     private val _effect: Channel<Effect> = Channel()
+
+    /**
+     * Used by the views to acquire the current state as read-only.
+     */
+    val uiState: StateFlow<State> =
+        _state.asStateFlow()
+
+    /**
+     * Used by the ViewModels to acquire the current state.
+     */
+    protected val currentState: State
+        get() = _state.value
 
     /**
      * Used by the views to acquire the current effect.
@@ -56,7 +57,6 @@ abstract class BaseViewModel<Event : BaseEvent, State : BaseState, Effect : Base
         }
     }
 
-
     /**
      * Sets the initial state's value.
      */
@@ -64,7 +64,7 @@ abstract class BaseViewModel<Event : BaseEvent, State : BaseState, Effect : Base
 
     protected fun setState(reducer: State.() -> State) {
         val newState = uiState.value.reducer()
-        _uiState.value = newState
+        _state.value = newState
         notifyViewStateHistoryChanged(newState)
     }
 

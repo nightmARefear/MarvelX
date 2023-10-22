@@ -21,7 +21,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyItemScope
-import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridItemScope
 import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -71,7 +70,6 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -162,6 +160,8 @@ data class BottomNavigationBarData(
     val items: List<BottomBarAction>,
     val backgroundColor: Color? = null,
     val contentColor: Color? = null,
+    val topHorizontalColor: Color? = null,
+    val selectedItemTopHorizontalColor: Color? = null,
     val elevation: Dp = BottomNavigationDefaults.Elevation,
 )
 
@@ -178,8 +178,8 @@ private fun BottomBar(
     elevation: Dp = AppBarDefaults.BottomAppBarElevation,
     contentPadding: PaddingValues = AppBarDefaults.ContentPadding
 ) {
-    if (items.size < 3) throw RuntimeException("The minimum allowed bottom bar actions are 3!")
-    if (items.size > 5) throw RuntimeException("The maximum allowed bottom bar actions are 5!")
+    if (items.size < 3) throw RuntimeException("The minimum allowed bottom bar actions is 3!")
+    if (items.size > 5) throw RuntimeException("The maximum allowed bottom bar actions is 5!")
 
     BottomAppBar(
         modifier = Modifier.fillMaxWidth(),
@@ -213,19 +213,26 @@ private fun BottomBar(
 
 /**
  * An extension of [BottomNavigation] providing additional functionality.
+ *
+ * @param navController the [NavController] for navigating to other items
+ * @param items the items of this bottom navigation bar
+ * @param backgroundColor the background [Color] of all the items
+ * @param contentColor the content [Color] of all the items
+ * @param topHorizontalColor the [Color] of the whole top horizontal axis of this bottom navigation bar
+ * @param selectedItemTopHorizontalColor the [Color] of the top horizontal axis of the selected item
  * */
 @Composable
 fun BottomNavigationBar(
     navController: NavController,
     items: List<BottomBarAction>,
-    backgroundColor: Color? = MaterialTheme.colors.primarySurface,
-    contentColor: Color? = if (backgroundColor == null) contentColorFor(MaterialTheme.colors.primarySurface) else contentColorFor(
-        backgroundColor
-    ),
-    elevation: Dp = BottomNavigationDefaults.Elevation,
+    backgroundColor: Color? = null,
+    contentColor: Color? = null,
+    topHorizontalColor: Color? = null,
+    selectedItemTopHorizontalColor: Color? = null,
+    elevation: Dp = BottomNavigationDefaults.Elevation
 ) {
-    if (items.size < 3) throw RuntimeException("The minimum allowed bottom navigation bar actions are 3!")
-    if (items.size > 5) throw RuntimeException("The maximum allowed bottom navigation bar actions are 5!")
+    if (items.size < 3) throw RuntimeException("The minimum allowed bottom navigation bar items is 3!")
+    if (items.size > 5) throw RuntimeException("The maximum allowed bottom navigation bar items is 5!")
     if (items.any { stringResource(it.label).length > 10 }) throw RuntimeException("The maximum allowed length for a bottom navigation bar's item label is 10 characters.")
 
     BottomNavigation(
@@ -242,25 +249,44 @@ fun BottomNavigationBar(
             CompositionLocalProvider(
                 LocalContentAlpha provides ContentAlpha.high
             ) {
+                // TODO: make these values configurable
+                val topHorizontalStrokeWidth = 1.dp
+
+                val selectedItemTopHorizontalStrokeWidth = topHorizontalStrokeWidth + 2.dp
+                val selectedItemTopHorizontalVerticalOffset = topHorizontalStrokeWidth + 1.dp
                 BottomNavigationItem(
-                    modifier = Modifier.then(
-                        // Applies the following modifiers to the selected item.
-                        if (currentRoute == bottomBarAction.route) {
-                            // Draws a horizontal line at the top of the selected item.
-                            val lineColor = MaterialTheme.colors.primaryVariant.copy(alpha = 0.8f)
+                    modifier = Modifier
+                        .then(
                             Modifier
                                 .drawWithContent {
+                                    // Draws this item.
                                     drawContent()
-                                    drawLine(
-                                        color = lineColor,
-                                        start = Offset(0f, 0f),
-                                        end = Offset(size.width, 0f),
-                                        strokeWidth = 5.dp.toPx(),
-                                        cap = StrokeCap.Butt
-                                    )
+
+                                    // Draws a horizontal line at the top of all the items.
+                                    topHorizontalColor?.let { lineColor ->
+                                        drawLine(
+                                            color = lineColor,
+                                            start = Offset(0f, 0f),
+                                            end = Offset(size.width, 0f),
+                                            strokeWidth = topHorizontalStrokeWidth.toPx(),
+                                            cap = StrokeCap.Butt
+                                        )
+                                    }
+
+                                    // Draws a horizontal line at the top of the selected item.
+                                    selectedItemTopHorizontalColor?.let { lineColor ->
+                                        if (currentRoute == bottomBarAction.route) {
+                                            drawLine(
+                                                color = lineColor,
+                                                start = Offset(0f, selectedItemTopHorizontalVerticalOffset.toPx()),
+                                                end = Offset(size.width, selectedItemTopHorizontalVerticalOffset.toPx()),
+                                                strokeWidth = selectedItemTopHorizontalStrokeWidth.toPx(),
+                                                cap = StrokeCap.Butt
+                                            )
+                                        }
+                                    }
                                 }
-                        } else Modifier
-                    ),
+                        ),
                     icon = {
                         Icon(
                             modifier = Modifier.size(32.dp),
@@ -281,6 +307,7 @@ fun BottomNavigationBar(
                         // Navigate ONLY to different route.
                         if (currentRoute != bottomBarAction.route) {
                             navController.navigate(bottomBarAction.route) {
+                                // TODO: Make the start destination configurable either by the provided value if it's not null, otherwise by the first item's route.
                                 popUpTo(Screen.BottomNavigationScreens.getStartDestination()) {
                                     saveState = true
                                 }
@@ -438,7 +465,10 @@ fun ContentScreen(
                     navController = bottomNavigationBarData.navController,
                     items = bottomNavigationBarData.items,
                     backgroundColor = bottomNavigationBarData.backgroundColor,
-                    contentColor = bottomNavigationBarData.contentColor
+                    contentColor = bottomNavigationBarData.contentColor,
+                    topHorizontalColor = bottomNavigationBarData.topHorizontalColor,
+                    selectedItemTopHorizontalColor = bottomNavigationBarData.selectedItemTopHorizontalColor,
+                    elevation = bottomNavigationBarData.elevation
                 )
             }
         },

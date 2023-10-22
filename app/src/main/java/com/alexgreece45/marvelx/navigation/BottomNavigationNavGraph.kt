@@ -31,12 +31,14 @@ fun NavGraphBuilder.BottomNavigationNavGraph(
                         )
                     )
                 },
-                bottomNavigationBarData = { items, backgroundColor, contentColor, elevation ->
+                bottomNavigationBarData = { items, backgroundColor, contentColor, topHorizontalColor, selectedItemTopHorizontalColor, elevation ->
                     BottomNavigationBarData(
                         navController = navController,
                         items = items,
                         backgroundColor = backgroundColor,
                         contentColor = contentColor,
+                        topHorizontalColor = topHorizontalColor,
+                        selectedItemTopHorizontalColor = selectedItemTopHorizontalColor,
                         elevation = elevation
                     )
                 }
@@ -74,12 +76,41 @@ fun NavGraphBuilder.BottomNavigationNavGraph(
         }
 
         composable(Screen.BottomNavigationScreens.AllFavoriteCharactersScreen) {
-            AllFavoriteCharactersScreen(navController = navController)
+            AllFavoriteCharactersScreen(
+                bottomNavigationBarData = { items, backgroundColor, contentColor, topHorizontalColor, selectedItemTopHorizontalColor, elevation ->
+                    BottomNavigationBarData(
+                        navController = navController,
+                        items = items,
+                        backgroundColor = backgroundColor,
+                        contentColor = contentColor,
+                        topHorizontalColor = topHorizontalColor,
+                        selectedItemTopHorizontalColor = selectedItemTopHorizontalColor,
+                        elevation = elevation
+                    )
+                }
+            )
         }
 
         composable(Screen.BottomNavigationScreens.ProfileScreen) {
             ProfileScreen(
-                navController = navController,
+                navigateToHomeScreen = {
+                    navController.navigate(Screen.RegisterScreens.getNestedGraphRootRoute()) {
+                        popUpTo(Screen.BottomNavigationScreens.getNestedGraphRootRoute()) {
+                            inclusive = true
+                        }
+                    }
+                },
+                bottomNavigationBarData = { items, backgroundColor, contentColor, topHorizontalColor, selectedItemTopHorizontalColor, elevation ->
+                    BottomNavigationBarData(
+                        navController = navController,
+                        items = items,
+                        backgroundColor = backgroundColor,
+                        contentColor = contentColor,
+                        topHorizontalColor = topHorizontalColor,
+                        selectedItemTopHorizontalColor = selectedItemTopHorizontalColor,
+                        elevation = elevation
+                    )
+                },
                 activityState = activityState
             )
         }
