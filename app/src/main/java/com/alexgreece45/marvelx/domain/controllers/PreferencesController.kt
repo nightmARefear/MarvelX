@@ -100,6 +100,7 @@ class PreferencesControllerImpl @Inject constructor(
 interface PreferencesKeys {
     fun containsUserId(): Boolean
     fun containsUserToken(): Boolean
+    fun containsUserCredentials(): Boolean
 
     fun getUserId(): Int
     fun getUserToken(): String
@@ -127,6 +128,8 @@ class PreferencesKeysImpl @Inject constructor(
 
     override fun containsUserToken(): Boolean =
         preferencesController.containsKey(BuildConfig.ENCRYPTED_SHARED_PREFERENCES_KEY_USER_TOKEN)
+
+    override fun containsUserCredentials(): Boolean = containsUserId() && containsUserToken()
 
     override fun getUserId(): Int =
         preferencesController.getInt(BuildConfig.ENCRYPTED_SHARED_PREFERENCES_KEY_USER_ID, -1)

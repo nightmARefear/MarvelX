@@ -33,7 +33,7 @@ sealed class HomeEvent : BaseEvent {
 
 data class HomeState(
     // Base states.
-    val isLoading: Boolean = false,
+    val isLoading: Boolean = true,
     val hasInternetConnection: Boolean = true,
     val errorMessage: String? = null,
 
@@ -45,7 +45,7 @@ data class HomeState(
     companion object {
         fun getDefaultValues(): HomeState =
             HomeState(
-                isLoading = false,
+                isLoading = true,
                 hasInternetConnection = true,
                 errorMessage = null,
                 isAlertDialogVisible = false,
@@ -105,8 +105,13 @@ class HomeViewModel @Inject constructor(
     }
 
     private fun initView() {
-        // No stored userId and/or userToken were found; thus, do not proceed any further.
-        if (!preferencesKeys.containsUserId() || !preferencesKeys.containsUserToken()) {
+        // No stored user credentials; thus, do not proceed any further.
+        if (!preferencesKeys.containsUserCredentials()) {
+            setState {
+                copy(
+                    isLoading = false // Stop loading animation.
+                )
+            }
             return
         }
 
@@ -145,7 +150,7 @@ class HomeViewModel @Inject constructor(
                             is VerificationStep.None -> {
                                 setState {
                                     copy(
-                                        isLoading = false
+//                                        isLoading = false // do not disable loading, so that the user cannot click on the Login/Signup buttons
                                     )
                                 }
 

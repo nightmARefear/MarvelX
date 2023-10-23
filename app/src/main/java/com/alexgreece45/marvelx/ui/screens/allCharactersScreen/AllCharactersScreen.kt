@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -51,6 +52,7 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.data.domains.character.CharacterDomain
+import com.alexgreece45.marvelx.data.uiModels.CharacterCardUi
 import com.alexgreece45.marvelx.domain.viewmodels.AllCharactersEffect
 import com.alexgreece45.marvelx.domain.viewmodels.AllCharactersEvent
 import com.alexgreece45.marvelx.domain.viewmodels.AllCharactersViewModel
@@ -232,21 +234,21 @@ fun AllCharactersScreen(
 
                     items(
                         items = state.filteredCharacters,
-                        key = { characterDomain ->
-                            characterDomain.id
+                        key = { characterCardUi ->
+                            characterCardUi.id
                         }
-                    ) { characterDomain ->
+                    ) { characterCardUi ->
                         CharacterItem(
-                            character = characterDomain,
+                            character = characterCardUi,
                             onClick = {
                                 viewModel.setEvent(
-                                    AllCharactersEvent.OnCharacterClick(characterId = characterDomain.id)
+                                    AllCharactersEvent.OnCharacterClick(characterId = characterCardUi.id)
                                 )
                             },
                             onFavoriteClick = {
                                 viewModel.setEvent(
                                     AllCharactersEvent.OnHeartClick(
-                                        characterId = characterDomain.id
+                                        characterId = characterCardUi.id
                                     )
                                 )
                             }
@@ -261,7 +263,7 @@ fun AllCharactersScreen(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun CharacterItem(
-    character: CharacterDomain,
+    character: CharacterCardUi,
     onClick: () -> Unit,
     onFavoriteClick: () -> Unit
 ) {
@@ -270,7 +272,7 @@ private fun CharacterItem(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick() }
+            .clickable(onClick = onClick)
     ) {
         Box(
             modifier = Modifier
@@ -282,10 +284,10 @@ private fun CharacterItem(
                     .fillMaxSize()
                     .aspectRatio(1f),
                 model = ImageRequest.Builder(context)
-                    .data(character.thumbnail.downloadUrl)
+                    .data(character.imageDownloadUrl)
                     .crossfade(true)
                     .build(),
-                contentDescription = "${character.name} image",
+                contentDescription = character.imageContentDescription,
                 contentScale = ContentScale.FillBounds,
                 error = painterResource(R.drawable.ic_broken_image)
             )

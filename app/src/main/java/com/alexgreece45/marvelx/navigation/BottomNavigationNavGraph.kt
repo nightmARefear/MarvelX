@@ -29,7 +29,9 @@ fun NavGraphBuilder.BottomNavigationNavGraph(
                         Screen.CharacterScreen.createNavRoute(
                             characterId = characterId
                         )
-                    )
+                    ) {
+                        launchSingleTop = true
+                    }
                 },
                 bottomNavigationBarData = { items, backgroundColor, topHorizontalColor, selectedItemTopHorizontalColor, elevation ->
                     BottomNavigationBarData(

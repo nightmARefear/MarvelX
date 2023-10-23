@@ -3,6 +3,8 @@ package com.alexgreece45.marvelx.domain.viewmodels
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.data.domains.character.CharacterDomain
+import com.alexgreece45.marvelx.data.domains.character.toCharacterCardUiList
+import com.alexgreece45.marvelx.data.uiModels.CharacterCardUi
 import com.alexgreece45.marvelx.domain.database.FavoriteCharacterEntity
 import com.alexgreece45.marvelx.domain.interactors.CharacterInteractor
 import com.alexgreece45.marvelx.domain.interactors.CharacterPartialState
@@ -73,7 +75,7 @@ data class AllCharactersState(
     val error: AllCharactersScreenErrorView? = null,
 
     // Data.
-    val characters: List<CharacterDomain> = emptyList(),
+    val characters: List<CharacterCardUi> = emptyList(),
     val sortingType: SortingType = SortingType.getDefaultSortingType(),
 
     /**
@@ -84,7 +86,7 @@ data class AllCharactersState(
     /**
      * The filtered characters list that is shown; if there is no search term, then all the characters are shown.
      * */
-    val filteredCharacters: List<CharacterDomain> = emptyList(),
+    val filteredCharacters: List<CharacterCardUi> = emptyList(),
 
     /**
      * This field tracks if the fragment of this ViewModel has been launched for the first time.
@@ -256,8 +258,8 @@ class AllCharactersViewModel @Inject constructor(
         }
         viewModelScope.launch {
             // Load all characters.
-            interactor.getAllCharacters().collect {
-                when (it) {
+            interactor.getAllCharacters().collect { characterPartialState ->
+                when (characterPartialState) {
                     is CharacterPartialState.Success -> {
                         // Load favorite characters.
                         interactor.getFavoriteCharacters()
@@ -266,7 +268,7 @@ class AllCharactersViewModel @Inject constructor(
                                     is GetFavoriteCharactersPartialState.Success -> {
                                         // Move favorite characters data from local storage to the characters list.
                                         setState {
-                                            val characters = it.data.map { character ->
+                                            val characters = characterPartialState.data.map { character ->
                                                 character.copy(
                                                     isFavorite = favoriteCharacterPartialState.favoriteCharacters.firstOrNull { favoriteCharacterEntity ->
                                                         favoriteCharacterEntity.characterId == character.id
@@ -274,7 +276,7 @@ class AllCharactersViewModel @Inject constructor(
                                                         true
                                                     } ?: false
                                                 )
-                                            }
+                                            }.toCharacterCardUiList()
                                             copy(
                                                 isLoading = false,
                                                 characters = characters,
@@ -304,7 +306,7 @@ class AllCharactersViewModel @Inject constructor(
                             copy(
                                 isLoading = false,
                                 error = AllCharactersScreenErrorView(
-                                    errorMessage = it.errorMessage,
+                                    errorMessage = characterPartialState.errorMessage,
                                     onRetryClick = { loadAllCharacters() }
                                 )
                             )
@@ -316,7 +318,7 @@ class AllCharactersViewModel @Inject constructor(
                             copy(
                                 isLoading = false,
                                 error = AllCharactersScreenErrorView(
-                                    errorMessage = it.errorMessage,
+                                    errorMessage = characterPartialState.errorMessage,
                                     onRetryClick = { loadAllCharacters() }
                                 )
                             )
