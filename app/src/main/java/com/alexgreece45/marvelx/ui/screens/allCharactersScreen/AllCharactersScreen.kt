@@ -12,11 +12,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
-import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
-import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
-import androidx.compose.foundation.lazy.staggeredgrid.items
-import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
 import androidx.compose.material.ExperimentalMaterialApi
@@ -86,7 +86,7 @@ fun AllCharactersScreen(
         skipHalfExpanded = true
     )
 
-    val lazyStaggeredGridState = rememberLazyStaggeredGridState()
+    val lazyGridState = rememberLazyGridState()
 
     val context = LocalContext.current
     var initLock: Unit by remember { mutableStateOf(Unit) }
@@ -172,7 +172,7 @@ fun AllCharactersScreen(
             toolbarTitle = stringResource(R.string.all_characters_screen_toolbar_title),
             fabData = if (state.error == null) { // Display FAB only when there's no error.
                 ExtendedFabData(
-                    extended = lazyStaggeredGridState.isScrollingUp(),
+                    extended = lazyGridState.isScrollingUp(),
                     normalFabData = NormalFabData(
                         label = stringResource(R.string.all_characters_screen_fab_label),
                         iconResource = R.drawable.ic_filter_32,
@@ -185,7 +185,7 @@ fun AllCharactersScreen(
             bottomNavigationBarData = bottomNavigationBarData(
                 BottomBarAction.getDefaultBottomBarActions(),
                 MaterialTheme.colors.background,
-                MaterialTheme.colors.onBackground,
+                MaterialTheme.colors.onBackground.copy(alpha = 0.8f),
                 MaterialTheme.colors.primaryVariant.copy(alpha = 0.8f),
                 16.dp,
             )
@@ -205,16 +205,15 @@ fun AllCharactersScreen(
                     }
                 }
             } ?: run {
-                LazyVerticalStaggeredGrid(
-                    modifier = Modifier
-                        .fillMaxSize(),
-                    columns = StaggeredGridCells.Fixed(2),
-                    state = lazyStaggeredGridState,
+                LazyVerticalGrid(
+                    modifier = Modifier.fillMaxSize(),
+                    columns = GridCells.Fixed(2),
+                    state = lazyGridState,
                     contentPadding = contentPadding,
-                    verticalItemSpacing = SPACING_SMALL.dp,
+                    verticalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp),
                     horizontalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp)
                 ) {
-                    item(span = StaggeredGridItemSpan.FullLine) {
+                    item(span = { GridItemSpan(2) }) {
                         SearchBar(
                             searchTerm = state.searchBarTerm,
                             hint = stringResource(R.string.all_characters_screen_search_bar_hint),

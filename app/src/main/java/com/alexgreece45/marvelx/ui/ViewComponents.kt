@@ -1,6 +1,7 @@
 package com.alexgreece45.marvelx.ui
 
 import androidx.annotation.DrawableRes
+import androidx.annotation.Px
 import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -21,6 +22,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyItemScope
+import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -247,15 +249,15 @@ fun BottomNavigationBar(
         val navBackStackEntry by navController.currentBackStackEntryAsState()
         val currentRoute = navBackStackEntry?.destination?.route
 
-        items.forEach { bottomBarAction ->
+        items.forEach { item ->
             CompositionLocalProvider(
                 LocalContentAlpha provides ContentAlpha.high
             ) {
                 // TODO: make these values configurable
                 val topHorizontalStrokeWidth = 1.dp
-
                 val selectedItemTopHorizontalStrokeWidth = topHorizontalStrokeWidth + 2.dp
-                val selectedItemTopHorizontalVerticalOffset = topHorizontalStrokeWidth + 1.dp
+                val selectedItemTopHorizontalVerticalOffset =
+                    selectedItemTopHorizontalStrokeWidth - 0.75.dp
                 BottomNavigationItem(
                     modifier = Modifier
                         .then(
@@ -277,19 +279,24 @@ fun BottomNavigationBar(
 
                                     // Draws a horizontal line at the top of the selected item.
                                     selectedItemTopHorizontalColor?.let { lineColor ->
-                                        if (currentRoute == bottomBarAction.route) {
+                                        // TODO: Make these values configurable.
+                                        val startPositionX = size.width / 33
+                                        val endPositionX = size.width - startPositionX
+                                        if (currentRoute == item.route) {
                                             drawLine(
                                                 color = lineColor,
                                                 start = Offset(
-                                                    0f,
-                                                    selectedItemTopHorizontalVerticalOffset.toPx()
+                                                    x = startPositionX.toDp()
+                                                        .toPx(), // Indent the start of the line by the 1/33th (3.3%) of the total length of the top horizontal line of the item.
+                                                    y = selectedItemTopHorizontalVerticalOffset.toPx()
                                                 ),
                                                 end = Offset(
-                                                    size.width,
-                                                    selectedItemTopHorizontalVerticalOffset.toPx()
+                                                    x = endPositionX.toDp()
+                                                        .toPx(),// Indent the end of the line by total length of the top horizontal line of the item minus the start indent.
+                                                    y = selectedItemTopHorizontalVerticalOffset.toPx()
                                                 ),
                                                 strokeWidth = selectedItemTopHorizontalStrokeWidth.toPx(),
-                                                cap = StrokeCap.Butt
+                                                cap = StrokeCap.Round
                                             )
                                         }
                                     }
@@ -297,24 +304,23 @@ fun BottomNavigationBar(
                         ),
                     icon = {
                         Icon(
-                            modifier = Modifier.size(32.dp),
-                            painter = painterResource(bottomBarAction.iconData.iconResource),
-                            contentDescription = stringResource(bottomBarAction.iconData.contentDescription),
-                            tint = bottomBarAction.iconData.colorTint
+                            modifier = Modifier.size(24.dp),
+                            painter = painterResource(item.iconData.iconResource),
+                            contentDescription = stringResource(item.iconData.contentDescription),
+                            tint = item.iconData.colorTint
                                 ?: LocalContentColor.current.copy(alpha = LocalContentAlpha.current)
                         )
                     },
                     label = {
                         Text(
-                            text = stringResource(bottomBarAction.label),
-                            style = MaterialTheme.typography.caption
+                            text = stringResource(item.label)
                         )
                     },
-                    selected = currentRoute == bottomBarAction.route,
+                    selected = currentRoute == item.route,
                     onClick = {
                         // Navigate ONLY to different route.
-                        if (currentRoute != bottomBarAction.route) {
-                            navController.navigate(bottomBarAction.route) {
+                        if (currentRoute != item.route) {
+                            navController.navigate(item.route) {
                                 // TODO: Make the start destination configurable either by the provided value if it's not null, otherwise by the first item's route.
                                 popUpTo(Screen.BottomNavigationScreens.getStartDestination()) {
                                     saveState = true
@@ -1359,31 +1365,8 @@ fun NoInternetErrorScreen(
 //        Error Screens
 // ==========================
 
-/*
 @Composable
-fun LazyStaggeredGridItemScope.isScrollingUp(): Boolean {
-    var previousIndex by remember(this) {
-        mutableStateOf(firstVisibleItemIndex)
-    }
-    var previousScrollOffset by remember(this) {
-        mutableStateOf(firstVisibleItemScrollOffset)
-    }
-    return remember(this) {
-        derivedStateOf {
-            if (previousIndex != firstVisibleItemIndex) {
-                previousIndex > firstVisibleItemIndex
-            } else {
-                previousScrollOffset >= firstVisibleItemScrollOffset
-            }.also {
-                previousIndex = firstVisibleItemIndex
-                previousScrollOffset = firstVisibleItemScrollOffset
-            }
-        }
-    }.value
-}*/
-
-@Composable
-fun LazyStaggeredGridState.isScrollingUp(): Boolean {
+fun LazyGridState.isScrollingUp(): Boolean {
     var previousIndex by remember(this) {
         mutableIntStateOf(firstVisibleItemIndex)
     }
