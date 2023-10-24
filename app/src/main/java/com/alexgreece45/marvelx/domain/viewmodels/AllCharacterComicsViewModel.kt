@@ -42,14 +42,15 @@ data class AllCharacterComicsState(
 
     // Data.
     val comics: List<ComicDomain> = emptyList(),
-    val sortingType: SortingType = SortingType.getDefaultSortingType(),
+    val sortingType: SortingType = SortingType.DEFAULT_SORTING_TYPE,
 ) : BaseState {
     companion object {
         fun getDefaultValues(): AllCharacterComicsState = AllCharacterComicsState(
             isLoading = true,
             hasInternetConnection = true,
             error = null,
-            comics = emptyList()
+            comics = emptyList(),
+            sortingType = SortingType.DEFAULT_SORTING_TYPE
         )
     }
 }

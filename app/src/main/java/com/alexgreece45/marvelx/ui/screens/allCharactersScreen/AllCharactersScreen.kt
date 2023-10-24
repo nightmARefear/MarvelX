@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -51,12 +50,11 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.data.domains.character.CharacterDomain
 import com.alexgreece45.marvelx.data.uiModels.CharacterCardUi
 import com.alexgreece45.marvelx.domain.viewmodels.AllCharactersEffect
 import com.alexgreece45.marvelx.domain.viewmodels.AllCharactersEvent
 import com.alexgreece45.marvelx.domain.viewmodels.AllCharactersViewModel
-import com.alexgreece45.marvelx.ui.BottomBarAction
+import com.alexgreece45.marvelx.ui.BottomBarItem
 import com.alexgreece45.marvelx.ui.BottomNavigationBarData
 import com.alexgreece45.marvelx.ui.ContentScreen
 import com.alexgreece45.marvelx.ui.ExtendedFabData
@@ -77,7 +75,7 @@ import kotlinx.coroutines.coroutineScope
 @Composable
 fun AllCharactersScreen(
     navigateToCharacterScreen: (characterId: Int) -> Unit,
-    bottomNavigationBarData: (items: List<BottomBarAction>, backgroundColor: Color, topHorizontalColor: Color?, selectedItemTopHorizontalColor: Color?, elevation: Dp) -> BottomNavigationBarData,
+    bottomNavigationBarData: (items: List<BottomBarItem>, backgroundColor: Color, topHorizontalColor: Color?, selectedItemTopHorizontalColor: Color?, elevation: Dp) -> BottomNavigationBarData,
     viewModel: AllCharactersViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
@@ -185,7 +183,7 @@ fun AllCharactersScreen(
                 )
             } else null,
             bottomNavigationBarData = bottomNavigationBarData(
-                BottomBarAction.getDefaultBottomBarActions(),
+                state.bottomNavigationItems,
                 MaterialTheme.colors.background,
                 MaterialTheme.colors.onBackground.copy(alpha = 0.8f),
                 MaterialTheme.colors.primaryVariant.copy(alpha = 0.8f),
@@ -286,6 +284,7 @@ private fun CharacterItem(
                 model = ImageRequest.Builder(context)
                     .data(character.imageDownloadUrl)
                     .crossfade(true)
+                    .fallback(R.drawable.ic_broken_image)
                     .build(),
                 contentDescription = character.imageContentDescription,
                 contentScale = ContentScale.FillBounds,
@@ -295,7 +294,7 @@ private fun CharacterItem(
             // Favorite IconButton
             IconButton(
                 modifier = Modifier.align(Alignment.TopEnd),
-                onClick = { onFavoriteClick() }
+                onClick = onFavoriteClick
             ) {
                 when (character.isFavorite) {
                     true -> {
@@ -327,7 +326,7 @@ private fun CharacterItem(
                         )
                     )
                     .fillMaxWidth()
-                    .padding(SPACING_TINY.dp)
+                    .padding(vertical = SPACING_TINY.dp)
                     .basicMarquee()
                     .align(Alignment.BottomCenter),
                 text = character.name,

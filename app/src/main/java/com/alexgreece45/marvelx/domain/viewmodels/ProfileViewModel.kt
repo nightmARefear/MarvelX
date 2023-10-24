@@ -1,10 +1,14 @@
 package com.alexgreece45.marvelx.domain.viewmodels
 
 import androidx.lifecycle.viewModelScope
+import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.data.domains.user.profileDetails.UserProfileDetailsDomain
 import com.alexgreece45.marvelx.domain.controllers.PreferencesKeys
 import com.alexgreece45.marvelx.domain.interactors.UserInteractor
 import com.alexgreece45.marvelx.domain.interactors.UserPartialStateGetProfileDetails
+import com.alexgreece45.marvelx.navigation.Screen
+import com.alexgreece45.marvelx.ui.BottomBarItem
+import com.alexgreece45.marvelx.ui.IconData
 import com.alexgreece45.marvelx.ui.base.BaseEffect
 import com.alexgreece45.marvelx.ui.base.BaseEvent
 import com.alexgreece45.marvelx.ui.base.BaseState
@@ -30,6 +34,8 @@ data class ProfileState(
     // Base states.
     val isLoading: Boolean = true,
 
+    val bottomNavigationItems: List<BottomBarItem> = emptyList(),
+
     /**
      * The user ID.
      * */
@@ -45,17 +51,7 @@ data class ProfileState(
      * Error message retrieved from the MarvelX-Backend API for invalid user input.
      * */
     val error: ProfileScreenErrorView? = null,
-) : BaseState {
-    companion object {
-        fun getDefaultValues(): ProfileState =
-            ProfileState(
-                isLoading = true,
-                userId = -1,
-                profileDetails = null,
-                error = null
-            )
-    }
-}
+) : BaseState
 
 sealed class ProfileEffect : BaseEffect {
     sealed class Navigation : ProfileEffect() {
@@ -71,7 +67,13 @@ class ProfileViewModel @Inject constructor(
     private val preferencesKeys: PreferencesKeys
 ) :
     BaseViewModel<ProfileEvent, ProfileState, ProfileEffect>() {
-    override fun setInitialState(): ProfileState = ProfileState.getDefaultValues()
+    override fun setInitialState(): ProfileState = ProfileState(
+        isLoading = true,
+        bottomNavigationItems = getBottomNavigationItems(),
+        userId = -1,
+        profileDetails = null,
+        error = null
+    )
 
     override fun handleEvents(event: ProfileEvent) {
         when (event) {
@@ -165,4 +167,31 @@ class ProfileViewModel @Inject constructor(
             ProfileEffect.Navigation.NavigateToHomeScreen
         }
     }
+
+    private fun getBottomNavigationItems(): List<BottomBarItem> = listOf(
+        BottomBarItem(
+            route = Screen.BottomNavigationScreens.AllCharactersScreen.route,
+            label = R.string.bottom_navigation_label_characters,
+            iconData = IconData(
+                iconResource = R.drawable.ic_superhero_32,
+                contentDescription = R.string.bottom_navigation_label_characters
+            )
+        ),
+        BottomBarItem(
+            route = Screen.BottomNavigationScreens.AllFavoriteCharactersScreen.route,
+            label = R.string.bottom_navigation_label_favorites,
+            iconData = IconData(
+                iconResource = R.drawable.ic_favorite_filled_24,
+                contentDescription = R.string.bottom_navigation_label_favorites
+            )
+        ),
+        BottomBarItem(
+            route = Screen.BottomNavigationScreens.ProfileScreen.route,
+            label = R.string.bottom_navigation_label_profile,
+            iconData = IconData(
+                iconResource = R.drawable.ic_person_32,
+                contentDescription = R.string.bottom_navigation_label_profile
+            )
+        )
+    )
 }

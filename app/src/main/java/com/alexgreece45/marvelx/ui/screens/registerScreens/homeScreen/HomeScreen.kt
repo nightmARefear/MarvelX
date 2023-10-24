@@ -37,45 +37,6 @@ fun HomeScreen(
 ) {
     val state by viewModel.uiState.collectAsState()
 
-    LaunchedEffect(Unit) {
-        viewModel.setEvent(HomeEvent.InitView)
-
-        viewModel.uiEffect.collect { homeEffect ->
-            when (homeEffect) {
-                HomeEffect.Navigation.NavigateToLogInScreen -> {
-                    navController.navigate(Screen.RegisterScreens.LogInScreen.route)
-                }
-
-                HomeEffect.Navigation.NavigateToSignUpScreen -> {
-                    navController.navigate(Screen.RegisterScreens.SignUpScreen.route)
-                }
-
-                is HomeEffect.Navigation.NavigateToAllCharactersScreen -> {
-                    // Login was successful so store the userId in the activity viewModel's state.
-                    setUserId.invoke(homeEffect.userId)
-
-                    navController.navigate(Screen.BottomNavigationScreens.AllCharactersScreen.route) {
-                        popUpTo(Screen.RegisterScreens.getNestedGraphRootRoute()) {
-                            inclusive = true
-                        }
-                    }
-                }
-
-                is HomeEffect.Navigation.NavigateToOtpScreen -> {
-                    navController.navigate(
-                        Screen.OtpScreen.createNavRoute(
-                            userId = homeEffect.userId
-                        )
-                    )
-                }
-
-                HomeEffect.Navigation.PopBackStack -> {
-                    navController.popBackStack()
-                }
-            }
-        }
-    }
-
     ContentScreen(
         onBack = { viewModel.setEvent(HomeEvent.OnBack) },
         isLoading = state.isLoading,
@@ -132,6 +93,49 @@ fun HomeScreen(
                             text = stringResource(R.string.home_screen_label_sign_up_button),
                         )
                     }
+                }
+            }
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.setEvent(HomeEvent.InitView)
+
+        viewModel.uiEffect.collect { homeEffect ->
+            when (homeEffect) {
+                HomeEffect.Navigation.NavigateToLogInScreen -> {
+                    navController.navigate(Screen.RegisterScreens.LogInScreen.route) {
+                        launchSingleTop = true
+                    }
+                }
+
+                HomeEffect.Navigation.NavigateToSignUpScreen -> {
+                    navController.navigate(Screen.RegisterScreens.SignUpScreen.route) {
+                        launchSingleTop = true
+                    }
+                }
+
+                is HomeEffect.Navigation.NavigateToAllCharactersScreen -> {
+                    // Login was successful so store the userId in the activity viewModel's state.
+                    setUserId.invoke(homeEffect.userId)
+
+                    navController.navigate(Screen.BottomNavigationScreens.AllCharactersScreen.route) {
+                        popUpTo(Screen.RegisterScreens.getNestedGraphRootRoute()) {
+                            inclusive = true
+                        }
+                    }
+                }
+
+                is HomeEffect.Navigation.NavigateToOtpScreen -> {
+                    navController.navigate(
+                        Screen.OtpScreen.createNavRoute(
+                            userId = homeEffect.userId
+                        )
+                    )
+                }
+
+                HomeEffect.Navigation.PopBackStack -> {
+                    navController.popBackStack()
                 }
             }
         }

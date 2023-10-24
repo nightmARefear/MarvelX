@@ -23,8 +23,8 @@ fun Navigation(
         // Register screens.
         RegisterNavGraph(navController = navController, setUserId = setUserId)
 
-        // Bottom Navigation screens.
-        BottomNavigationNavGraph(navController = navController, activityState = activityState)
+        // Main screens.
+        MainNavGraph(navController = navController, activityState = activityState)
     }
 }
 

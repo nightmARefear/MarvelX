@@ -2,14 +2,15 @@ package com.alexgreece45.marvelx.domain.viewmodels
 
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.data.domains.character.CharacterDomain
 import com.alexgreece45.marvelx.data.domains.character.toCharacterCardUiList
 import com.alexgreece45.marvelx.data.uiModels.CharacterCardUi
 import com.alexgreece45.marvelx.domain.database.FavoriteCharacterEntity
 import com.alexgreece45.marvelx.domain.interactors.CharacterInteractor
 import com.alexgreece45.marvelx.domain.interactors.CharacterPartialState
 import com.alexgreece45.marvelx.domain.interactors.GetFavoriteCharactersPartialState
-import com.alexgreece45.marvelx.ui.BottomBarAction
+import com.alexgreece45.marvelx.navigation.Screen
+import com.alexgreece45.marvelx.ui.BottomBarItem
+import com.alexgreece45.marvelx.ui.IconData
 import com.alexgreece45.marvelx.ui.SortingType
 import com.alexgreece45.marvelx.ui.base.BaseEffect
 import com.alexgreece45.marvelx.ui.base.BaseEvent
@@ -75,8 +76,9 @@ data class AllCharactersState(
     val error: AllCharactersScreenErrorView? = null,
 
     // Data.
+    val bottomNavigationItems: List<BottomBarItem> = emptyList(),
     val characters: List<CharacterCardUi> = emptyList(),
-    val sortingType: SortingType = SortingType.getDefaultSortingType(),
+    val sortingType: SortingType = SortingType.DEFAULT_SORTING_TYPE,
 
     /**
      * The search bar's term.
@@ -93,27 +95,23 @@ data class AllCharactersState(
      * The value is set to true by default, and only changes, to false, when navigation occurs to the [CharacterScreen].
      * */
     val isFirstLaunch: Boolean = true
-) : BaseState {
-    companion object {
-        fun getDefaultValues(): AllCharactersState =
-            AllCharactersState(
-                isLoading = false,
-                error = null,
-                characters = emptyList(),
-                sortingType = SortingType.getDefaultSortingType(),
-                searchBarTerm = "",
-                filteredCharacters = emptyList(),
-                isFirstLaunch = true
-            )
-    }
-}
+) : BaseState
 
 @HiltViewModel
 class AllCharactersViewModel @Inject constructor(
     private val interactor: CharacterInteractor,
     private val resourceProvider: ResourceProvider
 ) : BaseViewModel<AllCharactersEvent, AllCharactersState, AllCharactersEffect>() {
-    override fun setInitialState(): AllCharactersState = AllCharactersState.getDefaultValues()
+    override fun setInitialState(): AllCharactersState = AllCharactersState(
+        isLoading = false,
+        error = null,
+        bottomNavigationItems = getBottomNavigationItems(),
+        characters = emptyList(),
+        sortingType = SortingType.DEFAULT_SORTING_TYPE,
+        searchBarTerm = "",
+        filteredCharacters = emptyList(),
+        isFirstLaunch = true
+    )
 
     override fun handleEvents(event: AllCharactersEvent) {
         when (event) {
@@ -243,9 +241,9 @@ class AllCharactersViewModel @Inject constructor(
 
 
     private fun initView() {
-        setState {
+        /*setState {
             AllCharactersState.getDefaultValues()
-        }
+        }*/
         loadAllCharacters()
     }
 
@@ -268,15 +266,16 @@ class AllCharactersViewModel @Inject constructor(
                                     is GetFavoriteCharactersPartialState.Success -> {
                                         // Move favorite characters data from local storage to the characters list.
                                         setState {
-                                            val characters = characterPartialState.data.map { character ->
-                                                character.copy(
-                                                    isFavorite = favoriteCharacterPartialState.favoriteCharacters.firstOrNull { favoriteCharacterEntity ->
-                                                        favoriteCharacterEntity.characterId == character.id
-                                                    }?.let {
-                                                        true
-                                                    } ?: false
-                                                )
-                                            }.toCharacterCardUiList()
+                                            val characters =
+                                                characterPartialState.data.map { character ->
+                                                    character.copy(
+                                                        isFavorite = favoriteCharacterPartialState.favoriteCharacters.firstOrNull { favoriteCharacterEntity ->
+                                                            favoriteCharacterEntity.characterId == character.id
+                                                        }?.let {
+                                                            true
+                                                        } ?: false
+                                                    )
+                                                }.toCharacterCardUiList()
                                             copy(
                                                 isLoading = false,
                                                 characters = characters,
@@ -506,4 +505,31 @@ class AllCharactersViewModel @Inject constructor(
             }
         }
     }
+
+    private fun getBottomNavigationItems(): List<BottomBarItem> = listOf(
+        BottomBarItem(
+            route = Screen.BottomNavigationScreens.AllCharactersScreen.route,
+            label = R.string.bottom_navigation_label_characters,
+            iconData = IconData(
+                iconResource = R.drawable.ic_superhero_32,
+                contentDescription = R.string.bottom_navigation_label_characters
+            )
+        ),
+        BottomBarItem(
+            route = Screen.BottomNavigationScreens.AllFavoriteCharactersScreen.route,
+            label = R.string.bottom_navigation_label_favorites,
+            iconData = IconData(
+                iconResource = R.drawable.ic_favorite_filled_24,
+                contentDescription = R.string.bottom_navigation_label_favorites
+            )
+        ),
+        BottomBarItem(
+            route = Screen.BottomNavigationScreens.ProfileScreen.route,
+            label = R.string.bottom_navigation_label_profile,
+            iconData = IconData(
+                iconResource = R.drawable.ic_person_32,
+                contentDescription = R.string.bottom_navigation_label_profile
+            )
+        )
+    )
 }

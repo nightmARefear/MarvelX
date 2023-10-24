@@ -30,7 +30,7 @@ import com.alexgreece45.marvelx.domain.viewmodels.ActivityState
 import com.alexgreece45.marvelx.domain.viewmodels.ProfileEffect
 import com.alexgreece45.marvelx.domain.viewmodels.ProfileEvent
 import com.alexgreece45.marvelx.domain.viewmodels.ProfileViewModel
-import com.alexgreece45.marvelx.ui.BottomBarAction
+import com.alexgreece45.marvelx.ui.BottomBarItem
 import com.alexgreece45.marvelx.ui.BottomNavigationBarData
 import com.alexgreece45.marvelx.ui.ContainedButton
 import com.alexgreece45.marvelx.ui.ContentScreen
@@ -42,7 +42,7 @@ import com.alexgreece45.marvelx.util.extensions.shimmer
 @Composable
 fun ProfileScreen(
     navigateToHomeScreen: () -> Unit,
-    bottomNavigationBarData: (items: List<BottomBarAction>, backgroundColor: Color, topHorizontalColor: Color?, selectedItemTopHorizontalColor: Color?, elevation: Dp) -> BottomNavigationBarData,
+    bottomNavigationBarData: (items: List<BottomBarItem>, backgroundColor: Color, topHorizontalColor: Color?, selectedItemTopHorizontalColor: Color?, elevation: Dp) -> BottomNavigationBarData,
     activityState: State<ActivityState>,
     viewModel: ProfileViewModel = hiltViewModel()
 ) {
@@ -75,7 +75,7 @@ fun ProfileScreen(
         showToolbar = true,
         toolbarTitle = stringResource(R.string.profile_screen_toolbar_title),
         bottomNavigationBarData = bottomNavigationBarData(
-            BottomBarAction.getDefaultBottomBarActions(),
+            state.bottomNavigationItems,
             MaterialTheme.colors.background,
             MaterialTheme.colors.onBackground,
             MaterialTheme.colors.primaryVariant.copy(alpha = 0.8f),

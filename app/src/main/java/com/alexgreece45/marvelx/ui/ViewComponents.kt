@@ -1,7 +1,6 @@
 package com.alexgreece45.marvelx.ui
 
 import androidx.annotation.DrawableRes
-import androidx.annotation.Px
 import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -23,7 +22,6 @@ import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.grid.LazyGridState
-import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -96,6 +94,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.zIndex
 import androidx.navigation.NavController
+import androidx.navigation.NavDestination.Companion.hierarchy
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
@@ -115,44 +115,15 @@ import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.VSpacer
 import com.alexgreece45.marvelx.util.extensions.applyPadding
 
-data class BottomBarAction(
+data class BottomBarItem(
     val route: String,
     @StringRes val label: Int,
     val iconData: IconData,
-) {
-    companion object {
-        fun getDefaultBottomBarActions(): List<BottomBarAction> = listOf(
-            BottomBarAction(
-                route = Screen.BottomNavigationScreens.AllCharactersScreen.route,
-                label = R.string.bottom_navigation_label_characters,
-                iconData = IconData(
-                    iconResource = R.drawable.ic_superhero_32,
-                    contentDescription = R.string.bottom_navigation_label_characters
-                )
-            ),
-            BottomBarAction(
-                route = Screen.BottomNavigationScreens.AllFavoriteCharactersScreen.route,
-                label = R.string.bottom_navigation_label_favorites,
-                iconData = IconData(
-                    iconResource = R.drawable.ic_favorite_filled_24,
-                    contentDescription = R.string.bottom_navigation_label_favorites
-                )
-            ),
-            BottomBarAction(
-                route = Screen.BottomNavigationScreens.ProfileScreen.route,
-                label = R.string.bottom_navigation_label_profile,
-                iconData = IconData(
-                    iconResource = R.drawable.ic_person_32,
-                    contentDescription = R.string.bottom_navigation_label_profile
-                )
-            )
-        )
-    }
-}
+)
 
 data class BottomBarData(
     val navController: NavController,
-    val items: List<BottomBarAction>,
+    val items: List<BottomBarItem>,
     val backgroundColor: Color? = null,
     val contentColor: Color? = null,
     val cutoutShape: Shape? = null,
@@ -162,7 +133,7 @@ data class BottomBarData(
 
 data class BottomNavigationBarData(
     val navController: NavController,
-    val items: List<BottomBarAction>,
+    val items: List<BottomBarItem>,
     val backgroundColor: Color? = null,
     val topHorizontalColor: Color? = null,
     val selectedItemTopHorizontalColor: Color? = null,
@@ -175,7 +146,7 @@ data class BottomNavigationBarData(
 @Composable
 private fun BottomBar(
     navController: NavController,
-    items: List<BottomBarAction>,
+    items: List<BottomBarItem>,
     backgroundColor: Color = MaterialTheme.colors.primarySurface,
     contentColor: Color = contentColorFor(backgroundColor),
     cutoutShape: Shape? = null,
@@ -227,7 +198,7 @@ private fun BottomBar(
 @Composable
 fun BottomNavigationBar(
     navController: NavController,
-    items: List<BottomBarAction>,
+    items: List<BottomBarItem>,
     backgroundColor: Color? = null,
     topHorizontalColor: Color? = null,
     selectedItemTopHorizontalColor: Color? = null,
@@ -250,6 +221,7 @@ fun BottomNavigationBar(
         val currentRoute = navBackStackEntry?.destination?.route
 
         items.forEach { item ->
+            val isSelected = currentRoute == item.route
             CompositionLocalProvider(
                 LocalContentAlpha provides ContentAlpha.high
             ) {
@@ -282,7 +254,7 @@ fun BottomNavigationBar(
                                         // TODO: Make these values configurable.
                                         val startPositionX = size.width / 33
                                         val endPositionX = size.width - startPositionX
-                                        if (currentRoute == item.route) {
+                                        if (isSelected) {
                                             drawLine(
                                                 color = lineColor,
                                                 start = Offset(
@@ -316,9 +288,9 @@ fun BottomNavigationBar(
                             text = stringResource(item.label)
                         )
                     },
-                    selected = currentRoute == item.route,
+                    selected = isSelected,
                     onClick = {
-                        // Navigate ONLY to different route.
+                        // Navigate to different route ONLY.
                         if (currentRoute != item.route) {
                             navController.navigate(item.route) {
                                 // TODO: Make the start destination configurable either by the provided value if it's not null, otherwise by the first item's route.
@@ -612,7 +584,7 @@ fun SearchBar(
                 if (searchTerm.isNotBlank()) {
                     val circleBackgroundColor = MaterialTheme.colors.background
                     IconButton(
-                        onClick = { onCloseClick() }
+                        onClick = onCloseClick
                     ) {
                         Icon(
                             modifier = Modifier
@@ -1106,7 +1078,7 @@ sealed class SortingType(val order: Int, val label: String) {
     companion object {
         fun asList(): List<SortingType> = listOf(Random, TextAscending, TextDescending)
 
-        fun getDefaultSortingType(): SortingType = Random
+        val DEFAULT_SORTING_TYPE: SortingType = Random
     }
 }
 

@@ -14,7 +14,7 @@ import com.alexgreece45.marvelx.ui.screens.comicScreen.ComicScreen
 import com.alexgreece45.marvelx.ui.screens.profileScreen.ProfileScreen
 
 @Suppress("FunctionName")
-fun NavGraphBuilder.BottomNavigationNavGraph(
+fun NavGraphBuilder.MainNavGraph(
     navController: NavController,
     activityState: State<ActivityState>
 ) =
