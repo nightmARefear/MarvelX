@@ -3,6 +3,7 @@ package com.alexgreece45.marvelx.domain.viewmodels
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.data.domains.character.CharacterDomain
+import com.alexgreece45.marvelx.data.domains.character.toFavoriteCharacterEntity
 import com.alexgreece45.marvelx.data.domains.comic.ComicDomain
 import com.alexgreece45.marvelx.data.models.character.comic.toDomain
 import com.alexgreece45.marvelx.domain.database.FavoriteCharacterEntity
@@ -305,50 +306,49 @@ class CharacterViewModel @Inject constructor(
                 // Character is not favorite; proceed to make it favorite.
                 false -> {
                     viewModelScope.launch {
-                        interactor.insertFavoriteCharacters(
-                            FavoriteCharacterEntity(characterId = characterDomain.id)
-                        ).collect { characterPartialState ->
-                            when (characterPartialState) {
-                                is CharacterPartialState.Error -> {
-                                    setState {
-                                        copy(
-                                            error = CharacterScreenErrorView(
-                                                errorMessage = characterPartialState.errorMessage,
-                                                onRetryClick = { onFavoriteClick() }
+                        interactor.insertFavoriteCharacters(characterDomain.toFavoriteCharacterEntity())
+                            .collect { characterPartialState ->
+                                when (characterPartialState) {
+                                    is CharacterPartialState.Error -> {
+                                        setState {
+                                            copy(
+                                                error = CharacterScreenErrorView(
+                                                    errorMessage = characterPartialState.errorMessage,
+                                                    onRetryClick = { onFavoriteClick() }
+                                                )
                                             )
-                                        )
-                                    }
-                                }
-
-                                is CharacterPartialState.NoInternetConnection -> {
-                                    setState {
-                                        copy(
-                                            error = CharacterScreenErrorView(
-                                                errorMessage = characterPartialState.errorMessage,
-                                                onRetryClick = { onFavoriteClick() }
-                                            )
-                                        )
-                                    }
-                                }
-
-                                is CharacterPartialState.Success -> {
-                                    setState {
-                                        copy(
-                                            character = characterDomain.copy(isFavorite = true)
-                                        )
+                                        }
                                     }
 
-                                    setEffect {
-                                        CharacterEffect.DisplayOnFavoriteClickMessage(
-                                            message = resourceProvider.getString(
-                                                R.string.favorite_message,
-                                                "character"
+                                    is CharacterPartialState.NoInternetConnection -> {
+                                        setState {
+                                            copy(
+                                                error = CharacterScreenErrorView(
+                                                    errorMessage = characterPartialState.errorMessage,
+                                                    onRetryClick = { onFavoriteClick() }
+                                                )
                                             )
-                                        )
+                                        }
+                                    }
+
+                                    is CharacterPartialState.Success -> {
+                                        setState {
+                                            copy(
+                                                character = characterDomain.copy(isFavorite = true)
+                                            )
+                                        }
+
+                                        setEffect {
+                                            CharacterEffect.DisplayOnFavoriteClickMessage(
+                                                message = resourceProvider.getString(
+                                                    R.string.favorite_message,
+                                                    "character"
+                                                )
+                                            )
+                                        }
                                     }
                                 }
                             }
-                        }
                     }
                 }
             }

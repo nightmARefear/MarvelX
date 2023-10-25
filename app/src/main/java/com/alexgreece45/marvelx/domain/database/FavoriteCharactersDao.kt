@@ -20,6 +20,9 @@ interface FavoriteCharactersDao {
     @Query("SELECT * FROM favorite_character")
     suspend fun getAllCharacters(): List<FavoriteCharacterEntity>
 
+    @Query("SELECT characterId FROM favorite_character")
+    suspend fun getCharacterIds(): List<Int>
+
     @Query("SELECT * FROM favorite_character WHERE characterId = :characterId")
     suspend fun getCharacterById(characterId: Int): FavoriteCharacterEntity
 }

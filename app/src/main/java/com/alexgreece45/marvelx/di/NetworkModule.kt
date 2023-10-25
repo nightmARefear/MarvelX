@@ -17,6 +17,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import logcat.logcat
+import okhttp3.CertificatePinner
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -36,7 +37,16 @@ object NetworkModule {
     ): OkHttpClient {
         val okHttpClient = OkHttpClient.Builder()
 
+        // Used to add certificate pins.
+        val certificatePinner = CertificatePinner.Builder()
+            .add(
+                BuildConfig.MARVELX_BACKEND_DOMAIN,
+                "sha256/${BuildConfig.MARVELX_BACKEND_DOMAIN_PIN}"
+            )
+            .build()
+
         // Add required interceptors.
+        okHttpClient.certificatePinner(certificatePinner)
         okHttpClient.addInterceptor(Interceptors.AuthenticationTokenInterceptor())
         okHttpClient.addInterceptor(interceptor)
         okHttpClient.addInterceptor(

@@ -13,6 +13,8 @@ interface FavoriteCharactersRepository {
 
     suspend fun getAllCharacters(): List<FavoriteCharacterEntity>
 
+    suspend fun getCharacterIds(): List<Int>
+
     suspend fun getCharacterById(characterId: Int): FavoriteCharacterEntity
 }
 
@@ -30,6 +32,9 @@ class FavoriteCharactersRepositoryImpl @Inject constructor(
 
     override suspend fun getAllCharacters(): List<FavoriteCharacterEntity> =
         favoriteCharactersDao.getAllCharacters()
+
+    override suspend fun getCharacterIds(): List<Int> =
+        favoriteCharactersDao.getCharacterIds()
 
     override suspend fun getCharacterById(characterId: Int): FavoriteCharacterEntity =
         favoriteCharactersDao.getCharacterById(characterId = characterId)

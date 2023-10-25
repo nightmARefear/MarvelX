@@ -26,6 +26,7 @@ import com.alexgreece45.marvelx.domain.viewmodels.HomeViewModel
 import com.alexgreece45.marvelx.navigation.Screen
 import com.alexgreece45.marvelx.ui.AlertDialogButton
 import com.alexgreece45.marvelx.ui.AlertDialogError
+import com.alexgreece45.marvelx.ui.ContainedButton
 import com.alexgreece45.marvelx.ui.ContentScreen
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 
@@ -76,7 +77,7 @@ fun HomeScreen(
                     verticalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp)
                 ) {
                     // Login button.
-                    Button(
+                    ContainedButton(
                         modifier = Modifier.fillMaxWidth(),
                         onClick = { viewModel.setEvent(HomeEvent.OnLogInButtonClick) }
                     ) {

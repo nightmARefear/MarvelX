@@ -1,5 +1,6 @@
 package com.alexgreece45.marvelx.ui
 
+import androidx.activity.compose.BackHandler
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedVisibility
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -60,7 +62,9 @@ import androidx.compose.material.TextFieldDefaults
 import androidx.compose.material.TopAppBar
 import androidx.compose.material.contentColorFor
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.KeyboardBackspace
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.primarySurface
@@ -376,10 +380,11 @@ fun ContentScreen(
                         onBack?.let {
                             IconButton(onClick = { it.invoke() }) {
                                 Icon(
-                                    painter = painterResource(R.drawable.ic_back_32),
+                                    imageVector = Icons.Filled.ArrowBack,
                                     contentDescription = stringResource(R.string.back),
                                 )
                             }
+                            HSpacer.Medium()
                         }
 
                         toolbarTitle?.let { toolbarTitle ->
@@ -481,6 +486,10 @@ fun ContentScreen(
             content(paddingValues.applyPadding())
         }
     }
+
+    BackHandler {
+        onBack?.invoke()
+    }
 }
 
 @Composable
@@ -566,63 +575,55 @@ fun SearchBar(
     onValueChange: (String) -> Unit,
     onCloseClick: () -> Unit
 ) {
-    CompositionLocalProvider(
-        LocalTextStyle provides MaterialTheme.typography.h6,
-        LocalContentAlpha provides ContentAlpha.high
-    ) {
-        TextField(
-            modifier = Modifier.fillMaxWidth(),
-            value = searchTerm,
-            placeholder = {
-                Text(
-                    text = hint,
-                    style = MaterialTheme.typography.h6, // TODO: may need to be removed due to compositionlocalprovider
-                    fontStyle = FontStyle.Italic
-                )
-            },
-            trailingIcon = {
-                if (searchTerm.isNotBlank()) {
-                    val circleBackgroundColor = MaterialTheme.colors.background
-                    IconButton(
-                        onClick = onCloseClick
-                    ) {
-                        Icon(
-                            modifier = Modifier
-                                .size(SPACING_LARGE.dp)
-                                .drawBehind {
-                                    drawCircle(
-                                        color = circleBackgroundColor,
-                                        radius = this.size.maxDimension.div(2) + SPACING_SMALL
-                                    )
-                                },
-                            painter = painterResource(R.drawable.ic_close_32),
-                            contentDescription = stringResource(R.string.close),
-                            tint = MaterialTheme.colors.onBackground
-                        )
-                    }
-                }
-            },
-            onValueChange = { newSearchTerm -> onValueChange(newSearchTerm) },
-            keyboardOptions = KeyboardOptions(
-
-            ),
-            singleLine = true,
-            shape = CircleShape,
-            colors = TextFieldDefaults.textFieldColors(
-                textColor = textColor,
-                backgroundColor = backgroundColor,
-                focusedIndicatorColor = Color.Transparent,
-                unfocusedIndicatorColor = Color.Transparent,
-                disabledIndicatorColor = Color.Transparent,
-                errorIndicatorColor = Color.Transparent,
-                placeholderColor = MaterialTheme.colors.onBackground.copy(
-                    alpha = LocalContentAlpha.current.minus(
-                        0.3f
-                    )
-                )
+    TextField(
+        modifier = Modifier.fillMaxWidth(),
+        value = searchTerm,
+        placeholder = {
+            Text(
+                text = hint,
+                style = MaterialTheme.typography.h6,
+                fontStyle = FontStyle.Italic
             )
+        },
+        trailingIcon = {
+            if (searchTerm.isNotBlank()) {
+                val circleBackgroundColor = MaterialTheme.colors.background
+                IconButton(
+                    onClick = onCloseClick
+                ) {
+                    Icon(
+                        modifier = Modifier
+                            .size(SPACING_LARGE.dp)
+                            .drawBehind {
+                                drawCircle(
+                                    color = circleBackgroundColor,
+                                    radius = this.size.maxDimension.div(2) + SPACING_SMALL
+                                )
+                            },
+                        painter = painterResource(R.drawable.ic_close_32),
+                        contentDescription = stringResource(R.string.close),
+                        tint = MaterialTheme.colors.onBackground
+                    )
+                }
+            }
+        },
+        onValueChange = { newSearchTerm -> onValueChange(newSearchTerm) },
+        keyboardOptions = KeyboardOptions(
+
+        ),
+        singleLine = true,
+        shape = CircleShape,
+        textStyle = MaterialTheme.typography.h6,
+        colors = TextFieldDefaults.textFieldColors(
+            textColor = textColor,
+            backgroundColor = backgroundColor,
+            focusedIndicatorColor = Color.Transparent,
+            unfocusedIndicatorColor = Color.Transparent,
+            disabledIndicatorColor = Color.Transparent,
+            errorIndicatorColor = Color.Transparent,
+            placeholderColor = MaterialTheme.colors.onBackground.copy(alpha = 0.6f)
         )
-    }
+    )
 }
 
 @OptIn(ExperimentalMaterialApi::class)
@@ -680,7 +681,7 @@ fun ModalBottomSheetScaffold(
                         onBack?.let {
                             IconButton(onClick = { it.invoke() }) {
                                 Icon(
-                                    painter = painterResource(R.drawable.ic_back_32),
+                                    imageVector = Icons.Filled.ArrowBack,
                                     contentDescription = stringResource(R.string.back),
                                 )
                             }
@@ -929,30 +930,18 @@ fun OutlinedTextFieldValidation(
 
 @Composable
 fun ContainedButton(
+    onClick: () -> Unit,
     modifier: Modifier,
     enabled: Boolean = true,
-    label: String,
-    interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
-    elevation: ButtonElevation? = ButtonDefaults.elevation(),
-    shape: Shape = MaterialTheme.shapes.small,
-    border: BorderStroke? = null,
-    colors: ButtonColors = ButtonDefaults.buttonColors(),
-    onClick: () -> Unit
+    content: @Composable RowScope.() -> Unit
 ) {
     Button(
+        onClick = onClick,
         modifier = modifier,
         enabled = enabled,
-        interactionSource = interactionSource,
-        elevation = elevation,
-        shape = shape,
-        border = border,
-        colors = colors,
-        onClick = { onClick.invoke() }
-    ) {
-        Text(
-            text = label
-        )
-    }
+        contentPadding = PaddingValues(vertical = 8.dp, horizontal = 16.dp),
+        content = content
+    )
 }
 
 sealed class AlertDialogErrorButtonType {
@@ -1095,7 +1084,7 @@ fun SortingItems(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(start = startPadding)
-                // Disables the on tap ripple effect for both simple and long clicks.
+                // Disables the on tap ripple effect for both single and long clicks.
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = rememberRipple(radius = 0.dp)
@@ -1125,9 +1114,7 @@ fun SortingItems(
             Text(
                 text = sortingType.label,
                 style = MaterialTheme.typography.h6,
-                color = if (isSelected) LocalContentColor.current else LocalContentColor.current.copy(
-                    alpha = LocalContentAlpha.current.minus(0.3f)
-                )
+                color = if (isSelected) LocalContentColor.current else LocalContentColor.current.copy(alpha = 0.6f)
             )
         }
 
@@ -1276,44 +1263,6 @@ fun GenericErrorScreen(
     ) {
         Text(
             text = errorMessage,
-            textAlign = TextAlign.Center,
-            style = MaterialTheme.typography.h4.copy(
-                color = MaterialTheme.colors.error
-            )
-        )
-
-        VSpacer.Medium()
-
-        Button(
-            onClick = { onRetryClick() }
-        ) {
-            Text(
-                text = stringResource(R.string.retry).uppercase(),
-                style = MaterialTheme.typography.h5
-            )
-        }
-    }
-}
-
-@Composable
-fun NoInternetErrorScreen(
-    onRetryClick: () -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .zIndex(100f)
-            .background(MaterialTheme.colors.background)
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null,
-                onClick = {}
-            ),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = stringResource(R.string.no_internet_connection_error_message),
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.h4.copy(
                 color = MaterialTheme.colors.error

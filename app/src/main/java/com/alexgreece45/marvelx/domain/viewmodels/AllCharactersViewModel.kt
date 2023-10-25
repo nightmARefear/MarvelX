@@ -4,9 +4,11 @@ import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.data.domains.character.toCharacterCardUiList
 import com.alexgreece45.marvelx.data.uiModels.CharacterCardUi
+import com.alexgreece45.marvelx.data.uiModels.toFavoriteCharacterEntity
 import com.alexgreece45.marvelx.domain.database.FavoriteCharacterEntity
 import com.alexgreece45.marvelx.domain.interactors.CharacterInteractor
 import com.alexgreece45.marvelx.domain.interactors.CharacterPartialState
+import com.alexgreece45.marvelx.domain.interactors.GetFavoriteCharacterIdsPartialState
 import com.alexgreece45.marvelx.domain.interactors.GetFavoriteCharactersPartialState
 import com.alexgreece45.marvelx.navigation.Screen
 import com.alexgreece45.marvelx.ui.BottomBarItem
@@ -260,17 +262,17 @@ class AllCharactersViewModel @Inject constructor(
                 when (characterPartialState) {
                     is CharacterPartialState.Success -> {
                         // Load favorite characters.
-                        interactor.getFavoriteCharacters()
+                        interactor.getFavoriteCharacterIds()
                             .collect { favoriteCharacterPartialState ->
                                 when (favoriteCharacterPartialState) {
-                                    is GetFavoriteCharactersPartialState.Success -> {
+                                    is GetFavoriteCharacterIdsPartialState.Success -> {
                                         // Move favorite characters data from local storage to the characters list.
                                         setState {
                                             val characters =
                                                 characterPartialState.data.map { character ->
                                                     character.copy(
-                                                        isFavorite = favoriteCharacterPartialState.favoriteCharacters.firstOrNull { favoriteCharacterEntity ->
-                                                            favoriteCharacterEntity.characterId == character.id
+                                                        isFavorite = favoriteCharacterPartialState.favoriteCharacterIds.firstOrNull { favoriteCharacterId ->
+                                                            favoriteCharacterId == character.id
                                                         }?.let {
                                                             true
                                                         } ?: false
@@ -284,7 +286,7 @@ class AllCharactersViewModel @Inject constructor(
                                         }
                                     }
 
-                                    is GetFavoriteCharactersPartialState.Error -> {
+                                    is GetFavoriteCharacterIdsPartialState.Error -> {
                                         // Could not retrieve favorite characters data.
                                         setState {
                                             copy(
@@ -455,10 +457,21 @@ class AllCharactersViewModel @Inject constructor(
     }
 
     private fun favoriteCharacterById(characterId: Int) {
+        val character: FavoriteCharacterEntity? = currentState.filteredCharacters.firstOrNull { it.id == characterId }?.toFavoriteCharacterEntity()
+        if (character == null) {
+            setState {
+                copy(
+                    error = AllCharactersScreenErrorView(
+                        errorMessage = resourceProvider.getGenericErrorMessage(), // TODO: Refactor error handling by displaying a toast.
+                        onRetryClick = { favoriteCharacterById(characterId) }
+                    )
+                )
+            }
+            return
+        }
+
         viewModelScope.launch {
-            interactor.insertFavoriteCharacters(
-                FavoriteCharacterEntity(characterId = characterId)
-            ).collect {
+            interactor.insertFavoriteCharacters(character).collect {
                 when (it) {
                     is CharacterPartialState.Success -> {
                         setState {

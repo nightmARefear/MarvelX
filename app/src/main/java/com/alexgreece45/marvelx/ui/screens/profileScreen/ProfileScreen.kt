@@ -154,9 +154,12 @@ fun ProfileScreen(
                     ) {
                         ContainedButton(
                             modifier = Modifier.fillMaxWidth(),
-                            label = stringResource(R.string.profile_screen_button_label_logout),
                             onClick = { viewModel.setEvent(ProfileEvent.OnLogoutButtonPressed) }
-                        )
+                        ) {
+                            Text(
+                                text = stringResource(R.string.profile_screen_button_label_logout)
+                            )
+                        }
                     }
                 }
             }

@@ -83,7 +83,9 @@ fun AllCharacterComicsScreen(
                         Screen.ComicScreen.createNavRoute(
                             comicId = effect.comicId
                         )
-                    )
+                    ) {
+                        launchSingleTop = true
+                    }
                 }
 
                 AllCharacterComicsEffect.BottomSheet.Hide -> {

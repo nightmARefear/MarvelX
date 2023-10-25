@@ -80,7 +80,9 @@ fun CharacterScreen(
                         Screen.ComicScreen.createNavRoute(
                             comicId = effect.comicId
                         )
-                    )
+                    ) {
+                        launchSingleTop = true
+                    }
                 }
 
                 is CharacterEffect.NavigateToAllComicsScreen -> {

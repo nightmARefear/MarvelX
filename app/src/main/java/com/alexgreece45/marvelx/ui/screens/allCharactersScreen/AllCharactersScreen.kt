@@ -1,5 +1,6 @@
 package com.alexgreece45.marvelx.ui.screens.allCharactersScreen
 
+import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -65,6 +66,7 @@ import com.alexgreece45.marvelx.ui.SearchBar
 import com.alexgreece45.marvelx.ui.SortingModalBottomSheetContent
 import com.alexgreece45.marvelx.ui.isScrollingUp
 import com.alexgreece45.marvelx.util.DEFAULT_SCREEN_PADDING
+import com.alexgreece45.marvelx.util.HSpacer
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.SPACING_TINY
 import kotlinx.coroutines.coroutineScope
@@ -92,57 +94,6 @@ fun AllCharactersScreen(
     var initLock: Unit by remember { mutableStateOf(Unit) }
 
     val keyboard = LocalSoftwareKeyboardController.current
-
-    LaunchedEffect(initLock) {
-        if (!state.isFirstLaunch) {
-            viewModel.setEvent(AllCharactersEvent.LoadFavoriteCharacters)
-        }
-    }
-
-    LaunchedEffect(Unit) {
-        viewModel.setEvent(AllCharactersEvent.InitView)
-
-        viewModel.uiEffect.collect { effect ->
-            when (effect) {
-                is AllCharactersEffect.Navigation.NavigateToCharacterScreen -> {
-                    initLock = Unit
-                    navigateToCharacterScreen(effect.characterId)
-                }
-
-                is AllCharactersEffect.FavoriteCharacter.Success -> {
-                    Toast.makeText(context, effect.successMessage, Toast.LENGTH_SHORT).show()
-                }
-
-                is AllCharactersEffect.FavoriteCharacter.Error -> {
-                    Toast.makeText(context, effect.errorMessage, Toast.LENGTH_SHORT).show()
-                }
-
-                is AllCharactersEffect.UnFavoriteCharacter.Error -> {
-                    Toast.makeText(context, effect.errorMessage, Toast.LENGTH_SHORT).show()
-                }
-
-                is AllCharactersEffect.UnFavoriteCharacter.Success -> {
-                    Toast.makeText(context, effect.successMessage, Toast.LENGTH_SHORT).show()
-                }
-
-                AllCharactersEffect.SortingBottomSheet.Hide -> {
-                    coroutineScope {
-                        modalBottomSheetState.hide()
-                    }
-                }
-
-                AllCharactersEffect.SortingBottomSheet.Show -> {
-                    coroutineScope {
-                        modalBottomSheetState.show()
-                    }
-                }
-
-                AllCharactersEffect.CloseKeyboard -> {
-                    keyboard?.hide()
-                }
-            }
-        }
-    }
 
     ModalBottomSheet(
         sheetState = modalBottomSheetState,
@@ -230,6 +181,16 @@ fun AllCharactersScreen(
                         )
                     }
 
+                    // If the search term does not match any character's name.
+                    if (state.filteredCharacters.isEmpty()) {
+                        item(span = { GridItemSpan(2) }) {
+                            Text(
+                                text = "No characters were found based on the specified criteria...",
+                                style = MaterialTheme.typography.h6
+                            )
+                        }
+                    }
+
                     items(
                         items = state.filteredCharacters,
                         key = { characterCardUi ->
@@ -238,6 +199,7 @@ fun AllCharactersScreen(
                     ) { characterCardUi ->
                         CharacterItem(
                             character = characterCardUi,
+                            context = context,
                             onClick = {
                                 viewModel.setEvent(
                                     AllCharactersEvent.OnCharacterClick(characterId = characterCardUi.id)
@@ -256,17 +218,67 @@ fun AllCharactersScreen(
             }
         }
     }
+
+    LaunchedEffect(initLock) {
+        if (!state.isFirstLaunch) {
+            viewModel.setEvent(AllCharactersEvent.LoadFavoriteCharacters)
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.setEvent(AllCharactersEvent.InitView)
+
+        viewModel.uiEffect.collect { effect ->
+            when (effect) {
+                is AllCharactersEffect.Navigation.NavigateToCharacterScreen -> {
+                    initLock = Unit
+                    navigateToCharacterScreen(effect.characterId)
+                }
+
+                is AllCharactersEffect.FavoriteCharacter.Success -> {
+                    Toast.makeText(context, effect.successMessage, Toast.LENGTH_SHORT).show()
+                }
+
+                is AllCharactersEffect.FavoriteCharacter.Error -> {
+                    Toast.makeText(context, effect.errorMessage, Toast.LENGTH_SHORT).show()
+                }
+
+                is AllCharactersEffect.UnFavoriteCharacter.Error -> {
+                    Toast.makeText(context, effect.errorMessage, Toast.LENGTH_SHORT).show()
+                }
+
+                is AllCharactersEffect.UnFavoriteCharacter.Success -> {
+                    Toast.makeText(context, effect.successMessage, Toast.LENGTH_SHORT).show()
+                }
+
+                AllCharactersEffect.SortingBottomSheet.Hide -> {
+                    coroutineScope {
+                        modalBottomSheetState.hide()
+                    }
+                }
+
+                AllCharactersEffect.SortingBottomSheet.Show -> {
+                    coroutineScope {
+                        modalBottomSheetState.show()
+                    }
+                }
+
+                AllCharactersEffect.CloseKeyboard -> {
+                    keyboard?.hide()
+                }
+            }
+        }
+    }
 }
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun CharacterItem(
     character: CharacterCardUi,
+    context: Context,
     onClick: () -> Unit,
     onFavoriteClick: () -> Unit
 ) {
-    val context = LocalContext.current
-
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -291,7 +303,7 @@ private fun CharacterItem(
                 error = painterResource(R.drawable.ic_broken_image)
             )
 
-            // Favorite IconButton
+            // Favorite icon.
             IconButton(
                 modifier = Modifier.align(Alignment.TopEnd),
                 onClick = onFavoriteClick
@@ -318,14 +330,8 @@ private fun CharacterItem(
             // Name.
             Text(
                 modifier = Modifier
-                    .background(
-                        MaterialTheme.colors.background.copy(
-                            alpha = LocalContentAlpha.current.minus(
-                                0.35f
-                            )
-                        )
-                    )
                     .fillMaxWidth()
+                    .background(MaterialTheme.colors.background.copy(alpha = 0.6f))
                     .padding(vertical = SPACING_TINY.dp)
                     .basicMarquee()
                     .align(Alignment.BottomCenter),
