@@ -39,6 +39,8 @@ import com.alexgreece45.marvelx.ui.ContentScreen
 import com.alexgreece45.marvelx.ui.OutlinedTextFieldValidation
 import com.alexgreece45.marvelx.ui.ValueType
 import com.alexgreece45.marvelx.util.SPACING_MEDIUM
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.onEach
 import logcat.logcat
 
 @OptIn(ExperimentalComposeUiApi::class)
@@ -55,11 +57,9 @@ fun LogInScreen(
     val focusManager = LocalFocusManager.current
 
     LaunchedEffect(Unit) {
-        viewModel.setEvent(
-            LoginEvent.InitView
-        )
+        viewModel.setEvent(LoginEvent.InitView)
 
-        viewModel.uiEffect.collect { effect ->
+        viewModel.uiEffect.onEach { effect ->
             when (effect) {
                 is LoginEffect.Navigation.NavigateToAllCharactersScreen -> {
                     // Login was successful so store the userId in the activity viewModel's state.
@@ -90,10 +90,10 @@ fun LogInScreen(
                 }
 
                 LoginEffect.Navigation.PopBackStack -> {
-                    navController.popBackStack()
+                    navController.popBackStack().also{ println("LoginScreen: popBackStack")}
                 }
             }
-        }
+        }.collect()
     }
 
     ContentScreen(

@@ -6,7 +6,6 @@ import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -37,9 +36,6 @@ import androidx.compose.material.BottomSheetScaffold
 import androidx.compose.material.BottomSheetScaffoldDefaults
 import androidx.compose.material.BottomSheetScaffoldState
 import androidx.compose.material.Button
-import androidx.compose.material.ButtonColors
-import androidx.compose.material.ButtonDefaults
-import androidx.compose.material.ButtonElevation
 import androidx.compose.material.ContentAlpha
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.FloatingActionButton
@@ -64,16 +60,17 @@ import androidx.compose.material.contentColorFor
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.KeyboardBackspace
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.primarySurface
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -98,8 +95,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.zIndex
 import androidx.navigation.NavController
-import androidx.navigation.NavDestination.Companion.hierarchy
-import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
@@ -116,8 +111,124 @@ import com.alexgreece45.marvelx.util.HSpacer
 import com.alexgreece45.marvelx.util.SPACING_LARGE
 import com.alexgreece45.marvelx.util.SPACING_MEDIUM
 import com.alexgreece45.marvelx.util.SPACING_SMALL
+import com.alexgreece45.marvelx.util.THROTTLE_CLICKABLE_DEFAULT_DELAY
 import com.alexgreece45.marvelx.util.VSpacer
+import com.alexgreece45.marvelx.util.extensions.ClickState
 import com.alexgreece45.marvelx.util.extensions.applyPadding
+import com.alexgreece45.marvelx.util.extensions.throttledClickableIcon
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.MutableSharedFlow
+
+// ======== START OF ========
+//     PRIVATE COMPOSABLES
+// ==========================
+
+/**
+ * A custom implementation of [IconButton] providing throttled clickable functionality to ensure that
+ * this ThrottledIconButton is clicked only once per second.
+ *
+ * This component is typically used inside an App Bar for navigation icon / actions. It is strongly advised
+ * to explicitly use this component as the App Bar's back IconButton, if it exists.
+ *
+ * ### Example usages:
+ * #### 1. Back icon in App Bar for navigating to the previous screen
+ * ```
+ *ThrottledIconButton(
+ *  onClick = navController.popBackStack()
+ *) {
+ *  Icon(
+ *      imageVector = Icons.Filled.ArrowBack,
+ *      contentDescription = stringResource(id = R.string.back)
+ *  )
+ *}
+ * ```
+ *
+ * #### 2. Save action in App Bar for saving changes
+ * ```
+ *ThrottledIconButton(
+ *  onClick = { viewModel.setEvent(Event.OnSaveChangesButtonClick) }
+ *) {
+ *  Icon(
+ *      imageVector = Icons.Filled.Save,
+ *      contentDescription = stringResource(id = R.string.save)
+ *  )
+ *}
+ * ```
+ *
+ * @param onClick the lambda to be invoked when this icon is pressed
+ * @param modifier optional [Modifier] for this ThrottledIconButton
+ * @param enabled whether or not this ThrottledIconButton will handle input events and appear enabled for
+ * semantics purposes
+ * @param interactionSource the [MutableInteractionSource] representing the stream of
+ * [Interaction]s for this ThrottledIconButton. You can create and pass in your own remembered
+ * [MutableInteractionSource] if you want to observe [Interaction]s and customize the
+ * appearance / behavior of this ThrottledIconButton in different [Interaction]s.
+ * @param content the content (icon) to be drawn inside the ThrottledIconButton. This is typically an
+ * [Icon].
+ * */
+@Composable
+private fun ThrottledIconButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
+    content: @Composable () -> Unit
+) {
+    Box(
+        modifier = modifier
+            .throttledClickableIcon(
+                onClick = onClick,
+                enabled = enabled,
+                interactionSource = interactionSource
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        val contentAlpha = if (enabled) LocalContentAlpha.current else ContentAlpha.disabled
+        CompositionLocalProvider(LocalContentAlpha provides contentAlpha, content = content)
+    }
+}
+
+@Composable
+private fun ThrottledBackHandler(
+    enabled: Boolean,
+    delay: Long = THROTTLE_CLICKABLE_DEFAULT_DELAY,
+    onBack: () -> Unit
+) {
+    var lastClicked: Long by remember { mutableLongStateOf(0) }
+
+    val debounceState = remember {
+        MutableSharedFlow<ClickState>(
+            replay = 0,
+            extraBufferCapacity = 1,
+            onBufferOverflow = BufferOverflow.DROP_OLDEST
+        )
+    }
+
+    LaunchedEffect(Unit) {
+        debounceState
+            .collect {
+                if (lastClicked <= 0 || (it.currentTimeInMillis - lastClicked) >= delay) {
+                    it.event()
+                    lastClicked = it.currentTimeInMillis
+                }
+            }
+    }
+
+    BackHandler(
+        enabled = enabled, onBack = {
+            debounceState.tryEmit(
+                ClickState(
+                    onBack,
+                    System.currentTimeMillis()
+                )
+            )
+        }
+    )
+}
+
+// ======== END OF ========
+//     PRIVATE COMPOSABLES
+// ==========================
 
 data class BottomBarItem(
     val route: String,
@@ -377,11 +488,13 @@ fun ContentScreen(
                         LocalContentAlpha provides ContentAlpha.high,
                         LocalTextStyle provides MaterialTheme.typography.h6
                     ) {
-                        onBack?.let {
-                            IconButton(onClick = { it.invoke() }) {
+                        onBack?.let { onBack ->
+                            ThrottledIconButton(
+                                onClick = onBack
+                            ) {
                                 Icon(
                                     imageVector = Icons.Filled.ArrowBack,
-                                    contentDescription = stringResource(R.string.back),
+                                    contentDescription = stringResource(id = R.string.back),
                                 )
                             }
                             HSpacer.Medium()
@@ -487,9 +600,13 @@ fun ContentScreen(
         }
     }
 
-    BackHandler {
+  /*  BackHandler(enabled = onBack != null) {
         onBack?.invoke()
-    }
+    }*/
+
+      ThrottledBackHandler(enabled = onBack != null) {
+          onBack?.invoke()
+      }
 }
 
 @Composable
@@ -1114,7 +1231,9 @@ fun SortingItems(
             Text(
                 text = sortingType.label,
                 style = MaterialTheme.typography.h6,
-                color = if (isSelected) LocalContentColor.current else LocalContentColor.current.copy(alpha = 0.6f)
+                color = if (isSelected) LocalContentColor.current else LocalContentColor.current.copy(
+                    alpha = 0.6f
+                )
             )
         }
 

@@ -41,19 +41,7 @@ data class HomeState(
     val isAlertDialogVisible: Boolean = false,
     val alertDialogTitle: String = "",
     val alertDialogErrorMessage: String = "",
-) : BaseState {
-    companion object {
-        fun getDefaultValues(): HomeState =
-            HomeState(
-                isLoading = true,
-                hasInternetConnection = true,
-                errorMessage = null,
-                isAlertDialogVisible = false,
-                alertDialogTitle = "",
-                alertDialogErrorMessage = "",
-            )
-    }
-}
+) : BaseState
 
 sealed class HomeEffect : BaseEffect {
     sealed class Navigation : HomeEffect() {
@@ -71,7 +59,15 @@ class HomeViewModel @Inject constructor(
     private val resourceProvider: ResourceProvider,
     private val userInteractor: UserInteractor
 ) : BaseViewModel<HomeEvent, HomeState, HomeEffect>() {
-    override fun setInitialState(): HomeState = HomeState.getDefaultValues()
+    override fun setInitialState(): HomeState =
+        HomeState(
+            isLoading = true,
+            hasInternetConnection = true,
+            errorMessage = null,
+            isAlertDialogVisible = false,
+            alertDialogTitle = "",
+            alertDialogErrorMessage = "",
+        )
 
     override fun handleEvents(event: HomeEvent) {
         when (event) {
@@ -80,10 +76,6 @@ class HomeViewModel @Inject constructor(
             }
 
             HomeEvent.OnBack -> {
-                // Reset states just in case.
-                setState {
-                    HomeState.getDefaultValues()
-                }
                 // Pop back stack.
                 setEffect {
                     HomeEffect.Navigation.PopBackStack
@@ -130,14 +122,13 @@ class HomeViewModel @Inject constructor(
                 when (it) {
                     is UserPartialStatePostLoginWithToken.Error -> {
                         // An error occurred either due to an invalid token, or user id; proceed to remove the stored user credentials (userId, token).
+                        preferencesKeys.removeUserCredentials()
+
                         setState {
                             copy(
                                 isLoading = false
                             )
                         }
-
-                        // Remove user credentials (userId, userToken) from device.
-                        preferencesKeys.removeUserCredentials()
 
                         // Display erroneous alert dialog.
                         showAlertDialog(
@@ -168,16 +159,16 @@ class HomeViewModel @Inject constructor(
                             }
 
                             is VerificationStep.OtpEmail -> {
+                                // Update stored token if needed.
+                                it.userLoginWithTokenResponseDomain.token?.let { newToken ->
+                                    preferencesKeys.setUserToken(newToken)
+                                }
+
                                 // Currently we only support OTP from email.
                                 setState {
                                     copy(
                                         isLoading = false
                                     )
-                                }
-
-                                // Update stored token if needed.
-                                it.userLoginWithTokenResponseDomain.token?.let { newToken ->
-                                    preferencesKeys.setUserToken(newToken)
                                 }
 
                                 setEffect {
@@ -188,30 +179,29 @@ class HomeViewModel @Inject constructor(
                             }
 
                             is VerificationStep.OtpPhoneNumber -> {
-                                // TODO: display appropriate screen
+                                // Update stored token if needed.
+                                it.userLoginWithTokenResponseDomain.token?.let { newToken ->
+                                    preferencesKeys.setUserToken(newToken)
+                                }
+
                                 setState {
                                     copy(
                                         isLoading = false
                                     )
-                                }
-
-                                // Update stored token if needed.
-                                it.userLoginWithTokenResponseDomain.token?.let { newToken ->
-                                    preferencesKeys.setUserToken(newToken)
                                 }
 
                                 TODO("\"VerificationStep.OtpPhoneNumber\" not implemented yet")
                             }
 
                             is VerificationStep.Invalid -> {
+                                // An error occurred, so just in case, remove the stored user credentials (userId, userToken).
+                                preferencesKeys.removeUserCredentials()
+
                                 setState {
                                     copy(
                                         isLoading = false
                                     )
                                 }
-
-                                // An error occurred, so just in case, remove the stored user credentials (userId, userToken).
-                                preferencesKeys.removeUserCredentials()
 
                                 showAlertDialog(
                                     errorMessage = resourceProvider.getGenericErrorMessage()

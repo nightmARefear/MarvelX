@@ -29,6 +29,9 @@ import com.alexgreece45.marvelx.ui.AlertDialogError
 import com.alexgreece45.marvelx.ui.ContainedButton
 import com.alexgreece45.marvelx.ui.ContentScreen
 import com.alexgreece45.marvelx.util.SPACING_SMALL
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.collectIndexed
+import kotlinx.coroutines.flow.onEach
 
 @Composable
 fun HomeScreen(
@@ -87,9 +90,10 @@ fun HomeScreen(
                     }
 
                     // Signup button.
-                    Button(
+                    ContainedButton(
                         modifier = Modifier.fillMaxWidth(),
-                        onClick = { viewModel.setEvent(HomeEvent.OnSignUpButtonClick) }) {
+                        onClick = { viewModel.setEvent(HomeEvent.OnSignUpButtonClick) }
+                    ) {
                         Text(
                             text = stringResource(R.string.home_screen_label_sign_up_button),
                         )
@@ -102,7 +106,7 @@ fun HomeScreen(
     LaunchedEffect(Unit) {
         viewModel.setEvent(HomeEvent.InitView)
 
-        viewModel.uiEffect.collect { homeEffect ->
+        viewModel.uiEffect.onEach { homeEffect ->
             when (homeEffect) {
                 HomeEffect.Navigation.NavigateToLogInScreen -> {
                     navController.navigate(Screen.RegisterScreens.LogInScreen.route) {
@@ -139,6 +143,6 @@ fun HomeScreen(
                     navController.popBackStack()
                 }
             }
-        }
+        }.collect()
     }
 }
