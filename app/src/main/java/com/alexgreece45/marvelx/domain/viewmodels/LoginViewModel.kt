@@ -5,7 +5,6 @@ import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.data.domains.user.login.UserLoginResponseDomain
 import com.alexgreece45.marvelx.data.domains.user.VerificationStep
 import com.alexgreece45.marvelx.data.models.user.login.UserLoginRequest
-import com.alexgreece45.marvelx.domain.controllers.PreferencesController
 import com.alexgreece45.marvelx.domain.controllers.PreferencesKeys
 import com.alexgreece45.marvelx.domain.interactors.UserInteractor
 import com.alexgreece45.marvelx.domain.interactors.UserPartialStatePostLogin
@@ -307,7 +306,7 @@ class LoginViewModel @Inject constructor(
                             when (userLogInResponseDomain.verificationStep) {
                                 is VerificationStep.None -> {
                                     // Store userToken.
-                                    userLogInResponseDomain.userToken?.let { userToken ->
+                                    userLogInResponseDomain.accessToken?.let { userToken ->
                                         preferencesKeys.setUserToken(
                                             userToken = userToken
                                         )

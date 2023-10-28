@@ -214,16 +214,18 @@ private fun ThrottledBackHandler(
             }
     }
 
-    BackHandler(
-        enabled = enabled, onBack = {
-            debounceState.tryEmit(
-                ClickState(
-                    onBack,
-                    System.currentTimeMillis()
+    if (enabled) {
+        BackHandler(
+            enabled = true, onBack = {
+                debounceState.tryEmit(
+                    ClickState(
+                        onBack,
+                        System.currentTimeMillis()
+                    )
                 )
-            )
-        }
-    )
+            }
+        )
+    }
 }
 
 // ======== END OF ========
@@ -600,13 +602,14 @@ fun ContentScreen(
         }
     }
 
-  /*  BackHandler(enabled = onBack != null) {
+    // TODO: Refactor back handling mechanism to match ThrottleedIconButton.
+    /*BackHandler(enabled = onBack != null) {
         onBack?.invoke()
     }*/
 
-      ThrottledBackHandler(enabled = onBack != null) {
+     /* ThrottledBackHandler(enabled = onBack != null) {
           onBack?.invoke()
-      }
+      }*/
 }
 
 @Composable

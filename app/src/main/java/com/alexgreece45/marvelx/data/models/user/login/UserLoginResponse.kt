@@ -16,5 +16,5 @@ fun UserLoginResponse.toDomain(): UserLoginResponseDomain =
         code = this.code,
         verificationStep = VerificationStep.of(this.verificationStep),
         userId = this.userId.toInt(),
-        userToken = this.userToken
+        accessToken = this.userToken
     )

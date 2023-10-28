@@ -7,5 +7,5 @@ data class UserLoginResponseDomain(
     @SerializedName("code") val code: Int,
     @SerializedName("verification_step") val verificationStep: VerificationStep,
     @SerializedName("user_id") val userId: Int,
-    @SerializedName("user_token") val userToken: String?
+    @SerializedName("access_token") val accessToken: String?
 )
