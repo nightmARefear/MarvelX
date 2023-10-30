@@ -5,13 +5,10 @@ import com.alexgreece45.marvelx.data.domains.user.loginWithToken.UserLoginWithTo
 import com.google.gson.annotations.SerializedName
 
 data class UserLoginWithTokenResponse(
-    @SerializedName("code") val code: String,
-    @SerializedName("verification_step") val verificationStep: String,
-    @SerializedName("token") val token: String?
+    @SerializedName("verification_step") val verificationStep: String
 )
 
 fun UserLoginWithTokenResponse.toUserLoginWithTokenResponseDomain(): UserLoginWithTokenResponseDomain =
     UserLoginWithTokenResponseDomain(
-        verificationStep = VerificationStep.of(this.verificationStep),
-        token = this.token
+        verificationStep = VerificationStep.of(this.verificationStep)
     )

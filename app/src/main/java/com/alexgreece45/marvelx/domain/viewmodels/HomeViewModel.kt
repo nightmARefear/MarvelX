@@ -145,11 +145,6 @@ class HomeViewModel @Inject constructor(
                                     )
                                 }
 
-                                // Update stored token if needed.
-                                it.userLoginWithTokenResponseDomain.token?.let { newToken ->
-                                    preferencesKeys.setUserToken(newToken)
-                                }
-
                                 // No verification step, so navigate to AllCharactersScreen.
                                 setEffect {
                                     HomeEffect.Navigation.NavigateToAllCharactersScreen(
@@ -159,11 +154,6 @@ class HomeViewModel @Inject constructor(
                             }
 
                             is VerificationStep.OtpEmail -> {
-                                // Update stored token if needed.
-                                it.userLoginWithTokenResponseDomain.token?.let { newToken ->
-                                    preferencesKeys.setUserToken(newToken)
-                                }
-
                                 // Currently we only support OTP from email.
                                 setState {
                                     copy(
@@ -179,11 +169,6 @@ class HomeViewModel @Inject constructor(
                             }
 
                             is VerificationStep.OtpPhoneNumber -> {
-                                // Update stored token if needed.
-                                it.userLoginWithTokenResponseDomain.token?.let { newToken ->
-                                    preferencesKeys.setUserToken(newToken)
-                                }
-
                                 setState {
                                     copy(
                                         isLoading = false

@@ -8,7 +8,7 @@ data class UserLoginResponse(
     @SerializedName("code") val code: Int,
     @SerializedName("verification_step") val verificationStep: String,
     @SerializedName("user_id") val userId: String,
-    @SerializedName("user_token") val userToken: String?
+    @SerializedName("access_token") val accessToken: String
 )
 
 fun UserLoginResponse.toDomain(): UserLoginResponseDomain =
@@ -16,5 +16,5 @@ fun UserLoginResponse.toDomain(): UserLoginResponseDomain =
         code = this.code,
         verificationStep = VerificationStep.of(this.verificationStep),
         userId = this.userId.toInt(),
-        accessToken = this.userToken
+        accessToken = this.accessToken
     )

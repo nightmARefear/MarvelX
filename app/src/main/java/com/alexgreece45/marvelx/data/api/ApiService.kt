@@ -14,6 +14,8 @@ import com.alexgreece45.marvelx.data.models.user.signUp.UserSignupRequest
 import com.alexgreece45.marvelx.data.models.user.signUp.UserSignupResponse
 import retrofit2.Response
 import retrofit2.http.Body
+import retrofit2.http.Field
+import retrofit2.http.FormUrlEncoded
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Path
@@ -39,6 +41,24 @@ interface ApiService {
 
     @POST("/api/private/marvelx/user/login_with_token")
     suspend fun postLoginWithToken(@Body userLoginWithTokenRequest: UserLoginWithTokenRequest): Response<UserLoginWithTokenResponse>
+
+    /*@POST("/api/private/marvelx/token")
+    @FormUrlEncoded
+    suspend fun grantNewAccessToken(
+        @Field("client_id") clientId: String,
+        @Field("client_secret") clientSecret: String,
+        @Field("grant_type") grantType: String = "authorization_code",
+        @Field("code") code: String,
+        @Field("redirect_uri") redirectUri: String,
+    ): Response<ResponseToken>
+
+    @POST("/api/private/marvelx/token")
+    @FormUrlEncoded
+    suspend fun refreshAccessToken(
+        @Field("client_id") clientId: String,
+        @Field("grant_type") grantType: String = "refresh_token",
+        @Field("refresh_token") refreshToken: String,
+    ): Response<ResponseToken>*/
 
     @POST("/api/private/marvelx/user/validate_otp")
     suspend fun validateOtp(@Body otpRequest: OtpRequest): Response<OtpResponseSuccess>

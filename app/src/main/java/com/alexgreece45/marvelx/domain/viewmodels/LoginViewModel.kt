@@ -171,14 +171,12 @@ class LoginViewModel @Inject constructor(
 
             LoginEvent.OnDoneClick -> {
                 if (currentState.loginButton) {
-                    setEvent(
-                        LoginEvent.OnLoginButtonClick
-                    )
+                    onLoginButtonClick()
                 }
             }
 
             LoginEvent.OnLoginButtonClick -> {
-                onLogInButtonClick()
+                onLoginButtonClick()
             }
 
             LoginEvent.OnPasswordVisibilityIconClick -> {
@@ -246,7 +244,7 @@ class LoginViewModel @Inject constructor(
         }
     }
 
-    private fun onLogInButtonClick() {
+    private fun onLoginButtonClick() {
         // First of all, close the keyboard, and remove focus from all UI elements.
         setEffect {
             LoginEffect.CloseKeyboardAndClearFocus

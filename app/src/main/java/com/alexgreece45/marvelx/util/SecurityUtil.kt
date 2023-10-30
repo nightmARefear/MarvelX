@@ -21,8 +21,8 @@ object SecurityUtil {
             mode = Argon2Mode.ARGON2_ID,
             password = password.toByteArray(),
             salt = BuildConfig.PASSWORD_SALT.toByteArray(),
-            tCostInIterations = 20,
-            mCostInKibibyte = 262144, // 256MB
+            tCostInIterations = 10,
+            mCostInKibibyte = 131072, // 128MB
             parallelism = 10,
             hashLengthInBytes = 128
         )

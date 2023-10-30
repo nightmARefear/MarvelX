@@ -7,7 +7,7 @@ import com.alexgreece45.marvelx.data.domains.user.VerificationStep
 import com.alexgreece45.marvelx.util.gson.ComicPriceTypeAdapter
 import com.alexgreece45.marvelx.util.gson.OffsetDateTimeAdapter
 import com.alexgreece45.marvelx.util.gson.VerificationStepAdapter
-import com.alexgreece45.marvelx.util.interceptors.Interceptors
+import com.alexgreece45.marvelx.util.interceptors.BaseUrlChangerAndAuthenticationInterceptor
 import com.chuckerteam.chucker.api.ChuckerInterceptor
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
@@ -33,21 +33,20 @@ object NetworkModule {
     @Singleton
     fun provideOkHttpClient(
         @ApplicationContext context: Context,
-        interceptor: Interceptors.MarvelXBackendChangeBaseUrlInterceptor
+        interceptor: BaseUrlChangerAndAuthenticationInterceptor
     ): OkHttpClient {
         val okHttpClient = OkHttpClient.Builder()
 
-        // Used to add certificate pins.
+        // Adds certificate pins.
         val certificatePinner = CertificatePinner.Builder()
             .add(
                 BuildConfig.MARVELX_BACKEND_DOMAIN,
                 "sha256/${BuildConfig.MARVELX_BACKEND_DOMAIN_PIN}"
             )
             .build()
+        okHttpClient.certificatePinner(certificatePinner)
 
         // Add required interceptors.
-        okHttpClient.certificatePinner(certificatePinner)
-        okHttpClient.addInterceptor(Interceptors.AuthenticationTokenInterceptor())
         okHttpClient.addInterceptor(interceptor)
         okHttpClient.addInterceptor(
             HttpLoggingInterceptor(

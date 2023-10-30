@@ -30,7 +30,7 @@ class OtpInteractorImpl @Inject constructor(
                 response.body()?.let { responseBody ->
                     emit(
                         ValidateOtpPartialState.Success(
-                            userToken = responseBody.userToken
+                            userToken = responseBody.accessToken
                         )
                     )
                 } ?: run {
