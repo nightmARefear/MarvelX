@@ -29,9 +29,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.domain.viewmodels.LoginEffect
-import com.alexgreece45.marvelx.domain.viewmodels.LoginEvent
-import com.alexgreece45.marvelx.domain.viewmodels.LoginViewModel
+import com.alexgreece45.marvelx.domain.viewModels.LoginEffect
+import com.alexgreece45.marvelx.domain.viewModels.LoginEvent
+import com.alexgreece45.marvelx.domain.viewModels.LoginViewModel
 import com.alexgreece45.marvelx.navigation.Screen
 import com.alexgreece45.marvelx.ui.AlertDialogButton
 import com.alexgreece45.marvelx.ui.AlertDialogError

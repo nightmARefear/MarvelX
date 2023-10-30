@@ -30,9 +30,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.domain.viewmodels.SignUpEffect
-import com.alexgreece45.marvelx.domain.viewmodels.SignUpEvent
-import com.alexgreece45.marvelx.domain.viewmodels.SignUpViewModel
+import com.alexgreece45.marvelx.domain.viewModels.SignUpEffect
+import com.alexgreece45.marvelx.domain.viewModels.SignUpEvent
+import com.alexgreece45.marvelx.domain.viewModels.SignUpViewModel
 import com.alexgreece45.marvelx.navigation.Screen
 import com.alexgreece45.marvelx.ui.ContentScreen
 import com.alexgreece45.marvelx.ui.OutlinedTextFieldValidation

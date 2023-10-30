@@ -1,12 +1,12 @@
-package com.alexgreece45.marvelx.domain.viewmodels
+package com.alexgreece45.marvelx.domain.viewModels
 
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.data.domains.user.VerificationStep
 import com.alexgreece45.marvelx.data.models.user.loginWithToken.UserLoginWithTokenRequest
 import com.alexgreece45.marvelx.domain.controllers.PreferencesKeys
+import com.alexgreece45.marvelx.domain.interactors.PostLoginWithTokenPartialState
 import com.alexgreece45.marvelx.domain.interactors.UserInteractor
-import com.alexgreece45.marvelx.domain.interactors.UserPartialStatePostLoginWithToken
 import com.alexgreece45.marvelx.ui.base.BaseEffect
 import com.alexgreece45.marvelx.ui.base.BaseEvent
 import com.alexgreece45.marvelx.ui.base.BaseState
@@ -120,7 +120,7 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             userInteractor.postLoginWithToken(getUserLoginWithTokenRequest()).collect {
                 when (it) {
-                    is UserPartialStatePostLoginWithToken.Error -> {
+                    is PostLoginWithTokenPartialState.Failed -> {
                         // An error occurred either due to an invalid token, or user id; proceed to remove the stored user credentials (userId, token).
                         preferencesKeys.removeUserCredentials()
 
@@ -136,7 +136,7 @@ class HomeViewModel @Inject constructor(
                         )
                     }
 
-                    is UserPartialStatePostLoginWithToken.Success -> {
+                    is PostLoginWithTokenPartialState.Success -> {
                         when (it.userLoginWithTokenResponseDomain.verificationStep) {
                             is VerificationStep.None -> {
                                 setState {

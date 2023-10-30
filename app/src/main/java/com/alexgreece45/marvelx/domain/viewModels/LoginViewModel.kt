@@ -1,4 +1,4 @@
-package com.alexgreece45.marvelx.domain.viewmodels
+package com.alexgreece45.marvelx.domain.viewModels
 
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
@@ -7,7 +7,7 @@ import com.alexgreece45.marvelx.data.domains.user.VerificationStep
 import com.alexgreece45.marvelx.data.models.user.login.UserLoginRequest
 import com.alexgreece45.marvelx.domain.controllers.PreferencesKeys
 import com.alexgreece45.marvelx.domain.interactors.UserInteractor
-import com.alexgreece45.marvelx.domain.interactors.UserPartialStatePostLogin
+import com.alexgreece45.marvelx.domain.interactors.PostLoginPartialState
 import com.alexgreece45.marvelx.ui.base.BaseEffect
 import com.alexgreece45.marvelx.ui.base.BaseEvent
 import com.alexgreece45.marvelx.ui.base.BaseState
@@ -280,7 +280,7 @@ class LoginViewModel @Inject constructor(
                 userLogInRequest = getUserLogInRequest()
             ).collect { userPartialStatePostLogIn ->
                 when (userPartialStatePostLogIn) {
-                    is UserPartialStatePostLogin.Error -> {
+                    is PostLoginPartialState.Failed -> {
                         setState {
                             LoginState.getDefaultValues().copy(
                                 isLoading = false
@@ -291,7 +291,7 @@ class LoginViewModel @Inject constructor(
                         )
                     }
 
-                    is UserPartialStatePostLogin.Success -> {
+                    is PostLoginPartialState.Success -> {
                         setState {
                             LoginState.getDefaultValues().copy(
                                 isLoading = false,

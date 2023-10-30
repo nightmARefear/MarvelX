@@ -2,10 +2,10 @@ package com.alexgreece45.marvelx.domain.interactors
 
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.data.api.ApiClient
-import com.alexgreece45.marvelx.data.domains.user.VerificationStep
 import com.alexgreece45.marvelx.data.domains.user.login.UserLoginResponseDomain
 import com.alexgreece45.marvelx.data.domains.user.loginWithToken.UserLoginWithTokenResponseDomain
 import com.alexgreece45.marvelx.data.domains.user.profileDetails.UserProfileDetailsDomain
+import com.alexgreece45.marvelx.data.models.token.TokenResponse
 import com.alexgreece45.marvelx.data.models.user.UserResponseError
 import com.alexgreece45.marvelx.data.models.user.login.UserLoginRequest
 import com.alexgreece45.marvelx.data.models.user.login.toDomain
@@ -13,7 +13,9 @@ import com.alexgreece45.marvelx.data.models.user.loginWithToken.UserLoginWithTok
 import com.alexgreece45.marvelx.data.models.user.loginWithToken.toUserLoginWithTokenResponseDomain
 import com.alexgreece45.marvelx.data.models.user.profileDetails.toUserProfileDetailsDomain
 import com.alexgreece45.marvelx.data.models.user.signUp.UserSignupRequest
-import com.alexgreece45.marvelx.data.models.user.signUp.UserSignupResponse
+import com.alexgreece45.marvelx.data.models.user.signUp.SignupResponse
+import com.alexgreece45.marvelx.domain.repositories.GrantNewAccessTokenRepositoryResponse
+import com.alexgreece45.marvelx.domain.repositories.UserRepository
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.extensions.safeAsync
 import com.google.gson.Gson
@@ -24,35 +26,43 @@ import okio.IOException
 import javax.inject.Inject
 
 interface UserInteractor {
-    suspend fun postSignUp(userSignUpRequest: UserSignupRequest): Flow<UserPartialStatePostSignup>
+    suspend fun postSignUp(userSignUpRequest: UserSignupRequest): Flow<PostSignUpPartialState>
 
-    suspend fun postLogin(userLogInRequest: UserLoginRequest): Flow<UserPartialStatePostLogin>
+    suspend fun postLogin(userLogInRequest: UserLoginRequest): Flow<PostLoginPartialState>
 
-    suspend fun postLoginWithToken(userLoginWithTokenRequest: UserLoginWithTokenRequest): Flow<UserPartialStatePostLoginWithToken>
+    suspend fun postLoginWithToken(userLoginWithTokenRequest: UserLoginWithTokenRequest): Flow<PostLoginWithTokenPartialState>
 
-    suspend fun getProfileDetails(userId: Int): Flow<UserPartialStateGetProfileDetails>
+    suspend fun grandNewAccessToken(
+        clientId: String,
+        clientSecret: String,
+        code: String,
+        uri: String
+    ): Flow<GrantNewAccessTokenPartialState>
+
+    suspend fun getProfileDetails(userId: Int): Flow<GetProfileDetailsPartialState>
 }
 
 class UserInteractorImpl @Inject constructor(
     private val apiClient: ApiClient,
+    private val repository: UserRepository,
     private val resourceProvider: ResourceProvider,
     private val gson: Gson
 ) : UserInteractor {
-    override suspend fun postSignUp(userSignUpRequest: UserSignupRequest): Flow<UserPartialStatePostSignup> =
+    override suspend fun postSignUp(userSignUpRequest: UserSignupRequest): Flow<PostSignUpPartialState> =
         flow {
-            apiClient.postUserSignup(userSignUpRequest).let { response ->
+            apiClient.postSignup(userSignUpRequest).let { response ->
                 if (response.isSuccessful) {
                     // Success.
                     response.body()?.let { userSignupResponse ->
                         emit(
-                            UserPartialStatePostSignup.Success(
-                                userSignUpResponse = userSignupResponse
+                            PostSignUpPartialState.Success(
+                                signUpResponse = userSignupResponse
                             )
                         )
                     } ?: run {
                         // Null body, thus server responded erroneously.
                         emit(
-                            UserPartialStatePostSignup.Error(
+                            PostSignUpPartialState.Failed(
                                 errorMessage = resourceProvider.getGenericErrorMessage()
                             )
                         )
@@ -66,7 +76,7 @@ class UserInteractorImpl @Inject constructor(
                         )
 
                     emit(
-                        UserPartialStatePostSignup.Error(
+                        PostSignUpPartialState.Failed(
                             errorMessage = deserializedError.errorMessage
                         )
                     )
@@ -76,34 +86,34 @@ class UserInteractorImpl @Inject constructor(
             // Exception.
             when (it) {
                 is IOException -> {
-                    UserPartialStatePostSignup.Error(
+                    PostSignUpPartialState.Failed(
                         errorMessage = resourceProvider.getString(R.string.no_internet_connection_error_message)
                     )
                 }
 
                 else -> {
-                    UserPartialStatePostSignup.Error(
+                    PostSignUpPartialState.Failed(
                         errorMessage = resourceProvider.getGenericErrorMessage()
                     )
                 }
             }
         }
 
-    override suspend fun postLogin(userLogInRequest: UserLoginRequest): Flow<UserPartialStatePostLogin> =
+    override suspend fun postLogin(userLogInRequest: UserLoginRequest): Flow<PostLoginPartialState> =
         flow {
-            apiClient.postUserLogin(userLogInRequest).let { response ->
+            apiClient.postLogin(userLogInRequest).let { response ->
                 if (response.isSuccessful) {
                     response.body()?.let { userLoginResponse ->
                         // Success.
                         emit(
-                            UserPartialStatePostLogin.Success(
+                            PostLoginPartialState.Success(
                                 userLoginResponseDomain = userLoginResponse.toDomain()
                             )
                         )
                     } ?: run {
                         // Null body, thus server responded erroneously.
                         emit(
-                            UserPartialStatePostLogin.Error(
+                            PostLoginPartialState.Failed(
                                 errorMessage = resourceProvider.getString(R.string.internal_server_error)
                             )
                         )
@@ -116,7 +126,7 @@ class UserInteractorImpl @Inject constructor(
                     )
 
                     emit(
-                        UserPartialStatePostLogin.Error(
+                        PostLoginPartialState.Failed(
                             errorMessage = deserializedError.errorMessage
                         )
                     )
@@ -125,39 +135,39 @@ class UserInteractorImpl @Inject constructor(
         }.safeAsync {
             when (it) {
                 is IOException -> {
-                    UserPartialStatePostLogin.Error(
+                    PostLoginPartialState.Failed(
                         errorMessage = resourceProvider.getString(R.string.no_internet_connection_error_message)
                     )
                 }
 
                 else -> {
-                    UserPartialStatePostLogin.Error(
+                    PostLoginPartialState.Failed(
                         errorMessage = resourceProvider.getGenericErrorMessage()
                     )
                 }
             }
         }
 
-    override suspend fun postLoginWithToken(userLoginWithTokenRequest: UserLoginWithTokenRequest): Flow<UserPartialStatePostLoginWithToken> =
+    override suspend fun postLoginWithToken(userLoginWithTokenRequest: UserLoginWithTokenRequest): Flow<PostLoginWithTokenPartialState> =
         flow {
-            apiClient.postUserLoginWithToken(userLoginWithTokenRequest).let { response ->
+            apiClient.postLoginWithToken(userLoginWithTokenRequest).let { response ->
                 if (response.isSuccessful) {
                     response.body()?.let { userLoginWithTokenResponse ->
                         emit(
-                            UserPartialStatePostLoginWithToken.Success(
+                            PostLoginWithTokenPartialState.Success(
                                 userLoginWithTokenResponseDomain = userLoginWithTokenResponse.toUserLoginWithTokenResponseDomain()
                             )
                         )
                     } ?: run {
                         emit(
-                            UserPartialStatePostLoginWithToken.Error(
+                            PostLoginWithTokenPartialState.Failed(
                                 errorMessage = resourceProvider.getString(R.string.internal_server_error)
                             )
                         )
                     }
                 } else {
                     emit(
-                        UserPartialStatePostLoginWithToken.Error(
+                        PostLoginWithTokenPartialState.Failed(
                             errorMessage = resourceProvider.getGenericErrorMessage()
                         )
                     )
@@ -166,39 +176,81 @@ class UserInteractorImpl @Inject constructor(
         }.safeAsync {
             when (it) {
                 is IOException -> {
-                    UserPartialStatePostLoginWithToken.Error(
+                    PostLoginWithTokenPartialState.Failed(
                         errorMessage = resourceProvider.getNoInternetConnectionMessage()
                     )
                 }
 
                 else -> {
-                    UserPartialStatePostLoginWithToken.Error(
+                    PostLoginWithTokenPartialState.Failed(
                         errorMessage = resourceProvider.getGenericErrorMessage()
                     )
                 }
             }
         }
 
-    override suspend fun getProfileDetails(userId: Int): Flow<UserPartialStateGetProfileDetails> =
+    override suspend fun grandNewAccessToken(
+        clientId: String,
+        clientSecret: String,
+        code: String,
+        uri: String
+    ): Flow<GrantNewAccessTokenPartialState> = flow {
+        val genericErrorMessage = resourceProvider.getGenericErrorMessage()
+        repository.grantNewAccessToken(clientId, clientSecret, code, uri).collect {
+            when (it) {
+                is GrantNewAccessTokenRepositoryResponse.Error -> {
+                    emit(
+                        GrantNewAccessTokenPartialState.Failed(
+                            errorMessage = it.errorMessage
+                        )
+                    )
+                }
+
+                is GrantNewAccessTokenRepositoryResponse.Failed -> {
+                    emit(
+                        GrantNewAccessTokenPartialState.Failed(
+                            errorMessage = it.errorMessage ?: genericErrorMessage
+                        )
+                    )
+                }
+
+                is GrantNewAccessTokenRepositoryResponse.Success -> {
+                    it.response?.let { response ->
+                        emit(
+                            GrantNewAccessTokenPartialState.Success(
+                                tokenResponse = response
+                            )
+                        )
+                    } ?: emit(
+                        GrantNewAccessTokenPartialState.Failed(
+                            errorMessage = genericErrorMessage
+                        )
+                    )
+                }
+            }
+        }
+    }
+
+    override suspend fun getProfileDetails(userId: Int): Flow<GetProfileDetailsPartialState> =
         flow {
             apiClient.getUserProfileDetails(userId = userId).let { response ->
                 if (response.isSuccessful) {
                     response.body()?.let { userProfileDetailsResponse ->
                         emit(
-                            UserPartialStateGetProfileDetails.Success(
+                            GetProfileDetailsPartialState.Success(
                                 profileDetails = userProfileDetailsResponse.toUserProfileDetailsDomain()
                             )
                         )
                     } ?: run {
                         emit(
-                            UserPartialStateGetProfileDetails.Error(
+                            GetProfileDetailsPartialState.Failed(
                                 errorMessage = resourceProvider.getString(R.string.internal_server_error)
                             )
                         )
                     }
                 } else {
                     emit(
-                        UserPartialStateGetProfileDetails.Error(
+                        GetProfileDetailsPartialState.Failed(
                             errorMessage = resourceProvider.getGenericErrorMessage()
                         )
                     )
@@ -206,42 +258,47 @@ class UserInteractorImpl @Inject constructor(
             }
         }.safeAsync {
             when (it) {
-                is IOException -> UserPartialStateGetProfileDetails.NoInternetConnection(
+                is IOException -> GetProfileDetailsPartialState.NoInternetConnection(
                     errorMessage = resourceProvider.getString(R.string.no_internet_connection_error_message)
                 )
 
-                else -> UserPartialStateGetProfileDetails.Error(
+                else -> GetProfileDetailsPartialState.Failed(
                     errorMessage = resourceProvider.getGenericErrorMessage()
                 )
             }
         }
 }
 
-sealed class UserPartialStatePostSignup {
-    data class Success(val userSignUpResponse: UserSignupResponse) : UserPartialStatePostSignup()
+sealed class PostSignUpPartialState {
+    data class Success(val signUpResponse: SignupResponse) : PostSignUpPartialState()
 
-    data class Error(val errorMessage: String) : UserPartialStatePostSignup()
+    data class Failed(val errorMessage: String) : PostSignUpPartialState()
 }
 
-sealed class UserPartialStatePostLogin {
+sealed class PostLoginPartialState {
     data class Success(val userLoginResponseDomain: UserLoginResponseDomain) :
-        UserPartialStatePostLogin()
+        PostLoginPartialState()
 
-    data class Error(val errorMessage: String) : UserPartialStatePostLogin()
+    data class Failed(val errorMessage: String) : PostLoginPartialState()
 }
 
-sealed class UserPartialStatePostLoginWithToken {
+sealed class PostLoginWithTokenPartialState {
     data class Success(val userLoginWithTokenResponseDomain: UserLoginWithTokenResponseDomain) :
-        UserPartialStatePostLoginWithToken()
+        PostLoginWithTokenPartialState()
 
-    data class Error(val errorMessage: String) : UserPartialStatePostLoginWithToken()
+    data class Failed(val errorMessage: String) : PostLoginWithTokenPartialState()
 }
 
-sealed class UserPartialStateGetProfileDetails {
+sealed class GetProfileDetailsPartialState {
     data class Success(val profileDetails: UserProfileDetailsDomain) :
-        UserPartialStateGetProfileDetails()
+        GetProfileDetailsPartialState()
 
-    data class Error(val errorMessage: String) : UserPartialStateGetProfileDetails()
+    data class Failed(val errorMessage: String) : GetProfileDetailsPartialState()
 
-    data class NoInternetConnection(val errorMessage: String) : UserPartialStateGetProfileDetails()
+    data class NoInternetConnection(val errorMessage: String) : GetProfileDetailsPartialState()
+}
+
+sealed class GrantNewAccessTokenPartialState {
+    data class Success(val tokenResponse: TokenResponse) : GrantNewAccessTokenPartialState()
+    data class Failed(val errorMessage: String) : GrantNewAccessTokenPartialState()
 }

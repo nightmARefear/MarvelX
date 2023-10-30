@@ -1,4 +1,4 @@
-package com.alexgreece45.marvelx.domain.viewmodels
+package com.alexgreece45.marvelx.domain.viewModels
 
 import androidx.core.text.isDigitsOnly
 import androidx.lifecycle.viewModelScope

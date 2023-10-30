@@ -26,10 +26,10 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.domain.viewmodels.ActivityState
-import com.alexgreece45.marvelx.domain.viewmodels.ProfileEffect
-import com.alexgreece45.marvelx.domain.viewmodels.ProfileEvent
-import com.alexgreece45.marvelx.domain.viewmodels.ProfileViewModel
+import com.alexgreece45.marvelx.domain.viewModels.ActivityState
+import com.alexgreece45.marvelx.domain.viewModels.ProfileEffect
+import com.alexgreece45.marvelx.domain.viewModels.ProfileEvent
+import com.alexgreece45.marvelx.domain.viewModels.ProfileViewModel
 import com.alexgreece45.marvelx.ui.BottomBarItem
 import com.alexgreece45.marvelx.ui.BottomNavigationBarData
 import com.alexgreece45.marvelx.ui.ContainedButton

@@ -39,9 +39,9 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.data.domains.comic.ComicDomain
-import com.alexgreece45.marvelx.domain.viewmodels.AllCharacterComicsEffect
-import com.alexgreece45.marvelx.domain.viewmodels.AllCharacterComicsEvent
-import com.alexgreece45.marvelx.domain.viewmodels.AllCharacterComicsViewModel
+import com.alexgreece45.marvelx.domain.viewModels.AllCharacterComicsEffect
+import com.alexgreece45.marvelx.domain.viewModels.AllCharacterComicsEvent
+import com.alexgreece45.marvelx.domain.viewModels.AllCharacterComicsViewModel
 import com.alexgreece45.marvelx.navigation.Screen
 import com.alexgreece45.marvelx.ui.ContentScreen
 import com.alexgreece45.marvelx.ui.GenericErrorScreen

@@ -1,11 +1,11 @@
-package com.alexgreece45.marvelx.domain.viewmodels
+package com.alexgreece45.marvelx.domain.viewModels
 
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.data.domains.user.profileDetails.UserProfileDetailsDomain
 import com.alexgreece45.marvelx.domain.controllers.PreferencesKeys
 import com.alexgreece45.marvelx.domain.interactors.UserInteractor
-import com.alexgreece45.marvelx.domain.interactors.UserPartialStateGetProfileDetails
+import com.alexgreece45.marvelx.domain.interactors.GetProfileDetailsPartialState
 import com.alexgreece45.marvelx.navigation.Screen
 import com.alexgreece45.marvelx.ui.BottomBarItem
 import com.alexgreece45.marvelx.ui.IconData
@@ -116,7 +116,7 @@ class ProfileViewModel @Inject constructor(
         viewModelScope.launch {
             userInteractor.getProfileDetails(userId = currentState.userId).collect {
                 when (it) {
-                    is UserPartialStateGetProfileDetails.Error -> {
+                    is GetProfileDetailsPartialState.Failed -> {
                         setState {
                             copy(
                                 isLoading = false,
@@ -127,7 +127,7 @@ class ProfileViewModel @Inject constructor(
                         }
                     }
 
-                    is UserPartialStateGetProfileDetails.NoInternetConnection -> {
+                    is GetProfileDetailsPartialState.NoInternetConnection -> {
                         setState {
                             copy(
                                 isLoading = false,
@@ -141,7 +141,7 @@ class ProfileViewModel @Inject constructor(
                         }
                     }
 
-                    is UserPartialStateGetProfileDetails.Success -> {
+                    is GetProfileDetailsPartialState.Success -> {
                         setState {
                             copy(
                                 isLoading = false,

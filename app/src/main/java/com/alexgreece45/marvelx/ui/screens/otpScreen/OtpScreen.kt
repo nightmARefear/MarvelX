@@ -39,9 +39,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.domain.viewmodels.OtpEffect
-import com.alexgreece45.marvelx.domain.viewmodels.OtpEvent
-import com.alexgreece45.marvelx.domain.viewmodels.OtpViewModel
+import com.alexgreece45.marvelx.domain.viewModels.OtpEffect
+import com.alexgreece45.marvelx.domain.viewModels.OtpEvent
+import com.alexgreece45.marvelx.domain.viewModels.OtpViewModel
 import com.alexgreece45.marvelx.navigation.Screen
 import com.alexgreece45.marvelx.ui.ContentScreen
 import com.alexgreece45.marvelx.ui.IconData

@@ -7,7 +7,7 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.alexgreece45.marvelx.domain.viewmodels.ActivityState
+import com.alexgreece45.marvelx.domain.viewModels.ActivityState
 
 @Composable
 fun Navigation(
