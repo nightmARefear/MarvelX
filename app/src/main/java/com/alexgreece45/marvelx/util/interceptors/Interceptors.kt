@@ -1,7 +1,7 @@
 package com.alexgreece45.marvelx.util.interceptors
 
 import com.alexgreece45.marvelx.BuildConfig
-import com.alexgreece45.marvelx.domain.controllers.PreferencesKeys
+import com.alexgreece45.marvelx.domain.controllers.PrefKeys
 import com.alexgreece45.marvelx.util.APP_USER_AGENT
 import com.alexgreece45.marvelx.util.HeaderConstants
 import com.alexgreece45.marvelx.util.extensions.toMd5
@@ -13,7 +13,7 @@ import javax.inject.Singleton
 
 @Singleton
 class BaseUrlChangerAndAuthenticationInterceptor @Inject constructor(
-    private val preferencesKeys: PreferencesKeys
+    private val prefKeys: PrefKeys
 ) : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
         val originalRequest = chain.request()
@@ -26,7 +26,7 @@ class BaseUrlChangerAndAuthenticationInterceptor @Inject constructor(
 
                 // MarvelX Backend API.
                 path.startsWith(BuildConfig.MARVELX_BACKEND_ENDPOINT_PREFIX) -> {
-                    return applyMarvelXBackendTransformations(path, chain, preferencesKeys)
+                    return applyMarvelXBackendTransformations(path, chain, prefKeys)
                 }
 
                 // Other API.
@@ -63,7 +63,7 @@ private fun applyMarvelApiTransformations(chain: Interceptor.Chain): Response {
 private fun applyMarvelXBackendTransformations(
     path: String,
     chain: Interceptor.Chain,
-    preferencesKeys: PreferencesKeys
+    prefKeys: PrefKeys
 ): Response {
     val originalRequest = chain.request()
     // Get scheme from MarvelX Backend's baseUrl.
@@ -87,7 +87,7 @@ private fun applyMarvelXBackendTransformations(
                     .port(port)
                     .build()
 
-            val token = preferencesKeys.getUserToken()
+            val token = prefKeys.getUserToken()
 
             val modifiedRequest = Request.Builder()
                 .url(modifiedUrl)

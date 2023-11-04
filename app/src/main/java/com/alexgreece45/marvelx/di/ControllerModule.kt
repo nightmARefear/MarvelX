@@ -1,9 +1,11 @@
 package com.alexgreece45.marvelx.di
 
+import com.alexgreece45.marvelx.domain.controllers.ConfigController
+import com.alexgreece45.marvelx.domain.controllers.ConfigControllerImpl
 import com.alexgreece45.marvelx.domain.controllers.PreferencesController
 import com.alexgreece45.marvelx.domain.controllers.PreferencesControllerImpl
-import com.alexgreece45.marvelx.domain.controllers.PreferencesKeys
-import com.alexgreece45.marvelx.domain.controllers.PreferencesKeysImpl
+import com.alexgreece45.marvelx.domain.controllers.PrefKeys
+import com.alexgreece45.marvelx.domain.controllers.PrefKeysImpl
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -20,5 +22,9 @@ interface ControllerModule {
 
     @Binds
     @Singleton
-    fun bindsPreferencesKeys(impl: PreferencesKeysImpl): PreferencesKeys
+    fun bindsPreferencesKeys(impl: PrefKeysImpl): PrefKeys
+
+    @Binds
+    @Singleton
+    fun bindsConfigController(impl: ConfigControllerImpl): ConfigController
 }

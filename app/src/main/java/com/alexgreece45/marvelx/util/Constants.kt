@@ -6,10 +6,10 @@ const val OTP_LENGTH = 6
 const val APP_USER_AGENT = "mobile"
 
 // OAuth constants.
-const val clientId = "mobile"
-const val redirectScheme = "marvelxbackend"
-const val redirectHost = "oauth"
-const val redirectUri = "$redirectScheme//$redirectHost"
+const val TOKEN_CLIENT_ID = "mobile"
+const val TOKEN_REDIRECT_SCHEME = "marvelxbackend"
+const val TOKEN_REDIRECT_HOST = "oauth"
+const val TOKEN_REDIRECT_URI = "$TOKEN_REDIRECT_SCHEME//$TOKEN_REDIRECT_HOST"
 
 val DEFAULT_SCREEN_PADDING = 12.dp
 val IMAGE_BORDER_WIDTH = 2.dp

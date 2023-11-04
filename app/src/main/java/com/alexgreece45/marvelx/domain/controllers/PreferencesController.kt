@@ -97,7 +97,7 @@ class PreferencesControllerImpl @Inject constructor(
         )
 }
 
-interface PreferencesKeys {
+interface PrefKeys {
     fun containsUserId(): Boolean
     fun containsUserToken(): Boolean
     fun containsUserCredentials(): Boolean
@@ -119,9 +119,9 @@ interface PreferencesKeys {
     fun removeUserCredentials()
 }
 
-class PreferencesKeysImpl @Inject constructor(
+class PrefKeysImpl @Inject constructor(
     private val preferencesController: PreferencesController
-) : PreferencesKeys {
+) : PrefKeys {
 
     override fun containsUserId(): Boolean =
         preferencesController.containsKey(BuildConfig.ENCRYPTED_SHARED_PREFERENCES_KEY_USER_ID)

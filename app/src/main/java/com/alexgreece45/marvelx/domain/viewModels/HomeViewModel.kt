@@ -4,7 +4,7 @@ import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.data.domains.user.VerificationStep
 import com.alexgreece45.marvelx.data.models.user.loginWithToken.UserLoginWithTokenRequest
-import com.alexgreece45.marvelx.domain.controllers.PreferencesKeys
+import com.alexgreece45.marvelx.domain.controllers.PrefKeys
 import com.alexgreece45.marvelx.domain.interactors.PostLoginWithTokenPartialState
 import com.alexgreece45.marvelx.domain.interactors.UserInteractor
 import com.alexgreece45.marvelx.ui.base.BaseEffect
@@ -55,7 +55,7 @@ sealed class HomeEffect : BaseEffect {
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    private val preferencesKeys: PreferencesKeys,
+    private val prefKeys: PrefKeys,
     private val resourceProvider: ResourceProvider,
     private val userInteractor: UserInteractor
 ) : BaseViewModel<HomeEvent, HomeState, HomeEffect>() {
@@ -98,7 +98,7 @@ class HomeViewModel @Inject constructor(
 
     private fun initView() {
         // No stored user credentials; thus, do not proceed any further.
-        if (!preferencesKeys.containsUserCredentials()) {
+        if (!prefKeys.containsUserCredentials()) {
             setState {
                 copy(
                     isLoading = false // Stop loading animation.
@@ -122,7 +122,7 @@ class HomeViewModel @Inject constructor(
                 when (it) {
                     is PostLoginWithTokenPartialState.Failed -> {
                         // An error occurred either due to an invalid token, or user id; proceed to remove the stored user credentials (userId, token).
-                        preferencesKeys.removeUserCredentials()
+                        prefKeys.removeUserCredentials()
 
                         setState {
                             copy(
@@ -148,7 +148,7 @@ class HomeViewModel @Inject constructor(
                                 // No verification step, so navigate to AllCharactersScreen.
                                 setEffect {
                                     HomeEffect.Navigation.NavigateToAllCharactersScreen(
-                                        userId = preferencesKeys.getUserId()
+                                        userId = prefKeys.getUserId()
                                     )
                                 }
                             }
@@ -163,7 +163,7 @@ class HomeViewModel @Inject constructor(
 
                                 setEffect {
                                     HomeEffect.Navigation.NavigateToOtpScreen(
-                                        userId = preferencesKeys.getUserId()
+                                        userId = prefKeys.getUserId()
                                     )
                                 }
                             }
@@ -180,7 +180,7 @@ class HomeViewModel @Inject constructor(
 
                             is VerificationStep.Invalid -> {
                                 // An error occurred, so just in case, remove the stored user credentials (userId, userToken).
-                                preferencesKeys.removeUserCredentials()
+                                prefKeys.removeUserCredentials()
 
                                 setState {
                                     copy(
@@ -213,7 +213,7 @@ class HomeViewModel @Inject constructor(
 
     private fun getUserLoginWithTokenRequest(): UserLoginWithTokenRequest =
         UserLoginWithTokenRequest(
-            userId = preferencesKeys.getUserId(),
+            userId = prefKeys.getUserId(),
             epoch = DateUtil.getSecondsFromEpoch()
         )
 

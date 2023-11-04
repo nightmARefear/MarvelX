@@ -52,14 +52,12 @@ class ApiClientImpl @Inject constructor(
         clientSecret: String,
         code: String,
         uri: String
-    ): Response<TokenResponse> =
-        api.grantNewAccessToken(clientId, clientSecret, code, uri)
+    ): Response<TokenResponse> = api.grantNewAccessToken(clientId, clientSecret, code, uri)
 
     override suspend fun refreshAccessToken(
         clientId: String,
         refreshToken: String
-    ): Response<TokenResponse> =
-        api.refreshAccessToken(clientId, refreshToken)
+    ): Response<TokenResponse> = api.refreshAccessToken(clientId, refreshToken)
 
     override suspend fun logout(clientId: String, refreshToken: String): Response<Void> =
         api.logout(clientId, refreshToken)

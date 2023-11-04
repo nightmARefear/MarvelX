@@ -5,7 +5,7 @@ import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.data.domains.user.login.UserLoginResponseDomain
 import com.alexgreece45.marvelx.data.domains.user.VerificationStep
 import com.alexgreece45.marvelx.data.models.user.login.UserLoginRequest
-import com.alexgreece45.marvelx.domain.controllers.PreferencesKeys
+import com.alexgreece45.marvelx.domain.controllers.PrefKeys
 import com.alexgreece45.marvelx.domain.interactors.UserInteractor
 import com.alexgreece45.marvelx.domain.interactors.PostLoginPartialState
 import com.alexgreece45.marvelx.ui.base.BaseEffect
@@ -125,7 +125,7 @@ class LoginViewModel @Inject constructor(
     private val resourceProvider: ResourceProvider,
     private val formValidator: FormValidator,
     private val userInteractor: UserInteractor,
-    private val preferencesKeys: PreferencesKeys
+    private val prefKeys: PrefKeys
 ) : BaseViewModel<LoginEvent, LoginState, LoginEffect>() {
 
     override fun setInitialState(): LoginState = LoginState.getDefaultValues()
@@ -170,9 +170,7 @@ class LoginViewModel @Inject constructor(
             }
 
             LoginEvent.OnDoneClick -> {
-                if (currentState.loginButton) {
-                    onLoginButtonClick()
-                }
+                onDoneClick()
             }
 
             LoginEvent.OnLoginButtonClick -> {
@@ -244,6 +242,12 @@ class LoginViewModel @Inject constructor(
         }
     }
 
+    private fun onDoneClick() {
+        if (currentState.loginButton) {
+            onLoginButtonClick()
+        }
+    }
+
     private fun onLoginButtonClick() {
         // First of all, close the keyboard, and remove focus from all UI elements.
         setEffect {
@@ -305,13 +309,13 @@ class LoginViewModel @Inject constructor(
                                 is VerificationStep.None -> {
                                     // Store userToken.
                                     userLogInResponseDomain.accessToken?.let { userToken ->
-                                        preferencesKeys.setUserToken(
+                                        prefKeys.setUserToken(
                                             userToken = userToken
                                         )
                                     }
 
                                     // Store userId.
-                                    preferencesKeys.setUserId(userLogInResponseDomain.userId)
+                                    prefKeys.setUserId(userLogInResponseDomain.userId)
 
                                     // No verification step, so navigate to All Characters Screen.
                                     setEffect {

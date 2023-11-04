@@ -1,6 +1,6 @@
 package com.alexgreece45.marvelx.domain.viewModels
 
-import com.alexgreece45.marvelx.domain.controllers.PreferencesKeys
+import com.alexgreece45.marvelx.domain.controllers.PrefKeys
 import com.alexgreece45.marvelx.ui.base.BaseEffect
 import com.alexgreece45.marvelx.ui.base.BaseEvent
 import com.alexgreece45.marvelx.ui.base.BaseState
@@ -32,7 +32,7 @@ sealed class ActivityEffect : BaseEffect {
 
 @HiltViewModel
 class ActivityViewModel @Inject constructor(
-    private val preferencesKeys: PreferencesKeys,
+    private val prefKeys: PrefKeys,
 ) : BaseViewModel<ActivityEvent, ActivityState, ActivityEffect>() {
     override fun setInitialState(): ActivityState {
         return ActivityState.getDefaultValues()
@@ -55,14 +55,14 @@ class ActivityViewModel @Inject constructor(
     }
 
     private fun initView() {
-        preferencesKeys.containsUserId().let { keyExists ->
+        prefKeys.containsUserId().let { keyExists ->
             if (keyExists) {
-                logcat { "user_id : ${preferencesKeys.getUserId()}" }
+                logcat { "user_id : ${prefKeys.getUserId()}" }
             }
         }
-        preferencesKeys.containsUserToken().let { keyExists ->
+        prefKeys.containsUserToken().let { keyExists ->
             if (keyExists) {
-                logcat { "user_token : ${preferencesKeys.getUserToken()}" }
+                logcat { "user_token : ${prefKeys.getUserToken()}" }
             }
         }
     }

@@ -98,6 +98,12 @@ fun OtpScreen(
                         }
                     }
                 }
+
+                is OtpEffect.OnValidationSuccess -> viewModel.setEvent(
+                    OtpEvent.OnValidationSuccess(
+                        effect.code
+                    )
+                )
             }
         }
     }

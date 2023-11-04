@@ -3,7 +3,7 @@ package com.alexgreece45.marvelx.domain.viewModels
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.data.domains.user.profileDetails.UserProfileDetailsDomain
-import com.alexgreece45.marvelx.domain.controllers.PreferencesKeys
+import com.alexgreece45.marvelx.domain.controllers.PrefKeys
 import com.alexgreece45.marvelx.domain.interactors.UserInteractor
 import com.alexgreece45.marvelx.domain.interactors.GetProfileDetailsPartialState
 import com.alexgreece45.marvelx.navigation.Screen
@@ -64,7 +64,7 @@ sealed class ProfileEffect : BaseEffect {
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
     private val userInteractor: UserInteractor,
-    private val preferencesKeys: PreferencesKeys
+    private val prefKeys: PrefKeys
 ) :
     BaseViewModel<ProfileEvent, ProfileState, ProfileEffect>() {
     override fun setInitialState(): ProfileState = ProfileState(
@@ -109,8 +109,8 @@ class ProfileViewModel @Inject constructor(
         setState {
             copy(
                 isLoading = true,
-                userId = preferencesKeys.getUserId(),
-                userToken = preferencesKeys.getUserToken()
+                userId = prefKeys.getUserId(),
+                userToken = prefKeys.getUserToken()
             )
         }
         viewModelScope.launch {
@@ -160,7 +160,7 @@ class ProfileViewModel @Inject constructor(
         }
 
         // Remove user credentials.
-        preferencesKeys.removeUserCredentials()
+        prefKeys.removeUserCredentials()
 
         // Navigate to Home Screen.
         setEffect {

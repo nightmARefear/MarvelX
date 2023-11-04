@@ -2,10 +2,12 @@ package com.alexgreece45.marvelx.domain.interactors
 
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.data.api.ApiClient
+import com.alexgreece45.marvelx.data.domains.otp.OtpDomain
 import com.alexgreece45.marvelx.data.models.otp.OtpErrorCause
 import com.alexgreece45.marvelx.data.models.otp.OtpResponseError
 import com.alexgreece45.marvelx.data.models.otp.OtpRequest
 import com.alexgreece45.marvelx.data.models.otp.toDomain
+import com.alexgreece45.marvelx.data.models.otp.toOtpDomain
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.extensions.safeAsync
 import com.google.gson.Gson
@@ -30,7 +32,7 @@ class OtpInteractorImpl @Inject constructor(
                 response.body()?.let { responseBody ->
                     emit(
                         ValidateOtpPartialState.Success(
-                            userToken = responseBody.accessToken
+                            otpDomain = responseBody.toOtpDomain()
                         )
                     )
                 } ?: run {
@@ -74,7 +76,7 @@ sealed class ValidateOtpPartialState {
     /**
      * The OTP was correct. User is navigated to the next screen as defined in the viewModel.
      * */
-    data class Success(val userToken: String?) : ValidateOtpPartialState()
+    data class Success(val otpDomain: OtpDomain) : ValidateOtpPartialState()
 
     /**
      * Represents an internal server error. The displayed error message is "an internal server

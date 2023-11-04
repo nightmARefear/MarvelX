@@ -32,12 +32,7 @@ interface UserInteractor {
 
     suspend fun postLoginWithToken(userLoginWithTokenRequest: UserLoginWithTokenRequest): Flow<PostLoginWithTokenPartialState>
 
-    suspend fun grandNewAccessToken(
-        clientId: String,
-        clientSecret: String,
-        code: String,
-        uri: String
-    ): Flow<GrantNewAccessTokenPartialState>
+    suspend fun grandNewAccessToken(code: String): Flow<GrantNewAccessTokenPartialState>
 
     suspend fun getProfileDetails(userId: Int): Flow<GetProfileDetailsPartialState>
 }
@@ -189,14 +184,9 @@ class UserInteractorImpl @Inject constructor(
             }
         }
 
-    override suspend fun grandNewAccessToken(
-        clientId: String,
-        clientSecret: String,
-        code: String,
-        uri: String
-    ): Flow<GrantNewAccessTokenPartialState> = flow {
+    override suspend fun grandNewAccessToken(code: String): Flow<GrantNewAccessTokenPartialState> = flow {
         val genericErrorMessage = resourceProvider.getGenericErrorMessage()
-        repository.grantNewAccessToken(clientId, clientSecret, code, uri).collect {
+        repository.grantNewAccessToken(code).collect {
             when (it) {
                 is GrantNewAccessTokenRepositoryResponse.Error -> {
                     emit(
