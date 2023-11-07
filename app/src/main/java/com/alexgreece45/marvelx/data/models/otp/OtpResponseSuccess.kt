@@ -4,10 +4,10 @@ import com.alexgreece45.marvelx.data.domains.otp.OtpDomain
 import com.google.gson.annotations.SerializedName
 
 data class OtpResponseSuccess(
-    @SerializedName("code") val code: String
+    @SerializedName("authentication_code") val authenticationCode: String
 )
 
 fun OtpResponseSuccess.toOtpDomain(): OtpDomain =
     OtpDomain(
-        code = this.code
+        authenticationCode = this.authenticationCode
     )

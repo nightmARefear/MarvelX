@@ -5,7 +5,6 @@ import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKeys
 import com.alexgreece45.marvelx.BuildConfig
 import com.alexgreece45.marvelx.util.ResourceProvider
-import com.alexgreece45.marvelx.util.extensions.or
 import logcat.logcat
 import javax.inject.Inject
 
@@ -51,7 +50,7 @@ class PreferencesControllerImpl @Inject constructor(
         sharedPreferences.contains(key)
 
     override fun getString(key: String, defaultValue: String): String =
-        sharedPreferences.getString(key, defaultValue).or(defaultValue)
+        sharedPreferences.getString(key, defaultValue) ?: defaultValue
 
     override fun getInt(key: String, defaultValue: Int): Int =
         sharedPreferences.getInt(key, defaultValue)
@@ -85,7 +84,9 @@ class PreferencesControllerImpl @Inject constructor(
      * Returns an instance of [SharedPreferences], with the appropriate
      * configurations.
      *
-     * ### Note: This function MUST only be used internally, to obtain an object of [SharedPreferences].
+     * ### Note: This function MUST only be used internally.
+     *
+     * @return Returns an instance of [SharedPreferences].
      * */
     private fun getEncryptedSharedPreferences(): SharedPreferences =
         EncryptedSharedPreferences.create(
@@ -101,22 +102,23 @@ interface PrefKeys {
     fun containsUserId(): Boolean
     fun containsUserToken(): Boolean
     fun containsUserCredentials(): Boolean
+    fun containsUserAccessData(): Boolean
 
     fun getUserId(): Int
-    fun getUserToken(): String
+    fun getUserAuthData(): String
 
     fun setUserId(userId: Int)
     fun setUserToken(userToken: String)
+    fun setUserAuthData(userAccessData: String)
 
     fun removeUserId()
-    fun removeUserToken()
 
     /**
-     * Removes the stored user credentials (i.e., userId, token).
+     * Removes the stored user authentication data (i.e., access token, refresh token, etc.).
      *
-    ### Note: This operation should be used with caution as it is irreversible!
+     * ### Note: This operation is irreversible, and it MUST be used with caution.
      * */
-    fun removeUserCredentials()
+    fun removeUserAuthData()
 }
 
 class PrefKeysImpl @Inject constructor(
@@ -130,12 +132,14 @@ class PrefKeysImpl @Inject constructor(
         preferencesController.containsKey(BuildConfig.ENCRYPTED_SHARED_PREFERENCES_KEY_USER_TOKEN)
 
     override fun containsUserCredentials(): Boolean = containsUserId() && containsUserToken()
+    override fun containsUserAccessData(): Boolean =
+        preferencesController.containsKey("UserAccessData")
 
     override fun getUserId(): Int =
         preferencesController.getInt(BuildConfig.ENCRYPTED_SHARED_PREFERENCES_KEY_USER_ID, -1)
 
-    override fun getUserToken(): String =
-        preferencesController.getString(BuildConfig.ENCRYPTED_SHARED_PREFERENCES_KEY_USER_TOKEN, "")
+    override fun getUserAuthData(): String =
+        preferencesController.getString("UserAccessData", "{}")
 
     override fun setUserId(userId: Int) =
         preferencesController.setInt(
@@ -149,14 +153,15 @@ class PrefKeysImpl @Inject constructor(
             userToken
         ).also { logcat { "(setUserToken) user_token = $userToken" } }
 
-    override fun removeUserId() =
-        preferencesController.remove(BuildConfig.ENCRYPTED_SHARED_PREFERENCES_KEY_USER_ID)
+    override fun setUserAuthData(userAccessData: String) =
+        preferencesController.setString(
+            key = "UserAccessData",
+            value = userAccessData
+        )
 
-    override fun removeUserToken() =
+    override fun removeUserId() =
         preferencesController.remove(BuildConfig.ENCRYPTED_SHARED_PREFERENCES_KEY_USER_TOKEN)
 
-    override fun removeUserCredentials() {
-        removeUserId()
-        removeUserToken()
-    }
+    override fun removeUserAuthData() =
+        preferencesController.remove("UserAuthData")
 }

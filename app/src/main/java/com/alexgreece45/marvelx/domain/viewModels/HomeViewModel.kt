@@ -4,6 +4,7 @@ import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.data.domains.user.VerificationStep
 import com.alexgreece45.marvelx.data.models.user.loginWithToken.UserLoginWithTokenRequest
+import com.alexgreece45.marvelx.domain.controllers.AuthController
 import com.alexgreece45.marvelx.domain.controllers.PrefKeys
 import com.alexgreece45.marvelx.domain.interactors.PostLoginWithTokenPartialState
 import com.alexgreece45.marvelx.domain.interactors.UserInteractor
@@ -57,7 +58,8 @@ sealed class HomeEffect : BaseEffect {
 class HomeViewModel @Inject constructor(
     private val prefKeys: PrefKeys,
     private val resourceProvider: ResourceProvider,
-    private val userInteractor: UserInteractor
+    private val userInteractor: UserInteractor,
+    private val authController: AuthController
 ) : BaseViewModel<HomeEvent, HomeState, HomeEffect>() {
     override fun setInitialState(): HomeState =
         HomeState(
@@ -121,8 +123,8 @@ class HomeViewModel @Inject constructor(
             userInteractor.postLoginWithToken(getUserLoginWithTokenRequest()).collect {
                 when (it) {
                     is PostLoginWithTokenPartialState.Failed -> {
-                        // An error occurred either due to an invalid token, or user id; proceed to remove the stored user credentials (userId, token).
-                        prefKeys.removeUserCredentials()
+                        // An error occurred either due to an invalid token, or user id; proceed to remove the stored user credentials (userId, UserAuthData).
+                        authController.removeUserCredentials()
 
                         setState {
                             copy(
@@ -179,8 +181,8 @@ class HomeViewModel @Inject constructor(
                             }
 
                             is VerificationStep.Invalid -> {
-                                // An error occurred, so just in case, remove the stored user credentials (userId, userToken).
-                                prefKeys.removeUserCredentials()
+                                // An error occurred, so just in case, remove the stored user credentials (userId, UserAuthData).
+                                authController.removeUserCredentials()
 
                                 setState {
                                     copy(

@@ -7,12 +7,13 @@ import com.alexgreece45.marvelx.util.ResourceProvider
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flow
+import retrofit2.Response
 import javax.inject.Inject
 
 interface UserRepository {
-    suspend fun grantNewAccessToken(code: String): Flow<GrantNewAccessTokenRepositoryResponse>
-
+    suspend fun grandNewAccessToken(code: String): Flow<GrandNewAccessTokenRepositoryResponse>
     suspend fun refreshAccessToken(refreshToken: String): Flow<RefreshAccessTokenRepositoryResponse>
+    suspend fun logout(clientId: String, refreshToken: String): Flow<LogoutRepositoryResponse>
 }
 
 class UserRepositoryImpl @Inject constructor(
@@ -20,22 +21,22 @@ class UserRepositoryImpl @Inject constructor(
     private val resourceProvider: ResourceProvider,
     private val configController: ConfigController
 ) : UserRepository {
-    override suspend fun grantNewAccessToken(code: String): Flow<GrantNewAccessTokenRepositoryResponse> =
+    override suspend fun grandNewAccessToken(code: String): Flow<GrandNewAccessTokenRepositoryResponse> =
         flow {
-            val response = apiClient.grandNewAccessToken(
+            val response = apiClient.grantNewAccessToken(
                 clientId = configController.getClientId(),
                 clientSecret = configController.getClientSecret(),
                 code = code,
                 uri = configController.getUri()
             )
             if (response.isSuccessful) {
-                emit(GrantNewAccessTokenRepositoryResponse.Success(response = response.body()))
+                emit(GrandNewAccessTokenRepositoryResponse.Success(response = response.body()))
             } else {
-                emit(GrantNewAccessTokenRepositoryResponse.Failed(errorMessage = resourceProvider.getGenericErrorMessage()))
+                emit(GrandNewAccessTokenRepositoryResponse.Failed(errorMessage = resourceProvider.getGenericErrorMessage()))
             }
         }.catch {
             emit(
-                GrantNewAccessTokenRepositoryResponse.Failed(
+                GrandNewAccessTokenRepositoryResponse.Failed(
                     errorMessage = it.localizedMessage
                 )
             )
@@ -44,16 +45,41 @@ class UserRepositoryImpl @Inject constructor(
     override suspend fun refreshAccessToken(refreshToken: String): Flow<RefreshAccessTokenRepositoryResponse> {
         TODO("Not yet implemented")
     }
+
+    override suspend fun logout(
+        clientId: String,
+        refreshToken: String
+    ): Flow<LogoutRepositoryResponse> = flow {
+        apiClient.logout(clientId, refreshToken).let { response ->
+            if (response.isSuccessful) {
+                emit(LogoutRepositoryResponse.Success(response))
+            } else {
+                emit(LogoutRepositoryResponse.Failed(errorMessage = resourceProvider.getGenericErrorMessage()))
+            }
+        }
+    }.catch {
+        emit(
+            LogoutRepositoryResponse.Failed(
+                errorMessage = it.localizedMessage
+            )
+        )
+    }
 }
 
-sealed class GrantNewAccessTokenRepositoryResponse {
-    data class Success(val response: TokenResponse?) : GrantNewAccessTokenRepositoryResponse()
-    data class Failed(val errorMessage: String?) : GrantNewAccessTokenRepositoryResponse()
-    data class Error(val errorMessage: String) : GrantNewAccessTokenRepositoryResponse()
+sealed class GrandNewAccessTokenRepositoryResponse {
+    data class Success(val response: TokenResponse?) : GrandNewAccessTokenRepositoryResponse()
+    data class Failed(val errorMessage: String?) : GrandNewAccessTokenRepositoryResponse()
+    data class Error(val errorMessage: String) : GrandNewAccessTokenRepositoryResponse()
 }
 
 sealed class RefreshAccessTokenRepositoryResponse {
     data class Success(val response: TokenResponse?) : RefreshAccessTokenRepositoryResponse()
     data class Failed(val errorMessage: String?) : RefreshAccessTokenRepositoryResponse()
     data class Error(val errorMessage: String) : RefreshAccessTokenRepositoryResponse()
+}
+
+sealed class LogoutRepositoryResponse {
+    data class Success(val response: Response<Void>) : LogoutRepositoryResponse()
+    data class Failed(val errorMessage: String?) : LogoutRepositoryResponse()
+    data class Error(val errorMessage: String) : LogoutRepositoryResponse()
 }

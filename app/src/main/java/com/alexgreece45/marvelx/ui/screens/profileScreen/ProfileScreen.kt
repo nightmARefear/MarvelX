@@ -13,7 +13,6 @@ import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -26,7 +25,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.domain.viewModels.ActivityState
 import com.alexgreece45.marvelx.domain.viewModels.ProfileEffect
 import com.alexgreece45.marvelx.domain.viewModels.ProfileEvent
 import com.alexgreece45.marvelx.domain.viewModels.ProfileViewModel
@@ -43,7 +41,6 @@ import com.alexgreece45.marvelx.util.extensions.shimmer
 fun ProfileScreen(
     navigateToHomeScreen: () -> Unit,
     bottomNavigationBarData: (items: List<BottomBarItem>, backgroundColor: Color, topHorizontalColor: Color?, selectedItemTopHorizontalColor: Color?, elevation: Dp) -> BottomNavigationBarData,
-    activityState: State<ActivityState>,
     viewModel: ProfileViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
@@ -51,11 +48,7 @@ fun ProfileScreen(
     val context = LocalContext.current
 
     LaunchedEffect(Unit) {
-        viewModel.setEvent(
-            ProfileEvent.InitView(
-                userId = activityState.value.userId
-            )
-        )
+        viewModel.setEvent(ProfileEvent.InitView)
 
         viewModel.uiEffect.collect { effect ->
             when (effect) {
@@ -105,13 +98,13 @@ fun ProfileScreen(
                         // TODO: TO BE REMOVED!
                         // userId
                         Text(
-                            text = "userId: ".plus(activityState.value.userId.toString()),
+                            text = "userId: ".plus(state.userId),
                             style = MaterialTheme.typography.h4
                         )
 
                         // user's token
                         Text(
-                            text = "token: ".plus(state.userToken.take(10).plus("...")),
+                            text = "token: ".plus(state.accessToken.take(10).plus("...")),
                             style = MaterialTheme.typography.h4
                         )
 

@@ -24,6 +24,6 @@ const val BOTTOM_NAVIGATION_BAR_ITEM_LABEL_MAX_LENGTH = 10
 const val THROTTLE_CLICKABLE_DEFAULT_DELAY: Long = 1000
 
 sealed class HeaderConstants(val name: String) {
-    object UserAgent : HeaderConstants(name = "User-Agent")
-    object Authorization : HeaderConstants(name = "Authorization")
+    data object UserAgent : HeaderConstants(name = "User-Agent")
+    data object Authorization : HeaderConstants(name = "Authorization")
 }

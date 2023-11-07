@@ -109,8 +109,7 @@ fun NavGraphBuilder.MainNavGraph(
                         selectedItemTopHorizontalColor = selectedItemTopHorizontalColor,
                         elevation = elevation
                     )
-                },
-                activityState = activityState
+                }
             )
         }
     }

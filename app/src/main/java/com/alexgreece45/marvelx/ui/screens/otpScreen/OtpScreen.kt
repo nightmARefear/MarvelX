@@ -19,6 +19,7 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -101,7 +102,7 @@ fun OtpScreen(
 
                 is OtpEffect.OnValidationSuccess -> viewModel.setEvent(
                     OtpEvent.OnValidationSuccess(
-                        effect.code
+                        code = effect.code
                     )
                 )
             }

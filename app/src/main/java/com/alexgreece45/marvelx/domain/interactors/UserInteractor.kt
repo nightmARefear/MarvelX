@@ -12,9 +12,12 @@ import com.alexgreece45.marvelx.data.models.user.login.toDomain
 import com.alexgreece45.marvelx.data.models.user.loginWithToken.UserLoginWithTokenRequest
 import com.alexgreece45.marvelx.data.models.user.loginWithToken.toUserLoginWithTokenResponseDomain
 import com.alexgreece45.marvelx.data.models.user.profileDetails.toUserProfileDetailsDomain
-import com.alexgreece45.marvelx.data.models.user.signUp.UserSignupRequest
 import com.alexgreece45.marvelx.data.models.user.signUp.SignupResponse
-import com.alexgreece45.marvelx.domain.repositories.GrantNewAccessTokenRepositoryResponse
+import com.alexgreece45.marvelx.data.models.user.signUp.UserSignupRequest
+import com.alexgreece45.marvelx.domain.controllers.AuthController
+import com.alexgreece45.marvelx.domain.controllers.ConfigController
+import com.alexgreece45.marvelx.domain.repositories.GrandNewAccessTokenRepositoryResponse
+import com.alexgreece45.marvelx.domain.repositories.LogoutRepositoryResponse
 import com.alexgreece45.marvelx.domain.repositories.UserRepository
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.extensions.safeAsync
@@ -32,7 +35,9 @@ interface UserInteractor {
 
     suspend fun postLoginWithToken(userLoginWithTokenRequest: UserLoginWithTokenRequest): Flow<PostLoginWithTokenPartialState>
 
-    suspend fun grandNewAccessToken(code: String): Flow<GrantNewAccessTokenPartialState>
+    suspend fun logout(): Flow<LogoutPartialState>
+
+    suspend fun grandNewAccessToken(code: String): Flow<GrandNewAccessTokenPartialState>
 
     suspend fun getProfileDetails(userId: Int): Flow<GetProfileDetailsPartialState>
 }
@@ -41,7 +46,9 @@ class UserInteractorImpl @Inject constructor(
     private val apiClient: ApiClient,
     private val repository: UserRepository,
     private val resourceProvider: ResourceProvider,
-    private val gson: Gson
+    private val gson: Gson,
+    private val configController: ConfigController,
+    private val authController: AuthController
 ) : UserInteractor {
     override suspend fun postSignUp(userSignUpRequest: UserSignupRequest): Flow<PostSignUpPartialState> =
         flow {
@@ -184,42 +191,96 @@ class UserInteractorImpl @Inject constructor(
             }
         }
 
-    override suspend fun grandNewAccessToken(code: String): Flow<GrantNewAccessTokenPartialState> = flow {
+    override suspend fun logout(): Flow<LogoutPartialState> = flow {
         val genericErrorMessage = resourceProvider.getGenericErrorMessage()
-        repository.grantNewAccessToken(code).collect {
-            when (it) {
-                is GrantNewAccessTokenRepositoryResponse.Error -> {
-                    emit(
-                        GrantNewAccessTokenPartialState.Failed(
-                            errorMessage = it.errorMessage
-                        )
-                    )
-                }
+        val clientId = configController.getClientId()
+        val refreshToken = authController.getRefreshToken()
 
-                is GrantNewAccessTokenRepositoryResponse.Failed -> {
-                    emit(
-                        GrantNewAccessTokenPartialState.Failed(
-                            errorMessage = it.errorMessage ?: genericErrorMessage
-                        )
-                    )
-                }
+        if (refreshToken.isNullOrEmpty()) {
+            emit(LogoutPartialState.Success)
+            return@flow
+        }
 
-                is GrantNewAccessTokenRepositoryResponse.Success -> {
-                    it.response?.let { response ->
-                        emit(
-                            GrantNewAccessTokenPartialState.Success(
-                                tokenResponse = response
-                            )
-                        )
-                    } ?: emit(
-                        GrantNewAccessTokenPartialState.Failed(
+        repository.logout(clientId, refreshToken).collect { logoutRepositoryResponse ->
+            // Remove user credentials irrespectively of the response.
+            authController.removeUserCredentials()
+
+            when (logoutRepositoryResponse) {
+                is LogoutRepositoryResponse.Error -> {
+                    emit(
+                        LogoutPartialState.Failed(
                             errorMessage = genericErrorMessage
                         )
                     )
                 }
+
+                is LogoutRepositoryResponse.Failed -> {
+                    emit(
+                        LogoutPartialState.Failed(
+                            errorMessage = logoutRepositoryResponse.errorMessage
+                                ?: genericErrorMessage
+                        )
+                    )
+                }
+
+                is LogoutRepositoryResponse.Success -> {
+                    emit(LogoutPartialState.Success)
+                }
+            }
+        }
+    }.safeAsync {
+        when (it) {
+            is IOException -> {
+                LogoutPartialState.Failed(
+                    errorMessage = resourceProvider.getNoInternetConnectionMessage()
+                )
+            }
+
+            else -> {
+                LogoutPartialState.Failed(
+                    errorMessage = resourceProvider.getGenericErrorMessage()
+                )
             }
         }
     }
+
+    override suspend fun grandNewAccessToken(code: String): Flow<GrandNewAccessTokenPartialState> =
+        flow {
+            val genericErrorMessage = resourceProvider.getGenericErrorMessage()
+            repository.grandNewAccessToken(code).collect {
+                when (it) {
+                    is GrandNewAccessTokenRepositoryResponse.Error -> {
+                        emit(
+                            GrandNewAccessTokenPartialState.Failed(
+                                errorMessage = it.errorMessage
+                            )
+                        )
+                    }
+
+                    is GrandNewAccessTokenRepositoryResponse.Failed -> {
+                        emit(
+                            GrandNewAccessTokenPartialState.Failed(
+                                errorMessage = it.errorMessage ?: genericErrorMessage
+                            )
+                        )
+                    }
+
+                    is GrandNewAccessTokenRepositoryResponse.Success -> {
+                        it.response?.let { response ->
+                            emit(
+                                GrandNewAccessTokenPartialState.Success(
+                                    tokenResponse = response
+                                )
+                            )
+                        } ?: emit(
+                            GrandNewAccessTokenPartialState.Failed(
+                                errorMessage = genericErrorMessage
+                            )
+                        )
+                    }
+                }
+            }
+        }
 
     override suspend fun getProfileDetails(userId: Int): Flow<GetProfileDetailsPartialState> =
         flow {
@@ -288,7 +349,12 @@ sealed class GetProfileDetailsPartialState {
     data class NoInternetConnection(val errorMessage: String) : GetProfileDetailsPartialState()
 }
 
-sealed class GrantNewAccessTokenPartialState {
-    data class Success(val tokenResponse: TokenResponse) : GrantNewAccessTokenPartialState()
-    data class Failed(val errorMessage: String) : GrantNewAccessTokenPartialState()
+sealed class GrandNewAccessTokenPartialState {
+    data class Success(val tokenResponse: TokenResponse) : GrandNewAccessTokenPartialState()
+    data class Failed(val errorMessage: String) : GrandNewAccessTokenPartialState()
+}
+
+sealed class LogoutPartialState {
+    data object Success : LogoutPartialState()
+    data class Failed(val errorMessage: String) : LogoutPartialState()
 }

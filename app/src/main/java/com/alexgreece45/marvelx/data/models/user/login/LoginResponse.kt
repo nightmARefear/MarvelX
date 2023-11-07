@@ -5,16 +5,12 @@ import com.alexgreece45.marvelx.data.domains.user.login.UserLoginResponseDomain
 import com.google.gson.annotations.SerializedName
 
 data class LoginResponse(
-    @SerializedName("code") val code: Int,
     @SerializedName("verification_step") val verificationStep: String,
-    @SerializedName("user_id") val userId: String,
-    @SerializedName("access_token") val accessToken: String
+    @SerializedName("user_id") val userId: String
 )
 
 fun LoginResponse.toDomain(): UserLoginResponseDomain =
     UserLoginResponseDomain(
-        code = this.code,
         verificationStep = VerificationStep.of(this.verificationStep),
-        userId = this.userId.toInt(),
-        accessToken = this.accessToken
+        userId = this.userId.toInt()
     )

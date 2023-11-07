@@ -47,7 +47,7 @@ class ApiClientImpl @Inject constructor(
     override suspend fun postLoginWithToken(userLoginWithTokenRequest: UserLoginWithTokenRequest): Response<LoginWithTokenResponse> =
         api.postLoginWithToken(userLoginWithTokenRequest)
 
-    override suspend fun grandNewAccessToken(
+    override suspend fun grantNewAccessToken(
         clientId: String,
         clientSecret: String,
         code: String,

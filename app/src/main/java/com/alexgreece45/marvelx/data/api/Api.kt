@@ -42,7 +42,7 @@ interface ApiService {
     @POST("/api/private/marvelx/user/login_with_token")
     suspend fun postLoginWithToken(@Body userLoginWithTokenRequest: UserLoginWithTokenRequest): Response<LoginWithTokenResponse>
 
-    @POST("/api/private/marvelx/token")
+    @POST("/api/private/marvelx/user/token")
     @FormUrlEncoded
     suspend fun grantNewAccessToken(
         @Field("client_id") clientId: String,
@@ -52,7 +52,7 @@ interface ApiService {
         @Field("grant_type") grantType: String = "authorization_code"
     ): Response<TokenResponse>
 
-    @POST("/api/private/marvelx/token")
+    @POST("/api/private/marvelx/user/token")
     @FormUrlEncoded
     suspend fun refreshAccessToken(
         @Field("client_id") clientId: String,
@@ -60,7 +60,7 @@ interface ApiService {
         @Field("grant_type") grantType: String = "refresh_token"
     ): Response<TokenResponse>
 
-    @POST("/api/private/marvelx/logout")
+    @POST("/api/private/marvelx/user/logout")
     @FormUrlEncoded
     suspend fun logout(
         @Field("client_id") clientId: String,
@@ -89,7 +89,7 @@ interface ApiClient {
 
     suspend fun postLoginWithToken(userLoginWithTokenRequest: UserLoginWithTokenRequest): Response<LoginWithTokenResponse>
 
-    suspend fun grandNewAccessToken(clientId: String, clientSecret: String, code: String, uri: String): Response<TokenResponse>
+    suspend fun grantNewAccessToken(clientId: String, clientSecret: String, code: String, uri: String): Response<TokenResponse>
 
     suspend fun refreshAccessToken(clientId: String, refreshToken: String): Response<TokenResponse>
 

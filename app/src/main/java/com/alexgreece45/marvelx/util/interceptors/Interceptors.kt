@@ -1,6 +1,8 @@
 package com.alexgreece45.marvelx.util.interceptors
 
 import com.alexgreece45.marvelx.BuildConfig
+import com.alexgreece45.marvelx.domain.controllers.AuthController
+import com.alexgreece45.marvelx.domain.controllers.ConfigController
 import com.alexgreece45.marvelx.domain.controllers.PrefKeys
 import com.alexgreece45.marvelx.util.APP_USER_AGENT
 import com.alexgreece45.marvelx.util.HeaderConstants
@@ -13,7 +15,8 @@ import javax.inject.Singleton
 
 @Singleton
 class BaseUrlChangerAndAuthenticationInterceptor @Inject constructor(
-    private val prefKeys: PrefKeys
+    private val authController: AuthController,
+    private val configController: ConfigController
 ) : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
         val originalRequest = chain.request()
@@ -26,7 +29,12 @@ class BaseUrlChangerAndAuthenticationInterceptor @Inject constructor(
 
                 // MarvelX Backend API.
                 path.startsWith(BuildConfig.MARVELX_BACKEND_ENDPOINT_PREFIX) -> {
-                    return applyMarvelXBackendTransformations(path, chain, prefKeys)
+                    return applyMarvelXBackendTransformations(
+                        path,
+                        chain,
+                        authController,
+                        configController
+                    )
                 }
 
                 // Other API.
@@ -63,18 +71,18 @@ private fun applyMarvelApiTransformations(chain: Interceptor.Chain): Response {
 private fun applyMarvelXBackendTransformations(
     path: String,
     chain: Interceptor.Chain,
-    prefKeys: PrefKeys
+    authController: AuthController,
+    configController: ConfigController
 ): Response {
     val originalRequest = chain.request()
     // Get scheme from MarvelX Backend's baseUrl.
-    val scheme =
-        if (BuildConfig.MARVELX_BACKEND_BASE_URL.startsWith("https")) "https" else "http"
+    val scheme = configController.getSchemeFromBaseUrl()
 
     // Get host from config.
-    val host = BuildConfig.MARVELX_BACKEND_DOMAIN
+    val host = configController.getHost()
 
     // Get port from config.
-    val port = BuildConfig.MARVELX_BACKEND_BASE_URL.split(":").last().toInt()
+    val port = configController.getBaseUrlPort()
 
     // Add headers where necessary.
     when {
@@ -87,13 +95,10 @@ private fun applyMarvelXBackendTransformations(
                     .port(port)
                     .build()
 
-            val token = prefKeys.getUserToken()
-
             val modifiedRequest = Request.Builder()
                 .url(modifiedUrl)
                 .addHeader(HeaderConstants.UserAgent.name, APP_USER_AGENT)
-                // Authentication token.
-                .addHeader(HeaderConstants.Authorization.name, "Bearer $token")
+                .addHeader(HeaderConstants.Authorization.name, "${authController.getAccessToken()}")
                 .method(originalRequest.method, originalRequest.body)
                 .build()
 

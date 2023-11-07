@@ -3,8 +3,10 @@ package com.alexgreece45.marvelx.domain.viewModels
 import androidx.core.text.isDigitsOnly
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.data.models.otp.OtpRequest
+import com.alexgreece45.marvelx.data.models.token.toUserAccessData
+import com.alexgreece45.marvelx.domain.controllers.AuthController
 import com.alexgreece45.marvelx.domain.controllers.PrefKeys
-import com.alexgreece45.marvelx.domain.interactors.GrantNewAccessTokenPartialState
+import com.alexgreece45.marvelx.domain.interactors.GrandNewAccessTokenPartialState
 import com.alexgreece45.marvelx.domain.interactors.OtpInteractor
 import com.alexgreece45.marvelx.domain.interactors.UserInteractor
 import com.alexgreece45.marvelx.domain.interactors.ValidateOtpPartialState
@@ -25,9 +27,9 @@ sealed class OtpEvent : BaseEvent {
 
     data class OnOtpFieldValueChange(val otp: String) : OtpEvent()
 
-    object OnDoneClick : OtpEvent()
+    data object OnDoneClick : OtpEvent()
 
-    object OnSendClick : OtpEvent()
+    data object OnSendClick : OtpEvent()
 
     data class OnValidationSuccess(val code: String) : OtpEvent()
 }
@@ -90,6 +92,7 @@ class OtpViewModel @Inject constructor(
     private val otpInteractor: OtpInteractor,
     private val userInteractor: UserInteractor,
     private val resourceProvider: ResourceProvider,
+    private val authController: AuthController,
     private val prefKeys: PrefKeys
 ) : BaseViewModel<OtpEvent, OtpState, OtpEffect>() {
     override fun setInitialState(): OtpState = OtpState.getDefaultValues()
@@ -199,7 +202,7 @@ class OtpViewModel @Inject constructor(
 
                                 // If the user-entered OTP was correct, then move on to retrieving the Access & Refresh tokens.
                                 setEffect {
-                                    OtpEffect.OnValidationSuccess(getOtpPartialState.otpDomain.code)
+                                    OtpEffect.OnValidationSuccess(getOtpPartialState.otpDomain.authenticationCode)
                                 }
                             }
 
@@ -236,7 +239,7 @@ class OtpViewModel @Inject constructor(
         viewModelScope.launch {
             userInteractor.grandNewAccessToken(code = code).collect { accessTokenPartialState ->
                 when (accessTokenPartialState) {
-                    is GrantNewAccessTokenPartialState.Failed -> {
+                    is GrandNewAccessTokenPartialState.Failed -> {
                         setState {
                             copy(
                                 isLoading = false,
@@ -244,9 +247,22 @@ class OtpViewModel @Inject constructor(
                             )
                         }
                     }
-                    is GrantNewAccessTokenPartialState.Success -> {
+
+                    is GrandNewAccessTokenPartialState.Success -> {
                         // Token was successfully generated (in the server) and retrieved (in the client).
-                        // So, navigate the client to AllCharactersScreen
+                        setState {
+                            copy(
+                                isLoading = false
+                            )
+                        }
+
+                        // Save userId in device.
+                        currentState.userId?.let { prefKeys.setUserId(it) }
+
+                        // Save accessToken and refreshToken in device.
+                        authController.setData(userAuthData = accessTokenPartialState.tokenResponse.toUserAccessData())
+
+                        // Navigate the client to AllCharactersScreen
                         setEffect {
                             OtpEffect.Navigation.NavigateToAllCharactersScreen
                         }

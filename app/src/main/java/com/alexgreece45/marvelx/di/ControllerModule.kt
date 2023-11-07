@@ -1,5 +1,7 @@
 package com.alexgreece45.marvelx.di
 
+import com.alexgreece45.marvelx.domain.controllers.AuthController
+import com.alexgreece45.marvelx.domain.controllers.AuthControllerImpl
 import com.alexgreece45.marvelx.domain.controllers.ConfigController
 import com.alexgreece45.marvelx.domain.controllers.ConfigControllerImpl
 import com.alexgreece45.marvelx.domain.controllers.PreferencesController
@@ -27,4 +29,8 @@ interface ControllerModule {
     @Binds
     @Singleton
     fun bindsConfigController(impl: ConfigControllerImpl): ConfigController
+
+    @Binds
+    @Singleton
+    fun bindsAuthController(impl: AuthControllerImpl): AuthController
 }

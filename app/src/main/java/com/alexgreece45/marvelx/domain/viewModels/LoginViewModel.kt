@@ -2,12 +2,11 @@ package com.alexgreece45.marvelx.domain.viewModels
 
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.data.domains.user.login.UserLoginResponseDomain
 import com.alexgreece45.marvelx.data.domains.user.VerificationStep
 import com.alexgreece45.marvelx.data.models.user.login.UserLoginRequest
 import com.alexgreece45.marvelx.domain.controllers.PrefKeys
-import com.alexgreece45.marvelx.domain.interactors.UserInteractor
 import com.alexgreece45.marvelx.domain.interactors.PostLoginPartialState
+import com.alexgreece45.marvelx.domain.interactors.UserInteractor
 import com.alexgreece45.marvelx.ui.base.BaseEffect
 import com.alexgreece45.marvelx.ui.base.BaseEvent
 import com.alexgreece45.marvelx.ui.base.BaseState
@@ -25,11 +24,11 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 sealed class LoginEvent : BaseEvent {
-    object InitView : LoginEvent()
+    data object InitView : LoginEvent()
 
-    object OnBack : LoginEvent()
+    data object OnBack : LoginEvent()
 
-    object OnPasswordVisibilityIconClick : LoginEvent()
+    data object OnPasswordVisibilityIconClick : LoginEvent()
 
     sealed class FieldValueChange : LoginEvent() {
         data class Email(val email: String) : FieldValueChange()
@@ -37,15 +36,15 @@ sealed class LoginEvent : BaseEvent {
         data class Password(val password: String) : FieldValueChange()
     }
 
-    object OnDoneClick : LoginEvent()
+    data object OnDoneClick : LoginEvent()
 
-    object OnLoginButtonClick : LoginEvent()
+    data object OnLoginButtonClick : LoginEvent()
 
     sealed class AlertDialog : LoginEvent() {
-        object OnOkClick : AlertDialog()
+        data object OnOkClick : AlertDialog()
     }
 
-    object OnNoInternetRetryButtonClick : LoginEvent()
+    data object OnNoInternetRetryButtonClick : LoginEvent()
 }
 
 data class LoginState(
@@ -73,10 +72,7 @@ data class LoginState(
 
     // Validations.
     val emailValidationResult: FormsValidationResult = FormsValidationResult(isValid = false),
-    val passwordValidationResult: FormsValidationResult = FormsValidationResult(isValid = false),
-
-    // User login successful response.
-    val userLoginResponseDomain: UserLoginResponseDomain? = null,
+    val passwordValidationResult: FormsValidationResult = FormsValidationResult(isValid = false)
 ) : BaseState {
     companion object {
         fun getDefaultValues(): LoginState = LoginState(
@@ -89,15 +85,14 @@ data class LoginState(
             alertDialogTitle = "",
             alertDialogErrorMessage = "",
             emailValidationResult = FormsValidationResult(isValid = false),
-            passwordValidationResult = FormsValidationResult(isValid = false),
-            userLoginResponseDomain = null
+            passwordValidationResult = FormsValidationResult(isValid = false)
         )
     }
 }
 
 sealed class LoginEffect : BaseEffect {
     sealed class Navigation : LoginEffect() {
-        object PopBackStack : Navigation()
+        data object PopBackStack : Navigation()
 
         data class NavigateToAllCharactersScreen(val userId: Int) : Navigation()
 
@@ -117,7 +112,7 @@ sealed class LoginEffect : BaseEffect {
      * It should be used only in [LoginEvent.OnDoneClick],
      * and [LoginEvent.OnLoginButtonClick].
      * */
-    object CloseKeyboardAndClearFocus : LoginEffect()
+    data object CloseKeyboardAndClearFocus : LoginEffect()
 }
 
 @HiltViewModel
@@ -298,50 +293,40 @@ class LoginViewModel @Inject constructor(
                     is PostLoginPartialState.Success -> {
                         setState {
                             LoginState.getDefaultValues().copy(
-                                isLoading = false,
-                                userLoginResponseDomain = userPartialStatePostLogIn.userLoginResponseDomain
+                                isLoading = false
                             )
                         }
 
+                        // UserLoginResponseDomain.
+                        val loginResponseDomain = userPartialStatePostLogIn.userLoginResponseDomain
+
                         // Act accordingly based on the verification step.
-                        currentState.userLoginResponseDomain?.let { userLogInResponseDomain ->
-                            when (userLogInResponseDomain.verificationStep) {
-                                is VerificationStep.None -> {
-                                    // Store userToken.
-                                    userLogInResponseDomain.accessToken?.let { userToken ->
-                                        prefKeys.setUserToken(
-                                            userToken = userToken
-                                        )
-                                    }
-
-                                    // Store userId.
-                                    prefKeys.setUserId(userLogInResponseDomain.userId)
-
-                                    // No verification step, so navigate to All Characters Screen.
-                                    setEffect {
-                                        LoginEffect.Navigation.NavigateToAllCharactersScreen(userId = userLogInResponseDomain.userId)
-                                    }
+                        when (loginResponseDomain.verificationStep) {
+                            is VerificationStep.None -> {
+                                // No verification step, so navigate to All Characters Screen.
+                                setEffect {
+                                    LoginEffect.Navigation.NavigateToAllCharactersScreen(userId = loginResponseDomain.userId)
                                 }
+                            }
 
-                                is VerificationStep.Invalid -> {
-                                    showAlertDialog(
-                                        errorMessage = resourceProvider.getGenericErrorMessage()
+                            is VerificationStep.Invalid -> {
+                                showAlertDialog(
+                                    errorMessage = resourceProvider.getGenericErrorMessage()
+                                )
+                            }
+
+                            is VerificationStep.OtpEmail -> {
+                                // Currently we only support OTP from email.
+                                setEffect {
+                                    LoginEffect.Navigation.NavigateToOtpScreen(
+                                        userId = loginResponseDomain.userId
                                     )
                                 }
+                            }
 
-                                is VerificationStep.OtpEmail -> {
-                                    // Currently we only support OTP from email.
-                                    setEffect {
-                                        LoginEffect.Navigation.NavigateToOtpScreen(
-                                            userId = currentState.userLoginResponseDomain!!.userId
-                                        )
-                                    }
-                                }
-
-                                is VerificationStep.OtpPhoneNumber -> {
-                                    // TODO: display appropriate screen
-                                    TODO("\"VerificationStep.OtpPhoneNumber\" not implemented yet")
-                                }
+                            is VerificationStep.OtpPhoneNumber -> {
+                                // TODO: display appropriate screen
+                                TODO("\"VerificationStep.OtpPhoneNumber\" not implemented yet")
                             }
                         }
                     }
