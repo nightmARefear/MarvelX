@@ -11,7 +11,7 @@ data class TokenResponse(
     @SerializedName("token_type") val tokenType: String
 )
 
-fun TokenResponse.toUserAccessData(): UserAuthData =
+fun TokenResponse.toUserAuthData(): UserAuthData =
     UserAuthData(
         accessToken = this.accessToken,
         accessExpiresIn = this.accessExpiresIn.toLong(),

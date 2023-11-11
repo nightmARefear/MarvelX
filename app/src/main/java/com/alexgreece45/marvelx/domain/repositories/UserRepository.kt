@@ -2,7 +2,6 @@ package com.alexgreece45.marvelx.domain.repositories
 
 import com.alexgreece45.marvelx.data.api.ApiClient
 import com.alexgreece45.marvelx.data.models.token.TokenResponse
-import com.alexgreece45.marvelx.domain.controllers.ConfigController
 import com.alexgreece45.marvelx.util.ResourceProvider
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
@@ -11,23 +10,37 @@ import retrofit2.Response
 import javax.inject.Inject
 
 interface UserRepository {
-    suspend fun grandNewAccessToken(code: String): Flow<GrandNewAccessTokenRepositoryResponse>
-    suspend fun refreshAccessToken(refreshToken: String): Flow<RefreshAccessTokenRepositoryResponse>
+    suspend fun grandNewAccessToken(
+        clientId: String,
+        clientSecret: String,
+        code: String,
+        uri: String
+    ): Flow<GrandNewAccessTokenRepositoryResponse>
+
+    suspend fun refreshAccessToken(
+        clientId: String,
+        refreshToken: String
+    ): Flow<RefreshAccessTokenRepositoryResponse>
+
     suspend fun logout(clientId: String, refreshToken: String): Flow<LogoutRepositoryResponse>
 }
 
 class UserRepositoryImpl @Inject constructor(
     private val apiClient: ApiClient,
-    private val resourceProvider: ResourceProvider,
-    private val configController: ConfigController
+    private val resourceProvider: ResourceProvider
 ) : UserRepository {
-    override suspend fun grandNewAccessToken(code: String): Flow<GrandNewAccessTokenRepositoryResponse> =
+    override suspend fun grandNewAccessToken(
+        clientId: String,
+        clientSecret: String,
+        code: String,
+        uri: String
+    ): Flow<GrandNewAccessTokenRepositoryResponse> =
         flow {
             val response = apiClient.grantNewAccessToken(
-                clientId = configController.getClientId(),
-                clientSecret = configController.getClientSecret(),
+                clientId = clientId,
+                clientSecret = clientSecret,
                 code = code,
-                uri = configController.getUri()
+                uri = uri
             )
             if (response.isSuccessful) {
                 emit(GrandNewAccessTokenRepositoryResponse.Success(response = response.body()))
@@ -42,8 +55,34 @@ class UserRepositoryImpl @Inject constructor(
             )
         }
 
-    override suspend fun refreshAccessToken(refreshToken: String): Flow<RefreshAccessTokenRepositoryResponse> {
-        TODO("Not yet implemented")
+    override suspend fun refreshAccessToken(
+        clientId: String,
+        refreshToken: String
+    ): Flow<RefreshAccessTokenRepositoryResponse> = flow {
+        val response = apiClient.refreshAccessToken(
+            clientId = clientId,
+            refreshToken = refreshToken
+        )
+
+        if (response.isSuccessful) {
+            emit(
+                RefreshAccessTokenRepositoryResponse.Success(
+                    response = response.body()
+                )
+            )
+        } else {
+            emit(
+                RefreshAccessTokenRepositoryResponse.Error(
+                    errorMessage = resourceProvider.getGenericErrorMessage()
+                )
+            )
+        }
+    }.catch {
+        emit(
+            RefreshAccessTokenRepositoryResponse.Failed(
+                errorMessage = it.localizedMessage
+            )
+        )
     }
 
     override suspend fun logout(

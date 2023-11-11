@@ -286,7 +286,7 @@ class SignUpViewModel @Inject constructor(
             }
             viewModelScope.launch {
                 userInteractor.postSignUp(
-                    userSignUpRequest = getUserSignUpRequest()
+                    userSignupRequest = getUserSignUpRequest()
                 ).collect { userPartialStatePostSignUp ->
                     when (userPartialStatePostSignUp) {
                         is PostSignUpPartialState.Failed -> {

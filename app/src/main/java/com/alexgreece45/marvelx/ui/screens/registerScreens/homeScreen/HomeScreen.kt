@@ -140,6 +140,10 @@ fun HomeScreen(
                 HomeEffect.Navigation.PopBackStack -> {
                     navController.popBackStack()
                 }
+
+                HomeEffect.LoginFlow.ProceedWithLogin -> {
+                    viewModel.setEvent(HomeEvent.OnProceedWithLogin)
+                }
             }
         }.collect()
     }

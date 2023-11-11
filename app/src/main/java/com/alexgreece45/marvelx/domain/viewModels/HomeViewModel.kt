@@ -6,7 +6,9 @@ import com.alexgreece45.marvelx.data.domains.user.VerificationStep
 import com.alexgreece45.marvelx.data.models.user.loginWithToken.UserLoginWithTokenRequest
 import com.alexgreece45.marvelx.domain.controllers.AuthController
 import com.alexgreece45.marvelx.domain.controllers.PrefKeys
+import com.alexgreece45.marvelx.domain.interactors.LogoutPartialState
 import com.alexgreece45.marvelx.domain.interactors.PostLoginWithTokenPartialState
+import com.alexgreece45.marvelx.domain.interactors.RefreshAccessTokenPartialState
 import com.alexgreece45.marvelx.domain.interactors.UserInteractor
 import com.alexgreece45.marvelx.ui.base.BaseEffect
 import com.alexgreece45.marvelx.ui.base.BaseEvent
@@ -19,17 +21,19 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 sealed class HomeEvent : BaseEvent {
-    object InitView : HomeEvent()
+    data object InitView : HomeEvent()
 
-    object OnBack : HomeEvent()
+    data object OnBack : HomeEvent()
 
     sealed class AlertDialog : HomeEvent() {
-        object OnOkClick : AlertDialog()
+        data object OnOkClick : AlertDialog()
     }
 
-    object OnLogInButtonClick : HomeEvent()
+    data object OnLogInButtonClick : HomeEvent()
 
-    object OnSignUpButtonClick : HomeEvent()
+    data object OnSignUpButtonClick : HomeEvent()
+
+    data object OnProceedWithLogin : HomeEvent()
 }
 
 data class HomeState(
@@ -44,13 +48,17 @@ data class HomeState(
     val alertDialogErrorMessage: String = "",
 ) : BaseState
 
-sealed class HomeEffect : BaseEffect {
-    sealed class Navigation : HomeEffect() {
-        object PopBackStack : Navigation()
-        object NavigateToLogInScreen : Navigation()
-        object NavigateToSignUpScreen : Navigation()
+sealed interface HomeEffect : BaseEffect {
+    sealed class Navigation : HomeEffect {
+        data object PopBackStack : Navigation()
+        data object NavigateToLogInScreen : Navigation()
+        data object NavigateToSignUpScreen : Navigation()
         data class NavigateToOtpScreen(val userId: Int) : Navigation()
         data class NavigateToAllCharactersScreen(val userId: Int) : Navigation()
+    }
+
+    sealed interface LoginFlow : HomeEffect {
+        data object ProceedWithLogin : LoginFlow
     }
 }
 
@@ -95,6 +103,15 @@ class HomeViewModel @Inject constructor(
             HomeEvent.AlertDialog.OnOkClick -> {
                 hideAlertDialog()
             }
+
+            HomeEvent.OnProceedWithLogin -> {
+                setState {
+                    copy(
+                        isLoading = true
+                    )
+                }
+                postLogin()
+            }
         }
     }
 
@@ -103,22 +120,93 @@ class HomeViewModel @Inject constructor(
         if (!prefKeys.containsUserCredentials()) {
             setState {
                 copy(
-                    isLoading = false // Stop loading animation.
+                    isLoading = false
                 )
             }
+            // todo: show error
             return
         }
 
-        /* A stored token was found.
-        * Check if it is expired;
-        * - if expired, refresh, and then proceed to login
-        * - if NOT expired, validate it
-        */
+        // Stored credentials were found, so proceed with login flow.
         setState {
             copy(
                 isLoading = true
             )
         }
+        loginFlow()
+    }
+
+    private fun loginFlow() {
+        // Check if access token is expired.
+        if (authController.isAccessTokenExpired()) {
+            // Access token is expired. Check if refresh token is expired.
+            if (authController.isRefreshTokenExpired()) {
+                // Refresh token is expired, so logout.
+                viewModelScope.launch {
+                    userInteractor.logout().collect {
+                        when (it) {
+                            is LogoutPartialState.Failed -> {
+                                setState {
+                                    copy(
+                                        isLoading = false
+                                    )
+                                }
+                            }
+
+                            LogoutPartialState.Success -> {
+                                setState {
+                                    copy(
+                                        isLoading = false
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+                return
+            }
+
+            // Refresh access token.
+            setState {
+                copy(
+                    isLoading = true
+                )
+            }
+            viewModelScope.launch {
+                userInteractor.refreshAccessToken().collect {
+                    when (it) {
+                        is RefreshAccessTokenPartialState.Failed -> {
+                            setState {
+                                copy(
+                                    isLoading = false
+                                )
+                            }
+                            showAlertDialog(errorMessage = it.errorMessage)
+                        }
+
+                        is RefreshAccessTokenPartialState.Success -> {
+                            setState {
+                                copy(
+                                    isLoading = false
+                                )
+                            }
+                            // Proceed with login.
+                            setEffect {
+                                HomeEffect.LoginFlow.ProceedWithLogin
+                            }
+                        }
+                    }
+                }
+            }
+        } else {
+            // Tokens are not expired, so proceed with login.
+            setEffect {
+                HomeEffect.LoginFlow.ProceedWithLogin
+            }
+        }
+    }
+
+    private fun postLogin() {
         viewModelScope.launch {
             userInteractor.postLoginWithToken(getUserLoginWithTokenRequest()).collect {
                 when (it) {

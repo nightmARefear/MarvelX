@@ -100,7 +100,6 @@ class PreferencesControllerImpl @Inject constructor(
 
 interface PrefKeys {
     fun containsUserId(): Boolean
-    fun containsUserToken(): Boolean
     fun containsUserCredentials(): Boolean
     fun containsUserAccessData(): Boolean
 
@@ -108,8 +107,7 @@ interface PrefKeys {
     fun getUserAuthData(): String
 
     fun setUserId(userId: Int)
-    fun setUserToken(userToken: String)
-    fun setUserAuthData(userAccessData: String)
+    fun setUserAuthData(userAuthData: String)
 
     fun removeUserId()
 
@@ -128,18 +126,15 @@ class PrefKeysImpl @Inject constructor(
     override fun containsUserId(): Boolean =
         preferencesController.containsKey(BuildConfig.ENCRYPTED_SHARED_PREFERENCES_KEY_USER_ID)
 
-    override fun containsUserToken(): Boolean =
-        preferencesController.containsKey(BuildConfig.ENCRYPTED_SHARED_PREFERENCES_KEY_USER_TOKEN)
-
-    override fun containsUserCredentials(): Boolean = containsUserId() && containsUserToken()
+    override fun containsUserCredentials(): Boolean = containsUserId() && containsUserAccessData()
     override fun containsUserAccessData(): Boolean =
-        preferencesController.containsKey("UserAccessData")
+        preferencesController.containsKey("UserAuthData")
 
     override fun getUserId(): Int =
         preferencesController.getInt(BuildConfig.ENCRYPTED_SHARED_PREFERENCES_KEY_USER_ID, -1)
 
     override fun getUserAuthData(): String =
-        preferencesController.getString("UserAccessData", "{}")
+        preferencesController.getString("UserAuthData", "{}")
 
     override fun setUserId(userId: Int) =
         preferencesController.setInt(
@@ -147,16 +142,10 @@ class PrefKeysImpl @Inject constructor(
             userId
         ).also { logcat { "(setUserId) user_id = $userId" } }
 
-    override fun setUserToken(userToken: String) =
+    override fun setUserAuthData(userAuthData: String) =
         preferencesController.setString(
-            BuildConfig.ENCRYPTED_SHARED_PREFERENCES_KEY_USER_TOKEN,
-            userToken
-        ).also { logcat { "(setUserToken) user_token = $userToken" } }
-
-    override fun setUserAuthData(userAccessData: String) =
-        preferencesController.setString(
-            key = "UserAccessData",
-            value = userAccessData
+            key = "UserAuthData",
+            value = userAuthData
         )
 
     override fun removeUserId() =

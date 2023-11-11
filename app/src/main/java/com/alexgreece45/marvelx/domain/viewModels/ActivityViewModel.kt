@@ -11,7 +11,7 @@ import logcat.logcat
 import javax.inject.Inject
 
 sealed class ActivityEvent : BaseEvent {
-    object InitView : ActivityEvent()
+    data object InitView : ActivityEvent()
 
     data class SetUserId(val userId: Int) : ActivityEvent()
 }
@@ -27,13 +27,12 @@ data class ActivityState(
     }
 }
 
-sealed class ActivityEffect : BaseEffect {
-
-}
+sealed class ActivityEffect : BaseEffect
 
 @HiltViewModel
 class ActivityViewModel @Inject constructor(
-    private val authController: AuthController
+    private val authController: AuthController,
+    private val prefKeys: PrefKeys
 ) : BaseViewModel<ActivityEvent, ActivityState, ActivityEffect>() {
     override fun setInitialState(): ActivityState {
         return ActivityState.getDefaultValues()
@@ -62,5 +61,6 @@ class ActivityViewModel @Inject constructor(
         authController.getRefreshToken()?.let { refreshToken ->
             logcat { "refreshToken : $refreshToken" }
         }
+        logcat { "authData: ${prefKeys.getUserAuthData()}" }
     }
 }

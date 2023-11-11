@@ -101,6 +101,7 @@ class ProfileViewModel @Inject constructor(
             ProfileEvent.LoadProfileDetails -> {
                 setState {
                     copy(
+                        isLoading = true,
                         error = null
                     )
                 }
@@ -121,7 +122,6 @@ class ProfileViewModel @Inject constructor(
     private fun loadProfileDetails() {
         setState {
             copy(
-//                isLoading = true,
                 userId = prefKeys.getUserId(),
                 accessToken = authController.getAccessToken() ?: ""
             )
@@ -133,12 +133,13 @@ class ProfileViewModel @Inject constructor(
                         setState {
                             copy(
                                 isLoading = false,
-                                error = ProfileScreenErrorView(
-                                    errorMessage = it.errorMessage,
-                                    onRetryClick = { loadProfileDetails() }
-                                )
+//                                error = ProfileScreenErrorView(
+//                                    errorMessage = it.errorMessage,
+//                                    onRetryClick = { loadProfileDetails() }
+//                                )
                             )
                         }
+                        logout()
                     }
 
                     is GetProfileDetailsPartialState.NoInternetConnection -> {

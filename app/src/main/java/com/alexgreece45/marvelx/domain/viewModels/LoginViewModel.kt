@@ -4,7 +4,6 @@ import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.data.domains.user.VerificationStep
 import com.alexgreece45.marvelx.data.models.user.login.UserLoginRequest
-import com.alexgreece45.marvelx.domain.controllers.PrefKeys
 import com.alexgreece45.marvelx.domain.interactors.PostLoginPartialState
 import com.alexgreece45.marvelx.domain.interactors.UserInteractor
 import com.alexgreece45.marvelx.ui.base.BaseEffect
@@ -119,8 +118,7 @@ sealed class LoginEffect : BaseEffect {
 class LoginViewModel @Inject constructor(
     private val resourceProvider: ResourceProvider,
     private val formValidator: FormValidator,
-    private val userInteractor: UserInteractor,
-    private val prefKeys: PrefKeys
+    private val userInteractor: UserInteractor
 ) : BaseViewModel<LoginEvent, LoginState, LoginEffect>() {
 
     override fun setInitialState(): LoginState = LoginState.getDefaultValues()
@@ -276,7 +274,7 @@ class LoginViewModel @Inject constructor(
         // All fields are valid.
         viewModelScope.launch {
             userInteractor.postLogin(
-                userLogInRequest = getUserLogInRequest()
+                userLoginRequest = getUserLogInRequest()
             ).collect { userPartialStatePostLogIn ->
                 when (userPartialStatePostLogIn) {
                     is PostLoginPartialState.Failed -> {

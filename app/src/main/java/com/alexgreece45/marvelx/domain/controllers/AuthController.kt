@@ -3,7 +3,6 @@ package com.alexgreece45.marvelx.domain.controllers
 import com.alexgreece45.marvelx.data.domains.userAccessData.UserAuthData
 import com.google.gson.Gson
 import logcat.logcat
-import java.lang.Exception
 import javax.inject.Inject
 
 interface AuthController {
@@ -13,7 +12,7 @@ interface AuthController {
     fun getAccessToken(): String?
 
     /**
-     * Returns the refresh token with its type.
+     * Returns the refresh token.
      * */
     fun getRefreshToken(): String?
 
@@ -51,21 +50,19 @@ class AuthControllerImpl @Inject constructor(
         }
 
     override fun getRefreshToken(): String? =
-        userAuthData?.let { userAuthData ->
-            "${userAuthData.tokenType} ${userAuthData.refreshToken}"
-        }
+        userAuthData?.refreshToken
 
     override fun setData(userAuthData: UserAuthData) =
         prefKeys.setUserAuthData(Gson().toJson(userAuthData))
 
     override fun isAccessTokenExpired(): Boolean =
         userAuthData?.let { userAuthData ->
-            System.currentTimeMillis() >= userAuthData.accessExpiresIn
+            (System.currentTimeMillis() / 1000) >= userAuthData.accessExpiresIn
         } ?: true
 
     override fun isRefreshTokenExpired(): Boolean =
         userAuthData?.let { userAuthData ->
-            System.currentTimeMillis() >= userAuthData.refreshExpiresIn
+            (System.currentTimeMillis() / 1000) >= userAuthData.refreshExpiresIn
         } ?: true
 
     override fun removeUserCredentials() {

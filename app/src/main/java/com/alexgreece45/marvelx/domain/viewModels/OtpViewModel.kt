@@ -3,7 +3,7 @@ package com.alexgreece45.marvelx.domain.viewModels
 import androidx.core.text.isDigitsOnly
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.data.models.otp.OtpRequest
-import com.alexgreece45.marvelx.data.models.token.toUserAccessData
+import com.alexgreece45.marvelx.data.models.token.toUserAuthData
 import com.alexgreece45.marvelx.domain.controllers.AuthController
 import com.alexgreece45.marvelx.domain.controllers.PrefKeys
 import com.alexgreece45.marvelx.domain.interactors.GrandNewAccessTokenPartialState
@@ -258,9 +258,6 @@ class OtpViewModel @Inject constructor(
 
                         // Save userId in device.
                         currentState.userId?.let { prefKeys.setUserId(it) }
-
-                        // Save accessToken and refreshToken in device.
-                        authController.setData(userAuthData = accessTokenPartialState.tokenResponse.toUserAccessData())
 
                         // Navigate the client to AllCharactersScreen
                         setEffect {

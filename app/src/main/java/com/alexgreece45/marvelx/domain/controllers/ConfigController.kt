@@ -6,11 +6,34 @@ import com.alexgreece45.marvelx.util.TOKEN_REDIRECT_URI
 import javax.inject.Inject
 
 interface ConfigController {
+    /**
+     * Returns the client ID.
+     */
     fun getClientId(): String
+
+    /**
+     * Returns the client secret.
+     */
     fun getClientSecret(): String
+
+    /**
+     * Returns the URI.
+     */
     fun getUri(): String
+
+    /**
+     * Extracts and returns the scheme (i.e., `https`, `http`) from the base URL.
+     */
     fun getSchemeFromBaseUrl(): String
+
+    /**
+     * Returns the host.
+     */
     fun getHost(): String
+
+    /**
+     * Extracts and returns the port (i.e., `XXXXX`, where `X` integer) from the base URL.
+     */
     fun getBaseUrlPort(): Int
 }
 

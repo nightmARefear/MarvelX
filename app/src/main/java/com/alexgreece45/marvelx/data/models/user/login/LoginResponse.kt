@@ -9,7 +9,7 @@ data class LoginResponse(
     @SerializedName("user_id") val userId: String
 )
 
-fun LoginResponse.toDomain(): UserLoginResponseDomain =
+fun LoginResponse.toUserLoginResponseDomain(): UserLoginResponseDomain =
     UserLoginResponseDomain(
         verificationStep = VerificationStep.of(this.verificationStep),
         userId = this.userId.toInt()
