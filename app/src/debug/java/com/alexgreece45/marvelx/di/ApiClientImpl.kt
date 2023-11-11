@@ -6,13 +6,14 @@ import com.alexgreece45.marvelx.data.models.character.CharacterDataWrapper
 import com.alexgreece45.marvelx.data.models.character.comic.ComicDataWrapper
 import com.alexgreece45.marvelx.data.models.otp.OtpRequest
 import com.alexgreece45.marvelx.data.models.otp.OtpResponseSuccess
+import com.alexgreece45.marvelx.data.models.token.TokenResponse
+import com.alexgreece45.marvelx.data.models.user.login.LoginResponse
 import com.alexgreece45.marvelx.data.models.user.login.UserLoginRequest
-import com.alexgreece45.marvelx.data.models.user.login.UserLoginResponse
+import com.alexgreece45.marvelx.data.models.user.loginWithToken.LoginWithTokenResponse
 import com.alexgreece45.marvelx.data.models.user.loginWithToken.UserLoginWithTokenRequest
-import com.alexgreece45.marvelx.data.models.user.loginWithToken.UserLoginWithTokenResponse
 import com.alexgreece45.marvelx.data.models.user.profileDetails.UserProfileDetailsResponse
+import com.alexgreece45.marvelx.data.models.user.signUp.SignupResponse
 import com.alexgreece45.marvelx.data.models.user.signUp.UserSignupRequest
-import com.alexgreece45.marvelx.data.models.user.signUp.UserSignupResponse
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
@@ -37,30 +38,33 @@ class ApiClientImpl @Inject constructor(
     override suspend fun getComicById(comicId: Int): Response<ComicDataWrapper> =
         api.getComicById(comicId)
 
-    override suspend fun postUserSignup(userSignupRequest: UserSignupRequest): Response<UserSignupResponse> =
-        api.postUserSignup(userSignupRequest)
+    override suspend fun postSignup(userSignupRequest: UserSignupRequest): Response<SignupResponse> =
+        api.postSignup(userSignupRequest)
 
-    override suspend fun postUserLogin(userLoginRequest: UserLoginRequest): Response<UserLoginResponse> =
-        api.postUserLogin(userLoginRequest)
+    override suspend fun postLogin(userLoginRequest: UserLoginRequest): Response<LoginResponse> =
+        api.postLogin(userLoginRequest)
 
-    override suspend fun postUserLoginWithToken(userLoginWithTokenRequest: UserLoginWithTokenRequest): Response<UserLoginWithTokenResponse> =
+    override suspend fun postLoginWithToken(userLoginWithTokenRequest: UserLoginWithTokenRequest): Response<LoginWithTokenResponse> =
         api.postLoginWithToken(userLoginWithTokenRequest)
+
+    override suspend fun grantNewAccessToken(
+        clientId: String,
+        clientSecret: String,
+        code: String,
+        uri: String
+    ): Response<TokenResponse> = api.grantNewAccessToken(clientId, clientSecret, code, uri)
+
+    override suspend fun refreshAccessToken(
+        clientId: String,
+        refreshToken: String
+    ): Response<TokenResponse> = api.refreshAccessToken(clientId, refreshToken)
+
+    override suspend fun logout(clientId: String, refreshToken: String): Response<Void> =
+        api.logout(clientId, refreshToken)
 
     override suspend fun validateOtp(otpRequest: OtpRequest): Response<OtpResponseSuccess> =
         api.validateOtp(otpRequest)
 
     override suspend fun getUserProfileDetails(userId: Int): Response<UserProfileDetailsResponse> =
         api.getUserProfileDetails(userId = userId)
-}
-
-sealed interface ApiResult<out T> {
-    data class Success<T>(val data: T) : ApiResult<T>
-    data class Error(
-        val errorCode: Int? = null,
-        val errorMessage: String
-    ) : ApiResult<Nothing>
-
-    data class NoInternetConnection(
-        val errorMessage: String
-    ) : ApiResult<Nothing>
 }

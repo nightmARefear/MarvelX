@@ -23,7 +23,6 @@ import androidx.compose.material.Card
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
-import androidx.compose.material.LocalContentAlpha
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.ModalBottomSheetValue
 import androidx.compose.material.Text
@@ -52,9 +51,9 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.data.uiModels.CharacterCardUi
-import com.alexgreece45.marvelx.domain.viewmodels.AllCharactersEffect
-import com.alexgreece45.marvelx.domain.viewmodels.AllCharactersEvent
-import com.alexgreece45.marvelx.domain.viewmodels.AllCharactersViewModel
+import com.alexgreece45.marvelx.domain.viewModels.AllCharactersEffect
+import com.alexgreece45.marvelx.domain.viewModels.AllCharactersEvent
+import com.alexgreece45.marvelx.domain.viewModels.AllCharactersViewModel
 import com.alexgreece45.marvelx.ui.BottomBarItem
 import com.alexgreece45.marvelx.ui.BottomNavigationBarData
 import com.alexgreece45.marvelx.ui.ContentScreen
@@ -66,7 +65,6 @@ import com.alexgreece45.marvelx.ui.SearchBar
 import com.alexgreece45.marvelx.ui.SortingModalBottomSheetContent
 import com.alexgreece45.marvelx.ui.isScrollingUp
 import com.alexgreece45.marvelx.util.DEFAULT_SCREEN_PADDING
-import com.alexgreece45.marvelx.util.HSpacer
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.SPACING_TINY
 import kotlinx.coroutines.coroutineScope

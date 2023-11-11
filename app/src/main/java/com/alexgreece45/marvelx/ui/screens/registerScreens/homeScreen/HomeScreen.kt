@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.Button
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -20,9 +19,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.domain.viewmodels.HomeEffect
-import com.alexgreece45.marvelx.domain.viewmodels.HomeEvent
-import com.alexgreece45.marvelx.domain.viewmodels.HomeViewModel
+import com.alexgreece45.marvelx.domain.viewModels.HomeEffect
+import com.alexgreece45.marvelx.domain.viewModels.HomeEvent
+import com.alexgreece45.marvelx.domain.viewModels.HomeViewModel
 import com.alexgreece45.marvelx.navigation.Screen
 import com.alexgreece45.marvelx.ui.AlertDialogButton
 import com.alexgreece45.marvelx.ui.AlertDialogError
@@ -30,7 +29,6 @@ import com.alexgreece45.marvelx.ui.ContainedButton
 import com.alexgreece45.marvelx.ui.ContentScreen
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.collectIndexed
 import kotlinx.coroutines.flow.onEach
 
 @Composable
@@ -141,6 +139,10 @@ fun HomeScreen(
 
                 HomeEffect.Navigation.PopBackStack -> {
                     navController.popBackStack()
+                }
+
+                HomeEffect.LoginFlow.ProceedWithLogin -> {
+                    viewModel.setEvent(HomeEvent.OnProceedWithLogin)
                 }
             }
         }.collect()

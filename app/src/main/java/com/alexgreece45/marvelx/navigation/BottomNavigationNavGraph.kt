@@ -4,7 +4,7 @@ import androidx.compose.runtime.State
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.navigation
-import com.alexgreece45.marvelx.domain.viewmodels.ActivityState
+import com.alexgreece45.marvelx.domain.viewModels.ActivityState
 import com.alexgreece45.marvelx.ui.BottomNavigationBarData
 import com.alexgreece45.marvelx.ui.screens.allCharactersScreen.AllCharactersScreen
 import com.alexgreece45.marvelx.ui.screens.allFavoriteCharactersScreen.AllFavoriteCharactersScreen
@@ -109,8 +109,7 @@ fun NavGraphBuilder.MainNavGraph(
                         selectedItemTopHorizontalColor = selectedItemTopHorizontalColor,
                         elevation = elevation
                     )
-                },
-                activityState = activityState
+                }
             )
         }
     }

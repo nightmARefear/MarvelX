@@ -1,11 +1,11 @@
-package com.alexgreece45.marvelx.domain.viewmodels
+package com.alexgreece45.marvelx.domain.viewModels
 
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.data.models.user.Gender
 import com.alexgreece45.marvelx.data.models.user.signUp.UserSignupRequest
 import com.alexgreece45.marvelx.domain.interactors.UserInteractor
-import com.alexgreece45.marvelx.domain.interactors.UserPartialStatePostSignup
+import com.alexgreece45.marvelx.domain.interactors.PostSignUpPartialState
 import com.alexgreece45.marvelx.ui.base.BaseEffect
 import com.alexgreece45.marvelx.ui.base.BaseEvent
 import com.alexgreece45.marvelx.ui.base.BaseState
@@ -286,10 +286,10 @@ class SignUpViewModel @Inject constructor(
             }
             viewModelScope.launch {
                 userInteractor.postSignUp(
-                    userSignUpRequest = getUserSignUpRequest()
+                    userSignupRequest = getUserSignUpRequest()
                 ).collect { userPartialStatePostSignUp ->
                     when (userPartialStatePostSignUp) {
-                        is UserPartialStatePostSignup.Error -> {
+                        is PostSignUpPartialState.Failed -> {
                             setState {
                                 copy(
                                     isLoading = false,
@@ -311,7 +311,7 @@ class SignUpViewModel @Inject constructor(
                             }
                         }*/
 
-                        is UserPartialStatePostSignup.Success -> {
+                        is PostSignUpPartialState.Success -> {
                             setState {
                                 copy(
                                     isLoading = false

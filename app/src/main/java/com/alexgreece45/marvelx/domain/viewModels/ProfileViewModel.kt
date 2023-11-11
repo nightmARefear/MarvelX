@@ -1,11 +1,13 @@
-package com.alexgreece45.marvelx.domain.viewmodels
+package com.alexgreece45.marvelx.domain.viewModels
 
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.data.domains.user.profileDetails.UserProfileDetailsDomain
-import com.alexgreece45.marvelx.domain.controllers.PreferencesKeys
+import com.alexgreece45.marvelx.domain.controllers.AuthController
+import com.alexgreece45.marvelx.domain.controllers.PrefKeys
 import com.alexgreece45.marvelx.domain.interactors.UserInteractor
-import com.alexgreece45.marvelx.domain.interactors.UserPartialStateGetProfileDetails
+import com.alexgreece45.marvelx.domain.interactors.GetProfileDetailsPartialState
+import com.alexgreece45.marvelx.domain.interactors.LogoutPartialState
 import com.alexgreece45.marvelx.navigation.Screen
 import com.alexgreece45.marvelx.ui.BottomBarItem
 import com.alexgreece45.marvelx.ui.IconData
@@ -23,11 +25,11 @@ data class ProfileScreenErrorView(
 )
 
 sealed class ProfileEvent : BaseEvent {
-    data class InitView(val userId: Int) : ProfileEvent()
+    data object InitView : ProfileEvent()
 
-    object LoadProfileDetails : ProfileEvent()
+    data object LoadProfileDetails : ProfileEvent()
 
-    object OnLogoutButtonPressed : ProfileEvent()
+    data object OnLogoutButtonPressed : ProfileEvent()
 }
 
 data class ProfileState(
@@ -40,7 +42,7 @@ data class ProfileState(
      * The user ID.
      * */
     val userId: Int = -1,
-    val userToken: String = "",
+    val accessToken: String = "",
 
     /**
      * The profile details of the user.
@@ -55,7 +57,7 @@ data class ProfileState(
 
 sealed class ProfileEffect : BaseEffect {
     sealed class Navigation : ProfileEffect() {
-        object NavigateToHomeScreen : Navigation()
+        data object NavigateToHomeScreen : Navigation()
     }
 
     data class ShowToast(val toastMessage: String) : ProfileEffect()
@@ -64,7 +66,8 @@ sealed class ProfileEffect : BaseEffect {
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
     private val userInteractor: UserInteractor,
-    private val preferencesKeys: PreferencesKeys
+    private val prefKeys: PrefKeys,
+    private val authController: AuthController
 ) :
     BaseViewModel<ProfileEvent, ProfileState, ProfileEffect>() {
     override fun setInitialState(): ProfileState = ProfileState(
@@ -78,16 +81,27 @@ class ProfileViewModel @Inject constructor(
     override fun handleEvents(event: ProfileEvent) {
         when (event) {
             is ProfileEvent.InitView -> {
+                setState {
+                    copy(
+                        isLoading = true
+                    )
+                }
                 initView()
             }
 
             ProfileEvent.OnLogoutButtonPressed -> {
+                setState {
+                    copy(
+                        isLoading = true
+                    )
+                }
                 logout()
             }
 
             ProfileEvent.LoadProfileDetails -> {
                 setState {
                     copy(
+                        isLoading = true,
                         error = null
                     )
                 }
@@ -97,37 +111,38 @@ class ProfileViewModel @Inject constructor(
     }
 
     private fun initView() {
-        setState {
-            copy(
-                error = null
-            )
-        }
+//        setState {
+//            copy(
+//                error = null
+//            )
+//        }
         loadProfileDetails()
     }
 
     private fun loadProfileDetails() {
         setState {
             copy(
-                isLoading = true,
-                userId = preferencesKeys.getUserId(),
-                userToken = preferencesKeys.getUserToken()
+                userId = prefKeys.getUserId(),
+                accessToken = authController.getAccessToken() ?: ""
             )
         }
         viewModelScope.launch {
             userInteractor.getProfileDetails(userId = currentState.userId).collect {
                 when (it) {
-                    is UserPartialStateGetProfileDetails.Error -> {
+                    is GetProfileDetailsPartialState.Failed -> {
                         setState {
                             copy(
                                 isLoading = false,
-                                error = ProfileScreenErrorView(
-                                    errorMessage = it.errorMessage,
-                                    onRetryClick = { loadProfileDetails() })
+//                                error = ProfileScreenErrorView(
+//                                    errorMessage = it.errorMessage,
+//                                    onRetryClick = { loadProfileDetails() }
+//                                )
                             )
                         }
+                        logout()
                     }
 
-                    is UserPartialStateGetProfileDetails.NoInternetConnection -> {
+                    is GetProfileDetailsPartialState.NoInternetConnection -> {
                         setState {
                             copy(
                                 isLoading = false,
@@ -141,7 +156,7 @@ class ProfileViewModel @Inject constructor(
                         }
                     }
 
-                    is UserPartialStateGetProfileDetails.Success -> {
+                    is GetProfileDetailsPartialState.Success -> {
                         setState {
                             copy(
                                 isLoading = false,
@@ -159,12 +174,42 @@ class ProfileViewModel @Inject constructor(
             ProfileEffect.ShowToast("logout button clicked")
         }
 
-        // Remove user credentials.
-        preferencesKeys.removeUserCredentials()
+        viewModelScope.launch {
+            userInteractor.logout().collect { logoutPartialState ->
+                when (logoutPartialState) {
+                    is LogoutPartialState.Failed -> {
+                        setState {
+                            copy(
+                                isLoading = false
+                            )
+                        }
 
-        // Navigate to Home Screen.
-        setEffect {
-            ProfileEffect.Navigation.NavigateToHomeScreen
+                        // Show error message.
+                        setEffect {
+                            ProfileEffect.ShowToast(
+                                toastMessage = logoutPartialState.errorMessage
+                            )
+                        }
+
+                        // Navigate to Home Screen.
+                        setEffect {
+                            ProfileEffect.Navigation.NavigateToHomeScreen
+                        }
+                    }
+
+                    LogoutPartialState.Success -> {
+                        setState {
+                            copy(
+                                isLoading = false
+                            )
+                        }
+                        // Navigate to Home Screen.
+                        setEffect {
+                            ProfileEffect.Navigation.NavigateToHomeScreen
+                        }
+                    }
+                }
+            }
         }
     }
 

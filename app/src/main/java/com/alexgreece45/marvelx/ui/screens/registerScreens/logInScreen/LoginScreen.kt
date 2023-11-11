@@ -17,7 +17,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
@@ -29,9 +28,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.domain.viewmodels.LoginEffect
-import com.alexgreece45.marvelx.domain.viewmodels.LoginEvent
-import com.alexgreece45.marvelx.domain.viewmodels.LoginViewModel
+import com.alexgreece45.marvelx.domain.viewModels.LoginEffect
+import com.alexgreece45.marvelx.domain.viewModels.LoginEvent
+import com.alexgreece45.marvelx.domain.viewModels.LoginViewModel
 import com.alexgreece45.marvelx.navigation.Screen
 import com.alexgreece45.marvelx.ui.AlertDialogButton
 import com.alexgreece45.marvelx.ui.AlertDialogError
@@ -52,7 +51,6 @@ fun LogInScreen(
 ) {
     val state by viewModel.uiState.collectAsState()
 
-    val context = LocalContext.current
     val keyboard = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
 

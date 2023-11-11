@@ -1,4 +1,4 @@
-package com.alexgreece45.marvelx.domain.viewmodels
+package com.alexgreece45.marvelx.domain.viewModels
 
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.data.domains.comic.ComicDomain

@@ -1,7 +1,5 @@
 package com.alexgreece45.marvelx.ui.screens.allFavoriteCharactersScreen
 
-import android.content.Context
-import android.net.Uri
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
@@ -22,9 +20,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -37,13 +32,10 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
-import coil.imageLoader
-import coil.request.ErrorResult
 import coil.request.ImageRequest
-import coil.request.SuccessResult
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.domain.viewmodels.AllFavoriteCharactersEvent
-import com.alexgreece45.marvelx.domain.viewmodels.AllFavoriteCharactersViewModel
+import com.alexgreece45.marvelx.domain.viewModels.AllFavoriteCharactersEvent
+import com.alexgreece45.marvelx.domain.viewModels.AllFavoriteCharactersViewModel
 import com.alexgreece45.marvelx.ui.BottomBarItem
 import com.alexgreece45.marvelx.ui.BottomNavigationBarData
 import com.alexgreece45.marvelx.ui.ContentScreen
