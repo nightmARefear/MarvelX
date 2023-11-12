@@ -5,7 +5,7 @@ import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.data.domains.user.VerificationStep
 import com.alexgreece45.marvelx.data.models.user.Gender
 import com.alexgreece45.marvelx.data.models.user.signup.UserSignupRequest
-import com.alexgreece45.marvelx.domain.interactors.PostSignUpPartialState
+import com.alexgreece45.marvelx.domain.interactors.PostSignupPartialState
 import com.alexgreece45.marvelx.domain.interactors.UserInteractor
 import com.alexgreece45.marvelx.ui.base.BaseEffect
 import com.alexgreece45.marvelx.ui.base.BaseEvent
@@ -56,9 +56,10 @@ sealed class SignupEvent : BaseEvent {
 }
 
 data class SignupState(
-    // Base states.
+    /**
+     * Controls whether the loading animation is visible in the UI.
+     */
     val isLoading: Boolean = false,
-    val hasInternetConnection: Boolean = true, // todo: remove this state
 
     // Data.
     val firstName: String = "",
@@ -77,15 +78,17 @@ data class SignupState(
      * */
     val isPasswordVisible: Boolean = false,
 
-    // SignUp button
-    val signUpButton: Boolean = false,
+    /**
+     * Controls whether the signup button is enabled in the UI.
+     * */
+    val signupButton: Boolean = false,
 
     // Alert Dialog.
     val isAlertDialogVisible: Boolean = false,
     val alertDialogTitle: String = "",
     val alertDialogErrorMessage: String = "",
 
-    // Validations.
+    // UI fields' validations.
     val firstNameValidationResult: FormsValidationResult = FormsValidationResult(isValid = false),
     val lastNameValidationResult: FormsValidationResult = FormsValidationResult(isValid = false),
     val genderValidationResult: FormsValidationResult = FormsValidationResult(isValid = false),
@@ -116,7 +119,6 @@ class SignupViewModel @Inject constructor(
     override fun setInitialState(): SignupState =
         SignupState(
             isLoading = false,
-            hasInternetConnection = true,
             firstName = "",
             lastName = "",
             gender = null,
@@ -124,7 +126,7 @@ class SignupViewModel @Inject constructor(
             password = "",
             isGenderDropdownMenuVisible = false,
             isPasswordVisible = false,
-            signUpButton = false,
+            signupButton = false,
             isAlertDialogVisible = false,
             alertDialogTitle = "",
             alertDialogErrorMessage = "",
@@ -208,7 +210,7 @@ class SignupViewModel @Inject constructor(
             }
 
             SignupEvent.OnDoneClick -> {
-                if (currentState.signUpButton) {
+                if (currentState.signupButton) {
                     setEffect {
                         SignupEffect.OnDoneClick
                     }
@@ -247,7 +249,7 @@ class SignupViewModel @Inject constructor(
 
                     setState {
                         copy(
-                            signUpButton = formsValidationResult.isValid && areAllFieldsValid()
+                            signupButton = formsValidationResult.isValid && areAllFieldsValid()
                         )
                     }
                 }
@@ -266,7 +268,7 @@ class SignupViewModel @Inject constructor(
 
                     setState {
                         copy(
-                            signUpButton = formsValidationResult.isValid && areAllFieldsValid()
+                            signupButton = formsValidationResult.isValid && areAllFieldsValid()
                         )
                     }
                 }
@@ -275,7 +277,7 @@ class SignupViewModel @Inject constructor(
     }
 
     private fun validateGender(gender: Gender?) {
-        gender?.let { _ ->
+        gender?.let {
             viewModelScope.launch {
                 formValidator.validateForms(listOf(Form(mapOf(getGenderValidationRules() to gender.key))))
                     .collect { formsValidationResult ->
@@ -287,7 +289,7 @@ class SignupViewModel @Inject constructor(
 
                         setState {
                             copy(
-                                signUpButton = formsValidationResult.isValid && areAllFieldsValid()
+                                signupButton = formsValidationResult.isValid && areAllFieldsValid()
                             )
                         }
                     }
@@ -296,7 +298,7 @@ class SignupViewModel @Inject constructor(
     }
 
     private fun validateEmail(email: String?) {
-        email?.let { _ ->
+        email?.let {
             viewModelScope.launch {
                 formValidator.validateForms(listOf(Form(mapOf(getEmailValidationRules() to email))))
                     .collect { formsValidationResult ->
@@ -308,7 +310,7 @@ class SignupViewModel @Inject constructor(
 
                         setState {
                             copy(
-                                signUpButton = formsValidationResult.isValid && areAllFieldsValid()
+                                signupButton = formsValidationResult.isValid && areAllFieldsValid()
                             )
                         }
                     }
@@ -317,7 +319,7 @@ class SignupViewModel @Inject constructor(
     }
 
     private fun validatePassword(password: String?) {
-        password?.let { _ ->
+        password?.let {
             viewModelScope.launch {
                 formValidator.validateForms(listOf(Form(mapOf(getPasswordValidationRules() to password))))
                     .collect { formsValidationResult ->
@@ -329,7 +331,7 @@ class SignupViewModel @Inject constructor(
 
                         setState {
                             copy(
-                                signUpButton = formsValidationResult.isValid && areAllFieldsValid()
+                                signupButton = formsValidationResult.isValid && areAllFieldsValid()
                             )
                         }
                     }
@@ -354,75 +356,68 @@ class SignupViewModel @Inject constructor(
             // TODO: get user's ip address, and device info.
 
             viewModelScope.launch {
-                userInteractor.postSignup(
-                    userSignupRequest = getUserSignupRequest()
-                ).collect { userPartialStatePostSignUp ->
-                    when (userPartialStatePostSignUp) {
-                        is PostSignUpPartialState.Failed -> {
-                            resetUiFieldStates()
+                userInteractor.postSignup(userSignupRequest = getUserSignupRequest())
+                    .collect { userPartialStatePostSignUp ->
+                        when (userPartialStatePostSignUp) {
+                            is PostSignupPartialState.Failed -> {
+                                resetUiFieldStates()
 
-                            setEffect {
-                                SignupEffect.ShowAlertDialogError(
-                                    errorMessage = userPartialStatePostSignUp.errorMessage
-                                )
+                                setEffect {
+                                    SignupEffect.ShowAlertDialogError(
+                                        errorMessage = userPartialStatePostSignUp.errorMessage
+                                    )
+                                }
                             }
-                        }
 
-                        // TODO: REFACTOR
-                        /* UserPartialStatePostSignUp.NoInternetConnection -> {
-                             setState {
-                                 copy(
-                                     isLoading = false,
-                                     hasInternetConnection = false
-                                 )
-                             }
-                         }*/
+                            is PostSignupPartialState.Success -> {
+                                resetUiFieldStates()
 
-                        is PostSignUpPartialState.Success -> {
-                            resetUiFieldStates()
-
-                            userPartialStatePostSignUp.signupResponseDomain.let { signupResponseDomain ->
-                                // Act accordingly based on verification step.
-                                when (signupResponseDomain.verificationStep) {
-                                    is VerificationStep.Invalid -> TODO("Not yet implemented.")
-                                    VerificationStep.None -> {
-                                        setEffect {
-                                            SignupEffect.Navigation.NavigateToAllCharactersScreen
+                                userPartialStatePostSignUp.signupResponseDomain.let { signupResponseDomain ->
+                                    // Act accordingly based on the verification step.
+                                    when (signupResponseDomain.verificationStep) {
+                                        // Server sent an invalid verification step type.
+                                        is VerificationStep.Invalid -> {
+                                           setEffect {
+                                                SignupEffect.ShowAlertDialogError(
+                                                    errorMessage = resourceProvider.getGenericErrorMessage()
+                                                )
+                                            }
                                         }
-                                    }
 
-                                    VerificationStep.OtpEmail -> {
-                                        setEffect {
-                                            SignupEffect.Navigation.NavigateToOtpScreen(
-                                                userId = signupResponseDomain.userId
-                                            )
+                                        VerificationStep.None -> {
+                                            setEffect {
+                                                SignupEffect.Navigation.NavigateToAllCharactersScreen
+                                            }
                                         }
-                                    }
 
-                                    VerificationStep.OtpPhoneNumber -> {
-                                        setEffect {
-                                            SignupEffect.Navigation.NavigateToOtpScreen(
-                                                userId = signupResponseDomain.userId
-                                            )
+                                        VerificationStep.OtpEmail -> {
+                                            setEffect {
+                                                SignupEffect.Navigation.NavigateToOtpScreen(
+                                                    userId = signupResponseDomain.userId
+                                                )
+                                            }
+                                        }
+
+                                        VerificationStep.OtpPhoneNumber -> {
+                                            setEffect {
+                                                SignupEffect.Navigation.NavigateToOtpScreen(
+                                                    userId = signupResponseDomain.userId
+                                                )
+                                            }
                                         }
                                     }
                                 }
                             }
                         }
                     }
-                }
             }
         } else {
-            // One or more fields are invalid, we don't know which one, so we disable the "Sign Up" button
-            // and display an unexpected error message.
-            setState {
-                copy(
-                    signUpButton = false
-                )
-            }
+            // One or more fields are invalid, we don't know which one, so we reset
+            // all the UI field states and display an unexpected error message.
+            resetUiFieldStates()
             setEffect {
                 SignupEffect.ShowAlertDialogError(
-                    errorMessage = resourceProvider.getString(R.string.unknown_error)
+                    errorMessage = resourceProvider.getGenericErrorMessage()
                 )
             }
         }
@@ -554,7 +549,7 @@ class SignupViewModel @Inject constructor(
         )
 
     /**
-     * Returns the title of the Alert Dialog in `SignupScreen`.
+     * Returns the title of the Alert Dialog Error in `SignupScreen`.
      */
     private fun getAlertDialogTitle(): String =
         resourceProvider.getString(R.string.signup_screen_alert_dialog_title)
@@ -579,6 +574,11 @@ class SignupViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Resets all the UI field related states and disabled the loading animation.
+     *
+     * ### Note: This method MUST only be used when an error has occurred.
+     */
     private fun resetUiFieldStates() {
         setState {
             copy(
@@ -590,7 +590,7 @@ class SignupViewModel @Inject constructor(
                 password = "",
                 isGenderDropdownMenuVisible = false,
                 isPasswordVisible = false,
-                signUpButton = false,
+                signupButton = false,
                 firstNameValidationResult = FormsValidationResult(isValid = false),
                 lastNameValidationResult = FormsValidationResult(isValid = false),
                 genderValidationResult = FormsValidationResult(isValid = false),

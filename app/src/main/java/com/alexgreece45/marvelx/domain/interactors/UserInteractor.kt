@@ -20,6 +20,7 @@ import com.alexgreece45.marvelx.domain.controllers.AuthController
 import com.alexgreece45.marvelx.domain.controllers.ConfigController
 import com.alexgreece45.marvelx.domain.repositories.GrandNewAccessTokenRepositoryResponse
 import com.alexgreece45.marvelx.domain.repositories.LogoutRepositoryResponse
+import com.alexgreece45.marvelx.domain.repositories.PostSignupRepositoryResponse
 import com.alexgreece45.marvelx.domain.repositories.RefreshAccessTokenRepositoryResponse
 import com.alexgreece45.marvelx.domain.repositories.UserRepository
 import com.alexgreece45.marvelx.util.ResourceProvider
@@ -28,12 +29,11 @@ import com.google.gson.Gson
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import logcat.logcat
-import okhttp3.ResponseBody
 import okio.IOException
 import javax.inject.Inject
 
 interface UserInteractor {
-    suspend fun postSignup(userSignupRequest: UserSignupRequest): Flow<PostSignUpPartialState>
+    suspend fun postSignup(userSignupRequest: UserSignupRequest): Flow<PostSignupPartialState>
 
     suspend fun postLogin(userLoginRequest: UserLoginRequest): Flow<PostLoginPartialState>
 
@@ -56,51 +56,54 @@ class UserInteractorImpl @Inject constructor(
     private val configController: ConfigController,
     private val authController: AuthController
 ) : UserInteractor {
-    override suspend fun postSignup(userSignupRequest: UserSignupRequest): Flow<PostSignUpPartialState> =
+    override suspend fun postSignup(userSignupRequest: UserSignupRequest): Flow<PostSignupPartialState> =
         flow {
-            apiClient.postSignup(userSignupRequest).let { response ->
-                if (response.isSuccessful) {
-                    // Success.
-                    response.body()?.let { userSignupResponse ->
+            val genericErrorMessage = resourceProvider.getGenericErrorMessage()
+            repository.postSignup(userSignupRequest).collect {
+                when (it) {
+                    is PostSignupRepositoryResponse.Error -> {
+                        logcat { "(postSignup) error: ${it.errorMessage.orEmpty()}" }
                         emit(
-                            PostSignUpPartialState.Success(
-                                signupResponseDomain = userSignupResponse.toSignupResponseDomain()
-                            )
-                        )
-                    } ?: run {
-                        // Null body, thus server responded erroneously.
-                        emit(
-                            PostSignUpPartialState.Failed(
-                                errorMessage = resourceProvider.getGenericErrorMessage()
+                            PostSignupPartialState.Failed(
+                                errorMessage = genericErrorMessage
                             )
                         )
                     }
-                } else {
-                    // Error.
-                    val deserializedError =
-                        gson.fromJson(
-                            response.errorBody()?.string(),
-                            UserResponseError::class.java
-                        )
 
-                    emit(
-                        PostSignUpPartialState.Failed(
-                            errorMessage = deserializedError.errorMessage
+                    is PostSignupRepositoryResponse.Failed -> {
+                        emit(
+                            PostSignupPartialState.Failed(
+                                errorMessage = it.userResponseError.errorMessage
+                            )
                         )
-                    )
+                    }
+
+                    is PostSignupRepositoryResponse.Success -> {
+                        it.response?.let { signupResponse ->
+                            emit(
+                                PostSignupPartialState.Success(
+                                    signupResponseDomain = signupResponse.toSignupResponseDomain()
+                                )
+                            )
+                        } ?: emit(
+                            PostSignupPartialState.Failed(
+                                errorMessage = genericErrorMessage
+                            )
+                        )
+                    }
                 }
             }
         }.safeAsync {
             // Exception.
             when (it) {
                 is IOException -> {
-                    PostSignUpPartialState.Failed(
+                    PostSignupPartialState.Failed(
                         errorMessage = resourceProvider.getString(R.string.no_internet_connection_error_message)
                     )
                 }
 
                 else -> {
-                    PostSignUpPartialState.Failed(
+                    PostSignupPartialState.Failed(
                         errorMessage = resourceProvider.getGenericErrorMessage()
                     )
                 }
@@ -401,10 +404,10 @@ class UserInteractorImpl @Inject constructor(
         }
 }
 
-sealed class PostSignUpPartialState {
-    data class Success(val signupResponseDomain: SignupResponseDomain) : PostSignUpPartialState()
+sealed class PostSignupPartialState {
+    data class Success(val signupResponseDomain: SignupResponseDomain) : PostSignupPartialState()
 
-    data class Failed(val errorMessage: String) : PostSignUpPartialState()
+    data class Failed(val errorMessage: String) : PostSignupPartialState()
 }
 
 sealed class PostLoginPartialState {

@@ -13,7 +13,6 @@ import com.alexgreece45.marvelx.util.extensions.safeAsync
 import com.google.gson.Gson
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import okhttp3.ResponseBody
 import okio.IOException
 import javax.inject.Inject
 
@@ -112,5 +111,5 @@ sealed class ValidateOtpPartialState {
     /**
      * If there's no internet connection.
      * */
-    object NoInternetConnection : ValidateOtpPartialState()
+    data object NoInternetConnection : ValidateOtpPartialState()
 }

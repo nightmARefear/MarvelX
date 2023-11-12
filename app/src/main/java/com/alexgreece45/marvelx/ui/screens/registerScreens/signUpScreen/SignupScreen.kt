@@ -41,10 +41,9 @@ import com.alexgreece45.marvelx.ui.AlertDialogErrorButtonType
 import com.alexgreece45.marvelx.ui.ContentScreen
 import com.alexgreece45.marvelx.ui.ExposedDropdownMenu
 import com.alexgreece45.marvelx.ui.OutlinedTextFieldValidation
+import com.alexgreece45.marvelx.ui.ValueType
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.VSpacer
-import com.alexgreece45.marvelx.ui.ValueType
-import com.alexgreece45.marvelx.util.SPACING_MEDIUM
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -104,6 +103,7 @@ fun SignUpScreen(
             contentPadding = paddingValues,
             verticalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp)
         ) {
+            // Alert Dialog Error
             if (state.isAlertDialogVisible) {
                 item {
                     AlertDialogError(
@@ -283,7 +283,7 @@ fun SignUpScreen(
                     horizontalArrangement = Arrangement.Center
                 ) {
                     Button(
-                        enabled = state.signUpButton,
+                        enabled = state.signupButton,
                         onClick = { viewModel.setEvent(SignupEvent.OnSignupButtonClick) }
                     ) {
                         Text(
