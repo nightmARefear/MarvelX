@@ -13,9 +13,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.core.content.ContextCompat
-import com.alexgreece45.marvelx.domain.viewModels.ActivityEvent
-import com.alexgreece45.marvelx.domain.viewModels.ActivityViewModel
-import com.alexgreece45.marvelx.navigation.Navigation
+import com.alexgreece45.marvelx.viewModels.ActivityEvent
+import com.alexgreece45.marvelx.viewModels.ActivityViewModel
+import com.alexgreece45.marvelx.ui.navigation.Navigation
 import com.alexgreece45.marvelx.ui.theme.MarvelXTheme
 import com.chuckerteam.chucker.api.Chucker
 import dagger.hilt.android.AndroidEntryPoint
