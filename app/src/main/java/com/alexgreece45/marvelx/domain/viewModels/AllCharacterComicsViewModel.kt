@@ -1,4 +1,4 @@
-package com.alexgreece45.marvelx.domain.viewmodels
+package com.alexgreece45.marvelx.domain.viewModels
 
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.data.domains.comic.ComicDomain
@@ -13,6 +13,11 @@ import com.alexgreece45.marvelx.ui.SortingType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+
+data class AllCharacterComicsScreenErrorView(
+    val errorMessage: String,
+    val onRetryClick: () -> Unit
+)
 
 sealed class AllCharacterComicsEvent : BaseEvent {
     data class InitView(val characterId: Int) : AllCharacterComicsEvent()
@@ -33,18 +38,19 @@ data class AllCharacterComicsState(
     // Base States.
     val isLoading: Boolean = true,
     val hasInternetConnection: Boolean = true,
-    val errorMessage: String? = null,
+    val error: AllCharacterComicsScreenErrorView? = null,
 
     // Data.
     val comics: List<ComicDomain> = emptyList(),
-    val sortingType: SortingType = SortingType.getDefaultSortingType(),
+    val sortingType: SortingType = SortingType.DEFAULT_SORTING_TYPE,
 ) : BaseState {
     companion object {
         fun getDefaultValues(): AllCharacterComicsState = AllCharacterComicsState(
             isLoading = true,
             hasInternetConnection = true,
-            errorMessage = null,
-            comics = emptyList()
+            error = null,
+            comics = emptyList(),
+            sortingType = SortingType.DEFAULT_SORTING_TYPE
         )
     }
 }
@@ -172,7 +178,9 @@ class AllCharacterComicsViewModel @Inject constructor(
                         setState {
                             copy(
                                 isLoading = false,
-                                errorMessage = getCharacterComicsPartialState.errorMessage
+                                error = AllCharacterComicsScreenErrorView(
+                                    errorMessage = getCharacterComicsPartialState.errorMessage,
+                                    onRetryClick = { initView(characterId) })
                             )
                         }
                     }

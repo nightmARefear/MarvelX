@@ -10,25 +10,25 @@ sealed class Gender(
     @StringRes val label: Int
 ) : Parcelable {
     @Parcelize
-    object Female : Gender(
+    data object Female : Gender(
         key = "female",
         label = R.string.female
     )
 
     @Parcelize
-    object Male : Gender(
+    data object Male : Gender(
         key = "male",
         label = R.string.male
     )
 
     @Parcelize
-    object Other : Gender(
+    data object Other : Gender(
         key = "other",
         label = R.string.other
     )
 
     companion object {
-        private fun asList() : List<Gender> = listOf(Female, Male, Other)
+        fun asList() : List<Gender> = listOf(Female, Male, Other)
 
         fun of(value: String): Gender? = asList().firstOrNull { it.key == value }
 

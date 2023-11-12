@@ -1,12 +1,15 @@
-package com.alexgreece45.marvelx.domain.viewmodels
+package com.alexgreece45.marvelx.domain.viewModels
 
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.data.domains.user.VerificationStep
 import com.alexgreece45.marvelx.data.models.user.loginWithToken.UserLoginWithTokenRequest
-import com.alexgreece45.marvelx.domain.controllers.PreferencesKeys
+import com.alexgreece45.marvelx.domain.controllers.AuthController
+import com.alexgreece45.marvelx.domain.controllers.PrefKeys
+import com.alexgreece45.marvelx.domain.interactors.LogoutPartialState
+import com.alexgreece45.marvelx.domain.interactors.PostLoginWithTokenPartialState
+import com.alexgreece45.marvelx.domain.interactors.RefreshAccessTokenPartialState
 import com.alexgreece45.marvelx.domain.interactors.UserInteractor
-import com.alexgreece45.marvelx.domain.interactors.UserPartialStatePostLoginWithToken
 import com.alexgreece45.marvelx.ui.base.BaseEffect
 import com.alexgreece45.marvelx.ui.base.BaseEvent
 import com.alexgreece45.marvelx.ui.base.BaseState
@@ -18,22 +21,24 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 sealed class HomeEvent : BaseEvent {
-    object InitView : HomeEvent()
+    data object InitView : HomeEvent()
 
-    object OnBack : HomeEvent()
+    data object OnBack : HomeEvent()
 
     sealed class AlertDialog : HomeEvent() {
-        object OnOkClick : AlertDialog()
+        data object OnOkClick : AlertDialog()
     }
 
-    object OnLogInButtonClick : HomeEvent()
+    data object OnLogInButtonClick : HomeEvent()
 
-    object OnSignUpButtonClick : HomeEvent()
+    data object OnSignUpButtonClick : HomeEvent()
+
+    data object OnProceedWithLogin : HomeEvent()
 }
 
 data class HomeState(
     // Base states.
-    val isLoading: Boolean = false,
+    val isLoading: Boolean = true,
     val hasInternetConnection: Boolean = true,
     val errorMessage: String? = null,
 
@@ -41,37 +46,38 @@ data class HomeState(
     val isAlertDialogVisible: Boolean = false,
     val alertDialogTitle: String = "",
     val alertDialogErrorMessage: String = "",
-) : BaseState {
-    companion object {
-        fun getDefaultValues(): HomeState =
-            HomeState(
-                isLoading = false,
-                hasInternetConnection = true,
-                errorMessage = null,
-                isAlertDialogVisible = false,
-                alertDialogTitle = "",
-                alertDialogErrorMessage = "",
-            )
-    }
-}
+) : BaseState
 
-sealed class HomeEffect : BaseEffect {
-    sealed class Navigation : HomeEffect() {
-        object PopBackStack : Navigation()
-        object NavigateToLogInScreen : Navigation()
-        object NavigateToSignUpScreen : Navigation()
+sealed interface HomeEffect : BaseEffect {
+    sealed class Navigation : HomeEffect {
+        data object PopBackStack : Navigation()
+        data object NavigateToLogInScreen : Navigation()
+        data object NavigateToSignUpScreen : Navigation()
         data class NavigateToOtpScreen(val userId: Int) : Navigation()
         data class NavigateToAllCharactersScreen(val userId: Int) : Navigation()
+    }
+
+    sealed interface LoginFlow : HomeEffect {
+        data object ProceedWithLogin : LoginFlow
     }
 }
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    private val preferencesKeys: PreferencesKeys,
+    private val prefKeys: PrefKeys,
     private val resourceProvider: ResourceProvider,
-    private val userInteractor: UserInteractor
+    private val userInteractor: UserInteractor,
+    private val authController: AuthController
 ) : BaseViewModel<HomeEvent, HomeState, HomeEffect>() {
-    override fun setInitialState(): HomeState = HomeState.getDefaultValues()
+    override fun setInitialState(): HomeState =
+        HomeState(
+            isLoading = true,
+            hasInternetConnection = true,
+            errorMessage = null,
+            isAlertDialogVisible = false,
+            alertDialogTitle = "",
+            alertDialogErrorMessage = "",
+        )
 
     override fun handleEvents(event: HomeEvent) {
         when (event) {
@@ -80,10 +86,6 @@ class HomeViewModel @Inject constructor(
             }
 
             HomeEvent.OnBack -> {
-                // Reset states just in case.
-                setState {
-                    HomeState.getDefaultValues()
-                }
                 // Pop back stack.
                 setEffect {
                     HomeEffect.Navigation.PopBackStack
@@ -101,38 +103,122 @@ class HomeViewModel @Inject constructor(
             HomeEvent.AlertDialog.OnOkClick -> {
                 hideAlertDialog()
             }
+
+            HomeEvent.OnProceedWithLogin -> {
+                setState {
+                    copy(
+                        isLoading = true
+                    )
+                }
+                postLogin()
+            }
         }
     }
 
     private fun initView() {
-        // No stored userId and/or userToken were found; thus, do not proceed any further.
-        if (!preferencesKeys.containsUserId() || !preferencesKeys.containsUserToken()) {
+        // No stored user credentials; thus, do not proceed any further.
+        if (!prefKeys.containsUserCredentials()) {
+            setState {
+                copy(
+                    isLoading = false
+                )
+            }
+            // todo: show error
             return
         }
 
-        /* A stored token was found.
-        * Check if it is expired;
-        * - if expired, refresh, and then proceed to login
-        * - if NOT expired, validate it
-        */
+        // Stored credentials were found, so proceed with login flow.
         setState {
             copy(
                 isLoading = true
             )
         }
+        loginFlow()
+    }
+
+    private fun loginFlow() {
+        // Check if access token is expired.
+        if (authController.isAccessTokenExpired()) {
+            // Access token is expired. Check if refresh token is expired.
+            if (authController.isRefreshTokenExpired()) {
+                // Refresh token is expired, so logout.
+                viewModelScope.launch {
+                    userInteractor.logout().collect {
+                        when (it) {
+                            is LogoutPartialState.Failed -> {
+                                setState {
+                                    copy(
+                                        isLoading = false
+                                    )
+                                }
+                            }
+
+                            LogoutPartialState.Success -> {
+                                setState {
+                                    copy(
+                                        isLoading = false
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+                return
+            }
+
+            // Refresh access token.
+            setState {
+                copy(
+                    isLoading = true
+                )
+            }
+            viewModelScope.launch {
+                userInteractor.refreshAccessToken().collect {
+                    when (it) {
+                        is RefreshAccessTokenPartialState.Failed -> {
+                            setState {
+                                copy(
+                                    isLoading = false
+                                )
+                            }
+                            showAlertDialog(errorMessage = it.errorMessage)
+                        }
+
+                        is RefreshAccessTokenPartialState.Success -> {
+                            setState {
+                                copy(
+                                    isLoading = false
+                                )
+                            }
+                            // Proceed with login.
+                            setEffect {
+                                HomeEffect.LoginFlow.ProceedWithLogin
+                            }
+                        }
+                    }
+                }
+            }
+        } else {
+            // Tokens are not expired, so proceed with login.
+            setEffect {
+                HomeEffect.LoginFlow.ProceedWithLogin
+            }
+        }
+    }
+
+    private fun postLogin() {
         viewModelScope.launch {
             userInteractor.postLoginWithToken(getUserLoginWithTokenRequest()).collect {
                 when (it) {
-                    is UserPartialStatePostLoginWithToken.Error -> {
-                        // An error occurred either due to an invalid token, or user id; proceed to remove the stored user credentials (userId, token).
+                    is PostLoginWithTokenPartialState.Failed -> {
+                        // An error occurred either due to an invalid token, or user id; proceed to remove the stored user credentials (userId, UserAuthData).
+                        authController.removeUserCredentials()
+
                         setState {
                             copy(
                                 isLoading = false
                             )
                         }
-
-                        // Remove user credentials (userId, userToken) from device.
-                        preferencesKeys.removeUserCredentials()
 
                         // Display erroneous alert dialog.
                         showAlertDialog(
@@ -140,24 +226,19 @@ class HomeViewModel @Inject constructor(
                         )
                     }
 
-                    is UserPartialStatePostLoginWithToken.Success -> {
-                        when (it.userLoginWithTokenResponseDomain.verificationStep) {
+                    is PostLoginWithTokenPartialState.Success -> {
+                        when (it.loginWithTokenResponseDomain.verificationStep) {
                             is VerificationStep.None -> {
                                 setState {
                                     copy(
-                                        isLoading = false
+//                                        isLoading = false // do not disable loading, so that the user cannot click on the Login/Signup buttons
                                     )
-                                }
-
-                                // Update stored token if needed.
-                                it.userLoginWithTokenResponseDomain.token?.let { newToken ->
-                                    preferencesKeys.setUserToken(newToken)
                                 }
 
                                 // No verification step, so navigate to AllCharactersScreen.
                                 setEffect {
                                     HomeEffect.Navigation.NavigateToAllCharactersScreen(
-                                        userId = preferencesKeys.getUserId()
+                                        userId = prefKeys.getUserId()
                                     )
                                 }
                             }
@@ -170,43 +251,32 @@ class HomeViewModel @Inject constructor(
                                     )
                                 }
 
-                                // Update stored token if needed.
-                                it.userLoginWithTokenResponseDomain.token?.let { newToken ->
-                                    preferencesKeys.setUserToken(newToken)
-                                }
-
                                 setEffect {
                                     HomeEffect.Navigation.NavigateToOtpScreen(
-                                        userId = preferencesKeys.getUserId()
+                                        userId = prefKeys.getUserId()
                                     )
                                 }
                             }
 
                             is VerificationStep.OtpPhoneNumber -> {
-                                // TODO: display appropriate screen
                                 setState {
                                     copy(
                                         isLoading = false
                                     )
-                                }
-
-                                // Update stored token if needed.
-                                it.userLoginWithTokenResponseDomain.token?.let { newToken ->
-                                    preferencesKeys.setUserToken(newToken)
                                 }
 
                                 TODO("\"VerificationStep.OtpPhoneNumber\" not implemented yet")
                             }
 
                             is VerificationStep.Invalid -> {
+                                // An error occurred, so just in case, remove the stored user credentials (userId, UserAuthData).
+                                authController.removeUserCredentials()
+
                                 setState {
                                     copy(
                                         isLoading = false
                                     )
                                 }
-
-                                // An error occurred, so just in case, remove the stored user credentials (userId, userToken).
-                                preferencesKeys.removeUserCredentials()
 
                                 showAlertDialog(
                                     errorMessage = resourceProvider.getGenericErrorMessage()
@@ -233,7 +303,7 @@ class HomeViewModel @Inject constructor(
 
     private fun getUserLoginWithTokenRequest(): UserLoginWithTokenRequest =
         UserLoginWithTokenRequest(
-            userId = preferencesKeys.getUserId(),
+            userId = prefKeys.getUserId(),
             epoch = DateUtil.getSecondsFromEpoch()
         )
 

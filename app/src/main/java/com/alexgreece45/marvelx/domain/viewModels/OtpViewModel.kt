@@ -1,11 +1,12 @@
-package com.alexgreece45.marvelx.domain.viewmodels
+package com.alexgreece45.marvelx.domain.viewModels
 
 import androidx.core.text.isDigitsOnly
 import androidx.lifecycle.viewModelScope
-import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.data.models.otp.OtpRequest
-import com.alexgreece45.marvelx.domain.controllers.PreferencesKeys
+import com.alexgreece45.marvelx.domain.controllers.PrefKeys
+import com.alexgreece45.marvelx.domain.interactors.GrandNewAccessTokenPartialState
 import com.alexgreece45.marvelx.domain.interactors.OtpInteractor
+import com.alexgreece45.marvelx.domain.interactors.UserInteractor
 import com.alexgreece45.marvelx.domain.interactors.ValidateOtpPartialState
 import com.alexgreece45.marvelx.ui.base.BaseEffect
 import com.alexgreece45.marvelx.ui.base.BaseEvent
@@ -24,9 +25,11 @@ sealed class OtpEvent : BaseEvent {
 
     data class OnOtpFieldValueChange(val otp: String) : OtpEvent()
 
-    object OnDoneClick : OtpEvent()
+    data object OnDoneClick : OtpEvent()
 
-    object OnSendClick : OtpEvent()
+    data object OnSendClick : OtpEvent()
+
+    data class OnValidationSuccess(val code: String) : OtpEvent()
 }
 
 data class OtpState(
@@ -38,7 +41,9 @@ data class OtpState(
      * */
     val errorMessage: String? = null,
 
-    // Data.
+    /**
+     * The user ID.
+     * */
     val userId: Int? = null,
 
     /**
@@ -46,39 +51,44 @@ data class OtpState(
      * */
     val otp: String = "",
 
+    /**
+     * Controls whether the send toolbar action button is enabled.
+     * This button is enabled if the OTP's length is equal to 6.
+     * */
+    val sendButton: Boolean = false,
+
     // Validations.
     val enteredOtpValidationResult: FormsValidationResult = FormsValidationResult(true)
 
-) : BaseState {
-    companion object {
-        fun getDefaultValues(): OtpState =
-            OtpState(
-                isLoading = false,
-                hasInternetConnection = true,
-                errorMessage = null,
-                userId = null
-            )
-    }
-}
+) : BaseState
 
 sealed class OtpEffect : BaseEffect {
 
     sealed class Navigation : OtpEffect() {
         data class NavigateToPreviousScreenWithError(val errorMessage: String) : Navigation()
 
-        data class NavigateToNextScreen(val screenRoute: String) : Navigation()
-
-        object NavigateToAllCharactersScreen : Navigation()
+        data object NavigateToAllCharactersScreen : Navigation()
     }
+
+    data class OnValidationSuccess(val code: String) : OtpEffect()
 }
 
 @HiltViewModel
 class OtpViewModel @Inject constructor(
     private val otpInteractor: OtpInteractor,
+    private val userInteractor: UserInteractor,
     private val resourceProvider: ResourceProvider,
-    private val preferencesKeys: PreferencesKeys
+    private val prefKeys: PrefKeys
 ) : BaseViewModel<OtpEvent, OtpState, OtpEffect>() {
-    override fun setInitialState(): OtpState = OtpState.getDefaultValues()
+    override fun setInitialState(): OtpState =
+        OtpState(
+            isLoading = false,
+            hasInternetConnection = true,
+            errorMessage = null,
+            userId = null,
+            otp = "",
+            sendButton = false
+        )
 
     override fun handleEvents(event: OtpEvent) {
         when (event) {
@@ -97,6 +107,15 @@ class OtpViewModel @Inject constructor(
             OtpEvent.OnSendClick -> {
                 validateOtp()
             }
+
+            is OtpEvent.OnValidationSuccess -> {
+                setState {
+                    copy(
+                        isLoading = true
+                    )
+                }
+                grandNewAccessToken(code = event.code, event = event)
+            }
         }
     }
 
@@ -105,7 +124,7 @@ class OtpViewModel @Inject constructor(
             // User id is null so go back to the previous screen by displaying that an unknown error occurred.
             setEffect {
                 OtpEffect.Navigation.NavigateToPreviousScreenWithError(
-                    errorMessage = resourceProvider.getString(R.string.unknown_error)
+                    errorMessage = resourceProvider.getGenericErrorMessage()
                 )
             }
             return
@@ -122,14 +141,15 @@ class OtpViewModel @Inject constructor(
         if (otp.isDigitsOnly() && otp.length <= 6 && otp != currentState.otp) {
             setState {
                 copy(
-                    otp = otp
+                    otp = otp,
+                    sendButton = otp.length == 6
                 )
             }
         }
     }
 
     private fun validateOtp() {
-        // If the user-entered OTP is of length 6, then proceed with its validation.
+        // If the length of the user-entered OTP is 6, then proceed with its validation.
         if (currentState.otp.length == 6) {
             setState {
                 copy(
@@ -173,23 +193,9 @@ class OtpViewModel @Inject constructor(
                                     )
                                 }
 
-                                // Store userId to device.
-                                currentState.userId?.let { userId ->
-                                    preferencesKeys.setUserId(
-                                        userId = userId
-                                    )
-                                }
-
-                                // Store userToken to device.
-                                getOtpPartialState.userToken?.let { userToken ->
-                                    preferencesKeys.setUserToken(
-                                        userToken = userToken
-                                    )
-                                }
-
-                                // Navigate to All Characters Screen.
+                                // If the user-entered OTP was correct, then move on to retrieving the Access & Refresh tokens.
                                 setEffect {
-                                    OtpEffect.Navigation.NavigateToAllCharactersScreen
+                                    OtpEffect.OnValidationSuccess(getOtpPartialState.otpDomain.authenticationCode)
                                 }
                             }
 
@@ -218,6 +224,40 @@ class OtpViewModel @Inject constructor(
                             }
                         }
                     }
+            }
+        }
+    }
+
+    private fun grandNewAccessToken(code: String, event: OtpEvent) {
+        viewModelScope.launch {
+            userInteractor.grandNewAccessToken(code = code).collect { accessTokenPartialState ->
+                when (accessTokenPartialState) {
+                    is GrandNewAccessTokenPartialState.Failed -> {
+                        setState {
+                            copy(
+                                isLoading = false,
+                                errorMessage = accessTokenPartialState.errorMessage // TODO: Fix error display. 
+                            )
+                        }
+                    }
+
+                    is GrandNewAccessTokenPartialState.Success -> {
+                        // Token was successfully generated (in the server) and retrieved (in the client).
+                        setState {
+                            copy(
+                                isLoading = false
+                            )
+                        }
+
+                        // Save userId in device.
+                        currentState.userId?.let { prefKeys.setUserId(it) }
+
+                        // Navigate the client to AllCharactersScreen
+                        setEffect {
+                            OtpEffect.Navigation.NavigateToAllCharactersScreen
+                        }
+                    }
+                }
             }
         }
     }

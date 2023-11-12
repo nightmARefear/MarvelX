@@ -28,6 +28,8 @@ interface CharacterInteractor {
 
     suspend fun getFavoriteCharacters(): Flow<GetFavoriteCharactersPartialState>
 
+    suspend fun getFavoriteCharacterIds(): Flow<GetFavoriteCharacterIdsPartialState>
+
     suspend fun isCharacterByIdFavorite(characterId: Int): Flow<IsCharacterFavoritePartialState>
 }
 
@@ -248,7 +250,21 @@ class CharacterInteractorImpl @Inject constructor(
         }.safeAsync {
             logcat { it.localizedMessage ?: "" }
             GetFavoriteCharactersPartialState.Error(
-                errorMessage = resourceProvider.getString(R.string.all_characters_screen_error_favoring_character)
+                errorMessage = resourceProvider.getString(R.string.all_characters_screen_error_retrieving_favorite_characters)
+            )
+        }
+
+    override suspend fun getFavoriteCharacterIds(): Flow<GetFavoriteCharacterIdsPartialState> =
+        flow {
+            emit(
+                GetFavoriteCharacterIdsPartialState.Success(
+                    favoriteCharactersRepository.getCharacterIds()
+                )
+            )
+        }.safeAsync {
+            logcat { it.localizedMessage ?: "" }
+            GetFavoriteCharacterIdsPartialState.Error(
+                errorMessage = resourceProvider.getString(R.string.all_characters_screen_error_retrieving_favorite_characters)
             )
         }
 
@@ -298,6 +314,13 @@ sealed class GetFavoriteCharactersPartialState {
         GetFavoriteCharactersPartialState()
 
     data class Error(val errorMessage: String) : GetFavoriteCharactersPartialState()
+}
+
+sealed class GetFavoriteCharacterIdsPartialState {
+    data class Success(val favoriteCharacterIds: List<Int>) :
+        GetFavoriteCharacterIdsPartialState()
+
+    data class Error(val errorMessage: String) : GetFavoriteCharacterIdsPartialState()
 }
 
 sealed class IsCharacterFavoritePartialState {

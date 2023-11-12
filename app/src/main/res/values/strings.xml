@@ -7,6 +7,7 @@
     <string name="other">other</string>
     <string name="ok">OK</string>
     <string name="loading">Please wait…</string>
+    <string name="character">character</string>
     <string name="is_password_visible_content_description">Hide Password</string>
     <string name="is_password_not_visible_content_description">Show Password</string>
     <string name="ic_favorite_content_description">favorite</string>
@@ -49,6 +50,7 @@
 
     <string name="all_characters_screen_error_favoring_character">An error occurred while favoring this character.</string>
     <string name="all_characters_screen_error_unfavoring_character">An error occurred while unfavoring this character.</string>
+    <string name="all_characters_screen_error_retrieving_favorite_characters">An error occurred while retrieving favorite characters.</string>
 
     <!-- Character Screen -->
     <string name="character_screen_row_comic_toolbar_title">Comics</string>
@@ -73,6 +75,8 @@
 
     <!-- Profile Screen -->
     <string name="profile_screen_toolbar_title">Profile</string>
+
+    <string name="profile_screen_button_label_logout">Logout</string>
 
     <!-- Home Screen -->
     <string name="home_screen_toolbar_title">Home Screen</string>
@@ -117,6 +121,8 @@
     <string name="sign_up_screen_input_field_placeholder_gender">Male</string>
     <string name="sign_up_screen_input_field_placeholder_email">john.doe@email.com</string>
     <string name="sign_up_screen_input_field_placeholder_password">hJRVkVtX39Ud!%XIFn9)ui5+K</string>
+
+    <string name="signup_screen_alert_dialog_title">Signup failed</string>
 
     <string name="sign_up_screen_input_field_error_blank_first_name">First name cannot be blank.</string>
     <string name="sign_up_screen_input_field_error_blank_last_name">Last name cannot be blank.</string>

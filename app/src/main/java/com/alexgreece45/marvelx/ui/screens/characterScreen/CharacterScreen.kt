@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -43,18 +44,18 @@ import coil.request.ImageRequest
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.data.domains.character.CharacterDomain
 import com.alexgreece45.marvelx.data.domains.comic.ComicDomain
-import com.alexgreece45.marvelx.domain.viewmodels.CharacterEffect
-import com.alexgreece45.marvelx.domain.viewmodels.CharacterEvent
-import com.alexgreece45.marvelx.domain.viewmodels.CharacterViewModel
+import com.alexgreece45.marvelx.domain.viewModels.CharacterEffect
+import com.alexgreece45.marvelx.domain.viewModels.CharacterEvent
+import com.alexgreece45.marvelx.domain.viewModels.CharacterViewModel
 import com.alexgreece45.marvelx.navigation.Screen
 import com.alexgreece45.marvelx.ui.ContentScreen
-import com.alexgreece45.marvelx.util.IMAGE_BORDER_WIDTH
+import com.alexgreece45.marvelx.ui.GenericErrorScreen
 import com.alexgreece45.marvelx.ui.IconData
 import com.alexgreece45.marvelx.ui.ItemDescription
-import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.ui.ToolbarAction
+import com.alexgreece45.marvelx.util.IMAGE_BORDER_WIDTH
+import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.VSpacer
-import com.alexgreece45.marvelx.ui.WrapperContentScreen
 
 @Composable
 fun CharacterScreen(
@@ -70,7 +71,7 @@ fun CharacterScreen(
 
         viewModel.uiEffect.collect { effect ->
             when (effect) {
-                CharacterEffect.OnBackClick -> {
+                CharacterEffect.PopBackStack -> {
                     navController.popBackStack()
                 }
 
@@ -79,7 +80,9 @@ fun CharacterScreen(
                         Screen.ComicScreen.createNavRoute(
                             comicId = effect.comicId
                         )
-                    )
+                    ) {
+                        launchSingleTop = true
+                    }
                 }
 
                 is CharacterEffect.NavigateToAllComicsScreen -> {
@@ -102,86 +105,90 @@ fun CharacterScreen(
         }
     }
 
-    WrapperContentScreen(
+    ContentScreen(
+        onBack = { viewModel.setEvent(CharacterEvent.OnBackClick) },
         isLoading = state.isLoading,
-        hasInternetConnection = state.hasInternetConnection,
-        errorMessage = state.errorMessage,
-        onRetryClick = {
-            viewModel.setEvent(
-                CharacterEvent.InitView(
-                    characterId = characterId
-                )
-            )
-        }
-    ) {
-        ContentScreen(
-            onBack = { viewModel.setEvent(CharacterEvent.OnBackClick) },
-            showToolbar = true,
-            toolbarTitle = state.character?.name,
-            toolbarActions = state.character?.let { characterDomain ->
-                listOf(
-                    // Favorite button.
-                    ToolbarAction(
-                        label = stringResource(R.string.character_screen_row_comic_toolbar_action_favorite_title),
-                        order = 0,
-                        iconData = when (characterDomain.isFavorite) {
-                            true -> {
-                                IconData(
-                                    iconResource = R.drawable.ic_favorite_filled_24,
-                                    contentDescription = stringResource(R.string.ic_favorite_content_description),
-                                    colorTint = MaterialTheme.colors.primaryVariant
-                                )
-                            }
-
-                            false -> {
-                                IconData(
-                                    iconResource = R.drawable.ic_favorite_empty_24,
-                                    contentDescription = stringResource(R.string.ic_not_favorite_content_description),
-                                    colorTint = MaterialTheme.colors.primaryVariant
-                                )
-                            }
+        showToolbar = true,
+        toolbarTitle = state.character?.name,
+        toolbarActions = state.character?.let { characterDomain ->
+            listOf(
+                // Favorite button.
+                ToolbarAction(
+                    label = stringResource(R.string.character_screen_row_comic_toolbar_action_favorite_title),
+                    order = 0,
+                    iconData = when (characterDomain.isFavorite) {
+                        true -> {
+                            IconData(
+                                iconResource = R.drawable.ic_favorite_filled_24,
+                                contentDescription = R.string.ic_favorite_content_description,
+                                colorTint = MaterialTheme.colors.primaryVariant
+                            )
                         }
-                    ) {
-                        viewModel.setEvent(CharacterEvent.OnFavoriteClick)
-                    }
-                )
-            }
-        ) { padding ->
-            LazyColumn(contentPadding = padding) {
-                state.character?.let { character ->
-                    item {
-                        // Character.
-                        CharacterItem(
-                            character = character
-                        )
 
-                        // Comics.
-                        LazyRowTemplate(
-                            title = stringResource(R.string.character_screen_row_comic_toolbar_title),
-                            items = state.comics,
-                            itemKey = { comic -> comic.id },
-                            onArrowRightClick = { viewModel.setEvent(CharacterEvent.OnArrowRightClick) }
-                        ) { comic ->
-                            ComicItem(
-                                comic = comic,
-                                onClick = {
-                                    viewModel.setEvent(
-                                        CharacterEvent.OnComicClick(
-                                            comicId = comic.id
-                                        )
-                                    )
-                                }
+                        false -> {
+                            IconData(
+                                iconResource = R.drawable.ic_favorite_empty_24,
+                                contentDescription = R.string.ic_not_favorite_content_description,
+                                colorTint = MaterialTheme.colors.primaryVariant
                             )
                         }
                     }
+                ) {
+                    viewModel.setEvent(CharacterEvent.OnFavoriteClick)
+                }
+            )
+        }
+    ) { padding ->
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = padding
+        ) {
+            state.error?.let { error ->
+                item {
+                    GenericErrorScreen(
+                        errorMessage = error.errorMessage,
+                        onRetryClick = { error.onRetryClick.invoke() })
+                }
+                return@LazyColumn
+            }
 
-                    // Events.
-
-                    // Series.
-
-                    // Stories.
+            // Character.
+            state.character?.let { character ->
+                item {
+                    CharacterItem(
+                        character = character
+                    )
                 }
             }
+
+            // Comics.
+            if (state.comics.isNotEmpty()) {
+                item {
+                    LazyRowTemplate(
+                        title = stringResource(R.string.character_screen_row_comic_toolbar_title),
+                        items = state.comics,
+                        itemKey = { comic -> comic.id },
+                        onArrowRightClick = { viewModel.setEvent(CharacterEvent.OnArrowRightClick) }
+                    ) { comic ->
+                        ComicItem(
+                            comic = comic,
+                            onClick = {
+                                viewModel.setEvent(
+                                    CharacterEvent.OnComicClick(
+                                        comicId = comic.id
+                                    )
+                                )
+                            }
+                        )
+                    }
+                }
+            }
+
+            // Events.
+
+            // Series.
+
+            // Stories.
         }
     }
 }

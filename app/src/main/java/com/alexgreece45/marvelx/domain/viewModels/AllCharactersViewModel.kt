@@ -1,24 +1,36 @@
-package com.alexgreece45.marvelx.domain.viewmodels
+package com.alexgreece45.marvelx.domain.viewModels
 
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.data.domains.character.CharacterDomain
+import com.alexgreece45.marvelx.data.domains.character.toCharacterCardUiList
+import com.alexgreece45.marvelx.data.uiModels.CharacterCardUi
+import com.alexgreece45.marvelx.data.uiModels.toFavoriteCharacterEntity
 import com.alexgreece45.marvelx.domain.database.FavoriteCharacterEntity
 import com.alexgreece45.marvelx.domain.interactors.CharacterInteractor
 import com.alexgreece45.marvelx.domain.interactors.CharacterPartialState
+import com.alexgreece45.marvelx.domain.interactors.GetFavoriteCharacterIdsPartialState
 import com.alexgreece45.marvelx.domain.interactors.GetFavoriteCharactersPartialState
+import com.alexgreece45.marvelx.navigation.Screen
+import com.alexgreece45.marvelx.ui.BottomBarItem
+import com.alexgreece45.marvelx.ui.IconData
+import com.alexgreece45.marvelx.ui.SortingType
 import com.alexgreece45.marvelx.ui.base.BaseEffect
 import com.alexgreece45.marvelx.ui.base.BaseEvent
 import com.alexgreece45.marvelx.ui.base.BaseState
 import com.alexgreece45.marvelx.ui.base.BaseViewModel
 import com.alexgreece45.marvelx.util.ResourceProvider
-import com.alexgreece45.marvelx.ui.SortingType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+data class AllCharactersScreenErrorView(
+    val errorMessage: String,
+    val onRetryClick: () -> Unit
+)
+
 sealed interface AllCharactersEvent : BaseEvent {
     object InitView : AllCharactersEvent
+    object LoadAllCharacters : AllCharactersEvent
     object LoadFavoriteCharacters : AllCharactersEvent
     data class OnCharacterClick(val characterId: Int) : AllCharactersEvent
     data class OnHeartClick(val characterId: Int) : AllCharactersEvent
@@ -38,7 +50,10 @@ sealed interface AllCharactersEvent : BaseEvent {
 }
 
 sealed interface AllCharactersEffect : BaseEffect {
-    data class NavigateToCharacterScreen(val characterId: Int) : AllCharactersEffect
+    sealed interface Navigation : AllCharactersEffect {
+        data class NavigateToCharacterScreen(val characterId: Int) : Navigation
+    }
+
     sealed interface FavoriteCharacter : AllCharactersEffect {
         data class Success(val successMessage: String) : FavoriteCharacter
         data class Error(val errorMessage: String) : FavoriteCharacter
@@ -54,60 +69,60 @@ sealed interface AllCharactersEffect : BaseEffect {
         object Hide : SortingBottomSheet
     }
 
-    object CloseKeyboard: AllCharactersEffect
+    object CloseKeyboard : AllCharactersEffect
 }
 
 data class AllCharactersState(
     // Base states.
-    val isLoading: Boolean = true,
-    val hasInternetConnection: Boolean = true,
-    val errorMessage: String? = null,
+    val isLoading: Boolean = false,
+    val error: AllCharactersScreenErrorView? = null,
 
     // Data.
-    val characters: List<CharacterDomain> = mutableListOf(),
-    val sortingType: SortingType = SortingType.getDefaultSortingType(),
+    val bottomNavigationItems: List<BottomBarItem> = emptyList(),
+    val characters: List<CharacterCardUi> = emptyList(),
+    val sortingType: SortingType = SortingType.DEFAULT_SORTING_TYPE,
+
     /**
      * The search bar's term.
      * */
     val searchBarTerm: String = "",
+
     /**
      * The filtered characters list that is shown; if there is no search term, then all the characters are shown.
      * */
-    val filteredCharacters: List<CharacterDomain> = mutableListOf(),
+    val filteredCharacters: List<CharacterCardUi> = emptyList(),
 
     /**
      * This field tracks if the fragment of this ViewModel has been launched for the first time.
      * The value is set to true by default, and only changes, to false, when navigation occurs to the [CharacterScreen].
      * */
     val isFirstLaunch: Boolean = true
-) : BaseState {
-    companion object {
-        fun getDefaultValues(): AllCharactersState =
-            AllCharactersState(
-                isLoading = true,
-                hasInternetConnection = true,
-                errorMessage = null,
-                characters = mutableListOf(),
-                isFirstLaunch = true
-            )
-    }
-}
+) : BaseState
 
 @HiltViewModel
 class AllCharactersViewModel @Inject constructor(
     private val interactor: CharacterInteractor,
     private val resourceProvider: ResourceProvider
 ) : BaseViewModel<AllCharactersEvent, AllCharactersState, AllCharactersEffect>() {
-    override fun setInitialState(): AllCharactersState = AllCharactersState.getDefaultValues()
-
-    init {
-        setEvent(AllCharactersEvent.InitView)
-    }
+    override fun setInitialState(): AllCharactersState = AllCharactersState(
+        isLoading = false,
+        error = null,
+        bottomNavigationItems = getBottomNavigationItems(),
+        characters = emptyList(),
+        sortingType = SortingType.DEFAULT_SORTING_TYPE,
+        searchBarTerm = "",
+        filteredCharacters = emptyList(),
+        isFirstLaunch = true
+    )
 
     override fun handleEvents(event: AllCharactersEvent) {
         when (event) {
             AllCharactersEvent.InitView -> {
                 initView()
+            }
+
+            AllCharactersEvent.LoadAllCharacters -> {
+                loadAllCharacters()
             }
 
             is AllCharactersEvent.OnCharacterClick -> {
@@ -120,7 +135,7 @@ class AllCharactersViewModel @Inject constructor(
                     AllCharactersEffect.CloseKeyboard
                 }
                 setEffect {
-                    AllCharactersEffect.NavigateToCharacterScreen(
+                    AllCharactersEffect.Navigation.NavigateToCharacterScreen(
                         characterId = event.characterId
                     )
                 }
@@ -192,8 +207,16 @@ class AllCharactersViewModel @Inject constructor(
                     }
 
                     setState {
+                        val currentFilteredCharacters =
+                            currentState.characters.map { allCharactersCharacter ->
+                                currentState.filteredCharacters.firstOrNull { filteredCharactersCharacter ->
+                                    filteredCharactersCharacter.id == allCharactersCharacter.id
+                                } ?: allCharactersCharacter
+                            }
                         copy(
-                            filteredCharacters = currentState.characters.filter { it.name.lowercase().contains(event.searchTerm.lowercase()) }
+                            filteredCharacters = currentFilteredCharacters.filter { character ->
+                                character.name.contains(event.searchTerm, ignoreCase = true)
+                            }
                         )
                     }
                 }
@@ -203,7 +226,11 @@ class AllCharactersViewModel @Inject constructor(
                 setState {
                     copy(
                         searchBarTerm = "",
-                        filteredCharacters = currentState.characters
+                        filteredCharacters = currentState.characters.map { allCharactersCharacter ->
+                            currentState.filteredCharacters.firstOrNull { filteredCharactersCharacter ->
+                                filteredCharactersCharacter.id == allCharactersCharacter.id
+                            } ?: allCharactersCharacter
+                        }
                     )
                 }
 
@@ -214,54 +241,60 @@ class AllCharactersViewModel @Inject constructor(
         }
     }
 
+
     private fun initView() {
+        /*setState {
+            AllCharactersState.getDefaultValues()
+        }*/
+        loadAllCharacters()
+    }
+
+    private fun loadAllCharacters() {
         setState {
             copy(
                 isLoading = true,
-                hasInternetConnection = true
+                error = null
             )
         }
-
         viewModelScope.launch {
             // Load all characters.
-            interactor.getAllCharacters().collect {
-                when (it) {
+            interactor.getAllCharacters().collect { characterPartialState ->
+                when (characterPartialState) {
                     is CharacterPartialState.Success -> {
                         // Load favorite characters.
-                        interactor.getFavoriteCharacters()
+                        interactor.getFavoriteCharacterIds()
                             .collect { favoriteCharacterPartialState ->
                                 when (favoriteCharacterPartialState) {
-                                    is GetFavoriteCharactersPartialState.Success -> {
-                                        // Move favorite characters data from local storage to the CharacterDomain list.
+                                    is GetFavoriteCharacterIdsPartialState.Success -> {
+                                        // Move favorite characters data from local storage to the characters list.
                                         setState {
-                                            copy(
-                                                isLoading = false,
-                                                characters = it.data.map { character ->
+                                            val characters =
+                                                characterPartialState.data.map { character ->
                                                     character.copy(
-                                                        isFavorite = favoriteCharacterPartialState.favoriteCharacters.firstOrNull { favoriteCharacterEntity ->
-                                                            favoriteCharacterEntity.characterId == character.id
+                                                        isFavorite = favoriteCharacterPartialState.favoriteCharacterIds.firstOrNull { favoriteCharacterId ->
+                                                            favoriteCharacterId == character.id
                                                         }?.let {
                                                             true
                                                         } ?: false
                                                     )
-                                                }
-                                            )
-                                        }
-
-                                        // Sets the initial filteredCharacters' value.
-                                        setState {
+                                                }.toCharacterCardUiList()
                                             copy(
-                                                filteredCharacters = currentState.characters
+                                                isLoading = false,
+                                                characters = characters,
+                                                filteredCharacters = characters // Sets the initial filteredCharacters' value.
                                             )
                                         }
                                     }
 
-                                    is GetFavoriteCharactersPartialState.Error -> {
+                                    is GetFavoriteCharacterIdsPartialState.Error -> {
                                         // Could not retrieve favorite characters data.
                                         setState {
                                             copy(
                                                 isLoading = false,
-                                                characters = it.data
+                                                error = AllCharactersScreenErrorView(
+                                                    errorMessage = favoriteCharacterPartialState.errorMessage,
+                                                    onRetryClick = { loadAllCharacters() }
+                                                )
                                             )
                                         }
                                     }
@@ -273,7 +306,10 @@ class AllCharactersViewModel @Inject constructor(
                         setState {
                             copy(
                                 isLoading = false,
-                                errorMessage = it.errorMessage
+                                error = AllCharactersScreenErrorView(
+                                    errorMessage = characterPartialState.errorMessage,
+                                    onRetryClick = { loadAllCharacters() }
+                                )
                             )
                         }
                     }
@@ -282,7 +318,10 @@ class AllCharactersViewModel @Inject constructor(
                         setState {
                             copy(
                                 isLoading = false,
-                                hasInternetConnection = false
+                                error = AllCharactersScreenErrorView(
+                                    errorMessage = characterPartialState.errorMessage,
+                                    onRetryClick = { loadAllCharacters() }
+                                )
                             )
                         }
                     }
@@ -300,7 +339,6 @@ class AllCharactersViewModel @Inject constructor(
                 isLoading = true
             )
         }
-
         viewModelScope.launch {
             interactor.getFavoriteCharacters()
                 .collect { favoriteCharacterPartialState ->
@@ -310,7 +348,7 @@ class AllCharactersViewModel @Inject constructor(
                             setState {
                                 copy(
                                     isLoading = false,
-                                    characters = currentState.characters.map { character ->
+                                    filteredCharacters = currentState.filteredCharacters.map { character ->
                                         character.copy(
                                             isFavorite = favoriteCharacterPartialState.favoriteCharacters.firstOrNull { favoriteCharacterEntity ->
                                                 favoriteCharacterEntity.characterId == character.id
@@ -327,7 +365,11 @@ class AllCharactersViewModel @Inject constructor(
                             // Could not retrieve favorite characters data.
                             setState {
                                 copy(
-                                    isLoading = false
+                                    isLoading = false,
+                                    error = AllCharactersScreenErrorView(
+                                        errorMessage = favoriteCharacterPartialState.errorMessage,
+                                        onRetryClick = { syncFavoriteCharacters() }
+                                    )
                                 )
                             }
                         }
@@ -338,7 +380,7 @@ class AllCharactersViewModel @Inject constructor(
 
     private fun onHeartClick(characterId: Int) {
         // Retrieve character.
-        val character = currentState.characters.firstOrNull { it.id == characterId }
+        val character = currentState.filteredCharacters.firstOrNull { it.id == characterId }
         character?.let {
             // Check if character is favorite.
             when (character.isFavorite) {
@@ -353,9 +395,12 @@ class AllCharactersViewModel @Inject constructor(
                 }
             }
         } ?: run {
-            setEffect {
-                AllCharactersEffect.FavoriteCharacter.Error(
-                    errorMessage = resourceProvider.getString(R.string.unknown_error)
+            setState {
+                copy(
+                    error = AllCharactersScreenErrorView(
+                        errorMessage = resourceProvider.getGenericErrorMessage(),
+                        onRetryClick = { onHeartClick(characterId) }
+                    )
                 )
             }
         }
@@ -368,10 +413,10 @@ class AllCharactersViewModel @Inject constructor(
                     is CharacterPartialState.Success -> {
                         setState {
                             copy(
-                                characters = currentState.characters.map { characterDomain ->
-                                    if (characterDomain.id == characterId) characterDomain.copy(
+                                filteredCharacters = currentState.filteredCharacters.map { character ->
+                                    if (character.id == characterId) character.copy(
                                         isFavorite = false
-                                    ) else characterDomain
+                                    ) else character
                                 }
                             )
                         }
@@ -379,16 +424,19 @@ class AllCharactersViewModel @Inject constructor(
                             AllCharactersEffect.UnFavoriteCharacter.Success(
                                 successMessage = resourceProvider.getString(
                                     R.string.not_favorite_message,
-                                    "character"
+                                    resourceProvider.getString(R.string.character)
                                 )
                             )
                         }
                     }
 
                     is CharacterPartialState.Error -> {
-                        setEffect {
-                            AllCharactersEffect.UnFavoriteCharacter.Error(
-                                errorMessage = it.errorMessage
+                        setState {
+                            copy(
+                                error = AllCharactersScreenErrorView(
+                                    errorMessage = it.errorMessage,
+                                    onRetryClick = { unFavoriteCharacterById(characterId) }
+                                )
                             )
                         }
                     }
@@ -396,7 +444,10 @@ class AllCharactersViewModel @Inject constructor(
                     is CharacterPartialState.NoInternetConnection -> {
                         setState {
                             copy(
-                                hasInternetConnection = false
+                                error = AllCharactersScreenErrorView(
+                                    errorMessage = it.errorMessage,
+                                    onRetryClick = { unFavoriteCharacterById(characterId) }
+                                )
                             )
                         }
                     }
@@ -406,18 +457,29 @@ class AllCharactersViewModel @Inject constructor(
     }
 
     private fun favoriteCharacterById(characterId: Int) {
+        val character: FavoriteCharacterEntity? = currentState.filteredCharacters.firstOrNull { it.id == characterId }?.toFavoriteCharacterEntity()
+        if (character == null) {
+            setState {
+                copy(
+                    error = AllCharactersScreenErrorView(
+                        errorMessage = resourceProvider.getGenericErrorMessage(), // TODO: Refactor error handling by displaying a toast.
+                        onRetryClick = { favoriteCharacterById(characterId) }
+                    )
+                )
+            }
+            return
+        }
+
         viewModelScope.launch {
-            interactor.insertFavoriteCharacters(
-                FavoriteCharacterEntity(characterId = characterId)
-            ).collect {
+            interactor.insertFavoriteCharacters(character).collect {
                 when (it) {
                     is CharacterPartialState.Success -> {
                         setState {
                             copy(
-                                characters = currentState.characters.map { characterDomain ->
-                                    if (characterDomain.id == characterId) characterDomain.copy(
+                                filteredCharacters = currentState.filteredCharacters.map { character ->
+                                    if (character.id == characterId) character.copy(
                                         isFavorite = true
-                                    ) else characterDomain
+                                    ) else character
                                 }
                             )
                         }
@@ -425,20 +487,30 @@ class AllCharactersViewModel @Inject constructor(
                             AllCharactersEffect.UnFavoriteCharacter.Success(
                                 successMessage = resourceProvider.getString(
                                     R.string.favorite_message,
-                                    "character"
+                                    resourceProvider.getString(R.string.character)
                                 )
                             )
                         }
                     }
 
-                    is CharacterPartialState.Error -> setEffect {
-                        AllCharactersEffect.FavoriteCharacter.Error(errorMessage = it.errorMessage)
+                    is CharacterPartialState.Error -> {
+                        setState {
+                            copy(
+                                error = AllCharactersScreenErrorView(
+                                    errorMessage = it.errorMessage,
+                                    onRetryClick = { favoriteCharacterById(characterId) }
+                                )
+                            )
+                        }
                     }
 
                     is CharacterPartialState.NoInternetConnection -> {
                         setState {
                             copy(
-                                hasInternetConnection = false
+                                error = AllCharactersScreenErrorView(
+                                    errorMessage = it.errorMessage,
+                                    onRetryClick = { favoriteCharacterById(characterId) }
+                                )
                             )
                         }
                     }
@@ -446,4 +518,31 @@ class AllCharactersViewModel @Inject constructor(
             }
         }
     }
+
+    private fun getBottomNavigationItems(): List<BottomBarItem> = listOf(
+        BottomBarItem(
+            route = Screen.BottomNavigationScreens.AllCharactersScreen.route,
+            label = R.string.bottom_navigation_label_characters,
+            iconData = IconData(
+                iconResource = R.drawable.ic_superhero_32,
+                contentDescription = R.string.bottom_navigation_label_characters
+            )
+        ),
+        BottomBarItem(
+            route = Screen.BottomNavigationScreens.AllFavoriteCharactersScreen.route,
+            label = R.string.bottom_navigation_label_favorites,
+            iconData = IconData(
+                iconResource = R.drawable.ic_favorite_filled_24,
+                contentDescription = R.string.bottom_navigation_label_favorites
+            )
+        ),
+        BottomBarItem(
+            route = Screen.BottomNavigationScreens.ProfileScreen.route,
+            label = R.string.bottom_navigation_label_profile,
+            iconData = IconData(
+                iconResource = R.drawable.ic_person_32,
+                contentDescription = R.string.bottom_navigation_label_profile
+            )
+        )
+    )
 }

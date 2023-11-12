@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.Button
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -20,15 +19,17 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.domain.viewmodels.HomeEffect
-import com.alexgreece45.marvelx.domain.viewmodels.HomeEvent
-import com.alexgreece45.marvelx.domain.viewmodels.HomeViewModel
+import com.alexgreece45.marvelx.domain.viewModels.HomeEffect
+import com.alexgreece45.marvelx.domain.viewModels.HomeEvent
+import com.alexgreece45.marvelx.domain.viewModels.HomeViewModel
 import com.alexgreece45.marvelx.navigation.Screen
 import com.alexgreece45.marvelx.ui.AlertDialogButton
 import com.alexgreece45.marvelx.ui.AlertDialogError
+import com.alexgreece45.marvelx.ui.ContainedButton
 import com.alexgreece45.marvelx.ui.ContentScreen
-import com.alexgreece45.marvelx.ui.LoadingScreen
 import com.alexgreece45.marvelx.util.SPACING_SMALL
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.onEach
 
 @Composable
 fun HomeScreen(
@@ -38,17 +39,84 @@ fun HomeScreen(
 ) {
     val state by viewModel.uiState.collectAsState()
 
+    ContentScreen(
+        onBack = { viewModel.setEvent(HomeEvent.OnBack) },
+        isLoading = state.isLoading,
+    ) { paddingValues ->
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = paddingValues,
+        ) {
+            if (state.isAlertDialogVisible) {
+                item {
+                    AlertDialogError(
+                        title = state.alertDialogTitle,
+                        errorMessage = state.alertDialogErrorMessage,
+                        confirmButton = AlertDialogButton(
+                            value = stringResource(R.string.ok),
+                            onClick = { viewModel.setEvent(HomeEvent.AlertDialog.OnOkClick) }
+                        )
+                    )
+                }
+            }
+
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = stringResource(R.string.home_screen_toolbar_title),
+                        textAlign = TextAlign.Center,
+                        style = MaterialTheme.typography.h4
+                    )
+                }
+            }
+
+            item {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp)
+                ) {
+                    // Login button.
+                    ContainedButton(
+                        modifier = Modifier.fillMaxWidth(),
+                        onClick = { viewModel.setEvent(HomeEvent.OnLogInButtonClick) }
+                    ) {
+                        Text(
+                            text = stringResource(R.string.home_screen_label_log_in_button),
+                        )
+                    }
+
+                    // Signup button.
+                    ContainedButton(
+                        modifier = Modifier.fillMaxWidth(),
+                        onClick = { viewModel.setEvent(HomeEvent.OnSignUpButtonClick) }
+                    ) {
+                        Text(
+                            text = stringResource(R.string.home_screen_label_sign_up_button),
+                        )
+                    }
+                }
+            }
+        }
+    }
+
     LaunchedEffect(Unit) {
         viewModel.setEvent(HomeEvent.InitView)
 
-        viewModel.uiEffect.collect { homeEffect ->
+        viewModel.uiEffect.onEach { homeEffect ->
             when (homeEffect) {
                 HomeEffect.Navigation.NavigateToLogInScreen -> {
-                    navController.navigate(Screen.RegisterScreens.LogInScreen.route)
+                    navController.navigate(Screen.RegisterScreens.LogInScreen.route) {
+                        launchSingleTop = true
+                    }
                 }
 
                 HomeEffect.Navigation.NavigateToSignUpScreen -> {
-                    navController.navigate(Screen.RegisterScreens.SignUpScreen.route)
+                    navController.navigate(Screen.RegisterScreens.SignUpScreen.route) {
+                        launchSingleTop = true
+                    }
                 }
 
                 is HomeEffect.Navigation.NavigateToAllCharactersScreen -> {
@@ -73,69 +141,11 @@ fun HomeScreen(
                 HomeEffect.Navigation.PopBackStack -> {
                     navController.popBackStack()
                 }
-            }
-        }
-    }
 
-    LoadingScreen(isLoading = state.isLoading) {
-        ContentScreen(
-            onBack = { viewModel.setEvent(HomeEvent.OnBack) },
-        ) { paddingValues ->
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = paddingValues,
-            ) {
-                item {
-                    AlertDialogError(
-                        isVisible = state.isAlertDialogVisible,
-                        title = state.alertDialogTitle,
-                        errorMessage = state.alertDialogErrorMessage,
-                        confirmButton = AlertDialogButton(
-                            value = stringResource(R.string.ok),
-                            onClick = { viewModel.setEvent(HomeEvent.AlertDialog.OnOkClick) }
-                        )
-                    )
-                }
-
-                item {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        Text(
-                            text = stringResource(R.string.home_screen_toolbar_title),
-                            textAlign = TextAlign.Center,
-                            style = MaterialTheme.typography.h4
-                        )
-                    }
-                }
-
-                item {
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp)
-                    ) {
-                        // Login button.
-                        Button(
-                            modifier = Modifier.fillMaxWidth(),
-                            onClick = { viewModel.setEvent(HomeEvent.OnLogInButtonClick) }
-                        ) {
-                            Text(
-                                text = stringResource(R.string.home_screen_label_log_in_button),
-                            )
-                        }
-
-                        // Signup button.
-                        Button(
-                            modifier = Modifier.fillMaxWidth(),
-                            onClick = { viewModel.setEvent(HomeEvent.OnSignUpButtonClick) }) {
-                            Text(
-                                text = stringResource(R.string.home_screen_label_sign_up_button),
-                            )
-                        }
-                    }
+                HomeEffect.LoginFlow.ProceedWithLogin -> {
+                    viewModel.setEvent(HomeEvent.OnProceedWithLogin)
                 }
             }
-        }
+        }.collect()
     }
 }

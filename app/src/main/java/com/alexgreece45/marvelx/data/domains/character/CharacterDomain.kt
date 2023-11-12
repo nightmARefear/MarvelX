@@ -1,13 +1,15 @@
 package com.alexgreece45.marvelx.data.domains.character
 
-import com.alexgreece45.marvelx.data.domains.ImageDomain
-import com.alexgreece45.marvelx.data.domains.toResponse
+import com.alexgreece45.marvelx.data.domains.image.ImageDomain
+import com.alexgreece45.marvelx.data.domains.image.toResponse
 import com.alexgreece45.marvelx.data.models.character.CharacterResponse
 import com.alexgreece45.marvelx.data.models.character.ComicList
 import com.alexgreece45.marvelx.data.models.character.EventList
 import com.alexgreece45.marvelx.data.models.character.SeriesList
 import com.alexgreece45.marvelx.data.models.character.StoryList
 import com.alexgreece45.marvelx.data.models.character.Url
+import com.alexgreece45.marvelx.data.uiModels.CharacterCardUi
+import com.alexgreece45.marvelx.domain.database.FavoriteCharacterEntity
 import com.alexgreece45.marvelx.util.extensions.toOffsetDateTime
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -58,6 +60,27 @@ fun List<CharacterDomain>.toResponse(): List<CharacterResponse> = this.map { cha
         series = character.series
     )
 }
+
+fun CharacterDomain.toCharacterCardUi(): CharacterCardUi =
+    CharacterCardUi(
+        id = this.id,
+        name = this.name,
+        imageDownloadUrl = this.thumbnail.downloadUrl,
+        imageContentDescription = this.thumbnail.contentDescription,
+        isFavorite = this.isFavorite
+    )
+
+fun List<CharacterDomain>.toCharacterCardUiList(): List<CharacterCardUi> =
+    map { characterDomain -> characterDomain.toCharacterCardUi() }
+
+fun CharacterDomain.toFavoriteCharacterEntity(): FavoriteCharacterEntity =
+    FavoriteCharacterEntity(
+        characterId = this.id,
+        name = this.name,
+        imageDownloadUrl = this.thumbnail.downloadUrl,
+        imageContentDescription = this.thumbnail.contentDescription,
+        isFavorite = this.isFavorite
+    )
 
 fun LocalDateTime.format(): String {
     return this.format(DateTimeFormatter.ofPattern("EEEE, dd MMMM yyyy HH:mm")).toString()

@@ -1,6 +1,8 @@
 package com.alexgreece45.marvelx.ui
 
+import androidx.activity.compose.BackHandler
 import androidx.annotation.DrawableRes
+import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -12,6 +14,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -19,6 +22,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyItemScope
+import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -33,7 +37,10 @@ import androidx.compose.material.BottomSheetScaffoldDefaults
 import androidx.compose.material.BottomSheetScaffoldState
 import androidx.compose.material.Button
 import androidx.compose.material.ContentAlpha
+import androidx.compose.material.DropdownMenu
 import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.ExposedDropdownMenuBox
+import androidx.compose.material.ExposedDropdownMenuDefaults
 import androidx.compose.material.FloatingActionButton
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
@@ -54,6 +61,7 @@ import androidx.compose.material.TextFieldDefaults
 import androidx.compose.material.TopAppBar
 import androidx.compose.material.contentColorFor
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
@@ -61,13 +69,22 @@ import androidx.compose.material.primarySurface
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -75,11 +92,13 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.zIndex
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.airbnb.lottie.compose.LottieAnimation
@@ -89,53 +108,145 @@ import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.navigation.Screen
+import com.alexgreece45.marvelx.util.BOTTOM_NAVIGATION_BAR_ITEM_LABEL_MAX_LENGTH
+import com.alexgreece45.marvelx.util.BOTTOM_NAVIGATION_BAR_MAX_ITEMS
+import com.alexgreece45.marvelx.util.BOTTOM_NAVIGATION_BAR_MIN_ITEMS
 import com.alexgreece45.marvelx.util.DEFAULT_SCREEN_PADDING
 import com.alexgreece45.marvelx.util.HSpacer
 import com.alexgreece45.marvelx.util.SPACING_LARGE
 import com.alexgreece45.marvelx.util.SPACING_MEDIUM
 import com.alexgreece45.marvelx.util.SPACING_SMALL
+import com.alexgreece45.marvelx.util.THROTTLE_CLICKABLE_DEFAULT_DELAY
 import com.alexgreece45.marvelx.util.VSpacer
+import com.alexgreece45.marvelx.util.extensions.ClickState
 import com.alexgreece45.marvelx.util.extensions.applyPadding
+import com.alexgreece45.marvelx.util.extensions.screenPaddingsSte
+import com.alexgreece45.marvelx.util.extensions.throttledClickableIcon
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.MutableSharedFlow
 
-data class BottomBarAction(
-    val route: String,
-    val label: String,
-    val iconData: IconData,
+// ======== START OF ========
+//     PRIVATE COMPOSABLES
+// ==========================
+
+/**
+ * A custom implementation of [IconButton] providing throttled clickable functionality to ensure that
+ * this ThrottledIconButton is clicked only once per second.
+ *
+ * This component is typically used inside an App Bar for navigation icon / actions. It is strongly advised
+ * to explicitly use this component as the App Bar's back IconButton, if it exists.
+ *
+ * ### Example usages:
+ * #### 1. Back icon in App Bar for navigating to the previous screen
+ * ```
+ *ThrottledIconButton(
+ *  onClick = navController.popBackStack()
+ *) {
+ *  Icon(
+ *      imageVector = Icons.Filled.ArrowBack,
+ *      contentDescription = stringResource(id = R.string.back)
+ *  )
+ *}
+ * ```
+ *
+ * #### 2. Save action in App Bar for saving changes
+ * ```
+ *ThrottledIconButton(
+ *  onClick = { viewModel.setEvent(Event.OnSaveChangesButtonClick) }
+ *) {
+ *  Icon(
+ *      imageVector = Icons.Filled.Save,
+ *      contentDescription = stringResource(id = R.string.save)
+ *  )
+ *}
+ * ```
+ *
+ * @param onClick the lambda to be invoked when this icon is pressed
+ * @param modifier optional [Modifier] for this ThrottledIconButton
+ * @param enabled whether or not this ThrottledIconButton will handle input events and appear enabled for
+ * semantics purposes
+ * @param interactionSource the [MutableInteractionSource] representing the stream of
+ * [Interaction]s for this ThrottledIconButton. You can create and pass in your own remembered
+ * [MutableInteractionSource] if you want to observe [Interaction]s and customize the
+ * appearance / behavior of this ThrottledIconButton in different [Interaction]s.
+ * @param content the content (icon) to be drawn inside the ThrottledIconButton. This is typically an
+ * [Icon].
+ * */
+@Composable
+private fun ThrottledIconButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
+    content: @Composable () -> Unit
 ) {
-    companion object {
-        @Composable
-        fun getDefaultBottomBarActions(): List<BottomBarAction> = listOf(
-            BottomBarAction(
-                route = Screen.BottomNavigationScreens.AllCharactersScreen.route,
-                label = stringResource(R.string.bottom_navigation_label_characters),
-                iconData = IconData(
-                    iconResource = R.drawable.ic_superhero_32,
-                    contentDescription = stringResource(R.string.bottom_navigation_label_characters)
-                )
+    Box(
+        modifier = modifier
+            .throttledClickableIcon(
+                onClick = onClick,
+                enabled = enabled,
+                interactionSource = interactionSource
             ),
-            BottomBarAction(
-                route = Screen.BottomNavigationScreens.AllFavoriteCharactersScreen.route,
-                label = stringResource(R.string.bottom_navigation_label_favorites),
-                iconData = IconData(
-                    iconResource = R.drawable.ic_favorite_filled_24,
-                    contentDescription = stringResource(R.string.bottom_navigation_label_favorites)
+        contentAlignment = Alignment.Center
+    ) {
+        val contentAlpha = if (enabled) LocalContentAlpha.current else ContentAlpha.disabled
+        CompositionLocalProvider(LocalContentAlpha provides contentAlpha, content = content)
+    }
+}
+
+@Composable
+private fun ThrottledBackHandler(
+    enabled: Boolean,
+    delay: Long = THROTTLE_CLICKABLE_DEFAULT_DELAY,
+    onBack: () -> Unit
+) {
+    var lastClicked: Long by remember { mutableLongStateOf(0) }
+
+    val debounceState = remember {
+        MutableSharedFlow<ClickState>(
+            replay = 0,
+            extraBufferCapacity = 1,
+            onBufferOverflow = BufferOverflow.DROP_OLDEST
+        )
+    }
+
+    LaunchedEffect(Unit) {
+        debounceState
+            .collect {
+                if (lastClicked <= 0 || (it.currentTimeInMillis - lastClicked) >= delay) {
+                    it.event()
+                    lastClicked = it.currentTimeInMillis
+                }
+            }
+    }
+
+    if (enabled) {
+        BackHandler(
+            enabled = true, onBack = {
+                debounceState.tryEmit(
+                    ClickState(
+                        onBack,
+                        System.currentTimeMillis()
+                    )
                 )
-            ),
-            BottomBarAction(
-                route = Screen.BottomNavigationScreens.ProfileScreen.route,
-                label = stringResource(R.string.bottom_navigation_label_profile),
-                iconData = IconData(
-                    iconResource = R.drawable.ic_person_32,
-                    contentDescription = stringResource(R.string.bottom_navigation_label_profile)
-                )
-            )
+            }
         )
     }
 }
 
+// ======== END OF ========
+//     PRIVATE COMPOSABLES
+// ==========================
+
+data class BottomBarItem(
+    val route: String,
+    @StringRes val label: Int,
+    val iconData: IconData,
+)
+
 data class BottomBarData(
     val navController: NavController,
-    val items: List<BottomBarAction>,
+    val items: List<BottomBarItem>,
     val backgroundColor: Color? = null,
     val contentColor: Color? = null,
     val cutoutShape: Shape? = null,
@@ -145,9 +256,11 @@ data class BottomBarData(
 
 data class BottomNavigationBarData(
     val navController: NavController,
-    val items: List<BottomBarAction>,
+    val items: List<BottomBarItem>,
     val backgroundColor: Color? = null,
-    val contentColor: Color? = null,
+    val topHorizontalColor: Color? = null,
+    val selectedItemTopHorizontalColor: Color? = null,
+    val elevation: Dp = BottomNavigationDefaults.Elevation,
 )
 
 /**
@@ -156,15 +269,15 @@ data class BottomNavigationBarData(
 @Composable
 private fun BottomBar(
     navController: NavController,
-    items: List<BottomBarAction>,
+    items: List<BottomBarItem>,
     backgroundColor: Color = MaterialTheme.colors.primarySurface,
     contentColor: Color = contentColorFor(backgroundColor),
     cutoutShape: Shape? = null,
     elevation: Dp = AppBarDefaults.BottomAppBarElevation,
     contentPadding: PaddingValues = AppBarDefaults.ContentPadding
 ) {
-    if (items.size < 3) throw RuntimeException("The minimum allowed bottom bar actions are 3!")
-    if (items.size > 5) throw RuntimeException("The maximum allowed bottom bar actions are 5!")
+    if (items.size < 3) throw RuntimeException("The minimum allowed bottom bar actions is 3!")
+    if (items.size > 5) throw RuntimeException("The maximum allowed bottom bar actions is 5!")
 
     BottomAppBar(
         modifier = Modifier.fillMaxWidth(),
@@ -183,7 +296,7 @@ private fun BottomBar(
                     Column {
                         Icon(
                             painter = painterResource(bottomBarAction.iconData.iconResource),
-                            contentDescription = bottomBarAction.iconData.contentDescription,
+                            contentDescription = stringResource(bottomBarAction.iconData.contentDescription),
                             tint = bottomBarAction.iconData.colorTint
                                 ?: LocalContentColor.current.copy(
                                     alpha = LocalContentAlpha.current
@@ -197,61 +310,119 @@ private fun BottomBar(
 }
 
 /**
- * An extension of the [BottomNavigation] providing additional functionality.
+ * An extension of [BottomNavigation] providing additional functionality.
+ *
+ * @param navController the [NavController] for navigating to other items
+ * @param items the items of this bottom navigation bar
+ * @param backgroundColor the background [Color] of all the items
+ * @param topHorizontalColor the [Color] of the whole top horizontal axis of this bottom navigation bar
+ * @param selectedItemTopHorizontalColor the [Color] of the top horizontal axis of the selected item
  * */
 @Composable
 fun BottomNavigationBar(
     navController: NavController,
-    items: List<BottomBarAction>,
-    backgroundColor: Color? = MaterialTheme.colors.primarySurface,
-    contentColor: Color? = if (backgroundColor == null) contentColorFor(MaterialTheme.colors.primarySurface) else contentColorFor(
-        backgroundColor
-    ),
-    elevation: Dp = BottomNavigationDefaults.Elevation,
+    items: List<BottomBarItem>,
+    backgroundColor: Color? = null,
+    topHorizontalColor: Color? = null,
+    selectedItemTopHorizontalColor: Color? = null,
+    elevation: Dp = BottomNavigationDefaults.Elevation
 ) {
-    if (items.size < 3) throw RuntimeException("The minimum allowed bottom navigation bar actions are 3!")
-    if (items.size > 5) throw RuntimeException("The maximum allowed bottom navigation bar actions are 5!")
-    if (items.any { it.label.length > 10 }) throw RuntimeException("The maximum allowed length for a bottom navigation bar's item label is 10 characters.")
-
-    val _backgroundColor = backgroundColor ?: MaterialTheme.colors.primarySurface
-    val _contentColor = contentColor ?: contentColorFor(_backgroundColor)
+    if (items.size < BOTTOM_NAVIGATION_BAR_MIN_ITEMS) throw RuntimeException("The minimum allowed bottom navigation bar items is $BOTTOM_NAVIGATION_BAR_MIN_ITEMS!")
+    if (items.size > BOTTOM_NAVIGATION_BAR_MAX_ITEMS) throw RuntimeException("The maximum allowed bottom navigation bar items is $BOTTOM_NAVIGATION_BAR_MAX_ITEMS!")
+    if (items.any { stringResource(it.label).length > BOTTOM_NAVIGATION_BAR_ITEM_LABEL_MAX_LENGTH }) throw RuntimeException(
+        "The maximum allowed length for a bottom navigation bar's item label is $BOTTOM_NAVIGATION_BAR_ITEM_LABEL_MAX_LENGTH characters."
+    )
 
     BottomNavigation(
-        backgroundColor = _backgroundColor,
-        contentColor = _contentColor,
+        backgroundColor = backgroundColor ?: MaterialTheme.colors.primarySurface,
+        contentColor = if (backgroundColor == null) contentColorFor(MaterialTheme.colors.primarySurface) else contentColorFor(
+            backgroundColor
+        ),
         elevation = elevation
     ) {
         val navBackStackEntry by navController.currentBackStackEntryAsState()
         val currentRoute = navBackStackEntry?.destination?.route
 
-        items.forEach { bottomBarAction ->
+        items.forEach { item ->
+            val isSelected = currentRoute == item.route
             CompositionLocalProvider(
                 LocalContentAlpha provides ContentAlpha.high
             ) {
+                // TODO: make these values configurable
+                val topHorizontalStrokeWidth = 1.dp
+                val selectedItemTopHorizontalStrokeWidth = topHorizontalStrokeWidth + 2.dp
+                val selectedItemTopHorizontalVerticalOffset =
+                    selectedItemTopHorizontalStrokeWidth - 0.75.dp
                 BottomNavigationItem(
-                    selected = currentRoute == bottomBarAction.route,
+                    modifier = Modifier
+                        .then(
+                            Modifier
+                                .drawWithContent {
+                                    // Draws this item.
+                                    drawContent()
+
+                                    // Draws a horizontal line at the top of all the items.
+                                    topHorizontalColor?.let { lineColor ->
+                                        drawLine(
+                                            color = lineColor,
+                                            start = Offset(0f, 0f),
+                                            end = Offset(size.width, 0f),
+                                            strokeWidth = topHorizontalStrokeWidth.toPx(),
+                                            cap = StrokeCap.Butt
+                                        )
+                                    }
+
+                                    // Draws a horizontal line at the top of the selected item.
+                                    selectedItemTopHorizontalColor?.let { lineColor ->
+                                        // TODO: Make these values configurable.
+                                        val startPositionX = size.width / 33
+                                        val endPositionX = size.width - startPositionX
+                                        if (isSelected) {
+                                            drawLine(
+                                                color = lineColor,
+                                                start = Offset(
+                                                    x = startPositionX.toDp()
+                                                        .toPx(), // Indent the start of the line by the 1/33th (3.3%) of the total length of the top horizontal line of the item.
+                                                    y = selectedItemTopHorizontalVerticalOffset.toPx()
+                                                ),
+                                                end = Offset(
+                                                    x = endPositionX.toDp()
+                                                        .toPx(),// Indent the end of the line by total length of the top horizontal line of the item minus the start indent.
+                                                    y = selectedItemTopHorizontalVerticalOffset.toPx()
+                                                ),
+                                                strokeWidth = selectedItemTopHorizontalStrokeWidth.toPx(),
+                                                cap = StrokeCap.Round
+                                            )
+                                        }
+                                    }
+                                }
+                        ),
                     icon = {
                         Icon(
-                            modifier = Modifier.size(32.dp),
-                            painter = painterResource(bottomBarAction.iconData.iconResource),
-                            contentDescription = bottomBarAction.iconData.contentDescription,
-                            tint = bottomBarAction.iconData.colorTint
+                            modifier = Modifier.size(24.dp),
+                            painter = painterResource(item.iconData.iconResource),
+                            contentDescription = stringResource(item.iconData.contentDescription),
+                            tint = item.iconData.colorTint
                                 ?: LocalContentColor.current.copy(alpha = LocalContentAlpha.current)
                         )
                     },
                     label = {
                         Text(
-                            text = bottomBarAction.label,
-                            style = MaterialTheme.typography.caption
+                            text = stringResource(item.label)
                         )
                     },
+                    selected = isSelected,
                     onClick = {
-                        navController.navigate(bottomBarAction.route) {
-                            popUpTo(navController.graph.startDestinationId) {
-                                saveState = true
+                        // Navigate to different route ONLY.
+                        if (currentRoute != item.route) {
+                            navController.navigate(item.route) {
+                                // TODO: Make the start destination configurable either by the provided value if it's not null, otherwise by the first item's route.
+                                popUpTo(Screen.BottomNavigationScreens.getStartDestination()) {
+                                    saveState = true
+                                }
+                                launchSingleTop = true
+                                restoreState = true
                             }
-                            launchSingleTop = true
-                            restoreState = true
                         }
                     },
                     selectedContentColor = MaterialTheme.colors.primaryVariant,
@@ -264,7 +435,7 @@ fun BottomNavigationBar(
 
 data class IconData(
     @DrawableRes val iconResource: Int,
-    val contentDescription: String = "",
+    @StringRes val contentDescription: Int,
     val colorTint: Color? = null,
     val enabled: Boolean = true
 )
@@ -299,6 +470,7 @@ data class ExtendedFabData(
 @Composable
 fun ContentScreen(
     onBack: (() -> Unit)? = null,
+    isLoading: Boolean,
     showToolbar: Boolean = false,
     toolbarTitle: String? = null,
     toolbarActions: List<ToolbarAction>? = null,
@@ -313,24 +485,22 @@ fun ContentScreen(
                 TopAppBar(
                     modifier = Modifier.fillMaxWidth(),
                     elevation = 0.dp,
-                    contentPadding = PaddingValues(
-                        top = 0.dp,
-                        end = DEFAULT_SCREEN_PADDING,
-                        bottom = 0.dp,
-                        start = DEFAULT_SCREEN_PADDING
-                    )
+                    contentPadding = screenPaddingsSte()
                 ) {
                     CompositionLocalProvider(
                         LocalContentAlpha provides ContentAlpha.high,
                         LocalTextStyle provides MaterialTheme.typography.h6
                     ) {
-                        onBack?.let {
-                            IconButton(onClick = { it.invoke() }) {
+                        onBack?.let { onBack ->
+                            ThrottledIconButton(
+                                onClick = onBack
+                            ) {
                                 Icon(
-                                    painter = painterResource(R.drawable.ic_back_32),
-                                    contentDescription = stringResource(R.string.back),
+                                    imageVector = Icons.Filled.ArrowBack,
+                                    contentDescription = stringResource(id = R.string.back),
                                 )
                             }
+                            HSpacer.Medium()
                         }
 
                         toolbarTitle?.let { toolbarTitle ->
@@ -349,7 +519,7 @@ fun ContentScreen(
                                 Icon(
                                     modifier = Modifier.size(SPACING_LARGE.dp),
                                     painter = painterResource(toolbarAction.iconData.iconResource),
-                                    contentDescription = toolbarAction.iconData.contentDescription,
+                                    contentDescription = stringResource(toolbarAction.iconData.contentDescription),
                                     tint = toolbarAction.iconData.colorTint
                                         ?: LocalContentColor.current.copy(alpha = LocalContentAlpha.current)
                                 )
@@ -402,31 +572,45 @@ fun ContentScreen(
                     navController = bottomNavigationBarData.navController,
                     items = bottomNavigationBarData.items,
                     backgroundColor = bottomNavigationBarData.backgroundColor,
-                    contentColor = bottomNavigationBarData.contentColor
+                    topHorizontalColor = bottomNavigationBarData.topHorizontalColor,
+                    selectedItemTopHorizontalColor = bottomNavigationBarData.selectedItemTopHorizontalColor,
+                    elevation = bottomNavigationBarData.elevation
                 )
             }
         },
         floatingActionButton = {
-            fabData?.let { fabData ->
-                when (fabData) {
-                    is NormalFabData -> {
-                        NormalFloatingActionButton(normalFabData = fabData)
-                    }
+            // Display FAB only when loading is false.
+            if (!isLoading) {
+                fabData?.let { fabData ->
+                    when (fabData) {
+                        is NormalFabData -> {
+                            NormalFloatingActionButton(normalFabData = fabData)
+                        }
 
-                    is ExtendedFabData -> {
-                        CollapsibleExtendedFloatingActionButton(extendedFabData = fabData)
+                        is ExtendedFabData -> {
+                            CollapsibleExtendedFloatingActionButton(extendedFabData = fabData)
+                        }
                     }
                 }
             }
         }
     ) { paddingValues ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-        ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            if (isLoading) {
+                LoadingScreen()
+            }
             content(paddingValues.applyPadding())
         }
     }
+
+    // TODO: Refactor back handling mechanism to match ThrottleedIconButton.
+    /*BackHandler(enabled = onBack != null) {
+        onBack?.invoke()
+    }*/
+
+    /* ThrottledBackHandler(enabled = onBack != null) {
+         onBack?.invoke()
+     }*/
 }
 
 @Composable
@@ -512,63 +696,55 @@ fun SearchBar(
     onValueChange: (String) -> Unit,
     onCloseClick: () -> Unit
 ) {
-    CompositionLocalProvider(
-        LocalTextStyle provides MaterialTheme.typography.h6,
-        LocalContentAlpha provides ContentAlpha.high
-    ) {
-        TextField(
-            modifier = Modifier.fillMaxWidth(),
-            value = searchTerm,
-            placeholder = {
-                Text(
-                    text = hint,
-                    style = MaterialTheme.typography.h6,
-                    fontStyle = FontStyle.Italic
-                )
-            },
-            trailingIcon = {
-                if (searchTerm.isNotBlank()) {
-                    val circleBackgroundColor = MaterialTheme.colors.background
-                    IconButton(
-                        onClick = { onCloseClick() }
-                    ) {
-                        Icon(
-                            modifier = Modifier
-                                .size(SPACING_LARGE.dp)
-                                .drawBehind {
-                                    drawCircle(
-                                        color = circleBackgroundColor,
-                                        radius = this.size.maxDimension.div(2) + SPACING_SMALL
-                                    )
-                                },
-                            painter = painterResource(R.drawable.ic_close_32),
-                            contentDescription = stringResource(R.string.close),
-                            tint = MaterialTheme.colors.onBackground
-                        )
-                    }
-                }
-            },
-            onValueChange = { newSearchTerm -> onValueChange(newSearchTerm) },
-            keyboardOptions = KeyboardOptions(
-
-            ),
-            singleLine = true,
-            shape = CircleShape,
-            colors = TextFieldDefaults.textFieldColors(
-                textColor = textColor,
-                backgroundColor = backgroundColor,
-                focusedIndicatorColor = Color.Transparent,
-                unfocusedIndicatorColor = Color.Transparent,
-                disabledIndicatorColor = Color.Transparent,
-                errorIndicatorColor = Color.Transparent,
-                placeholderColor = MaterialTheme.colors.onBackground.copy(
-                    alpha = LocalContentAlpha.current.minus(
-                        0.3f
-                    )
-                )
+    TextField(
+        modifier = Modifier.fillMaxWidth(),
+        value = searchTerm,
+        placeholder = {
+            Text(
+                text = hint,
+                style = MaterialTheme.typography.h6,
+                fontStyle = FontStyle.Italic
             )
+        },
+        trailingIcon = {
+            if (searchTerm.isNotBlank()) {
+                val circleBackgroundColor = MaterialTheme.colors.background
+                IconButton(
+                    onClick = onCloseClick
+                ) {
+                    Icon(
+                        modifier = Modifier
+                            .size(SPACING_LARGE.dp)
+                            .drawBehind {
+                                drawCircle(
+                                    color = circleBackgroundColor,
+                                    radius = this.size.maxDimension.div(2) + SPACING_SMALL
+                                )
+                            },
+                        painter = painterResource(R.drawable.ic_close_32),
+                        contentDescription = stringResource(R.string.close),
+                        tint = MaterialTheme.colors.onBackground
+                    )
+                }
+            }
+        },
+        onValueChange = { newSearchTerm -> onValueChange(newSearchTerm) },
+        keyboardOptions = KeyboardOptions(
+
+        ),
+        singleLine = true,
+        shape = CircleShape,
+        textStyle = MaterialTheme.typography.h6,
+        colors = TextFieldDefaults.textFieldColors(
+            textColor = textColor,
+            backgroundColor = backgroundColor,
+            focusedIndicatorColor = Color.Transparent,
+            unfocusedIndicatorColor = Color.Transparent,
+            disabledIndicatorColor = Color.Transparent,
+            errorIndicatorColor = Color.Transparent,
+            placeholderColor = MaterialTheme.colors.onBackground.copy(alpha = 0.6f)
         )
-    }
+    )
 }
 
 @OptIn(ExperimentalMaterialApi::class)
@@ -626,7 +802,7 @@ fun ModalBottomSheetScaffold(
                         onBack?.let {
                             IconButton(onClick = { it.invoke() }) {
                                 Icon(
-                                    painter = painterResource(R.drawable.ic_back_32),
+                                    imageVector = Icons.Filled.ArrowBack,
                                     contentDescription = stringResource(R.string.back),
                                 )
                             }
@@ -644,7 +820,7 @@ fun ModalBottomSheetScaffold(
                             IconButton(onClick = { toolbarAction.onClick() }) {
                                 Icon(
                                     painter = painterResource(toolbarAction.iconData.iconResource),
-                                    contentDescription = toolbarAction.iconData.contentDescription,
+                                    contentDescription = stringResource(toolbarAction.iconData.contentDescription),
                                     tint = toolbarAction.iconData.colorTint
                                         ?: LocalContentColor.current.copy(alpha = LocalContentAlpha.current)
                                 )
@@ -669,38 +845,6 @@ fun ModalBottomSheetScaffold(
 }
 
 @Composable
-fun WrapperContentScreen(
-    isLoading: Boolean,
-    hasInternetConnection: Boolean,
-    errorMessage: String?,
-    onRetryClick: () -> Unit,
-    content: @Composable () -> Unit
-) {
-    Box(
-        modifier = Modifier.fillMaxSize()
-    ) {
-        content()
-        if (isLoading) {
-            LoadingScreen()
-        }
-
-        // TODO: UNCOMMENT
-        /*if (!hasInternetConnection) {
-            NoInternetErrorScreen {
-                onRetryClick()
-            }
-        }*/
-
-        errorMessage?.let { errorMessage ->
-            GenericErrorScreen(errorMessage = errorMessage)
-        }
-    }
-}
-
-/**
- * This [Composable] is to be exclusively used by [WrapperContentScreen].
- * */
-@Composable
 fun LoadingScreen() {
     val composition by rememberLottieComposition(
         spec = LottieCompositionSpec.RawRes(
@@ -715,11 +859,12 @@ fun LoadingScreen() {
     Box(
         modifier = Modifier
             .fillMaxSize()
+            .zIndex(10f)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(MaterialTheme.colors.background.copy(alpha = 0.8f))
+                .background(MaterialTheme.colors.background)
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null,
@@ -739,56 +884,6 @@ fun LoadingScreen() {
                 textAlign = TextAlign.Center,
                 style = MaterialTheme.typography.h4,
             )
-        }
-    }
-}
-
-@Composable
-fun LoadingScreen(
-    isLoading: Boolean,
-    content: @Composable () -> Unit
-) {
-    val composition by rememberLottieComposition(
-        spec = LottieCompositionSpec.RawRes(
-            resId = R.raw.loading_animation
-        )
-    )
-    val progress by animateLottieCompositionAsState(
-        composition = composition,
-        iterations = LottieConstants.IterateForever
-    )
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-
-    ) {
-        content()
-        if (isLoading) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(MaterialTheme.colors.background.copy(alpha = 0.8f))
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null,
-                        onClick = {}
-                    ),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                LottieAnimation(
-                    modifier = Modifier.size(140.dp),
-                    composition = composition,
-                    progress = { progress }
-                )
-
-                Text(
-                    text = stringResource(R.string.loading),
-                    textAlign = TextAlign.Center,
-                    style = MaterialTheme.typography.h4,
-                )
-            }
         }
     }
 }
@@ -954,15 +1049,92 @@ fun OutlinedTextFieldValidation(
     }
 }
 
+/**
+ * Simple Exposed Dropdown menu constructed using [ExposedDropdownMenuBox],
+ * [OutlinedTextField], and [DropdownMenu]. Avoid using [ExposedDropdownMenuBox].
+ * Use this wrapper instead. This is required since the native
+ * [ExposedDropdownMenuBox] does not provide an implementation for the
+ * [OutlinedTextField], nor the [ExposedDropdownMenu].
+ *
+ * @param modifier          The modifier to be applied.
+ * @param expanded          Indicates if the dropdown menu is visible.
+ * @param value             The currently selected value.
+ * @param label             A placeholder text when no item has been selected.
+ * @param maxLines          The maximum number of lines that [value] can be displayed to; set to `1` by default.
+ * @param onDismissRequest  The action(s) to invoke when the dropdown menu is expanded, and the user clicks outside it.
+ * @param onExpandedChange  The action(s) to invoke when the user clicks on this dropdown menu.
+ * @param content           The content to be shown when the dropdown menu is visible.
+ */
+@OptIn(ExperimentalMaterialApi::class, ExperimentalMaterialApi::class)
+@Composable
+fun ExposedDropdownMenu(
+    modifier: Modifier = Modifier,
+    expanded: Boolean,
+    value: String? = "",
+    label: String,
+    maxLines: Int = 1,
+    onDismissRequest: (() -> Unit)? = null,
+    onExpandedChange: (() -> Unit)? = null,
+    content: @Composable () -> Unit
+) {
+    ExposedDropdownMenuBox(
+        modifier = modifier,
+        expanded = expanded,
+        onExpandedChange = { onExpandedChange?.invoke() },
+    ) {
+        OutlinedTextField(
+            value = TextFieldValue(
+                text = value.orEmpty()
+            ),
+            onValueChange = {},
+            readOnly = true,
+            label = {
+                Text(
+                    text = label
+                )
+            },
+            trailingIcon = {
+                ExposedDropdownMenuDefaults.TrailingIcon(
+                    expanded = expanded
+                )
+            },
+            maxLines = maxLines
+        )
+        ExposedDropdownMenu(
+            modifier = Modifier.fillMaxWidth(),
+            expanded = expanded,
+            onDismissRequest = { onDismissRequest?.invoke() }
+        ) {
+            content()
+        }
+    }
+}
+
+@Composable
+fun ContainedButton(
+    onClick: () -> Unit,
+    modifier: Modifier,
+    enabled: Boolean = true,
+    content: @Composable RowScope.() -> Unit
+) {
+    Button(
+        onClick = onClick,
+        modifier = modifier,
+        enabled = enabled,
+        contentPadding = PaddingValues(vertical = 8.dp, horizontal = 16.dp),
+        content = content
+    )
+}
+
 sealed class AlertDialogErrorButtonType {
-    object Text : AlertDialogErrorButtonType()
+    data object Text : AlertDialogErrorButtonType()
 
-    object Outlined : AlertDialogErrorButtonType()
+    data object Outlined : AlertDialogErrorButtonType()
 
-    object Contained : AlertDialogErrorButtonType()
+    data object Contained : AlertDialogErrorButtonType()
 
     companion object {
-        fun getDefaultType(): AlertDialogErrorButtonType = Text
+        val defaultType: AlertDialogErrorButtonType = Text
     }
 }
 
@@ -973,19 +1145,17 @@ sealed class AlertDialogErrorButtonType {
  * */
 data class AlertDialogButton(
     val value: String,
-    val buttonType: AlertDialogErrorButtonType = AlertDialogErrorButtonType.getDefaultType(),
+    val buttonType: AlertDialogErrorButtonType = AlertDialogErrorButtonType.defaultType,
     val onClick: () -> Unit
 )
 
 /**
- * @param isVisible if set to true the Alert Dialog will appear on the screen, otherwise it will be invincible
- * @param title the title of the Alert Dialog
- * @param errorMessage the error message of the Alert Dialog
- * */
+ * @param title         The title of this alert dialog.
+ * @param errorMessage  The error message of this alert dialog.
+ */
 @Composable
 fun AlertDialogError(
     modifier: Modifier = Modifier,
-    isVisible: Boolean,
     title: String,
     errorMessage: String,
     dismissButton: AlertDialogButton? = null,
@@ -996,71 +1166,69 @@ fun AlertDialogError(
     properties: DialogProperties = DialogProperties(),
     onDismissRequest: (() -> Unit)? = null
 ) {
-    if (isVisible) {
-        AlertDialog(
-            modifier = modifier,
-            title = {
+    AlertDialog(
+        modifier = modifier,
+        title = {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.h6 // Overrides the default style of "subtitle1".
+            )
+        },
+        text = {
+            // Overrides the provided content alpha of "ContentAlpha.medium".
+            CompositionLocalProvider(
+                LocalContentAlpha provides ContentAlpha.high
+            ) {
                 Text(
-                    text = title,
-                    style = MaterialTheme.typography.h6 // Overrides the default style of "subtitle1".
+                    text = errorMessage,
+                    style = MaterialTheme.typography.body1 // Overrides the provided style of "body2".
                 )
-            },
-            text = {
-                // Overrides the provided content alpha of "ContentAlpha.medium".
-                CompositionLocalProvider(
-                    LocalContentAlpha provides ContentAlpha.high
-                ) {
+            }
+        },
+        dismissButton = {
+            dismissButton?.let { button ->
+                TextButton(onClick = { button.onClick() }) {
                     Text(
-                        text = errorMessage,
-                        style = MaterialTheme.typography.body1 // Overrides the provided style of "body2".
+                        text = button.value
                     )
                 }
-            },
-            dismissButton = {
-                dismissButton?.let { button ->
-                    TextButton(onClick = { button.onClick() }) {
-                        Text(
-                            text = button.value
-                        )
+            }
+        },
+        confirmButton = {
+            confirmButton.let { button ->
+                when (button.buttonType) {
+                    AlertDialogErrorButtonType.Contained -> {
+                        Button(onClick = { button.onClick() }) {
+                            Text(
+                                text = button.value
+                            )
+                        }
                     }
-                }
-            },
-            confirmButton = {
-                confirmButton.let { button ->
-                    when (button.buttonType) {
-                        AlertDialogErrorButtonType.Contained -> {
-                            Button(onClick = { button.onClick() }) {
-                                Text(
-                                    text = button.value
-                                )
-                            }
-                        }
 
-                        AlertDialogErrorButtonType.Outlined -> {
-                            OutlinedButton(onClick = { button.onClick() }) {
-                                Text(
-                                    text = button.value
-                                )
-                            }
+                    AlertDialogErrorButtonType.Outlined -> {
+                        OutlinedButton(onClick = { button.onClick() }) {
+                            Text(
+                                text = button.value
+                            )
                         }
+                    }
 
-                        AlertDialogErrorButtonType.Text -> {
-                            TextButton(onClick = { button.onClick() }) {
-                                Text(
-                                    text = button.value
-                                )
-                            }
+                    AlertDialogErrorButtonType.Text -> {
+                        TextButton(onClick = { button.onClick() }) {
+                            Text(
+                                text = button.value
+                            )
                         }
                     }
                 }
-            },
-            shape = shape,
-            backgroundColor = backgroundColor,
-            contentColor = contentColor,
-            properties = properties,
-            onDismissRequest = { onDismissRequest?.invoke() },
-        )
-    }
+            }
+        },
+        shape = shape,
+        backgroundColor = backgroundColor,
+        contentColor = contentColor,
+        properties = properties,
+        onDismissRequest = { onDismissRequest?.invoke() },
+    )
 }
 
 // ======== END OF ========
@@ -1077,7 +1245,7 @@ sealed class SortingType(val order: Int, val label: String) {
     companion object {
         fun asList(): List<SortingType> = listOf(Random, TextAscending, TextDescending)
 
-        fun getDefaultSortingType(): SortingType = Random
+        val DEFAULT_SORTING_TYPE: SortingType = Random
     }
 }
 
@@ -1094,7 +1262,7 @@ fun SortingItems(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(start = startPadding)
-                // Disables the on tap ripple effect for both simple and long clicks.
+                // Disables the on tap ripple effect for both single and long clicks.
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = rememberRipple(radius = 0.dp)
@@ -1125,7 +1293,7 @@ fun SortingItems(
                 text = sortingType.label,
                 style = MaterialTheme.typography.h6,
                 color = if (isSelected) LocalContentColor.current else LocalContentColor.current.copy(
-                    alpha = LocalContentAlpha.current.minus(0.3f)
+                    alpha = 0.6f
                 )
             )
         }
@@ -1197,6 +1365,7 @@ fun SortingModalBottomSheetContent(
 @Composable
 fun LazyItemScope.GenericErrorScreen(
     errorMessage: String,
+    onRetryClick: () -> Unit
 ) {
     Column(
         modifier = Modifier.fillParentMaxSize(),
@@ -1210,6 +1379,17 @@ fun LazyItemScope.GenericErrorScreen(
                 color = MaterialTheme.colors.error
             )
         )
+
+        VSpacer.Medium()
+
+        Button(
+            onClick = { onRetryClick() }
+        ) {
+            Text(
+                text = stringResource(R.string.retry).uppercase(),
+                style = MaterialTheme.typography.h5
+            )
+        }
     }
 }
 
@@ -1244,37 +1424,25 @@ fun LazyItemScope.NoInternetErrorScreen(
 }
 
 @Composable
-private fun GenericErrorScreen(
+fun GenericErrorScreen(
     errorMessage: String,
-) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colors.background)
-    ) {
-        Text(
-            text = errorMessage,
-            textAlign = TextAlign.Center,
-            style = MaterialTheme.typography.h4.copy(
-                color = MaterialTheme.colors.error
-            )
-        )
-    }
-}
-
-@Composable
-fun NoInternetErrorScreen(
     onRetryClick: () -> Unit
 ) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colors.background),
+            .zIndex(100f)
+            .background(MaterialTheme.colors.background)
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = {}
+            ),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = stringResource(R.string.no_internet_connection_error_message),
+            text = errorMessage,
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.h4.copy(
                 color = MaterialTheme.colors.error
@@ -1298,13 +1466,13 @@ fun NoInternetErrorScreen(
 //        Error Screens
 // ==========================
 
-/*@Composable
-fun LazyStaggeredGridItemScope.isScrollingUp(): Boolean {
+@Composable
+fun LazyGridState.isScrollingUp(): Boolean {
     var previousIndex by remember(this) {
-        mutableStateOf(firstVisibleItemIndex)
+        mutableIntStateOf(firstVisibleItemIndex)
     }
     var previousScrollOffset by remember(this) {
-        mutableStateOf(firstVisibleItemScrollOffset)
+        mutableIntStateOf(firstVisibleItemScrollOffset)
     }
     return remember(this) {
         derivedStateOf {
@@ -1318,4 +1486,4 @@ fun LazyStaggeredGridItemScope.isScrollingUp(): Boolean {
             }
         }
     }.value
-}*/
+}

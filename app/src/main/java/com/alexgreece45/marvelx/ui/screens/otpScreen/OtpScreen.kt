@@ -19,11 +19,17 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.ImeAction
@@ -34,26 +40,26 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.domain.viewmodels.OtpEffect
-import com.alexgreece45.marvelx.domain.viewmodels.OtpEvent
-import com.alexgreece45.marvelx.domain.viewmodels.OtpViewModel
+import com.alexgreece45.marvelx.domain.viewModels.OtpEffect
+import com.alexgreece45.marvelx.domain.viewModels.OtpEvent
+import com.alexgreece45.marvelx.domain.viewModels.OtpViewModel
 import com.alexgreece45.marvelx.navigation.Screen
 import com.alexgreece45.marvelx.ui.ContentScreen
 import com.alexgreece45.marvelx.ui.IconData
-import com.alexgreece45.marvelx.ui.LoadingScreen
-import com.alexgreece45.marvelx.util.OTP_LENGTH
 import com.alexgreece45.marvelx.ui.ToolbarAction
+import com.alexgreece45.marvelx.util.OTP_LENGTH
 import com.alexgreece45.marvelx.util.VSpacer
 
 
 /**
  * The OTP (One Time Password) screen is used to double check the user's identity when
- * logging in, signing up, or when their token has expired.
+ * logging in, signing up.
  *
  * Navigation **to** and **from** this screen ***must*** be handled with caution.
  * Navigation to this screen MUST only happen when instructed either by [LogInScreen],
  * or [SignUpScreen].
  * */
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun OtpScreen(
     navController: NavController,
@@ -64,8 +70,13 @@ fun OtpScreen(
     val state by viewModel.uiState.collectAsState()
 
     val context = LocalContext.current
+    val keyboard = LocalSoftwareKeyboardController.current
+    val focusRequester = remember { FocusRequester() }
 
     LaunchedEffect(Unit) {
+        // Requests focus.
+        focusRequester.requestFocus()
+
         viewModel.setEvent(
             OtpEvent.InitView(
                 userId = userId
@@ -74,20 +85,13 @@ fun OtpScreen(
 
         viewModel.uiEffect.collect { effect ->
             when (effect) {
-                is OtpEffect.Navigation.NavigateToNextScreen -> {
-                    navController.navigate(effect.screenRoute) {
-                        popUpTo(Screen.OtpScreen.route) {
-                            inclusive = true
-                        }
-                    }
-                }
-
                 is OtpEffect.Navigation.NavigateToPreviousScreenWithError -> {
                     Toast.makeText(context, effect.errorMessage, Toast.LENGTH_LONG).show()
                     navController.popBackStack()
                 }
 
                 OtpEffect.Navigation.NavigateToAllCharactersScreen -> {
+                    keyboard?.hide()
                     setUserId.invoke(userId)
                     navController.navigate(Screen.BottomNavigationScreens.AllCharactersScreen.route) {
                         popUpTo(Screen.RegisterScreens.getNestedGraphRootRoute()) {
@@ -95,81 +99,88 @@ fun OtpScreen(
                         }
                     }
                 }
+
+                is OtpEffect.OnValidationSuccess -> viewModel.setEvent(
+                    OtpEvent.OnValidationSuccess(
+                        code = effect.code
+                    )
+                )
             }
         }
     }
-    LoadingScreen(isLoading = state.isLoading) {
-        ContentScreen(
-            onBack = { navController.popBackStack() },
-            showToolbar = true,
-            toolbarTitle = stringResource(R.string.otp_screen_toolbar_title),
-            toolbarActions = listOf(
-                ToolbarAction(
-                    label = stringResource(R.string.otp_screen_toolbar_action_label_send),
-                    order = 1,
-                    iconData = IconData(
-                        iconResource = R.drawable.ic_send_32,
-                        contentDescription = stringResource(R.string.otp_screen_content_description_send),
-                        enabled = state.otp.length == 6 // Enable button if the OTP's length is equal to 6.
-                    ),
-                    onClick = {
-                        viewModel.setEvent(OtpEvent.OnSendClick)
-                    }
-                )
+    ContentScreen(
+        onBack = { navController.popBackStack() },
+        isLoading = state.isLoading,
+        showToolbar = true,
+        toolbarTitle = stringResource(R.string.otp_screen_toolbar_title),
+        toolbarActions = listOf(
+            ToolbarAction(
+                label = stringResource(R.string.otp_screen_toolbar_action_label_send),
+                order = 1,
+                iconData = IconData(
+                    iconResource = R.drawable.ic_send_32,
+                    contentDescription = R.string.otp_screen_content_description_send,
+                    enabled = state.sendButton
+                ),
+                onClick = {
+                    viewModel.setEvent(OtpEvent.OnSendClick)
+                }
             )
-        ) { paddingValues ->
-            LazyColumn(
-                contentPadding = paddingValues,
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Top
-            ) {
-                item {
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Top
+        )
+    ) { paddingValues ->
+        LazyColumn(
+            contentPadding = paddingValues,
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Top
+        ) {
+            item {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Top
+                ) {
+                    AnimatedVisibility(
+                        visible = state.errorMessage != null && state.errorMessage?.isNotBlank() == true,
+                        enter = fadeIn(),
+                        exit = fadeOut()
                     ) {
-                        AnimatedVisibility(
-                            visible = state.errorMessage != null && state.errorMessage?.isNotBlank() == true,
-                            enter = fadeIn(),
-                            exit = fadeOut()
-                        ) {
-                            Text(
-                                modifier = Modifier.fillMaxWidth(),
-                                text = state.errorMessage.toString(),
-                                color = MaterialTheme.colors.error,
-                                textAlign = TextAlign.Center,
-                                style = MaterialTheme.typography.body1,
-                            )
-                        }
-
-                        VSpacer.Small()
-
-                        // OTP
-                        OtpTextField(
-                            modifier = Modifier.fillMaxWidth(),
-                            otp = state.otp,
-                            onValueChange = { value, otpInputFilled ->
-                                viewModel.setEvent(
-                                    OtpEvent.OnOtpFieldValueChange(
-                                        otp = value
-                                    )
-                                )
-                            },
-                            onDoneClick = {
-                                viewModel.setEvent(OtpEvent.OnDoneClick)
-                            }
-                        )
-
-                        VSpacer.Small()
-
                         Text(
                             modifier = Modifier.fillMaxWidth(),
-                            text = stringResource(R.string.otp_screen_input_field_label),
-                            textAlign = TextAlign.Start,
-                            style = MaterialTheme.typography.body2
+                            text = state.errorMessage.toString(),
+                            color = MaterialTheme.colors.error,
+                            textAlign = TextAlign.Center,
+                            style = MaterialTheme.typography.body1,
                         )
                     }
+
+                    VSpacer.Small()
+
+                    // OTP
+                    OtpTextField(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .focusRequester(focusRequester),
+                        otp = state.otp,
+                        onValueChange = { value, otpInputFilled ->
+                            viewModel.setEvent(
+                                OtpEvent.OnOtpFieldValueChange(
+                                    otp = value
+                                )
+                            )
+                        },
+                        onDoneClick = {
+                            viewModel.setEvent(OtpEvent.OnDoneClick)
+                        }
+                    )
+
+                    VSpacer.Small()
+
+                    Text(
+                        modifier = Modifier.fillMaxWidth(),
+                        text = stringResource(R.string.otp_screen_input_field_label),
+                        textAlign = TextAlign.Start,
+                        style = MaterialTheme.typography.body2
+                    )
                 }
             }
         }

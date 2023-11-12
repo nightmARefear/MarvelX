@@ -1,14 +1,11 @@
-package com.alexgreece45.marvelx.domain.viewmodels
+package com.alexgreece45.marvelx.domain.viewModels
 
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.data.domains.user.login.UserLoginResponseDomain
 import com.alexgreece45.marvelx.data.domains.user.VerificationStep
 import com.alexgreece45.marvelx.data.models.user.login.UserLoginRequest
-import com.alexgreece45.marvelx.domain.controllers.PreferencesController
-import com.alexgreece45.marvelx.domain.controllers.PreferencesKeys
+import com.alexgreece45.marvelx.domain.interactors.PostLoginPartialState
 import com.alexgreece45.marvelx.domain.interactors.UserInteractor
-import com.alexgreece45.marvelx.domain.interactors.UserPartialStatePostLogin
 import com.alexgreece45.marvelx.ui.base.BaseEffect
 import com.alexgreece45.marvelx.ui.base.BaseEvent
 import com.alexgreece45.marvelx.ui.base.BaseState
@@ -26,11 +23,11 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 sealed class LoginEvent : BaseEvent {
-    object InitView : LoginEvent()
+    data object InitView : LoginEvent()
 
-    object OnBack : LoginEvent()
+    data object OnBack : LoginEvent()
 
-    object OnPasswordVisibilityIconClick : LoginEvent()
+    data object OnPasswordVisibilityIconClick : LoginEvent()
 
     sealed class FieldValueChange : LoginEvent() {
         data class Email(val email: String) : FieldValueChange()
@@ -38,15 +35,17 @@ sealed class LoginEvent : BaseEvent {
         data class Password(val password: String) : FieldValueChange()
     }
 
-    object OnDoneClick : LoginEvent()
+    data object OnDoneClick : LoginEvent()
 
-    object OnLoginButtonClick : LoginEvent()
+    data object OnLoginButtonClick : LoginEvent()
 
     sealed class AlertDialog : LoginEvent() {
-        object OnOkClick : AlertDialog()
+        data object OnOkClick : AlertDialog()
     }
 
-    object OnNoInternetRetryButtonClick : LoginEvent()
+    data class OnShowErrorDialog(val errorMessage: String) : LoginEvent()
+
+    data object OnNoInternetRetryButtonClick : LoginEvent()
 }
 
 data class LoginState(
@@ -74,31 +73,12 @@ data class LoginState(
 
     // Validations.
     val emailValidationResult: FormsValidationResult = FormsValidationResult(isValid = false),
-    val passwordValidationResult: FormsValidationResult = FormsValidationResult(isValid = false),
-
-    // User login successful response.
-    val userLoginResponseDomain: UserLoginResponseDomain? = null,
-) : BaseState {
-    companion object {
-        fun getDefaultValues(): LoginState = LoginState(
-            isLoading = false,
-            email = "",
-            password = "",
-            isPasswordVisible = false,
-            loginButton = false,
-            isAlertDialogVisible = false,
-            alertDialogTitle = "",
-            alertDialogErrorMessage = "",
-            emailValidationResult = FormsValidationResult(isValid = false),
-            passwordValidationResult = FormsValidationResult(isValid = false),
-            userLoginResponseDomain = null
-        )
-    }
-}
+    val passwordValidationResult: FormsValidationResult = FormsValidationResult(isValid = false)
+) : BaseState
 
 sealed class LoginEffect : BaseEffect {
     sealed class Navigation : LoginEffect() {
-        object PopBackStack : Navigation()
+        data object PopBackStack : Navigation()
 
         data class NavigateToAllCharactersScreen(val userId: Int) : Navigation()
 
@@ -118,22 +98,34 @@ sealed class LoginEffect : BaseEffect {
      * It should be used only in [LoginEvent.OnDoneClick],
      * and [LoginEvent.OnLoginButtonClick].
      * */
-    object CloseKeyboardAndClearFocus : LoginEffect()
+
+    data class ShowErrorDialog(val errorMessage: String) : LoginEffect()
+
+    data object CloseKeyboardAndClearFocus : LoginEffect()
+
+    data object OnDoneClick : LoginEffect()
 }
 
 @HiltViewModel
 class LoginViewModel @Inject constructor(
     private val resourceProvider: ResourceProvider,
     private val formValidator: FormValidator,
-    private val userInteractor: UserInteractor,
-    private val preferencesKeys: PreferencesKeys
+    private val userInteractor: UserInteractor
 ) : BaseViewModel<LoginEvent, LoginState, LoginEffect>() {
 
-    override fun setInitialState(): LoginState = LoginState.getDefaultValues()
-
-    init {
-        setEvent(LoginEvent.InitView)
-    }
+    override fun setInitialState(): LoginState =
+        LoginState(
+            isLoading = false,
+            email = "",
+            password = "",
+            isPasswordVisible = false,
+            loginButton = false,
+            isAlertDialogVisible = false,
+            alertDialogTitle = "",
+            alertDialogErrorMessage = "",
+            emailValidationResult = FormsValidationResult(isValid = false),
+            passwordValidationResult = FormsValidationResult(isValid = false)
+        )
 
     override fun handleEvents(event: LoginEvent) {
         when (event) {
@@ -143,9 +135,7 @@ class LoginViewModel @Inject constructor(
 
             LoginEvent.OnBack -> {
                 // Reset states just in case.
-                setState {
-                    LoginState.getDefaultValues()
-                }
+                resetUiFieldStates()
                 // Pop back stack.
                 setEffect {
                     LoginEffect.Navigation.PopBackStack
@@ -171,15 +161,19 @@ class LoginViewModel @Inject constructor(
             }
 
             LoginEvent.OnDoneClick -> {
+                // Execute only when the login button is enabled,
+                // so the functionality is the same (i.e., if an error
+                // occurs, it will be because a field's validation was
+                // incorrectly calculated, etc.)
                 if (currentState.loginButton) {
-                    setEvent(
-                        LoginEvent.OnLoginButtonClick
-                    )
+                    setEffect {
+                        LoginEffect.OnDoneClick
+                    }
                 }
             }
 
             LoginEvent.OnLoginButtonClick -> {
-                onLogInButtonClick()
+                onLoginButtonClick()
             }
 
             LoginEvent.OnPasswordVisibilityIconClick -> {
@@ -199,13 +193,17 @@ class LoginViewModel @Inject constructor(
             LoginEvent.AlertDialog.OnOkClick -> {
                 hideAlertDialog()
             }
+
+            is LoginEvent.OnShowErrorDialog -> {
+                showAlertDialog(errorMessage = event.errorMessage)
+            }
         }
     }
 
     private fun initView() {
         // Sets all states to their default values.
         setState {
-            LoginState.getDefaultValues()
+            setInitialState()
         }
     }
 
@@ -247,7 +245,7 @@ class LoginViewModel @Inject constructor(
         }
     }
 
-    private fun onLogInButtonClick() {
+    private fun onLoginButtonClick() {
         // First of all, close the keyboard, and remove focus from all UI elements.
         setEffect {
             LoginEffect.CloseKeyboardAndClearFocus
@@ -262,85 +260,72 @@ class LoginViewModel @Inject constructor(
 
         // TODO: get user's ip address, and device info.
 
-        // One or more fields are invalid. We don't know which one, so we disable the "LOGIN" button
-        // and display an error message.
+        // One or more fields are invalid. We don't know which one, so we reset
+        // the UI field states and display an error message.
         if (!areAllFieldsValid()) {
             setState {
-                LoginState.getDefaultValues().copy(
-                    isLoading = false,
-                    loginButton = false
+                copy(
+                    isLoading = false
                 )
             }
-            showAlertDialog(
-                errorMessage = resourceProvider.getString(R.string.unknown_error)
-            )
+            setEffect {
+                LoginEffect.ShowErrorDialog(
+                    errorMessage = resourceProvider.getGenericErrorMessage()
+                )
+            }
             return
         }
 
         // All fields are valid.
         viewModelScope.launch {
             userInteractor.postLogin(
-                userLogInRequest = getUserLogInRequest()
+                userLoginRequest = getUserLogInRequest()
             ).collect { userPartialStatePostLogIn ->
                 when (userPartialStatePostLogIn) {
-                    is UserPartialStatePostLogin.Error -> {
-                        setState {
-                            LoginState.getDefaultValues().copy(
-                                isLoading = false
+                    is PostLoginPartialState.Failed -> {
+                        resetUiFieldStates()
+                        setEffect {
+                            LoginEffect.ShowErrorDialog(
+                                errorMessage = userPartialStatePostLogIn.errorMessage
                             )
                         }
-                        showAlertDialog(
-                            errorMessage = userPartialStatePostLogIn.errorMessage
-                        )
                     }
 
-                    is UserPartialStatePostLogin.Success -> {
-                        setState {
-                            LoginState.getDefaultValues().copy(
-                                isLoading = false,
-                                userLoginResponseDomain = userPartialStatePostLogIn.userLoginResponseDomain
-                            )
-                        }
+                    is PostLoginPartialState.Success -> {
+                        resetUiFieldStates()
+
+                        // UserLoginResponseDomain.
+                        val loginResponseDomain = userPartialStatePostLogIn.loginResponseDomain
 
                         // Act accordingly based on the verification step.
-                        currentState.userLoginResponseDomain?.let { userLogInResponseDomain ->
-                            when (userLogInResponseDomain.verificationStep) {
-                                is VerificationStep.None -> {
-                                    // Store userToken.
-                                    userLogInResponseDomain.userToken?.let { userToken ->
-                                        preferencesKeys.setUserToken(
-                                            userToken = userToken
-                                        )
-                                    }
-
-                                    // Store userId.
-                                    preferencesKeys.setUserId(userLogInResponseDomain.userId)
-
-                                    // No verification step, so navigate to All Characters Screen.
-                                    setEffect {
-                                        LoginEffect.Navigation.NavigateToAllCharactersScreen(userId = userLogInResponseDomain.userId)
-                                    }
+                        when (loginResponseDomain.verificationStep) {
+                            is VerificationStep.None -> {
+                                // No verification step, so navigate to All Characters Screen.
+                                setEffect {
+                                    LoginEffect.Navigation.NavigateToAllCharactersScreen(userId = loginResponseDomain.userId)
                                 }
+                            }
 
-                                is VerificationStep.Invalid -> {
-                                    showAlertDialog(
+                            is VerificationStep.Invalid -> {
+                                setEffect {
+                                    LoginEffect.ShowErrorDialog(
                                         errorMessage = resourceProvider.getGenericErrorMessage()
                                     )
                                 }
+                            }
 
-                                is VerificationStep.OtpEmail -> {
-                                    // Currently we only support OTP from email.
-                                    setEffect {
-                                        LoginEffect.Navigation.NavigateToOtpScreen(
-                                            userId = currentState.userLoginResponseDomain!!.userId
-                                        )
-                                    }
+                            is VerificationStep.OtpEmail -> {
+                                // Currently we only support OTP from email.
+                                setEffect {
+                                    LoginEffect.Navigation.NavigateToOtpScreen(
+                                        userId = loginResponseDomain.userId
+                                    )
                                 }
+                            }
 
-                                is VerificationStep.OtpPhoneNumber -> {
-                                    // TODO: display appropriate screen
-                                    TODO("\"VerificationStep.OtpPhoneNumber\" not implemented yet")
-                                }
+                            is VerificationStep.OtpPhoneNumber -> {
+                                // TODO: display appropriate screen
+                                TODO("\"VerificationStep.OtpPhoneNumber\" not implemented yet")
                             }
                         }
                     }
@@ -416,7 +401,7 @@ class LoginViewModel @Inject constructor(
         )
 
     /**
-     * Returns the title of the Alert Dialog in [com.alexgreece45.marvelx.ui.screens.registerScreens.logInScreen.LogInScreen].
+     * Returns the title of the Alert Dialog in `LoginScreen`.
      */
     private fun getAlertDialogTitle(): String =
         resourceProvider.getString(R.string.login_screen_alert_dialog_title)
@@ -437,6 +422,26 @@ class LoginViewModel @Inject constructor(
                 isAlertDialogVisible = false,
                 alertDialogTitle = "",
                 alertDialogErrorMessage = ""
+            )
+        }
+    }
+
+    /**
+     * This method MUST only be used when an error occurs and it is
+     * necessary to reset the UI field states.
+     *
+     * ### Note: this method, also, DISABLES the loading animation.
+     */
+    private fun resetUiFieldStates() {
+        setState {
+            copy(
+                isLoading = false,
+                email = "",
+                password = "",
+                isPasswordVisible = false,
+                loginButton = false,
+                emailValidationResult = FormsValidationResult(isValid = false),
+                passwordValidationResult = FormsValidationResult(isValid = false)
             )
         }
     }

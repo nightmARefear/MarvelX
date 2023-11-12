@@ -1,4 +1,4 @@
-package com.alexgreece45.marvelx.data.domains
+package com.alexgreece45.marvelx.data.domains.image
 
 import com.alexgreece45.marvelx.data.models.character.ImageResponse
 
