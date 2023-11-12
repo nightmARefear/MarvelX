@@ -1,9 +1,8 @@
 package com.alexgreece45.marvelx.util.interceptors
 
 import com.alexgreece45.marvelx.BuildConfig
-import com.alexgreece45.marvelx.domain.controllers.AuthController
-import com.alexgreece45.marvelx.domain.controllers.ConfigController
-import com.alexgreece45.marvelx.domain.controllers.PrefKeys
+import com.alexgreece45.marvelx.controllers.AuthController
+import com.alexgreece45.marvelx.controllers.ConfigController
 import com.alexgreece45.marvelx.util.APP_USER_AGENT
 import com.alexgreece45.marvelx.util.HeaderConstants
 import com.alexgreece45.marvelx.util.extensions.toMd5

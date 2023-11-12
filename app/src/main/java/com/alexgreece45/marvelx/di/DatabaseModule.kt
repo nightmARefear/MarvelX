@@ -3,8 +3,8 @@ package com.alexgreece45.marvelx.di
 import android.content.Context
 import androidx.room.Room
 import com.alexgreece45.marvelx.BuildConfig
-import com.alexgreece45.marvelx.domain.database.FavoriteCharactersDao
-import com.alexgreece45.marvelx.domain.database.FavoriteCharactersDatabase
+import com.alexgreece45.marvelx.database.FavoriteCharactersDao
+import com.alexgreece45.marvelx.database.FavoriteCharactersDatabase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

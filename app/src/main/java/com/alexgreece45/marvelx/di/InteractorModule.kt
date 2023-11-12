@@ -1,13 +1,13 @@
 package com.alexgreece45.marvelx.di
 
-import com.alexgreece45.marvelx.domain.interactors.CharacterInteractor
-import com.alexgreece45.marvelx.domain.interactors.CharacterInteractorImpl
-import com.alexgreece45.marvelx.domain.interactors.ComicInteractor
-import com.alexgreece45.marvelx.domain.interactors.ComicInteractorImpl
-import com.alexgreece45.marvelx.domain.interactors.OtpInteractor
-import com.alexgreece45.marvelx.domain.interactors.OtpInteractorImpl
-import com.alexgreece45.marvelx.domain.interactors.UserInteractor
-import com.alexgreece45.marvelx.domain.interactors.UserInteractorImpl
+import com.alexgreece45.marvelx.interactors.CharacterInteractor
+import com.alexgreece45.marvelx.interactors.CharacterInteractorImpl
+import com.alexgreece45.marvelx.interactors.ComicInteractor
+import com.alexgreece45.marvelx.interactors.ComicInteractorImpl
+import com.alexgreece45.marvelx.interactors.OtpInteractor
+import com.alexgreece45.marvelx.interactors.OtpInteractorImpl
+import com.alexgreece45.marvelx.interactors.UserInteractor
+import com.alexgreece45.marvelx.interactors.UserInteractorImpl
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn

@@ -24,11 +24,11 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.data.domains.comic.ComicDomain
-import com.alexgreece45.marvelx.domain.viewModels.ComicEvent
-import com.alexgreece45.marvelx.domain.viewModels.ComicViewModel
-import com.alexgreece45.marvelx.ui.ContentScreen
+import com.alexgreece45.marvelx.viewModels.ComicEvent
+import com.alexgreece45.marvelx.viewModels.ComicViewModel
+import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.util.HSpacer
-import com.alexgreece45.marvelx.ui.ItemDescription
+import com.alexgreece45.marvelx.ui.components.ItemDescription
 import com.alexgreece45.marvelx.util.SPACING_TINY
 import com.alexgreece45.marvelx.util.VSpacer
 

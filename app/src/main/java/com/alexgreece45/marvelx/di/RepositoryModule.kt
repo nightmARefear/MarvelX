@@ -1,16 +1,15 @@
 package com.alexgreece45.marvelx.di
 
-import com.alexgreece45.marvelx.domain.repositories.CharacterRepository
-import com.alexgreece45.marvelx.domain.repositories.CharacterRepositoryImpl
-import com.alexgreece45.marvelx.domain.repositories.FavoriteCharactersRepository
-import com.alexgreece45.marvelx.domain.repositories.FavoriteCharactersRepositoryImpl
-import com.alexgreece45.marvelx.domain.repositories.UserRepository
-import com.alexgreece45.marvelx.domain.repositories.UserRepositoryImpl
+import com.alexgreece45.marvelx.repository.CharacterRepository
+import com.alexgreece45.marvelx.repository.CharacterRepositoryImpl
+import com.alexgreece45.marvelx.repository.FavoriteCharactersRepository
+import com.alexgreece45.marvelx.repository.FavoriteCharactersRepositoryImpl
+import com.alexgreece45.marvelx.repository.UserRepository
+import com.alexgreece45.marvelx.repository.UserRepositoryImpl
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.android.components.ViewModelComponent
-import dagger.hilt.android.scopes.ViewModelScoped
 
 @Module
 @InstallIn(ViewModelComponent::class)
