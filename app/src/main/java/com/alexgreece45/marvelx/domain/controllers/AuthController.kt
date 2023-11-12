@@ -1,6 +1,6 @@
 package com.alexgreece45.marvelx.domain.controllers
 
-import com.alexgreece45.marvelx.data.domains.userAccessData.UserAuthData
+import com.alexgreece45.marvelx.data.domains.userAuthData.UserAuthData
 import com.google.gson.Gson
 import logcat.logcat
 import javax.inject.Inject

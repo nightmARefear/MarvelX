@@ -10,8 +10,8 @@ import com.alexgreece45.marvelx.data.models.user.login.LoginResponse
 import com.alexgreece45.marvelx.data.models.user.loginWithToken.UserLoginWithTokenRequest
 import com.alexgreece45.marvelx.data.models.user.loginWithToken.LoginWithTokenResponse
 import com.alexgreece45.marvelx.data.models.user.profileDetails.UserProfileDetailsResponse
-import com.alexgreece45.marvelx.data.models.user.signUp.UserSignupRequest
-import com.alexgreece45.marvelx.data.models.user.signUp.SignupResponse
+import com.alexgreece45.marvelx.data.models.user.signup.UserSignupRequest
+import com.alexgreece45.marvelx.data.models.user.signup.SignupResponse
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.Field

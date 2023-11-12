@@ -122,6 +122,8 @@
     <string name="sign_up_screen_input_field_placeholder_email">john.doe@email.com</string>
     <string name="sign_up_screen_input_field_placeholder_password">hJRVkVtX39Ud!%XIFn9)ui5+K</string>
 
+    <string name="signup_screen_alert_dialog_title">Signup failed</string>
+
     <string name="sign_up_screen_input_field_error_blank_first_name">First name cannot be blank.</string>
     <string name="sign_up_screen_input_field_error_blank_last_name">Last name cannot be blank.</string>
     <string name="sign_up_screen_input_field_error_blank_gender">Gender cannot be blank.</string>

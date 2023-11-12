@@ -227,7 +227,7 @@ class HomeViewModel @Inject constructor(
                     }
 
                     is PostLoginWithTokenPartialState.Success -> {
-                        when (it.userLoginWithTokenResponseDomain.verificationStep) {
+                        when (it.loginWithTokenResponseDomain.verificationStep) {
                             is VerificationStep.None -> {
                                 setState {
                                     copy(

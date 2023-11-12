@@ -28,7 +28,7 @@ sealed class Gender(
     )
 
     companion object {
-        private fun asList() : List<Gender> = listOf(Female, Male, Other)
+        fun asList() : List<Gender> = listOf(Female, Male, Other)
 
         fun of(value: String): Gender? = asList().firstOrNull { it.key == value }
 

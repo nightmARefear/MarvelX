@@ -43,7 +43,7 @@ class OtpInteractorImpl @Inject constructor(
             } else {
                 // Error
                 val deserializedError = gson.fromJson(
-                    (response.errorBody() as ResponseBody).string(),
+                    response.errorBody()?.string(),
                     OtpResponseError::class.java
                 ).toOtpResponseDomain()
 
