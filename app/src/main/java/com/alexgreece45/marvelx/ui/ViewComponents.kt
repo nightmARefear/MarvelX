@@ -37,7 +37,10 @@ import androidx.compose.material.BottomSheetScaffoldDefaults
 import androidx.compose.material.BottomSheetScaffoldState
 import androidx.compose.material.Button
 import androidx.compose.material.ContentAlpha
+import androidx.compose.material.DropdownMenu
 import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.ExposedDropdownMenuBox
+import androidx.compose.material.ExposedDropdownMenuDefaults
 import androidx.compose.material.FloatingActionButton
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
@@ -71,6 +74,7 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -88,6 +92,7 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
@@ -115,6 +120,7 @@ import com.alexgreece45.marvelx.util.THROTTLE_CLICKABLE_DEFAULT_DELAY
 import com.alexgreece45.marvelx.util.VSpacer
 import com.alexgreece45.marvelx.util.extensions.ClickState
 import com.alexgreece45.marvelx.util.extensions.applyPadding
+import com.alexgreece45.marvelx.util.extensions.screenPaddingsSte
 import com.alexgreece45.marvelx.util.extensions.throttledClickableIcon
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -479,12 +485,7 @@ fun ContentScreen(
                 TopAppBar(
                     modifier = Modifier.fillMaxWidth(),
                     elevation = 0.dp,
-                    contentPadding = PaddingValues(
-                        top = 0.dp,
-                        end = DEFAULT_SCREEN_PADDING,
-                        bottom = 0.dp,
-                        start = DEFAULT_SCREEN_PADDING
-                    )
+                    contentPadding = screenPaddingsSte()
                 ) {
                     CompositionLocalProvider(
                         LocalContentAlpha provides ContentAlpha.high,
@@ -607,9 +608,9 @@ fun ContentScreen(
         onBack?.invoke()
     }*/
 
-     /* ThrottledBackHandler(enabled = onBack != null) {
-          onBack?.invoke()
-      }*/
+    /* ThrottledBackHandler(enabled = onBack != null) {
+         onBack?.invoke()
+     }*/
 }
 
 @Composable
@@ -1048,6 +1049,67 @@ fun OutlinedTextFieldValidation(
     }
 }
 
+/**
+ * Simple Exposed Dropdown menu constructed using [ExposedDropdownMenuBox],
+ * [OutlinedTextField], and [DropdownMenu]. Avoid using [ExposedDropdownMenuBox].
+ * Use this wrapper instead. This is required since the native
+ * [ExposedDropdownMenuBox] does not provide an implementation for the
+ * [OutlinedTextField], nor the [ExposedDropdownMenu].
+ *
+ * @param modifier          The modifier to be applied.
+ * @param expanded          Indicates if the dropdown menu is visible.
+ * @param value             The currently selected value.
+ * @param label             A placeholder text when no item has been selected.
+ * @param maxLines          The maximum number of lines that [value] can be displayed to; set to `1` by default.
+ * @param onDismissRequest  The action(s) to invoke when the dropdown menu is expanded, and the user clicks outside it.
+ * @param onExpandedChange  The action(s) to invoke when the user clicks on this dropdown menu.
+ * @param content           The content to be shown when the dropdown menu is visible.
+ */
+@OptIn(ExperimentalMaterialApi::class, ExperimentalMaterialApi::class)
+@Composable
+fun ExposedDropdownMenu(
+    modifier: Modifier = Modifier,
+    expanded: Boolean,
+    value: String? = "",
+    label: String,
+    maxLines: Int = 1,
+    onDismissRequest: (() -> Unit)? = null,
+    onExpandedChange: (() -> Unit)? = null,
+    content: @Composable () -> Unit
+) {
+    ExposedDropdownMenuBox(
+        modifier = modifier,
+        expanded = expanded,
+        onExpandedChange = { onExpandedChange?.invoke() },
+    ) {
+        OutlinedTextField(
+            value = TextFieldValue(
+                text = value.orEmpty()
+            ),
+            onValueChange = {},
+            readOnly = true,
+            label = {
+                Text(
+                    text = label
+                )
+            },
+            trailingIcon = {
+                ExposedDropdownMenuDefaults.TrailingIcon(
+                    expanded = expanded
+                )
+            },
+            maxLines = maxLines
+        )
+        ExposedDropdownMenu(
+            modifier = Modifier.fillMaxWidth(),
+            expanded = expanded,
+            onDismissRequest = { onDismissRequest?.invoke() }
+        ) {
+            content()
+        }
+    }
+}
+
 @Composable
 fun ContainedButton(
     onClick: () -> Unit,
@@ -1065,14 +1127,14 @@ fun ContainedButton(
 }
 
 sealed class AlertDialogErrorButtonType {
-    object Text : AlertDialogErrorButtonType()
+    data object Text : AlertDialogErrorButtonType()
 
-    object Outlined : AlertDialogErrorButtonType()
+    data object Outlined : AlertDialogErrorButtonType()
 
-    object Contained : AlertDialogErrorButtonType()
+    data object Contained : AlertDialogErrorButtonType()
 
     companion object {
-        fun getDefaultType(): AlertDialogErrorButtonType = Text
+        val defaultType: AlertDialogErrorButtonType = Text
     }
 }
 
@@ -1083,19 +1145,17 @@ sealed class AlertDialogErrorButtonType {
  * */
 data class AlertDialogButton(
     val value: String,
-    val buttonType: AlertDialogErrorButtonType = AlertDialogErrorButtonType.getDefaultType(),
+    val buttonType: AlertDialogErrorButtonType = AlertDialogErrorButtonType.defaultType,
     val onClick: () -> Unit
 )
 
 /**
- * @param isVisible if set to true the Alert Dialog will appear on the screen, otherwise it will be invincible
- * @param title the title of the Alert Dialog
- * @param errorMessage the error message of the Alert Dialog
- * */
+ * @param title         The title of this alert dialog.
+ * @param errorMessage  The error message of this alert dialog.
+ */
 @Composable
 fun AlertDialogError(
     modifier: Modifier = Modifier,
-    isVisible: Boolean,
     title: String,
     errorMessage: String,
     dismissButton: AlertDialogButton? = null,
@@ -1106,71 +1166,69 @@ fun AlertDialogError(
     properties: DialogProperties = DialogProperties(),
     onDismissRequest: (() -> Unit)? = null
 ) {
-    if (isVisible) {
-        AlertDialog(
-            modifier = modifier,
-            title = {
+    AlertDialog(
+        modifier = modifier,
+        title = {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.h6 // Overrides the default style of "subtitle1".
+            )
+        },
+        text = {
+            // Overrides the provided content alpha of "ContentAlpha.medium".
+            CompositionLocalProvider(
+                LocalContentAlpha provides ContentAlpha.high
+            ) {
                 Text(
-                    text = title,
-                    style = MaterialTheme.typography.h6 // Overrides the default style of "subtitle1".
+                    text = errorMessage,
+                    style = MaterialTheme.typography.body1 // Overrides the provided style of "body2".
                 )
-            },
-            text = {
-                // Overrides the provided content alpha of "ContentAlpha.medium".
-                CompositionLocalProvider(
-                    LocalContentAlpha provides ContentAlpha.high
-                ) {
+            }
+        },
+        dismissButton = {
+            dismissButton?.let { button ->
+                TextButton(onClick = { button.onClick() }) {
                     Text(
-                        text = errorMessage,
-                        style = MaterialTheme.typography.body1 // Overrides the provided style of "body2".
+                        text = button.value
                     )
                 }
-            },
-            dismissButton = {
-                dismissButton?.let { button ->
-                    TextButton(onClick = { button.onClick() }) {
-                        Text(
-                            text = button.value
-                        )
+            }
+        },
+        confirmButton = {
+            confirmButton.let { button ->
+                when (button.buttonType) {
+                    AlertDialogErrorButtonType.Contained -> {
+                        Button(onClick = { button.onClick() }) {
+                            Text(
+                                text = button.value
+                            )
+                        }
                     }
-                }
-            },
-            confirmButton = {
-                confirmButton.let { button ->
-                    when (button.buttonType) {
-                        AlertDialogErrorButtonType.Contained -> {
-                            Button(onClick = { button.onClick() }) {
-                                Text(
-                                    text = button.value
-                                )
-                            }
-                        }
 
-                        AlertDialogErrorButtonType.Outlined -> {
-                            OutlinedButton(onClick = { button.onClick() }) {
-                                Text(
-                                    text = button.value
-                                )
-                            }
+                    AlertDialogErrorButtonType.Outlined -> {
+                        OutlinedButton(onClick = { button.onClick() }) {
+                            Text(
+                                text = button.value
+                            )
                         }
+                    }
 
-                        AlertDialogErrorButtonType.Text -> {
-                            TextButton(onClick = { button.onClick() }) {
-                                Text(
-                                    text = button.value
-                                )
-                            }
+                    AlertDialogErrorButtonType.Text -> {
+                        TextButton(onClick = { button.onClick() }) {
+                            Text(
+                                text = button.value
+                            )
                         }
                     }
                 }
-            },
-            shape = shape,
-            backgroundColor = backgroundColor,
-            contentColor = contentColor,
-            properties = properties,
-            onDismissRequest = { onDismissRequest?.invoke() },
-        )
-    }
+            }
+        },
+        shape = shape,
+        backgroundColor = backgroundColor,
+        contentColor = contentColor,
+        properties = properties,
+        onDismissRequest = { onDismissRequest?.invoke() },
+    )
 }
 
 // ======== END OF ========

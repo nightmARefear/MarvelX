@@ -1,6 +1,6 @@
 package com.alexgreece45.marvelx.data.models.token
 
-import com.alexgreece45.marvelx.data.domains.userAccessData.UserAuthData
+import com.alexgreece45.marvelx.data.domains.userAuthData.UserAuthData
 import com.google.gson.annotations.SerializedName
 
 data class TokenResponse(

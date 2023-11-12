@@ -47,16 +47,17 @@ fun HomeScreen(
             modifier = Modifier.fillMaxSize(),
             contentPadding = paddingValues,
         ) {
-            item {
-                AlertDialogError(
-                    isVisible = state.isAlertDialogVisible,
-                    title = state.alertDialogTitle,
-                    errorMessage = state.alertDialogErrorMessage,
-                    confirmButton = AlertDialogButton(
-                        value = stringResource(R.string.ok),
-                        onClick = { viewModel.setEvent(HomeEvent.AlertDialog.OnOkClick) }
+            if (state.isAlertDialogVisible) {
+                item {
+                    AlertDialogError(
+                        title = state.alertDialogTitle,
+                        errorMessage = state.alertDialogErrorMessage,
+                        confirmButton = AlertDialogButton(
+                            value = stringResource(R.string.ok),
+                            onClick = { viewModel.setEvent(HomeEvent.AlertDialog.OnOkClick) }
+                        )
                     )
-                )
+                }
             }
 
             item {

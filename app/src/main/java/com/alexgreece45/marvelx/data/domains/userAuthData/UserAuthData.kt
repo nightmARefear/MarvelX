@@ -1,4 +1,4 @@
-package com.alexgreece45.marvelx.data.domains.userAccessData
+package com.alexgreece45.marvelx.data.domains.userAuthData
 
 /**
  * Data class that contains the required data for authentication purposes.

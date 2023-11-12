@@ -1,4 +1,4 @@
-package com.alexgreece45.marvelx.data.models.user.signUp
+package com.alexgreece45.marvelx.data.models.user.signup
 
 import android.os.Parcelable
 import com.google.gson.annotations.SerializedName

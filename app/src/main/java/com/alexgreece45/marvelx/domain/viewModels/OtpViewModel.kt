@@ -3,8 +3,6 @@ package com.alexgreece45.marvelx.domain.viewModels
 import androidx.core.text.isDigitsOnly
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.data.models.otp.OtpRequest
-import com.alexgreece45.marvelx.data.models.token.toUserAuthData
-import com.alexgreece45.marvelx.domain.controllers.AuthController
 import com.alexgreece45.marvelx.domain.controllers.PrefKeys
 import com.alexgreece45.marvelx.domain.interactors.GrandNewAccessTokenPartialState
 import com.alexgreece45.marvelx.domain.interactors.OtpInteractor
@@ -62,19 +60,7 @@ data class OtpState(
     // Validations.
     val enteredOtpValidationResult: FormsValidationResult = FormsValidationResult(true)
 
-) : BaseState {
-    companion object {
-        fun getDefaultValues(): OtpState =
-            OtpState(
-                isLoading = false,
-                hasInternetConnection = true,
-                errorMessage = null,
-                userId = null,
-                otp = "",
-                sendButton = false
-            )
-    }
-}
+) : BaseState
 
 sealed class OtpEffect : BaseEffect {
 
@@ -92,10 +78,17 @@ class OtpViewModel @Inject constructor(
     private val otpInteractor: OtpInteractor,
     private val userInteractor: UserInteractor,
     private val resourceProvider: ResourceProvider,
-    private val authController: AuthController,
     private val prefKeys: PrefKeys
 ) : BaseViewModel<OtpEvent, OtpState, OtpEffect>() {
-    override fun setInitialState(): OtpState = OtpState.getDefaultValues()
+    override fun setInitialState(): OtpState =
+        OtpState(
+            isLoading = false,
+            hasInternetConnection = true,
+            errorMessage = null,
+            userId = null,
+            otp = "",
+            sendButton = false
+        )
 
     override fun handleEvents(event: OtpEvent) {
         when (event) {

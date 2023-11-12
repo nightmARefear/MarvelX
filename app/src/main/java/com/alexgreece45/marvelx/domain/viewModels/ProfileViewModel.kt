@@ -2,7 +2,7 @@ package com.alexgreece45.marvelx.domain.viewModels
 
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.data.domains.user.profileDetails.UserProfileDetailsDomain
+import com.alexgreece45.marvelx.data.domains.user.profileDetails.ProfileDetailsDomain
 import com.alexgreece45.marvelx.domain.controllers.AuthController
 import com.alexgreece45.marvelx.domain.controllers.PrefKeys
 import com.alexgreece45.marvelx.domain.interactors.UserInteractor
@@ -47,7 +47,7 @@ data class ProfileState(
     /**
      * The profile details of the user.
      * */
-    val profileDetails: UserProfileDetailsDomain? = null,
+    val profileDetails: ProfileDetailsDomain? = null,
 
     /**
      * Error message retrieved from the MarvelX-Backend API for invalid user input.

@@ -13,7 +13,6 @@ import com.alexgreece45.marvelx.util.extensions.safeAsync
 import com.google.gson.Gson
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import okhttp3.ResponseBody
 import okio.IOException
 import javax.inject.Inject
 
@@ -43,7 +42,7 @@ class OtpInteractorImpl @Inject constructor(
             } else {
                 // Error
                 val deserializedError = gson.fromJson(
-                    (response.errorBody() as ResponseBody).string(),
+                    response.errorBody()?.string(),
                     OtpResponseError::class.java
                 ).toOtpResponseDomain()
 
@@ -112,5 +111,5 @@ sealed class ValidateOtpPartialState {
     /**
      * If there's no internet connection.
      * */
-    object NoInternetConnection : ValidateOtpPartialState()
+    data object NoInternetConnection : ValidateOtpPartialState()
 }

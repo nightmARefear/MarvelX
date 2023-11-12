@@ -8,6 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import com.alexgreece45.marvelx.util.DEFAULT_SCREEN_PADDING
 import com.google.accompanist.placeholder.PlaceholderDefaults
 import kotlinx.coroutines.Dispatchers
@@ -51,6 +52,9 @@ inline fun <reified Any> Any?.or(other: Any): Any = this ?: other
 //fun LocalDateTime.toOffsetDateTimeUTC() : OffsetDateTime = OffsetDateTime.parse(this.toString())
 fun LocalDateTime.toOffsetDateTime(): OffsetDateTime = OffsetDateTime.parse(this.toString())
 
+/**
+ * Applies padding to all the edges inside a box.
+ */
 @Composable
 fun PaddingValues.applyPadding(padding: Dp = DEFAULT_SCREEN_PADDING): PaddingValues {
     return PaddingValues(
@@ -58,6 +62,19 @@ fun PaddingValues.applyPadding(padding: Dp = DEFAULT_SCREEN_PADDING): PaddingVal
         top = padding + this.calculateTopPadding(),
         end = padding,
         bottom = padding + this.calculateBottomPadding()
+    )
+}
+
+/**
+ * Applies padding to the `start` and `end` edges inside a box.
+ */
+@Composable
+fun screenPaddingsSte(padding: Dp = DEFAULT_SCREEN_PADDING): PaddingValues {
+    return PaddingValues(
+        start = padding,
+        top = 0.dp,
+        end = padding,
+        bottom = 0.dp
     )
 }
 

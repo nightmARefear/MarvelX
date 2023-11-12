@@ -43,6 +43,8 @@ sealed class LoginEvent : BaseEvent {
         data object OnOkClick : AlertDialog()
     }
 
+    data class OnShowErrorDialog(val errorMessage: String) : LoginEvent()
+
     data object OnNoInternetRetryButtonClick : LoginEvent()
 }
 
@@ -72,22 +74,7 @@ data class LoginState(
     // Validations.
     val emailValidationResult: FormsValidationResult = FormsValidationResult(isValid = false),
     val passwordValidationResult: FormsValidationResult = FormsValidationResult(isValid = false)
-) : BaseState {
-    companion object {
-        fun getDefaultValues(): LoginState = LoginState(
-            isLoading = false,
-            email = "",
-            password = "",
-            isPasswordVisible = false,
-            loginButton = false,
-            isAlertDialogVisible = false,
-            alertDialogTitle = "",
-            alertDialogErrorMessage = "",
-            emailValidationResult = FormsValidationResult(isValid = false),
-            passwordValidationResult = FormsValidationResult(isValid = false)
-        )
-    }
-}
+) : BaseState
 
 sealed class LoginEffect : BaseEffect {
     sealed class Navigation : LoginEffect() {
@@ -111,7 +98,12 @@ sealed class LoginEffect : BaseEffect {
      * It should be used only in [LoginEvent.OnDoneClick],
      * and [LoginEvent.OnLoginButtonClick].
      * */
+
+    data class ShowErrorDialog(val errorMessage: String) : LoginEffect()
+
     data object CloseKeyboardAndClearFocus : LoginEffect()
+
+    data object OnDoneClick : LoginEffect()
 }
 
 @HiltViewModel
@@ -121,11 +113,19 @@ class LoginViewModel @Inject constructor(
     private val userInteractor: UserInteractor
 ) : BaseViewModel<LoginEvent, LoginState, LoginEffect>() {
 
-    override fun setInitialState(): LoginState = LoginState.getDefaultValues()
-
-    init {
-        setEvent(LoginEvent.InitView)
-    }
+    override fun setInitialState(): LoginState =
+        LoginState(
+            isLoading = false,
+            email = "",
+            password = "",
+            isPasswordVisible = false,
+            loginButton = false,
+            isAlertDialogVisible = false,
+            alertDialogTitle = "",
+            alertDialogErrorMessage = "",
+            emailValidationResult = FormsValidationResult(isValid = false),
+            passwordValidationResult = FormsValidationResult(isValid = false)
+        )
 
     override fun handleEvents(event: LoginEvent) {
         when (event) {
@@ -135,9 +135,7 @@ class LoginViewModel @Inject constructor(
 
             LoginEvent.OnBack -> {
                 // Reset states just in case.
-                setState {
-                    LoginState.getDefaultValues()
-                }
+                resetUiFieldStates()
                 // Pop back stack.
                 setEffect {
                     LoginEffect.Navigation.PopBackStack
@@ -163,7 +161,15 @@ class LoginViewModel @Inject constructor(
             }
 
             LoginEvent.OnDoneClick -> {
-                onDoneClick()
+                // Execute only when the login button is enabled,
+                // so the functionality is the same (i.e., if an error
+                // occurs, it will be because a field's validation was
+                // incorrectly calculated, etc.)
+                if (currentState.loginButton) {
+                    setEffect {
+                        LoginEffect.OnDoneClick
+                    }
+                }
             }
 
             LoginEvent.OnLoginButtonClick -> {
@@ -187,13 +193,17 @@ class LoginViewModel @Inject constructor(
             LoginEvent.AlertDialog.OnOkClick -> {
                 hideAlertDialog()
             }
+
+            is LoginEvent.OnShowErrorDialog -> {
+                showAlertDialog(errorMessage = event.errorMessage)
+            }
         }
     }
 
     private fun initView() {
         // Sets all states to their default values.
         setState {
-            LoginState.getDefaultValues()
+            setInitialState()
         }
     }
 
@@ -235,12 +245,6 @@ class LoginViewModel @Inject constructor(
         }
     }
 
-    private fun onDoneClick() {
-        if (currentState.loginButton) {
-            onLoginButtonClick()
-        }
-    }
-
     private fun onLoginButtonClick() {
         // First of all, close the keyboard, and remove focus from all UI elements.
         setEffect {
@@ -256,18 +260,19 @@ class LoginViewModel @Inject constructor(
 
         // TODO: get user's ip address, and device info.
 
-        // One or more fields are invalid. We don't know which one, so we disable the "LOGIN" button
-        // and display an error message.
+        // One or more fields are invalid. We don't know which one, so we reset
+        // the UI field states and display an error message.
         if (!areAllFieldsValid()) {
             setState {
-                LoginState.getDefaultValues().copy(
-                    isLoading = false,
-                    loginButton = false
+                copy(
+                    isLoading = false
                 )
             }
-            showAlertDialog(
-                errorMessage = resourceProvider.getString(R.string.unknown_error)
-            )
+            setEffect {
+                LoginEffect.ShowErrorDialog(
+                    errorMessage = resourceProvider.getGenericErrorMessage()
+                )
+            }
             return
         }
 
@@ -278,25 +283,19 @@ class LoginViewModel @Inject constructor(
             ).collect { userPartialStatePostLogIn ->
                 when (userPartialStatePostLogIn) {
                     is PostLoginPartialState.Failed -> {
-                        setState {
-                            LoginState.getDefaultValues().copy(
-                                isLoading = false
+                        resetUiFieldStates()
+                        setEffect {
+                            LoginEffect.ShowErrorDialog(
+                                errorMessage = userPartialStatePostLogIn.errorMessage
                             )
                         }
-                        showAlertDialog(
-                            errorMessage = userPartialStatePostLogIn.errorMessage
-                        )
                     }
 
                     is PostLoginPartialState.Success -> {
-                        setState {
-                            LoginState.getDefaultValues().copy(
-                                isLoading = false
-                            )
-                        }
+                        resetUiFieldStates()
 
                         // UserLoginResponseDomain.
-                        val loginResponseDomain = userPartialStatePostLogIn.userLoginResponseDomain
+                        val loginResponseDomain = userPartialStatePostLogIn.loginResponseDomain
 
                         // Act accordingly based on the verification step.
                         when (loginResponseDomain.verificationStep) {
@@ -308,9 +307,11 @@ class LoginViewModel @Inject constructor(
                             }
 
                             is VerificationStep.Invalid -> {
-                                showAlertDialog(
-                                    errorMessage = resourceProvider.getGenericErrorMessage()
-                                )
+                                setEffect {
+                                    LoginEffect.ShowErrorDialog(
+                                        errorMessage = resourceProvider.getGenericErrorMessage()
+                                    )
+                                }
                             }
 
                             is VerificationStep.OtpEmail -> {
@@ -400,7 +401,7 @@ class LoginViewModel @Inject constructor(
         )
 
     /**
-     * Returns the title of the Alert Dialog in [com.alexgreece45.marvelx.ui.screens.registerScreens.logInScreen.LogInScreen].
+     * Returns the title of the Alert Dialog in `LoginScreen`.
      */
     private fun getAlertDialogTitle(): String =
         resourceProvider.getString(R.string.login_screen_alert_dialog_title)
@@ -421,6 +422,26 @@ class LoginViewModel @Inject constructor(
                 isAlertDialogVisible = false,
                 alertDialogTitle = "",
                 alertDialogErrorMessage = ""
+            )
+        }
+    }
+
+    /**
+     * This method MUST only be used when an error occurs and it is
+     * necessary to reset the UI field states.
+     *
+     * ### Note: this method, also, DISABLES the loading animation.
+     */
+    private fun resetUiFieldStates() {
+        setState {
+            copy(
+                isLoading = false,
+                email = "",
+                password = "",
+                isPasswordVisible = false,
+                loginButton = false,
+                emailValidationResult = FormsValidationResult(isValid = false),
+                passwordValidationResult = FormsValidationResult(isValid = false)
             )
         }
     }

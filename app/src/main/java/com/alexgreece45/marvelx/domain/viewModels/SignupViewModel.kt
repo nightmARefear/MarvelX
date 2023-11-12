@@ -2,10 +2,11 @@ package com.alexgreece45.marvelx.domain.viewModels
 
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.data.domains.user.VerificationStep
 import com.alexgreece45.marvelx.data.models.user.Gender
-import com.alexgreece45.marvelx.data.models.user.signUp.UserSignupRequest
+import com.alexgreece45.marvelx.data.models.user.signup.UserSignupRequest
+import com.alexgreece45.marvelx.domain.interactors.PostSignupPartialState
 import com.alexgreece45.marvelx.domain.interactors.UserInteractor
-import com.alexgreece45.marvelx.domain.interactors.PostSignUpPartialState
 import com.alexgreece45.marvelx.ui.base.BaseEffect
 import com.alexgreece45.marvelx.ui.base.BaseEvent
 import com.alexgreece45.marvelx.ui.base.BaseState
@@ -17,16 +18,21 @@ import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.Rule
 import com.alexgreece45.marvelx.util.SecurityUtil
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-sealed class SignUpEvent : BaseEvent {
-    object InitView : SignUpEvent()
+sealed class SignupEvent : BaseEvent {
+    data object InitView : SignupEvent()
 
-    object OnPasswordVisibilityIconClick : SignUpEvent()
+    sealed class GenderDropdownMenu : SignupEvent() {
+        data object OnClick : GenderDropdownMenu()
+        data object OnDismiss : GenderDropdownMenu()
+    }
 
-    sealed class FieldValueChange : SignUpEvent() {
+    data object OnPasswordVisibilityIconClick : SignupEvent()
+
+    sealed class FieldValueChange : SignupEvent() {
         data class FirstName(val firstName: String) : FieldValueChange()
 
         data class LastName(val lastName: String) : FieldValueChange()
@@ -39,74 +45,105 @@ sealed class SignUpEvent : BaseEvent {
         data class Password(val password: String?) : FieldValueChange()
     }
 
-    object OnSignUpButtonClick : SignUpEvent()
+    sealed class AlertDialogError : SignupEvent() {
+        data class OnShow(val errorMessage: String) : AlertDialogError()
+        data object OnOkClick : AlertDialogError()
+    }
+
+    data object OnDoneClick : SignupEvent()
+
+    data object OnSignupButtonClick : SignupEvent()
 }
 
-data class SignUpState(
-    // Base states.
+data class SignupState(
+    /**
+     * Controls whether the loading animation is visible in the UI.
+     */
     val isLoading: Boolean = false,
-    val hasInternetConnection: Boolean = true,
-    val errorMessage: String? = null,
 
     // Data.
     val firstName: String = "",
     val lastName: String = "",
-    val gender: Gender? = Gender.Male, // todo: change to null
+    val gender: Gender?,
     val email: String = "",
     val password: String = "",
+
+    /**
+     * Controls whether the gender dropdown menu is visible in the UI.
+     * */
+    val isGenderDropdownMenuVisible: Boolean = false,
 
     /**
      * Controls whether the password is visible in the UI.
      * */
     val isPasswordVisible: Boolean = false,
 
-    // SignUp button
-    val signUpButton: Boolean = false,
+    /**
+     * Controls whether the signup button is enabled in the UI.
+     * */
+    val signupButton: Boolean = false,
 
-    // Validations.
-    val firstNameValidationResult: FormsValidationResult = FormsValidationResult(isValid = true),
-    val lastNameValidationResult: FormsValidationResult = FormsValidationResult(isValid = true),
-    val genderValidationResult: FormsValidationResult = FormsValidationResult(isValid = true),
-    val emailValidationResult: FormsValidationResult = FormsValidationResult(isValid = true),
-    val passwordValidationResult: FormsValidationResult = FormsValidationResult(isValid = true)
-) : BaseState {
-    companion object {
-        fun getDefaultValues(): SignUpState = SignUpState(
-            isLoading = false,
-            hasInternetConnection = true,
-            errorMessage = null
-        )
+    // Alert Dialog.
+    val isAlertDialogVisible: Boolean = false,
+    val alertDialogTitle: String = "",
+    val alertDialogErrorMessage: String = "",
+
+    // UI fields' validations.
+    val firstNameValidationResult: FormsValidationResult = FormsValidationResult(isValid = false),
+    val lastNameValidationResult: FormsValidationResult = FormsValidationResult(isValid = false),
+    val genderValidationResult: FormsValidationResult = FormsValidationResult(isValid = false),
+    val emailValidationResult: FormsValidationResult = FormsValidationResult(isValid = false),
+    val passwordValidationResult: FormsValidationResult = FormsValidationResult(isValid = false)
+) : BaseState
+
+sealed class SignupEffect : BaseEffect {
+    sealed class Navigation : SignupEffect() {
+        data object NavigateToAllCharactersScreen : Navigation()
+        data class NavigateToOtpScreen(val userId: Int) : Navigation()
     }
-}
 
-sealed class SignUpEffect : BaseEffect {
-    object SignUpSuccess : SignUpEffect()
+    data class ShowAlertDialogError(val errorMessage: String) : SignupEffect()
 
-    data class DisplayErrorToastMessage(val errorMessage: String) : SignUpEffect()
+    data object CloseKeyboard : SignupEffect()
 
-    object CloseKeyboard : SignUpEffect()
+    data object OnDoneClick : SignupEffect()
 }
 
 @HiltViewModel
-class SignUpViewModel @Inject constructor(
+class SignupViewModel @Inject constructor(
     private val resourceProvider: ResourceProvider,
     private val formValidator: FormValidator,
     private val userInteractor: UserInteractor
-) : BaseViewModel<SignUpEvent, SignUpState, SignUpEffect>() {
+) : BaseViewModel<SignupEvent, SignupState, SignupEffect>() {
 
-    override fun setInitialState(): SignUpState = SignUpState.getDefaultValues()
+    override fun setInitialState(): SignupState =
+        SignupState(
+            isLoading = false,
+            firstName = "",
+            lastName = "",
+            gender = null,
+            email = "",
+            password = "",
+            isGenderDropdownMenuVisible = false,
+            isPasswordVisible = false,
+            signupButton = false,
+            isAlertDialogVisible = false,
+            alertDialogTitle = "",
+            alertDialogErrorMessage = "",
+            firstNameValidationResult = FormsValidationResult(isValid = false),
+            lastNameValidationResult = FormsValidationResult(isValid = false),
+            genderValidationResult = FormsValidationResult(isValid = false),
+            emailValidationResult = FormsValidationResult(isValid = false),
+            passwordValidationResult = FormsValidationResult(isValid = false)
+        )
 
-    init {
-        setEvent(SignUpEvent.InitView)
-    }
-
-    override fun handleEvents(event: SignUpEvent) {
+    override fun handleEvents(event: SignupEvent) {
         when (event) {
-            SignUpEvent.InitView -> {
+            SignupEvent.InitView -> {
                 initView()
             }
 
-            is SignUpEvent.FieldValueChange.FirstName -> {
+            is SignupEvent.FieldValueChange.FirstName -> {
                 setState {
                     copy(
                         firstName = event.firstName
@@ -115,7 +152,7 @@ class SignUpViewModel @Inject constructor(
                 validateFirstName(firstName = event.firstName)
             }
 
-            is SignUpEvent.FieldValueChange.LastName -> {
+            is SignupEvent.FieldValueChange.LastName -> {
                 setState {
                     copy(
                         lastName = event.lastName
@@ -124,16 +161,17 @@ class SignUpViewModel @Inject constructor(
                 validateLastName(lastName = event.lastName)
             }
 
-            is SignUpEvent.FieldValueChange.Gender -> {
+            is SignupEvent.FieldValueChange.Gender -> {
                 setState {
                     copy(
-                        gender = event.gender
+                        gender = event.gender,
+                        isGenderDropdownMenuVisible = false
                     )
                 }
                 validateGender(gender = event.gender)
             }
 
-            is SignUpEvent.FieldValueChange.Email -> {
+            is SignupEvent.FieldValueChange.Email -> {
                 setState {
                     copy(
                         email = event.email.orEmpty()
@@ -142,7 +180,7 @@ class SignUpViewModel @Inject constructor(
                 validateEmail(email = event.email)
             }
 
-            is SignUpEvent.FieldValueChange.Password -> {
+            is SignupEvent.FieldValueChange.Password -> {
                 setState {
                     copy(
                         password = event.password.orEmpty()
@@ -151,23 +189,53 @@ class SignUpViewModel @Inject constructor(
                 validatePassword(password = event.password)
             }
 
-            SignUpEvent.OnSignUpButtonClick -> {
+            SignupEvent.OnSignupButtonClick -> {
                 onSignUpButtonClick()
             }
 
-            SignUpEvent.OnPasswordVisibilityIconClick -> {
+            SignupEvent.OnPasswordVisibilityIconClick -> {
                 setState {
                     copy(
                         isPasswordVisible = currentState.isPasswordVisible.not()
                     )
                 }
             }
+
+            is SignupEvent.AlertDialogError.OnShow -> {
+                showAlertDialog(errorMessage = event.errorMessage)
+            }
+
+            SignupEvent.AlertDialogError.OnOkClick -> {
+                hideAlertDialog()
+            }
+
+            SignupEvent.OnDoneClick -> {
+                if (currentState.signupButton) {
+                    setEffect {
+                        SignupEffect.OnDoneClick
+                    }
+                }
+            }
+
+            SignupEvent.GenderDropdownMenu.OnClick -> {
+                setState {
+                    copy(
+                        isGenderDropdownMenuVisible = !currentState.isGenderDropdownMenuVisible
+                    )
+                }
+            }
+
+            SignupEvent.GenderDropdownMenu.OnDismiss -> {
+                setState {
+                    copy(
+                        isGenderDropdownMenuVisible = false
+                    )
+                }
+            }
         }
     }
 
-    private fun initView() {
-        // todo: get user's ip address, and device info.
-    }
+    private fun initView() {}
 
     private fun validateFirstName(firstName: String) {
         viewModelScope.launch {
@@ -181,7 +249,7 @@ class SignUpViewModel @Inject constructor(
 
                     setState {
                         copy(
-                            signUpButton = formsValidationResult.isValid && areAllFieldsValid()
+                            signupButton = formsValidationResult.isValid && areAllFieldsValid()
                         )
                     }
                 }
@@ -200,7 +268,7 @@ class SignUpViewModel @Inject constructor(
 
                     setState {
                         copy(
-                            signUpButton = formsValidationResult.isValid && areAllFieldsValid()
+                            signupButton = formsValidationResult.isValid && areAllFieldsValid()
                         )
                     }
                 }
@@ -209,7 +277,7 @@ class SignUpViewModel @Inject constructor(
     }
 
     private fun validateGender(gender: Gender?) {
-        gender?.let { _ ->
+        gender?.let {
             viewModelScope.launch {
                 formValidator.validateForms(listOf(Form(mapOf(getGenderValidationRules() to gender.key))))
                     .collect { formsValidationResult ->
@@ -221,7 +289,7 @@ class SignUpViewModel @Inject constructor(
 
                         setState {
                             copy(
-                                signUpButton = formsValidationResult.isValid && areAllFieldsValid()
+                                signupButton = formsValidationResult.isValid && areAllFieldsValid()
                             )
                         }
                     }
@@ -230,7 +298,7 @@ class SignUpViewModel @Inject constructor(
     }
 
     private fun validateEmail(email: String?) {
-        email?.let { _ ->
+        email?.let {
             viewModelScope.launch {
                 formValidator.validateForms(listOf(Form(mapOf(getEmailValidationRules() to email))))
                     .collect { formsValidationResult ->
@@ -242,7 +310,7 @@ class SignUpViewModel @Inject constructor(
 
                         setState {
                             copy(
-                                signUpButton = formsValidationResult.isValid && areAllFieldsValid()
+                                signupButton = formsValidationResult.isValid && areAllFieldsValid()
                             )
                         }
                     }
@@ -251,7 +319,7 @@ class SignUpViewModel @Inject constructor(
     }
 
     private fun validatePassword(password: String?) {
-        password?.let { _ ->
+        password?.let {
             viewModelScope.launch {
                 formValidator.validateForms(listOf(Form(mapOf(getPasswordValidationRules() to password))))
                     .collect { formsValidationResult ->
@@ -263,7 +331,7 @@ class SignUpViewModel @Inject constructor(
 
                         setState {
                             copy(
-                                signUpButton = formsValidationResult.isValid && areAllFieldsValid()
+                                signupButton = formsValidationResult.isValid && areAllFieldsValid()
                             )
                         }
                     }
@@ -274,7 +342,7 @@ class SignUpViewModel @Inject constructor(
     private fun onSignUpButtonClick() {
         // First of all, close the keyboard.
         setEffect {
-            SignUpEffect.CloseKeyboard
+            SignupEffect.CloseKeyboard
         }
 
         // Check if all the fields are valid.
@@ -284,58 +352,72 @@ class SignUpViewModel @Inject constructor(
                     isLoading = true
                 )
             }
+
+            // TODO: get user's ip address, and device info.
+
             viewModelScope.launch {
-                userInteractor.postSignUp(
-                    userSignupRequest = getUserSignUpRequest()
-                ).collect { userPartialStatePostSignUp ->
-                    when (userPartialStatePostSignUp) {
-                        is PostSignUpPartialState.Failed -> {
-                            setState {
-                                copy(
-                                    isLoading = false,
-                                    errorMessage = userPartialStatePostSignUp.errorMessage
-                                )
-                            }
-                            setEffect {
-                                SignUpEffect.DisplayErrorToastMessage(errorMessage = userPartialStatePostSignUp.errorMessage)
-                            }
-                        }
+                userInteractor.postSignup(userSignupRequest = getUserSignupRequest())
+                    .collect { userPartialStatePostSignUp ->
+                        when (userPartialStatePostSignUp) {
+                            is PostSignupPartialState.Failed -> {
+                                resetUiFieldStates()
 
-                        // TODO: REFACTOR
-                       /* UserPartialStatePostSignUp.NoInternetConnection -> {
-                            setState {
-                                copy(
-                                    isLoading = false,
-                                    hasInternetConnection = false
-                                )
+                                setEffect {
+                                    SignupEffect.ShowAlertDialogError(
+                                        errorMessage = userPartialStatePostSignUp.errorMessage
+                                    )
+                                }
                             }
-                        }*/
 
-                        is PostSignUpPartialState.Success -> {
-                            setState {
-                                copy(
-                                    isLoading = false
-                                )
-                            }
-                            // todo: change handling
-                            setEffect {
-                                SignUpEffect.SignUpSuccess
+                            is PostSignupPartialState.Success -> {
+                                resetUiFieldStates()
+
+                                userPartialStatePostSignUp.signupResponseDomain.let { signupResponseDomain ->
+                                    // Act accordingly based on the verification step.
+                                    when (signupResponseDomain.verificationStep) {
+                                        // Server sent an invalid verification step type.
+                                        is VerificationStep.Invalid -> {
+                                           setEffect {
+                                                SignupEffect.ShowAlertDialogError(
+                                                    errorMessage = resourceProvider.getGenericErrorMessage()
+                                                )
+                                            }
+                                        }
+
+                                        VerificationStep.None -> {
+                                            setEffect {
+                                                SignupEffect.Navigation.NavigateToAllCharactersScreen
+                                            }
+                                        }
+
+                                        VerificationStep.OtpEmail -> {
+                                            setEffect {
+                                                SignupEffect.Navigation.NavigateToOtpScreen(
+                                                    userId = signupResponseDomain.userId
+                                                )
+                                            }
+                                        }
+
+                                        VerificationStep.OtpPhoneNumber -> {
+                                            setEffect {
+                                                SignupEffect.Navigation.NavigateToOtpScreen(
+                                                    userId = signupResponseDomain.userId
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
-                }
             }
         } else {
-            // One or more fields are invalid, we don't know which one, so we disable the "Sign Up" button
-            // and display an unexpected error message.
-            setState {
-                copy(
-                    signUpButton = false
-                )
-            }
+            // One or more fields are invalid, we don't know which one, so we reset
+            // all the UI field states and display an unexpected error message.
+            resetUiFieldStates()
             setEffect {
-                SignUpEffect.DisplayErrorToastMessage(
-                    errorMessage = resourceProvider.getString(R.string.unknown_error)
+                SignupEffect.ShowAlertDialogError(
+                    errorMessage = resourceProvider.getGenericErrorMessage()
                 )
             }
         }
@@ -457,12 +539,64 @@ class SignUpViewModel @Inject constructor(
         )
     }
 
-    private suspend fun getUserSignUpRequest(): UserSignupRequest =
+    private suspend fun getUserSignupRequest(): UserSignupRequest =
         UserSignupRequest(
             firstName = currentState.firstName,
             lastName = currentState.lastName,
             gender = currentState.gender?.key.orEmpty(),
             email = currentState.email,
-            password = SecurityUtil.getHashedPasswordFromString(currentState.password).collect().toString()
+            password = SecurityUtil.getHashedPasswordFromString(currentState.password).single()
         )
+
+    /**
+     * Returns the title of the Alert Dialog Error in `SignupScreen`.
+     */
+    private fun getAlertDialogTitle(): String =
+        resourceProvider.getString(R.string.signup_screen_alert_dialog_title)
+
+    private fun showAlertDialog(errorMessage: String) {
+        setState {
+            copy(
+                isAlertDialogVisible = true,
+                alertDialogTitle = getAlertDialogTitle(),
+                alertDialogErrorMessage = errorMessage
+            )
+        }
+    }
+
+    private fun hideAlertDialog() {
+        setState {
+            copy(
+                isAlertDialogVisible = false,
+                alertDialogTitle = "",
+                alertDialogErrorMessage = ""
+            )
+        }
+    }
+
+    /**
+     * Resets all the UI field related states and disabled the loading animation.
+     *
+     * ### Note: This method MUST only be used when an error has occurred.
+     */
+    private fun resetUiFieldStates() {
+        setState {
+            copy(
+                isLoading = false,
+                firstName = "",
+                lastName = "",
+                gender = null,
+                email = "",
+                password = "",
+                isGenderDropdownMenuVisible = false,
+                isPasswordVisible = false,
+                signupButton = false,
+                firstNameValidationResult = FormsValidationResult(isValid = false),
+                lastNameValidationResult = FormsValidationResult(isValid = false),
+                genderValidationResult = FormsValidationResult(isValid = false),
+                emailValidationResult = FormsValidationResult(isValid = false),
+                passwordValidationResult = FormsValidationResult(isValid = false)
+            )
+        }
+    }
 }

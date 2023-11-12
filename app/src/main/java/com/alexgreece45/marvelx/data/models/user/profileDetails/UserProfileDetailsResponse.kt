@@ -1,8 +1,7 @@
 package com.alexgreece45.marvelx.data.models.user.profileDetails
 
-import com.alexgreece45.marvelx.data.domains.user.profileDetails.UserProfileDetailsDomain
+import com.alexgreece45.marvelx.data.domains.user.profileDetails.ProfileDetailsDomain
 import com.alexgreece45.marvelx.data.models.user.Gender
-import com.alexgreece45.marvelx.util.extensions.or
 import com.google.gson.annotations.SerializedName
 
 data class UserProfileDetailsResponse(
@@ -12,8 +11,8 @@ data class UserProfileDetailsResponse(
     @SerializedName("email") val email: String,
 )
 
-fun UserProfileDetailsResponse.toUserProfileDetailsDomain(): UserProfileDetailsDomain =
-    UserProfileDetailsDomain(
+fun UserProfileDetailsResponse.toUserProfileDetailsDomain(): ProfileDetailsDomain =
+    ProfileDetailsDomain(
         firstName = this.firstName,
         lastName = this.lastName,
         gender = Gender.of(this.gender) ?: Gender.Other,

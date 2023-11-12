@@ -88,7 +88,19 @@ fun LogInScreen(
                 }
 
                 LoginEffect.Navigation.PopBackStack -> {
-                    navController.popBackStack().also{ println("LoginScreen: popBackStack")}
+                    navController.popBackStack().also { logcat { "LoginScreen: popBackStack" } }
+                }
+
+                is LoginEffect.ShowErrorDialog -> {
+                    viewModel.setEvent(
+                        LoginEvent.OnShowErrorDialog(
+                            errorMessage = effect.errorMessage
+                        )
+                    )
+                }
+
+                LoginEffect.OnDoneClick -> {
+                    viewModel.setEvent(LoginEvent.OnLoginButtonClick)
                 }
             }
         }.collect()
@@ -104,16 +116,17 @@ fun LogInScreen(
             modifier = Modifier.fillMaxSize(),
             contentPadding = paddingValues,
         ) {
-            item {
-                AlertDialogError(
-                    isVisible = state.isAlertDialogVisible,
-                    title = state.alertDialogTitle,
-                    errorMessage = state.alertDialogErrorMessage,
-                    confirmButton = AlertDialogButton(
-                        value = stringResource(R.string.ok),
-                        onClick = { viewModel.setEvent(LoginEvent.AlertDialog.OnOkClick) }
+            if (state.isAlertDialogVisible) {
+                item {
+                    AlertDialogError(
+                        title = state.alertDialogTitle,
+                        errorMessage = state.alertDialogErrorMessage,
+                        confirmButton = AlertDialogButton(
+                            value = stringResource(R.string.ok),
+                            onClick = { viewModel.setEvent(LoginEvent.AlertDialog.OnOkClick) }
+                        )
                     )
-                )
+                }
             }
 
             item {
@@ -127,8 +140,8 @@ fun LogInScreen(
                         value = state.email,
                         label = stringResource(R.string.login_screen_input_field_label_email),
                         placeholder = stringResource(R.string.login_screen_input_field_placeholder_email),
-                        onValueChange = { newValue ->
-                            viewModel.setEvent(LoginEvent.FieldValueChange.Email(email = newValue))
+                        onValueChange = { newEmail ->
+                            viewModel.setEvent(LoginEvent.FieldValueChange.Email(email = newEmail))
                         },
                         errorMessage = state.emailValidationResult.messages.firstOrNull()
                             .orEmpty(),
@@ -155,8 +168,8 @@ fun LogInScreen(
                         ),
                         label = stringResource(R.string.login_screen_input_field_label_password),
                         placeholder = stringResource(R.string.log_in_screen_input_field_placeholder_password),
-                        onValueChange = { newValue ->
-                            viewModel.setEvent(LoginEvent.FieldValueChange.Password(password = newValue))
+                        onValueChange = { newPassword ->
+                            viewModel.setEvent(LoginEvent.FieldValueChange.Password(password = newPassword))
                         },
                         errorMessage = state.passwordValidationResult.messages.firstOrNull()
                             .orEmpty(),

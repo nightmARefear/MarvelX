@@ -12,8 +12,8 @@ import com.alexgreece45.marvelx.data.models.user.login.UserLoginRequest
 import com.alexgreece45.marvelx.data.models.user.loginWithToken.LoginWithTokenResponse
 import com.alexgreece45.marvelx.data.models.user.loginWithToken.UserLoginWithTokenRequest
 import com.alexgreece45.marvelx.data.models.user.profileDetails.UserProfileDetailsResponse
-import com.alexgreece45.marvelx.data.models.user.signUp.SignupResponse
-import com.alexgreece45.marvelx.data.models.user.signUp.UserSignupRequest
+import com.alexgreece45.marvelx.data.models.user.signup.SignupResponse
+import com.alexgreece45.marvelx.data.models.user.signup.UserSignupRequest
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
