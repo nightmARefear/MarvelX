@@ -11,7 +11,7 @@ import com.alexgreece45.marvelx.data.models.user.login.LoginResponse
 import com.alexgreece45.marvelx.data.models.user.login.UserLoginRequest
 import com.alexgreece45.marvelx.data.models.user.loginWithToken.LoginWithTokenResponse
 import com.alexgreece45.marvelx.data.models.user.loginWithToken.UserLoginWithTokenRequest
-import com.alexgreece45.marvelx.data.models.user.profileDetails.UserProfileDetailsResponse
+import com.alexgreece45.marvelx.data.models.user.profileDetails.ResponseProfileDetails
 import com.alexgreece45.marvelx.data.models.user.signup.SignupResponse
 import com.alexgreece45.marvelx.data.models.user.signup.UserSignupRequest
 import dagger.Module
@@ -65,6 +65,6 @@ class ApiClientImpl @Inject constructor(
     override suspend fun validateOtp(otpRequest: OtpRequest): Response<OtpResponseSuccess> =
         api.validateOtp(otpRequest)
 
-    override suspend fun getUserProfileDetails(userId: Int): Response<UserProfileDetailsResponse> =
+    override suspend fun getUserProfileDetails(userId: Int): Response<ResponseProfileDetails> =
         api.getUserProfileDetails(userId = userId)
 }

@@ -8,8 +8,8 @@ import com.alexgreece45.marvelx.data.models.character.EventList
 import com.alexgreece45.marvelx.data.models.character.SeriesList
 import com.alexgreece45.marvelx.data.models.character.StoryList
 import com.alexgreece45.marvelx.data.models.character.Url
-import com.alexgreece45.marvelx.data.uiModels.CharacterCardUi
-import com.alexgreece45.marvelx.domain.database.FavoriteCharacterEntity
+import com.alexgreece45.marvelx.ui.screens.allCharactersScreen.uiModels.CharacterCardUi
+import com.alexgreece45.marvelx.database.FavoriteCharacterEntity
 import com.alexgreece45.marvelx.util.extensions.toOffsetDateTime
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter

@@ -34,11 +34,11 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.domain.viewModels.AllFavoriteCharactersEvent
-import com.alexgreece45.marvelx.domain.viewModels.AllFavoriteCharactersViewModel
-import com.alexgreece45.marvelx.ui.BottomBarItem
-import com.alexgreece45.marvelx.ui.BottomNavigationBarData
-import com.alexgreece45.marvelx.ui.ContentScreen
+import com.alexgreece45.marvelx.viewModels.AllFavoriteCharactersEvent
+import com.alexgreece45.marvelx.viewModels.AllFavoriteCharactersViewModel
+import com.alexgreece45.marvelx.ui.components.BottomBarItem
+import com.alexgreece45.marvelx.ui.components.BottomNavigationBarData
+import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.SPACING_TINY
 
