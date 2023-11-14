@@ -21,7 +21,7 @@ import javax.inject.Inject
 
 data class ProfileScreenErrorView(
     val errorMessage: String,
-    val onRetryClick: () -> Unit
+    val profileEvent: ProfileEvent
 )
 
 sealed class ProfileEvent : BaseEvent {
@@ -86,7 +86,7 @@ class ProfileViewModel @Inject constructor(
                         isLoading = true
                     )
                 }
-                initView()
+                initView(event)
             }
 
             ProfileEvent.OnLogoutButtonPressed -> {
@@ -99,46 +99,32 @@ class ProfileViewModel @Inject constructor(
             }
 
             ProfileEvent.LoadProfileDetails -> {
-                setState {
-                    copy(
-                        isLoading = true,
-                        error = null
-                    )
-                }
-                loadProfileDetails()
+                loadProfileDetails(event)
             }
         }
     }
 
-    private fun initView() {
-//        setState {
-//            copy(
-//                error = null
-//            )
-//        }
-        loadProfileDetails()
-    }
-
-    private fun loadProfileDetails() {
+    private fun initView(event: ProfileEvent) {
         setState {
             copy(
                 userId = prefKeys.getUserId(),
-                accessToken = authController.getAccessToken() ?: ""
+                accessToken = authController.getAccessToken().orEmpty()
+            )
+        }
+        loadProfileDetails(event)
+    }
+
+    private fun loadProfileDetails(event: ProfileEvent) {
+        setState {
+            copy(
+                isLoading = true,
+                error = null
             )
         }
         viewModelScope.launch {
-            userInteractor.getProfileDetails(userId = currentState.userId).collect {
+            userInteractor.getProfileDetails().collect {
                 when (it) {
                     is GetProfileDetailsPartialState.Failed -> {
-                        setState {
-                            copy(
-                                isLoading = false,
-//                                error = ProfileScreenErrorView(
-//                                    errorMessage = it.errorMessage,
-//                                    onRetryClick = { loadProfileDetails() }
-//                                )
-                            )
-                        }
                         logout()
                     }
 
@@ -148,9 +134,7 @@ class ProfileViewModel @Inject constructor(
                                 isLoading = false,
                                 error = ProfileScreenErrorView(
                                     errorMessage = it.errorMessage,
-                                    onRetryClick = {
-                                        loadProfileDetails()
-                                    }
+                                    profileEvent = event
                                 )
                             )
                         }
@@ -160,7 +144,8 @@ class ProfileViewModel @Inject constructor(
                         setState {
                             copy(
                                 isLoading = false,
-                                profileDetails = it.profileDetails
+                                error = null,
+                                profileDetails = it.profileDetailsDomain
                             )
                         }
                     }

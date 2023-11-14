@@ -1,90 +1,89 @@
 package com.alexgreece45.marvelx.repository
 
-import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.data.api.ApiClient
 import com.alexgreece45.marvelx.data.models.character.CharacterDataWrapper
-import com.alexgreece45.marvelx.data.models.character.comic.ComicResponse
-import com.alexgreece45.marvelx.util.ResourceProvider
+import com.alexgreece45.marvelx.data.models.character.comic.ComicDataWrapper
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import logcat.LogPriority
-import logcat.logcat
-import okio.IOException
-import retrofit2.Response
 import javax.inject.Inject
 
 interface CharacterRepository {
-    suspend fun getAllCharacters(): Response<CharacterDataWrapper>
-
-    suspend fun getCharacter(characterId: Int): Response<CharacterDataWrapper>
-
-    suspend fun getCharacterComics(characterId: Int): Flow<CharacterRepositoryPartialState>
+    suspend fun getAllCharacters(): Flow<GetAllCharactersRepositoryResponse>
+    suspend fun getCharacter(characterId: Int): Flow<GetCharacterRepositoryResponse>
+    suspend fun getCharacterComics(characterId: Int): Flow<GetCharacterComicsRepositoryResponse>
 }
 
 class CharacterRepositoryImpl @Inject constructor(
-    private val api: ApiClient,
-    private val resourceProvider: ResourceProvider
+    private val apiClient: ApiClient
 ) : CharacterRepository {
-    override suspend fun getAllCharacters(): Response<CharacterDataWrapper> {
-        return api.getCharacters()
-    }
-
-    override suspend fun getCharacter(characterId: Int): Response<CharacterDataWrapper> {
-        return api.getCharacterById(characterId)
-    }
-
-    override suspend fun getCharacterComics(characterId: Int): Flow<CharacterRepositoryPartialState> =
-        flow {
-            try {
-                val response = api.getCharacterComics(characterId)
-
-                if (response.isSuccessful) {
-                    response.body()?.let {
-                        emit(
-                            CharacterRepositoryPartialState.Success(
-                                data = it.data.results
-                            )
-                        )
-                    } ?: run {
-                        CharacterRepositoryPartialState.Error(
-                            errorCode = response.code(),
-                            errorMessage = resourceProvider.getString(R.string.unknown_error)
-                        )
-                    }
-                } else {
-                    emit(
-                        CharacterRepositoryPartialState.Error(
-                            errorCode = response.code(),
-                            errorMessage = resourceProvider.getString(R.string.no_data_was_found)
-                        )
-                    )
-                }
-            } catch (e: IOException) {
-                logcat(LogPriority.ERROR) { e.toString() }
+    override suspend fun getAllCharacters(): Flow<GetAllCharactersRepositoryResponse> = flow {
+        apiClient.getCharacters().let { response ->
+            if (response.isSuccessful) {
                 emit(
-                    CharacterRepositoryPartialState.NoInternetConnection(
-                        errorMessage = resourceProvider.getString(R.string.no_internet_connection_error_message)
+                    GetAllCharactersRepositoryResponse.Success(
+                        response = response.body()
                     )
                 )
-            } catch (e: Exception) {
-                logcat(LogPriority.ERROR) { e.toString() }
+            } else {
                 emit(
-                    CharacterRepositoryPartialState.Error(
-                        errorMessage = e.localizedMessage
-                            ?: resourceProvider.getString(R.string.unknown_error)
+                    GetAllCharactersRepositoryResponse.Failed(
+                        errorMessage = response.errorBody()?.string()
                     )
                 )
             }
         }
+    }
+
+    override suspend fun getCharacter(characterId: Int): Flow<GetCharacterRepositoryResponse> =
+        flow {
+            apiClient.getCharacterById(characterId).let { response ->
+                if (response.isSuccessful) {
+                    emit(
+                        GetCharacterRepositoryResponse.Success(
+                            response = response.body()
+                        )
+                    )
+                } else {
+                    emit(
+                        GetCharacterRepositoryResponse.Failed(
+                            errorMessage = response.errorBody()?.string()
+                        )
+                    )
+                }
+            }
+        }
+
+    override suspend fun getCharacterComics(characterId: Int): Flow<GetCharacterComicsRepositoryResponse> =
+        flow {
+            apiClient.getCharacterComics(characterId).let { response ->
+                if (response.isSuccessful) {
+                    emit(
+                        GetCharacterComicsRepositoryResponse.Success(
+                            response = response.body()
+                        )
+                    )
+                } else {
+                    emit(
+                        GetCharacterComicsRepositoryResponse.Failed(
+                            errorMessage = response.errorBody()?.string()
+                        )
+                    )
+                }
+            }
+        }
 }
 
-sealed interface CharacterRepositoryPartialState {
-    data class Success(val data: List<ComicResponse>) : CharacterRepositoryPartialState
+sealed class GetCharacterComicsRepositoryResponse {
+    data class Success(val response: ComicDataWrapper?) : GetCharacterComicsRepositoryResponse()
+    data class Failed(val errorMessage: String?) : GetCharacterComicsRepositoryResponse()
+}
 
-    data class Error(
-        val errorCode: Int? = null,
-        val errorMessage: String
-    ) : CharacterRepositoryPartialState
+sealed class GetAllCharactersRepositoryResponse {
+    data class Success(val response: CharacterDataWrapper?) : GetAllCharactersRepositoryResponse()
+    data class Failed(val errorMessage: String?) : GetAllCharactersRepositoryResponse()
+}
 
-    data class NoInternetConnection(val errorMessage: String) : CharacterRepositoryPartialState
+sealed class GetCharacterRepositoryResponse {
+    data class Success(val response: CharacterDataWrapper?) : GetCharacterRepositoryResponse()
+    data class Failed(val errorMessage: String?) : GetCharacterRepositoryResponse()
 }

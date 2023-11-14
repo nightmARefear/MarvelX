@@ -2,146 +2,147 @@ package com.alexgreece45.marvelx.interactors
 
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.data.domains.character.CharacterDomain
-import com.alexgreece45.marvelx.data.models.character.comic.ComicResponse
-import com.alexgreece45.marvelx.data.models.character.toDomain
+import com.alexgreece45.marvelx.data.domains.comic.ComicDomain
+import com.alexgreece45.marvelx.data.models.character.comic.toComicDomainList
+import com.alexgreece45.marvelx.data.models.character.toCharacterDomain
+import com.alexgreece45.marvelx.data.models.character.toCharacterDomainList
 import com.alexgreece45.marvelx.database.FavoriteCharacterEntity
 import com.alexgreece45.marvelx.repository.CharacterRepository
-import com.alexgreece45.marvelx.repository.CharacterRepositoryPartialState
 import com.alexgreece45.marvelx.repository.FavoriteCharactersRepository
+import com.alexgreece45.marvelx.repository.GetAllCharactersRepositoryResponse
+import com.alexgreece45.marvelx.repository.GetCharacterComicsRepositoryResponse
+import com.alexgreece45.marvelx.repository.GetCharacterRepositoryResponse
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.extensions.safeAsync
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import logcat.LogPriority
 import logcat.logcat
 import okio.IOException
 import javax.inject.Inject
 
 interface CharacterInteractor {
-    suspend fun getAllCharacters(): Flow<CharacterPartialState<List<CharacterDomain>>>
-    suspend fun getCharacter(characterId: Int): Flow<CharacterPartialState<CharacterDomain>>
+    suspend fun getAllCharacters(): Flow<GetAllCharactersPartialState>
+
+    suspend fun getCharacter(characterId: Int): Flow<GetCharacterPartialState>
 
     suspend fun getCharacterComics(characterId: Int): Flow<GetCharacterComicsPartialState>
 
-    suspend fun insertFavoriteCharacters(vararg favoriteCharacterEntity: FavoriteCharacterEntity): Flow<CharacterPartialState<Int>>
+    suspend fun insertFavoriteCharacters(vararg favoriteCharacterEntity: FavoriteCharacterEntity): Flow<InsertFavoriteCharactersPartialState>
 
-    suspend fun deleteFavoriteCharacterById(characterId: Int): Flow<CharacterPartialState<Int>>
+    suspend fun deleteFavoriteCharacterById(characterId: Int): Flow<DeleteFavoriteCharacterByIdPartialState>
 
     suspend fun getFavoriteCharacters(): Flow<GetFavoriteCharactersPartialState>
 
     suspend fun getFavoriteCharacterIds(): Flow<GetFavoriteCharacterIdsPartialState>
 
-    suspend fun isCharacterByIdFavorite(characterId: Int): Flow<IsCharacterFavoritePartialState>
+    suspend fun isCharacterFavoriteById(characterId: Int): Flow<IsCharacterFavoriteByIdPartialState>
 }
 
 class CharacterInteractorImpl @Inject constructor(
-    private val resourceProvider: ResourceProvider,
     private val characterRepository: CharacterRepository,
-    private val favoriteCharactersRepository: FavoriteCharactersRepository
+    private val favoriteCharactersRepository: FavoriteCharactersRepository,
+    private val resourceProvider: ResourceProvider
 ) : CharacterInteractor {
-    override suspend fun getAllCharacters(): Flow<CharacterPartialState<List<CharacterDomain>>> =
+    override suspend fun getAllCharacters(): Flow<GetAllCharactersPartialState> =
         flow {
-            val response = characterRepository.getAllCharacters()
-            when (response.isSuccessful) {
-                true -> {
-                    response.body()?.data?.let {
-                        if (it.results.isNotEmpty()) {
-                            emit(
-                                CharacterPartialState.Success(
-                                    it.results.toDomain()
-                                )
-                            )
-                        } else {
-                            emit(
-                                CharacterPartialState.Error(
-                                    errorMessage = resourceProvider.getString(R.string.no_characters_were_found_error_message)
-                                )
-                            )
-                        }
-                    } ?: run {
+            characterRepository.getAllCharacters().collect {
+                when (it) {
+                    is GetAllCharactersRepositoryResponse.Failed -> {
                         emit(
-                            CharacterPartialState.Error(
-                                errorMessage = resourceProvider.getString(R.string.no_characters_were_found_error_message)
+                            GetAllCharactersPartialState.Failed(
+                                errorMessage = resourceProvider.getString(R.string.error_retrieving_all_characters)
+                            )
+                        )
+                    }
+
+                    is GetAllCharactersRepositoryResponse.Success -> {
+                        it.response?.let { characterDataWrapper ->
+                            emit(
+                                GetAllCharactersPartialState.Success(
+                                    characters = characterDataWrapper.data.results.toCharacterDomainList()
+                                )
+                            )
+                        } ?: emit(
+                            GetAllCharactersPartialState.Failed(
+                                errorMessage = resourceProvider.getString(R.string.error_retrieving_all_characters)
                             )
                         )
                     }
                 }
-
-                false -> {
-                    emit(
-                        CharacterPartialState.Error(
-                            errorMessage = response.errorBody().toString()
-                        )
-                    )
-                }
             }
         }.safeAsync {
+            logcat(LogPriority.ERROR) { "(getAllCharacters) error: ${it.message.orEmpty()}" }
             when (it) {
                 is IOException -> {
-                    CharacterPartialState.NoInternetConnection(
-                        resourceProvider.getString(R.string.no_internet_connection_error_message)
+                    GetAllCharactersPartialState.Failed(
+                        errorMessage = resourceProvider.getNoInternetConnectionMessage()
                     )
                 }
 
                 else -> {
-                    CharacterPartialState.Error(
-                        errorMessage = it.localizedMessage
-                            ?: resourceProvider.getString(R.string.unknown_error)
+                    GetAllCharactersPartialState.Failed(
+                        errorMessage = resourceProvider.getGenericErrorMessage()
                     )
                 }
             }
         }
 
-    override suspend fun getCharacter(characterId: Int): Flow<CharacterPartialState<CharacterDomain>> =
+    override suspend fun getCharacter(characterId: Int): Flow<GetCharacterPartialState> =
         flow {
-            val response = characterRepository.getCharacter(characterId)
-            when (response.isSuccessful) {
-                true -> {
-                    response.body()?.data?.let {
-                        if (it.results.isNotEmpty()) {
-                            emit(
-                                CharacterPartialState.Success(
-                                    it.results[0].toDomain()
-                                )
-                            )
-                        } else {
-                            emit(
-                                CharacterPartialState.Error(
-                                    errorMessage = resourceProvider.getString(
-                                        R.string.character_with_specific_id_not_found,
-                                        characterId
-                                    )
-                                )
-                            )
-                        }
-                    } ?: run {
+            characterRepository.getCharacter(characterId).collect {
+                when (it) {
+                    is GetCharacterRepositoryResponse.Failed -> {
                         emit(
-                            CharacterPartialState.Error(
-                                errorMessage = resourceProvider.getString(R.string.character_error_loading)
+                            GetCharacterPartialState.Failed(
+                                errorMessage = resourceProvider.getString(
+                                    R.string.character_with_specific_id_not_found,
+                                    characterId
+                                )
                             )
                         )
                     }
-                }
 
-                false -> {
-                    emit(
-                        CharacterPartialState.Error(
-                            errorMessage = response.errorBody().toString()
-                        )
-                    )
+                    is GetCharacterRepositoryResponse.Success -> {
+                        it.response?.let { characterDataWrapper ->
+                            if (characterDataWrapper.data.results.isNotEmpty()) {
+                                emit(
+                                    GetCharacterPartialState.Success(
+                                        character = characterDataWrapper.data.results.first()
+                                            .toCharacterDomain()
+                                    )
+                                )
+                            } else {
+                                emit(
+                                    GetCharacterPartialState.Failed(
+                                        errorMessage = resourceProvider.getString(
+                                            R.string.character_with_specific_id_not_found,
+                                            characterId
+                                        )
+                                    )
+                                )
+                            }
+                        } ?: run {
+                            emit(
+                                GetCharacterPartialState.Failed(
+                                    errorMessage = resourceProvider.getString(R.string.character_error_loading)
+                                )
+                            )
+                        }
+                    }
                 }
             }
         }.safeAsync {
             when (it) {
                 is IOException -> {
-                    CharacterPartialState.NoInternetConnection(
-                        resourceProvider.getString(R.string.no_internet_connection_error_message)
+                    GetCharacterPartialState.Failed(
+                        errorMessage = resourceProvider.getNoInternetConnectionMessage()
                     )
                 }
 
                 else -> {
-                    CharacterPartialState.Error(
-                        errorMessage = it.localizedMessage
-                            ?: resourceProvider.getString(R.string.unknown_error)
+                    GetCharacterPartialState.Failed(
+                        errorMessage = resourceProvider.getGenericErrorMessage()
                     )
                 }
             }
@@ -151,81 +152,80 @@ class CharacterInteractorImpl @Inject constructor(
         flow {
             characterRepository.getCharacterComics(characterId).collect {
                 when (it) {
-                    is CharacterRepositoryPartialState.Error -> {
+                    is GetCharacterComicsRepositoryResponse.Failed -> {
                         emit(
-                            GetCharacterComicsPartialState.Error(
-                                errorCode = it.errorCode,
-                                errorMessage = it.errorMessage
+                            GetCharacterComicsPartialState.Failed(
+                                errorMessage = resourceProvider.getString(R.string.error_retrieving_all_comics)
                             )
                         )
                     }
 
-                    is CharacterRepositoryPartialState.NoInternetConnection -> {
-                        emit(
-                            GetCharacterComicsPartialState.NoInternetConnection
-                        )
-                    }
-
-                    is CharacterRepositoryPartialState.Success -> {
-                        emit(
-                            GetCharacterComicsPartialState.Success(
-                                comics = it.data
+                    is GetCharacterComicsRepositoryResponse.Success -> {
+                        it.response?.let { comicDataWrapper ->
+                            emit(
+                                GetCharacterComicsPartialState.Success(
+                                    comics = comicDataWrapper.data.results.toComicDomainList()
+                                )
+                            )
+                        } ?: emit(
+                            GetCharacterComicsPartialState.Failed(
+                                errorMessage = resourceProvider.getString(R.string.error_retrieving_all_comics)
                             )
                         )
                     }
                 }
             }
         }.safeAsync {
+            logcat(LogPriority.ERROR) { "(getCharacterComics) error: ${it.message.orEmpty()}" }
             when (it) {
                 is IOException -> {
                     GetCharacterComicsPartialState.NoInternetConnection
                 }
 
                 else -> {
-                    GetCharacterComicsPartialState.Error(
-                        errorMessage = it.localizedMessage
-                            ?: resourceProvider.getString(R.string.unknown_error)
+                    GetCharacterComicsPartialState.Failed(
+                        errorMessage = resourceProvider.getGenericErrorMessage()
                     )
                 }
             }
         }
 
-    override suspend fun insertFavoriteCharacters(vararg favoriteCharacterEntity: FavoriteCharacterEntity): Flow<CharacterPartialState<Int>> =
+    override suspend fun insertFavoriteCharacters(vararg favoriteCharacterEntity: FavoriteCharacterEntity): Flow<InsertFavoriteCharactersPartialState> =
         flow {
             val insertedCharactersSize =
                 favoriteCharactersRepository.insertCharacters(favoriteCharacterEntity = favoriteCharacterEntity).size
             when (insertedCharactersSize == favoriteCharacterEntity.size) {
                 true -> {
                     emit(
-                        CharacterPartialState.Success(data = favoriteCharacterEntity.size)
+                        InsertFavoriteCharactersPartialState.Success
                     )
                 }
 
                 false -> {
                     emit(
-                        CharacterPartialState.Error(
+                        InsertFavoriteCharactersPartialState.Failed(
                             errorMessage = resourceProvider.getString(R.string.all_characters_screen_error_favoring_character)
                         )
                     )
                 }
             }
         }.safeAsync {
-            logcat { it.localizedMessage.orEmpty() }
-            CharacterPartialState.Error(
+            logcat(LogPriority.ERROR) { "(insertFavoriteCharacters) error: ${it.message.orEmpty()}" }
+            InsertFavoriteCharactersPartialState.Failed(
                 errorMessage = resourceProvider.getString(R.string.all_characters_screen_error_favoring_character)
             )
         }
 
-    override suspend fun deleteFavoriteCharacterById(characterId: Int): Flow<CharacterPartialState<Int>> =
+    override suspend fun deleteFavoriteCharacterById(characterId: Int): Flow<DeleteFavoriteCharacterByIdPartialState> =
         flow {
             when (favoriteCharactersRepository.deleteCharacterById(characterId = characterId)) {
                 1 -> {
-                    emit(CharacterPartialState.Success(1))
+                    emit(DeleteFavoriteCharacterByIdPartialState.Success)
                 }
 
                 else -> {
                     emit(
-                        CharacterPartialState.Error(
+                        DeleteFavoriteCharacterByIdPartialState.Failed(
                             errorMessage = resourceProvider.getString(
                                 R.string.all_characters_screen_error_unfavoring_character
                             )
@@ -234,8 +234,8 @@ class CharacterInteractorImpl @Inject constructor(
                 }
             }
         }.safeAsync {
-            logcat { it.localizedMessage ?: "" }
-            CharacterPartialState.Error(
+            logcat(LogPriority.ERROR) { "(deleteFavoriteCharacterById) error: ${it.message.orEmpty()}" }
+            DeleteFavoriteCharacterByIdPartialState.Failed(
                 errorMessage = resourceProvider.getString(R.string.all_characters_screen_error_favoring_character)
             )
         }
@@ -244,12 +244,12 @@ class CharacterInteractorImpl @Inject constructor(
         flow {
             emit(
                 GetFavoriteCharactersPartialState.Success(
-                    favoriteCharactersRepository.getAllCharacters()
+                    favoriteCharacters = favoriteCharactersRepository.getAllCharacters()
                 )
             )
         }.safeAsync {
-            logcat { it.localizedMessage ?: "" }
-            GetFavoriteCharactersPartialState.Error(
+            logcat(LogPriority.ERROR) { "(getFavoriteCharacters) error: ${it.message.orEmpty()}" }
+            GetFavoriteCharactersPartialState.Failed(
                 errorMessage = resourceProvider.getString(R.string.all_characters_screen_error_retrieving_favorite_characters)
             )
         }
@@ -263,69 +263,70 @@ class CharacterInteractorImpl @Inject constructor(
             )
         }.safeAsync {
             logcat { it.localizedMessage ?: "" }
-            GetFavoriteCharacterIdsPartialState.Error(
+            GetFavoriteCharacterIdsPartialState.Failed(
                 errorMessage = resourceProvider.getString(R.string.all_characters_screen_error_retrieving_favorite_characters)
             )
         }
 
-    override suspend fun isCharacterByIdFavorite(characterId: Int): Flow<IsCharacterFavoritePartialState> =
+    override suspend fun isCharacterFavoriteById(characterId: Int): Flow<IsCharacterFavoriteByIdPartialState> =
         flow {
             emit(
-                IsCharacterFavoritePartialState.IsFavorite(
+                IsCharacterFavoriteByIdPartialState.IsFavorite(
                     favoriteCharacter = favoriteCharactersRepository.getCharacterById(characterId)
                 )
             )
         }.safeAsync {
-            IsCharacterFavoritePartialState.IsNotFavorite
+            IsCharacterFavoriteByIdPartialState.IsNotFavorite
         }
 }
 
-sealed class CharacterPartialState<out T> {
-    data class Success<T>(val data: T) : CharacterPartialState<T>()
+sealed class GetAllCharactersPartialState {
+    data class Success(val characters: List<CharacterDomain>) : GetAllCharactersPartialState()
+    data class Failed(val errorMessage: String) : GetAllCharactersPartialState()
+}
 
-    data class Error(
-        val errorCode: Int? = null,
-        val errorMessage: String
-    ) : CharacterPartialState<Nothing>()
-
-    data class NoInternetConnection(val errorMessage: String) : CharacterPartialState<Nothing>()
+sealed class GetCharacterPartialState {
+    data class Success(val character: CharacterDomain) : GetCharacterPartialState()
+    data class Failed(val errorMessage: String) : GetCharacterPartialState()
 }
 
 sealed class GetCharacterComicsPartialState {
-    data class Success(val comics: List<ComicResponse>) : GetCharacterComicsPartialState()
+    data class Success(val comics: List<ComicDomain>) : GetCharacterComicsPartialState()
 
-    data class Error(
-        val errorCode: Int? = null,
-        val errorMessage: String
-    ) : GetCharacterComicsPartialState()
+    data class Failed(val errorMessage: String) : GetCharacterComicsPartialState()
 
-    object NoInternetConnection : GetCharacterComicsPartialState()
+    data object NoInternetConnection : GetCharacterComicsPartialState()
 }
 
-sealed class DeleteFavoriteCharacterPartialState {
-    data class Success(val favoriteCharacter: FavoriteCharacterEntity) :
-        DeleteFavoriteCharacterPartialState()
+sealed class InsertFavoriteCharactersPartialState {
+    data object Success : InsertFavoriteCharactersPartialState()
 
-    data class Error(val errorMessage: String) : DeleteFavoriteCharacterPartialState()
+    data class Failed(val errorMessage: String) : InsertFavoriteCharactersPartialState()
+}
+
+sealed class DeleteFavoriteCharacterByIdPartialState {
+    data object Success : DeleteFavoriteCharacterByIdPartialState()
+
+    data class Failed(val errorMessage: String) : DeleteFavoriteCharacterByIdPartialState()
 }
 
 sealed class GetFavoriteCharactersPartialState {
     data class Success(val favoriteCharacters: List<FavoriteCharacterEntity>) :
         GetFavoriteCharactersPartialState()
 
-    data class Error(val errorMessage: String) : GetFavoriteCharactersPartialState()
+    data class Failed(val errorMessage: String) : GetFavoriteCharactersPartialState()
 }
 
 sealed class GetFavoriteCharacterIdsPartialState {
     data class Success(val favoriteCharacterIds: List<Int>) :
         GetFavoriteCharacterIdsPartialState()
 
-    data class Error(val errorMessage: String) : GetFavoriteCharacterIdsPartialState()
+    data class Failed(val errorMessage: String) : GetFavoriteCharacterIdsPartialState()
 }
 
-sealed class IsCharacterFavoritePartialState {
+sealed class IsCharacterFavoriteByIdPartialState {
     data class IsFavorite(val favoriteCharacter: FavoriteCharacterEntity) :
-        IsCharacterFavoritePartialState()
+        IsCharacterFavoriteByIdPartialState()
 
-    object IsNotFavorite : IsCharacterFavoritePartialState()
+    data object IsNotFavorite : IsCharacterFavoriteByIdPartialState()
 }

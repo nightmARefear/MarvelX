@@ -2,7 +2,6 @@ package com.alexgreece45.marvelx.viewModels
 
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.data.domains.comic.ComicDomain
-import com.alexgreece45.marvelx.data.models.character.comic.toDomain
 import com.alexgreece45.marvelx.interactors.CharacterInteractor
 import com.alexgreece45.marvelx.interactors.GetCharacterComicsPartialState
 import com.alexgreece45.marvelx.mvi.BaseEffect
@@ -174,7 +173,7 @@ class AllCharacterComicsViewModel @Inject constructor(
         viewModelScope.launch {
             interactor.getCharacterComics(characterId).collect { getCharacterComicsPartialState ->
                 when (getCharacterComicsPartialState) {
-                    is GetCharacterComicsPartialState.Error -> {
+                    is GetCharacterComicsPartialState.Failed -> {
                         setState {
                             copy(
                                 isLoading = false,
@@ -198,7 +197,7 @@ class AllCharacterComicsViewModel @Inject constructor(
                         setState {
                             copy(
                                 isLoading = false,
-                                comics = getCharacterComicsPartialState.comics.toDomain()
+                                comics = getCharacterComicsPartialState.comics
                             )
                         }
                     }

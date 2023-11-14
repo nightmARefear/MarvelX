@@ -1,80 +1,92 @@
 package com.alexgreece45.marvelx.interactors
 
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.data.api.ApiClient
+import com.alexgreece45.marvelx.controllers.PrefKeys
 import com.alexgreece45.marvelx.data.domains.otp.OtpDomain
 import com.alexgreece45.marvelx.data.models.otp.OtpErrorCause
 import com.alexgreece45.marvelx.data.models.otp.OtpRequest
-import com.alexgreece45.marvelx.data.models.otp.OtpResponseError
+import com.alexgreece45.marvelx.data.models.otp.otpResponseErrorDomain
 import com.alexgreece45.marvelx.data.models.otp.toOtpDomain
-import com.alexgreece45.marvelx.data.models.otp.toOtpResponseDomain
+import com.alexgreece45.marvelx.repository.OtpRepository
+import com.alexgreece45.marvelx.repository.ValidateOtpRepositoryResponse
+import com.alexgreece45.marvelx.util.DateUtil
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.extensions.safeAsync
-import com.google.gson.Gson
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import logcat.LogPriority
+import logcat.logcat
 import okio.IOException
 import javax.inject.Inject
 
 interface OtpInteractor {
-    suspend fun validateOtp(otpRequest: OtpRequest): Flow<ValidateOtpPartialState>
+    suspend fun validateOtp(otp: String): Flow<ValidateOtpPartialState>
 }
 
 class OtpInteractorImpl @Inject constructor(
-    private val api: ApiClient,
+    private val repository: OtpRepository,
     private val resourceProvider: ResourceProvider,
-    private val gson: Gson
+    private val prefKeys: PrefKeys
 ) : OtpInteractor {
-    override suspend fun validateOtp(otpRequest: OtpRequest): Flow<ValidateOtpPartialState> = flow {
-        api.validateOtp(otpRequest = otpRequest).let { response ->
-            if (response.isSuccessful) {
-                response.body()?.let { responseBody ->
-                    emit(
-                        ValidateOtpPartialState.Success(
-                            otpDomain = responseBody.toOtpDomain()
-                        )
-                    )
-                } ?: emit(
-                    ValidateOtpPartialState.InternalServerError(
-                        errorMessage = resourceProvider.getString(R.string.internal_server_error)
-                    )
-                )
-            } else {
-                // Error
-                val deserializedError = gson.fromJson(
-                    response.errorBody()?.string(),
-                    OtpResponseError::class.java
-                ).toOtpResponseDomain()
+    override suspend fun validateOtp(otp: String): Flow<ValidateOtpPartialState> = flow {
+        val otpRequest = OtpRequest(
+            userId = prefKeys.getUserId().toString(),
+            otp = otp,
+            epoch = DateUtil.getSecondsFromEpoch()
+        )
+        repository.validateOtp(otpRequest).collect {
+            when (it) {
+                is ValidateOtpRepositoryResponse.Error -> {
+                    emit(ValidateOtpPartialState.Failed(errorMessage = resourceProvider.getGenericErrorMessage()))
+                }
 
-                when (deserializedError.errorCause) {
-                    is OtpErrorCause.InternalServerError, is OtpErrorCause.Invalid -> {
+                is ValidateOtpRepositoryResponse.Failed -> {
+                    val otpResponseErrorDomain = it.otpResponseError.otpResponseErrorDomain()
+                    when (otpResponseErrorDomain.errorCause) {
+                        is OtpErrorCause.Invalid, OtpErrorCause.InternalServerError -> {
+                            emit(
+                                ValidateOtpPartialState.Failed(
+                                    errorMessage = resourceProvider.getString(R.string.internal_server_error)
+                                )
+                            )
+                        }
+
+                        is OtpErrorCause.Expired, OtpErrorCause.NotMatch, OtpErrorCause.InvalidLength -> {
+                            emit(
+                                ValidateOtpPartialState.ClientError(
+                                    otpErrorCause = otpResponseErrorDomain.errorCause
+                                )
+                            )
+                        }
+                    }
+                }
+
+                is ValidateOtpRepositoryResponse.Success -> {
+                    it.response?.let { otpResponseSuccess ->
                         emit(
-                            ValidateOtpPartialState.InternalServerError(
-                                errorMessage = deserializedError.errorCause.cause
+                            ValidateOtpPartialState.Success(
+                                otpDomain = otpResponseSuccess.toOtpDomain()
                             )
                         )
-                    }
-
-                    OtpErrorCause.Expired, OtpErrorCause.InvalidLength, OtpErrorCause.NotMatch -> {
-                        emit(
-                            ValidateOtpPartialState.UserError(
-                                otpErrorCause = deserializedError.errorCause
-                            )
+                    } ?: emit(
+                        ValidateOtpPartialState.Failed(
+                            errorMessage = resourceProvider.getString(R.string.internal_server_error)
                         )
-                    }
+                    )
                 }
             }
         }
     }.safeAsync {
+        logcat(LogPriority.ERROR) { "(validateOtp) error: ${it.message.orEmpty()}" }
         when (it) {
             is IOException -> {
-                ValidateOtpPartialState.NoInternetConnection
+                ValidateOtpPartialState.Failed(
+                    errorMessage = resourceProvider.getNoInternetConnectionMessage()
+                )
             }
 
             else -> {
-                ValidateOtpPartialState.InternalServerError(
-                    errorMessage = resourceProvider.getString(R.string.unknown_error)
-                )
+                ValidateOtpPartialState.Failed(errorMessage = resourceProvider.getGenericErrorMessage())
             }
         }
     }
@@ -88,28 +100,14 @@ sealed class ValidateOtpPartialState {
     data class Success(val otpDomain: OtpDomain) : ValidateOtpPartialState()
 
     /**
-     * Represents an internal server error. The displayed error message is "an internal server
-     * error occurred".
+     * Indicates that a server-side or an in-app error has occurred. This either means that the
+     * [OtpErrorCause] was [OtpErrorCause.InternalServerError] or [OtpErrorCause.Invalid], OR
+     * that something else has gone wrong client-side (i.e., no internet connection, etc.).
      * */
-    data class InternalServerError(val errorMessage: String) : ValidateOtpPartialState()
+    data class Failed(val errorMessage: String) : ValidateOtpPartialState()
 
     /**
-     * This data class is not used to display the actual error message to the screen.
-     * The error stems from the app's code, rather than the user input.
-     * The displayed error message is that an "unknown error occurred".
-     * Furthermore, the contents of this data class are used by the app's logs for debugging.
+     * Indicates that the error is due to invalid user-input.
      * */
-    data class ClientError(val errorMessage: String) : ValidateOtpPartialState()
-
-
-    /**
-     * Represents if the error is due to invalid user-input.
-     * */
-    data class UserError(val otpErrorCause: OtpErrorCause) : ValidateOtpPartialState()
-
-
-    /**
-     * If there's no internet connection.
-     * */
-    data object NoInternetConnection : ValidateOtpPartialState()
+    data class ClientError(val otpErrorCause: OtpErrorCause) : ValidateOtpPartialState()
 }

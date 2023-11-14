@@ -43,7 +43,7 @@ data class ComicResponse(
     @SerializedName("events") val events: EventList,
 )
 
-fun ComicResponse.toDomain(): ComicDomain = ComicDomain(
+fun ComicResponse.toComicDomain(): ComicDomain = ComicDomain(
     id = this.id,
     digitalId = this.digitalId,
     title = this.title,
@@ -81,41 +81,5 @@ fun ComicResponse.toDomain(): ComicDomain = ComicDomain(
     events = this.events
 )
 
-fun List<ComicResponse>.toDomain(): List<ComicDomain> =
-    this.map {
-        ComicDomain(
-            id = it.id,
-            digitalId = it.digitalId,
-            title = it.title,
-            issueNumber = it.issueNumber,
-            variantDescription = it.variantDescription,
-            description = it.description,
-            modified = it.modified,
-            isbn = it.isbn,
-            upc = it.upc,
-            diamondCode = it.diamondCode,
-            ean = it.ean,
-            issn = it.issn,
-            format = it.format,
-            pageCount = it.pageCount,
-            textObjects = it.textObjects,
-            resourceURI = it.resourceURI,
-            series = it.series,
-            variants = it.variants,
-            collections = it.collections,
-            collectedIssues = it.collectedIssues,
-            dates = it.dates,
-            prices = it.prices?.map { comicPrice ->
-                ComicPriceDomain(
-                    type = ComicPriceType.getType(comicPrice.type),
-                    price = comicPrice.price
-                )
-            }.orEmpty(),
-            thumbnail = it.thumbnail.toDomain(containerClassType = it::class),
-            images = it.images,
-            creators = it.creators,
-            characters = it.characters,
-            stories = it.stories,
-            events = it.events
-        )
-    }
+fun List<ComicResponse>.toComicDomainList(): List<ComicDomain> =
+    this.map { comicResponse -> comicResponse.toComicDomain() }

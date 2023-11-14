@@ -3,7 +3,7 @@ package com.alexgreece45.marvelx.interactors
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.data.api.ApiClient
 import com.alexgreece45.marvelx.data.domains.comic.ComicDomain
-import com.alexgreece45.marvelx.data.models.character.comic.toDomain
+import com.alexgreece45.marvelx.data.models.character.comic.toComicDomain
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.extensions.safeAsync
 import kotlinx.coroutines.flow.Flow
@@ -33,10 +33,10 @@ class ComicInteractorImpl @Inject constructor(
                             )
                         )
                     } else {
-                        logcat { comicDataWrapper.data.results[0].toDomain().toString() }
+                        logcat { comicDataWrapper.data.results[0].toComicDomain().toString() }
                         emit(
                             GetComicPartialState.Success(
-                                comic = comicDataWrapper.data.results[0].toDomain()
+                                comic = comicDataWrapper.data.results[0].toComicDomain()
                             )
                         )
                     }

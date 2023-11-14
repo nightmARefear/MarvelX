@@ -4,6 +4,8 @@ import com.alexgreece45.marvelx.repository.CharacterRepository
 import com.alexgreece45.marvelx.repository.CharacterRepositoryImpl
 import com.alexgreece45.marvelx.repository.FavoriteCharactersRepository
 import com.alexgreece45.marvelx.repository.FavoriteCharactersRepositoryImpl
+import com.alexgreece45.marvelx.repository.OtpRepository
+import com.alexgreece45.marvelx.repository.OtpRepositoryImpl
 import com.alexgreece45.marvelx.repository.UserRepository
 import com.alexgreece45.marvelx.repository.UserRepositoryImpl
 import dagger.Binds
@@ -23,4 +25,7 @@ interface RepositoryModule {
 
     @Binds
     fun bindsUserRepository(impl: UserRepositoryImpl): UserRepository
+
+    @Binds
+    fun bindsOtpRepository(impl: OtpRepositoryImpl): OtpRepository
 }

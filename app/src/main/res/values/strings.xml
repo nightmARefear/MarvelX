@@ -33,11 +33,15 @@
     <string name="bottom_navigation_label_favorites">Favorites</string>
     <string name="bottom_navigation_label_profile">Profile</string>
 
-    <!-- CHARACTER -->
+    <!-- Character -->
     <string name="no_characters_were_found_error_message">No characters were found!</string>
     <string name="no_character_description">Character description is not available.</string>
     <string name="character_with_specific_id_not_found">The character with id \"%1$s\" could not be found!</string>
     <string name="character_error_loading">An error occurred while loading this character!</string>
+    <string name="error_retrieving_all_characters">An error occurred while retrieving the characters.</string>
+
+    <!-- Comic -->
+    <string name="error_retrieving_all_comics">An error occurred while retrieving the comics.</string>
 
     <!-- All Characters Screen -->
     <string name="all_characters_screen_toolbar_title">Characters</string>

@@ -24,17 +24,7 @@ data class ComicState(
     // Data.
     val comic: ComicDomain? = null
 
-) : BaseState {
-    companion object {
-        fun getDefaultValues(): ComicState =
-            ComicState(
-                isLoading = true,
-                hasInternetConnection = true,
-                errorMessage = null,
-                comic = null
-            )
-    }
-}
+) : BaseState
 
 sealed interface ComicEffect : BaseEffect
 
@@ -42,22 +32,29 @@ sealed interface ComicEffect : BaseEffect
 class ComicViewModel @Inject constructor(
     private val interactor: ComicInteractor
 ) : BaseViewModel<ComicEvent, ComicState, ComicEffect>() {
-    override fun setInitialState(): ComicState = ComicState()
+    override fun setInitialState(): ComicState =
+        ComicState(
+            isLoading = true,
+            hasInternetConnection = true,
+            errorMessage = null,
+            comic = null
+        )
 
     override fun handleEvents(event: ComicEvent) {
         when (event) {
             is ComicEvent.InitView -> {
+                setState {
+                    copy(
+                        isLoading = true
+                    )
+                }
                 initView(comicId = event.comicId)
             }
         }
     }
 
     private fun initView(comicId: Int) {
-        setState {
-            ComicState.getDefaultValues()
-        }
-
-        viewModelScope.launch {
+       viewModelScope.launch {
             interactor.getComicById(comicId).collect { getComicPartialState ->
                 when (getComicPartialState) {
                     is GetComicPartialState.Success -> {

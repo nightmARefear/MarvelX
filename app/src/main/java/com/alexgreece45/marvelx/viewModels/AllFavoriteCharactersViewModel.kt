@@ -23,7 +23,7 @@ data class AllFavoriteCharactersScreenErrorView(
 )
 
 sealed class AllFavoriteCharactersEvent : BaseEvent {
-    object InitView : AllFavoriteCharactersEvent()
+    data object InitView : AllFavoriteCharactersEvent()
 }
 
 data class AllFavoriteCharactersState(
@@ -75,7 +75,7 @@ class AllFavoriteCharactersViewModel @Inject constructor(
                         }
                     }
 
-                    is GetFavoriteCharactersPartialState.Error -> {
+                    is GetFavoriteCharactersPartialState.Failed -> {
                         setState {
                             copy(
                                 isLoading = false,
