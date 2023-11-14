@@ -85,7 +85,10 @@ fun ProfileScreen(
                 item {
                     GenericErrorScreen(
                         errorMessage = error.errorMessage,
-                        onRetryClick = { error.onRetryClick.invoke() })
+                        onRetryClick = {
+                            viewModel.setEvent(error.profileEvent)
+                        }
+                    )
                 }
             }
 

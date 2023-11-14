@@ -5,11 +5,12 @@ import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.data.domains.character.CharacterDomain
 import com.alexgreece45.marvelx.data.domains.character.toFavoriteCharacterEntity
 import com.alexgreece45.marvelx.data.domains.comic.ComicDomain
-import com.alexgreece45.marvelx.data.models.character.comic.toDomain
 import com.alexgreece45.marvelx.interactors.CharacterInteractor
-import com.alexgreece45.marvelx.interactors.CharacterPartialState
+import com.alexgreece45.marvelx.interactors.DeleteFavoriteCharacterByIdPartialState
 import com.alexgreece45.marvelx.interactors.GetCharacterComicsPartialState
-import com.alexgreece45.marvelx.interactors.IsCharacterFavoritePartialState
+import com.alexgreece45.marvelx.interactors.GetCharacterPartialState
+import com.alexgreece45.marvelx.interactors.InsertFavoriteCharactersPartialState
+import com.alexgreece45.marvelx.interactors.IsCharacterFavoriteByIdPartialState
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
@@ -145,17 +146,17 @@ class CharacterViewModel @Inject constructor(
             )
         }
         viewModelScope.launch {
-            interactor.getCharacter(characterId).collect { characterPartialState ->
-                when (characterPartialState) {
-                    is CharacterPartialState.Success -> {
+            interactor.getCharacter(characterId).collect { getCharacterPartialState ->
+                when (getCharacterPartialState) {
+                    is GetCharacterPartialState.Success -> {
                         // Search if character is favorite.
-                        interactor.isCharacterByIdFavorite(characterId = characterId)
+                        interactor.isCharacterFavoriteById(characterId = characterId)
                             .collect { isCharacterFavoritePartialState ->
                                 when (isCharacterFavoritePartialState) {
-                                    is IsCharacterFavoritePartialState.IsNotFavorite -> {
+                                    is IsCharacterFavoriteByIdPartialState.IsNotFavorite -> {
                                         setState {
                                             copy(
-                                                character = characterPartialState.data.copy(
+                                                character = getCharacterPartialState.character.copy(
                                                     isFavorite = false
                                                 )
                                             )
@@ -165,10 +166,10 @@ class CharacterViewModel @Inject constructor(
                                         loadComics(characterId = characterId)
                                     }
 
-                                    is IsCharacterFavoritePartialState.IsFavorite -> {
+                                    is IsCharacterFavoriteByIdPartialState.IsFavorite -> {
                                         setState {
                                             copy(
-                                                character = characterPartialState.data.copy(
+                                                character = getCharacterPartialState.character.copy(
                                                     isFavorite = true
                                                 )
                                             )
@@ -181,24 +182,12 @@ class CharacterViewModel @Inject constructor(
                             }
                     }
 
-                    is CharacterPartialState.Error -> {
+                    is GetCharacterPartialState.Failed -> {
                         setState {
                             copy(
                                 isLoading = false,
                                 error = CharacterScreenErrorView(
-                                    errorMessage = characterPartialState.errorMessage,
-                                    onRetryClick = { loadCharacter(characterId) }
-                                )
-                            )
-                        }
-                    }
-
-                    is CharacterPartialState.NoInternetConnection -> {
-                        setState {
-                            copy(
-                                isLoading = false,
-                                error = CharacterScreenErrorView(
-                                    errorMessage = characterPartialState.errorMessage,
+                                    errorMessage = getCharacterPartialState.errorMessage,
                                     onRetryClick = { loadCharacter(characterId) }
                                 )
                             )
@@ -213,7 +202,7 @@ class CharacterViewModel @Inject constructor(
         viewModelScope.launch {
             interactor.getCharacterComics(characterId).collect {
                 when (it) {
-                    is GetCharacterComicsPartialState.Error -> {
+                    is GetCharacterComicsPartialState.Failed -> {
                         setState {
                             copy(
                                 isLoading = false,
@@ -241,7 +230,7 @@ class CharacterViewModel @Inject constructor(
                         setState {
                             copy(
                                 isLoading = false,
-                                comics = it.comics.toDomain()
+                                comics = it.comics
                             )
                         }
                     }
@@ -257,31 +246,20 @@ class CharacterViewModel @Inject constructor(
                 true -> {
                     viewModelScope.launch {
                         interactor.deleteFavoriteCharacterById(characterId = characterDomain.id)
-                            .collect { characterPartialState ->
-                                when (characterPartialState) {
-                                    is CharacterPartialState.Error -> {
+                            .collect {
+                                when (it) {
+                                    is DeleteFavoriteCharacterByIdPartialState.Failed -> {
                                         setState {
                                             copy(
                                                 error = CharacterScreenErrorView(
-                                                    errorMessage = characterPartialState.errorMessage,
+                                                    errorMessage = it.errorMessage,
                                                     onRetryClick = { onFavoriteClick() }
                                                 )
                                             )
                                         }
                                     }
 
-                                    is CharacterPartialState.NoInternetConnection -> {
-                                        setState {
-                                            copy(
-                                                error = CharacterScreenErrorView(
-                                                    errorMessage = characterPartialState.errorMessage,
-                                                    onRetryClick = { onFavoriteClick() }
-                                                )
-                                            )
-                                        }
-                                    }
-
-                                    is CharacterPartialState.Success -> {
+                                    is DeleteFavoriteCharacterByIdPartialState.Success -> {
                                         setState {
                                             copy(
                                                 character = characterDomain.copy(isFavorite = false)
@@ -306,31 +284,20 @@ class CharacterViewModel @Inject constructor(
                 false -> {
                     viewModelScope.launch {
                         interactor.insertFavoriteCharacters(characterDomain.toFavoriteCharacterEntity())
-                            .collect { characterPartialState ->
-                                when (characterPartialState) {
-                                    is CharacterPartialState.Error -> {
+                            .collect { insertFavoriteCharactersPartialState ->
+                                when (insertFavoriteCharactersPartialState) {
+                                    is InsertFavoriteCharactersPartialState.Failed -> {
                                         setState {
                                             copy(
                                                 error = CharacterScreenErrorView(
-                                                    errorMessage = characterPartialState.errorMessage,
+                                                    errorMessage = insertFavoriteCharactersPartialState.errorMessage,
                                                     onRetryClick = { onFavoriteClick() }
                                                 )
                                             )
                                         }
                                     }
 
-                                    is CharacterPartialState.NoInternetConnection -> {
-                                        setState {
-                                            copy(
-                                                error = CharacterScreenErrorView(
-                                                    errorMessage = characterPartialState.errorMessage,
-                                                    onRetryClick = { onFavoriteClick() }
-                                                )
-                                            )
-                                        }
-                                    }
-
-                                    is CharacterPartialState.Success -> {
+                                    is InsertFavoriteCharactersPartialState.Success -> {
                                         setState {
                                             copy(
                                                 character = characterDomain.copy(isFavorite = true)

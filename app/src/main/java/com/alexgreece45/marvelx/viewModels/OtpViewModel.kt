@@ -2,7 +2,6 @@ package com.alexgreece45.marvelx.viewModels
 
 import androidx.core.text.isDigitsOnly
 import androidx.lifecycle.viewModelScope
-import com.alexgreece45.marvelx.data.models.otp.OtpRequest
 import com.alexgreece45.marvelx.controllers.PrefKeys
 import com.alexgreece45.marvelx.interactors.GrandNewAccessTokenPartialState
 import com.alexgreece45.marvelx.interactors.OtpInteractor
@@ -12,7 +11,6 @@ import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
 import com.alexgreece45.marvelx.mvi.BaseViewModel
-import com.alexgreece45.marvelx.util.DateUtil
 import com.alexgreece45.marvelx.util.FormsValidationResult
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.Rule
@@ -157,35 +155,10 @@ class OtpViewModel @Inject constructor(
                 )
             }
             viewModelScope.launch {
-                otpInteractor.validateOtp(otpRequest = getOtpRequest())
+                otpInteractor.validateOtp(otp = currentState.otp)
                     .collect { getOtpPartialState ->
                         when (getOtpPartialState) {
-                            is ValidateOtpPartialState.InternalServerError -> {
-                                // Internal server error.
-                                setState {
-                                    copy(
-                                        isLoading = false
-                                    )
-                                }
-
-                                setEffect {
-                                    OtpEffect.Navigation.NavigateToPreviousScreenWithError(
-                                        errorMessage = getOtpPartialState.errorMessage
-                                    )
-                                }
-                            }
-
-                            ValidateOtpPartialState.NoInternetConnection -> {
-                                // No internet connection.
-                                setState {
-                                    copy(
-                                        isLoading = false,
-                                        hasInternetConnection = false
-                                    )
-                                }
-                            }
-
-                            is ValidateOtpPartialState.Success -> {
+                           is ValidateOtpPartialState.Success -> {
                                 // OTPs matched.
                                 setState {
                                     copy(
@@ -199,13 +172,7 @@ class OtpViewModel @Inject constructor(
                                 }
                             }
 
-                            is ValidateOtpPartialState.ClientError -> {
-                                // This error occurred due to the app sending invalid data.
-                                setState {
-                                    copy(
-                                        isLoading = false
-                                    )
-                                }
+                            is ValidateOtpPartialState.Failed -> {
                                 setEffect {
                                     OtpEffect.Navigation.NavigateToPreviousScreenWithError(
                                         errorMessage = getOtpPartialState.errorMessage
@@ -213,7 +180,7 @@ class OtpViewModel @Inject constructor(
                                 }
                             }
 
-                            is ValidateOtpPartialState.UserError -> {
+                            is ValidateOtpPartialState.ClientError -> {
                                 // User-input related error.
                                 setState {
                                     copy(
@@ -266,12 +233,5 @@ class OtpViewModel @Inject constructor(
         listOf(
             Rule.ValidateNotBlank("OTP cannot be empty."),
             Rule.ValidateStringLength(6, "OTP must be 6 characters.")
-        )
-
-    private fun getOtpRequest(): OtpRequest =
-        OtpRequest(
-            userId = currentState.userId.toString(),
-            otp = currentState.otp,
-            epoch = DateUtil.getSecondsFromEpoch()
         )
 }

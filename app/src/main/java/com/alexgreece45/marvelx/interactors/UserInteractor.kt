@@ -1,33 +1,34 @@
 package com.alexgreece45.marvelx.interactors
 
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.data.api.ApiClient
+import com.alexgreece45.marvelx.controllers.AuthController
+import com.alexgreece45.marvelx.controllers.ConfigController
+import com.alexgreece45.marvelx.controllers.PrefKeys
 import com.alexgreece45.marvelx.data.domains.user.login.LoginResponseDomain
 import com.alexgreece45.marvelx.data.domains.user.loginWithToken.LoginWithTokenResponseDomain
 import com.alexgreece45.marvelx.data.domains.user.profileDetails.ProfileDetailsDomain
 import com.alexgreece45.marvelx.data.domains.user.signup.SignupResponseDomain
-import com.alexgreece45.marvelx.data.models.token.TokenResponse
 import com.alexgreece45.marvelx.data.models.token.toUserAuthData
-import com.alexgreece45.marvelx.data.models.user.UserResponseError
 import com.alexgreece45.marvelx.data.models.user.login.UserLoginRequest
 import com.alexgreece45.marvelx.data.models.user.login.toUserLoginResponseDomain
 import com.alexgreece45.marvelx.data.models.user.loginWithToken.UserLoginWithTokenRequest
 import com.alexgreece45.marvelx.data.models.user.loginWithToken.toUserLoginWithTokenResponseDomain
-import com.alexgreece45.marvelx.data.models.user.profileDetails.toUserProfileDetailsDomain
+import com.alexgreece45.marvelx.data.models.user.profileDetails.toProfileDetailsDomain
 import com.alexgreece45.marvelx.data.models.user.signup.UserSignupRequest
 import com.alexgreece45.marvelx.data.models.user.signup.toSignupResponseDomain
-import com.alexgreece45.marvelx.controllers.AuthController
-import com.alexgreece45.marvelx.controllers.ConfigController
+import com.alexgreece45.marvelx.repository.GetProfileDetailsRepositoryResponse
 import com.alexgreece45.marvelx.repository.GrandNewAccessTokenRepositoryResponse
 import com.alexgreece45.marvelx.repository.LogoutRepositoryResponse
+import com.alexgreece45.marvelx.repository.PostLoginRepositoryResponse
+import com.alexgreece45.marvelx.repository.PostLoginWithTokenRepositoryResponse
 import com.alexgreece45.marvelx.repository.PostSignupRepositoryResponse
 import com.alexgreece45.marvelx.repository.RefreshAccessTokenRepositoryResponse
 import com.alexgreece45.marvelx.repository.UserRepository
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.extensions.safeAsync
-import com.google.gson.Gson
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import logcat.LogPriority
 import logcat.logcat
 import okio.IOException
 import javax.inject.Inject
@@ -45,35 +46,25 @@ interface UserInteractor {
 
     suspend fun refreshAccessToken(): Flow<RefreshAccessTokenPartialState>
 
-    suspend fun getProfileDetails(userId: Int): Flow<GetProfileDetailsPartialState>
+    suspend fun getProfileDetails(): Flow<GetProfileDetailsPartialState>
 }
 
 class UserInteractorImpl @Inject constructor(
-    private val apiClient: ApiClient,
     private val repository: UserRepository,
     private val resourceProvider: ResourceProvider,
-    private val gson: Gson,
     private val configController: ConfigController,
-    private val authController: AuthController
+    private val authController: AuthController,
+    private val prefKeys: PrefKeys
 ) : UserInteractor {
     override suspend fun postSignup(userSignupRequest: UserSignupRequest): Flow<PostSignupPartialState> =
         flow {
             val genericErrorMessage = resourceProvider.getGenericErrorMessage()
             repository.postSignup(userSignupRequest).collect {
                 when (it) {
-                    is PostSignupRepositoryResponse.Error -> {
-                        logcat { "(postSignup) error: ${it.errorMessage.orEmpty()}" }
-                        emit(
-                            PostSignupPartialState.Failed(
-                                errorMessage = genericErrorMessage
-                            )
-                        )
-                    }
-
                     is PostSignupRepositoryResponse.Failed -> {
                         emit(
                             PostSignupPartialState.Failed(
-                                errorMessage = it.userResponseError.errorMessage
+                                errorMessage = it.responseUserError.errorMessage
                             )
                         )
                     }
@@ -94,7 +85,7 @@ class UserInteractorImpl @Inject constructor(
                 }
             }
         }.safeAsync {
-            // Exception.
+            logcat(LogPriority.ERROR) { "(postSignup) error: ${it.message.orEmpty()}" }
             when (it) {
                 is IOException -> {
                     PostSignupPartialState.Failed(
@@ -112,38 +103,26 @@ class UserInteractorImpl @Inject constructor(
 
     override suspend fun postLogin(userLoginRequest: UserLoginRequest): Flow<PostLoginPartialState> =
         flow {
-            apiClient.postLogin(userLoginRequest).let { response ->
-                if (response.isSuccessful) {
-                    response.body()?.let { userLoginResponse ->
-                        // Success.
-                        emit(
-                            PostLoginPartialState.Success(
-                                loginResponseDomain = userLoginResponse.toUserLoginResponseDomain()
-                            )
-                        )
-                    } ?: run {
-                        // Null body, thus server responded erroneously.
-                        emit(
-                            PostLoginPartialState.Failed(
-                                errorMessage = resourceProvider.getString(R.string.internal_server_error)
-                            )
-                        )
+            val genericErrorMessage = resourceProvider.getGenericErrorMessage()
+            repository.postLogin(userLoginRequest).collect {
+                when (it) {
+                    is PostLoginRepositoryResponse.Failed -> {
+                        emit(PostLoginPartialState.Failed(errorMessage = it.responseUserError.errorMessage))
                     }
-                } else {
-                    // Error.
-                    val deserializedError = gson.fromJson(
-                        response.errorBody()?.string(),
-                        UserResponseError::class.java
-                    )
 
-                    emit(
-                        PostLoginPartialState.Failed(
-                            errorMessage = deserializedError.errorMessage
-                        )
-                    )
+                    is PostLoginRepositoryResponse.Success -> {
+                        it.response?.let { loginResponse ->
+                            emit(
+                                PostLoginPartialState.Success(
+                                    loginResponseDomain = loginResponse.toUserLoginResponseDomain()
+                                )
+                            )
+                        } ?: emit(PostLoginPartialState.Failed(errorMessage = genericErrorMessage))
+                    }
                 }
             }
         }.safeAsync {
+            logcat(LogPriority.ERROR) { "(postLogin) error: ${it.message.orEmpty()}" }
             when (it) {
                 is IOException -> {
                     PostLoginPartialState.Failed(
@@ -161,30 +140,28 @@ class UserInteractorImpl @Inject constructor(
 
     override suspend fun postLoginWithToken(userLoginWithTokenRequest: UserLoginWithTokenRequest): Flow<PostLoginWithTokenPartialState> =
         flow {
-            apiClient.postLoginWithToken(userLoginWithTokenRequest).let { response ->
-                if (response.isSuccessful) {
-                    response.body()?.let { userLoginWithTokenResponse ->
-                        emit(
-                            PostLoginWithTokenPartialState.Success(
-                                loginWithTokenResponseDomain = userLoginWithTokenResponse.toUserLoginWithTokenResponseDomain()
-                            )
-                        )
-                    } ?: run {
-                        emit(
-                            PostLoginWithTokenPartialState.Failed(
-                                errorMessage = resourceProvider.getString(R.string.internal_server_error)
-                            )
-                        )
+            val genericErrorMessage = resourceProvider.getGenericErrorMessage()
+            repository.postLoginWithToken(userLoginWithTokenRequest).collect {
+                when (it) {
+                    is PostLoginWithTokenRepositoryResponse.Failed -> {
+                        // Propagate generic error to client.
+                        emit(PostLoginWithTokenPartialState.Failed(errorMessage = genericErrorMessage))
                     }
-                } else {
-                    emit(
-                        PostLoginWithTokenPartialState.Failed(
-                            errorMessage = resourceProvider.getGenericErrorMessage()
-                        )
-                    )
+
+                    is PostLoginWithTokenRepositoryResponse.Success -> {
+                        it.response?.let { loginWithTokenResponse ->
+                            emit(
+                                PostLoginWithTokenPartialState.Success(
+                                    loginWithTokenResponseDomain = loginWithTokenResponse.toUserLoginWithTokenResponseDomain()
+                                )
+                            )
+                        }
+                            ?: emit(PostLoginWithTokenPartialState.Failed(errorMessage = genericErrorMessage))
+                    }
                 }
             }
         }.safeAsync {
+            logcat(LogPriority.ERROR) { "(postLoginWithToken) error: ${it.message.orEmpty()}" }
             when (it) {
                 is IOException -> {
                     PostLoginWithTokenPartialState.Failed(
@@ -215,14 +192,6 @@ class UserInteractorImpl @Inject constructor(
             authController.removeUserCredentials()
 
             when (logoutRepositoryResponse) {
-                is LogoutRepositoryResponse.Error -> {
-                    emit(
-                        LogoutPartialState.Failed(
-                            errorMessage = genericErrorMessage
-                        )
-                    )
-                }
-
                 is LogoutRepositoryResponse.Failed -> {
                     emit(
                         LogoutPartialState.Failed(
@@ -238,6 +207,7 @@ class UserInteractorImpl @Inject constructor(
             }
         }
     }.safeAsync {
+        logcat(LogPriority.ERROR) { "(logout) error: ${it.message.orEmpty()}" }
         when (it) {
             is IOException -> {
                 LogoutPartialState.Failed(
@@ -263,18 +233,10 @@ class UserInteractorImpl @Inject constructor(
                 uri = configController.getUri()
             ).collect {
                 when (it) {
-                    is GrandNewAccessTokenRepositoryResponse.Error -> {
-                        emit(
-                            GrandNewAccessTokenPartialState.Failed(
-                                errorMessage = it.errorMessage
-                            )
-                        )
-                    }
-
                     is GrandNewAccessTokenRepositoryResponse.Failed -> {
                         emit(
                             GrandNewAccessTokenPartialState.Failed(
-                                errorMessage = it.errorMessage ?: genericErrorMessage
+                                errorMessage = genericErrorMessage
                             )
                         )
                     }
@@ -284,9 +246,7 @@ class UserInteractorImpl @Inject constructor(
                             // Save token info in device.
                             authController.setData(response.toUserAuthData())
                             emit(
-                                GrandNewAccessTokenPartialState.Success(
-                                    tokenResponse = response
-                                )
+                                GrandNewAccessTokenPartialState.Success
                             )
                         } ?: emit(
                             GrandNewAccessTokenPartialState.Failed(
@@ -294,6 +254,19 @@ class UserInteractorImpl @Inject constructor(
                             )
                         )
                     }
+                }
+            }
+        }.safeAsync {
+            logcat(LogPriority.ERROR) { "(grandNewAccessToken) error: ${it.message.orEmpty()}" }
+            when (it) {
+                is IOException -> GrandNewAccessTokenPartialState.Failed(
+                    errorMessage = resourceProvider.getNoInternetConnectionMessage()
+                )
+
+                else -> {
+                    GrandNewAccessTokenPartialState.Failed(
+                        errorMessage = resourceProvider.getGenericErrorMessage()
+                    )
                 }
             }
         }
@@ -310,16 +283,6 @@ class UserInteractorImpl @Inject constructor(
 
         repository.refreshAccessToken(clientId, token).collect {
             when (it) {
-                is RefreshAccessTokenRepositoryResponse.Error -> {
-                    // Remove stored credentials.
-                    authController.removeUserCredentials()
-                    emit(
-                        RefreshAccessTokenPartialState.Failed(
-                            errorMessage = genericErrorMessage
-                        )
-                    )
-                }
-
                 is RefreshAccessTokenRepositoryResponse.Failed -> {
                     // Remove stored credentials.
                     authController.removeUserCredentials()
@@ -334,11 +297,7 @@ class UserInteractorImpl @Inject constructor(
                     it.response?.let { tokenResponse ->
                         // Save token info to device.
                         authController.setData(tokenResponse.toUserAuthData())
-                        emit(
-                            RefreshAccessTokenPartialState.Success(
-                                tokenResponse = tokenResponse
-                            )
-                        )
+                        emit(RefreshAccessTokenPartialState.Success)
                     } ?: run {
                         // Remove stored credentials.
                         authController.removeUserCredentials()
@@ -352,13 +311,13 @@ class UserInteractorImpl @Inject constructor(
             }
         }
     }.safeAsync {
+        logcat(LogPriority.ERROR) { "(refreshAccessToken) error: ${it.message.orEmpty()}" }
         when (it) {
             is IOException -> RefreshAccessTokenPartialState.Failed(
                 errorMessage = resourceProvider.getNoInternetConnectionMessage()
             )
 
             else -> {
-                logcat { "(refreshAccessToken#safeAsync#Error) ${it.localizedMessage.orEmpty()}" }
                 RefreshAccessTokenPartialState.Failed(
                     errorMessage = resourceProvider.getGenericErrorMessage()
                 )
@@ -366,32 +325,26 @@ class UserInteractorImpl @Inject constructor(
         }
     }
 
-    override suspend fun getProfileDetails(userId: Int): Flow<GetProfileDetailsPartialState> =
+    override suspend fun getProfileDetails(): Flow<GetProfileDetailsPartialState> =
         flow {
-            apiClient.getUserProfileDetails(userId = userId).let { response ->
-                if (response.isSuccessful) {
-                    response.body()?.let { userProfileDetailsResponse ->
-                        emit(
-                            GetProfileDetailsPartialState.Success(
-                                profileDetails = userProfileDetailsResponse.toUserProfileDetailsDomain()
-                            )
-                        )
-                    } ?: run {
-                        emit(
-                            GetProfileDetailsPartialState.Failed(
-                                errorMessage = resourceProvider.getString(R.string.internal_server_error)
-                            )
-                        )
+            val genericErrorMessage = resourceProvider.getGenericErrorMessage()
+            repository.getProfileDetails(prefKeys.getUserId()).collect {
+                when (it) {
+
+                    is GetProfileDetailsRepositoryResponse.Failed -> {
+                        emit(GetProfileDetailsPartialState.Failed(errorMessage = genericErrorMessage))
                     }
-                } else {
-                    emit(
-                        GetProfileDetailsPartialState.Failed(
-                            errorMessage = resourceProvider.getGenericErrorMessage()
-                        )
-                    )
+
+                    is GetProfileDetailsRepositoryResponse.Success -> {
+                        it.response?.let { responseProfileDetails ->
+                            emit(GetProfileDetailsPartialState.Success(profileDetailsDomain = responseProfileDetails.toProfileDetailsDomain()))
+                        }
+                            ?: emit(GetProfileDetailsPartialState.Failed(errorMessage = genericErrorMessage))
+                    }
                 }
             }
         }.safeAsync {
+            logcat(LogPriority.ERROR) { "(getProfileDetails) error: ${it.message.orEmpty()}" }
             when (it) {
                 is IOException -> GetProfileDetailsPartialState.NoInternetConnection(
                     errorMessage = resourceProvider.getString(R.string.no_internet_connection_error_message)
@@ -425,7 +378,7 @@ sealed class PostLoginWithTokenPartialState {
 }
 
 sealed class GetProfileDetailsPartialState {
-    data class Success(val profileDetails: ProfileDetailsDomain) :
+    data class Success(val profileDetailsDomain: ProfileDetailsDomain) :
         GetProfileDetailsPartialState()
 
     data class Failed(val errorMessage: String) : GetProfileDetailsPartialState()
@@ -434,12 +387,12 @@ sealed class GetProfileDetailsPartialState {
 }
 
 sealed class GrandNewAccessTokenPartialState {
-    data class Success(val tokenResponse: TokenResponse) : GrandNewAccessTokenPartialState()
+    data object Success : GrandNewAccessTokenPartialState()
     data class Failed(val errorMessage: String) : GrandNewAccessTokenPartialState()
 }
 
 sealed class RefreshAccessTokenPartialState {
-    data class Success(val tokenResponse: TokenResponse) : RefreshAccessTokenPartialState()
+    data object Success : RefreshAccessTokenPartialState()
     data class Failed(val errorMessage: String) : RefreshAccessTokenPartialState()
 }
 

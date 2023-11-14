@@ -39,15 +39,15 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.viewModels.OtpEffect
-import com.alexgreece45.marvelx.viewModels.OtpEvent
-import com.alexgreece45.marvelx.viewModels.OtpViewModel
-import com.alexgreece45.marvelx.ui.navigation.Screen
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.IconData
 import com.alexgreece45.marvelx.ui.components.ToolbarAction
+import com.alexgreece45.marvelx.ui.navigation.Screen
 import com.alexgreece45.marvelx.util.OTP_LENGTH
 import com.alexgreece45.marvelx.util.VSpacer
+import com.alexgreece45.marvelx.viewModels.OtpEffect
+import com.alexgreece45.marvelx.viewModels.OtpEvent
+import com.alexgreece45.marvelx.viewModels.OtpViewModel
 
 
 /**
@@ -55,8 +55,8 @@ import com.alexgreece45.marvelx.util.VSpacer
  * logging in, signing up.
  *
  * Navigation **to** and **from** this screen ***must*** be handled with caution.
- * Navigation to this screen MUST only happen when instructed either by [LogInScreen],
- * or [SignUpScreen].
+ * Navigation to this screen MUST only happen when instructed either by `LogInScreen`,
+ * or `SignUpScreen`.
  * */
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable

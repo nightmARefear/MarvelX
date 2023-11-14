@@ -9,7 +9,7 @@ import com.alexgreece45.marvelx.data.models.user.login.UserLoginRequest
 import com.alexgreece45.marvelx.data.models.user.login.LoginResponse
 import com.alexgreece45.marvelx.data.models.user.loginWithToken.UserLoginWithTokenRequest
 import com.alexgreece45.marvelx.data.models.user.loginWithToken.LoginWithTokenResponse
-import com.alexgreece45.marvelx.data.models.user.profileDetails.UserProfileDetailsResponse
+import com.alexgreece45.marvelx.data.models.user.profileDetails.ResponseProfileDetails
 import com.alexgreece45.marvelx.data.models.user.signup.UserSignupRequest
 import com.alexgreece45.marvelx.data.models.user.signup.SignupResponse
 import retrofit2.Response
@@ -71,7 +71,7 @@ interface ApiService {
     suspend fun validateOtp(@Body otpRequest: OtpRequest): Response<OtpResponseSuccess>
 
     @GET("/api/private/marvelx/user/profile_details/{userId}")
-    suspend fun getUserProfileDetails(@Path("userId") userId: Int): Response<UserProfileDetailsResponse>
+    suspend fun getUserProfileDetails(@Path("userId") userId: Int): Response<ResponseProfileDetails>
 }
 
 interface ApiClient {
@@ -97,5 +97,5 @@ interface ApiClient {
 
     suspend fun validateOtp(otpRequest: OtpRequest): Response<OtpResponseSuccess>
 
-    suspend fun getUserProfileDetails(userId: Int): Response<UserProfileDetailsResponse>
+    suspend fun getUserProfileDetails(userId: Int): Response<ResponseProfileDetails>
 }

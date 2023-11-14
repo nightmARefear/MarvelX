@@ -4,14 +4,14 @@ import com.alexgreece45.marvelx.data.domains.user.profileDetails.ProfileDetailsD
 import com.alexgreece45.marvelx.data.models.user.Gender
 import com.google.gson.annotations.SerializedName
 
-data class UserProfileDetailsResponse(
+data class ResponseProfileDetails(
     @SerializedName("first_name") val firstName: String,
     @SerializedName("last_name") val lastName: String,
     @SerializedName("gender") val gender: String,
     @SerializedName("email") val email: String,
 )
 
-fun UserProfileDetailsResponse.toUserProfileDetailsDomain(): ProfileDetailsDomain =
+fun ResponseProfileDetails.toProfileDetailsDomain(): ProfileDetailsDomain =
     ProfileDetailsDomain(
         firstName = this.firstName,
         lastName = this.lastName,

@@ -12,7 +12,7 @@ data class OtpResponseError(
     @SerializedName("otp_error_cause") val errorCause: String
 )
 
-fun OtpResponseError.toOtpResponseDomain(): OtpResponseErrorDomain =
+fun OtpResponseError.otpResponseErrorDomain(): OtpResponseErrorDomain =
     OtpResponseErrorDomain(
         errorCause = OtpErrorCause.of(this.errorCause)
     )

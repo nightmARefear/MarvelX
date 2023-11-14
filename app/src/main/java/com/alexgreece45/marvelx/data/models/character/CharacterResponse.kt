@@ -19,7 +19,7 @@ data class CharacterResponse(
     @SerializedName("series") val series: SeriesList
 )
 
-fun CharacterResponse.toDomain(): CharacterDomain =
+fun CharacterResponse.toCharacterDomain(): CharacterDomain =
     CharacterDomain(
         id = this.id,
         name = this.name,
@@ -37,22 +37,5 @@ fun CharacterResponse.toDomain(): CharacterDomain =
         series = this.series
     )
 
-fun List<CharacterResponse>.toDomain(): List<CharacterDomain> =
-    this.map {
-        CharacterDomain(
-            id = it.id,
-            name = it.name,
-            modified = it.modified.toSystemLocalDateTime(),
-            description = it.description,
-            resourceURI = it.resourceURI,
-            urls = it.urls,
-            thumbnail = it.thumbnail.toDomain(
-                containerClassType = it::class,
-                characterName = it.name
-            ),
-            comics = it.comics,
-            stories = it.stories,
-            events = it.events,
-            series = it.series
-        )
-    }
+fun List<CharacterResponse>.toCharacterDomainList(): List<CharacterDomain> =
+    this.map { characterResponse -> characterResponse.toCharacterDomain() }

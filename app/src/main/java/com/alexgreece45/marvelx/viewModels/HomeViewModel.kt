@@ -142,27 +142,7 @@ class HomeViewModel @Inject constructor(
             // Access token is expired. Check if refresh token is expired.
             if (authController.isRefreshTokenExpired()) {
                 // Refresh token is expired, so logout.
-                viewModelScope.launch {
-                    userInteractor.logout().collect {
-                        when (it) {
-                            is LogoutPartialState.Failed -> {
-                                setState {
-                                    copy(
-                                        isLoading = false
-                                    )
-                                }
-                            }
-
-                            LogoutPartialState.Success -> {
-                                setState {
-                                    copy(
-                                        isLoading = false
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
+                logout()
                 return
             }
 
@@ -181,6 +161,8 @@ class HomeViewModel @Inject constructor(
                                     isLoading = false
                                 )
                             }
+                            // Could NOT refresh access token, so logout.
+                            logout()
                             showAlertDialog(errorMessage = it.errorMessage)
                         }
 
@@ -282,6 +264,35 @@ class HomeViewModel @Inject constructor(
                                     errorMessage = resourceProvider.getGenericErrorMessage()
                                 )
                             }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private fun logout() {
+        setState {
+            copy(
+                isLoading = true
+            )
+        }
+        viewModelScope.launch {
+            userInteractor.logout().collect {
+                when (it) {
+                    is LogoutPartialState.Failed -> {
+                        setState {
+                            copy(
+                                isLoading = false
+                            )
+                        }
+                    }
+
+                    LogoutPartialState.Success -> {
+                        setState {
+                            copy(
+                                isLoading = false
+                            )
                         }
                     }
                 }
