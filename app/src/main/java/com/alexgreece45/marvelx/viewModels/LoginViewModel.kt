@@ -2,10 +2,11 @@ package com.alexgreece45.marvelx.viewModels
 
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.controllers.PrefKeys
 import com.alexgreece45.marvelx.data.domains.user.VerificationStep
 import com.alexgreece45.marvelx.data.models.user.login.UserLoginRequest
 import com.alexgreece45.marvelx.interactors.PostLoginPartialState
-import com.alexgreece45.marvelx.interactors.UserInteractor
+import com.alexgreece45.marvelx.interactors.RegisterInteractor
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
@@ -82,22 +83,22 @@ sealed class LoginEffect : BaseEffect {
 
         data class NavigateToAllCharactersScreen(val userId: Int) : Navigation()
 
-        data class NavigateToOtpScreen(val userId: Int) : Navigation()
+        data class NavigateToOtpScreen(val userId: Int, val verificationStep: String) : Navigation()
     }
 
     /**
-    ### This effect does two things:
+     * ### This effect does two things:
      *
-     * • Closes the keyboard.
+     * - Closes the keyboard.
      *
-     * • Clears the focus from the last focused UI element.
+     * - Clears the focus from the last focused UI element.
      * This essentially clears the focus from all UI
      * elements, since the focus only applies to one
      * UI element at a time.
      *
      * It should be used only in [LoginEvent.OnDoneClick],
      * and [LoginEvent.OnLoginButtonClick].
-     * */
+     */
 
     data class ShowErrorDialog(val errorMessage: String) : LoginEffect()
 
@@ -110,7 +111,8 @@ sealed class LoginEffect : BaseEffect {
 class LoginViewModel @Inject constructor(
     private val resourceProvider: ResourceProvider,
     private val formValidator: FormValidator,
-    private val userInteractor: UserInteractor
+    private val registerInteractor: RegisterInteractor,
+    private val prefKeys: PrefKeys
 ) : BaseViewModel<LoginEvent, LoginState, LoginEffect>() {
 
     override fun setInitialState(): LoginState =
@@ -278,7 +280,7 @@ class LoginViewModel @Inject constructor(
 
         // All fields are valid.
         viewModelScope.launch {
-            userInteractor.postLogin(
+            registerInteractor.postLogin(
                 userLoginRequest = getUserLogInRequest()
             ).collect { userPartialStatePostLogIn ->
                 when (userPartialStatePostLogIn) {
@@ -294,38 +296,49 @@ class LoginViewModel @Inject constructor(
                     is PostLoginPartialState.Success -> {
                         resetUiFieldStates()
 
-                        // UserLoginResponseDomain.
-                        val loginResponseDomain = userPartialStatePostLogIn.loginResponseDomain
-
                         // Act accordingly based on the verification step.
-                        when (loginResponseDomain.verificationStep) {
-                            is VerificationStep.None -> {
-                                // No verification step, so navigate to All Characters Screen.
-                                setEffect {
-                                    LoginEffect.Navigation.NavigateToAllCharactersScreen(userId = loginResponseDomain.userId)
-                                }
-                            }
+                        userPartialStatePostLogIn.loginResponseDomain.let { loginResponseDomain ->
+                            when (loginResponseDomain.verificationStep) {
+                                is VerificationStep.None -> {
+                                    // Save userId in device.
+                                    prefKeys.setUserId(userPartialStatePostLogIn.loginResponseDomain.userId)
 
-                            is VerificationStep.Invalid -> {
-                                setEffect {
-                                    LoginEffect.ShowErrorDialog(
-                                        errorMessage = resourceProvider.getGenericErrorMessage()
-                                    )
+                                    // No verification step, so navigate to All Characters Screen.
+                                    setEffect {
+                                        LoginEffect.Navigation.NavigateToAllCharactersScreen(userId = loginResponseDomain.userId)
+                                    }
                                 }
-                            }
 
-                            is VerificationStep.OtpEmail -> {
-                                // Currently we only support OTP from email.
-                                setEffect {
-                                    LoginEffect.Navigation.NavigateToOtpScreen(
-                                        userId = loginResponseDomain.userId
-                                    )
+                                is VerificationStep.Invalid -> {
+                                    // Save userId in device.
+                                    prefKeys.setUserId(userPartialStatePostLogIn.loginResponseDomain.userId)
+
+                                    setEffect {
+                                        LoginEffect.ShowErrorDialog(
+                                            errorMessage = resourceProvider.getGenericErrorMessage()
+                                        )
+                                    }
                                 }
-                            }
 
-                            is VerificationStep.OtpPhoneNumber -> {
-                                // TODO: display appropriate screen
-                                TODO("\"VerificationStep.OtpPhoneNumber\" not implemented yet")
+                                is VerificationStep.OtpEmail -> {
+                                    // Save userId in device.
+                                    prefKeys.setUserId(userPartialStatePostLogIn.loginResponseDomain.userId)
+
+                                    // Currently we only support OTP from email.
+                                    setEffect {
+                                        LoginEffect.Navigation.NavigateToOtpScreen(
+                                            userId = loginResponseDomain.userId,
+                                            verificationStep = loginResponseDomain.verificationStep.name
+                                        )
+                                    }
+                                }
+
+                                is VerificationStep.OtpPhoneNumber -> { // Save userId in device.
+//                                    prefKeys.setUserId(userPartialStatePostLogIn.loginResponseDomain.userId) // todo: uncomment when this option is resolved
+
+                                    // TODO: display appropriate screen
+                                    TODO("\"VerificationStep.OtpPhoneNumber\" not implemented yet")
+                                }
                             }
                         }
                     }

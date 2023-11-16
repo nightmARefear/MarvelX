@@ -9,6 +9,12 @@ sealed class OtpErrorCause(val key: String, val cause: String) {
     data object Expired :
         OtpErrorCause(key = "otp_expired", cause = "The OTP is expired. Please try again.")
 
+    data object Blocked :
+        OtpErrorCause(
+            key = "otp_blocked",
+            cause = "The OTP functionality has been blocked. Please try again later."
+        )
+
     data object InternalServerError :
         OtpErrorCause(key = "internal_server_error", cause = "Internal server error.")
 
@@ -17,7 +23,7 @@ sealed class OtpErrorCause(val key: String, val cause: String) {
 
     companion object {
         private fun asList(): List<OtpErrorCause> =
-            listOf(NotMatch, InvalidLength, Expired, InternalServerError)
+            listOf(NotMatch, InvalidLength, Expired, Blocked,InternalServerError)
 
         fun of(value: String): OtpErrorCause =
             asList().firstOrNull { it.key == value } ?: Invalid(value = value)

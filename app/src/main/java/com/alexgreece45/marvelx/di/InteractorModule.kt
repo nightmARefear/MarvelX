@@ -6,6 +6,8 @@ import com.alexgreece45.marvelx.interactors.ComicInteractor
 import com.alexgreece45.marvelx.interactors.ComicInteractorImpl
 import com.alexgreece45.marvelx.interactors.OtpInteractor
 import com.alexgreece45.marvelx.interactors.OtpInteractorImpl
+import com.alexgreece45.marvelx.interactors.RegisterInteractor
+import com.alexgreece45.marvelx.interactors.RegisterInteractorImpl
 import com.alexgreece45.marvelx.interactors.UserInteractor
 import com.alexgreece45.marvelx.interactors.UserInteractorImpl
 import dagger.Binds
@@ -20,11 +22,11 @@ interface InteractorModule {
 
     @Binds
     @ViewModelScoped
-    fun bindsCharacterInteractor(impl : CharacterInteractorImpl) : CharacterInteractor
+    fun bindsCharacterInteractor(impl: CharacterInteractorImpl): CharacterInteractor
 
     @Binds
     @ViewModelScoped
-    fun bindsComicInteractor(impl : ComicInteractorImpl) : ComicInteractor
+    fun bindsComicInteractor(impl: ComicInteractorImpl): ComicInteractor
 
     @Binds
     @ViewModelScoped
@@ -33,4 +35,8 @@ interface InteractorModule {
     @Binds
     @ViewModelScoped
     fun bindsOtpInteractor(impl: OtpInteractorImpl): OtpInteractor
+
+    @Binds
+    @ViewModelScoped
+    fun bindsRegisterInteractor(impl: RegisterInteractorImpl): RegisterInteractor
 }

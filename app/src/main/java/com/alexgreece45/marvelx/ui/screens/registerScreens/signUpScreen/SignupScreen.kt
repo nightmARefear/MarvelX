@@ -78,7 +78,12 @@ fun SignUpScreen(
                 }
 
                 is SignupEffect.Navigation.NavigateToOtpScreen -> {
-                    navController.navigate(Screen.OtpScreen.createNavRoute(effect.userId))
+                    navController.navigate(
+                        Screen.OtpScreen.createNavRoute(
+                            userId = effect.userId,
+                            verificationStep = effect.verificationStep
+                        )
+                    )
                 }
 
                 SignupEffect.CloseKeyboard -> {

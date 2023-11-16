@@ -4,8 +4,12 @@ import com.alexgreece45.marvelx.data.api.ApiClient
 import com.alexgreece45.marvelx.data.api.ApiService
 import com.alexgreece45.marvelx.data.models.character.CharacterDataWrapper
 import com.alexgreece45.marvelx.data.models.character.comic.ComicDataWrapper
+import com.alexgreece45.marvelx.data.models.jwtSensitiveUserData.RequestJwtSensitiveUserData
+import com.alexgreece45.marvelx.data.models.jwtSensitiveUserData.ResponseJwtSensitiveUserData
 import com.alexgreece45.marvelx.data.models.otp.OtpRequest
 import com.alexgreece45.marvelx.data.models.otp.OtpResponseSuccess
+import com.alexgreece45.marvelx.data.models.sensitiveUserData.RequestSensitiveUserData
+import com.alexgreece45.marvelx.data.models.sensitiveUserData.ResponseSensitiveUserData
 import com.alexgreece45.marvelx.data.models.token.TokenResponse
 import com.alexgreece45.marvelx.data.models.user.login.LoginResponse
 import com.alexgreece45.marvelx.data.models.user.login.UserLoginRequest
@@ -67,4 +71,10 @@ class ApiClientImpl @Inject constructor(
 
     override suspend fun getUserProfileDetails(userId: Int): Response<ResponseProfileDetails> =
         api.getUserProfileDetails(userId = userId)
+
+    override suspend fun getJwtForSensitiveUserData(requestJwtSensitiveUserData: RequestJwtSensitiveUserData): Response<ResponseJwtSensitiveUserData> =
+        api.getJwtForSensitiveUserData(requestJwtSensitiveUserData)
+
+    override suspend fun getSensitiveUserData(requestSensitiveUserData: RequestSensitiveUserData): Response<ResponseSensitiveUserData> =
+        api.getSensitiveUserData(requestSensitiveUserData)
 }

@@ -133,7 +133,8 @@ fun HomeScreen(
                 is HomeEffect.Navigation.NavigateToOtpScreen -> {
                     navController.navigate(
                         Screen.OtpScreen.createNavRoute(
-                            userId = homeEffect.userId
+                            userId = homeEffect.userId,
+                            verificationStep = homeEffect.verificationStep
                         )
                     )
                 }

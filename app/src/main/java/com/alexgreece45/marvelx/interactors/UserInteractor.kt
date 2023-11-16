@@ -4,24 +4,18 @@ import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.controllers.AuthController
 import com.alexgreece45.marvelx.controllers.ConfigController
 import com.alexgreece45.marvelx.controllers.PrefKeys
-import com.alexgreece45.marvelx.data.domains.user.login.LoginResponseDomain
-import com.alexgreece45.marvelx.data.domains.user.loginWithToken.LoginWithTokenResponseDomain
+import com.alexgreece45.marvelx.data.domains.sensitiveUserData.OtpPreferredCommunicationType
+import com.alexgreece45.marvelx.data.domains.sensitiveUserData.SensitiveUserDataDomain
+import com.alexgreece45.marvelx.data.domains.user.VerificationStep
 import com.alexgreece45.marvelx.data.domains.user.profileDetails.ProfileDetailsDomain
-import com.alexgreece45.marvelx.data.domains.user.signup.SignupResponseDomain
+import com.alexgreece45.marvelx.data.models.sensitiveUserData.RequestSensitiveUserData
+import com.alexgreece45.marvelx.data.models.sensitiveUserData.toSensitiveUserDataDomain
 import com.alexgreece45.marvelx.data.models.token.toUserAuthData
-import com.alexgreece45.marvelx.data.models.user.login.UserLoginRequest
-import com.alexgreece45.marvelx.data.models.user.login.toUserLoginResponseDomain
-import com.alexgreece45.marvelx.data.models.user.loginWithToken.UserLoginWithTokenRequest
-import com.alexgreece45.marvelx.data.models.user.loginWithToken.toUserLoginWithTokenResponseDomain
 import com.alexgreece45.marvelx.data.models.user.profileDetails.toProfileDetailsDomain
-import com.alexgreece45.marvelx.data.models.user.signup.UserSignupRequest
-import com.alexgreece45.marvelx.data.models.user.signup.toSignupResponseDomain
 import com.alexgreece45.marvelx.repository.GetProfileDetailsRepositoryResponse
+import com.alexgreece45.marvelx.repository.GetSensitiveUserDataRepositoryResponse
 import com.alexgreece45.marvelx.repository.GrandNewAccessTokenRepositoryResponse
 import com.alexgreece45.marvelx.repository.LogoutRepositoryResponse
-import com.alexgreece45.marvelx.repository.PostLoginRepositoryResponse
-import com.alexgreece45.marvelx.repository.PostLoginWithTokenRepositoryResponse
-import com.alexgreece45.marvelx.repository.PostSignupRepositoryResponse
 import com.alexgreece45.marvelx.repository.RefreshAccessTokenRepositoryResponse
 import com.alexgreece45.marvelx.repository.UserRepository
 import com.alexgreece45.marvelx.util.ResourceProvider
@@ -34,12 +28,6 @@ import okio.IOException
 import javax.inject.Inject
 
 interface UserInteractor {
-    suspend fun postSignup(userSignupRequest: UserSignupRequest): Flow<PostSignupPartialState>
-
-    suspend fun postLogin(userLoginRequest: UserLoginRequest): Flow<PostLoginPartialState>
-
-    suspend fun postLoginWithToken(userLoginWithTokenRequest: UserLoginWithTokenRequest): Flow<PostLoginWithTokenPartialState>
-
     suspend fun logout(): Flow<LogoutPartialState>
 
     suspend fun grandNewAccessToken(code: String): Flow<GrandNewAccessTokenPartialState>
@@ -47,6 +35,11 @@ interface UserInteractor {
     suspend fun refreshAccessToken(): Flow<RefreshAccessTokenPartialState>
 
     suspend fun getProfileDetails(): Flow<GetProfileDetailsPartialState>
+
+    suspend fun getSensitiveUserData(
+        jwt: String,
+        verificationStep: VerificationStep
+    ): Flow<GetSensitiveUserDataPartialState>
 }
 
 class UserInteractorImpl @Inject constructor(
@@ -56,133 +49,14 @@ class UserInteractorImpl @Inject constructor(
     private val authController: AuthController,
     private val prefKeys: PrefKeys
 ) : UserInteractor {
-    override suspend fun postSignup(userSignupRequest: UserSignupRequest): Flow<PostSignupPartialState> =
-        flow {
-            val genericErrorMessage = resourceProvider.getGenericErrorMessage()
-            repository.postSignup(userSignupRequest).collect {
-                when (it) {
-                    is PostSignupRepositoryResponse.Failed -> {
-                        emit(
-                            PostSignupPartialState.Failed(
-                                errorMessage = it.responseUserError.errorMessage
-                            )
-                        )
-                    }
-
-                    is PostSignupRepositoryResponse.Success -> {
-                        it.response?.let { signupResponse ->
-                            emit(
-                                PostSignupPartialState.Success(
-                                    signupResponseDomain = signupResponse.toSignupResponseDomain()
-                                )
-                            )
-                        } ?: emit(
-                            PostSignupPartialState.Failed(
-                                errorMessage = genericErrorMessage
-                            )
-                        )
-                    }
-                }
-            }
-        }.safeAsync {
-            logcat(LogPriority.ERROR) { "(postSignup) error: ${it.message.orEmpty()}" }
-            when (it) {
-                is IOException -> {
-                    PostSignupPartialState.Failed(
-                        errorMessage = resourceProvider.getString(R.string.no_internet_connection_error_message)
-                    )
-                }
-
-                else -> {
-                    PostSignupPartialState.Failed(
-                        errorMessage = resourceProvider.getGenericErrorMessage()
-                    )
-                }
-            }
-        }
-
-    override suspend fun postLogin(userLoginRequest: UserLoginRequest): Flow<PostLoginPartialState> =
-        flow {
-            val genericErrorMessage = resourceProvider.getGenericErrorMessage()
-            repository.postLogin(userLoginRequest).collect {
-                when (it) {
-                    is PostLoginRepositoryResponse.Failed -> {
-                        emit(PostLoginPartialState.Failed(errorMessage = it.responseUserError.errorMessage))
-                    }
-
-                    is PostLoginRepositoryResponse.Success -> {
-                        it.response?.let { loginResponse ->
-                            emit(
-                                PostLoginPartialState.Success(
-                                    loginResponseDomain = loginResponse.toUserLoginResponseDomain()
-                                )
-                            )
-                        } ?: emit(PostLoginPartialState.Failed(errorMessage = genericErrorMessage))
-                    }
-                }
-            }
-        }.safeAsync {
-            logcat(LogPriority.ERROR) { "(postLogin) error: ${it.message.orEmpty()}" }
-            when (it) {
-                is IOException -> {
-                    PostLoginPartialState.Failed(
-                        errorMessage = resourceProvider.getString(R.string.no_internet_connection_error_message)
-                    )
-                }
-
-                else -> {
-                    PostLoginPartialState.Failed(
-                        errorMessage = resourceProvider.getGenericErrorMessage()
-                    )
-                }
-            }
-        }
-
-    override suspend fun postLoginWithToken(userLoginWithTokenRequest: UserLoginWithTokenRequest): Flow<PostLoginWithTokenPartialState> =
-        flow {
-            val genericErrorMessage = resourceProvider.getGenericErrorMessage()
-            repository.postLoginWithToken(userLoginWithTokenRequest).collect {
-                when (it) {
-                    is PostLoginWithTokenRepositoryResponse.Failed -> {
-                        // Propagate generic error to client.
-                        emit(PostLoginWithTokenPartialState.Failed(errorMessage = genericErrorMessage))
-                    }
-
-                    is PostLoginWithTokenRepositoryResponse.Success -> {
-                        it.response?.let { loginWithTokenResponse ->
-                            emit(
-                                PostLoginWithTokenPartialState.Success(
-                                    loginWithTokenResponseDomain = loginWithTokenResponse.toUserLoginWithTokenResponseDomain()
-                                )
-                            )
-                        }
-                            ?: emit(PostLoginWithTokenPartialState.Failed(errorMessage = genericErrorMessage))
-                    }
-                }
-            }
-        }.safeAsync {
-            logcat(LogPriority.ERROR) { "(postLoginWithToken) error: ${it.message.orEmpty()}" }
-            when (it) {
-                is IOException -> {
-                    PostLoginWithTokenPartialState.Failed(
-                        errorMessage = resourceProvider.getNoInternetConnectionMessage()
-                    )
-                }
-
-                else -> {
-                    PostLoginWithTokenPartialState.Failed(
-                        errorMessage = resourceProvider.getGenericErrorMessage()
-                    )
-                }
-            }
-        }
-
     override suspend fun logout(): Flow<LogoutPartialState> = flow {
         val genericErrorMessage = resourceProvider.getGenericErrorMessage()
         val clientId = configController.getClientId()
         val refreshToken = authController.getRefreshToken()
 
         if (refreshToken.isNullOrEmpty()) {
+            // Remove stored credentials.
+            authController.removeUserCredentials()
             emit(LogoutPartialState.Success)
             return@flow
         }
@@ -277,6 +151,8 @@ class UserInteractorImpl @Inject constructor(
         val genericErrorMessage = resourceProvider.getGenericErrorMessage()
 
         if (token.isNullOrBlank()) {
+            // Remove stored credentials.
+            authController.removeUserCredentials()
             emit(RefreshAccessTokenPartialState.Failed(errorMessage = genericErrorMessage))
             return@flow
         }
@@ -355,26 +231,48 @@ class UserInteractorImpl @Inject constructor(
                 )
             }
         }
-}
 
-sealed class PostSignupPartialState {
-    data class Success(val signupResponseDomain: SignupResponseDomain) : PostSignupPartialState()
+    override suspend fun getSensitiveUserData(
+        jwt: String,
+        verificationStep: VerificationStep
+    ): Flow<GetSensitiveUserDataPartialState> = flow {
+        val request = RequestSensitiveUserData(
+            jwt = jwt,
+            verificationStep = verificationStep.name
+        )
 
-    data class Failed(val errorMessage: String) : PostSignupPartialState()
-}
+        repository.getSensitiveUserData(request).collect { repositoryResponse ->
+            when (repositoryResponse) {
+                is GetSensitiveUserDataRepositoryResponse.Failed -> {
+                    emit(
+                        GetSensitiveUserDataPartialState.Failed(
+                            errorMessage = repositoryResponse.responseUserError.errorMessage
+                        )
+                    )
+                }
 
-sealed class PostLoginPartialState {
-    data class Success(val loginResponseDomain: LoginResponseDomain) :
-        PostLoginPartialState()
-
-    data class Failed(val errorMessage: String) : PostLoginPartialState()
-}
-
-sealed class PostLoginWithTokenPartialState {
-    data class Success(val loginWithTokenResponseDomain: LoginWithTokenResponseDomain) :
-        PostLoginWithTokenPartialState()
-
-    data class Failed(val errorMessage: String) : PostLoginWithTokenPartialState()
+                is GetSensitiveUserDataRepositoryResponse.Success -> {
+                    repositoryResponse.response?.let { responseSensitiveUserData ->
+                        emit(
+                            GetSensitiveUserDataPartialState.Success(
+                                sensitiveUserDataDomain = responseSensitiveUserData.toSensitiveUserDataDomain()
+                            )
+                        )
+                    } ?: emit(
+                        GetSensitiveUserDataPartialState.Failed(
+                            errorMessage = resourceProvider.getGenericErrorMessage()
+                        )
+                    )
+                }
+            }
+        }
+    }.safeAsync {
+        logcat(LogPriority.ERROR) { "(getSensitiveUserData) error: ${it.message}" }
+        when (it) {
+            is IOException -> GetSensitiveUserDataPartialState.Failed(errorMessage = resourceProvider.getNoInternetConnectionMessage())
+            else -> GetSensitiveUserDataPartialState.Failed(errorMessage = resourceProvider.getGenericErrorMessage())
+        }
+    }
 }
 
 sealed class GetProfileDetailsPartialState {
@@ -399,4 +297,11 @@ sealed class RefreshAccessTokenPartialState {
 sealed class LogoutPartialState {
     data object Success : LogoutPartialState()
     data class Failed(val errorMessage: String) : LogoutPartialState()
+}
+
+sealed class GetSensitiveUserDataPartialState {
+    data class Success(val sensitiveUserDataDomain: SensitiveUserDataDomain) :
+        GetSensitiveUserDataPartialState()
+
+    data class Failed(val errorMessage: String) : GetSensitiveUserDataPartialState()
 }

@@ -3,6 +3,7 @@ package com.alexgreece45.marvelx.ui.navigation
 import androidx.navigation.NamedNavArgument
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
+import com.alexgreece45.marvelx.data.domains.user.VerificationStep
 
 sealed class Screen(
     protected val baseRoute: String,
@@ -38,22 +39,22 @@ sealed class Screen(
             fun getStartDestination(): String = AllCharactersScreen.route
         }
 
-        object AllCharactersScreen : BottomNavigationScreens(baseRoute = "allCharactersScreen")
+        data object AllCharactersScreen : BottomNavigationScreens(baseRoute = "allCharactersScreen")
 
-        object AllFavoriteCharactersScreen :
+        data object AllFavoriteCharactersScreen :
             BottomNavigationScreens(baseRoute = "allFavoriteCharactersScreen")
 
-        object ProfileScreen : BottomNavigationScreens(baseRoute = "profileScreen")
+        data object ProfileScreen : BottomNavigationScreens(baseRoute = "profileScreen")
     }
 
-    object CharacterScreen : Screen(
+    data object CharacterScreen : Screen(
         baseRoute = "characterScreen",
         navArgs = listOf(NavItem.Character)
     ) {
         fun createNavRoute(characterId: Int) = "$baseRoute/$characterId"
     }
 
-    object AllCharacterComicsScreen : Screen(
+    data object AllCharacterComicsScreen : Screen(
         baseRoute = "allCharacterComicsScreen",
         navArgs = listOf(NavItem.Character, NavItem.ToolbarTitlePrefix)
     ) {
@@ -63,7 +64,7 @@ sealed class Screen(
         ): String = "$baseRoute/$characterId/$toolbarTitlePrefix"
     }
 
-    object ComicScreen : Screen(
+    data object ComicScreen : Screen(
         baseRoute = "comicScreen",
         navArgs = listOf(NavItem.Comic)
     ) {
@@ -79,20 +80,20 @@ sealed class Screen(
             fun getStartDestination(): String = HomeScreen.route
         }
 
-        object HomeScreen : Screen(baseRoute = "homeScreen")
+        data object HomeScreen : Screen(baseRoute = "homeScreen")
 
 
-        object LogInScreen : Screen(baseRoute = "logInScreen")
+        data object LogInScreen : Screen(baseRoute = "logInScreen")
 
 
-        object SignUpScreen : Screen(baseRoute = "signUpScreen")
+        data object SignUpScreen : Screen(baseRoute = "signUpScreen")
     }
 
-    object OtpScreen : Screen(
+    data object OtpScreen : Screen(
         baseRoute = "otpScreen",
-        navArgs = listOf(NavItem.User)
+        navArgs = listOf(NavItem.User, NavItem.VerificationStep)
     ) {
-        fun createNavRoute(userId: Int): String = "$baseRoute/$userId"
+        fun createNavRoute(userId: Int, verificationStep: String): String = "$baseRoute/$userId/$verificationStep"
     }
 }
 
@@ -100,5 +101,6 @@ enum class NavItem(val key: String, val type: NavType<*>) {
     Character(key = "characterId", NavType.IntType),
     Comic(key = "comicId", type = NavType.IntType),
     ToolbarTitlePrefix(key = "toolbarTitlePrefix", NavType.StringType),
-    User(key = "userId", NavType.IntType)
+    User(key = "userId", NavType.IntType),
+    VerificationStep(key = "verificationStep", NavType.StringType)
 }

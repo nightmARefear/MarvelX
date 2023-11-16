@@ -1,11 +1,11 @@
 package com.alexgreece45.marvelx.data.domains.user
 
 sealed class VerificationStep(open val name: String) {
-    object OtpEmail : VerificationStep(name = "verification_pin_email")
+    data object OtpEmail : VerificationStep(name = "verification_pin_email")
 
-    object OtpPhoneNumber : VerificationStep(name = "verification_pin_sms")
+    data object OtpPhoneNumber : VerificationStep(name = "verification_pin_sms")
 
-    object None : VerificationStep(name = "no_verification")
+    data object None : VerificationStep(name = "no_verification")
 
     data class Invalid(override val name: String) : VerificationStep(name)
 

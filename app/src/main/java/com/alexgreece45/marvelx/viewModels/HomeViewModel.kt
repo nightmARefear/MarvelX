@@ -9,6 +9,7 @@ import com.alexgreece45.marvelx.controllers.PrefKeys
 import com.alexgreece45.marvelx.interactors.LogoutPartialState
 import com.alexgreece45.marvelx.interactors.PostLoginWithTokenPartialState
 import com.alexgreece45.marvelx.interactors.RefreshAccessTokenPartialState
+import com.alexgreece45.marvelx.interactors.RegisterInteractor
 import com.alexgreece45.marvelx.interactors.UserInteractor
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
@@ -53,7 +54,7 @@ sealed interface HomeEffect : BaseEffect {
         data object PopBackStack : Navigation()
         data object NavigateToLogInScreen : Navigation()
         data object NavigateToSignUpScreen : Navigation()
-        data class NavigateToOtpScreen(val userId: Int) : Navigation()
+        data class NavigateToOtpScreen(val userId: Int, val verificationStep: String) : Navigation()
         data class NavigateToAllCharactersScreen(val userId: Int) : Navigation()
     }
 
@@ -67,6 +68,7 @@ class HomeViewModel @Inject constructor(
     private val prefKeys: PrefKeys,
     private val resourceProvider: ResourceProvider,
     private val userInteractor: UserInteractor,
+    private val registerInteractor: RegisterInteractor,
     private val authController: AuthController
 ) : BaseViewModel<HomeEvent, HomeState, HomeEffect>() {
     override fun setInitialState(): HomeState =
@@ -190,7 +192,7 @@ class HomeViewModel @Inject constructor(
 
     private fun postLogin() {
         viewModelScope.launch {
-            userInteractor.postLoginWithToken(getUserLoginWithTokenRequest()).collect {
+            registerInteractor.postLoginWithToken(getUserLoginWithTokenRequest()).collect {
                 when (it) {
                     is PostLoginWithTokenPartialState.Failed -> {
                         // An error occurred either due to an invalid token, or user id; proceed to remove the stored user credentials (userId, UserAuthData).
@@ -209,60 +211,63 @@ class HomeViewModel @Inject constructor(
                     }
 
                     is PostLoginWithTokenPartialState.Success -> {
-                        when (it.loginWithTokenResponseDomain.verificationStep) {
-                            is VerificationStep.None -> {
-                                setState {
-                                    copy(
+                        it.loginWithTokenResponseDomain.verificationStep.let { verificationStep ->
+                            when (verificationStep) {
+                                is VerificationStep.None -> {
+                                    setState {
+                                        copy(
 //                                        isLoading = false // do not disable loading, so that the user cannot click on the Login/Signup buttons
-                                    )
+                                        )
+                                    }
+
+                                    // No verification step, so navigate to AllCharactersScreen.
+                                    setEffect {
+                                        HomeEffect.Navigation.NavigateToAllCharactersScreen(
+                                            userId = prefKeys.getUserId()
+                                        )
+                                    }
                                 }
 
-                                // No verification step, so navigate to AllCharactersScreen.
-                                setEffect {
-                                    HomeEffect.Navigation.NavigateToAllCharactersScreen(
-                                        userId = prefKeys.getUserId()
-                                    )
-                                }
-                            }
+                                is VerificationStep.OtpEmail -> {
+                                    // Currently we only support OTP from email.
+                                    setState {
+                                        copy(
+                                            isLoading = false
+                                        )
+                                    }
 
-                            is VerificationStep.OtpEmail -> {
-                                // Currently we only support OTP from email.
-                                setState {
-                                    copy(
-                                        isLoading = false
-                                    )
-                                }
-
-                                setEffect {
-                                    HomeEffect.Navigation.NavigateToOtpScreen(
-                                        userId = prefKeys.getUserId()
-                                    )
-                                }
-                            }
-
-                            is VerificationStep.OtpPhoneNumber -> {
-                                setState {
-                                    copy(
-                                        isLoading = false
-                                    )
+                                    setEffect {
+                                        HomeEffect.Navigation.NavigateToOtpScreen(
+                                            userId = prefKeys.getUserId(),
+                                            verificationStep = verificationStep.name
+                                        )
+                                    }
                                 }
 
-                                TODO("\"VerificationStep.OtpPhoneNumber\" not implemented yet")
-                            }
+                                is VerificationStep.OtpPhoneNumber -> {
+                                    setState {
+                                        copy(
+                                            isLoading = false
+                                        )
+                                    }
 
-                            is VerificationStep.Invalid -> {
-                                // An error occurred, so just in case, remove the stored user credentials (userId, UserAuthData).
-                                authController.removeUserCredentials()
-
-                                setState {
-                                    copy(
-                                        isLoading = false
-                                    )
+                                    TODO("\"VerificationStep.OtpPhoneNumber\" not implemented yet")
                                 }
 
-                                showAlertDialog(
-                                    errorMessage = resourceProvider.getGenericErrorMessage()
-                                )
+                                is VerificationStep.Invalid -> {
+                                    // An error occurred, so just in case, remove the stored user credentials (userId, UserAuthData).
+                                    authController.removeUserCredentials()
+
+                                    setState {
+                                        copy(
+                                            isLoading = false
+                                        )
+                                    }
+
+                                    showAlertDialog(
+                                        errorMessage = resourceProvider.getGenericErrorMessage()
+                                    )
+                                }
                             }
                         }
                     }
