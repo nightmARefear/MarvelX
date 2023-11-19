@@ -8,6 +8,8 @@ import com.alexgreece45.marvelx.controllers.PreferencesController
 import com.alexgreece45.marvelx.controllers.PreferencesControllerImpl
 import com.alexgreece45.marvelx.controllers.PrefKeys
 import com.alexgreece45.marvelx.controllers.PrefKeysImpl
+import com.alexgreece45.marvelx.controllers.RefreshTokenController
+import com.alexgreece45.marvelx.controllers.RefreshTokenControllerImpl
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -33,4 +35,8 @@ interface ControllerModule {
     @Binds
     @Singleton
     fun bindsAuthController(impl: AuthControllerImpl): AuthController
+
+    @Binds
+    @Singleton
+    fun bindsRefreshTokenController(impl: RefreshTokenControllerImpl): RefreshTokenController
 }

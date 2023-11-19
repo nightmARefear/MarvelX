@@ -2,6 +2,7 @@ package com.alexgreece45.marvelx.interactors
 
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.controllers.PrefKeys
+import com.alexgreece45.marvelx.controllers.RefreshTokenController
 import com.alexgreece45.marvelx.data.domains.otp.OtpDomain
 import com.alexgreece45.marvelx.data.models.otp.OtpErrorCause
 import com.alexgreece45.marvelx.data.models.otp.OtpRequest
@@ -9,7 +10,6 @@ import com.alexgreece45.marvelx.data.models.otp.otpResponseErrorDomain
 import com.alexgreece45.marvelx.data.models.otp.toOtpDomain
 import com.alexgreece45.marvelx.repository.OtpRepository
 import com.alexgreece45.marvelx.repository.ValidateOtpRepositoryResponse
-import com.alexgreece45.marvelx.util.DateUtil
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.extensions.safeAsync
 import kotlinx.coroutines.flow.Flow
@@ -26,7 +26,8 @@ interface OtpInteractor {
 class OtpInteractorImpl @Inject constructor(
     private val repository: OtpRepository,
     private val resourceProvider: ResourceProvider,
-    private val prefKeys: PrefKeys
+    private val prefKeys: PrefKeys,
+    private val refreshTokenController: RefreshTokenController
 ) : OtpInteractor {
     override suspend fun validateOtp(otp: String): Flow<ValidateOtpPartialState> = flow {
         val otpRequest = OtpRequest(
@@ -62,6 +63,9 @@ class OtpInteractorImpl @Inject constructor(
 
                 is ValidateOtpRepositoryResponse.Success -> {
                     it.response?.let { otpResponseSuccess ->
+                        // Start refresh token worker since the OTP was successfully validated.
+                        refreshTokenController.startWorker()
+
                         emit(
                             ValidateOtpPartialState.Success(
                                 otpDomain = otpResponseSuccess.toOtpDomain()

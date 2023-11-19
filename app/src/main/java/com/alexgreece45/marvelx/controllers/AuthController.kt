@@ -1,6 +1,7 @@
 package com.alexgreece45.marvelx.controllers
 
 import com.alexgreece45.marvelx.data.domains.userAuthData.UserAuthData
+import com.alexgreece45.marvelx.util.DateUtil
 import com.google.gson.Gson
 import logcat.logcat
 import javax.inject.Inject
@@ -10,6 +11,20 @@ interface AuthController {
      * Returns the access token with its type.
      * */
     fun getAccessToken(): String?
+
+    /**
+     * Returns the expiration UNIX of the access token.
+     *
+     * If the access token does not exist, `0` is returned.
+     */
+    fun getAccessTokenExpiration(): Long
+
+    /**
+     * Returns the expiration UNIX of the refresh token.
+     *
+     * If the refresh token does not exist, `0` is returned.
+     */
+    fun getRefreshTokenExpiration(): Long
 
     /**
      * Returns the refresh token.
@@ -49,6 +64,12 @@ class AuthControllerImpl @Inject constructor(
             "${userAuthData.tokenType} ${userAuthData.accessToken}"
         }
 
+    override fun getAccessTokenExpiration(): Long =
+        userAuthData?.accessExpiresIn ?: 0L
+
+    override fun getRefreshTokenExpiration(): Long =
+        userAuthData?.refreshExpiresIn ?: 0L
+
     override fun getRefreshToken(): String? =
         userAuthData?.refreshToken
 
@@ -56,14 +77,18 @@ class AuthControllerImpl @Inject constructor(
         prefKeys.setUserAuthData(Gson().toJson(userAuthData))
 
     override fun isAccessTokenExpired(): Boolean =
-        userAuthData?.let { userAuthData ->
-            (System.currentTimeMillis() / 1000) >= userAuthData.accessExpiresIn
-        } ?: true
+        if (userAuthData != null) {
+            DateUtil.getSecondsFromEpoch() >= getAccessTokenExpiration()
+        } else {
+            true
+        }
 
     override fun isRefreshTokenExpired(): Boolean =
-        userAuthData?.let { userAuthData ->
-            (System.currentTimeMillis() / 1000) >= userAuthData.refreshExpiresIn
-        } ?: true
+        if (userAuthData != null) {
+            DateUtil.getSecondsFromEpoch() >= getRefreshTokenExpiration()
+        } else {
+            true
+        }
 
     override fun removeUserCredentials() {
         prefKeys.removeUserId()

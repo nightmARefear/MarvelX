@@ -4,6 +4,7 @@ import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.controllers.AuthController
 import com.alexgreece45.marvelx.controllers.ConfigController
 import com.alexgreece45.marvelx.controllers.PrefKeys
+import com.alexgreece45.marvelx.controllers.RefreshTokenController
 import com.alexgreece45.marvelx.data.domains.sensitiveUserData.SensitiveUserDataDomain
 import com.alexgreece45.marvelx.data.domains.user.profileDetails.ProfileDetailsDomain
 import com.alexgreece45.marvelx.data.models.sensitiveUserData.RequestSensitiveUserData
@@ -42,11 +43,12 @@ class UserInteractorImpl @Inject constructor(
     private val resourceProvider: ResourceProvider,
     private val configController: ConfigController,
     private val authController: AuthController,
+    private val refreshTokenController: RefreshTokenController,
     private val prefKeys: PrefKeys
 ) : UserInteractor {
     override suspend fun logout(): Flow<LogoutPartialState> = flow {
         val genericErrorMessage = resourceProvider.getGenericErrorMessage()
-        val clientId = configController.getClientId()
+        val clientId = configController.clientId
         val refreshToken = authController.getRefreshToken()
 
         if (refreshToken.isNullOrEmpty()) {
@@ -57,6 +59,9 @@ class UserInteractorImpl @Inject constructor(
         }
 
         repository.logout(clientId, refreshToken).collect { logoutRepositoryResponse ->
+            // Stop refresh token worker irrespectively of the response.
+            refreshTokenController.stopWorker()
+
             // Remove user credentials irrespectively of the response.
             authController.removeUserCredentials()
 
@@ -96,10 +101,10 @@ class UserInteractorImpl @Inject constructor(
         flow {
             val genericErrorMessage = resourceProvider.getGenericErrorMessage()
             repository.grandNewAccessToken(
-                clientId = configController.getClientId(),
-                clientSecret = configController.getClientSecret(),
+                clientId = configController.clientId,
+                clientSecret = configController.clientSecret,
                 code = code,
-                uri = configController.getUri()
+                uri = configController.uri
             ).collect {
                 when (it) {
                     is GrandNewAccessTokenRepositoryResponse.Failed -> {
@@ -141,7 +146,7 @@ class UserInteractorImpl @Inject constructor(
         }
 
     override suspend fun refreshAccessToken(): Flow<RefreshAccessTokenPartialState> = flow {
-        val clientId = configController.getClientId()
+        val clientId = configController.clientId
         val token = authController.getRefreshToken()
         val genericErrorMessage = resourceProvider.getGenericErrorMessage()
 

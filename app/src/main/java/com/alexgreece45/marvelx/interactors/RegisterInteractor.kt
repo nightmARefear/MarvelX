@@ -1,6 +1,7 @@
 package com.alexgreece45.marvelx.interactors
 
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.controllers.RefreshTokenController
 import com.alexgreece45.marvelx.data.domains.jwtSensitiveUserData.JwtSensitiveUserDataDomain
 import com.alexgreece45.marvelx.data.domains.user.VerificationStep
 import com.alexgreece45.marvelx.data.domains.user.login.LoginResponseDomain
@@ -44,6 +45,7 @@ interface RegisterInteractor {
 class RegisterInteractorImpl @Inject constructor(
     private val repository: RegisterRepository,
     private val resourceProvider: ResourceProvider,
+    private val refreshTokenController: RefreshTokenController
 ) : RegisterInteractor {
     override suspend fun postSignup(userSignupRequest: UserSignupRequest): Flow<PostSignupPartialState> =
         flow {
@@ -101,9 +103,16 @@ class RegisterInteractorImpl @Inject constructor(
 
                     is PostLoginRepositoryResponse.Success -> {
                         it.response?.let { loginResponse ->
+                            val userLoginResponseDomain = loginResponse.toUserLoginResponseDomain()
+
+                            // Start refresh token worker if there are is no verification step pending (i.e., `VerificationStep.None`).
+                            if (userLoginResponseDomain.verificationStep is VerificationStep.None) {
+                                refreshTokenController.startWorker()
+                            }
+
                             emit(
                                 PostLoginPartialState.Success(
-                                    loginResponseDomain = loginResponse.toUserLoginResponseDomain()
+                                    loginResponseDomain = userLoginResponseDomain
                                 )
                             )
                         } ?: emit(PostLoginPartialState.Failed(errorMessage = genericErrorMessage))
@@ -139,9 +148,16 @@ class RegisterInteractorImpl @Inject constructor(
 
                     is PostLoginWithTokenRepositoryResponse.Success -> {
                         it.response?.let { loginWithTokenResponse ->
+                            val userLoginWithTokenResponseDomain = loginWithTokenResponse.toUserLoginWithTokenResponseDomain()
+
+                            // Start refresh token worker if there are is no verification step pending (i.e., `VerificationStep.None`).
+                            if (userLoginWithTokenResponseDomain.verificationStep is VerificationStep.None) {
+                                refreshTokenController.startWorker()
+                            }
+
                             emit(
                                 PostLoginWithTokenPartialState.Success(
-                                    loginWithTokenResponseDomain = loginWithTokenResponse.toUserLoginWithTokenResponseDomain()
+                                    loginWithTokenResponseDomain = userLoginWithTokenResponseDomain
                                 )
                             )
                         }

@@ -9,45 +9,57 @@ interface ConfigController {
     /**
      * Returns the client ID.
      */
-    fun getClientId(): String
+    val clientId: String
 
     /**
      * Returns the client secret.
      */
-    fun getClientSecret(): String
+    val clientSecret: String
+
+    /**
+     * The refresh interval, in minutes, for refreshing the `access` token.
+     *
+     * #### Note: It is ALWAYS one minute less than the expiration timespan of the access token, so that we can request for a new token within 10 to 20 seconds before it expires.
+     *
+     */
+    val refreshTokenInterval: Long
 
     /**
      * Returns the URI.
      */
-    fun getUri(): String
+    val uri: String
 
     /**
      * Extracts and returns the scheme (i.e., `https`, `http`) from the base URL.
      */
-    fun getSchemeFromBaseUrl(): String
+    val scheme: String
 
     /**
      * Returns the host.
      */
-    fun getHost(): String
+    val host: String
 
     /**
      * Extracts and returns the port (i.e., `XXXXX`, where `X` integer) from the base URL.
      */
-    fun getBaseUrlPort(): Int
+    val port: Int
 }
 
 class ConfigControllerImpl @Inject constructor() : ConfigController {
-    override fun getClientId(): String = TOKEN_CLIENT_ID
+    /**
+     * The actual refresh token interval.
+     */
+    private val actualRefreshTokenInterval: Long = 10L
 
-    override fun getClientSecret(): String = BuildConfig.TOKEN_CLIENT_SECRET
-
-    override fun getUri(): String = TOKEN_REDIRECT_URI
-    override fun getSchemeFromBaseUrl(): String =
-        if (BuildConfig.MARVELX_BACKEND_BASE_URL.startsWith("https")) "https" else "http"
-
-    override fun getHost(): String = BuildConfig.MARVELX_BACKEND_DOMAIN
-
-    override fun getBaseUrlPort(): Int =
-        BuildConfig.MARVELX_BACKEND_BASE_URL.split(":").last().toInt()
+    override val clientId: String get() = TOKEN_CLIENT_ID
+    override val clientSecret: String get() = BuildConfig.TOKEN_CLIENT_SECRET
+    override val refreshTokenInterval: Long get() = actualRefreshTokenInterval - 1L
+    override val uri: String get() = TOKEN_REDIRECT_URI
+    override val scheme: String
+        get() =
+            if (BuildConfig.MARVELX_BACKEND_BASE_URL.startsWith("https")) "https" else "http"
+    override val host: String get() = BuildConfig.MARVELX_BACKEND_DOMAIN
+    override val port: Int
+        get() =
+            BuildConfig.MARVELX_BACKEND_BASE_URL.split(":").last().toInt()
 }

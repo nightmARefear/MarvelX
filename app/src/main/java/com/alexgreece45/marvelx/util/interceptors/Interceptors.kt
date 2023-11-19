@@ -77,13 +77,13 @@ private fun applyMarvelXBackendTransformations(
     val originalRequest = chain.request()
 
     // Get scheme from MarvelX Backend's baseUrl.
-    val scheme = configController.getSchemeFromBaseUrl()
+    val scheme = configController.scheme
 
     // Get host from config.
-    val host = configController.getHost()
+    val host = configController.host
 
     // Get port from config.
-    val port = configController.getBaseUrlPort()
+    val port = configController.port
 
     // Create modified URL based on the config.
     val modifiedUrl =

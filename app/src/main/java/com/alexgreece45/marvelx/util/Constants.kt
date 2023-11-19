@@ -23,6 +23,9 @@ const val BOTTOM_NAVIGATION_BAR_ITEM_LABEL_MAX_LENGTH = 10
 // Throttle clickable constants.
 const val THROTTLE_CLICKABLE_DEFAULT_DELAY: Long = 1000
 
+// Work manager constants.
+const val REFRESH_TOKEN_WORKER_NAME = "refresh-token-work"
+
 sealed class HeaderConstants(val name: String) {
     data object UserAgent : HeaderConstants(name = "User-Agent")
     data object Authorization : HeaderConstants(name = "Authorization")
