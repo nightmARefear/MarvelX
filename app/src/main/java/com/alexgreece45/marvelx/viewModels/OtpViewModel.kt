@@ -34,7 +34,7 @@ sealed class OtpEvent : BaseEvent {
 
     data class OnValidationSuccess(val code: String) : OtpEvent()
 
-    data class OnJwtRetrieval(val jwt: String, val verificationStep: VerificationStep) : OtpEvent()
+    data class OnTokenReceived(val token: String) : OtpEvent()
 }
 
 data class OtpState(
@@ -79,7 +79,7 @@ sealed class OtpEffect : BaseEffect {
 
     data class OnValidationSuccess(val code: String) : OtpEffect()
 
-    data class OnJwtRetrieval(val jwt: String, val verificationStep: VerificationStep) : OtpEffect()
+    data class OnTokenReceived(val token: String, val verificationStep: VerificationStep) : OtpEffect()
 }
 
 @HiltViewModel
@@ -127,13 +127,13 @@ class OtpViewModel @Inject constructor(
                 grandNewAccessToken(code = event.code, event = event)
             }
 
-            is OtpEvent.OnJwtRetrieval -> {
+            is OtpEvent.OnTokenReceived -> {
                 setState {
                     copy(
                         isLoading = true
                     )
                 }
-                getSensitiveUserData(jwt = event.jwt, verificationStep = event.verificationStep)
+                getSensitiveUserData(token = event.token)
             }
         }
     }
@@ -285,8 +285,8 @@ class OtpViewModel @Inject constructor(
 
                     is GetJwtForSensitiveUserDataPartialState.Success -> {
                         setEffect {
-                            OtpEffect.OnJwtRetrieval(
-                                jwt = it.jwtSensitiveUserDataDomain.jwt,
+                            OtpEffect.OnTokenReceived(
+                                token = it.jwtSensitiveUserDataDomain.token,
                                 verificationStep = verificationStep
                             )
                         }
@@ -299,9 +299,9 @@ class OtpViewModel @Inject constructor(
     /**
      * Retrieves the user's preferred medium of communication for sending OTPs.
      */
-    private fun getSensitiveUserData(jwt: String, verificationStep: VerificationStep) {
+    private fun getSensitiveUserData(token: String) {
         viewModelScope.launch {
-            userInteractor.getSensitiveUserData(jwt = jwt, verificationStep).collect {
+            userInteractor.getSensitiveUserData(token = token).collect {
                 when (it) {
                     is GetSensitiveUserDataPartialState.Failed -> {
                         setEffect {

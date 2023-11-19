@@ -4,10 +4,10 @@ import com.alexgreece45.marvelx.data.domains.jwtSensitiveUserData.JwtSensitiveUs
 import com.google.gson.annotations.SerializedName
 
 data class ResponseJwtSensitiveUserData(
-    @SerializedName("jwt") val jwt: String
+    @SerializedName("token") val token: String
 )
 
 fun ResponseJwtSensitiveUserData.toJwtSensitiveUserDataDomain(): JwtSensitiveUserDataDomain =
     JwtSensitiveUserDataDomain(
-        jwt = this.jwt
+        token = this.token
     )

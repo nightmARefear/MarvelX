@@ -11,7 +11,7 @@ interface FormValidator {
     fun validateForms(forms: List<Form>): Flow<FormsValidationResult>
 }
 
-class FormValidatorImpl @Inject constructor(): FormValidator {
+class FormValidatorImpl @Inject constructor() : FormValidator {
     override fun validateForm(form: Form): Flow<FormValidationResult> = flow {
         form.inputs.forEach { (rules, value) ->
             rules.forEach { rule ->

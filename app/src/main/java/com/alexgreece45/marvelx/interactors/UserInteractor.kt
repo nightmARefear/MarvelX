@@ -4,9 +4,7 @@ import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.controllers.AuthController
 import com.alexgreece45.marvelx.controllers.ConfigController
 import com.alexgreece45.marvelx.controllers.PrefKeys
-import com.alexgreece45.marvelx.data.domains.sensitiveUserData.OtpPreferredCommunicationType
 import com.alexgreece45.marvelx.data.domains.sensitiveUserData.SensitiveUserDataDomain
-import com.alexgreece45.marvelx.data.domains.user.VerificationStep
 import com.alexgreece45.marvelx.data.domains.user.profileDetails.ProfileDetailsDomain
 import com.alexgreece45.marvelx.data.models.sensitiveUserData.RequestSensitiveUserData
 import com.alexgreece45.marvelx.data.models.sensitiveUserData.toSensitiveUserDataDomain
@@ -36,10 +34,7 @@ interface UserInteractor {
 
     suspend fun getProfileDetails(): Flow<GetProfileDetailsPartialState>
 
-    suspend fun getSensitiveUserData(
-        jwt: String,
-        verificationStep: VerificationStep
-    ): Flow<GetSensitiveUserDataPartialState>
+    suspend fun getSensitiveUserData(token: String): Flow<GetSensitiveUserDataPartialState>
 }
 
 class UserInteractorImpl @Inject constructor(
@@ -232,14 +227,8 @@ class UserInteractorImpl @Inject constructor(
             }
         }
 
-    override suspend fun getSensitiveUserData(
-        jwt: String,
-        verificationStep: VerificationStep
-    ): Flow<GetSensitiveUserDataPartialState> = flow {
-        val request = RequestSensitiveUserData(
-            jwt = jwt,
-            verificationStep = verificationStep.name
-        )
+    override suspend fun getSensitiveUserData(token: String): Flow<GetSensitiveUserDataPartialState> = flow {
+        val request = RequestSensitiveUserData(token = token)
 
         repository.getSensitiveUserData(request).collect { repositoryResponse ->
             when (repositoryResponse) {

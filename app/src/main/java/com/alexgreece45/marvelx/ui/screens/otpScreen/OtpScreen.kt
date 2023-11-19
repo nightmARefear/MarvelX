@@ -106,12 +106,9 @@ fun OtpScreen(
                     )
                 )
 
-                is OtpEffect.OnJwtRetrieval -> {
+                is OtpEffect.OnTokenReceived -> {
                     viewModel.setEvent(
-                        OtpEvent.OnJwtRetrieval(
-                            jwt = effect.jwt,
-                            verificationStep = effect.verificationStep
-                        )
+                        OtpEvent.OnTokenReceived(token = effect.token)
                     )
                 }
             }
@@ -191,8 +188,8 @@ fun OtpScreen(
                                 modifier = Modifier.fillMaxWidth(),
                                 text = stringResource(
                                     R.string.otp_screen_input_field_label,
-                                    stringResource(sensitiveUserData.type.label),
-                                    sensitiveUserData.data
+                                    stringResource(sensitiveUserData.otpPreferredCommunicationType.label),
+                                    sensitiveUserData.maskedData
                                 ),
                                 textAlign = TextAlign.Start,
                                 style = MaterialTheme.typography.body2

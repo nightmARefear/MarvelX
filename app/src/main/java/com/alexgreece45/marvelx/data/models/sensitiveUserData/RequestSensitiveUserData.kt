@@ -6,6 +6,5 @@ import kotlinx.parcelize.Parcelize
 
 @Parcelize
 data class RequestSensitiveUserData(
-    @SerializedName("jwt") val jwt: String,
-    @SerializedName("verification_step") val verificationStep: String
+    @SerializedName("token") val token: String
 ) : Parcelable

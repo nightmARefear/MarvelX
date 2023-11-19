@@ -2,12 +2,13 @@ package com.alexgreece45.marvelx.data.domains.sensitiveUserData
 
 import androidx.annotation.StringRes
 import com.alexgreece45.marvelx.R
-import com.google.gson.annotations.SerializedName
+import com.alexgreece45.marvelx.util.extensions.maskEmail
+import com.alexgreece45.marvelx.util.extensions.maskGreekPhoneNumber
 
-// TODO: Rename to OtpPreferredCommunicationType
 data class SensitiveUserDataDomain(
-    @SerializedName("type") val type: OtpPreferredCommunicationType,
-    @SerializedName("data") val data: String
+    val otpPreferredCommunicationType: OtpPreferredCommunicationType,
+    val data: String,
+    val maskedData: String
 )
 
 sealed class OtpPreferredCommunicationType(
@@ -32,6 +33,7 @@ sealed class OtpPreferredCommunicationType(
         fun of(value: String): OtpPreferredCommunicationType =
             asList().firstOrNull { it.key == value } ?: Invalid(value)
 
-        fun isStringValidOtpPreferredCommunicationType(value: String): Boolean = of(value) != Invalid(value)
+        fun isStringValidOtpPreferredCommunicationType(value: String): Boolean =
+            of(value) != Invalid(value)
     }
 }
