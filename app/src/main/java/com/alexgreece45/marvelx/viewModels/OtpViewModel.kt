@@ -103,6 +103,11 @@ class OtpViewModel @Inject constructor(
     override fun handleEvents(event: OtpEvent) {
         when (event) {
             is OtpEvent.InitView -> {
+                setState {
+                    copy(
+                        isLoading = true
+                    )
+                }
                 initView(event.userId, event.verificationStep)
             }
 
@@ -151,7 +156,7 @@ class OtpViewModel @Inject constructor(
 
         setState {
             copy(
-                userId = userId
+                userId = userId,
             )
         }
 
@@ -238,11 +243,6 @@ class OtpViewModel @Inject constructor(
 
                     is GrandNewAccessTokenPartialState.Success -> {
                         // Token was successfully generated (in the server) and retrieved (in the client).
-                        setState {
-                            copy(
-                                isLoading = false
-                            )
-                        }
 
                         // Save userId in device.
                         currentState.userId?.let { prefKeys.setUserId(it) }

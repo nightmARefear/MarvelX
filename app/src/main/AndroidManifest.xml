@@ -15,16 +15,15 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.MarvelX"
         android:usesCleartextTraffic="true"
-        android:windowSoftInputMode="adjustResize"
         tools:targetApi="34">
         <activity
             android:name=".ui.MainActivity"
             android:exported="true"
             android:screenOrientation="portrait"
-            android:theme="@style/Theme.MarvelX">
+            android:theme="@style/Theme.MarvelX"
+            android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
@@ -32,10 +31,8 @@
         <provider
             android:name="androidx.startup.InitializationProvider"
             android:authorities="${applicationId}.androidx-startup"
-            android:exported="false">
-            <meta-data
-                android:name="androidx.work.WorkManagerInitializer"
-                android:value="androidx.startup" />
+            android:exported="false"
+            tools:node="remove">
         </provider>
     </application>
 

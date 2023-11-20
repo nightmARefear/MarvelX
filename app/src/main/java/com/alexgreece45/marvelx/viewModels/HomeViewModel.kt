@@ -139,53 +139,40 @@ class HomeViewModel @Inject constructor(
     }
 
     private fun loginFlow() {
-        // Check if access token is expired.
-        if (authController.isAccessTokenExpired()) {
-            // Access token is expired. Check if refresh token is expired.
-            if (authController.isRefreshTokenExpired()) {
-                // Refresh token is expired, so logout.
-                logout()
-                return
-            }
+        // Check if refresh token is expired.
+        if (authController.isRefreshTokenExpired()) {
+            // Refresh token is expired, so logout.
+            logout()
+            return
+        }
 
-            // Refresh access token.
-            setState {
-                copy(
-                    isLoading = true
-                )
-            }
-            viewModelScope.launch {
-                userInteractor.refreshAccessToken().collect {
-                    when (it) {
-                        is RefreshAccessTokenPartialState.Failed -> {
-                            setState {
-                                copy(
-                                    isLoading = false
-                                )
-                            }
-                            // Could NOT refresh access token, so logout.
-                            logout()
-                            showAlertDialog(errorMessage = it.errorMessage)
+        // Refresh access token.
+        setState {
+            copy(
+                isLoading = true
+            )
+        }
+        viewModelScope.launch {
+            userInteractor.refreshAccessToken().collect {
+                when (it) {
+                    is RefreshAccessTokenPartialState.Failed -> {
+                        setState {
+                            copy(
+                                isLoading = false
+                            )
                         }
+                        // Could NOT refresh access token, so logout.
+                        logout()
+                        showAlertDialog(errorMessage = it.errorMessage)
+                    }
 
-                        is RefreshAccessTokenPartialState.Success -> {
-                            setState {
-                                copy(
-                                    isLoading = false
-                                )
-                            }
-                            // Proceed with login.
-                            setEffect {
-                                HomeEffect.LoginFlow.ProceedWithLogin
-                            }
+                    is RefreshAccessTokenPartialState.Success -> {
+                        // Proceed with login.
+                        setEffect {
+                            HomeEffect.LoginFlow.ProceedWithLogin
                         }
                     }
                 }
-            }
-        } else {
-            // Tokens are not expired, so proceed with login.
-            setEffect {
-                HomeEffect.LoginFlow.ProceedWithLogin
             }
         }
     }
@@ -214,13 +201,9 @@ class HomeViewModel @Inject constructor(
                         it.loginWithTokenResponseDomain.verificationStep.let { verificationStep ->
                             when (verificationStep) {
                                 is VerificationStep.None -> {
-                                    setState {
-                                        copy(
-//                                        isLoading = false // do not disable loading, so that the user cannot click on the Login/Signup buttons
-                                        )
-                                    }
-
-                                    // No verification step, so navigate to AllCharactersScreen.
+                                    // No verification step, so navigate to All Characters Screen.
+                                    // There is no need to generate a new token as it has already
+                                    // been generated in the `loginFlow` function.
                                     setEffect {
                                         HomeEffect.Navigation.NavigateToAllCharactersScreen(
                                             userId = prefKeys.getUserId()
@@ -230,12 +213,6 @@ class HomeViewModel @Inject constructor(
 
                                 is VerificationStep.OtpEmail -> {
                                     // Currently we only support OTP from email.
-                                    setState {
-                                        copy(
-                                            isLoading = false
-                                        )
-                                    }
-
                                     setEffect {
                                         HomeEffect.Navigation.NavigateToOtpScreen(
                                             userId = prefKeys.getUserId(),

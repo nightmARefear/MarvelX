@@ -1,11 +1,13 @@
-package com.alexgreece45.marvelx.controllers
+package com.alexgreece45.marvelx.configuration
 
 import com.alexgreece45.marvelx.BuildConfig
 import com.alexgreece45.marvelx.util.TOKEN_CLIENT_ID
 import com.alexgreece45.marvelx.util.TOKEN_REDIRECT_URI
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
+import javax.inject.Singleton
 
-interface ConfigController {
+interface ConfigLogic {
     /**
      * Returns the client ID.
      */
@@ -17,10 +19,7 @@ interface ConfigController {
     val clientSecret: String
 
     /**
-     * The refresh interval, in minutes, for refreshing the `access` token.
-     *
-     * #### Note: It is ALWAYS one minute less than the expiration timespan of the access token, so that we can request for a new token within 10 to 20 seconds before it expires.
-     *
+     * The refresh interval, in minutes, for refreshing the `access` token. Its value is set to `15` by default.
      */
     val refreshTokenInterval: Long
 
@@ -45,15 +44,12 @@ interface ConfigController {
     val port: Int
 }
 
-class ConfigControllerImpl @Inject constructor() : ConfigController {
-    /**
-     * The actual refresh token interval.
-     */
-    private val actualRefreshTokenInterval: Long = 10L
+@Singleton
+class ConfigLogicImpl @Inject constructor() : ConfigLogic {
 
     override val clientId: String get() = TOKEN_CLIENT_ID
     override val clientSecret: String get() = BuildConfig.TOKEN_CLIENT_SECRET
-    override val refreshTokenInterval: Long get() = actualRefreshTokenInterval - 1L
+    override val refreshTokenInterval: Long get() = 15L
     override val uri: String get() = TOKEN_REDIRECT_URI
     override val scheme: String
         get() =

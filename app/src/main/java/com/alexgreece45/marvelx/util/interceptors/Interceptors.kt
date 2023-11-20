@@ -2,7 +2,7 @@ package com.alexgreece45.marvelx.util.interceptors
 
 import com.alexgreece45.marvelx.BuildConfig
 import com.alexgreece45.marvelx.controllers.AuthController
-import com.alexgreece45.marvelx.controllers.ConfigController
+import com.alexgreece45.marvelx.configuration.ConfigLogic
 import com.alexgreece45.marvelx.util.APP_USER_AGENT
 import com.alexgreece45.marvelx.util.HeaderConstants
 import com.alexgreece45.marvelx.util.extensions.toMd5
@@ -15,7 +15,7 @@ import javax.inject.Singleton
 @Singleton
 class BaseUrlChangerAndAuthenticationInterceptor @Inject constructor(
     private val authController: AuthController,
-    private val configController: ConfigController
+    private val configLogic: ConfigLogic
 ) : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
         val originalRequest = chain.request()
@@ -32,7 +32,7 @@ class BaseUrlChangerAndAuthenticationInterceptor @Inject constructor(
                         path = path,
                         chain = chain,
                         authController = authController,
-                        configController = configController
+                        configLogic = configLogic
                     )
                 }
 
@@ -71,19 +71,19 @@ private fun applyMarvelXBackendTransformations(
     path: String,
     chain: Interceptor.Chain,
     authController: AuthController,
-    configController: ConfigController
+    configLogic: ConfigLogic
 ): Response {
     // Get request from chain.
     val originalRequest = chain.request()
 
     // Get scheme from MarvelX Backend's baseUrl.
-    val scheme = configController.scheme
+    val scheme = configLogic.scheme
 
     // Get host from config.
-    val host = configController.host
+    val host = configLogic.host
 
     // Get port from config.
-    val port = configController.port
+    val port = configLogic.port
 
     // Create modified URL based on the config.
     val modifiedUrl =

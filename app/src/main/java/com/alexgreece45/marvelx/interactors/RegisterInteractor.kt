@@ -105,7 +105,7 @@ class RegisterInteractorImpl @Inject constructor(
                         it.response?.let { loginResponse ->
                             val userLoginResponseDomain = loginResponse.toUserLoginResponseDomain()
 
-                            // Start refresh token worker if there are is no verification step pending (i.e., `VerificationStep.None`).
+                            // Start refresh token worker if there is no verification step pending (i.e., `VerificationStep.None`).
                             if (userLoginResponseDomain.verificationStep is VerificationStep.None) {
                                 refreshTokenController.startWorker()
                             }
@@ -150,7 +150,7 @@ class RegisterInteractorImpl @Inject constructor(
                         it.response?.let { loginWithTokenResponse ->
                             val userLoginWithTokenResponseDomain = loginWithTokenResponse.toUserLoginWithTokenResponseDomain()
 
-                            // Start refresh token worker if there are is no verification step pending (i.e., `VerificationStep.None`).
+                            // Start refresh token worker if there is no verification step pending (i.e., `VerificationStep.None`).
                             if (userLoginWithTokenResponseDomain.verificationStep is VerificationStep.None) {
                                 refreshTokenController.startWorker()
                             }

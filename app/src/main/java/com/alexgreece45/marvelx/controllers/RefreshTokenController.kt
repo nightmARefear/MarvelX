@@ -5,6 +5,7 @@ import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequest
 import androidx.work.WorkManager
+import com.alexgreece45.marvelx.configuration.ConfigLogic
 import com.alexgreece45.marvelx.util.REFRESH_TOKEN_WORKER_NAME
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.worker.RefreshTokenWorker
@@ -21,7 +22,7 @@ interface RefreshTokenController {
 
 class RefreshTokenControllerImpl @Inject constructor(
     private val resourceProvider: ResourceProvider,
-    private val configController: ConfigController
+    private val configLogic: ConfigLogic
 ) : RefreshTokenController {
     override fun startWorker() {
         try {
@@ -31,7 +32,7 @@ class RefreshTokenControllerImpl @Inject constructor(
                 PeriodicWorkRequest
                     .Builder(
                         RefreshTokenWorker::class.java,
-                        configController.refreshTokenInterval,
+                        configLogic.refreshTokenInterval,
                         TimeUnit.MINUTES
                     )
                     .setConstraints(
