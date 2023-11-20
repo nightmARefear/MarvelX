@@ -2,14 +2,17 @@ package com.alexgreece45.marvelx.di
 
 import com.alexgreece45.marvelx.controllers.AuthController
 import com.alexgreece45.marvelx.controllers.AuthControllerImpl
-import com.alexgreece45.marvelx.controllers.ConfigController
-import com.alexgreece45.marvelx.controllers.ConfigControllerImpl
+import com.alexgreece45.marvelx.configuration.ConfigLogic
+import com.alexgreece45.marvelx.configuration.ConfigLogicImpl
 import com.alexgreece45.marvelx.controllers.PreferencesController
 import com.alexgreece45.marvelx.controllers.PreferencesControllerImpl
 import com.alexgreece45.marvelx.controllers.PrefKeys
 import com.alexgreece45.marvelx.controllers.PrefKeysImpl
+import com.alexgreece45.marvelx.controllers.RefreshTokenController
+import com.alexgreece45.marvelx.controllers.RefreshTokenControllerImpl
 import dagger.Binds
 import dagger.Module
+import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
@@ -28,9 +31,9 @@ interface ControllerModule {
 
     @Binds
     @Singleton
-    fun bindsConfigController(impl: ConfigControllerImpl): ConfigController
+    fun bindsAuthController(impl: AuthControllerImpl): AuthController
 
     @Binds
     @Singleton
-    fun bindsAuthController(impl: AuthControllerImpl): AuthController
+    fun bindsRefreshTokenController(impl: RefreshTokenControllerImpl): RefreshTokenController
 }

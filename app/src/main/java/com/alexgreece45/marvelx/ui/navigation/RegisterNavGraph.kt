@@ -42,10 +42,8 @@ fun NavGraphBuilder.RegisterNavGraph(
         composable(Screen.OtpScreen) { navBackStackEntry ->
             OtpScreen(
                 navController = navController,
-                userId = navBackStackEntry.arguments?.getInt(NavItem.User.key) ?: -1,
-                setUserId = { userId ->
-                    setUserId.invoke(userId)
-                }
+                userId = navBackStackEntry.arguments?.getInt(NavItem.User.key),
+                verificationStep = navBackStackEntry.arguments?.getString(NavItem.VerificationStep.key)
             )
         }
     }

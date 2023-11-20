@@ -4,6 +4,8 @@ import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -49,22 +51,21 @@ import com.alexgreece45.marvelx.viewModels.OtpEffect
 import com.alexgreece45.marvelx.viewModels.OtpEvent
 import com.alexgreece45.marvelx.viewModels.OtpViewModel
 
-
 /**
  * The OTP (One Time Password) screen is used to double check the user's identity when
- * logging in, signing up.
+ * signing up or logging in.
  *
  * Navigation **to** and **from** this screen ***must*** be handled with caution.
  * Navigation to this screen MUST only happen when instructed either by `LogInScreen`,
  * or `SignUpScreen`.
- * */
+ */
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun OtpScreen(
     navController: NavController,
-    userId: Int,
     viewModel: OtpViewModel = hiltViewModel(),
-    setUserId: (Int) -> Unit
+    userId: Int?,
+    verificationStep: String?
 ) {
     val state by viewModel.uiState.collectAsState()
 
@@ -78,7 +79,8 @@ fun OtpScreen(
 
         viewModel.setEvent(
             OtpEvent.InitView(
-                userId = userId
+                userId = userId,
+                verificationStep = verificationStep
             )
         )
 
@@ -91,7 +93,6 @@ fun OtpScreen(
 
                 OtpEffect.Navigation.NavigateToAllCharactersScreen -> {
                     keyboard?.hide()
-                    setUserId.invoke(userId)
                     navController.navigate(Screen.BottomNavigationScreens.AllCharactersScreen.route) {
                         popUpTo(Screen.RegisterScreens.getNestedGraphRootRoute()) {
                             inclusive = true
@@ -104,9 +105,16 @@ fun OtpScreen(
                         code = effect.code
                     )
                 )
+
+                is OtpEffect.OnTokenReceived -> {
+                    viewModel.setEvent(
+                        OtpEvent.OnTokenReceived(token = effect.token)
+                    )
+                }
             }
         }
     }
+
     ContentScreen(
         onBack = { navController.popBackStack() },
         isLoading = state.isLoading,
@@ -132,54 +140,62 @@ fun OtpScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Top
         ) {
-            item {
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Top
-                ) {
-                    AnimatedVisibility(
-                        visible = state.errorMessage != null && state.errorMessage?.isNotBlank() == true,
-                        enter = fadeIn(),
-                        exit = fadeOut()
-                    ) {
-                        Text(
-                            modifier = Modifier.fillMaxWidth(),
-                            text = state.errorMessage.toString(),
-                            color = MaterialTheme.colors.error,
-                            textAlign = TextAlign.Center,
-                            style = MaterialTheme.typography.body1,
-                        )
-                    }
-
-                    VSpacer.Small()
-
-                    // OTP
-                    OtpTextField(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .focusRequester(focusRequester),
-                        otp = state.otp,
-                        onValueChange = { value, otpInputFilled ->
-                            viewModel.setEvent(
-                                OtpEvent.OnOtpFieldValueChange(
-                                    otp = value
-                                )
-                            )
-                        },
-                        onDoneClick = {
-                            viewModel.setEvent(OtpEvent.OnDoneClick)
-                        }
-                    )
-
-                    VSpacer.Small()
-
-                    Text(
+            if (state.isLoading.not()) {
+                item {
+                    Column(
                         modifier = Modifier.fillMaxWidth(),
-                        text = stringResource(R.string.otp_screen_input_field_label),
-                        textAlign = TextAlign.Start,
-                        style = MaterialTheme.typography.body2
-                    )
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Top
+                    ) {
+                        AnimatedVisibility(
+                            visible = state.errorMessage != null && state.errorMessage?.isNotBlank() == true,
+                            enter = fadeIn() + slideInHorizontally(),
+                            exit = fadeOut() + slideOutHorizontally()
+                        ) {
+                            Text(
+                                modifier = Modifier.fillMaxWidth(),
+                                text = state.errorMessage.toString(),
+                                color = MaterialTheme.colors.error,
+                                textAlign = TextAlign.Center,
+                                style = MaterialTheme.typography.body1,
+                            )
+                        }
+
+                        VSpacer.Small()
+
+                        // OTP
+                        OtpTextField(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .focusRequester(focusRequester),
+                            otp = state.otp,
+                            onValueChange = { value, otpInputFilled ->
+                                viewModel.setEvent(
+                                    OtpEvent.OnOtpFieldValueChange(
+                                        otp = value
+                                    )
+                                )
+                            },
+                            onDoneClick = {
+                                viewModel.setEvent(OtpEvent.OnDoneClick)
+                            }
+                        )
+
+                        VSpacer.Small()
+
+                        state.sensitiveUserData?.let { sensitiveUserData ->
+                            Text(
+                                modifier = Modifier.fillMaxWidth(),
+                                text = stringResource(
+                                    R.string.otp_screen_input_field_label,
+                                    stringResource(sensitiveUserData.otpPreferredCommunicationType.label),
+                                    sensitiveUserData.maskedData
+                                ),
+                                textAlign = TextAlign.Start,
+                                style = MaterialTheme.typography.body2
+                            )
+                        }
+                    }
                 }
             }
         }

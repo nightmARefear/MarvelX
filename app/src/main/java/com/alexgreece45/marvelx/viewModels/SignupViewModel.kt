@@ -6,7 +6,7 @@ import com.alexgreece45.marvelx.data.domains.user.VerificationStep
 import com.alexgreece45.marvelx.data.models.user.Gender
 import com.alexgreece45.marvelx.data.models.user.signup.UserSignupRequest
 import com.alexgreece45.marvelx.interactors.PostSignupPartialState
-import com.alexgreece45.marvelx.interactors.UserInteractor
+import com.alexgreece45.marvelx.interactors.RegisterInteractor
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
@@ -99,7 +99,10 @@ data class SignupState(
 sealed class SignupEffect : BaseEffect {
     sealed class Navigation : SignupEffect() {
         data object NavigateToAllCharactersScreen : Navigation()
-        data class NavigateToOtpScreen(val userId: Int) : Navigation()
+        data class NavigateToOtpScreen(
+            val userId: Int,
+            val verificationStep: String
+        ) : Navigation()
     }
 
     data class ShowAlertDialogError(val errorMessage: String) : SignupEffect()
@@ -113,7 +116,7 @@ sealed class SignupEffect : BaseEffect {
 class SignupViewModel @Inject constructor(
     private val resourceProvider: ResourceProvider,
     private val formValidator: FormValidator,
-    private val userInteractor: UserInteractor
+    private val registerInteractor: RegisterInteractor
 ) : BaseViewModel<SignupEvent, SignupState, SignupEffect>() {
 
     override fun setInitialState(): SignupState =
@@ -356,7 +359,7 @@ class SignupViewModel @Inject constructor(
             // TODO: get user's ip address, and device info.
 
             viewModelScope.launch {
-                userInteractor.postSignup(userSignupRequest = getUserSignupRequest())
+                registerInteractor.postSignup(userSignupRequest = getUserSignupRequest())
                     .collect { userPartialStatePostSignUp ->
                         when (userPartialStatePostSignUp) {
                             is PostSignupPartialState.Failed -> {
@@ -377,10 +380,10 @@ class SignupViewModel @Inject constructor(
                                     when (signupResponseDomain.verificationStep) {
                                         // Server sent an invalid verification step type.
                                         is VerificationStep.Invalid -> {
-                                           setEffect {
-                                               SignupEffect.ShowAlertDialogError(
-                                                   errorMessage = resourceProvider.getGenericErrorMessage()
-                                               )
+                                            setEffect {
+                                                SignupEffect.ShowAlertDialogError(
+                                                    errorMessage = resourceProvider.getGenericErrorMessage()
+                                                )
                                             }
                                         }
 
@@ -393,7 +396,8 @@ class SignupViewModel @Inject constructor(
                                         VerificationStep.OtpEmail -> {
                                             setEffect {
                                                 SignupEffect.Navigation.NavigateToOtpScreen(
-                                                    userId = signupResponseDomain.userId
+                                                    userId = signupResponseDomain.userId,
+                                                    signupResponseDomain.verificationStep.name
                                                 )
                                             }
                                         }
@@ -401,7 +405,8 @@ class SignupViewModel @Inject constructor(
                                         VerificationStep.OtpPhoneNumber -> {
                                             setEffect {
                                                 SignupEffect.Navigation.NavigateToOtpScreen(
-                                                    userId = signupResponseDomain.userId
+                                                    userId = signupResponseDomain.userId,
+                                                    signupResponseDomain.verificationStep.name
                                                 )
                                             }
                                         }

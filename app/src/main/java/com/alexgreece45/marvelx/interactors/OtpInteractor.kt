@@ -9,7 +9,6 @@ import com.alexgreece45.marvelx.data.models.otp.otpResponseErrorDomain
 import com.alexgreece45.marvelx.data.models.otp.toOtpDomain
 import com.alexgreece45.marvelx.repository.OtpRepository
 import com.alexgreece45.marvelx.repository.ValidateOtpRepositoryResponse
-import com.alexgreece45.marvelx.util.DateUtil
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.extensions.safeAsync
 import kotlinx.coroutines.flow.Flow
@@ -31,8 +30,7 @@ class OtpInteractorImpl @Inject constructor(
     override suspend fun validateOtp(otp: String): Flow<ValidateOtpPartialState> = flow {
         val otpRequest = OtpRequest(
             userId = prefKeys.getUserId().toString(),
-            otp = otp,
-            epoch = DateUtil.getSecondsFromEpoch()
+            otp = otp
         )
         repository.validateOtp(otpRequest).collect {
             when (it) {
@@ -43,7 +41,7 @@ class OtpInteractorImpl @Inject constructor(
                 is ValidateOtpRepositoryResponse.Failed -> {
                     val otpResponseErrorDomain = it.otpResponseError.otpResponseErrorDomain()
                     when (otpResponseErrorDomain.errorCause) {
-                        is OtpErrorCause.Invalid, OtpErrorCause.InternalServerError -> {
+                        is OtpErrorCause.Invalid, OtpErrorCause.Blocked, OtpErrorCause.InternalServerError -> {
                             emit(
                                 ValidateOtpPartialState.Failed(
                                     errorMessage = resourceProvider.getString(R.string.internal_server_error)

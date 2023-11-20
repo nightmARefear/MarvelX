@@ -1,15 +1,11 @@
 package com.alexgreece45.marvelx.repository
 
 import com.alexgreece45.marvelx.data.api.ApiClient
+import com.alexgreece45.marvelx.data.models.sensitiveUserData.RequestSensitiveUserData
+import com.alexgreece45.marvelx.data.models.sensitiveUserData.ResponseSensitiveUserData
 import com.alexgreece45.marvelx.data.models.token.TokenResponse
 import com.alexgreece45.marvelx.data.models.user.ResponseUserError
-import com.alexgreece45.marvelx.data.models.user.login.LoginResponse
-import com.alexgreece45.marvelx.data.models.user.login.UserLoginRequest
-import com.alexgreece45.marvelx.data.models.user.loginWithToken.LoginWithTokenResponse
-import com.alexgreece45.marvelx.data.models.user.loginWithToken.UserLoginWithTokenRequest
 import com.alexgreece45.marvelx.data.models.user.profileDetails.ResponseProfileDetails
-import com.alexgreece45.marvelx.data.models.user.signup.SignupResponse
-import com.alexgreece45.marvelx.data.models.user.signup.UserSignupRequest
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.helper.parseError
 import kotlinx.coroutines.flow.Flow
@@ -20,9 +16,9 @@ import retrofit2.Response
 import javax.inject.Inject
 
 interface UserRepository {
-    suspend fun postLogin(userLoginRequest: UserLoginRequest): Flow<PostLoginRepositoryResponse>
-    suspend fun postLoginWithToken(userLoginWithTokenRequest: UserLoginWithTokenRequest): Flow<PostLoginWithTokenRepositoryResponse>
-    suspend fun postSignup(userSignupRequest: UserSignupRequest): Flow<PostSignupRepositoryResponse>
+    /**
+     * Grands a new access token upon login or signup.
+     */
     suspend fun grandNewAccessToken(
         clientId: String,
         clientSecret: String,
@@ -30,79 +26,31 @@ interface UserRepository {
         uri: String
     ): Flow<GrandNewAccessTokenRepositoryResponse>
 
+    /**
+     * Refreshes the access token.
+     */
     suspend fun refreshAccessToken(
         clientId: String,
         refreshToken: String
     ): Flow<RefreshAccessTokenRepositoryResponse>
 
+    /**
+     * Gets the profile details of the given [userId].
+     */
     suspend fun getProfileDetails(userId: Int): Flow<GetProfileDetailsRepositoryResponse>
 
+    /**
+     * Logouts the user.
+     */
     suspend fun logout(clientId: String, refreshToken: String): Flow<LogoutRepositoryResponse>
+
+    suspend fun getSensitiveUserData(requestSensitiveUserData: RequestSensitiveUserData): Flow<GetSensitiveUserDataRepositoryResponse>
 }
 
 class UserRepositoryImpl @Inject constructor(
     private val apiClient: ApiClient,
     private val resourceProvider: ResourceProvider,
 ) : UserRepository {
-    override suspend fun postLogin(userLoginRequest: UserLoginRequest): Flow<PostLoginRepositoryResponse> =
-        flow {
-            apiClient.postLogin(userLoginRequest).let { response ->
-                if (response.isSuccessful) {
-                    emit(
-                        PostLoginRepositoryResponse.Success(
-                            response = response.body()
-                        )
-                    )
-                } else {
-                    emit(
-                        PostLoginRepositoryResponse.Failed(
-                            responseUserError = parseError(response)
-                        )
-                    )
-                }
-            }
-        }
-
-    override suspend fun postLoginWithToken(userLoginWithTokenRequest: UserLoginWithTokenRequest): Flow<PostLoginWithTokenRepositoryResponse> =
-        flow {
-            apiClient.postLoginWithToken(userLoginWithTokenRequest).let { response ->
-                if (response.isSuccessful) {
-                    emit(
-                        PostLoginWithTokenRepositoryResponse.Success(
-                            response = response.body()
-                        )
-                    )
-                } else {
-                    emit(
-                        PostLoginWithTokenRepositoryResponse.Failed(
-                            responseUserError = parseError(
-                                response
-                            )
-                        )
-                    )
-                }
-            }
-        }
-
-    override suspend fun postSignup(userSignupRequest: UserSignupRequest): Flow<PostSignupRepositoryResponse> =
-        flow {
-            apiClient.postSignup(userSignupRequest).let { response ->
-                if (response.isSuccessful) {
-                    emit(
-                        PostSignupRepositoryResponse.Success(
-                            response = response.body()
-                        )
-                    )
-                } else {
-                    emit(
-                        PostSignupRepositoryResponse.Failed(
-                            responseUserError = parseError(response)
-                        )
-                    )
-                }
-            }
-        }
-
     override suspend fun grandNewAccessToken(
         clientId: String,
         clientSecret: String,
@@ -187,24 +135,25 @@ class UserRepositoryImpl @Inject constructor(
             }
         }
     }
-}
 
-sealed class PostLoginRepositoryResponse {
-    data class Success(val response: LoginResponse?) : PostLoginRepositoryResponse()
-    data class Failed(val responseUserError: ResponseUserError) : PostLoginRepositoryResponse()
-}
-
-sealed class PostLoginWithTokenRepositoryResponse {
-    data class Success(val response: LoginWithTokenResponse?) :
-        PostLoginWithTokenRepositoryResponse()
-
-    data class Failed(val responseUserError: ResponseUserError) :
-        PostLoginWithTokenRepositoryResponse()
-}
-
-sealed class PostSignupRepositoryResponse {
-    data class Success(val response: SignupResponse?) : PostSignupRepositoryResponse()
-    data class Failed(val responseUserError: ResponseUserError) : PostSignupRepositoryResponse()
+    override suspend fun getSensitiveUserData(requestSensitiveUserData: RequestSensitiveUserData): Flow<GetSensitiveUserDataRepositoryResponse> =
+        flow {
+            apiClient.getSensitiveUserData(requestSensitiveUserData).let { response ->
+                if (response.isSuccessful) {
+                    emit(
+                        GetSensitiveUserDataRepositoryResponse.Success(
+                            response = response.body()
+                        )
+                    )
+                } else {
+                    emit(
+                        GetSensitiveUserDataRepositoryResponse.Failed(
+                            responseUserError = parseError(response)
+                        )
+                    )
+                }
+            }
+        }
 }
 
 sealed class GrandNewAccessTokenRepositoryResponse {
@@ -228,4 +177,12 @@ sealed class GetProfileDetailsRepositoryResponse {
 sealed class LogoutRepositoryResponse {
     data class Success(val response: Response<Void>) : LogoutRepositoryResponse()
     data class Failed(val errorMessage: String?) : LogoutRepositoryResponse()
+}
+
+sealed class GetSensitiveUserDataRepositoryResponse {
+    data class Success(val response: ResponseSensitiveUserData?) :
+        GetSensitiveUserDataRepositoryResponse()
+
+    data class Failed(val responseUserError: ResponseUserError) :
+        GetSensitiveUserDataRepositoryResponse()
 }

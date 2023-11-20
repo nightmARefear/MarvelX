@@ -60,7 +60,7 @@ fun LogInScreen(
         viewModel.uiEffect.onEach { effect ->
             when (effect) {
                 is LoginEffect.Navigation.NavigateToAllCharactersScreen -> {
-                    // Login was successful so store the userId in the activity viewModel's state.
+                    // Login was successful so store the userId in the activity viewModel's state. TODO: to be removed
                     setUserId.invoke(effect.userId)
 
                     logcat { "user id (${effect.userId}) in activityViewModel state was inserted." }
@@ -75,7 +75,8 @@ fun LogInScreen(
                     logcat { "effect.userId = ${effect.userId}" }
                     navController.navigate(
                         Screen.OtpScreen.createNavRoute(
-                            userId = effect.userId
+                            userId = effect.userId,
+                            verificationStep = effect.verificationStep
                         )
                     )
                 }

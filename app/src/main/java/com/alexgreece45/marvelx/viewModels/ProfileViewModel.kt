@@ -2,19 +2,19 @@ package com.alexgreece45.marvelx.viewModels
 
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.data.domains.user.profileDetails.ProfileDetailsDomain
 import com.alexgreece45.marvelx.controllers.AuthController
 import com.alexgreece45.marvelx.controllers.PrefKeys
-import com.alexgreece45.marvelx.interactors.UserInteractor
+import com.alexgreece45.marvelx.data.domains.user.profileDetails.ProfileDetailsDomain
 import com.alexgreece45.marvelx.interactors.GetProfileDetailsPartialState
 import com.alexgreece45.marvelx.interactors.LogoutPartialState
-import com.alexgreece45.marvelx.ui.navigation.Screen
-import com.alexgreece45.marvelx.ui.components.BottomBarItem
-import com.alexgreece45.marvelx.ui.components.IconData
+import com.alexgreece45.marvelx.interactors.UserInteractor
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
 import com.alexgreece45.marvelx.mvi.BaseViewModel
+import com.alexgreece45.marvelx.ui.components.BottomBarItem
+import com.alexgreece45.marvelx.ui.components.IconData
+import com.alexgreece45.marvelx.ui.navigation.Screen
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -163,12 +163,6 @@ class ProfileViewModel @Inject constructor(
             userInteractor.logout().collect { logoutPartialState ->
                 when (logoutPartialState) {
                     is LogoutPartialState.Failed -> {
-                        setState {
-                            copy(
-                                isLoading = false
-                            )
-                        }
-
                         // Show error message.
                         setEffect {
                             ProfileEffect.ShowToast(
@@ -183,11 +177,6 @@ class ProfileViewModel @Inject constructor(
                     }
 
                     LogoutPartialState.Success -> {
-                        setState {
-                            copy(
-                                isLoading = false
-                            )
-                        }
                         // Navigate to Home Screen.
                         setEffect {
                             ProfileEffect.Navigation.NavigateToHomeScreen

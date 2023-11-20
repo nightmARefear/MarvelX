@@ -3,8 +3,13 @@ package com.alexgreece45.marvelx.viewModels
 import androidx.core.text.isDigitsOnly
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.controllers.PrefKeys
+import com.alexgreece45.marvelx.data.domains.sensitiveUserData.SensitiveUserDataDomain
+import com.alexgreece45.marvelx.data.domains.user.VerificationStep
+import com.alexgreece45.marvelx.interactors.GetJwtForSensitiveUserDataPartialState
+import com.alexgreece45.marvelx.interactors.GetSensitiveUserDataPartialState
 import com.alexgreece45.marvelx.interactors.GrandNewAccessTokenPartialState
 import com.alexgreece45.marvelx.interactors.OtpInteractor
+import com.alexgreece45.marvelx.interactors.RegisterInteractor
 import com.alexgreece45.marvelx.interactors.UserInteractor
 import com.alexgreece45.marvelx.interactors.ValidateOtpPartialState
 import com.alexgreece45.marvelx.mvi.BaseEffect
@@ -19,7 +24,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 sealed class OtpEvent : BaseEvent {
-    data class InitView(val userId: Int?) : OtpEvent()
+    data class InitView(val userId: Int?, val verificationStep: String?) : OtpEvent()
 
     data class OnOtpFieldValueChange(val otp: String) : OtpEvent()
 
@@ -28,12 +33,14 @@ sealed class OtpEvent : BaseEvent {
     data object OnSendClick : OtpEvent()
 
     data class OnValidationSuccess(val code: String) : OtpEvent()
+
+    data class OnTokenReceived(val token: String) : OtpEvent()
 }
 
 data class OtpState(
     // Base states.
     val isLoading: Boolean = false,
-    val hasInternetConnection: Boolean = true,
+
     /**
      * Error message retrieved from the MarvelX-Backend API for invalid user input.
      * */
@@ -48,6 +55,8 @@ data class OtpState(
      * The OTP that the user has entered in the TextField.
      * */
     val otp: String = "",
+
+    val sensitiveUserData: SensitiveUserDataDomain? = null,
 
     /**
      * Controls whether the send toolbar action button is enabled.
@@ -69,29 +78,37 @@ sealed class OtpEffect : BaseEffect {
     }
 
     data class OnValidationSuccess(val code: String) : OtpEffect()
+
+    data class OnTokenReceived(val token: String, val verificationStep: VerificationStep) : OtpEffect()
 }
 
 @HiltViewModel
 class OtpViewModel @Inject constructor(
     private val otpInteractor: OtpInteractor,
     private val userInteractor: UserInteractor,
+    private val registerInteractor: RegisterInteractor,
     private val resourceProvider: ResourceProvider,
     private val prefKeys: PrefKeys
 ) : BaseViewModel<OtpEvent, OtpState, OtpEffect>() {
     override fun setInitialState(): OtpState =
         OtpState(
             isLoading = false,
-            hasInternetConnection = true,
             errorMessage = null,
             userId = null,
             otp = "",
+            sensitiveUserData = null,
             sendButton = false
         )
 
     override fun handleEvents(event: OtpEvent) {
         when (event) {
             is OtpEvent.InitView -> {
-                initView(event.userId)
+                setState {
+                    copy(
+                        isLoading = true
+                    )
+                }
+                initView(event.userId, event.verificationStep)
             }
 
             is OtpEvent.OnOtpFieldValueChange -> {
@@ -114,12 +131,21 @@ class OtpViewModel @Inject constructor(
                 }
                 grandNewAccessToken(code = event.code, event = event)
             }
+
+            is OtpEvent.OnTokenReceived -> {
+                setState {
+                    copy(
+                        isLoading = true
+                    )
+                }
+                getSensitiveUserData(token = event.token)
+            }
         }
     }
 
-    private fun initView(userId: Int?) {
-        if (userId == null) {
-            // User id is null so go back to the previous screen by displaying that an unknown error occurred.
+    private fun initView(userId: Int?, verificationStep: String?) {
+        if (userId == null || verificationStep == null) {
+            // User id and/or verification step is null, so go back to the previous screen by displaying that an unknown error occurred.
             setEffect {
                 OtpEffect.Navigation.NavigateToPreviousScreenWithError(
                     errorMessage = resourceProvider.getGenericErrorMessage()
@@ -130,9 +156,16 @@ class OtpViewModel @Inject constructor(
 
         setState {
             copy(
-                userId = userId
+                userId = userId,
             )
         }
+
+        // Get JWT for retrieving sensitive user data (i.e., the preferred
+        // medium of contact for the OTP).
+        retrieveJwt(
+            userId = userId,
+            verificationStep = VerificationStep.of(verificationStep)
+        )
     }
 
     private fun onOtpFieldValueChange(otp: String) {
@@ -158,7 +191,7 @@ class OtpViewModel @Inject constructor(
                 otpInteractor.validateOtp(otp = currentState.otp)
                     .collect { getOtpPartialState ->
                         when (getOtpPartialState) {
-                           is ValidateOtpPartialState.Success -> {
+                            is ValidateOtpPartialState.Success -> {
                                 // OTPs matched.
                                 setState {
                                     copy(
@@ -210,11 +243,6 @@ class OtpViewModel @Inject constructor(
 
                     is GrandNewAccessTokenPartialState.Success -> {
                         // Token was successfully generated (in the server) and retrieved (in the client).
-                        setState {
-                            copy(
-                                isLoading = false
-                            )
-                        }
 
                         // Save userId in device.
                         currentState.userId?.let { prefKeys.setUserId(it) }
@@ -222,6 +250,72 @@ class OtpViewModel @Inject constructor(
                         // Navigate the client to AllCharactersScreen
                         setEffect {
                             OtpEffect.Navigation.NavigateToAllCharactersScreen
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /** Retrieves the JWT that will be used later for retrieving the user's
+     * OTP preferred medium of communication (i.e., email or phone number).
+     * This operation is required, as we are accessing sensitive user data.
+     *
+     * ### Note: The JWT is valid for a short period of time for security reasons (~1 minute).
+     */
+    private fun retrieveJwt(userId: Int, verificationStep: VerificationStep) {
+        setState {
+            copy(
+                isLoading = true
+            )
+        }
+        viewModelScope.launch {
+            registerInteractor.getJwtForSensitiveUserData(
+                userId = userId,
+                verificationStep = verificationStep
+            ).collect {
+                when (it) {
+                    is GetJwtForSensitiveUserDataPartialState.Failed -> {
+                        setEffect {
+                            OtpEffect.Navigation.NavigateToPreviousScreenWithError(
+                                errorMessage = it.errorMessage
+                            )
+                        }
+                    }
+
+                    is GetJwtForSensitiveUserDataPartialState.Success -> {
+                        setEffect {
+                            OtpEffect.OnTokenReceived(
+                                token = it.jwtSensitiveUserDataDomain.token,
+                                verificationStep = verificationStep
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Retrieves the user's preferred medium of communication for sending OTPs.
+     */
+    private fun getSensitiveUserData(token: String) {
+        viewModelScope.launch {
+            userInteractor.getSensitiveUserData(token = token).collect {
+                when (it) {
+                    is GetSensitiveUserDataPartialState.Failed -> {
+                        setEffect {
+                            OtpEffect.Navigation.NavigateToPreviousScreenWithError(
+                                errorMessage = it.errorMessage
+                            )
+                        }
+                    }
+                    is GetSensitiveUserDataPartialState.Success -> {
+                        setState {
+                            copy(
+                                isLoading = false,
+                                sensitiveUserData = it.sensitiveUserDataDomain
+                            )
                         }
                     }
                 }
