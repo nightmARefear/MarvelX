@@ -25,8 +25,9 @@ class MarvelXApplication : Application(), Configuration.Provider {
     override fun onCreate() {
         super.onCreate()
 
-        // Install logcat.
-        if (LogcatLogger.isInstalled.not() && BuildConfig.LOG_MODE) {
+        // Install logcat if it hasn't already been installed, and if the build type is NOT
+        // "release".
+        if (LogcatLogger.isInstalled.not() && BuildConfig.BUILD_TYPE != "release") {
             LogcatLogger.install(AndroidLogcatLogger(LogPriority.DEBUG))
         }
     }
