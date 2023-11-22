@@ -56,15 +56,15 @@ object NetworkModule {
                     }
                 }
             ).apply {
-                level = when (BuildConfig.LOG_MODE && BuildConfig.DEBUG) {
+                level = when (BuildConfig.BUILD_TYPE != "release") {
                     true -> HttpLoggingInterceptor.Level.BODY
                     false -> HttpLoggingInterceptor.Level.NONE
                 }
             }
         )
 
-        // Add "ChuckerInterceptor" only in debuggable builds (debug, mock).
-        if (BuildConfig.LOG_MODE && BuildConfig.DEBUG) {
+        // Add "ChuckerInterceptor" only in non-release builds (debug, mock).
+        if (BuildConfig.BUILD_TYPE != "release") {
             okHttpClient.addInterceptor(ChuckerInterceptor(context))
         }
 
