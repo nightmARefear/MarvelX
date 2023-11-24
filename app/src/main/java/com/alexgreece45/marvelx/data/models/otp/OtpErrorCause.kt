@@ -1,29 +1,39 @@
 package com.alexgreece45.marvelx.data.models.otp
 
-sealed class OtpErrorCause(val key: String, val cause: String) {
-    data object NotMatch : OtpErrorCause(key = "otp_not_match", cause = "OTP is incorrect.")
+import androidx.annotation.StringRes
+import com.alexgreece45.marvelx.R
+
+sealed class OtpErrorCause(val key: String, @StringRes val cause: Int) {
+    data object NotMatch :
+        OtpErrorCause(key = "otp_not_match", cause = R.string.otp_screen_otp_error_cause_not_match)
 
     data object InvalidLength :
-        OtpErrorCause("otp_invalid_length", cause = "OTP must be 6 characters.")
+        OtpErrorCause(
+            "otp_invalid_length",
+            cause = R.string.otp_screen_otp_error_cause_invalid_length
+        )
 
     data object Expired :
-        OtpErrorCause(key = "otp_expired", cause = "The OTP is expired. Please try again.")
+        OtpErrorCause(key = "otp_expired", cause = R.string.otp_screen_otp_error_cause_expired)
 
     data object Blocked :
         OtpErrorCause(
             key = "otp_blocked",
-            cause = "The OTP functionality has been blocked. Please try again later."
+            cause = R.string.otp_screen_otp_error_cause_blocked
         )
 
     data object InternalServerError :
-        OtpErrorCause(key = "internal_server_error", cause = "Internal server error.")
+        OtpErrorCause(
+            key = "internal_server_error",
+            cause = R.string.otp_screen_otp_error_cause_internal_server_error
+        )
 
     data class Invalid(val value: String) :
-        OtpErrorCause(key = value, cause = "Invalid OTP Error cause type \"$value\".")
+        OtpErrorCause(key = value, cause = R.string.otp_screen_otp_error_cause_invalid)
 
     companion object {
         private fun asList(): List<OtpErrorCause> =
-            listOf(NotMatch, InvalidLength, Expired, Blocked,InternalServerError)
+            listOf(NotMatch, InvalidLength, Expired, Blocked, InternalServerError)
 
         fun of(value: String): OtpErrorCause =
             asList().firstOrNull { it.key == value } ?: Invalid(value = value)

@@ -57,7 +57,7 @@ fun LogInScreen(
     LaunchedEffect(Unit) {
         viewModel.setEvent(LoginEvent.InitView)
 
-        viewModel.uiEffect.onEach { effect ->
+        viewModel.uiEffect.collect { effect ->
             when (effect) {
                 is LoginEffect.Navigation.NavigateToAllCharactersScreen -> {
                     // Login was successful so store the userId in the activity viewModel's state. TODO: to be removed
@@ -104,7 +104,7 @@ fun LogInScreen(
                     viewModel.setEvent(LoginEvent.OnLoginButtonClick)
                 }
             }
-        }.collect()
+        }
     }
 
     ContentScreen(

@@ -105,7 +105,7 @@ fun HomeScreen(
     LaunchedEffect(Unit) {
         viewModel.setEvent(HomeEvent.InitView)
 
-        viewModel.uiEffect.onEach { homeEffect ->
+        viewModel.uiEffect.collect { homeEffect ->
             when (homeEffect) {
                 HomeEffect.Navigation.NavigateToLogInScreen -> {
                     navController.navigate(Screen.RegisterScreens.LogInScreen.route) {
@@ -147,6 +147,6 @@ fun HomeScreen(
                     viewModel.setEvent(HomeEvent.OnProceedWithLogin)
                 }
             }
-        }.collect()
+        }
     }
 }

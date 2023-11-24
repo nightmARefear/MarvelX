@@ -3,9 +3,10 @@ package com.alexgreece45.marvelx.interactors
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.controllers.PrefKeys
 import com.alexgreece45.marvelx.data.domains.otp.OtpDomain
+import com.alexgreece45.marvelx.data.domains.otp.OtpResponseErrorDomain
 import com.alexgreece45.marvelx.data.models.otp.OtpErrorCause
 import com.alexgreece45.marvelx.data.models.otp.OtpRequest
-import com.alexgreece45.marvelx.data.models.otp.otpResponseErrorDomain
+import com.alexgreece45.marvelx.data.models.otp.toOtpResponseErrorDomain
 import com.alexgreece45.marvelx.data.models.otp.toOtpDomain
 import com.alexgreece45.marvelx.repository.OtpRepository
 import com.alexgreece45.marvelx.repository.ValidateOtpRepositoryResponse
@@ -39,9 +40,10 @@ class OtpInteractorImpl @Inject constructor(
                 }
 
                 is ValidateOtpRepositoryResponse.Failed -> {
-                    val otpResponseErrorDomain = it.otpResponseError.otpResponseErrorDomain()
+                    val otpResponseErrorDomain = it.otpResponseError.toOtpResponseErrorDomain()
                     when (otpResponseErrorDomain.errorCause) {
-                        is OtpErrorCause.Invalid, OtpErrorCause.Blocked, OtpErrorCause.InternalServerError -> {
+                        // Server errors.
+                        is OtpErrorCause.Invalid, OtpErrorCause.InternalServerError -> {
                             emit(
                                 ValidateOtpPartialState.Failed(
                                     errorMessage = resourceProvider.getString(R.string.internal_server_error)
@@ -49,10 +51,33 @@ class OtpInteractorImpl @Inject constructor(
                             )
                         }
 
+                        // Client errors.
+                        is OtpErrorCause.Blocked -> {
+                            // Check if `blockExpiresIn` field exists. If it does, emit `ClientError`
+                            // with the corresponding response error domain, otherwise emit `Failed`
+                            // with an internal server error as its error message.
+                            //TODO: TO BE UNCOMMENTED
+                            /*if (otpResponseErrorDomain.blockExpiresIn == null) {
+                                emit(
+                                    ValidateOtpPartialState.Failed(
+                                        errorMessage = resourceProvider.getString(R.string.internal_server_error)
+                                    )
+                                )
+                                return@collect
+                            }*/
+
+                            // `blockExpiresIn` is NOT null
+                            emit(
+                                ValidateOtpPartialState.ClientError(
+                                    otpResponseErrorDomain = otpResponseErrorDomain
+                                )
+                            )
+                        }
+
                         is OtpErrorCause.Expired, OtpErrorCause.NotMatch, OtpErrorCause.InvalidLength -> {
                             emit(
                                 ValidateOtpPartialState.ClientError(
-                                    otpErrorCause = otpResponseErrorDomain.errorCause
+                                    otpResponseErrorDomain = otpResponseErrorDomain
                                 )
                             )
                         }
@@ -90,7 +115,6 @@ class OtpInteractorImpl @Inject constructor(
     }
 }
 
-
 sealed class ValidateOtpPartialState {
     /**
      * The OTP was correct. User is navigated to the next screen as defined in the viewModel.
@@ -107,5 +131,6 @@ sealed class ValidateOtpPartialState {
     /**
      * Indicates that the error is due to invalid user-input.
      * */
-    data class ClientError(val otpErrorCause: OtpErrorCause) : ValidateOtpPartialState()
+    data class ClientError(val otpResponseErrorDomain: OtpResponseErrorDomain) :
+        ValidateOtpPartialState()
 }

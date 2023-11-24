@@ -152,9 +152,15 @@
 
     <!-- Otp Screen -->
     <string name="otp_screen_toolbar_title">OTP</string>
-    <string name="otp_screen_toolbar_action_label_send">Send</string>
 
-    <string name="otp_screen_content_description_send">Send</string>
+    <string name="otp_screen_title">Verification Code</string>
+    <string name="otp_screen_input_field_label">Enter the code that was sent to your %1$s: %2$s</string>
+    <string name="otp_screen_button_text_verify">Verify</string>
+    <string name="otp_screen_otp_error_cause_not_match">OTP is incorrect.</string>
+    <string name="otp_screen_otp_error_cause_invalid_length">OTP must be 6 characters.</string>
+    <string name="otp_screen_otp_error_cause_expired">The entered code is expired. Request a new one. </string>
+    <string name="otp_screen_otp_error_cause_blocked">The OTP functionality has been blocked. Please try again in:</string>
+    <string name="otp_screen_otp_error_cause_internal_server_error">Internal server error.</string>
+    <string name="otp_screen_otp_error_cause_invalid">Invalid OTP Error cause type \"%1$s\".</string>
 
-    <string name="otp_screen_input_field_label">Please enter the OTP that was sent to your %1$s: %2$s.</string>
 </resources>

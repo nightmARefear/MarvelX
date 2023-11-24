@@ -471,6 +471,7 @@ fun ContentScreen(
     isLoading: Boolean,
     showToolbar: Boolean = false,
     toolbarTitle: String? = null,
+    toolbarBackgroundColor: Color = MaterialTheme.colors.primarySurface,
     toolbarActions: List<ToolbarAction>? = null,
     bottomBarData: BottomBarData? = null,
     bottomNavigationBarData: BottomNavigationBarData? = null,
@@ -482,6 +483,7 @@ fun ContentScreen(
             if (showToolbar) {
                 TopAppBar(
                     modifier = Modifier.fillMaxWidth(),
+                    backgroundColor = toolbarBackgroundColor,
                     elevation = 0.dp,
                     contentPadding = screenPaddingsSte()
                 ) {
@@ -601,7 +603,7 @@ fun ContentScreen(
         }
     }
 
-    // TODO: Refactor back handling mechanism to match ThrottleedIconButton.
+    // TODO: Refactor back handling mechanism to match ThrottledIconButton.
     /*BackHandler(enabled = onBack != null) {
         onBack?.invoke()
     }*/

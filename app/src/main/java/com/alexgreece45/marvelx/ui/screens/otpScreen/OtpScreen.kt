@@ -4,31 +4,38 @@ import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.foundation.border
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.Button
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
@@ -37,15 +44,17 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.ui.components.ContentScreen
-import com.alexgreece45.marvelx.ui.components.IconData
-import com.alexgreece45.marvelx.ui.components.ToolbarAction
 import com.alexgreece45.marvelx.ui.navigation.Screen
+import com.alexgreece45.marvelx.util.HSpacer
 import com.alexgreece45.marvelx.util.OTP_LENGTH
+import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.VSpacer
 import com.alexgreece45.marvelx.viewModels.OtpEffect
 import com.alexgreece45.marvelx.viewModels.OtpEvent
@@ -74,9 +83,6 @@ fun OtpScreen(
     val focusRequester = remember { FocusRequester() }
 
     LaunchedEffect(Unit) {
-        // Requests focus.
-        focusRequester.requestFocus()
-
         viewModel.setEvent(
             OtpEvent.InitView(
                 userId = userId,
@@ -111,91 +117,121 @@ fun OtpScreen(
                         OtpEvent.OnTokenReceived(token = effect.token)
                     )
                 }
+
+                OtpEffect.OnUserSensitiveDataReceived -> {
+                    // Request focus for OTP field.
+                    focusRequester.requestFocus()
+                }
+
+                OtpEffect.Navigation.PopBackStack -> {
+                    navController.popBackStack()
+                }
+
+                OtpEffect.OtpFieldRequestFocus -> {
+                    focusRequester.requestFocus()
+                }
             }
         }
     }
 
     ContentScreen(
-        onBack = { navController.popBackStack() },
+        onBack = { viewModel.setEvent(OtpEvent.OnBackClick) },
         isLoading = state.isLoading,
         showToolbar = true,
-        toolbarTitle = stringResource(R.string.otp_screen_toolbar_title),
-        toolbarActions = listOf(
-            ToolbarAction(
-                label = stringResource(R.string.otp_screen_toolbar_action_label_send),
-                order = 1,
-                iconData = IconData(
-                    iconResource = R.drawable.ic_send_32,
-                    contentDescription = R.string.otp_screen_content_description_send,
-                    enabled = state.sendButton
-                ),
-                onClick = {
-                    viewModel.setEvent(OtpEvent.OnSendClick)
-                }
-            )
-        )
+        toolbarBackgroundColor = Color.Transparent
     ) { paddingValues ->
         LazyColumn(
-            contentPadding = paddingValues,
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Top
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = paddingValues
         ) {
-            if (state.isLoading.not()) {
+            // Title and where OTP has been sent to.
+            state.sensitiveUserData?.let { sensitiveUserData ->
                 item {
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Top
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        // Title.
+                        Text(
+                            text = stringResource(R.string.otp_screen_title),
+                            style = MaterialTheme.typography.h4
+                        )
+
+                        VSpacer.Large()
+
+                        // Where the OTP has been sent to.
+                        Text(
+                            text = stringResource(
+                                R.string.otp_screen_input_field_label,
+                                stringResource(sensitiveUserData.otpPreferredCommunicationType.label),
+                                sensitiveUserData.maskedData
+                            ),
+                            textAlign = TextAlign.Center,
+                            style = MaterialTheme.typography.h6.copy(fontSize = 18.sp)
+                        )
+                    }
+                }
+            }
+
+            // Vertical spacing.
+            item { VSpacer.Large() }
+
+            // OTP field and error message.
+            item {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp)
+                ) {
+                    // OTP field
+                    OtpTextField(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .focusRequester(focusRequester),
+                        otp = state.otp,
+                        onValueChange = { value, otpInputFilled ->
+                            viewModel.setEvent(
+                                OtpEvent.OnOtpFieldValueChange(
+                                    otp = value
+                                )
+                            )
+                        },
+                        onDoneClick = { viewModel.setEvent(OtpEvent.OnDoneClick) }
+                    )
+
+                    // Error message
+                    Row(
+                        modifier = Modifier.padding(start = 35.dp, end = 8.dp)
                     ) {
                         AnimatedVisibility(
                             visible = state.errorMessage != null && state.errorMessage?.isNotBlank() == true,
-                            enter = fadeIn() + slideInHorizontally(),
-                            exit = fadeOut() + slideOutHorizontally()
+                            enter = fadeIn(),
+                            exit = fadeOut()
                         ) {
+                            // TODO: Fix bug where "null" is shown after OTP block functionality has been disabled.
                             Text(
                                 modifier = Modifier.fillMaxWidth(),
-                                text = state.errorMessage.toString(),
+                                text = state.errorMessage.toString()
+                                    .plus(
+                                        if (state.otpBlockRemainingTime != null) " ${state.otpBlockRemainingTime}." else ""
+                                    ),
                                 color = MaterialTheme.colors.error,
-                                textAlign = TextAlign.Center,
-                                style = MaterialTheme.typography.body1,
-                            )
-                        }
-
-                        VSpacer.Small()
-
-                        // OTP
-                        OtpTextField(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .focusRequester(focusRequester),
-                            otp = state.otp,
-                            onValueChange = { value, otpInputFilled ->
-                                viewModel.setEvent(
-                                    OtpEvent.OnOtpFieldValueChange(
-                                        otp = value
-                                    )
-                                )
-                            },
-                            onDoneClick = {
-                                viewModel.setEvent(OtpEvent.OnDoneClick)
-                            }
-                        )
-
-                        VSpacer.Small()
-
-                        state.sensitiveUserData?.let { sensitiveUserData ->
-                            Text(
-                                modifier = Modifier.fillMaxWidth(),
-                                text = stringResource(
-                                    R.string.otp_screen_input_field_label,
-                                    stringResource(sensitiveUserData.otpPreferredCommunicationType.label),
-                                    sensitiveUserData.maskedData
-                                ),
                                 textAlign = TextAlign.Start,
-                                style = MaterialTheme.typography.body2
+                                style = MaterialTheme.typography.subtitle1,
                             )
                         }
                     }
+                }
+            }
+
+            item { VSpacer.Medium() }
+
+            // Resend OTP button.
+            item {
+                Button(
+                    onClick = { },
+                    enabled = state.resendOtpButtonEnabled
+                ) {
+                    Text(
+                        text = "Resend OTP"
+                    )
                 }
             }
         }
@@ -203,7 +239,7 @@ fun OtpScreen(
 }
 
 @Composable
-fun OtpTextField(
+private fun OtpTextField(
     modifier: Modifier = Modifier,
     otp: String,
     onValueChange: (String, Boolean) -> Unit,
@@ -236,7 +272,7 @@ fun OtpTextField(
                         index = index,
                         text = otp
                     )
-                    VSpacer.Small()
+                    HSpacer.Small()
                 }
             }
         }
@@ -250,25 +286,68 @@ private fun CharView(
 ) {
     val isFocused = text.length == index
     val char = when {
-        index == text.length -> "0"
+        index == text.length -> ""
         index > text.length -> ""
         else -> text[index].toString()
     }
-    Text(
+
+    val lineColor = when (isFocused) {
+        true -> MaterialTheme.colors.primaryVariant
+        false -> MaterialTheme.colors.onBackground
+    }
+
+    Box(
         modifier = Modifier
-            .width(40.dp)
-            .border(
-                width = 1.dp,
-                color = when {
-                    isFocused -> MaterialTheme.colors.onPrimary
-                    else -> MaterialTheme.colors.onBackground
-                },
-                shape = MaterialTheme.shapes.medium
-            )
-            .padding(2.dp),
-        text = char,
-        style = MaterialTheme.typography.h4,
-        color = if (isFocused) MaterialTheme.colors.onBackground else MaterialTheme.colors.onPrimary,
-        textAlign = TextAlign.Center
+            .size(45.dp)
+            .background(MaterialTheme.colors.secondaryVariant)
+            /*  .border(
+                  width = 2.dp,
+                  color = when {
+                      isFocused -> MaterialTheme.colors.onPrimary
+                      else -> MaterialTheme.colors.onBackground.copy(alpha = ContentAlpha.medium)
+                  },
+                  shape = MaterialTheme.shapes.medium
+              )*/
+            .drawWithContent {
+                // Draws this field.
+                drawContent()
+
+                // Draws a horizontal line at the bottom of this field.
+                drawLine(
+                    color = lineColor,
+                    start = Offset(
+                        x = 0f,
+                        y = size.height
+                    ),
+                    end = Offset(
+                        x = size.width,
+                        y = size.height
+                    ),
+                    strokeWidth = 1.5.dp.toPx(),
+                    cap = StrokeCap.Round
+                )
+            },
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = char,
+            style = MaterialTheme.typography.h4,
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun OtpTextFieldPreview() {
+    var otp by remember { mutableStateOf("") }
+    OtpTextField(
+        modifier = Modifier
+            .fillMaxWidth(),
+        otp = otp,
+        onValueChange = { value, _ ->
+            otp = value
+        },
+        onDoneClick = {
+        }
     )
 }

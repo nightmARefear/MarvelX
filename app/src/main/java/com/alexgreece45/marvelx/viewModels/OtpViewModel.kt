@@ -3,8 +3,10 @@ package com.alexgreece45.marvelx.viewModels
 import androidx.core.text.isDigitsOnly
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.controllers.PrefKeys
+import com.alexgreece45.marvelx.controllers.TimerController
 import com.alexgreece45.marvelx.data.domains.sensitiveUserData.SensitiveUserDataDomain
 import com.alexgreece45.marvelx.data.domains.user.VerificationStep
+import com.alexgreece45.marvelx.data.models.otp.OtpErrorCause
 import com.alexgreece45.marvelx.interactors.GetJwtForSensitiveUserDataPartialState
 import com.alexgreece45.marvelx.interactors.GetSensitiveUserDataPartialState
 import com.alexgreece45.marvelx.interactors.GrandNewAccessTokenPartialState
@@ -28,9 +30,11 @@ sealed class OtpEvent : BaseEvent {
 
     data class OnOtpFieldValueChange(val otp: String) : OtpEvent()
 
+    data object OnBackClick : OtpEvent()
+
     data object OnDoneClick : OtpEvent()
 
-    data object OnSendClick : OtpEvent()
+    data object OnVerifyButtonClick : OtpEvent()
 
     data class OnValidationSuccess(val code: String) : OtpEvent()
 
@@ -59,10 +63,12 @@ data class OtpState(
     val sensitiveUserData: SensitiveUserDataDomain? = null,
 
     /**
-     * Controls whether the send toolbar action button is enabled.
-     * This button is enabled if the OTP's length is equal to 6.
-     * */
-    val sendButton: Boolean = false,
+     * The amount of remaining time, as a [String], until the OTP functionality is enabled so that
+     * new OTPs can be requested. If set to `null`, the OTP functionality is enabled.
+     */
+    val otpBlockRemainingTime: String? = null,
+
+    val resendOtpButtonEnabled: Boolean = false,
 
     // Validations.
     val enteredOtpValidationResult: FormsValidationResult = FormsValidationResult(true)
@@ -70,8 +76,10 @@ data class OtpState(
 ) : BaseState
 
 sealed class OtpEffect : BaseEffect {
+    data object OtpFieldRequestFocus : OtpEffect()
 
     sealed class Navigation : OtpEffect() {
+        data object PopBackStack : Navigation()
         data class NavigateToPreviousScreenWithError(val errorMessage: String) : Navigation()
 
         data object NavigateToAllCharactersScreen : Navigation()
@@ -79,7 +87,10 @@ sealed class OtpEffect : BaseEffect {
 
     data class OnValidationSuccess(val code: String) : OtpEffect()
 
-    data class OnTokenReceived(val token: String, val verificationStep: VerificationStep) : OtpEffect()
+    data class OnTokenReceived(val token: String, val verificationStep: VerificationStep) :
+        OtpEffect()
+
+    data object OnUserSensitiveDataReceived : OtpEffect()
 }
 
 @HiltViewModel
@@ -88,7 +99,8 @@ class OtpViewModel @Inject constructor(
     private val userInteractor: UserInteractor,
     private val registerInteractor: RegisterInteractor,
     private val resourceProvider: ResourceProvider,
-    private val prefKeys: PrefKeys
+    private val prefKeys: PrefKeys,
+    private val timerController: TimerController
 ) : BaseViewModel<OtpEvent, OtpState, OtpEffect>() {
     override fun setInitialState(): OtpState =
         OtpState(
@@ -97,7 +109,8 @@ class OtpViewModel @Inject constructor(
             userId = null,
             otp = "",
             sensitiveUserData = null,
-            sendButton = false
+            otpBlockRemainingTime = null,
+            resendOtpButtonEnabled = false
         )
 
     override fun handleEvents(event: OtpEvent) {
@@ -112,14 +125,20 @@ class OtpViewModel @Inject constructor(
             }
 
             is OtpEvent.OnOtpFieldValueChange -> {
-                onOtpFieldValueChange(otp = event.otp)
+                // Accept user input ONLY if the OTP block functionality is disabled.
+                if (currentState.otpBlockRemainingTime == null) {
+                    // Update state, ONLY if the new OTP is different from the old one.
+                    if (event.otp != currentState.otp) {
+                        onOtpFieldValueChange(otp = event.otp)
+                    }
+                }
             }
 
             OtpEvent.OnDoneClick -> {
                 validateOtp()
             }
 
-            OtpEvent.OnSendClick -> {
+            OtpEvent.OnVerifyButtonClick -> {
                 validateOtp()
             }
 
@@ -139,6 +158,12 @@ class OtpViewModel @Inject constructor(
                     )
                 }
                 getSensitiveUserData(token = event.token)
+            }
+
+            OtpEvent.OnBackClick -> {
+                setEffect {
+                    OtpEffect.Navigation.PopBackStack
+                }
             }
         }
     }
@@ -169,62 +194,124 @@ class OtpViewModel @Inject constructor(
     }
 
     private fun onOtpFieldValueChange(otp: String) {
-        if (otp.isDigitsOnly() && otp.length <= 6 && otp != currentState.otp) {
+        if (otp.isDigitsOnly() && otp.length <= 6) {
             setState {
                 copy(
-                    otp = otp,
-                    sendButton = otp.length == 6
+                    otp = otp
                 )
+            }
+
+            // Validate OTP if its length is 6 characters.
+            if (otp.length == 6) {
+                validateOtp()
             }
         }
     }
 
     private fun validateOtp() {
-        // If the length of the user-entered OTP is 6, then proceed with its validation.
-        if (currentState.otp.length == 6) {
-            setState {
-                copy(
-                    isLoading = true
-                )
-            }
-            viewModelScope.launch {
-                otpInteractor.validateOtp(otp = currentState.otp)
-                    .collect { getOtpPartialState ->
-                        when (getOtpPartialState) {
-                            is ValidateOtpPartialState.Success -> {
-                                // OTPs matched.
-                                setState {
-                                    copy(
-                                        isLoading = false
-                                    )
-                                }
+        // OTP block functionality is enabled, thus, do NOT proceed with the validation process.
+        if (currentState.otpBlockRemainingTime != null) return
 
-                                // If the user-entered OTP was correct, then move on to retrieving the Access & Refresh tokens.
-                                setEffect {
-                                    OtpEffect.OnValidationSuccess(getOtpPartialState.otpDomain.authenticationCode)
-                                }
+        // Current OTP length is not equal to 6, thus, do NOT proceed with the validation process.
+        if (currentState.otp.length != 6) return
+
+        // The length of the user-entered OTP is 6, thus, proceed with the validation process.
+        setState {
+            copy(
+                isLoading = true
+            )
+        }
+        viewModelScope.launch {
+            otpInteractor.validateOtp(otp = currentState.otp)
+                .collect { validateOtpPartialState ->
+                    when (validateOtpPartialState) {
+                        is ValidateOtpPartialState.Success -> {
+                            // OTPs matched.
+                            setState {
+                                copy(
+                                    isLoading = false
+                                )
                             }
 
-                            is ValidateOtpPartialState.Failed -> {
-                                setEffect {
-                                    OtpEffect.Navigation.NavigateToPreviousScreenWithError(
-                                        errorMessage = getOtpPartialState.errorMessage
-                                    )
-                                }
+                            // If the user-entered OTP was correct, then move on to retrieving the Access & Refresh tokens.
+                            setEffect {
+                                OtpEffect.OnValidationSuccess(validateOtpPartialState.otpDomain.authenticationCode)
+                            }
+                        }
+
+                        is ValidateOtpPartialState.Failed -> {
+                            setEffect {
+                                OtpEffect.Navigation.NavigateToPreviousScreenWithError(
+                                    errorMessage = validateOtpPartialState.errorMessage
+                                )
+                            }
+                        }
+
+                        is ValidateOtpPartialState.ClientError -> {
+                            // User-input related error.
+
+                            // If the OTP error cause it Blocked, perform additional operations.
+                            if (validateOtpPartialState.otpResponseErrorDomain.errorCause is OtpErrorCause.Blocked) {
+                                var remainingTime = ""
+                                timerController.startTimer(
+                                    expiresIn = validateOtpPartialState.otpResponseErrorDomain.blockExpiresIn?.or(
+                                        0L
+                                    ) ?: 12L,
+                                    onTick = { formattedRemainingTime, isLastSecond ->
+                                        // Current second is the last one.
+                                        if (isLastSecond) {
+                                            setState {
+                                                copy(
+                                                    // Set the remaining time state to "null".
+                                                    otpBlockRemainingTime = null,
+                                                    // Set the error message to "null".
+                                                    errorMessage = null,
+                                                    // Enabled the "Resend OTP" button.
+                                                    resendOtpButtonEnabled = true
+                                                )
+                                            }
+                                        } else {
+                                            remainingTime = formattedRemainingTime
+                                            setState {
+                                                copy(
+                                                    otpBlockRemainingTime = remainingTime
+                                                )
+                                            }
+                                            setState {
+                                                copy(
+                                                    isLoading = false,
+                                                    errorMessage = resourceProvider.getString(
+                                                        validateOtpPartialState.otpResponseErrorDomain.errorCause.cause
+                                                    ),
+                                                    otp = "", // Reset OTP field.
+                                                    resendOtpButtonEnabled = false
+                                                )
+                                            }
+                                        }
+                                    }
+                                )
+                                return@collect
                             }
 
-                            is ValidateOtpPartialState.ClientError -> {
-                                // User-input related error.
-                                setState {
-                                    copy(
-                                        isLoading = false,
-                                        errorMessage = getOtpPartialState.otpErrorCause.cause
-                                    )
-                                }
+                            // OTP error cause is NOT Blocked.
+                            setState {
+                                copy(
+                                    isLoading = false,
+                                    errorMessage = resourceProvider.getString(
+                                        validateOtpPartialState.otpResponseErrorDomain.errorCause.cause
+                                    ),
+                                    otp = "", // Reset OTP field.
+                                    resendOtpButtonEnabled = false
+                                )
+                            }
+
+                            // Request focus for OTP field.
+                            setEffect {
+                                OtpEffect.OtpFieldRequestFocus
                             }
                         }
                     }
-            }
+                }
         }
     }
 
@@ -310,12 +397,17 @@ class OtpViewModel @Inject constructor(
                             )
                         }
                     }
+
                     is GetSensitiveUserDataPartialState.Success -> {
                         setState {
                             copy(
                                 isLoading = false,
                                 sensitiveUserData = it.sensitiveUserDataDomain
                             )
+                        }
+                        // Request focus in OTP field.
+                        setEffect {
+                            OtpEffect.OnUserSensitiveDataReceived
                         }
                     }
                 }
