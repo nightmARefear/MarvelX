@@ -11,6 +11,11 @@ import kotlin.time.Duration.Companion.ZERO
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.DurationUnit
 
+/**
+ * This controller is used to accurately measure time by utilizing [Timer].
+ *
+ * Upon starting a new timer, the old one is automatically cancelled.
+ */
 interface TimerController {
     /**
      * Initializes a new timer.
@@ -35,7 +40,29 @@ class TimerControllerImpl @Inject constructor() : TimerController {
 
     private var seconds = "00"
 
-    override fun startTimer(expiresIn: Long, onTick: (formattedTime: String, isLastSecond: Boolean) -> Unit) {
+    /**
+     * Returns the formatted time for [minutes] and [seconds] in a human readable format.
+     */
+    private val formattedTime: String
+        get() = DateUtil.formatTime(
+            minutes.toInt(),
+            seconds.toInt()
+        )
+
+    /**
+     * Returns `true` if the current second is the last one, otherwise `false`. This is calculated
+     * as follows:
+     *
+     *
+     * If minutes are 0, and there are no seconds left, then the current second is the last one.
+     */
+    private val isLastSecond: Boolean
+        get() = minutes.toInt() == 0 && seconds.toInt() == 0
+
+    override fun startTimer(
+        expiresIn: Long,
+        onTick: (formattedTime: String, isLastSecond: Boolean) -> Unit
+    ) {
         // First of all, stop the timer if it has already been initialized.
         stopTimer()
 
@@ -54,11 +81,8 @@ class TimerControllerImpl @Inject constructor() : TimerController {
 
             updateTimeUnits()
             onTick(
-                DateUtil.formatTime(
-                    minutes.toInt(),
-                    seconds.toInt()
-                ).also { logcat { "remaining time: $it" } },
-                minutes.toInt() == 0 && seconds.toInt() == 0 // If minutes are 0, and there are no seconds left, then the current second is the last one.
+                formattedTime.also { logcat { "remaining time: $it" } },
+                isLastSecond
             )
         }
     }

@@ -6,6 +6,8 @@ import com.alexgreece45.marvelx.data.models.jwtSensitiveUserData.RequestJwtSensi
 import com.alexgreece45.marvelx.data.models.jwtSensitiveUserData.ResponseJwtSensitiveUserData
 import com.alexgreece45.marvelx.data.models.otp.OtpRequest
 import com.alexgreece45.marvelx.data.models.otp.OtpResponseSuccess
+import com.alexgreece45.marvelx.data.models.resendOtp.RequestResendOtp
+import com.alexgreece45.marvelx.data.models.resendOtp.ResponseResendOtpSuccess
 import com.alexgreece45.marvelx.data.models.sensitiveUserData.RequestSensitiveUserData
 import com.alexgreece45.marvelx.data.models.sensitiveUserData.ResponseSensitiveUserData
 import com.alexgreece45.marvelx.data.models.token.TokenResponse
@@ -74,6 +76,9 @@ interface ApiService {
     @POST("/api/private/marvelx/user/validate_otp")
     suspend fun validateOtp(@Body otpRequest: OtpRequest): Response<OtpResponseSuccess>
 
+    @POST("/api/private/marvelx/user/resend_otp")
+    suspend fun resendOtp(@Body requestResendOtp: RequestResendOtp): Response<ResponseResendOtpSuccess>
+
     @GET("/api/private/marvelx/user/profile_details/{userId}")
     suspend fun getUserProfileDetails(@Path("userId") userId: Int): Response<ResponseProfileDetails>
 
@@ -106,6 +111,8 @@ interface ApiClient {
     suspend fun logout(clientId: String, refreshToken: String): Response<Void>
 
     suspend fun validateOtp(otpRequest: OtpRequest): Response<OtpResponseSuccess>
+
+    suspend fun resendOtp(requestResendOtp: RequestResendOtp): Response<ResponseResendOtpSuccess>
 
     suspend fun getUserProfileDetails(userId: Int): Response<ResponseProfileDetails>
 

@@ -1,5 +1,6 @@
 package com.alexgreece45.marvelx.data.models.otp
 
+import com.alexgreece45.marvelx.data.domains.otp.OtpErrorCause
 import com.alexgreece45.marvelx.data.domains.otp.OtpResponseErrorDomain
 import com.google.gson.annotations.SerializedName
 

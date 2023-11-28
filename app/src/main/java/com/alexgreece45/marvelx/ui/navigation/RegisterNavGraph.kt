@@ -5,8 +5,8 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.navigation
 import com.alexgreece45.marvelx.ui.screens.otpScreen.OtpScreen
 import com.alexgreece45.marvelx.ui.screens.registerScreens.homeScreen.HomeScreen
-import com.alexgreece45.marvelx.ui.screens.registerScreens.logInScreen.LogInScreen
-import com.alexgreece45.marvelx.ui.screens.registerScreens.signUpScreen.SignUpScreen
+import com.alexgreece45.marvelx.ui.screens.registerScreens.loginScreen.LogInScreen
+import com.alexgreece45.marvelx.ui.screens.registerScreens.signupScreen.SignUpScreen
 
 @Suppress("FunctionName")
 fun NavGraphBuilder.RegisterNavGraph(

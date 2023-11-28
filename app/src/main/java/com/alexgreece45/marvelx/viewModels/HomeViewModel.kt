@@ -84,14 +84,7 @@ class HomeViewModel @Inject constructor(
     override fun handleEvents(event: HomeEvent) {
         when (event) {
             HomeEvent.InitView -> {
-//                initView()
-                // TODO: To be removed!
-                setEffect {
-                    HomeEffect.Navigation.NavigateToOtpScreen(
-                        userId = 181,
-                        verificationStep = VerificationStep.OtpEmail.name
-                    )
-                }
+                initView()
             }
 
             HomeEvent.OnBack -> {

@@ -1,7 +1,5 @@
 package com.alexgreece45.marvelx.data.domains.otp
 
-import com.alexgreece45.marvelx.data.models.otp.OtpErrorCause
-
 /**
  * Defines the error response of an OTP request.
  *

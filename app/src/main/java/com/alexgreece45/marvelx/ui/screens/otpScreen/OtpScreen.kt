@@ -1,9 +1,6 @@
 package com.alexgreece45.marvelx.ui.screens.otpScreen
 
 import android.widget.Toast
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -48,25 +45,28 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.navigation.Screen
 import com.alexgreece45.marvelx.util.HSpacer
 import com.alexgreece45.marvelx.util.OTP_LENGTH
+import com.alexgreece45.marvelx.util.SPACING_MEDIUM
 import com.alexgreece45.marvelx.util.SPACING_SMALL
+import com.alexgreece45.marvelx.util.SPACING_TINY
 import com.alexgreece45.marvelx.util.VSpacer
 import com.alexgreece45.marvelx.viewModels.OtpEffect
 import com.alexgreece45.marvelx.viewModels.OtpEvent
 import com.alexgreece45.marvelx.viewModels.OtpViewModel
 
 /**
- * The OTP (One Time Password) screen is used to double check the user's identity when
- * signing up or logging in.
+ * The OTP (One Time Password) screen is used to double check the user's identity when signing up
+ * or logging in.
  *
  * Navigation **to** and **from** this screen ***must*** be handled with caution.
- * Navigation to this screen MUST only happen when instructed either by `LogInScreen`,
- * or `SignUpScreen`.
+ * Navigation to this screen MUST only happen when instructed either by `LoginScreen`,
+ * or `SignupScreen`.
  */
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -76,7 +76,7 @@ fun OtpScreen(
     userId: Int?,
     verificationStep: String?
 ) {
-    val state by viewModel.uiState.collectAsState()
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
 
     val context = LocalContext.current
     val keyboard = LocalSoftwareKeyboardController.current
@@ -120,7 +120,7 @@ fun OtpScreen(
 
                 OtpEffect.OnUserSensitiveDataReceived -> {
                     // Request focus for OTP field.
-                    focusRequester.requestFocus()
+                    focusRequester.captureFocus()
                 }
 
                 OtpEffect.Navigation.PopBackStack -> {
@@ -185,6 +185,7 @@ fun OtpScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .focusRequester(focusRequester),
+                        enabled = state.otpFieldEnabled,
                         otp = state.otp,
                         onValueChange = { value, otpInputFilled ->
                             viewModel.setEvent(
@@ -196,42 +197,47 @@ fun OtpScreen(
                         onDoneClick = { viewModel.setEvent(OtpEvent.OnDoneClick) }
                     )
 
-                    // Error message
-                    Row(
-                        modifier = Modifier.padding(start = 35.dp, end = 8.dp)
+                    Column(
+                        modifier = Modifier.padding(start = 35.dp, end = 8.dp),
+                        verticalArrangement = Arrangement.spacedBy(SPACING_TINY.dp)
                     ) {
-                        AnimatedVisibility(
-                            visible = state.errorMessage != null && state.errorMessage?.isNotBlank() == true,
-                            enter = fadeIn(),
-                            exit = fadeOut()
+                        // Error message
+                        Row {
+                            state.errorMessage?.let { errorMessage ->
+                                Text(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(start = SPACING_TINY.dp),
+                                    text = errorMessage,
+                                    color = MaterialTheme.colors.error,
+                                    textAlign = TextAlign.Start,
+                                    style = MaterialTheme.typography.subtitle1,
+                                )
+                            }
+                        }
+
+                        VSpacer.Medium()
+
+                        // "didn't receive an OTP..." string
+                        Text(
+                            text = stringResource(R.string.otp_screen_not_receive_otp_label)
+                        )
+
+                        // Resend OTP button.
+                        Button(
+                            onClick = { viewModel.setEvent(OtpEvent.OnResendOtpButtonClick) },
+                            enabled = state.resendOtpButtonEnabled
                         ) {
-                            // TODO: Fix bug where "null" is shown after OTP block functionality has been disabled.
                             Text(
-                                modifier = Modifier.fillMaxWidth(),
-                                text = state.errorMessage.toString()
-                                    .plus(
-                                        if (state.otpBlockRemainingTime != null) " ${state.otpBlockRemainingTime}." else ""
-                                    ),
-                                color = MaterialTheme.colors.error,
-                                textAlign = TextAlign.Start,
-                                style = MaterialTheme.typography.subtitle1,
+                                text = state.otpBlockRemainingTime?.let { remainingTime ->
+                                    stringResource(
+                                        R.string.otp_screen_resend_otp_button_with_delay,
+                                        remainingTime
+                                    )
+                                } ?: stringResource(R.string.otp_screen_resend_otp_button)
                             )
                         }
                     }
-                }
-            }
-
-            item { VSpacer.Medium() }
-
-            // Resend OTP button.
-            item {
-                Button(
-                    onClick = { },
-                    enabled = state.resendOtpButtonEnabled
-                ) {
-                    Text(
-                        text = "Resend OTP"
-                    )
                 }
             }
         }
@@ -241,12 +247,14 @@ fun OtpScreen(
 @Composable
 private fun OtpTextField(
     modifier: Modifier = Modifier,
+    enabled: Boolean,
     otp: String,
     onValueChange: (String, Boolean) -> Unit,
     onDoneClick: () -> Unit
 ) {
     BasicTextField(
         modifier = modifier,
+        enabled = enabled,
         value = TextFieldValue(
             otp,
             selection = TextRange(otp.length)
@@ -343,6 +351,7 @@ private fun OtpTextFieldPreview() {
     OtpTextField(
         modifier = Modifier
             .fillMaxWidth(),
+        enabled = true,
         otp = otp,
         onValueChange = { value, _ ->
             otp = value
