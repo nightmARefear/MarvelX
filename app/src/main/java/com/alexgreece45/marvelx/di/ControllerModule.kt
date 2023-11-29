@@ -10,6 +10,8 @@ import com.alexgreece45.marvelx.controllers.PrefKeys
 import com.alexgreece45.marvelx.controllers.PrefKeysImpl
 import com.alexgreece45.marvelx.controllers.RefreshTokenController
 import com.alexgreece45.marvelx.controllers.RefreshTokenControllerImpl
+import com.alexgreece45.marvelx.controllers.TimerController
+import com.alexgreece45.marvelx.controllers.TimerControllerImpl
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -36,4 +38,8 @@ interface ControllerModule {
     @Binds
     @Singleton
     fun bindsRefreshTokenController(impl: RefreshTokenControllerImpl): RefreshTokenController
+
+    @Binds
+    @Singleton
+    fun bindsTimerController(impl: TimerControllerImpl): TimerController
 }

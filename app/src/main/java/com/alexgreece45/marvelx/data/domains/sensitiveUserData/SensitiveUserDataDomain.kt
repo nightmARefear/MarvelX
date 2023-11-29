@@ -1,39 +1,23 @@
 package com.alexgreece45.marvelx.data.domains.sensitiveUserData
 
-import androidx.annotation.StringRes
-import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.util.extensions.maskEmail
-import com.alexgreece45.marvelx.util.extensions.maskGreekPhoneNumber
-
+/**
+ * Defines the initial required data needed in [OtpScreen].
+ *
+ * Only used for displaying masked emails / phone numbers
+ * to the screen for requesting new OTPs.
+ *
+ * @param otpPreferredCommunicationType     Refers to the preferred communication type of the user
+ * (i.e., email, or phone_number).
+ * @param data                              Refers to the value of the retrieved sensitive user data
+ * (i.e., the stored email address, or phone number).
+ * @param isOtpBlocked                      Defines whether the `OTP` functionality is blocked.
+ * @param otpBlockExpiresIn                 Defines the remaining amount of time in seconds,
+ * from now, until the `OTP` functionality is enabled so that new OTPs can be requested.
+ */
 data class SensitiveUserDataDomain(
     val otpPreferredCommunicationType: OtpPreferredCommunicationType,
     val data: String,
-    val maskedData: String
+    val maskedData: String,
+    val isOtpBlocked: Boolean,
+    val otpBlockExpiresIn: Long?
 )
-
-sealed class OtpPreferredCommunicationType(
-    open val key: String,
-    @StringRes val label: Int
-) {
-    data object Email : OtpPreferredCommunicationType(
-        key = "email",
-        label = R.string.email
-    )
-
-    data object PhoneNumber : OtpPreferredCommunicationType(
-        key = "phone_number",
-        label = R.string.phone_number
-    )
-
-    data class Invalid(override val key: String) : OtpPreferredCommunicationType(key, label = 0)
-
-    companion object {
-        private fun asList(): List<OtpPreferredCommunicationType> = listOf(Email, PhoneNumber)
-
-        fun of(value: String): OtpPreferredCommunicationType =
-            asList().firstOrNull { it.key == value } ?: Invalid(value)
-
-        fun isStringValidOtpPreferredCommunicationType(value: String): Boolean =
-            of(value) != Invalid(value)
-    }
-}

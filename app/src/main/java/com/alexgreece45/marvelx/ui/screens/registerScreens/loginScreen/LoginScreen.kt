@@ -1,4 +1,4 @@
-package com.alexgreece45.marvelx.ui.screens.registerScreens.logInScreen
+package com.alexgreece45.marvelx.ui.screens.registerScreens.loginScreen
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -12,7 +12,6 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -26,6 +25,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.viewModels.LoginEffect
@@ -38,8 +38,6 @@ import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.OutlinedTextFieldValidation
 import com.alexgreece45.marvelx.ui.components.ValueType
 import com.alexgreece45.marvelx.util.SPACING_MEDIUM
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.onEach
 import logcat.logcat
 
 @OptIn(ExperimentalComposeUiApi::class)
@@ -49,7 +47,7 @@ fun LogInScreen(
     setUserId: (Int) -> Unit,
     viewModel: LoginViewModel = hiltViewModel()
 ) {
-    val state by viewModel.uiState.collectAsState()
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
 
     val keyboard = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
@@ -57,7 +55,7 @@ fun LogInScreen(
     LaunchedEffect(Unit) {
         viewModel.setEvent(LoginEvent.InitView)
 
-        viewModel.uiEffect.onEach { effect ->
+        viewModel.uiEffect.collect { effect ->
             when (effect) {
                 is LoginEffect.Navigation.NavigateToAllCharactersScreen -> {
                     // Login was successful so store the userId in the activity viewModel's state. TODO: to be removed
@@ -104,7 +102,7 @@ fun LogInScreen(
                     viewModel.setEvent(LoginEvent.OnLoginButtonClick)
                 }
             }
-        }.collect()
+        }
     }
 
     ContentScreen(
@@ -196,7 +194,7 @@ fun LogInScreen(
                         onClick = { viewModel.setEvent(LoginEvent.OnLoginButtonClick) }
                     ) {
                         Text(
-                            text = stringResource(R.string.log_in_screen_sign_up_button_text)
+                            text = stringResource(R.string.login_screen_signup_button)
                         )
                     }
                 }

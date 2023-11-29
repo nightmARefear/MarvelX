@@ -235,41 +235,55 @@ class UserInteractorImpl @Inject constructor(
             }
         }
 
-    override suspend fun getSensitiveUserData(token: String): Flow<GetSensitiveUserDataPartialState> = flow {
-        val request = RequestSensitiveUserData(token = token)
+    override suspend fun getSensitiveUserData(token: String): Flow<GetSensitiveUserDataPartialState> =
+        flow {
+            val request = RequestSensitiveUserData(token = token)
 
-        repository.getSensitiveUserData(request).collect { repositoryResponse ->
-            when (repositoryResponse) {
-                is GetSensitiveUserDataRepositoryResponse.Failed -> {
-                    emit(
-                        GetSensitiveUserDataPartialState.Failed(
-                            errorMessage = repositoryResponse.responseUserError.errorMessage
-                        )
-                    )
-                }
-
-                is GetSensitiveUserDataRepositoryResponse.Success -> {
-                    repositoryResponse.response?.let { responseSensitiveUserData ->
+            repository.getSensitiveUserData(request).collect { repositoryResponse ->
+                when (repositoryResponse) {
+                    is GetSensitiveUserDataRepositoryResponse.Failed -> {
                         emit(
-                            GetSensitiveUserDataPartialState.Success(
-                                sensitiveUserDataDomain = responseSensitiveUserData.toSensitiveUserDataDomain()
+                            GetSensitiveUserDataPartialState.Failed(
+                                errorMessage = repositoryResponse.responseUserError.errorMessage
                             )
                         )
-                    } ?: emit(
-                        GetSensitiveUserDataPartialState.Failed(
-                            errorMessage = resourceProvider.getGenericErrorMessage()
+                    }
+
+                    is GetSensitiveUserDataRepositoryResponse.Success -> {
+                        repositoryResponse.response?.let { responseSensitiveUserData ->
+                            // If the OTP functionality is blocked, but there's no expiresIn info,
+                            // throw an "internal server error".
+                            if (responseSensitiveUserData.isOtpBlocked &&
+                                responseSensitiveUserData.otpBlockExpiresIn == null
+                            ) {
+                                emit(
+                                    GetSensitiveUserDataPartialState.Failed(
+                                        errorMessage = resourceProvider.getString(R.string.internal_server_error)
+                                    )
+                                )
+                                return@collect
+                            }
+
+                            emit(
+                                GetSensitiveUserDataPartialState.Success(
+                                    sensitiveUserDataDomain = responseSensitiveUserData.toSensitiveUserDataDomain()
+                                )
+                            )
+                        } ?: emit(
+                            GetSensitiveUserDataPartialState.Failed(
+                                errorMessage = resourceProvider.getGenericErrorMessage()
+                            )
                         )
-                    )
+                    }
                 }
             }
+        }.safeAsync {
+            logcat(LogPriority.ERROR) { "(getSensitiveUserData) error: ${it.message}" }
+            when (it) {
+                is IOException -> GetSensitiveUserDataPartialState.Failed(errorMessage = resourceProvider.getNoInternetConnectionMessage())
+                else -> GetSensitiveUserDataPartialState.Failed(errorMessage = resourceProvider.getGenericErrorMessage())
+            }
         }
-    }.safeAsync {
-        logcat(LogPriority.ERROR) { "(getSensitiveUserData) error: ${it.message}" }
-        when (it) {
-            is IOException -> GetSensitiveUserDataPartialState.Failed(errorMessage = resourceProvider.getNoInternetConnectionMessage())
-            else -> GetSensitiveUserDataPartialState.Failed(errorMessage = resourceProvider.getGenericErrorMessage())
-        }
-    }
 }
 
 sealed class GetProfileDetailsPartialState {

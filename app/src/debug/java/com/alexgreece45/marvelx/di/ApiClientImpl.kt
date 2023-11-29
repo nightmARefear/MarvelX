@@ -8,6 +8,8 @@ import com.alexgreece45.marvelx.data.models.jwtSensitiveUserData.RequestJwtSensi
 import com.alexgreece45.marvelx.data.models.jwtSensitiveUserData.ResponseJwtSensitiveUserData
 import com.alexgreece45.marvelx.data.models.otp.OtpRequest
 import com.alexgreece45.marvelx.data.models.otp.OtpResponseSuccess
+import com.alexgreece45.marvelx.data.models.resendOtp.RequestResendOtp
+import com.alexgreece45.marvelx.data.models.resendOtp.ResponseResendOtpSuccess
 import com.alexgreece45.marvelx.data.models.sensitiveUserData.RequestSensitiveUserData
 import com.alexgreece45.marvelx.data.models.sensitiveUserData.ResponseSensitiveUserData
 import com.alexgreece45.marvelx.data.models.token.TokenResponse
@@ -68,6 +70,9 @@ class ApiClientImpl @Inject constructor(
 
     override suspend fun validateOtp(otpRequest: OtpRequest): Response<OtpResponseSuccess> =
         api.validateOtp(otpRequest)
+
+    override suspend fun resendOtp(requestResendOtp: RequestResendOtp): Response<ResponseResendOtpSuccess> =
+        api.resendOtp(requestResendOtp)
 
     override suspend fun getUserProfileDetails(userId: Int): Response<ResponseProfileDetails> =
         api.getUserProfileDetails(userId = userId)

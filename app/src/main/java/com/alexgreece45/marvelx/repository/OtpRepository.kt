@@ -4,6 +4,9 @@ import com.alexgreece45.marvelx.data.api.ApiClient
 import com.alexgreece45.marvelx.data.models.otp.OtpRequest
 import com.alexgreece45.marvelx.data.models.otp.OtpResponseError
 import com.alexgreece45.marvelx.data.models.otp.OtpResponseSuccess
+import com.alexgreece45.marvelx.data.models.resendOtp.RequestResendOtp
+import com.alexgreece45.marvelx.data.models.resendOtp.ResponseResendOtpFailed
+import com.alexgreece45.marvelx.data.models.resendOtp.ResponseResendOtpSuccess
 import com.google.gson.Gson
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -11,6 +14,7 @@ import javax.inject.Inject
 
 interface OtpRepository {
     suspend fun validateOtp(otpRequest: OtpRequest): Flow<ValidateOtpRepositoryResponse>
+    suspend fun resendOtp(requestResendOtp: RequestResendOtp): Flow<ResendOtpRepositoryResponse>
 }
 
 class OtpRepositoryImpl @Inject constructor(
@@ -38,10 +42,39 @@ class OtpRepositoryImpl @Inject constructor(
                 }
             }
         }
+
+    override suspend fun resendOtp(requestResendOtp: RequestResendOtp): Flow<ResendOtpRepositoryResponse> =
+        flow {
+            apiClient.resendOtp(requestResendOtp).let { response ->
+                if (response.isSuccessful) {
+                    emit(
+                        ResendOtpRepositoryResponse.Success(
+                            responseResendOtpSuccess = response.body()
+                        )
+                    )
+                } else {
+                    emit(
+                        ResendOtpRepositoryResponse.Failed(
+                            responseResendOtpFailed = gson.fromJson(
+                                response.errorBody()?.string(),
+                                ResponseResendOtpFailed::class.java
+                            )
+                        )
+                    )
+                }
+            }
+        }
 }
 
 sealed class ValidateOtpRepositoryResponse {
     data class Success(val response: OtpResponseSuccess?) : ValidateOtpRepositoryResponse()
     data class Failed(val otpResponseError: OtpResponseError) : ValidateOtpRepositoryResponse()
-    data class Error(val errorMessage: String?) : ValidateOtpRepositoryResponse()
+}
+
+sealed class ResendOtpRepositoryResponse {
+    data class Success(val responseResendOtpSuccess: ResponseResendOtpSuccess?) :
+        ResendOtpRepositoryResponse()
+
+    data class Failed(val responseResendOtpFailed: ResponseResendOtpFailed) :
+        ResendOtpRepositoryResponse()
 }

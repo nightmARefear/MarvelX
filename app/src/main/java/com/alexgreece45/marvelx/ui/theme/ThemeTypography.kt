@@ -65,7 +65,7 @@ class ThemeTypography : ThemeTypographyTemplate() {
         get() = TextStyle(
             fontFamily = secondaryFontFamily,
             fontWeight = FontWeight.Normal,
-            fontSize = 33.sp,
+            fontSize = 30.sp,
             letterSpacing = 0.25.sp
         )
     override val h5: TextStyle
@@ -114,8 +114,9 @@ class ThemeTypography : ThemeTypographyTemplate() {
         get() = TextStyle(
             fontFamily = defaultFontFamily,
             fontWeight = FontWeight.Medium,
-            fontSize = 14.sp,
-            letterSpacing = 1.25.sp
+            fontSize = 16.sp,
+            letterSpacing = 1.25.sp,
+            fontFeatureSettings = "c2sc, smcp" // Capitalizes all characters.
         )
     override val caption: TextStyle
         get() = TextStyle(

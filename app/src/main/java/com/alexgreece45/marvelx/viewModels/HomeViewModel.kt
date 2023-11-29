@@ -88,7 +88,6 @@ class HomeViewModel @Inject constructor(
             }
 
             HomeEvent.OnBack -> {
-                // Pop back stack.
                 setEffect {
                     HomeEffect.Navigation.PopBackStack
                 }

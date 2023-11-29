@@ -1,4 +1,4 @@
-package com.alexgreece45.marvelx.ui.screens.registerScreens.signUpScreen
+package com.alexgreece45.marvelx.ui.screens.registerScreens.signupScreen
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -28,6 +28,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.data.models.user.Gender
@@ -51,7 +52,7 @@ fun SignUpScreen(
     navController: NavController,
     viewModel: SignupViewModel = hiltViewModel()
 ) {
-    val state by viewModel.uiState.collectAsState()
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
 
     val focusManager = LocalFocusManager.current
     val keyboard = LocalSoftwareKeyboardController.current
@@ -292,7 +293,7 @@ fun SignUpScreen(
                         onClick = { viewModel.setEvent(SignupEvent.OnSignupButtonClick) }
                     ) {
                         Text(
-                            text = stringResource(R.string.sign_up_screen_sign_up_button_text)
+                            text = stringResource(R.string.sign_up_screen_signup_button)
                         )
                     }
                 }
