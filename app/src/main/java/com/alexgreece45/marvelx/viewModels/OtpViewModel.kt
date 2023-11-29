@@ -37,10 +37,6 @@ sealed class OtpEvent : BaseEvent {
     data object OnDoneClick : OtpEvent()
 
     data object OnResendOtpButtonClick : OtpEvent()
-
-    data class OnValidationSuccess(val code: String) : OtpEvent()
-
-    data class OnTokenReceived(val token: String) : OtpEvent()
 }
 
 data class OtpState(
@@ -94,11 +90,6 @@ sealed class OtpEffect : BaseEffect {
         data object NavigateToAllCharactersScreen : Navigation()
     }
 
-    data class OnValidationSuccess(val code: String) : OtpEffect()
-
-    data class OnTokenReceived(val token: String, val verificationStep: VerificationStep) :
-        OtpEffect()
-
     data object OnUserSensitiveDataReceived : OtpEffect()
 }
 
@@ -127,32 +118,14 @@ class OtpViewModel @Inject constructor(
             is OtpEvent.OnOtpFieldValueChange -> {
                 // Update state, ONLY if the new OTP is different from the old one.
                 if (event.otp != currentState.otp) {
-                    onOtpFieldValueChange(otp = event.otp)
+                    onOtpFieldValueChange(otp = event.otp, event = event)
                 }
             }
 
             OtpEvent.OnDoneClick -> {
                 if (currentState.otpFieldEnabled) {
-                    validateOtp()
+                    validateOtp(event)
                 }
-            }
-
-            is OtpEvent.OnValidationSuccess -> {
-                setState {
-                    copy(
-                        isLoading = true
-                    )
-                }
-                grandNewAccessToken(code = event.code, event = event)
-            }
-
-            is OtpEvent.OnTokenReceived -> {
-                setState {
-                    copy(
-                        isLoading = true
-                    )
-                }
-                getSensitiveUserData(token = event.token)
             }
 
             OtpEvent.OnBackClick -> {
@@ -193,7 +166,7 @@ class OtpViewModel @Inject constructor(
         )
     }
 
-    private fun onOtpFieldValueChange(otp: String) {
+    private fun onOtpFieldValueChange(otp: String, event: OtpEvent.OnOtpFieldValueChange) {
         if (otp.isDigitsOnly() && otp.length <= 6) {
             setState {
                 copy(
@@ -204,7 +177,7 @@ class OtpViewModel @Inject constructor(
 
             // Automatically validate user entered OTP if its length is 6 characters.
             if (otp.length == 6) {
-                validateOtp()
+                validateOtp(event)
             }
         }
     }
@@ -336,7 +309,7 @@ class OtpViewModel @Inject constructor(
         }
     }
 
-    private fun validateOtp() {
+    private fun validateOtp(event: OtpEvent) {
         // Current OTP length is not equal to 6, thus, do NOT proceed with the validation process.
         if (currentState.otp.length != 6) return
 
@@ -352,9 +325,10 @@ class OtpViewModel @Inject constructor(
                     when (validateOtpPartialState) {
                         is ValidateOtpPartialState.Success -> {
                             // User entered OTP was correct, thus, proceed to retrieve the Access & Refresh tokens.
-                            setEffect {
-                                OtpEffect.OnValidationSuccess(validateOtpPartialState.otpDomain.authenticationCode)
-                            }
+                            grandNewAccessToken(
+                                code = validateOtpPartialState.otpDomain.authenticationCode,
+                                event = event
+                            )
                         }
 
                         is ValidateOtpPartialState.Failed -> {
@@ -496,12 +470,7 @@ class OtpViewModel @Inject constructor(
                     }
 
                     is GetJwtForSensitiveUserDataPartialState.Success -> {
-                        setEffect {
-                            OtpEffect.OnTokenReceived(
-                                token = it.jwtSensitiveUserDataDomain.token,
-                                verificationStep = verificationStep
-                            )
-                        }
+                        getSensitiveUserData(it.jwtSensitiveUserDataDomain.token)
                     }
                 }
             }
@@ -524,16 +493,70 @@ class OtpViewModel @Inject constructor(
                     }
 
                     is GetSensitiveUserDataPartialState.Success -> {
+                        val sensitiveUserDataDomain = it.sensitiveUserDataDomain
+                        if (sensitiveUserDataDomain.isOtpBlocked.not()) {
+                            // OTP functionality isn't blocked.
+                            setState {
+                                copy(
+                                    isLoading = false,
+                                    sensitiveUserData = it.sensitiveUserDataDomain
+                                )
+                            }
+
+                            setEffect {
+                                OtpEffect.OtpFieldRequestFocus
+                            }
+                            return@collect
+                        }
+
+                        // OTP functionality is blocked.
+
+                        if (sensitiveUserDataDomain.otpBlockExpiresIn == null) {
+                            setEffect {
+                                OtpEffect.Navigation.NavigateToPreviousScreenWithError(
+                                    errorMessage = resourceProvider.getGenericErrorMessage()
+                                )
+                            }
+                            return@collect
+                        }
+
                         setState {
                             copy(
                                 isLoading = false,
+                                otpFieldEnabled = false,
+                                resendOtpButtonEnabled = false,
                                 sensitiveUserData = it.sensitiveUserDataDomain
                             )
                         }
-                        // Request focus in OTP field.
-                        setEffect {
-                            OtpEffect.OnUserSensitiveDataReceived
-                        }
+                        timerController.startTimer(
+                            expiresIn = sensitiveUserDataDomain.otpBlockExpiresIn,
+                            onTick = { formattedRemainingTime, isLastSecond ->
+                                // Current second is the last one.
+                                if (isLastSecond) {
+                                    setState {
+                                        copy(
+                                            errorMessage = null,
+                                            otpBlockRemainingTime = null,
+                                            otpFieldEnabled = true,
+                                            resendOtpButtonEnabled = true
+                                        )
+                                    }
+                                    setEffect {
+                                        OtpEffect.OtpFieldRequestFocus
+                                    }
+                                } else {
+                                    setState {
+                                        copy(
+                                            errorMessage = resourceProvider.getString(
+                                                OtpErrorCause.Blocked.cause,
+                                                formattedRemainingTime
+                                            ),
+                                            otpBlockRemainingTime = formattedRemainingTime
+                                        )
+                                    }
+                                }
+                            }
+                        )
                     }
                 }
             }

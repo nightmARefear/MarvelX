@@ -106,21 +106,9 @@ fun OtpScreen(
                     }
                 }
 
-                is OtpEffect.OnValidationSuccess -> viewModel.setEvent(
-                    OtpEvent.OnValidationSuccess(
-                        code = effect.code
-                    )
-                )
-
-                is OtpEffect.OnTokenReceived -> {
-                    viewModel.setEvent(
-                        OtpEvent.OnTokenReceived(token = effect.token)
-                    )
-                }
-
                 OtpEffect.OnUserSensitiveDataReceived -> {
-                    // Request focus for OTP field.
-                    focusRequester.captureFocus()
+                    // Requests focus for OTP field.
+                    focusRequester.requestFocus()
                 }
 
                 OtpEffect.Navigation.PopBackStack -> {
@@ -145,17 +133,17 @@ fun OtpScreen(
             contentPadding = paddingValues
         ) {
             // Title and where OTP has been sent to.
-            state.sensitiveUserData?.let { sensitiveUserData ->
-                item {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        // Title.
-                        Text(
-                            text = stringResource(R.string.otp_screen_title),
-                            style = MaterialTheme.typography.h4
-                        )
+            item {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    // Title.
+                    Text(
+                        text = stringResource(R.string.otp_screen_title),
+                        style = MaterialTheme.typography.h4
+                    )
 
-                        VSpacer.Large()
+                    VSpacer.Large()
 
+                    state.sensitiveUserData?.let { sensitiveUserData ->
                         // Where the OTP has been sent to.
                         Text(
                             text = stringResource(
