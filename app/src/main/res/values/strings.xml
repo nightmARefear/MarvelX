@@ -1,5 +1,5 @@
 <resources>
-    // Generic 
+    // Generic
     <string name="back">Back</string>
     <string name="error">error</string>
     <string name="male">male</string>
@@ -18,7 +18,7 @@
     <string name="ic_not_favorite_content_description">not favorite</string>
     <string name="not_favorite_message">This %1$s was removed from your favorites.</string>
 
-    // ERROR HANDLING 
+    // ERROR HANDLING
     <string name="retry">Retry</string>
     <string name="no_internet_connection_error_message">No internet connection! Please try again!</string>
     <string name="unknown_error">An unknown error has occurred!</string>
@@ -26,26 +26,31 @@
     <string name="internal_server_error">An internal server error has occurred!</string>
     <string name="no_data_was_found">No data was found!</string>
 
-    // Sorting 
+    // Insecure application.
+    <string name="splash_screen_alert_dialog_title">Insecure application</string>
+    <string name="splash_screen_alert_dialog_error_message">It has been detected that this device is either an emulator or rooted, or the application package has been tampered with.</string>
+    <string name="splash_screen_alert_dialog_confirm_button">close</string>
+
+    // Sorting
     <string name="close">close</string>
     <string name="sort_by">Sort by</string>
 
-    // Bottom Navigation (Root Screen: AllCharactersScreen, Other Screens: AllFavoriteCharactersScreen, ProfileScreen) 
+    // Bottom Navigation (Root Screen: AllCharactersScreen, Other Screens: AllFavoriteCharactersScreen, ProfileScreen)
     <string name="bottom_navigation_label_characters">Characters</string>
     <string name="bottom_navigation_label_favorites">Favorites</string>
     <string name="bottom_navigation_label_profile">Profile</string>
 
-    // Character 
+    // Character
     <string name="no_characters_were_found_error_message">No characters were found!</string>
     <string name="no_character_description">Character description is not available.</string>
     <string name="character_with_specific_id_not_found">The character with id \"%1$s\" could not be found!</string>
     <string name="character_error_loading">An error occurred while loading this character!</string>
     <string name="error_retrieving_all_characters">An error occurred while retrieving the characters.</string>
 
-    // Comic 
+    // Comic
     <string name="error_retrieving_all_comics">An error occurred while retrieving the comics.</string>
 
-    // All Characters Screen 
+    // All Characters Screen
     <string name="all_characters_screen_toolbar_title">Characters</string>
 
     <string name="all_characters_screen_fab_label">Filter</string>
@@ -58,7 +63,7 @@
     <string name="all_characters_screen_error_unfavoring_character">An error occurred while unfavoring this character.</string>
     <string name="all_characters_screen_error_retrieving_favorite_characters">An error occurred while retrieving favorite characters.</string>
 
-    // Character Screen 
+    // Character Screen
     <string name="character_screen_row_comic_toolbar_title">Comics</string>
     <string name="character_screen_row_comic_toolbar_action_favorite_title">Favorite Character</string>
 
@@ -67,24 +72,24 @@
     <string name="character_screen_error_loading_character">An error occurred while loading this character.</string>
     <string name="character_screen_error_loading_all_comics">An error occurred while loading all the comics.</string>
 
-    // Comic Screen 
+    // Comic Screen
     <string name="comic_screen_toolbar_title">%1$s</string>
 
     <string name="comic_screen_comic_could_not_be_retrieved">Error retrieving comic details</string>
     <string name="comic_screen_no_description">Comic description is not available.</string>
 
-    // All Character Comics Screen 
+    // All Character Comics Screen
     <string name="all_character_comics_screen_toolbar_title">%1$s Comics</string>
 
-    // All Favorite Characters Screen 
+    // All Favorite Characters Screen
     <string name="all_favorite_characters_screen_toolbar_title">Favorite Characters</string>
 
-    // Profile Screen 
+    // Profile Screen
     <string name="profile_screen_toolbar_title">Profile</string>
 
     <string name="profile_screen_button_label_logout">Logout</string>
 
-    // Home Screen 
+    // Home Screen
     <string name="home_screen_toolbar_title">Home Screen</string>
     <string name="home_screen_label_log_in_button">Login</string>
     <string name="home_screen_label_sign_up_button">Signup</string>
@@ -150,7 +155,7 @@
 
     <string name="sign_up_screen_signup_button">SIGN UP</string>
 
-    // OTP Screen 
+    // OTP Screen
     <string name="otp_screen_toolbar_title">OTP</string>
 
     <string name="otp_screen_title">Verification Code</string>

@@ -3,7 +3,6 @@ package com.alexgreece45.marvelx.configuration
 import com.alexgreece45.marvelx.BuildConfig
 import com.alexgreece45.marvelx.util.TOKEN_CLIENT_ID
 import com.alexgreece45.marvelx.util.TOKEN_REDIRECT_URI
-import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -42,6 +41,25 @@ interface ConfigLogic {
      * Extracts and returns the port (i.e., `XXXXX`, where `X` integer) from the base URL.
      */
     val port: Int
+
+    /**
+     * Returns the app's build type (i.e., debug, mock, or release).
+     */
+    val appBuildType: AppBuildType
+}
+
+enum class AppBuildType {
+    DEBUG, MOCK, RELEASE;
+
+    companion object {
+        fun getType(): AppBuildType =
+            when (BuildConfig.BUILD_TYPE) {
+                "debug" -> DEBUG
+                "mock" -> MOCK
+                "release" -> RELEASE
+                else -> RELEASE
+            }
+    }
 }
 
 @Singleton
@@ -58,4 +76,6 @@ class ConfigLogicImpl @Inject constructor() : ConfigLogic {
     override val port: Int
         get() =
             BuildConfig.MARVELX_BACKEND_BASE_URL.split(":").last().toInt()
+    override val appBuildType: AppBuildType
+        get() = AppBuildType.getType()
 }

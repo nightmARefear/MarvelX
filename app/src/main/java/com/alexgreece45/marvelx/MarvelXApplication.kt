@@ -6,6 +6,7 @@ import androidx.work.Configuration
 import androidx.work.ListenableWorker
 import androidx.work.WorkerFactory
 import androidx.work.WorkerParameters
+import com.alexgreece45.marvelx.configuration.AppBuildType
 import com.alexgreece45.marvelx.configuration.ConfigLogic
 import com.alexgreece45.marvelx.controllers.AuthController
 import com.alexgreece45.marvelx.data.api.ApiClient
@@ -22,12 +23,14 @@ class MarvelXApplication : Application(), Configuration.Provider {
     @Inject
     lateinit var refreshTokenWorkerFactory: RefreshTokenWorkerFactory
 
+    @Inject
+    lateinit var configLogic: ConfigLogic
+
     override fun onCreate() {
         super.onCreate()
 
-        // Install logcat if it hasn't already been installed, and if the build type is NOT
-        // "release".
-        if (LogcatLogger.isInstalled.not() && BuildConfig.BUILD_TYPE != "release") {
+        // Install logcat if it hasn't already been installed, and if the build type isn't release.
+        if (LogcatLogger.isInstalled.not() && configLogic.appBuildType != AppBuildType.RELEASE) {
             LogcatLogger.install(AndroidLogcatLogger(LogPriority.DEBUG))
         }
     }

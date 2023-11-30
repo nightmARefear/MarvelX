@@ -8,6 +8,8 @@ import com.alexgreece45.marvelx.interactors.OtpInteractor
 import com.alexgreece45.marvelx.interactors.OtpInteractorImpl
 import com.alexgreece45.marvelx.interactors.RegisterInteractor
 import com.alexgreece45.marvelx.interactors.RegisterInteractorImpl
+import com.alexgreece45.marvelx.interactors.SplashInteractor
+import com.alexgreece45.marvelx.interactors.SplashInteractorImpl
 import com.alexgreece45.marvelx.interactors.UserInteractor
 import com.alexgreece45.marvelx.interactors.UserInteractorImpl
 import dagger.Binds
@@ -39,4 +41,8 @@ interface InteractorModule {
     @Binds
     @ViewModelScoped
     fun bindsRegisterInteractor(impl: RegisterInteractorImpl): RegisterInteractor
+
+    @Binds
+    @ViewModelScoped
+    fun bindsSplashInteractor(impl: SplashInteractorImpl): SplashInteractor
 }
