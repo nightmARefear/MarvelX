@@ -177,4 +177,7 @@
     <string name="resend_otp_error_cause_user_not_found">The user was not found.</string>
     <string name="resend_otp_error_cause_too_soon">You have requested a new OTP code too soon. Try again in: %1$s</string>
 
+    // Content descriptions
+    <string name="content_description_splash_loading_animation">Loading animation</string>
+
 </resources>

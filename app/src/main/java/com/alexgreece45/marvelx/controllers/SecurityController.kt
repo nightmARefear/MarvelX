@@ -11,6 +11,11 @@ import javax.inject.Inject
 
 interface SecurityController {
     /**
+     * Checks whether the package signature is valid, and returns `true` if it, otherwise `false`.
+     */
+    fun isPackageSignatureValid(): Boolean
+
+    /**
      * Checks whether the app is running on an emulator, and returns `true` if it is otherwise
      * `false`.
      *
@@ -35,7 +40,7 @@ interface SecurityController {
 
     /**
      * Checks whether this application is running on a secure device and/or if it has been tampered with.
-     * 
+     *
      * ### Note: This condition doesn't guarantee that the device is secure, or that the application
      * hasn't been tampered with.
      */
@@ -44,8 +49,20 @@ interface SecurityController {
 
 class SecurityControllerImpl @Inject constructor(
     private val configLogic: ConfigLogic,
-    private val rootController: RootController
+    private val rootController: RootController,
+    private val applicationPackageController: ApplicationPackageController
 ) : SecurityController {
+    private val isApplicationSecure: Boolean
+        get() = isPackageSignatureValid()
+                && !isAppRunningOnEmulator()
+                && !isDeviceRooted()
+                && !areRootCloakingAppsInstalled()
+
+    override fun isPackageSignatureValid(): Boolean {
+        if (configLogic.appBuildType != AppBuildType.RELEASE) return true
+        return applicationPackageController.getSignature() == configLogic.packageSignature
+    }
+
     override fun isAppRunningOnEmulator(): Boolean =
         configLogic.appBuildType == AppBuildType.RELEASE
                 && (
@@ -79,10 +96,6 @@ class SecurityControllerImpl @Inject constructor(
                 && rootController.areRootCloakingAppsInstalled()
 
     override fun isApplicationSecure(): Flow<Boolean> = flow {
-        emit(
-            !isAppRunningOnEmulator()
-                    && !isDeviceRooted()
-                    && !areRootCloakingAppsInstalled()
-        )
+        emit(isApplicationSecure)
     }.flowOn(Dispatchers.IO)
 }

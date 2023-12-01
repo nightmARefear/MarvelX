@@ -1,6 +1,7 @@
 package com.alexgreece45.marvelx.ui.screens.splashScreen
 
 import android.app.Activity
+import android.os.Build
 import android.os.Build.VERSION.SDK_INT
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
@@ -46,7 +47,9 @@ fun SplashScreen(
             when (effect) {
                 SplashEffect.Navigation.NavigateToHomeScreen -> {
                     navController.navigate(Screen.RegisterScreens.HomeScreen.route) {
-                        popUpTo(Screen.RegisterScreens.HomeScreen.route)
+                        popUpTo(Screen.RegisterScreens.SplashScreen.route) {
+                            inclusive = true
+                        }
                     }
                 }
 
@@ -59,7 +62,7 @@ fun SplashScreen(
 
     val imageLoader = ImageLoader.Builder(LocalContext.current)
         .components {
-            if (SDK_INT >= 28) {
+            if (SDK_INT >= Build.VERSION_CODES.P) {
                 add(ImageDecoderDecoder.Factory())
             } else {
                 add(GifDecoder.Factory())
@@ -89,7 +92,7 @@ fun SplashScreen(
                 Image(
                     modifier = Modifier.fillMaxWidth(),
                     painter = rememberAsyncImagePainter(R.drawable.splash_animation, imageLoader),
-                    contentDescription = null,
+                    contentDescription = stringResource(R.string.content_description_splash_loading_animation)
                 )
             }
         }

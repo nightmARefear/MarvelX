@@ -77,14 +77,14 @@ class SplashViewModel @Inject constructor(
 
                 false -> {
                     setState {
-                       copy(
-                           isAnimationVisible = false,
-                           error = SplashScreenError(
-                               title = resourceProvider.getString(R.string.splash_screen_alert_dialog_title),
-                               errorMessage = resourceProvider.getString(R.string.splash_screen_alert_dialog_error_message),
-                               onCloseClick = SplashEvent.OnCloseClick
-                           )
-                       )
+                        copy(
+                            isAnimationVisible = false,
+                            error = SplashScreenError(
+                                title = resourceProvider.getString(R.string.splash_screen_alert_dialog_title),
+                                errorMessage = resourceProvider.getString(R.string.splash_screen_alert_dialog_error_message),
+                                onCloseClick = SplashEvent.OnCloseClick
+                            )
+                        )
                     }
                 }
             }

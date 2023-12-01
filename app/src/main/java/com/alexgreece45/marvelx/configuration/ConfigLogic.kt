@@ -8,12 +8,12 @@ import javax.inject.Singleton
 
 interface ConfigLogic {
     /**
-     * Returns the client ID.
+     * The client ID.
      */
     val clientId: String
 
     /**
-     * Returns the client secret.
+     * The client secret.
      */
     val clientSecret: String
 
@@ -43,9 +43,14 @@ interface ConfigLogic {
     val port: Int
 
     /**
-     * Returns the app's build type (i.e., debug, mock, or release).
+     * The app's build type (i.e., debug, mock, or release).
      */
     val appBuildType: AppBuildType
+
+    /**
+     * The package signature of this application.
+     */
+    val packageSignature: String
 }
 
 enum class AppBuildType {
@@ -78,4 +83,6 @@ class ConfigLogicImpl @Inject constructor() : ConfigLogic {
             BuildConfig.MARVELX_BACKEND_BASE_URL.split(":").last().toInt()
     override val appBuildType: AppBuildType
         get() = AppBuildType.getType()
+    override val packageSignature: String
+        get() = "K9sqm8e3aPgpA8Vxmp/D+M4oJEU="
 }

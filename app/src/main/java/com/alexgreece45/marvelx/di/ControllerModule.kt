@@ -1,5 +1,7 @@
 package com.alexgreece45.marvelx.di
 
+import com.alexgreece45.marvelx.controllers.ApplicationPackageController
+import com.alexgreece45.marvelx.controllers.ApplicationPackageControllerImpl
 import com.alexgreece45.marvelx.controllers.AuthController
 import com.alexgreece45.marvelx.controllers.AuthControllerImpl
 import com.alexgreece45.marvelx.controllers.PrefKeys
@@ -51,4 +53,8 @@ interface ControllerModule {
     @Binds
     @Singleton
     fun bindsSecurityController(impl: SecurityControllerImpl): SecurityController
+
+    @Binds
+    @Singleton
+    fun bindsApplicationPackageController(impl: ApplicationPackageControllerImpl): ApplicationPackageController
 }
