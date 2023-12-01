@@ -94,11 +94,11 @@ class HomeViewModel @Inject constructor(
             }
 
             HomeEvent.OnLogInButtonClick -> {
-                onLogInButtonClick()
+                onLoginButtonClick()
             }
 
             HomeEvent.OnSignUpButtonClick -> {
-                onSignUpButtonClick()
+                onSignupButtonClick()
             }
 
             HomeEvent.AlertDialog.OnOkClick -> {
@@ -281,13 +281,13 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    private fun onLogInButtonClick() {
+    private fun onLoginButtonClick() {
         setEffect {
             HomeEffect.Navigation.NavigateToLogInScreen
         }
     }
 
-    private fun onSignUpButtonClick() {
+    private fun onSignupButtonClick() {
         setEffect {
             HomeEffect.Navigation.NavigateToSignUpScreen
         }

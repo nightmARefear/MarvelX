@@ -2,6 +2,8 @@ package com.alexgreece45.marvelx.di
 
 import android.content.Context
 import com.alexgreece45.marvelx.BuildConfig
+import com.alexgreece45.marvelx.configuration.AppBuildType
+import com.alexgreece45.marvelx.configuration.ConfigLogic
 import com.alexgreece45.marvelx.data.domains.comic.ComicPriceType
 import com.alexgreece45.marvelx.data.domains.user.VerificationStep
 import com.alexgreece45.marvelx.util.gson.ComicPriceTypeAdapter
@@ -33,7 +35,8 @@ object NetworkModule {
     @Singleton
     fun provideOkHttpClient(
         @ApplicationContext context: Context,
-        interceptor: BaseUrlChangerAndAuthenticationInterceptor
+        interceptor: BaseUrlChangerAndAuthenticationInterceptor,
+        configLogic: ConfigLogic
     ): OkHttpClient {
         val okHttpClient = OkHttpClient.Builder()
 
@@ -56,15 +59,15 @@ object NetworkModule {
                     }
                 }
             ).apply {
-                level = when (BuildConfig.BUILD_TYPE != "release") {
-                    true -> HttpLoggingInterceptor.Level.BODY
-                    false -> HttpLoggingInterceptor.Level.NONE
+                level = when (configLogic.appBuildType) {
+                    AppBuildType.RELEASE -> HttpLoggingInterceptor.Level.NONE
+                    else -> HttpLoggingInterceptor.Level.BODY
                 }
             }
         )
 
         // Add "ChuckerInterceptor" only in non-release builds (debug, mock).
-        if (BuildConfig.BUILD_TYPE != "release") {
+        if (configLogic.appBuildType != AppBuildType.RELEASE) {
             okHttpClient.addInterceptor(ChuckerInterceptor(context))
         }
 

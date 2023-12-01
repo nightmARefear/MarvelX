@@ -10,7 +10,6 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -29,8 +28,6 @@ import com.alexgreece45.marvelx.ui.components.AlertDialogError
 import com.alexgreece45.marvelx.ui.components.ContainedButton
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.util.SPACING_SMALL
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.onEach
 
 @Composable
 fun HomeScreen(
@@ -109,13 +106,13 @@ fun HomeScreen(
         viewModel.uiEffect.collect { homeEffect ->
             when (homeEffect) {
                 HomeEffect.Navigation.NavigateToLogInScreen -> {
-                    navController.navigate(Screen.RegisterScreens.LogInScreen.route) {
+                    navController.navigate(Screen.RegisterScreens.LoginScreen.route) {
                         launchSingleTop = true
                     }
                 }
 
                 HomeEffect.Navigation.NavigateToSignUpScreen -> {
-                    navController.navigate(Screen.RegisterScreens.SignUpScreen.route) {
+                    navController.navigate(Screen.RegisterScreens.SignupScreen.route) {
                         launchSingleTop = true
                     }
                 }

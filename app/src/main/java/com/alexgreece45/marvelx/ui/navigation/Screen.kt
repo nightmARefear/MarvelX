@@ -3,7 +3,6 @@ package com.alexgreece45.marvelx.ui.navigation
 import androidx.navigation.NamedNavArgument
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
-import com.alexgreece45.marvelx.data.domains.user.VerificationStep
 
 sealed class Screen(
     protected val baseRoute: String,
@@ -71,22 +70,19 @@ sealed class Screen(
         fun createNavRoute(comicId: Int): String = "$baseRoute/$comicId"
     }
 
-    sealed class RegisterScreens(baseRoute: String) : Screen(baseRoute) {
+    sealed class RegisterScreens {
         companion object {
             private const val nestedGraphRootRoute: String = "registerScreens"
 
             fun getNestedGraphRootRoute(): String = nestedGraphRootRoute
 
-            fun getStartDestination(): String = HomeScreen.route
+            fun getStartDestination(): String = SplashScreen.route
         }
 
         data object HomeScreen : Screen(baseRoute = "homeScreen")
-
-
-        data object LogInScreen : Screen(baseRoute = "logInScreen")
-
-
-        data object SignUpScreen : Screen(baseRoute = "signUpScreen")
+        data object LoginScreen : Screen(baseRoute = "loginScreen")
+        data object SignupScreen : Screen(baseRoute = "signupScreen")
+        data object SplashScreen : Screen(baseRoute = "splashScreen")
     }
 
     data object OtpScreen : Screen(
