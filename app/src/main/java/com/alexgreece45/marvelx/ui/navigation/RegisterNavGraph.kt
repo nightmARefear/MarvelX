@@ -5,14 +5,13 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.navigation
 import com.alexgreece45.marvelx.ui.screens.otpScreen.OtpScreen
 import com.alexgreece45.marvelx.ui.screens.registerScreens.homeScreen.HomeScreen
-import com.alexgreece45.marvelx.ui.screens.registerScreens.loginScreen.LogInScreen
+import com.alexgreece45.marvelx.ui.screens.registerScreens.loginScreen.LoginScreen
 import com.alexgreece45.marvelx.ui.screens.registerScreens.signupScreen.SignUpScreen
 import com.alexgreece45.marvelx.ui.screens.splashScreen.SplashScreen
 
 @Suppress("FunctionName")
 fun NavGraphBuilder.RegisterNavGraph(
-    navController: NavController,
-    setUserId: (Int) -> Unit
+    navController: NavController
 ) =
     navigation(
         route = Screen.RegisterScreens.getNestedGraphRootRoute(),
@@ -24,19 +23,13 @@ fun NavGraphBuilder.RegisterNavGraph(
 
         composable(Screen.RegisterScreens.HomeScreen) {
             HomeScreen(
-                navController = navController,
-                setUserId = { userId ->
-                    setUserId.invoke(userId)
-                }
+                navController = navController
             )
         }
 
         composable(Screen.RegisterScreens.LoginScreen) {
-            LogInScreen(
-                navController = navController,
-                setUserId = { userId ->
-                    setUserId.invoke(userId)
-                }
+            LoginScreen(
+                navController = navController
             )
         }
 

@@ -1,6 +1,7 @@
 package com.alexgreece45.marvelx.interactors
 
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.controllers.AppLoggerController
 import com.alexgreece45.marvelx.data.domains.character.CharacterDomain
 import com.alexgreece45.marvelx.data.domains.comic.ComicDomain
 import com.alexgreece45.marvelx.data.models.character.comic.toComicDomainList
@@ -16,8 +17,6 @@ import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.extensions.safeAsync
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import logcat.LogPriority
-import logcat.logcat
 import okio.IOException
 import javax.inject.Inject
 
@@ -42,7 +41,8 @@ interface CharacterInteractor {
 class CharacterInteractorImpl @Inject constructor(
     private val characterRepository: CharacterRepository,
     private val favoriteCharactersRepository: FavoriteCharactersRepository,
-    private val resourceProvider: ResourceProvider
+    private val resourceProvider: ResourceProvider,
+    private val logger: AppLoggerController
 ) : CharacterInteractor {
     override suspend fun getAllCharacters(): Flow<GetAllCharactersPartialState> =
         flow {
@@ -72,7 +72,7 @@ class CharacterInteractorImpl @Inject constructor(
                 }
             }
         }.safeAsync {
-            logcat(LogPriority.ERROR) { "(getAllCharacters) error: ${it.message.orEmpty()}" }
+            logger.e { "(getAllCharacters) error: ${it.message.orEmpty()}" }
             when (it) {
                 is IOException -> {
                     GetAllCharactersPartialState.Failed(
@@ -176,7 +176,7 @@ class CharacterInteractorImpl @Inject constructor(
                 }
             }
         }.safeAsync {
-            logcat(LogPriority.ERROR) { "(getCharacterComics) error: ${it.message.orEmpty()}" }
+            logger.e { "(getCharacterComics) error: ${it.message.orEmpty()}" }
             when (it) {
                 is IOException -> {
                     GetCharacterComicsPartialState.NoInternetConnection
@@ -210,7 +210,7 @@ class CharacterInteractorImpl @Inject constructor(
                 }
             }
         }.safeAsync {
-            logcat(LogPriority.ERROR) { "(insertFavoriteCharacters) error: ${it.message.orEmpty()}" }
+            logger.e { "(insertFavoriteCharacters) error: ${it.message.orEmpty()}" }
             InsertFavoriteCharactersPartialState.Failed(
                 errorMessage = resourceProvider.getString(R.string.all_characters_screen_error_favoring_character)
             )
@@ -234,7 +234,7 @@ class CharacterInteractorImpl @Inject constructor(
                 }
             }
         }.safeAsync {
-            logcat(LogPriority.ERROR) { "(deleteFavoriteCharacterById) error: ${it.message.orEmpty()}" }
+            logger.e { "(deleteFavoriteCharacterById) error: ${it.message.orEmpty()}" }
             DeleteFavoriteCharacterByIdPartialState.Failed(
                 errorMessage = resourceProvider.getString(R.string.all_characters_screen_error_favoring_character)
             )
@@ -248,7 +248,7 @@ class CharacterInteractorImpl @Inject constructor(
                 )
             )
         }.safeAsync {
-            logcat(LogPriority.ERROR) { "(getFavoriteCharacters) error: ${it.message.orEmpty()}" }
+            logger.e { "(getFavoriteCharacters) error: ${it.message.orEmpty()}" }
             GetFavoriteCharactersPartialState.Failed(
                 errorMessage = resourceProvider.getString(R.string.all_characters_screen_error_retrieving_favorite_characters)
             )
@@ -262,7 +262,7 @@ class CharacterInteractorImpl @Inject constructor(
                 )
             )
         }.safeAsync {
-            logcat { it.localizedMessage ?: "" }
+            logger.d { it.localizedMessage ?: "" }
             GetFavoriteCharacterIdsPartialState.Failed(
                 errorMessage = resourceProvider.getString(R.string.all_characters_screen_error_retrieving_favorite_characters)
             )

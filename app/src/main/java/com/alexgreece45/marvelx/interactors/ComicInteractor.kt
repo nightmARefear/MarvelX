@@ -1,6 +1,7 @@
 package com.alexgreece45.marvelx.interactors
 
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.controllers.AppLoggerController
 import com.alexgreece45.marvelx.data.api.ApiClient
 import com.alexgreece45.marvelx.data.domains.comic.ComicDomain
 import com.alexgreece45.marvelx.data.models.character.comic.toComicDomain
@@ -8,7 +9,6 @@ import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.extensions.safeAsync
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import logcat.logcat
 import okio.IOException
 import javax.inject.Inject
 
@@ -18,7 +18,8 @@ interface ComicInteractor {
 
 class ComicInteractorImpl @Inject constructor(
     private val api: ApiClient,
-    private val resourceProvider: ResourceProvider
+    private val resourceProvider: ResourceProvider,
+    private val logger: AppLoggerController
 ) : ComicInteractor {
     override fun getComicById(comicId: Int): Flow<GetComicPartialState> = flow {
         val response = api.getComicById(comicId)
@@ -33,7 +34,7 @@ class ComicInteractorImpl @Inject constructor(
                             )
                         )
                     } else {
-                        logcat { comicDataWrapper.data.results[0].toComicDomain().toString() }
+                        logger.d { comicDataWrapper.data.results[0].toComicDomain().toString() }
                         emit(
                             GetComicPartialState.Success(
                                 comic = comicDataWrapper.data.results[0].toComicDomain()
@@ -75,5 +76,5 @@ class ComicInteractorImpl @Inject constructor(
 sealed interface GetComicPartialState {
     data class Success(val comic: ComicDomain) : GetComicPartialState
     data class Error(val errorMessage: String) : GetComicPartialState
-    object NoInternetConnection : GetComicPartialState
+    data object NoInternetConnection : GetComicPartialState
 }

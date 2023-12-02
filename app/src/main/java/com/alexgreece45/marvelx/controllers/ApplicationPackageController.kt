@@ -6,8 +6,6 @@ import android.os.Build
 import android.os.Build.VERSION.SDK_INT
 import android.util.Base64
 import com.alexgreece45.marvelx.util.ResourceProvider
-import logcat.LogPriority
-import logcat.logcat
 import java.security.MessageDigest
 import javax.inject.Inject
 
@@ -20,7 +18,8 @@ interface ApplicationPackageController {
 }
 
 class ApplicationPackageControllerImpl @Inject constructor(
-    private val resourceProvider: ResourceProvider
+    private val resourceProvider: ResourceProvider,
+    private val logger: AppLoggerController
 ) : ApplicationPackageController {
     override fun getSignature(): String {
         try {
@@ -60,7 +59,7 @@ class ApplicationPackageControllerImpl @Inject constructor(
             }
             return signatures.joinToString("")
         } catch (e: Exception) {
-            logcat(LogPriority.ERROR) { "${javaClass.simpleName}: e" }
+            logger.e { "${javaClass.simpleName}: e" }
         }
         return ""
     }

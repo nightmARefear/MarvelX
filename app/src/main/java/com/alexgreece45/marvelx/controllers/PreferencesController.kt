@@ -5,7 +5,6 @@ import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKeys
 import com.alexgreece45.marvelx.BuildConfig
 import com.alexgreece45.marvelx.util.ResourceProvider
-import logcat.logcat
 import javax.inject.Inject
 
 interface PreferencesController {
@@ -120,7 +119,8 @@ interface PrefKeys {
 }
 
 class PrefKeysImpl @Inject constructor(
-    private val preferencesController: PreferencesController
+    private val preferencesController: PreferencesController,
+    private val logger: AppLoggerController
 ) : PrefKeys {
 
     override fun containsUserId(): Boolean =
@@ -140,7 +140,7 @@ class PrefKeysImpl @Inject constructor(
         preferencesController.setInt(
             BuildConfig.ENCRYPTED_SHARED_PREFERENCES_KEY_USER_ID,
             userId
-        ).also { logcat { "(setUserId) user_id = $userId" } }
+        ).also { logger.d { "(setUserId) user_id = $userId" } }
 
     override fun setUserAuthData(userAuthData: String) =
         preferencesController.setString(

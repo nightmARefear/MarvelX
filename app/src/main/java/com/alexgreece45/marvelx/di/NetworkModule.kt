@@ -4,6 +4,7 @@ import android.content.Context
 import com.alexgreece45.marvelx.BuildConfig
 import com.alexgreece45.marvelx.configuration.AppBuildType
 import com.alexgreece45.marvelx.configuration.ConfigLogic
+import com.alexgreece45.marvelx.controllers.AppLoggerController
 import com.alexgreece45.marvelx.data.domains.comic.ComicPriceType
 import com.alexgreece45.marvelx.data.domains.user.VerificationStep
 import com.alexgreece45.marvelx.util.gson.ComicPriceTypeAdapter
@@ -18,7 +19,6 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import logcat.logcat
 import okhttp3.CertificatePinner
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -36,11 +36,12 @@ object NetworkModule {
     fun provideOkHttpClient(
         @ApplicationContext context: Context,
         interceptor: BaseUrlChangerAndAuthenticationInterceptor,
-        configLogic: ConfigLogic
+        configLogic: ConfigLogic,
+        logger: AppLoggerController
     ): OkHttpClient {
         val okHttpClient = OkHttpClient.Builder()
 
-        // Adds certificate pins.
+        // Add certificate pins.
         val certificatePinner = CertificatePinner.Builder()
             .add(
                 BuildConfig.MARVELX_BACKEND_DOMAIN,
@@ -52,13 +53,9 @@ object NetworkModule {
         // Add required interceptors.
         okHttpClient.addInterceptor(interceptor)
         okHttpClient.addInterceptor(
-            HttpLoggingInterceptor(
-                object : HttpLoggingInterceptor.Logger {
-                    override fun log(message: String) {
-                        logcat { message }
-                    }
-                }
-            ).apply {
+            HttpLoggingInterceptor { message ->
+                logger.d { message }
+            }.apply {
                 level = when (configLogic.appBuildType) {
                     AppBuildType.RELEASE -> HttpLoggingInterceptor.Level.NONE
                     else -> HttpLoggingInterceptor.Level.BODY

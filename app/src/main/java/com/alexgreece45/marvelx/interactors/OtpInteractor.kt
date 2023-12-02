@@ -1,6 +1,7 @@
 package com.alexgreece45.marvelx.interactors
 
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.controllers.AppLoggerController
 import com.alexgreece45.marvelx.data.domains.otp.OtpDomain
 import com.alexgreece45.marvelx.data.domains.otp.OtpErrorCause
 import com.alexgreece45.marvelx.data.domains.otp.OtpResponseErrorDomain
@@ -18,8 +19,6 @@ import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.extensions.safeAsync
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import logcat.LogPriority
-import logcat.logcat
 import okio.IOException
 import javax.inject.Inject
 
@@ -33,7 +32,8 @@ interface OtpInteractor {
 
 class OtpInteractorImpl @Inject constructor(
     private val repository: OtpRepository,
-    private val resourceProvider: ResourceProvider
+    private val resourceProvider: ResourceProvider,
+    private val logger: AppLoggerController
 ) : OtpInteractor {
     override suspend fun validateOtp(otp: String, userId: Int): Flow<ValidateOtpPartialState> =
         flow {
@@ -103,7 +103,7 @@ class OtpInteractorImpl @Inject constructor(
                 }
             }
         }.safeAsync {
-            logcat(LogPriority.ERROR) { "(validateOtp) error: ${it.message.orEmpty()}" }
+            logger.e { "(validateOtp) error: ${it.message.orEmpty()}" }
             when (it) {
                 is IOException -> {
                     ValidateOtpPartialState.Failed(
@@ -150,7 +150,7 @@ class OtpInteractorImpl @Inject constructor(
             }
         }
     }.safeAsync {
-        logcat(LogPriority.ERROR) { "(resendOtp) error: ${it.message.orEmpty()}" }
+        logger.e { "(resendOtp) error: ${it.message.orEmpty()}" }
         when (it) {
             is IOException -> {
                 ResendOtpPartialState.Error(

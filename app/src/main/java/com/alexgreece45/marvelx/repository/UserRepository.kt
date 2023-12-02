@@ -1,5 +1,6 @@
 package com.alexgreece45.marvelx.repository
 
+import com.alexgreece45.marvelx.controllers.AppLoggerController
 import com.alexgreece45.marvelx.data.api.ApiClient
 import com.alexgreece45.marvelx.data.models.sensitiveUserData.RequestSensitiveUserData
 import com.alexgreece45.marvelx.data.models.sensitiveUserData.ResponseSensitiveUserData
@@ -10,8 +11,6 @@ import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.helper.parseError
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import logcat.LogPriority
-import logcat.logcat
 import retrofit2.Response
 import javax.inject.Inject
 
@@ -50,6 +49,7 @@ interface UserRepository {
 class UserRepositoryImpl @Inject constructor(
     private val apiClient: ApiClient,
     private val resourceProvider: ResourceProvider,
+    private val logger: AppLoggerController
 ) : UserRepository {
     override suspend fun grandNewAccessToken(
         clientId: String,
@@ -68,7 +68,7 @@ class UserRepositoryImpl @Inject constructor(
                     emit(GrandNewAccessTokenRepositoryResponse.Success(response = response.body()))
                 } else {
                     val parsedError = parseError(response)
-                    logcat(LogPriority.ERROR) { "(grandNewAccessToken) failed: ${parsedError.errorMessage}" }
+                    logger.e { "(grandNewAccessToken) failed: ${parsedError.errorMessage}" }
                     emit(
                         GrandNewAccessTokenRepositoryResponse.Failed(
                             errorMessage = resourceProvider.getGenericErrorMessage()

@@ -9,8 +9,6 @@ import com.alexgreece45.marvelx.configuration.ConfigLogic
 import com.alexgreece45.marvelx.util.REFRESH_TOKEN_WORKER_NAME
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.worker.RefreshTokenWorker
-import logcat.LogPriority
-import logcat.logcat
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
@@ -22,7 +20,8 @@ interface RefreshTokenController {
 
 class RefreshTokenControllerImpl @Inject constructor(
     private val resourceProvider: ResourceProvider,
-    private val configLogic: ConfigLogic
+    private val configLogic: ConfigLogic,
+    private val logger: AppLoggerController
 ) : RefreshTokenController {
     override fun startWorker() {
         try {
@@ -42,10 +41,12 @@ class RefreshTokenControllerImpl @Inject constructor(
                     )
                     .build()
             )
-            logcat(LogPriority.INFO) { "Refresh token worker started." }
+            logger.i { "Refresh token worker started." }
         } catch (error: Exception) {
-            logcat(LogPriority.ERROR) { "Refresh token worker could NOT be started.\n" +
-                    "(startWorker) error: $error" }
+            logger.e {
+                "Refresh token worker could NOT be started.\n" +
+                        "(startWorker) error: $error"
+            }
             throw error
         }
     }
@@ -53,6 +54,6 @@ class RefreshTokenControllerImpl @Inject constructor(
     override fun stopWorker() {
         WorkManager.getInstance(resourceProvider.getContext())
             .cancelUniqueWork(REFRESH_TOKEN_WORKER_NAME)
-        logcat(LogPriority.INFO) { "Refresh token worker stopped." }
+        logger.i { "Refresh token worker stopped." }
     }
 }

@@ -1,8 +1,9 @@
 package com.alexgreece45.marvelx.interactors
 
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.controllers.AuthController
 import com.alexgreece45.marvelx.configuration.ConfigLogic
+import com.alexgreece45.marvelx.controllers.AppLoggerController
+import com.alexgreece45.marvelx.controllers.AuthController
 import com.alexgreece45.marvelx.controllers.PrefKeys
 import com.alexgreece45.marvelx.controllers.RefreshTokenController
 import com.alexgreece45.marvelx.data.domains.sensitiveUserData.SensitiveUserDataDomain
@@ -21,8 +22,6 @@ import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.extensions.safeAsync
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import logcat.LogPriority
-import logcat.logcat
 import okio.IOException
 import javax.inject.Inject
 
@@ -44,7 +43,8 @@ class UserInteractorImpl @Inject constructor(
     private val configLogic: ConfigLogic,
     private val authController: AuthController,
     private val refreshTokenController: RefreshTokenController,
-    private val prefKeys: PrefKeys
+    private val prefKeys: PrefKeys,
+    private val logger: AppLoggerController
 ) : UserInteractor {
     override suspend fun logout(): Flow<LogoutPartialState> = flow {
         val genericErrorMessage = resourceProvider.getGenericErrorMessage()
@@ -81,7 +81,7 @@ class UserInteractorImpl @Inject constructor(
             }
         }
     }.safeAsync {
-        logcat(LogPriority.ERROR) { "(logout) error: ${it.message.orEmpty()}" }
+        logger.e { "(logout) error: ${it.message.orEmpty()}" }
         when (it) {
             is IOException -> {
                 LogoutPartialState.Failed(
@@ -134,7 +134,7 @@ class UserInteractorImpl @Inject constructor(
                 }
             }
         }.safeAsync {
-            logcat(LogPriority.ERROR) { "(grandNewAccessToken) error: ${it.message.orEmpty()}" }
+            logger.e { "(grandNewAccessToken) error: ${it.message.orEmpty()}" }
             when (it) {
                 is IOException -> GrandNewAccessTokenPartialState.Failed(
                     errorMessage = resourceProvider.getNoInternetConnectionMessage()
@@ -190,7 +190,7 @@ class UserInteractorImpl @Inject constructor(
             }
         }
     }.safeAsync {
-        logcat(LogPriority.ERROR) { "(refreshAccessToken) error: ${it.message.orEmpty()}" }
+        logger.e { "(refreshAccessToken) error: ${it.message.orEmpty()}" }
         when (it) {
             is IOException -> RefreshAccessTokenPartialState.Failed(
                 errorMessage = resourceProvider.getNoInternetConnectionMessage()
@@ -223,7 +223,7 @@ class UserInteractorImpl @Inject constructor(
                 }
             }
         }.safeAsync {
-            logcat(LogPriority.ERROR) { "(getProfileDetails) error: ${it.message.orEmpty()}" }
+            logger.e { "(getProfileDetails) error: ${it.message.orEmpty()}" }
             when (it) {
                 is IOException -> GetProfileDetailsPartialState.NoInternetConnection(
                     errorMessage = resourceProvider.getString(R.string.no_internet_connection_error_message)
@@ -278,7 +278,7 @@ class UserInteractorImpl @Inject constructor(
                 }
             }
         }.safeAsync {
-            logcat(LogPriority.ERROR) { "(getSensitiveUserData) error: ${it.message}" }
+            logger.e { "(getSensitiveUserData) error: ${it.message}" }
             when (it) {
                 is IOException -> GetSensitiveUserDataPartialState.Failed(errorMessage = resourceProvider.getNoInternetConnectionMessage())
                 else -> GetSensitiveUserDataPartialState.Failed(errorMessage = resourceProvider.getGenericErrorMessage())

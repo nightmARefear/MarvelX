@@ -28,23 +28,21 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.viewModels.LoginEffect
-import com.alexgreece45.marvelx.viewModels.LoginEvent
-import com.alexgreece45.marvelx.viewModels.LoginViewModel
-import com.alexgreece45.marvelx.ui.navigation.Screen
 import com.alexgreece45.marvelx.ui.components.AlertDialogButton
 import com.alexgreece45.marvelx.ui.components.AlertDialogError
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.OutlinedTextFieldValidation
 import com.alexgreece45.marvelx.ui.components.ValueType
+import com.alexgreece45.marvelx.ui.navigation.Screen
 import com.alexgreece45.marvelx.util.SPACING_MEDIUM
-import logcat.logcat
+import com.alexgreece45.marvelx.viewModels.LoginEffect
+import com.alexgreece45.marvelx.viewModels.LoginEvent
+import com.alexgreece45.marvelx.viewModels.LoginViewModel
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
-fun LogInScreen(
+fun LoginScreen(
     navController: NavController,
-    setUserId: (Int) -> Unit,
     viewModel: LoginViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -58,10 +56,6 @@ fun LogInScreen(
         viewModel.uiEffect.collect { effect ->
             when (effect) {
                 is LoginEffect.Navigation.NavigateToAllCharactersScreen -> {
-                    // Login was successful so store the userId in the activity viewModel's state. TODO: to be removed
-                    setUserId.invoke(effect.userId)
-
-                    logcat { "user id (${effect.userId}) in activityViewModel state was inserted." }
                     navController.navigate(Screen.BottomNavigationScreens.AllCharactersScreen.route) {
                         popUpTo(Screen.RegisterScreens.getNestedGraphRootRoute()) {
                             inclusive = true
@@ -70,7 +64,6 @@ fun LogInScreen(
                 }
 
                 is LoginEffect.Navigation.NavigateToOtpScreen -> {
-                    logcat { "effect.userId = ${effect.userId}" }
                     navController.navigate(
                         Screen.OtpScreen.createNavRoute(
                             userId = effect.userId,
@@ -87,7 +80,7 @@ fun LogInScreen(
                 }
 
                 LoginEffect.Navigation.PopBackStack -> {
-                    navController.popBackStack().also { logcat { "LoginScreen: popBackStack" } }
+                    navController.popBackStack()
                 }
 
                 is LoginEffect.ShowErrorDialog -> {

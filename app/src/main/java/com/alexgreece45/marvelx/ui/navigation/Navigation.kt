@@ -11,8 +11,7 @@ import com.alexgreece45.marvelx.viewModels.ActivityState
 
 @Composable
 fun Navigation(
-    activityState: State<ActivityState>,
-    setUserId: (Int) -> Unit
+    activityState: State<ActivityState>
 ) {
     val navController = rememberNavController()
 
@@ -21,7 +20,7 @@ fun Navigation(
         startDestination = Screen.getStartDestination()
     ) {
         // Register screens.
-        RegisterNavGraph(navController = navController, setUserId = setUserId)
+        RegisterNavGraph(navController = navController)
 
         // Main screens.
         MainNavGraph(navController = navController, activityState = activityState)
