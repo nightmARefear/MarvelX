@@ -14,7 +14,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.core.content.ContextCompat
 import androidx.work.WorkManager
-import com.alexgreece45.marvelx.BuildConfig
+import com.alexgreece45.marvelx.controllers.AppLoggerController
 import com.alexgreece45.marvelx.ui.navigation.Navigation
 import com.alexgreece45.marvelx.ui.theme.MarvelXTheme
 import com.alexgreece45.marvelx.util.REFRESH_TOKEN_WORKER_NAME
@@ -22,10 +22,13 @@ import com.alexgreece45.marvelx.viewModels.ActivityEvent
 import com.alexgreece45.marvelx.viewModels.ActivityViewModel
 import com.chuckerteam.chucker.api.Chucker
 import dagger.hilt.android.AndroidEntryPoint
-import logcat.logcat
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
+    @Inject
+    lateinit var logger: AppLoggerController
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,14 +41,7 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colors.background
                 ) {
                     Navigation(
-                        activityState = activityViewModel.uiState.collectAsState(),
-                        setUserId = { userId ->
-                            activityViewModel.setEvent(
-                                ActivityEvent.SetUserId(
-                                    userId = userId
-                                )
-                            )
-                        }
+                        activityState = activityViewModel.uiState.collectAsState()
                     )
                     ChuckerPermissions()
                 }
@@ -60,7 +56,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        logcat { "MainActivity's onDestroy called." }
+        logger.d { "MainActivity's onDestroy called." }
 
         // Cancel worker when the app closes.
         WorkManager.getInstance(this).cancelUniqueWork(REFRESH_TOKEN_WORKER_NAME)

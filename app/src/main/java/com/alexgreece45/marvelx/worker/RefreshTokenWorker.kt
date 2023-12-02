@@ -5,6 +5,7 @@ import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.alexgreece45.marvelx.configuration.ConfigLogic
+import com.alexgreece45.marvelx.controllers.AppLoggerController
 import com.alexgreece45.marvelx.controllers.AuthController
 import com.alexgreece45.marvelx.data.api.ApiClient
 import com.alexgreece45.marvelx.data.domains.userAuthData.UserAuthData
@@ -13,8 +14,6 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import logcat.LogPriority
-import logcat.logcat
 
 @HiltWorker
 class RefreshTokenWorker @AssistedInject constructor(
@@ -22,7 +21,8 @@ class RefreshTokenWorker @AssistedInject constructor(
     @Assisted workerParameters: WorkerParameters,
     @Assisted private val apiClient: ApiClient,
     @Assisted private val authController: AuthController,
-    @Assisted private val configLogic: ConfigLogic
+    @Assisted private val configLogic: ConfigLogic,
+    @Assisted private val logger: AppLoggerController
 ) : CoroutineWorker(context, workerParameters) {
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
         try {
@@ -56,7 +56,7 @@ class RefreshTokenWorker @AssistedInject constructor(
                                         )
                                     )
 
-                                    logcat(LogPriority.INFO) { "Access token was successfully refreshed." }
+                                    logger.i { "Access token was successfully refreshed." }
                                     Result.success()
                                 } ?: failure("Refresh access token body is null.")
                             } else {
@@ -76,7 +76,7 @@ class RefreshTokenWorker @AssistedInject constructor(
     }
 
     private fun failure(errorMessage: String): Result {
-        logcat(LogPriority.ERROR) { "(RefreshTokenWorker#doWork) error message: $errorMessage" }
+        logger.e { "(RefreshTokenWorker#doWork) error message: $errorMessage" }
         return Result.failure()
     }
 }

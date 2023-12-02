@@ -1,5 +1,6 @@
 package com.alexgreece45.marvelx.viewModels
 
+import com.alexgreece45.marvelx.controllers.AppLoggerController
 import com.alexgreece45.marvelx.controllers.AuthController
 import com.alexgreece45.marvelx.controllers.PrefKeys
 import com.alexgreece45.marvelx.mvi.BaseEffect
@@ -7,7 +8,6 @@ import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
 import com.alexgreece45.marvelx.mvi.BaseViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
-import logcat.logcat
 import javax.inject.Inject
 
 sealed class ActivityEvent : BaseEvent {
@@ -32,7 +32,8 @@ sealed class ActivityEffect : BaseEffect
 @HiltViewModel
 class ActivityViewModel @Inject constructor(
     private val authController: AuthController,
-    private val prefKeys: PrefKeys
+    private val prefKeys: PrefKeys,
+    private val logger: AppLoggerController
 ) : BaseViewModel<ActivityEvent, ActivityState, ActivityEffect>() {
     override fun setInitialState(): ActivityState {
         return ActivityState.getDefaultValues()
@@ -56,11 +57,11 @@ class ActivityViewModel @Inject constructor(
 
     private fun initView() {
         authController.getAccessToken()?.let { accessToken ->
-            logcat { "accessToken : $accessToken" }
+            logger.d { "accessToken : $accessToken" }
         }
         authController.getRefreshToken()?.let { refreshToken ->
-            logcat { "refreshToken : $refreshToken" }
+            logger.d { "refreshToken : $refreshToken" }
         }
-        logcat { "authData: ${prefKeys.getUserAuthData()}" }
+        logger.d { "authData: ${prefKeys.getUserAuthData()}" }
     }
 }

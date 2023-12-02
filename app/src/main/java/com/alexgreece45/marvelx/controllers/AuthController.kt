@@ -3,7 +3,6 @@ package com.alexgreece45.marvelx.controllers
 import com.alexgreece45.marvelx.data.domains.userAuthData.UserAuthData
 import com.alexgreece45.marvelx.util.DateUtil
 import com.google.gson.Gson
-import logcat.logcat
 import javax.inject.Inject
 
 interface AuthController {
@@ -44,7 +43,8 @@ interface AuthController {
 }
 
 class AuthControllerImpl @Inject constructor(
-    private val prefKeys: PrefKeys
+    private val prefKeys: PrefKeys,
+    private val logger: AppLoggerController
 ) : AuthController {
     private val userAuthData: UserAuthData?
         get() {
@@ -54,7 +54,7 @@ class AuthControllerImpl @Inject constructor(
                     UserAuthData::class.java
                 )
             } catch (e: Exception) {
-                logcat("AuthController") { "User authentication data is null." }
+                logger.d("AuthController") { "User authentication data is null." }
                 null
             }
         }

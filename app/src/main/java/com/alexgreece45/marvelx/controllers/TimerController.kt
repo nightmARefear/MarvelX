@@ -2,7 +2,6 @@ package com.alexgreece45.marvelx.controllers
 
 import com.alexgreece45.marvelx.util.DateUtil
 import com.alexgreece45.marvelx.util.extensions.pad
-import logcat.logcat
 import java.util.Timer
 import javax.inject.Inject
 import kotlin.concurrent.fixedRateTimer
@@ -32,7 +31,9 @@ interface TimerController {
     fun stopTimer()
 }
 
-class TimerControllerImpl @Inject constructor() : TimerController {
+class TimerControllerImpl @Inject constructor(
+    private val logger: AppLoggerController
+) : TimerController {
     private var remainingNumberOfSeconds: Duration = ZERO
     private lateinit var timer: Timer
 
@@ -81,7 +82,7 @@ class TimerControllerImpl @Inject constructor() : TimerController {
 
             updateTimeUnits()
             onTick(
-                formattedTime.also { logcat { "remaining time: $it" } },
+                formattedTime.also { logger.d { "remaining time: $it" } },
                 isLastSecond
             )
         }

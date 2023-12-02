@@ -94,7 +94,7 @@ fun NavGraphBuilder.MainNavGraph(
         composable(Screen.BottomNavigationScreens.ProfileScreen) {
             ProfileScreen(
                 navigateToHomeScreen = {
-                    navController.navigate(Screen.RegisterScreens.getNestedGraphRootRoute()) {
+                    navController.navigate(Screen.RegisterScreens.HomeScreen.route) {
                         popUpTo(Screen.BottomNavigationScreens.getNestedGraphRootRoute()) {
                             inclusive = true
                         }

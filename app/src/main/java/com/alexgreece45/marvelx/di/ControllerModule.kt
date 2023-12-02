@@ -4,6 +4,8 @@ import com.alexgreece45.marvelx.controllers.ApplicationPackageController
 import com.alexgreece45.marvelx.controllers.ApplicationPackageControllerImpl
 import com.alexgreece45.marvelx.controllers.AuthController
 import com.alexgreece45.marvelx.controllers.AuthControllerImpl
+import com.alexgreece45.marvelx.controllers.AppLoggerController
+import com.alexgreece45.marvelx.controllers.AppLoggerControllerImpl
 import com.alexgreece45.marvelx.controllers.PrefKeys
 import com.alexgreece45.marvelx.controllers.PrefKeysImpl
 import com.alexgreece45.marvelx.controllers.PreferencesController
@@ -57,4 +59,8 @@ interface ControllerModule {
     @Binds
     @Singleton
     fun bindsApplicationPackageController(impl: ApplicationPackageControllerImpl): ApplicationPackageController
+
+    @Binds
+    @Singleton
+    fun bindsAppLoggerController(impl: AppLoggerControllerImpl): AppLoggerController
 }

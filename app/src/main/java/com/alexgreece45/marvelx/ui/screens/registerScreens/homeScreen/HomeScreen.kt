@@ -19,20 +19,19 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.viewModels.HomeEffect
-import com.alexgreece45.marvelx.viewModels.HomeEvent
-import com.alexgreece45.marvelx.viewModels.HomeViewModel
-import com.alexgreece45.marvelx.ui.navigation.Screen
 import com.alexgreece45.marvelx.ui.components.AlertDialogButton
 import com.alexgreece45.marvelx.ui.components.AlertDialogError
 import com.alexgreece45.marvelx.ui.components.ContainedButton
 import com.alexgreece45.marvelx.ui.components.ContentScreen
+import com.alexgreece45.marvelx.ui.navigation.Screen
 import com.alexgreece45.marvelx.util.SPACING_SMALL
+import com.alexgreece45.marvelx.viewModels.HomeEffect
+import com.alexgreece45.marvelx.viewModels.HomeEvent
+import com.alexgreece45.marvelx.viewModels.HomeViewModel
 
 @Composable
 fun HomeScreen(
     navController: NavController,
-    setUserId: (Int) -> Unit,
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -118,9 +117,6 @@ fun HomeScreen(
                 }
 
                 is HomeEffect.Navigation.NavigateToAllCharactersScreen -> {
-                    // Login was successful so store the userId in the activity viewModel's state.
-                    setUserId.invoke(homeEffect.userId)
-
                     navController.navigate(Screen.BottomNavigationScreens.AllCharactersScreen.route) {
                         popUpTo(Screen.RegisterScreens.getNestedGraphRootRoute()) {
                             inclusive = true

@@ -1,6 +1,7 @@
 package com.alexgreece45.marvelx.interactors
 
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.controllers.AppLoggerController
 import com.alexgreece45.marvelx.controllers.RefreshTokenController
 import com.alexgreece45.marvelx.data.domains.jwtSensitiveUserData.JwtSensitiveUserDataDomain
 import com.alexgreece45.marvelx.data.domains.user.VerificationStep
@@ -24,8 +25,6 @@ import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.extensions.safeAsync
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import logcat.LogPriority
-import logcat.logcat
 import okio.IOException
 import javax.inject.Inject
 
@@ -45,7 +44,8 @@ interface RegisterInteractor {
 class RegisterInteractorImpl @Inject constructor(
     private val repository: RegisterRepository,
     private val resourceProvider: ResourceProvider,
-    private val refreshTokenController: RefreshTokenController
+    private val refreshTokenController: RefreshTokenController,
+    private val logger: AppLoggerController
 ) : RegisterInteractor {
     override suspend fun postSignup(userSignupRequest: UserSignupRequest): Flow<PostSignupPartialState> =
         flow {
@@ -76,7 +76,7 @@ class RegisterInteractorImpl @Inject constructor(
                 }
             }
         }.safeAsync {
-            logcat(LogPriority.ERROR) { "(postSignup) error: ${it.message.orEmpty()}" }
+            logger.e { "(postSignup) error: ${it.message.orEmpty()}" }
             when (it) {
                 is IOException -> {
                     PostSignupPartialState.Failed(
@@ -120,7 +120,7 @@ class RegisterInteractorImpl @Inject constructor(
                 }
             }
         }.safeAsync {
-            logcat(LogPriority.ERROR) { "(postLogin) error: ${it.message.orEmpty()}" }
+            logger.e { "(postLogin) error: ${it.message.orEmpty()}" }
             when (it) {
                 is IOException -> {
                     PostLoginPartialState.Failed(
@@ -148,7 +148,8 @@ class RegisterInteractorImpl @Inject constructor(
 
                     is PostLoginWithTokenRepositoryResponse.Success -> {
                         it.response?.let { loginWithTokenResponse ->
-                            val userLoginWithTokenResponseDomain = loginWithTokenResponse.toUserLoginWithTokenResponseDomain()
+                            val userLoginWithTokenResponseDomain =
+                                loginWithTokenResponse.toUserLoginWithTokenResponseDomain()
 
                             // Start refresh token worker if there is no verification step pending (i.e., `VerificationStep.None`).
                             if (userLoginWithTokenResponseDomain.verificationStep is VerificationStep.None) {
@@ -166,7 +167,7 @@ class RegisterInteractorImpl @Inject constructor(
                 }
             }
         }.safeAsync {
-            logcat(LogPriority.ERROR) { "(postLoginWithToken) error: ${it.message.orEmpty()}" }
+            logger.e { "(postLoginWithToken) error: ${it.message.orEmpty()}" }
             when (it) {
                 is IOException -> {
                     PostLoginWithTokenPartialState.Failed(
@@ -219,7 +220,7 @@ class RegisterInteractorImpl @Inject constructor(
             }
         }
     }.safeAsync {
-        logcat(LogPriority.ERROR) { "(getJwtForSensitiveUserData) error: ${it.message.orEmpty()}" }
+        logger.e { "(getJwtForSensitiveUserData) error: ${it.message.orEmpty()}" }
         when (it) {
             is IOException -> {
                 GetJwtForSensitiveUserDataPartialState.Failed(
