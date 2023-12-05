@@ -100,7 +100,7 @@ class PreferencesControllerImpl @Inject constructor(
 interface PrefKeys {
     fun containsUserId(): Boolean
     fun containsUserCredentials(): Boolean
-    fun containsUserAccessData(): Boolean
+    fun containsUserAuthData(): Boolean
 
     fun getUserId(): Int
     fun getUserAuthData(): String
@@ -126,8 +126,8 @@ class PrefKeysImpl @Inject constructor(
     override fun containsUserId(): Boolean =
         preferencesController.containsKey(BuildConfig.ENCRYPTED_SHARED_PREFERENCES_KEY_USER_ID)
 
-    override fun containsUserCredentials(): Boolean = containsUserId() && containsUserAccessData()
-    override fun containsUserAccessData(): Boolean =
+    override fun containsUserCredentials(): Boolean = containsUserId() && containsUserAuthData()
+    override fun containsUserAuthData(): Boolean =
         preferencesController.containsKey("UserAuthData")
 
     override fun getUserId(): Int =
@@ -149,7 +149,7 @@ class PrefKeysImpl @Inject constructor(
         )
 
     override fun removeUserId() =
-        preferencesController.remove(BuildConfig.ENCRYPTED_SHARED_PREFERENCES_KEY_USER_TOKEN)
+        preferencesController.remove(BuildConfig.ENCRYPTED_SHARED_PREFERENCES_KEY_USER_ID)
 
     override fun removeUserAuthData() =
         preferencesController.remove("UserAuthData")

@@ -1,6 +1,7 @@
 package com.alexgreece45.marvelx.controllers
 
 import android.os.Build
+import android.os.Debug
 import com.alexgreece45.marvelx.configuration.AppBuildType
 import com.alexgreece45.marvelx.configuration.ConfigLogic
 import kotlinx.coroutines.Dispatchers
@@ -14,6 +15,21 @@ interface SecurityController {
      * Checks whether the package signature is valid, and returns `true` if it, otherwise `false`.
      */
     fun isPackageSignatureValid(): Boolean
+
+    /**
+     * Checks whether the application allows debugging of its code , even when installed on a
+     * non-development system. Comes from `android:debuggable` of the `<application>` tag in
+     * `AndroidManifest`.
+     *
+     * @return Returns `true` if the application allows debugging of its code, otherwise `false`.
+     */
+    fun isAppDebuggable(): Boolean
+
+    /**
+     * Checks whether a debugger has been attached to the application, and returns `true` if it has,
+     * otherwise `false`.
+     */
+    fun isDebuggerAttached(): Boolean
 
     /**
      * Checks whether the app is running on an emulator, and returns `true` if it is otherwise
@@ -39,10 +55,10 @@ interface SecurityController {
     fun areRootCloakingAppsInstalled(): Boolean
 
     /**
-     * Checks whether this application is running on a secure device and/or if it has been tampered with.
+     * Checks whether this application is running on a secure device and/or if it has been tampered
+     * with.
      *
-     * ### Note: This condition doesn't guarantee that the device is secure, or that the application
-     * hasn't been tampered with.
+     * ### Note: This condition doesn't guarantee that the device is secure, or that the application hasn't been tampered with.
      */
     fun isApplicationSecure(): Flow<Boolean>
 }
@@ -54,6 +70,8 @@ class SecurityControllerImpl @Inject constructor(
 ) : SecurityController {
     private val isApplicationSecure: Boolean
         get() = isPackageSignatureValid()
+                && !isDebuggerAttached()
+                && !isAppDebuggable()
                 && !isAppRunningOnEmulator()
                 && !isDeviceRooted()
                 && !areRootCloakingAppsInstalled()
@@ -62,6 +80,14 @@ class SecurityControllerImpl @Inject constructor(
         if (configLogic.appBuildType != AppBuildType.RELEASE) return true
         return applicationPackageController.getSignature() == configLogic.packageSignature
     }
+
+    override fun isAppDebuggable(): Boolean =
+        configLogic.appBuildType == AppBuildType.RELEASE
+                && applicationPackageController.isAppDebuggable()
+
+    override fun isDebuggerAttached(): Boolean =
+        configLogic.appBuildType == AppBuildType.RELEASE
+                && Debug.isDebuggerConnected()
 
     override fun isAppRunningOnEmulator(): Boolean =
         configLogic.appBuildType == AppBuildType.RELEASE
