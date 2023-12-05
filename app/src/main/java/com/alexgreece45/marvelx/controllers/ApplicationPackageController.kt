@@ -1,5 +1,6 @@
 package com.alexgreece45.marvelx.controllers
 
+import android.content.pm.ApplicationInfo
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.os.Build
@@ -15,6 +16,15 @@ interface ApplicationPackageController {
      * If no signatures were found, or an error occurred, an empty [String] is returned.
      */
     fun getSignature(): String
+
+    /**
+     * Checks whether the application allows debugging of its code , even when installed on a
+     * non-development system. Comes from `android:debuggable` of the `<application>` tag in
+     * `AndroidManifest`.
+     *
+     * @return Returns `true` if the application allows debugging of its code, otherwise `false`.
+     */
+    fun isAppDebuggable(): Boolean
 }
 
 class ApplicationPackageControllerImpl @Inject constructor(
@@ -63,4 +73,7 @@ class ApplicationPackageControllerImpl @Inject constructor(
         }
         return ""
     }
+
+    override fun isAppDebuggable(): Boolean =
+        0 != resourceProvider.getContext().applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE
 }
