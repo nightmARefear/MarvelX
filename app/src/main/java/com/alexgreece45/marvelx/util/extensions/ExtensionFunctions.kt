@@ -1,6 +1,5 @@
 package com.alexgreece45.marvelx.util.extensions
 
-import android.util.Patterns
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.contentColorFor
@@ -15,8 +14,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flowOn
-import java.math.BigInteger
-import java.security.MessageDigest
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.ZoneId
@@ -28,19 +25,6 @@ fun <T> Flow<T>.safeAsync(with: (Throwable) -> (T)): Flow<T> {
 fun OffsetDateTime.toSystemLocalDateTime(): LocalDateTime =
     this.atZoneSameInstant(ZoneId.systemDefault()).toLocalDateTime()
 
-/**
- * Used to return an alternative non-null value, if the given value
- * was null. This extension function is a replacement for the
- * elvis operator.
- *
- * @param other the alternative value
- *
- * @return returns the first value if it is not null, otherwise
- * the value "other"
- * */
-inline fun <reified Any> Any?.or(other: Any): Any = this ?: other
-
-//fun LocalDateTime.toOffsetDateTimeUTC() : OffsetDateTime = OffsetDateTime.parse(this.toString())
 fun LocalDateTime.toOffsetDateTime(): OffsetDateTime = OffsetDateTime.parse(this.toString())
 
 /**

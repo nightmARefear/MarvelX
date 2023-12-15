@@ -28,7 +28,11 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 sealed class OtpEvent : BaseEvent {
-    data class InitView(val userId: Int?, val verificationStep: String?) : OtpEvent()
+    data class InitView(
+        val userId: Int?,
+        val verificationStep: String?,
+        val shouldRememberUserSession: Boolean?
+    ) : OtpEvent()
 
     data class OnOtpFieldValueChange(val otp: String) : OtpEvent()
 
@@ -57,6 +61,11 @@ data class OtpState(
      * The verification step.
      */
     val verificationStep: VerificationStep = VerificationStep.Invalid(""),
+
+    /**
+     * Defines if the application should remember the session when the user exits the app.
+     */
+    val shouldRememberUserSession: Boolean = false,
 
     /**
      * The OTP that the user has entered in the TextField.
@@ -112,7 +121,7 @@ class OtpViewModel @Inject constructor(
                         isLoading = true
                     )
                 }
-                initView(event.userId, event.verificationStep)
+                initView(event.userId, event.verificationStep, event.shouldRememberUserSession)
             }
 
             is OtpEvent.OnOtpFieldValueChange -> {
@@ -140,9 +149,13 @@ class OtpViewModel @Inject constructor(
         }
     }
 
-    private fun initView(userId: Int?, verificationStep: String?) {
-        if (userId == null || verificationStep == null) {
-            // User id and/or verification step is null, so go back to the previous screen by displaying that an unknown error occurred.
+    private fun initView(
+        userId: Int?,
+        verificationStep: String?,
+        shouldRememberUserSession: Boolean?
+    ) {
+        if (userId == null || verificationStep == null || shouldRememberUserSession == null) {
+            // User id and/or verification step is null, and/or remember user session is null so go back to the previous screen by displaying that an unknown error occurred.
             setEffect {
                 OtpEffect.Navigation.NavigateToPreviousScreenWithError(
                     errorMessage = resourceProvider.getGenericErrorMessage()
@@ -154,7 +167,8 @@ class OtpViewModel @Inject constructor(
         setState {
             copy(
                 userId = userId,
-                verificationStep = VerificationStep.of(verificationStep)
+                verificationStep = VerificationStep.of(verificationStep),
+                shouldRememberUserSession = shouldRememberUserSession
             )
         }
 
@@ -432,6 +446,12 @@ class OtpViewModel @Inject constructor(
 
                         // Save userId in device.
                         prefKeys.setUserId(currentState.userId)
+
+                        // User is now logged in. Save the flag.
+                        prefKeys.setUserLoggedIn(isLoggedIn = true)
+
+                        // Save remember user session flag.
+                        prefKeys.setRememberUserSession(currentState.shouldRememberUserSession)
 
                         // Navigate the client to AllCharactersScreen
                         setEffect {

@@ -31,11 +31,16 @@
     <string name="splash_screen_alert_dialog_error_message">It has been detected that this device is either an emulator or rooted, or the application package has been tampered with.</string>
     <string name="splash_screen_alert_dialog_confirm_button">close</string>
 
+    // Session status
+    <string name="session_status_session_has_expired_alert_dialog_title">Session expired</string>
+    <string name="session_status_session_has_expired_alert_dialog_error_message">Your session has expired!</string>
+
     // Sorting
     <string name="close">close</string>
     <string name="sort_by">Sort by</string>
 
-    // Bottom Navigation (Root Screen: AllCharactersScreen, Other Screens: AllFavoriteCharactersScreen, ProfileScreen)
+    // Bottom Navigation (Root Screen: AllCharactersScreen, Other Screens:
+    AllFavoriteCharactersScreen, ProfileScreen)
     <string name="bottom_navigation_label_characters">Characters</string>
     <string name="bottom_navigation_label_favorites">Favorites</string>
     <string name="bottom_navigation_label_profile">Profile</string>
@@ -100,23 +105,21 @@
     <string name="login_screen_input_field_label_email">Email</string>
     <string name="login_screen_input_field_label_password">Password</string>
 
-    <string name="login_screen_input_field_placeholder_email">john.doe@email.com</string>
-    <string name="log_in_screen_input_field_placeholder_password">hJRVkVtX39Ud!%XIFn9)ui5+K</string>
+    <string name="login_screen_remember_me">Remember Me?</string>
+    <string name="login_screen_do_not_have_an_account">Don\'t have an account? Signup</string>
 
     <string name="login_screen_alert_dialog_title">Login failed</string>
-
     <string name="login_screen_input_field_error_blank_email">Email cannot be blank.</string>
     <string name="login_screen_input_field_error_blank_password">Password cannot be blank.</string>
+    <string name="login_screen_input_field_error_min_length_email">Email\'s length cannot be less than %1$s characters.</string>
+    <string name="login_screen_input_field_error_min_length_password">Password\'s length cannot be less than %1$s characters.</string>
+    <string name="login_screen_input_field_error_max_length_email">Email\'s length cannot be more than %1$s characters.</string>
+    <string name="login_screen_input_field_error_max_length_password">Password\'s length cannot be more than %1$s characters.</string>
+    <string name="login_screen_input_field_error_validate_email_email">Email is invalid.</string>
 
-    <string name="log_in_screen_input_field_error_min_length_email">Email\'s length cannot be less than %1$s characters.</string>
-    <string name="log_in_screen_input_field_error_min_length_password">Password\'s length cannot be less than %1$s characters.</string>
-
-    <string name="log_in_screen_input_field_error_max_length_email">Email\'s length cannot be more than %1$s characters.</string>
-    <string name="log_in_screen_input_field_error_max_length_password">Password\'s length cannot be more than %1$s characters.</string>
-
-    <string name="log_in_screen_input_field_error_validate_email_email">Email is invalid.</string>
-
-    <string name="login_screen_signup_button">LOGIN</string>
+    <string name="login_screen_forgot_password_button">Forgot Password?</string>
+    <string name="login_screen_signup_text_button">Signup</string>
+    <string name="login_screen_login_button">LOGIN</string>
 
     // Sign Up Screen
     <string name="sign_up_screen_toolbar_title">Sign Up</string>
@@ -179,5 +182,7 @@
 
     // Content descriptions
     <string name="content_description_splash_loading_animation">Loading animation</string>
+    <string name="content_description_lock">lock</string>
+    <string name="content_description_person">person</string>
 
 </resources>

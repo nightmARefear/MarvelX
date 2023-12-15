@@ -87,9 +87,13 @@ sealed class Screen(
 
     data object OtpScreen : Screen(
         baseRoute = "otpScreen",
-        navArgs = listOf(NavItem.User, NavItem.VerificationStep)
+        navArgs = listOf(NavItem.User, NavItem.VerificationStep, NavItem.ShouldRememberUserSession)
     ) {
-        fun createNavRoute(userId: Int, verificationStep: String): String = "$baseRoute/$userId/$verificationStep"
+        fun createNavRoute(
+            userId: Int,
+            verificationStep: String,
+            shouldRememberUserSession: Boolean
+        ): String = "$baseRoute/$userId/$verificationStep/$shouldRememberUserSession"
     }
 }
 
@@ -98,5 +102,6 @@ enum class NavItem(val key: String, val type: NavType<*>) {
     Comic(key = "comicId", type = NavType.IntType),
     ToolbarTitlePrefix(key = "toolbarTitlePrefix", NavType.StringType),
     User(key = "userId", NavType.IntType),
-    VerificationStep(key = "verificationStep", NavType.StringType)
+    VerificationStep(key = "verificationStep", NavType.StringType),
+    ShouldRememberUserSession(key = "shouldRememberUserSession", NavType.BoolType)
 }

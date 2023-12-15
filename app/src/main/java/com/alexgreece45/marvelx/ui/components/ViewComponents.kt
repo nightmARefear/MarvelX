@@ -63,8 +63,6 @@ import androidx.compose.material.contentColorFor
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.primarySurface
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.Composable
@@ -84,13 +82,10 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
@@ -516,12 +511,14 @@ fun ContentScreen(
                                 onClick = { toolbarAction.onClick() },
                                 enabled = toolbarAction.iconData.enabled
                             ) {
+                                val iconTintAlpha = if (toolbarAction.iconData.enabled) LocalContentAlpha.current else ContentAlpha.disabled
                                 Icon(
                                     modifier = Modifier.size(SPACING_LARGE.dp),
                                     painter = painterResource(toolbarAction.iconData.iconResource),
                                     contentDescription = stringResource(toolbarAction.iconData.contentDescription),
-                                    tint = toolbarAction.iconData.colorTint
-                                        ?: LocalContentColor.current.copy(alpha = LocalContentAlpha.current)
+                                    // TODO: To be reviewed.
+                                    tint = toolbarAction.iconData.colorTint?.copy(alpha = iconTintAlpha)
+                                        ?: LocalContentColor.current.copy(alpha = iconTintAlpha)
                                 )
                             }
                         }
@@ -721,7 +718,7 @@ fun SearchBar(
                                     radius = this.size.maxDimension.div(2) + SPACING_SMALL
                                 )
                             },
-                        painter = painterResource(R.drawable.ic_close_32),
+                        painter = painterResource(R.drawable.ic_close),
                         contentDescription = stringResource(R.string.close),
                         tint = MaterialTheme.colors.onBackground
                     )
@@ -912,26 +909,15 @@ fun ItemDescription(
     }
 }
 
-sealed interface ValueType {
-    object Text : ValueType
-
-    object Email : ValueType
-
-    data class Password(
-        val isPasswordVisible: Boolean = false,
-        val onVisibilityIconClick: () -> Unit
-    ) : ValueType
-}
-
 @Composable
 fun OutlinedTextFieldValidation(
     modifier: Modifier = Modifier,
     value: String,
-    valueType: ValueType = ValueType.Text,
     onValueChange: (String) -> Unit,
     label: String = "",
     placeholder: String? = null,
     leadingIcon: @Composable (() -> Unit)? = null,
+    trailingIcon: @Composable (() -> Unit)? = null,
     errorMessage: String = "",
     isError: Boolean = false,
     visualTransformation: VisualTransformation = VisualTransformation.None,
@@ -940,7 +926,7 @@ fun OutlinedTextFieldValidation(
     singleLine: Boolean = true,
     maxLines: Int = if (singleLine) 1 else Int.MAX_VALUE,
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
-    shape: Shape = MaterialTheme.shapes.small
+    shape: Shape = MaterialTheme.shapes.medium
 ) {
     Box(
         modifier = modifier
@@ -969,63 +955,10 @@ fun OutlinedTextFieldValidation(
                 }
             },
             leadingIcon = leadingIcon,
-            trailingIcon = {
-                /** Default trailing Icon color as defined in [TextFieldDefaults.textFieldColors].
-                 *  It should be used by [ValueType.Password] only, as the trailing icon's color
-                 *  is changed if an error has occurred.
-                 * */
-                val defaultIconColor =
-                    MaterialTheme.colors.onSurface.copy(alpha = TextFieldDefaults.IconOpacity)
-
-                when (valueType) {
-                    ValueType.Text, ValueType.Email -> {
-                        if (isError)
-                            Icon(
-                                modifier = Modifier.size(SPACING_LARGE.dp),
-                                imageVector = ImageVector.vectorResource(R.drawable.ic_error_32),
-                                contentDescription = stringResource(R.string.error),
-                            )
-                    }
-
-                    is ValueType.Password -> {
-                        IconButton(onClick = { valueType.onVisibilityIconClick() }) {
-                            if (valueType.isPasswordVisible) {
-                                Icon(
-                                    imageVector = Icons.Filled.VisibilityOff,
-                                    contentDescription = stringResource(R.string.is_password_visible_content_description),
-                                    tint = defaultIconColor
-                                )
-                            } else {
-                                Icon(
-                                    imageVector = Icons.Filled.Visibility,
-                                    contentDescription = stringResource(R.string.is_password_not_visible_content_description),
-                                    tint = defaultIconColor
-                                )
-                            }
-                        }
-                    }
-                }
-            },
+            trailingIcon = trailingIcon,
             isError = isError,
             visualTransformation = visualTransformation,
-            keyboardOptions = when (valueType) {
-                ValueType.Text -> {
-                    keyboardOptions
-                }
-
-                ValueType.Email -> {
-                    keyboardOptions.copy(
-                        keyboardType = KeyboardType.Email
-                    )
-                }
-
-                is ValueType.Password -> {
-                    // Restricts the implementation so as to avoid exposing the password in the user's keyboard.
-                    keyboardOptions.copy(
-                        keyboardType = KeyboardType.Password,
-                    )
-                }
-            },
+            keyboardOptions = keyboardOptions,
             keyboardActions = keyboardActions,
             singleLine = singleLine,
             maxLines = maxLines,
@@ -1040,10 +973,11 @@ fun OutlinedTextFieldValidation(
             exit = fadeOut()
         ) {
             Text(
-                modifier = Modifier.padding(start = SPACING_SMALL.dp, top = 68.dp),
+                modifier = Modifier
+                    .padding(start = 10.dp, top = 66.dp),
                 text = errorMessage,
                 color = MaterialTheme.colors.error,
-                style = MaterialTheme.typography.body2,
+                style = MaterialTheme.typography.body2
             )
         }
     }
@@ -1112,16 +1046,16 @@ fun ExposedDropdownMenu(
 
 @Composable
 fun ContainedButton(
-    onClick: () -> Unit,
     modifier: Modifier,
     enabled: Boolean = true,
+    onClick: () -> Unit,
     content: @Composable RowScope.() -> Unit
 ) {
     Button(
         onClick = onClick,
         modifier = modifier,
         enabled = enabled,
-        contentPadding = PaddingValues(vertical = 8.dp, horizontal = 16.dp),
+        contentPadding = PaddingValues(vertical = 12.dp, horizontal = 32.dp),
         content = content
     )
 }
@@ -1150,8 +1084,21 @@ data class AlertDialogButton(
 )
 
 /**
- * @param title         The title of this alert dialog.
- * @param errorMessage  The error message of this alert dialog.
+ * A wrapper for [AlertDialog] providing additional functionality and custom styling. Avoid using the
+ * native one. Use this wrapper instead.
+ *
+ * @param modifier          The modifier to be applied.
+ * @param title             The title of this dialog.
+ * @param errorMessage      The error message of this dialog.
+ * @param dismissButton     The dismiss button of this dialog. Can be `null`.
+ * @param confirmButton     The confirm button of this dialog. It is always required.
+ * @param shape             The shape of this dialog. Has a default value of [MaterialTheme.shapes.medium].
+ * @param backgroundColor   The background color of this dialog. Has a default value of
+ * [MaterialTheme.colors.surface].
+ * @param contentColor      The content color of this dialog. Has a default color based on the
+ * [backgroundColor].
+ * @param properties        The dialog properties of this dialog. Has a default value.
+ * @param onDismissRequest  The action(s) to be invoked when the user clicks outside this dialog.
  */
 @Composable
 fun AlertDialogError(
@@ -1237,10 +1184,10 @@ fun AlertDialogError(
 
 sealed class SortingType(val order: Int, val label: String) {
 
-    object Random : SortingType(order = 0, label = "Random")
-    object TextAscending : SortingType(order = 1, label = "A-Z Asc")
+    data object Random : SortingType(order = 0, label = "Random")
+    data object TextAscending : SortingType(order = 1, label = "A-Z Asc")
 
-    object TextDescending : SortingType(order = 2, label = "A-Z Desc")
+    data object TextDescending : SortingType(order = 2, label = "A-Z Desc")
 
     companion object {
         fun asList(): List<SortingType> = listOf(Random, TextAscending, TextDescending)
@@ -1342,7 +1289,7 @@ fun SortingModalBottomSheetContent(
                                 radius = this.size.maxDimension.div(2) + SPACING_MEDIUM
                             )
                         },
-                    painter = painterResource(R.drawable.ic_close_32),
+                    painter = painterResource(R.drawable.ic_close),
                     contentDescription = stringResource(R.string.close)
                 )
             }

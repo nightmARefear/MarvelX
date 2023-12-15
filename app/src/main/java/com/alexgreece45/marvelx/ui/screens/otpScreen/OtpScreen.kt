@@ -19,7 +19,6 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -52,7 +51,6 @@ import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.navigation.Screen
 import com.alexgreece45.marvelx.util.HSpacer
 import com.alexgreece45.marvelx.util.OTP_LENGTH
-import com.alexgreece45.marvelx.util.SPACING_MEDIUM
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.SPACING_TINY
 import com.alexgreece45.marvelx.util.VSpacer
@@ -74,7 +72,8 @@ fun OtpScreen(
     navController: NavController,
     viewModel: OtpViewModel = hiltViewModel(),
     userId: Int?,
-    verificationStep: String?
+    verificationStep: String?,
+    shouldRememberUserSession: Boolean?
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -86,7 +85,8 @@ fun OtpScreen(
         viewModel.setEvent(
             OtpEvent.InitView(
                 userId = userId,
-                verificationStep = verificationStep
+                verificationStep = verificationStep,
+                shouldRememberUserSession = shouldRememberUserSession
             )
         )
 

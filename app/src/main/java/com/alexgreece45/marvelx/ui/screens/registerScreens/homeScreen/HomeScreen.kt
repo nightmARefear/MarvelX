@@ -104,13 +104,13 @@ fun HomeScreen(
 
         viewModel.uiEffect.collect { homeEffect ->
             when (homeEffect) {
-                HomeEffect.Navigation.NavigateToLogInScreen -> {
+                HomeEffect.Navigation.NavigateToLoginScreen -> {
                     navController.navigate(Screen.RegisterScreens.LoginScreen.route) {
                         launchSingleTop = true
                     }
                 }
 
-                HomeEffect.Navigation.NavigateToSignUpScreen -> {
+                HomeEffect.Navigation.NavigateToSignupScreen -> {
                     navController.navigate(Screen.RegisterScreens.SignupScreen.route) {
                         launchSingleTop = true
                     }
@@ -128,7 +128,8 @@ fun HomeScreen(
                     navController.navigate(
                         Screen.OtpScreen.createNavRoute(
                             userId = homeEffect.userId,
-                            verificationStep = homeEffect.verificationStep
+                            verificationStep = homeEffect.verificationStep,
+                            shouldRememberUserSession = homeEffect.shouldRememberUserSession
                         )
                     )
                 }

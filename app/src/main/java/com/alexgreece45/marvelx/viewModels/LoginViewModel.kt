@@ -4,14 +4,12 @@ import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.controllers.PrefKeys
 import com.alexgreece45.marvelx.data.domains.user.VerificationStep
-import com.alexgreece45.marvelx.data.models.user.login.UserLoginRequest
 import com.alexgreece45.marvelx.interactors.PostLoginPartialState
 import com.alexgreece45.marvelx.interactors.RegisterInteractor
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
 import com.alexgreece45.marvelx.mvi.BaseViewModel
-import com.alexgreece45.marvelx.util.DateUtil
 import com.alexgreece45.marvelx.util.Form
 import com.alexgreece45.marvelx.util.FormValidator
 import com.alexgreece45.marvelx.util.FormsValidationResult
@@ -28,17 +26,23 @@ sealed class LoginEvent : BaseEvent {
 
     data object OnBack : LoginEvent()
 
-    data object OnPasswordVisibilityIconClick : LoginEvent()
-
     sealed class FieldValueChange : LoginEvent() {
         data class Email(val email: String) : FieldValueChange()
-
         data class Password(val password: String) : FieldValueChange()
+
     }
+
+    data object OnPasswordVisibilityIconClick : LoginEvent()
+
+    data object OnRememberMeCheckboxClick : LoginEvent()
+
+    data object OnForgotPasswordButtonClick : LoginEvent()
 
     data object OnDoneClick : LoginEvent()
 
     data object OnLoginButtonClick : LoginEvent()
+
+    data object OnSignupTextClicked : LoginEvent()
 
     sealed class AlertDialog : LoginEvent() {
         data object OnOkClick : AlertDialog()
@@ -62,10 +66,12 @@ data class LoginState(
      * */
     val isPasswordVisible: Boolean = false,
 
+    val isRememberMeCheckboxChecked: Boolean = false,
+
     /**
      * Controls whether the login button is enabled.
      * */
-    val loginButton: Boolean = false,
+    val isLoginButtonEnabled: Boolean = false,
 
     // Alert Dialog.
     val isAlertDialogVisible: Boolean = false,
@@ -83,7 +89,13 @@ sealed class LoginEffect : BaseEffect {
 
         data class NavigateToAllCharactersScreen(val userId: Int) : Navigation()
 
-        data class NavigateToOtpScreen(val userId: Int, val verificationStep: String) : Navigation()
+        data class NavigateToOtpScreen(
+            val userId: Int,
+            val verificationStep: String,
+            val shouldRememberUserSession: Boolean
+        ) : Navigation()
+
+        data object PopUpToSignupScreen : Navigation()
     }
 
     /**
@@ -121,7 +133,7 @@ class LoginViewModel @Inject constructor(
             email = "",
             password = "",
             isPasswordVisible = false,
-            loginButton = false,
+            isLoginButtonEnabled = false,
             isAlertDialogVisible = false,
             alertDialogTitle = "",
             alertDialogErrorMessage = "",
@@ -167,7 +179,7 @@ class LoginViewModel @Inject constructor(
                 // so the functionality is the same (i.e., if an error
                 // occurs, it will be because a field's validation was
                 // incorrectly calculated, etc.)
-                if (currentState.loginButton) {
+                if (currentState.isLoginButtonEnabled) {
                     setEffect {
                         LoginEffect.OnDoneClick
                     }
@@ -176,6 +188,12 @@ class LoginViewModel @Inject constructor(
 
             LoginEvent.OnLoginButtonClick -> {
                 onLoginButtonClick()
+            }
+
+            LoginEvent.OnSignupTextClicked -> {
+                setEffect {
+                    LoginEffect.Navigation.PopUpToSignupScreen
+                }
             }
 
             LoginEvent.OnPasswordVisibilityIconClick -> {
@@ -199,6 +217,18 @@ class LoginViewModel @Inject constructor(
             is LoginEvent.OnShowErrorDialog -> {
                 showAlertDialog(errorMessage = event.errorMessage)
             }
+
+            LoginEvent.OnForgotPasswordButtonClick -> {
+
+            }
+
+            LoginEvent.OnRememberMeCheckboxClick -> {
+                setState {
+                    copy(
+                        isRememberMeCheckboxChecked = currentState.isRememberMeCheckboxChecked.not()
+                    )
+                }
+            }
         }
     }
 
@@ -221,7 +251,7 @@ class LoginViewModel @Inject constructor(
 
                     setState {
                         copy(
-                            loginButton = formsValidationResult.isValid && areAllFieldsValid()
+                            isLoginButtonEnabled = formsValidationResult.isValid && areAllFieldsValid()
                         )
                     }
                 }
@@ -240,7 +270,7 @@ class LoginViewModel @Inject constructor(
 
                     setState {
                         copy(
-                            loginButton = formsValidationResult.isValid && areAllFieldsValid()
+                            isLoginButtonEnabled = formsValidationResult.isValid && areAllFieldsValid()
                         )
                     }
                 }
@@ -281,7 +311,8 @@ class LoginViewModel @Inject constructor(
         // All fields are valid.
         viewModelScope.launch {
             registerInteractor.postLogin(
-                userLoginRequest = getUserLogInRequest()
+                email = currentState.email,
+                password = SecurityUtil.getHashedPasswordFromString(currentState.password).single()
             ).collect { userPartialStatePostLogIn ->
                 when (userPartialStatePostLogIn) {
                     is PostLoginPartialState.Failed -> {
@@ -294,14 +325,20 @@ class LoginViewModel @Inject constructor(
                     }
 
                     is PostLoginPartialState.Success -> {
-                        resetUiFieldStates()
-
                         // Act accordingly based on the verification step.
                         userPartialStatePostLogIn.loginResponseDomain.let { loginResponseDomain ->
                             when (loginResponseDomain.verificationStep) {
                                 is VerificationStep.None -> {
                                     // Save userId in device.
                                     prefKeys.setUserId(userPartialStatePostLogIn.loginResponseDomain.userId)
+
+                                    // No verification step, thus user is logged in.
+                                    prefKeys.setUserLoggedIn(isLoggedIn = true)
+
+                                    // Save "Remember Me" in device since we're logged in.
+                                    prefKeys.setRememberUserSession(shouldRemember = currentState.isRememberMeCheckboxChecked)
+
+                                    resetUiFieldStates()
 
                                     // No verification step, so navigate to All Characters Screen.
                                     setEffect {
@@ -310,9 +347,7 @@ class LoginViewModel @Inject constructor(
                                 }
 
                                 is VerificationStep.Invalid -> {
-                                    // Save userId in device.
-                                    prefKeys.setUserId(userPartialStatePostLogIn.loginResponseDomain.userId)
-
+                                    resetUiFieldStates()
                                     setEffect {
                                         LoginEffect.ShowErrorDialog(
                                             errorMessage = resourceProvider.getGenericErrorMessage()
@@ -324,11 +359,15 @@ class LoginViewModel @Inject constructor(
                                     // Save userId in device.
                                     prefKeys.setUserId(userPartialStatePostLogIn.loginResponseDomain.userId)
 
+                                    val isRememberMeCheckboxChecked = currentState.isRememberMeCheckboxChecked
+                                    resetUiFieldStates()
+
                                     // Currently we only support OTP from email.
                                     setEffect {
                                         LoginEffect.Navigation.NavigateToOtpScreen(
                                             userId = loginResponseDomain.userId,
-                                            verificationStep = loginResponseDomain.verificationStep.name
+                                            verificationStep = loginResponseDomain.verificationStep.name,
+                                            shouldRememberUserSession = isRememberMeCheckboxChecked
                                         )
                                     }
                                 }
@@ -406,13 +445,6 @@ class LoginViewModel @Inject constructor(
         )
     }
 
-    private suspend fun getUserLogInRequest(): UserLoginRequest =
-        UserLoginRequest(
-            email = currentState.email,
-            password = SecurityUtil.getHashedPasswordFromString(currentState.password).single(),
-            epoch = DateUtil.getSecondsFromEpoch()
-        )
-
     /**
      * Returns the title of the Alert Dialog in `LoginScreen`.
      */
@@ -452,7 +484,8 @@ class LoginViewModel @Inject constructor(
                 email = "",
                 password = "",
                 isPasswordVisible = false,
-                loginButton = false,
+                isRememberMeCheckboxChecked = false,
+                isLoginButtonEnabled = false,
                 emailValidationResult = FormsValidationResult(isValid = false),
                 passwordValidationResult = FormsValidationResult(isValid = false)
             )

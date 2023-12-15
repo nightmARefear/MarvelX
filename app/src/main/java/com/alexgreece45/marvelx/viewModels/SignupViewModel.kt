@@ -2,6 +2,7 @@ package com.alexgreece45.marvelx.viewModels
 
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.controllers.PrefKeys
 import com.alexgreece45.marvelx.data.domains.user.VerificationStep
 import com.alexgreece45.marvelx.data.models.user.Gender
 import com.alexgreece45.marvelx.data.models.user.signup.UserSignupRequest
@@ -101,7 +102,8 @@ sealed class SignupEffect : BaseEffect {
         data object NavigateToAllCharactersScreen : Navigation()
         data class NavigateToOtpScreen(
             val userId: Int,
-            val verificationStep: String
+            val verificationStep: String,
+            val shouldRememberUserSession: Boolean
         ) : Navigation()
     }
 
@@ -116,7 +118,8 @@ sealed class SignupEffect : BaseEffect {
 class SignupViewModel @Inject constructor(
     private val resourceProvider: ResourceProvider,
     private val formValidator: FormValidator,
-    private val registerInteractor: RegisterInteractor
+    private val registerInteractor: RegisterInteractor,
+    private val prefKeys: PrefKeys
 ) : BaseViewModel<SignupEvent, SignupState, SignupEffect>() {
 
     override fun setInitialState(): SignupState =
@@ -388,6 +391,12 @@ class SignupViewModel @Inject constructor(
                                         }
 
                                         VerificationStep.None -> {
+                                            // User is logged in.
+                                            prefKeys.setUserLoggedIn(isLoggedIn = true)
+
+                                            // ONLY for signup, set the remember user session to `true` by default.
+                                            prefKeys.setRememberUserSession(shouldRemember = true)
+
                                             setEffect {
                                                 SignupEffect.Navigation.NavigateToAllCharactersScreen
                                             }
@@ -397,7 +406,8 @@ class SignupViewModel @Inject constructor(
                                             setEffect {
                                                 SignupEffect.Navigation.NavigateToOtpScreen(
                                                     userId = signupResponseDomain.userId,
-                                                    signupResponseDomain.verificationStep.name
+                                                    signupResponseDomain.verificationStep.name,
+                                                    shouldRememberUserSession = true
                                                 )
                                             }
                                         }
@@ -406,7 +416,8 @@ class SignupViewModel @Inject constructor(
                                             setEffect {
                                                 SignupEffect.Navigation.NavigateToOtpScreen(
                                                     userId = signupResponseDomain.userId,
-                                                    signupResponseDomain.verificationStep.name
+                                                    signupResponseDomain.verificationStep.name,
+                                                    shouldRememberUserSession = true
                                                 )
                                             }
                                         }

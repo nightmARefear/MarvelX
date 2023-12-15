@@ -21,6 +21,7 @@ import com.alexgreece45.marvelx.repository.PostLoginRepositoryResponse
 import com.alexgreece45.marvelx.repository.PostLoginWithTokenRepositoryResponse
 import com.alexgreece45.marvelx.repository.PostSignupRepositoryResponse
 import com.alexgreece45.marvelx.repository.RegisterRepository
+import com.alexgreece45.marvelx.util.DateUtil
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.extensions.safeAsync
 import kotlinx.coroutines.flow.Flow
@@ -31,7 +32,7 @@ import javax.inject.Inject
 interface RegisterInteractor {
     suspend fun postSignup(userSignupRequest: UserSignupRequest): Flow<PostSignupPartialState>
 
-    suspend fun postLogin(userLoginRequest: UserLoginRequest): Flow<PostLoginPartialState>
+    suspend fun postLogin(email: String, password: String): Flow<PostLoginPartialState>
 
     suspend fun postLoginWithToken(userLoginWithTokenRequest: UserLoginWithTokenRequest): Flow<PostLoginWithTokenPartialState>
 
@@ -92,9 +93,14 @@ class RegisterInteractorImpl @Inject constructor(
             }
         }
 
-    override suspend fun postLogin(userLoginRequest: UserLoginRequest): Flow<PostLoginPartialState> =
+    override suspend fun postLogin(email: String, password: String): Flow<PostLoginPartialState> =
         flow {
             val genericErrorMessage = resourceProvider.getGenericErrorMessage()
+            val userLoginRequest = UserLoginRequest(
+                email = email,
+                password = password,
+                epoch = DateUtil.getSecondsFromEpoch()
+            )
             repository.postLogin(userLoginRequest).collect {
                 when (it) {
                     is PostLoginRepositoryResponse.Failed -> {
@@ -105,8 +111,8 @@ class RegisterInteractorImpl @Inject constructor(
                         it.response?.let { loginResponse ->
                             val userLoginResponseDomain = loginResponse.toUserLoginResponseDomain()
 
-                            // Start refresh token worker if there is no verification step pending (i.e., `VerificationStep.None`).
                             if (userLoginResponseDomain.verificationStep is VerificationStep.None) {
+                                // Start refresh token worker if there is no verification step pending (i.e., `VerificationStep.None`).
                                 refreshTokenController.startWorker()
                             }
 

@@ -119,7 +119,7 @@ fun CharacterScreen(
                     iconData = when (characterDomain.isFavorite) {
                         true -> {
                             IconData(
-                                iconResource = R.drawable.ic_favorite_filled_24,
+                                iconResource = R.drawable.ic_favorite_filled,
                                 contentDescription = R.string.ic_favorite_content_description,
                                 colorTint = MaterialTheme.colors.primaryVariant
                             )
@@ -127,7 +127,7 @@ fun CharacterScreen(
 
                         false -> {
                             IconData(
-                                iconResource = R.drawable.ic_favorite_empty_24,
+                                iconResource = R.drawable.ic_favorite_empty,
                                 contentDescription = R.string.ic_not_favorite_content_description,
                                 colorTint = MaterialTheme.colors.primaryVariant
                             )
@@ -256,7 +256,7 @@ fun <T> LazyRowTemplate(
             onClick = { onArrowRightClick() }
         ) {
             Icon(
-                painter = painterResource(R.drawable.ic_arrow_right_32),
+                painter = painterResource(R.drawable.ic_arrow_right),
                 contentDescription = stringResource(R.string.character_screen_arrow_right_comic_content_description),
                 tint = MaterialTheme.colors.onBackground
             )

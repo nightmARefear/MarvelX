@@ -51,9 +51,16 @@ class UserInteractorImpl @Inject constructor(
         val clientId = configLogic.clientId
         val refreshToken = authController.getRefreshToken()
 
+        // Disable user logged in flag.
+        prefKeys.setUserLoggedIn(false)
+
+        // Disable remember user session functionality.
+        prefKeys.setRememberUserSession(false)
+
+        // Remove stored credentials.
+        authController.removeUserCredentials()
+
         if (refreshToken.isNullOrEmpty()) {
-            // Remove stored credentials.
-            authController.removeUserCredentials()
             emit(LogoutPartialState.Success)
             return@flow
         }
@@ -61,9 +68,6 @@ class UserInteractorImpl @Inject constructor(
         repository.logout(clientId, refreshToken).collect { logoutRepositoryResponse ->
             // Stop refresh token worker irrespectively of the response.
             refreshTokenController.stopWorker()
-
-            // Remove user credentials irrespectively of the response.
-            authController.removeUserCredentials()
 
             when (logoutRepositoryResponse) {
                 is LogoutRepositoryResponse.Failed -> {

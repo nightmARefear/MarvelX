@@ -41,7 +41,8 @@ fun NavGraphBuilder.RegisterNavGraph(
             OtpScreen(
                 navController = navController,
                 userId = navBackStackEntry.arguments?.getInt(NavItem.User.key),
-                verificationStep = navBackStackEntry.arguments?.getString(NavItem.VerificationStep.key)
+                verificationStep = navBackStackEntry.arguments?.getString(NavItem.VerificationStep.key),
+                shouldRememberUserSession = navBackStackEntry.arguments?.getBoolean(NavItem.ShouldRememberUserSession.key)
             )
         }
     }

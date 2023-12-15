@@ -2,10 +2,10 @@ package com.alexgreece45.marvelx.viewModels
 
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.data.domains.user.VerificationStep
-import com.alexgreece45.marvelx.data.models.user.loginWithToken.UserLoginWithTokenRequest
 import com.alexgreece45.marvelx.controllers.AuthController
 import com.alexgreece45.marvelx.controllers.PrefKeys
+import com.alexgreece45.marvelx.data.domains.user.VerificationStep
+import com.alexgreece45.marvelx.data.models.user.loginWithToken.UserLoginWithTokenRequest
 import com.alexgreece45.marvelx.interactors.LogoutPartialState
 import com.alexgreece45.marvelx.interactors.PostLoginWithTokenPartialState
 import com.alexgreece45.marvelx.interactors.RefreshAccessTokenPartialState
@@ -52,9 +52,14 @@ data class HomeState(
 sealed interface HomeEffect : BaseEffect {
     sealed class Navigation : HomeEffect {
         data object PopBackStack : Navigation()
-        data object NavigateToLogInScreen : Navigation()
-        data object NavigateToSignUpScreen : Navigation()
-        data class NavigateToOtpScreen(val userId: Int, val verificationStep: String) : Navigation()
+        data object NavigateToLoginScreen : Navigation()
+        data object NavigateToSignupScreen : Navigation()
+        data class NavigateToOtpScreen(
+            val userId: Int,
+            val verificationStep: String,
+            val shouldRememberUserSession: Boolean
+        ) : Navigation()
+
         data class NavigateToAllCharactersScreen(val userId: Int) : Navigation()
     }
 
@@ -215,7 +220,8 @@ class HomeViewModel @Inject constructor(
                                     setEffect {
                                         HomeEffect.Navigation.NavigateToOtpScreen(
                                             userId = prefKeys.getUserId(),
-                                            verificationStep = verificationStep.name
+                                            verificationStep = verificationStep.name,
+                                            shouldRememberUserSession = prefKeys.shouldRememberUserSession()
                                         )
                                     }
                                 }
@@ -283,13 +289,13 @@ class HomeViewModel @Inject constructor(
 
     private fun onLoginButtonClick() {
         setEffect {
-            HomeEffect.Navigation.NavigateToLogInScreen
+            HomeEffect.Navigation.NavigateToLoginScreen
         }
     }
 
     private fun onSignupButtonClick() {
         setEffect {
-            HomeEffect.Navigation.NavigateToSignUpScreen
+            HomeEffect.Navigation.NavigateToSignupScreen
         }
     }
 

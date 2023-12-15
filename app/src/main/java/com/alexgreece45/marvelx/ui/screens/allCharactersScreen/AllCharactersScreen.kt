@@ -124,7 +124,7 @@ fun AllCharactersScreen(
                     extended = lazyGridState.isScrollingUp(),
                     normalFabData = NormalFabData(
                         label = stringResource(R.string.all_characters_screen_fab_label),
-                        iconResource = R.drawable.ic_filter_32,
+                        iconResource = R.drawable.ic_filter,
                         backgroundColor = null,
                         contentColor = null,
                         onClick = { viewModel.setEvent(AllCharactersEvent.OnFabClick) }
@@ -309,7 +309,7 @@ private fun CharacterItem(
                 when (character.isFavorite) {
                     true -> {
                         Icon(
-                            painter = painterResource(R.drawable.ic_favorite_filled_24),
+                            painter = painterResource(R.drawable.ic_favorite_filled),
                             contentDescription = stringResource(R.string.all_characters_screen_favorite_character_icon_description),
                             tint = MaterialTheme.colors.primaryVariant
                         )
@@ -317,7 +317,7 @@ private fun CharacterItem(
 
                     false -> {
                         Icon(
-                            painter = painterResource(R.drawable.ic_favorite_empty_24),
+                            painter = painterResource(R.drawable.ic_favorite_empty),
                             contentDescription = stringResource(R.string.all_characters_screen_not_favorite_character_icon_description),
                             tint = MaterialTheme.colors.primaryVariant
                         )
