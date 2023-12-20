@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -109,6 +110,7 @@ import com.alexgreece45.marvelx.util.HSpacer
 import com.alexgreece45.marvelx.util.SPACING_LARGE
 import com.alexgreece45.marvelx.util.SPACING_MEDIUM
 import com.alexgreece45.marvelx.util.SPACING_SMALL
+import com.alexgreece45.marvelx.util.STICKY_BOTTOM_Z_INDEX
 import com.alexgreece45.marvelx.util.THROTTLE_CLICKABLE_DEFAULT_DELAY
 import com.alexgreece45.marvelx.util.VSpacer
 import com.alexgreece45.marvelx.util.extensions.ClickState
@@ -471,6 +473,7 @@ fun ContentScreen(
     bottomBarData: BottomBarData? = null,
     bottomNavigationBarData: BottomNavigationBarData? = null,
     fabData: FabData? = null,
+    stickyBottom: @Composable (() -> Unit)? = null,
     content: @Composable (PaddingValues) -> Unit
 ) {
     Scaffold(
@@ -511,7 +514,8 @@ fun ContentScreen(
                                 onClick = { toolbarAction.onClick() },
                                 enabled = toolbarAction.iconData.enabled
                             ) {
-                                val iconTintAlpha = if (toolbarAction.iconData.enabled) LocalContentAlpha.current else ContentAlpha.disabled
+                                val iconTintAlpha =
+                                    if (toolbarAction.iconData.enabled) LocalContentAlpha.current else ContentAlpha.disabled
                                 Icon(
                                     modifier = Modifier.size(SPACING_LARGE.dp),
                                     painter = painterResource(toolbarAction.iconData.iconResource),
@@ -592,11 +596,25 @@ fun ContentScreen(
             }
         }
     ) { paddingValues ->
-        Box(modifier = Modifier.fillMaxSize()) {
-            if (isLoading) {
-                LoadingScreen()
+        Column(modifier = Modifier.fillMaxSize()) {
+            Box(modifier = Modifier.weight(1f)) {
+                if (isLoading) {
+                    LoadingScreen()
+                }
+                content(paddingValues.applyPadding())
             }
-            content(paddingValues.applyPadding())
+
+            // Sticky bottom.
+            stickyBottom?.let {
+                Box(
+                    modifier = Modifier
+                        .zIndex(STICKY_BOTTOM_Z_INDEX)
+                        .padding(paddingValues.applyPadding())
+                        .fillMaxWidth()
+                ) {
+                    stickyBottom()
+                }
+            }
         }
     }
 
@@ -608,6 +626,34 @@ fun ContentScreen(
     /* ThrottledBackHandler(enabled = onBack != null) {
          onBack?.invoke()
      }*/
+}
+
+/**
+ * A [Composable] that sticks the [content] to the bottom of a screen. This function should be used
+ * outside of [ContentScreen] only.
+ *
+ * @param paddingValues     The padding values to be applied to this composable. If a value isn't
+ * provided, then all the sides will have a padding of `0.`[dp].
+ * @param content           The content to be displayed.
+ */
+@Composable
+fun StickyBottom(
+    paddingValues: PaddingValues = PaddingValues(0.dp),
+    content: @Composable () -> Unit
+) {
+    Column(modifier = Modifier
+        .fillMaxWidth()
+        .background(Color.Blue)) {
+        Spacer(modifier = Modifier.weight(1f))
+        Box(
+            modifier = Modifier
+                .zIndex(STICKY_BOTTOM_Z_INDEX)
+                .padding(paddingValues)
+                .fillMaxWidth()
+        ) {
+            content()
+        }
+    }
 }
 
 @Composable
@@ -1046,9 +1092,9 @@ fun ExposedDropdownMenu(
 
 @Composable
 fun ContainedButton(
-    modifier: Modifier,
-    enabled: Boolean = true,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
     content: @Composable RowScope.() -> Unit
 ) {
     Button(

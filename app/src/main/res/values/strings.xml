@@ -109,13 +109,6 @@
     <string name="login_screen_do_not_have_an_account">Don\'t have an account? Signup</string>
 
     <string name="login_screen_alert_dialog_title">Login failed</string>
-    <string name="login_screen_input_field_error_blank_email">Email cannot be blank.</string>
-    <string name="login_screen_input_field_error_blank_password">Password cannot be blank.</string>
-    <string name="login_screen_input_field_error_min_length_email">Email\'s length cannot be less than %1$s characters.</string>
-    <string name="login_screen_input_field_error_min_length_password">Password\'s length cannot be less than %1$s characters.</string>
-    <string name="login_screen_input_field_error_max_length_email">Email\'s length cannot be more than %1$s characters.</string>
-    <string name="login_screen_input_field_error_max_length_password">Password\'s length cannot be more than %1$s characters.</string>
-    <string name="login_screen_input_field_error_validate_email_email">Email is invalid.</string>
 
     <string name="login_screen_forgot_password_button">Forgot Password?</string>
     <string name="login_screen_signup_text_button">Signup</string>
@@ -133,8 +126,6 @@
     <string name="sign_up_screen_input_field_placeholder_first_name">John</string>
     <string name="sign_up_screen_input_field_placeholder_last_name">Doe</string>
     <string name="sign_up_screen_input_field_placeholder_gender">Male</string>
-    <string name="sign_up_screen_input_field_placeholder_email">john.doe@email.com</string>
-    <string name="sign_up_screen_input_field_placeholder_password">hJRVkVtX39Ud!%XIFn9)ui5+K</string>
 
     <string name="signup_screen_alert_dialog_title">Signup failed</string>
 
@@ -158,6 +149,35 @@
 
     <string name="sign_up_screen_signup_button">SIGN UP</string>
 
+    // FORGOT PASSWORD Screen and Sub-Screens
+    // • EnterEmail
+    <string name="forgot_password_screen_enter_email_subscreen_title">Forgot Your Password?</string>
+    <string name="forgot_password_screen_enter_email_subscreen_subtitle">Enter the email associated with your account and we\'ll send an email with the OTP code.</string>
+
+    <string name="forgot_password_screen_input_field_label_email">Email</string>
+
+    <string name="forgot_password_screen_enter_email_subscreen_sticky_button">Continue</string>
+
+    // • ValidateEmail
+    <string name="forgot_password_screen_validate_email_subscreen_title">Verification code</string>
+    <string name="forgot_password_screen_validate_email_subscreen_subtitle">Enter the OTP code that was sent to your email.</string>
+    <string name="forgot_password_screen_validate_email_subscreen_sticky_button">Verify OTP</string>
+
+    // • EnterPhoneNumber
+    <string name="forgot_password_screen_enter_phone_number_subscreen_title">Enter your phone number</string>
+    <string name="forgot_password_screen_enter_phone_number_subscreen_subtitle">Enter the phone number associated with your account and we\'ll send a SMS with the OTP code.</string>
+    <string name="forgot_password_screen_enter_phone_number_subscreen_sticky_button">Continue</string>
+
+    // • ValidatePhoneNumber
+    <string name="forgot_password_screen_validate_phone_number_subscreen_title">Verification code</string>
+    <string name="forgot_password_screen_validate_phone_number_subscreen_subtitle">Enter the OTP code that was sent to your phone number.</string>
+    <string name="forgot_password_screen_validate_phone_number_subscreen_sticky_button">Verify OTP</string>
+
+    // • EnterNewPassword
+    <string name="forgot_password_screen_enter_new_password_subscreen_title">Enter your new password</string>
+    <string name="forgot_password_screen_enter_new_password_subscreen_subtitle">Enter the new password for your account.</string>
+    <string name="forgot_password_screen_enter_new_password_subscreen_sticky_button">reset password</string>
+
     // OTP Screen
     <string name="otp_screen_toolbar_title">OTP</string>
 
@@ -167,6 +187,7 @@
 
     <string name="otp_screen_resend_otp_button">Resend OTP</string>
     <string name="otp_screen_resend_otp_button_with_delay">Resend OTP (%1$s)</string>
+    <string name="otp_screen_verify_button">Verify</string>
 
     // `OtpErrorCause` sealed class strings
     <string name="otp_error_cause_not_match">OTP is incorrect.</string>
@@ -179,6 +200,15 @@
     // `ResendOtpErrorCause` sealed class strings
     <string name="resend_otp_error_cause_user_not_found">The user was not found.</string>
     <string name="resend_otp_error_cause_too_soon">You have requested a new OTP code too soon. Try again in: %1$s</string>
+
+    // Input field errors
+    <string name="input_field_error_blank_email">Email cannot be blank.</string>
+    <string name="input_field_error_blank_password">Password cannot be blank.</string>
+    <string name="input_field_error_min_length_email">Email\'s length cannot be less than %1$s characters.</string>
+    <string name="input_field_error_min_length_password">Password\'s length cannot be less than %1$s characters.</string>
+    <string name="input_field_error_max_length_email">Email\'s length cannot be more than %1$s characters.</string>
+    <string name="input_field_error_max_length_password">Password\'s length cannot be more than %1$s characters.</string>
+    <string name="input_field_error_validate_email_email">Email is invalid.</string>
 
     // Content descriptions
     <string name="content_description_splash_loading_animation">Loading animation</string>

@@ -81,6 +81,7 @@ sealed class Screen(
 
         data object HomeScreen : Screen(baseRoute = "homeScreen")
         data object LoginScreen : Screen(baseRoute = "loginScreen")
+        data object ForgotPasswordScreen : Screen(baseRoute = "forgotPasswordScreen")
         data object SignupScreen : Screen(baseRoute = "signupScreen")
         data object SplashScreen : Screen(baseRoute = "splashScreen")
     }

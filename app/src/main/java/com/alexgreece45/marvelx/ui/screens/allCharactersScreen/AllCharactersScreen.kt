@@ -33,6 +33,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -40,6 +41,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -47,6 +49,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.alexgreece45.marvelx.R
@@ -63,11 +66,13 @@ import com.alexgreece45.marvelx.ui.components.ModalBottomSheet
 import com.alexgreece45.marvelx.ui.components.NormalFabData
 import com.alexgreece45.marvelx.ui.components.SearchBar
 import com.alexgreece45.marvelx.ui.components.SortingModalBottomSheetContent
+import com.alexgreece45.marvelx.ui.components.effect.DisposableEffectWithLifecycle
 import com.alexgreece45.marvelx.ui.components.isScrollingUp
 import com.alexgreece45.marvelx.util.DEFAULT_SCREEN_PADDING
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.SPACING_TINY
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 
 @OptIn(
     ExperimentalMaterialApi::class, ExperimentalComposeUiApi::class
@@ -79,6 +84,8 @@ fun AllCharactersScreen(
     viewModel: AllCharactersViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
+
+    val coroutineScope = rememberCoroutineScope()
 
     val modalBottomSheetState = rememberModalBottomSheetState(
         initialValue = ModalBottomSheetValue.Hidden,
@@ -92,6 +99,68 @@ fun AllCharactersScreen(
     var initLock: Unit by remember { mutableStateOf(Unit) }
 
     val keyboard = LocalSoftwareKeyboardController.current
+
+    LaunchedEffect(initLock) {
+        if (!state.isFirstLaunch) {
+            viewModel.setEvent(AllCharactersEvent.LoadFavoriteCharacters)
+        }
+    }
+
+    DisposableEffectWithLifecycle(
+        lifecycleOwner = LocalLifecycleOwner.current,
+        lifecycleEvent = Lifecycle.Event.ON_START
+    ) {
+        // Hides the bottom sheet when the screen initializes. This allows the previously opened
+        // bottom sheet to be hidden.
+        coroutineScope.launch {
+            modalBottomSheetState.hide()
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.setEvent(AllCharactersEvent.InitView)
+
+        viewModel.uiEffect.collect { effect ->
+            when (effect) {
+                is AllCharactersEffect.Navigation.NavigateToCharacterScreen -> {
+                    initLock = Unit
+                    navigateToCharacterScreen(effect.characterId)
+                }
+
+                is AllCharactersEffect.FavoriteCharacter.Success -> {
+                    Toast.makeText(context, effect.successMessage, Toast.LENGTH_SHORT).show()
+                }
+
+                is AllCharactersEffect.FavoriteCharacter.Error -> {
+                    Toast.makeText(context, effect.errorMessage, Toast.LENGTH_SHORT).show()
+                }
+
+                is AllCharactersEffect.UnFavoriteCharacter.Error -> {
+                    Toast.makeText(context, effect.errorMessage, Toast.LENGTH_SHORT).show()
+                }
+
+                is AllCharactersEffect.UnFavoriteCharacter.Success -> {
+                    Toast.makeText(context, effect.successMessage, Toast.LENGTH_SHORT).show()
+                }
+
+                AllCharactersEffect.SortingBottomSheet.Hide -> {
+                    coroutineScope.launch {
+                        modalBottomSheetState.hide()
+                    }
+                }
+
+                AllCharactersEffect.SortingBottomSheet.Show -> {
+                    coroutineScope.launch {
+                        modalBottomSheetState.show()
+                    }
+                }
+
+                AllCharactersEffect.CloseKeyboard -> {
+                    keyboard?.hide()
+                }
+            }
+        }
+    }
 
     ModalBottomSheet(
         sheetState = modalBottomSheetState,
@@ -212,57 +281,6 @@ fun AllCharactersScreen(
                             }
                         )
                     }
-                }
-            }
-        }
-    }
-
-    LaunchedEffect(initLock) {
-        if (!state.isFirstLaunch) {
-            viewModel.setEvent(AllCharactersEvent.LoadFavoriteCharacters)
-        }
-    }
-
-    LaunchedEffect(Unit) {
-        viewModel.setEvent(AllCharactersEvent.InitView)
-
-        viewModel.uiEffect.collect { effect ->
-            when (effect) {
-                is AllCharactersEffect.Navigation.NavigateToCharacterScreen -> {
-                    initLock = Unit
-                    navigateToCharacterScreen(effect.characterId)
-                }
-
-                is AllCharactersEffect.FavoriteCharacter.Success -> {
-                    Toast.makeText(context, effect.successMessage, Toast.LENGTH_SHORT).show()
-                }
-
-                is AllCharactersEffect.FavoriteCharacter.Error -> {
-                    Toast.makeText(context, effect.errorMessage, Toast.LENGTH_SHORT).show()
-                }
-
-                is AllCharactersEffect.UnFavoriteCharacter.Error -> {
-                    Toast.makeText(context, effect.errorMessage, Toast.LENGTH_SHORT).show()
-                }
-
-                is AllCharactersEffect.UnFavoriteCharacter.Success -> {
-                    Toast.makeText(context, effect.successMessage, Toast.LENGTH_SHORT).show()
-                }
-
-                AllCharactersEffect.SortingBottomSheet.Hide -> {
-                    coroutineScope {
-                        modalBottomSheetState.hide()
-                    }
-                }
-
-                AllCharactersEffect.SortingBottomSheet.Show -> {
-                    coroutineScope {
-                        modalBottomSheetState.show()
-                    }
-                }
-
-                AllCharactersEffect.CloseKeyboard -> {
-                    keyboard?.hide()
                 }
             }
         }

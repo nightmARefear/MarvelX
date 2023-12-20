@@ -16,6 +16,7 @@ import com.alexgreece45.marvelx.util.FormsValidationResult
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.Rule
 import com.alexgreece45.marvelx.util.SecurityUtil
+import com.alexgreece45.marvelx.util.constants.InputFieldConstants
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.launch
@@ -87,6 +88,8 @@ sealed class LoginEffect : BaseEffect {
     sealed class Navigation : LoginEffect() {
         data object PopBackStack : Navigation()
 
+        data object NavigateToForgotPasswordScreen : Navigation()
+
         data class NavigateToAllCharactersScreen(val userId: Int) : Navigation()
 
         data class NavigateToOtpScreen(
@@ -111,10 +114,9 @@ sealed class LoginEffect : BaseEffect {
      * It should be used only in [LoginEvent.OnDoneClick],
      * and [LoginEvent.OnLoginButtonClick].
      */
+    data object CloseKeyboardAndClearFocus : LoginEffect()
 
     data class ShowErrorDialog(val errorMessage: String) : LoginEffect()
-
-    data object CloseKeyboardAndClearFocus : LoginEffect()
 
     data object OnDoneClick : LoginEffect()
 }
@@ -148,9 +150,6 @@ class LoginViewModel @Inject constructor(
             }
 
             LoginEvent.OnBack -> {
-                // Reset states just in case.
-                resetUiFieldStates()
-                // Pop back stack.
                 setEffect {
                     LoginEffect.Navigation.PopBackStack
                 }
@@ -162,7 +161,7 @@ class LoginViewModel @Inject constructor(
                         email = event.email
                     )
                 }
-                validateEmail(email = event.email)
+                validateEmail()
             }
 
             is LoginEvent.FieldValueChange.Password -> {
@@ -171,7 +170,7 @@ class LoginViewModel @Inject constructor(
                         password = event.password
                     )
                 }
-                validatePassword(password = event.password)
+                validatePassword()
             }
 
             LoginEvent.OnDoneClick -> {
@@ -219,7 +218,9 @@ class LoginViewModel @Inject constructor(
             }
 
             LoginEvent.OnForgotPasswordButtonClick -> {
-
+                setEffect {
+                    LoginEffect.Navigation.NavigateToForgotPasswordScreen
+                }
             }
 
             LoginEvent.OnRememberMeCheckboxClick -> {
@@ -239,9 +240,9 @@ class LoginViewModel @Inject constructor(
         }
     }
 
-    private fun validateEmail(email: String) {
+    private fun validateEmail() {
         viewModelScope.launch {
-            formValidator.validateForms(listOf(Form(mapOf(getEmailValidationRules() to email))))
+            formValidator.validateForms(listOf(Form(mapOf(getEmailValidationRules() to currentState.email))))
                 .collect { formsValidationResult ->
                     setState {
                         copy(
@@ -258,9 +259,9 @@ class LoginViewModel @Inject constructor(
         }
     }
 
-    private fun validatePassword(password: String) {
+    private fun validatePassword() {
         viewModelScope.launch {
-            formValidator.validateForms(listOf(Form(mapOf(getPasswordValidationRules() to password))))
+            formValidator.validateForms(listOf(Form(mapOf(getPasswordValidationRules() to currentState.password))))
                 .collect { formsValidationResult ->
                     setState {
                         copy(
@@ -359,7 +360,8 @@ class LoginViewModel @Inject constructor(
                                     // Save userId in device.
                                     prefKeys.setUserId(userPartialStatePostLogIn.loginResponseDomain.userId)
 
-                                    val isRememberMeCheckboxChecked = currentState.isRememberMeCheckboxChecked
+                                    val isRememberMeCheckboxChecked =
+                                        currentState.isRememberMeCheckboxChecked
                                     resetUiFieldStates()
 
                                     // Currently we only support OTP from email.
@@ -397,49 +399,45 @@ class LoginViewModel @Inject constructor(
     }
 
     private fun getEmailValidationRules(): List<Rule> {
-        val minLength = 5
-        val maxLength = 100
         return listOf(
             Rule.ValidateNotBlank(
-                errorMessage = resourceProvider.getString(R.string.sign_up_screen_input_field_error_blank_email)
+                errorMessage = resourceProvider.getString(R.string.input_field_error_blank_email)
             ),
             Rule.ValidateStringMinLength(
-                length = minLength,
+                length = InputFieldConstants.Email.minLength,
                 errorMessage = resourceProvider.getString(
-                    R.string.sign_up_screen_input_field_error_min_length_email,
-                    minLength
+                    R.string.input_field_error_min_length_email,
+                    InputFieldConstants.Email.minLength
                 )
             ),
             Rule.ValidateStringMaxLength(
-                length = maxLength,
+                length = InputFieldConstants.Email.maxLength,
                 errorMessage = resourceProvider.getString(
-                    R.string.sign_up_screen_input_field_error_max_length_email,
-                    maxLength
+                    R.string.input_field_error_max_length_email,
+                    InputFieldConstants.Email.maxLength
                 )
             ),
             Rule.ValidateEmail(
-                errorMessage = resourceProvider.getString(R.string.sign_up_screen_input_field_error_validate_email_email)
+                errorMessage = resourceProvider.getString(R.string.input_field_error_validate_email_email)
             )
         )
     }
 
     private fun getPasswordValidationRules(): List<Rule> {
-        val minLength = 10
-        val maxLength = 30
         return listOf(
             Rule.ValidateNotBlank(errorMessage = resourceProvider.getString(R.string.sign_up_screen_input_field_error_blank_password)),
             Rule.ValidateStringMinLength(
-                length = minLength,
+                length = InputFieldConstants.Password.minLength,
                 errorMessage = resourceProvider.getString(
-                    R.string.sign_up_screen_input_field_error_min_length_password,
-                    minLength
+                    R.string.input_field_error_min_length_password,
+                    InputFieldConstants.Password.minLength
                 )
             ),
             Rule.ValidateStringMaxLength(
-                length = maxLength,
+                length = InputFieldConstants.Password.maxLength,
                 errorMessage = resourceProvider.getString(
-                    R.string.sign_up_screen_input_field_error_max_length_password,
-                    maxLength
+                    R.string.input_field_error_max_length_password,
+                    InputFieldConstants.Password.maxLength
                 )
             )
         )

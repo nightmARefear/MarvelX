@@ -10,7 +10,7 @@ import com.alexgreece45.marvelx.interactors.LogoutPartialState
 import com.alexgreece45.marvelx.interactors.PostLoginWithTokenPartialState
 import com.alexgreece45.marvelx.interactors.RefreshAccessTokenPartialState
 import com.alexgreece45.marvelx.interactors.RegisterInteractor
-import com.alexgreece45.marvelx.interactors.UserInteractor
+import com.alexgreece45.marvelx.interactors.LoginInteractor
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
@@ -72,7 +72,7 @@ sealed interface HomeEffect : BaseEffect {
 class HomeViewModel @Inject constructor(
     private val prefKeys: PrefKeys,
     private val resourceProvider: ResourceProvider,
-    private val userInteractor: UserInteractor,
+    private val loginInteractor: LoginInteractor,
     private val registerInteractor: RegisterInteractor,
     private val authController: AuthController
 ) : BaseViewModel<HomeEvent, HomeState, HomeEffect>() {
@@ -157,7 +157,7 @@ class HomeViewModel @Inject constructor(
             )
         }
         viewModelScope.launch {
-            userInteractor.refreshAccessToken().collect {
+            loginInteractor.refreshAccessToken().collect {
                 when (it) {
                     is RefreshAccessTokenPartialState.Failed -> {
                         setState {
@@ -265,7 +265,7 @@ class HomeViewModel @Inject constructor(
             )
         }
         viewModelScope.launch {
-            userInteractor.logout().collect {
+            loginInteractor.logout().collect {
                 when (it) {
                     is LogoutPartialState.Failed -> {
                         setState {

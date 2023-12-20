@@ -6,6 +6,7 @@ import androidx.navigation.navigation
 import com.alexgreece45.marvelx.ui.screens.otpScreen.OtpScreen
 import com.alexgreece45.marvelx.ui.screens.registerScreens.homeScreen.HomeScreen
 import com.alexgreece45.marvelx.ui.screens.registerScreens.loginScreen.LoginScreen
+import com.alexgreece45.marvelx.ui.screens.registerScreens.loginScreen.forgotPasswordScreen.ForgotPasswordScreen
 import com.alexgreece45.marvelx.ui.screens.registerScreens.signupScreen.SignUpScreen
 import com.alexgreece45.marvelx.ui.screens.splashScreen.SplashScreen
 
@@ -30,6 +31,14 @@ fun NavGraphBuilder.RegisterNavGraph(
         composable(Screen.RegisterScreens.LoginScreen) {
             LoginScreen(
                 navController = navController
+            )
+        }
+
+        composable(Screen.RegisterScreens.ForgotPasswordScreen) {
+            ForgotPasswordScreen(
+                navigateToLoginScreen = {
+                    navController.popBackStack()
+                }
             )
         }
 

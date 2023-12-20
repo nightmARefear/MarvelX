@@ -118,6 +118,10 @@ fun LoginScreen(
                 LoginEffect.OnDoneClick -> {
                     viewModel.setEvent(LoginEvent.OnLoginButtonClick)
                 }
+
+                LoginEffect.Navigation.NavigateToForgotPasswordScreen -> {
+                    navController.navigate(Screen.RegisterScreens.ForgotPasswordScreen.route)
+                }
             }
         }
     }

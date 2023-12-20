@@ -4,6 +4,7 @@ import androidx.core.text.isDigitsOnly
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.controllers.PrefKeys
 import com.alexgreece45.marvelx.controllers.TimerController
+import com.alexgreece45.marvelx.controllers.TimerStatus
 import com.alexgreece45.marvelx.data.domains.otp.OtpErrorCause
 import com.alexgreece45.marvelx.data.domains.resendOtp.ResendOtpErrorCause
 import com.alexgreece45.marvelx.data.domains.sensitiveUserData.SensitiveUserDataDomain
@@ -11,10 +12,10 @@ import com.alexgreece45.marvelx.data.domains.user.VerificationStep
 import com.alexgreece45.marvelx.interactors.GetJwtForSensitiveUserDataPartialState
 import com.alexgreece45.marvelx.interactors.GetSensitiveUserDataPartialState
 import com.alexgreece45.marvelx.interactors.GrandNewAccessTokenPartialState
+import com.alexgreece45.marvelx.interactors.LoginInteractor
 import com.alexgreece45.marvelx.interactors.OtpInteractor
 import com.alexgreece45.marvelx.interactors.RegisterInteractor
 import com.alexgreece45.marvelx.interactors.ResendOtpPartialState
-import com.alexgreece45.marvelx.interactors.UserInteractor
 import com.alexgreece45.marvelx.interactors.ValidateOtpPartialState
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
@@ -22,8 +23,9 @@ import com.alexgreece45.marvelx.mvi.BaseState
 import com.alexgreece45.marvelx.mvi.BaseViewModel
 import com.alexgreece45.marvelx.util.FormsValidationResult
 import com.alexgreece45.marvelx.util.ResourceProvider
-import com.alexgreece45.marvelx.util.Rule
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -39,6 +41,8 @@ sealed class OtpEvent : BaseEvent {
     data object OnBackClick : OtpEvent()
 
     data object OnDoneClick : OtpEvent()
+
+    data object OnVerifyButtonClicked : OtpEvent()
 
     data object OnResendOtpButtonClick : OtpEvent()
 }
@@ -82,7 +86,14 @@ data class OtpState(
 
     val otpFieldEnabled: Boolean = true,
 
-    val resendOtpButtonEnabled: Boolean = true,
+    val isResendOtpButtonEnabled: Boolean = true,
+
+    /**
+     * Controls whether the verify button is enabled. When clicked, the user-entered OTP is verified.
+     * This button must _only_ be enabled when the length of the OTP is 6. Also, when the OTP field
+     * clears, this button should be disabled.
+     */
+    val isVerifyButtonEnabled: Boolean = false,
 
     // Validations.
     val enteredOtpValidationResult: FormsValidationResult = FormsValidationResult(true)
@@ -105,12 +116,57 @@ sealed class OtpEffect : BaseEffect {
 @HiltViewModel
 class OtpViewModel @Inject constructor(
     private val otpInteractor: OtpInteractor,
-    private val userInteractor: UserInteractor,
+    private val loginInteractor: LoginInteractor,
     private val registerInteractor: RegisterInteractor,
     private val resourceProvider: ResourceProvider,
     private val prefKeys: PrefKeys,
     private val timerController: TimerController
 ) : BaseViewModel<OtpEvent, OtpState, OtpEffect>() {
+
+    /**
+     * A [Job] for the OTP countdown timer. Its initial value is set to `null` to represent that no
+     * job is present. This job should be set to the respective parent [CoroutineScope] of the
+     * caller of [TimerController.startCountdown], which usually is [viewModelScope].
+     *
+     * Before setting this job to a coroutine scope, make sure to cancel it by calling `cancel()`.
+     * It is highly recommended to _**always**_ cancel this job before setting it to a new one.
+     *
+     * ## Example usage
+     *
+     * ### 1. Cancel this job.
+     * ```
+     * countdownJob?.cancel()
+     * ```
+     *
+     * ### 2. Initialize this job.
+     * ```
+     * countdownJob = viewModelScope.launch {
+     *                 timerController.startCountdown(duration = it.expiresIn)
+     *                     .collect { timerStatus ->
+     *                         when (timerStatus) {
+     *                             TimerStatus.Completed -> {
+     *                                 setState {
+     *                                     copy(
+     *                                         otpBlockRemainingTime = null,
+     *                                         resendOtpButtonEnabled = true
+     *                                     )
+     *                                 }
+     *                             }
+     *
+     *                             is TimerStatus.Ticking -> {
+     *                                 setState {
+     *                                     copy(
+     *                                         otpBlockRemainingTime = timerStatus.remainingTime,
+     *                                     )
+     *                                 }
+     *                             }
+     *                         }
+     *                     }
+     *             }
+     * ```
+     */
+    private var countdownJob: Job? = null
+
     override fun setInitialState(): OtpState = OtpState()
 
     override fun handleEvents(event: OtpEvent) {
@@ -127,7 +183,7 @@ class OtpViewModel @Inject constructor(
             is OtpEvent.OnOtpFieldValueChange -> {
                 // Update state, ONLY if the new OTP is different from the old one.
                 if (event.otp != currentState.otp) {
-                    onOtpFieldValueChange(otp = event.otp, event = event)
+                    onOtpFieldValueChange(otp = event.otp)
                 }
             }
 
@@ -145,6 +201,19 @@ class OtpViewModel @Inject constructor(
 
             OtpEvent.OnResendOtpButtonClick -> {
                 resendOtp()
+            }
+
+            OtpEvent.OnVerifyButtonClicked -> {
+                if (currentState.otp.length != 6) {
+                    setEffect {
+                        OtpEffect.Navigation.NavigateToPreviousScreenWithError(
+                            errorMessage = resourceProvider.getGenericErrorMessage()
+                        )
+                    }
+                    return
+                }
+
+                validateOtp(event)
             }
         }
     }
@@ -180,18 +249,14 @@ class OtpViewModel @Inject constructor(
         )
     }
 
-    private fun onOtpFieldValueChange(otp: String, event: OtpEvent.OnOtpFieldValueChange) {
+    private fun onOtpFieldValueChange(otp: String) {
         if (otp.isDigitsOnly() && otp.length <= 6) {
             setState {
                 copy(
                     errorMessage = null,
-                    otp = otp
+                    otp = otp,
+                    isVerifyButtonEnabled = otp.length == 6
                 )
-            }
-
-            // Automatically validate user entered OTP if its length is 6 characters.
-            if (otp.length == 6) {
-                validateOtp(event)
             }
         }
     }
@@ -201,7 +266,7 @@ class OtpViewModel @Inject constructor(
             // OTP block is in place. Disable "Resend OTP" button, and don't proceed any further.
             setState {
                 copy(
-                    resendOtpButtonEnabled = false
+                    isResendOtpButtonEnabled = false
                 )
             }
             return
@@ -212,7 +277,8 @@ class OtpViewModel @Inject constructor(
                 isLoading = true
             )
         }
-        viewModelScope.launch {
+        countdownJob?.cancel()
+        countdownJob = viewModelScope.launch {
             otpInteractor.resendOtp(
                 userId = currentState.userId,
                 verificationStep = currentState.verificationStep
@@ -231,25 +297,33 @@ class OtpViewModel @Inject constructor(
                             copy(
                                 isLoading = false,
                                 errorMessage = null,
-                                resendOtpButtonEnabled = false
+                                isResendOtpButtonEnabled = false
                             )
                         }
-                        timerController.startTimer(expiresIn = it.expiresIn) { formattedTime, isLastSecond ->
-                            if (isLastSecond) {
-                                setState {
-                                    copy(
-                                        otpBlockRemainingTime = null,
-                                        resendOtpButtonEnabled = true
-                                    )
-                                }
-                            } else {
-                                setState {
-                                    copy(
-                                        otpBlockRemainingTime = formattedTime,
-                                    )
+                        timerController.startCountdown(duration = it.expiresIn)
+                            .collect { timerStatus ->
+                                when (timerStatus) {
+                                    TimerStatus.Completed -> {
+                                        setState {
+                                            copy(
+                                                otpBlockRemainingTime = null,
+                                                isResendOtpButtonEnabled = true
+                                            )
+                                        }
+                                        setEffect {
+                                            OtpEffect.OtpFieldRequestFocus
+                                        }
+                                    }
+
+                                    is TimerStatus.Ticking -> {
+                                        setState {
+                                            copy(
+                                                otpBlockRemainingTime = timerStatus.remainingTime,
+                                            )
+                                        }
+                                    }
                                 }
                             }
-                        }
                     }
 
                     is ResendOtpPartialState.Failed -> {
@@ -269,34 +343,41 @@ class OtpViewModel @Inject constructor(
                                 setState {
                                     copy(
                                         isLoading = false,
-                                        errorMessage = null,
                                         otp = "",
-                                        resendOtpButtonEnabled = false,
-                                        otpFieldEnabled = false
+                                        isResendOtpButtonEnabled = false,
+                                        otpFieldEnabled = false,
+                                        isVerifyButtonEnabled = false
                                     )
                                 }
-                                timerController.startTimer(expiresIn = otpFailedDomain.expiresIn) { formattedTime, isLastSecond ->
-                                    if (isLastSecond) {
-                                        setState {
-                                            copy(
-                                                errorMessage = null,
-                                                otpBlockRemainingTime = null,
-                                                resendOtpButtonEnabled = true,
-                                                otpFieldEnabled = true
-                                            )
-                                        }
-                                    } else {
-                                        setState {
-                                            copy(
-                                                errorMessage = resourceProvider.getString(
-                                                    otpFailedDomain.resendOtpErrorCause.cause,
-                                                    formattedTime
-                                                ),
-                                                otpBlockRemainingTime = formattedTime,
-                                            )
+                                timerController.startCountdown(duration = otpFailedDomain.expiresIn)
+                                    .collect { timerStatus ->
+                                        when (timerStatus) {
+                                            TimerStatus.Completed -> {
+                                                setState {
+                                                    copy(
+                                                        otpBlockRemainingTime = null,
+                                                        isResendOtpButtonEnabled = true,
+                                                        otpFieldEnabled = true
+                                                    )
+                                                }
+                                                setEffect {
+                                                    OtpEffect.OtpFieldRequestFocus
+                                                }
+                                            }
+
+                                            is TimerStatus.Ticking -> {
+                                                setState {
+                                                    copy(
+                                                        errorMessage = resourceProvider.getString(
+                                                            otpFailedDomain.resendOtpErrorCause.cause,
+                                                            timerStatus.remainingTime
+                                                        ),
+                                                        otpBlockRemainingTime = timerStatus.remainingTime,
+                                                    )
+                                                }
+                                            }
                                         }
                                     }
-                                }
                             }
 
                             ResendOtpErrorCause.InternalServerError, ResendOtpErrorCause.UserNotFound -> {
@@ -333,7 +414,8 @@ class OtpViewModel @Inject constructor(
                 isLoading = true
             )
         }
-        viewModelScope.launch {
+        countdownJob?.cancel()
+        countdownJob = viewModelScope.launch {
             otpInteractor.validateOtp(otp = currentState.otp, userId = currentState.userId)
                 .collect { validateOtpPartialState ->
                     when (validateOtpPartialState) {
@@ -355,11 +437,16 @@ class OtpViewModel @Inject constructor(
 
                         is ValidateOtpPartialState.ClientError -> {
                             // User-input related error.
+                            setState {
+                                copy(
+                                    isVerifyButtonEnabled = false
+                                )
+                            }
 
                             // If the OTP error cause it Blocked, perform additional operations.
                             if (validateOtpPartialState.otpResponseErrorDomain.errorCause is OtpErrorCause.Blocked) {
                                 if (validateOtpPartialState.otpResponseErrorDomain.blockExpiresIn == null) {
-                                    // "blocksExpiresIn" is null when the error cause is "Blocked". Propagate "an unknown error occurred" to the user.
+                                    // "blocksExpiresIn" shouldn't be  `null` when the error cause is "Blocked". Thus, propagate "an unknown error occurred" to the user.
                                     setEffect {
                                         OtpEffect.Navigation.NavigateToPreviousScreenWithError(
                                             errorMessage = resourceProvider.getGenericErrorMessage()
@@ -374,35 +461,40 @@ class OtpViewModel @Inject constructor(
                                         errorMessage = null,
                                         otp = "",
                                         otpFieldEnabled = false,
-                                        resendOtpButtonEnabled = false
+                                        isResendOtpButtonEnabled = false,
+                                        otpBlockRemainingTime = null,
                                     )
                                 }
-                                timerController.startTimer(
-                                    expiresIn = validateOtpPartialState.otpResponseErrorDomain.blockExpiresIn,
-                                    onTick = { formattedRemainingTime, isLastSecond ->
-                                        // Current second is the last one.
-                                        if (isLastSecond) {
-                                            setState {
-                                                copy(
-                                                    errorMessage = null,
-                                                    otpBlockRemainingTime = null,
-                                                    otpFieldEnabled = true,
-                                                    resendOtpButtonEnabled = true
-                                                )
+                                timerController.startCountdown(duration = validateOtpPartialState.otpResponseErrorDomain.blockExpiresIn)
+                                    .collect { timerStatus ->
+                                        when (timerStatus) {
+                                            TimerStatus.Completed -> {
+                                                setState {
+                                                    copy(
+                                                        errorMessage = null,
+                                                        otpBlockRemainingTime = null,
+                                                        otpFieldEnabled = true,
+                                                        isResendOtpButtonEnabled = true
+                                                    )
+                                                }
+                                                setEffect {
+                                                    OtpEffect.OtpFieldRequestFocus
+                                                }
                                             }
-                                        } else {
-                                            setState {
-                                                copy(
-                                                    errorMessage = resourceProvider.getString(
-                                                        validateOtpPartialState.otpResponseErrorDomain.errorCause.cause,
-                                                        formattedRemainingTime
-                                                    ),
-                                                    otpBlockRemainingTime = formattedRemainingTime
-                                                )
+
+                                            is TimerStatus.Ticking -> {
+                                                setState {
+                                                    copy(
+                                                        errorMessage = resourceProvider.getString(
+                                                            validateOtpPartialState.otpResponseErrorDomain.errorCause.cause,
+                                                            timerStatus.remainingTime
+                                                        ),
+                                                        otpBlockRemainingTime = timerStatus.remainingTime
+                                                    )
+                                                }
                                             }
                                         }
                                     }
-                                )
                                 return@collect
                             }
 
@@ -430,7 +522,7 @@ class OtpViewModel @Inject constructor(
 
     private fun grandNewAccessToken(code: String, event: OtpEvent) {
         viewModelScope.launch {
-            userInteractor.grandNewAccessToken(code = code).collect { accessTokenPartialState ->
+            loginInteractor.grandNewAccessToken(code = code).collect { accessTokenPartialState ->
                 when (accessTokenPartialState) {
                     is GrandNewAccessTokenPartialState.Failed -> {
                         setState {
@@ -501,8 +593,9 @@ class OtpViewModel @Inject constructor(
      * Retrieves the user's preferred medium of communication for sending OTPs.
      */
     private fun getSensitiveUserData(token: String) {
-        viewModelScope.launch {
-            userInteractor.getSensitiveUserData(token = token).collect {
+        countdownJob?.cancel()
+        countdownJob = viewModelScope.launch {
+            loginInteractor.getSensitiveUserData(token = token).collect {
                 when (it) {
                     is GetSensitiveUserDataPartialState.Failed -> {
                         setEffect {
@@ -516,16 +609,40 @@ class OtpViewModel @Inject constructor(
                         val sensitiveUserDataDomain = it.sensitiveUserDataDomain
                         if (sensitiveUserDataDomain.isOtpBlocked.not()) {
                             // OTP functionality isn't blocked.
+
                             setState {
                                 copy(
                                     isLoading = false,
-                                    sensitiveUserData = it.sensitiveUserDataDomain
+                                    sensitiveUserData = sensitiveUserDataDomain
                                 )
                             }
 
-                            setEffect {
-                                OtpEffect.OtpFieldRequestFocus
-                            }
+                            // Block "Resend OTP functionality."
+                            timerController.startCountdown(sensitiveUserDataDomain.otpInterval)
+                                .collect { timerStatus ->
+                                    when (timerStatus) {
+                                        TimerStatus.Completed -> {
+                                            setState {
+                                                copy(
+                                                    otpBlockRemainingTime = null,
+                                                    isResendOtpButtonEnabled = true
+                                                )
+                                            }
+                                            setEffect {
+                                                OtpEffect.OtpFieldRequestFocus
+                                            }
+                                        }
+
+                                        is TimerStatus.Ticking -> {
+                                            setState {
+                                                copy(
+                                                    otpBlockRemainingTime = timerStatus.remainingTime,
+                                                    isResendOtpButtonEnabled = false
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
                             return@collect
                         }
 
@@ -543,49 +660,44 @@ class OtpViewModel @Inject constructor(
                         setState {
                             copy(
                                 isLoading = false,
-                                otpFieldEnabled = false,
-                                resendOtpButtonEnabled = false,
+                                otpFieldEnabled = !sensitiveUserDataDomain.isOtpBlocked,
+                                isResendOtpButtonEnabled = false,
                                 sensitiveUserData = it.sensitiveUserDataDomain
                             )
                         }
-                        timerController.startTimer(
-                            expiresIn = sensitiveUserDataDomain.otpBlockExpiresIn,
-                            onTick = { formattedRemainingTime, isLastSecond ->
-                                // Current second is the last one.
-                                if (isLastSecond) {
-                                    setState {
-                                        copy(
-                                            errorMessage = null,
-                                            otpBlockRemainingTime = null,
-                                            otpFieldEnabled = true,
-                                            resendOtpButtonEnabled = true
-                                        )
+                        timerController.startCountdown(duration = sensitiveUserDataDomain.otpBlockExpiresIn)
+                            .collect { timerStatus ->
+                                when (timerStatus) {
+                                    TimerStatus.Completed -> {
+                                        setState {
+                                            copy(
+                                                errorMessage = null,
+                                                otpBlockRemainingTime = null,
+                                                otpFieldEnabled = true,
+                                                isResendOtpButtonEnabled = true
+                                            )
+                                        }
+                                        setEffect {
+                                            OtpEffect.OtpFieldRequestFocus
+                                        }
                                     }
-                                    setEffect {
-                                        OtpEffect.OtpFieldRequestFocus
-                                    }
-                                } else {
-                                    setState {
-                                        copy(
-                                            errorMessage = resourceProvider.getString(
-                                                OtpErrorCause.Blocked.cause,
-                                                formattedRemainingTime
-                                            ),
-                                            otpBlockRemainingTime = formattedRemainingTime
-                                        )
+
+                                    is TimerStatus.Ticking -> {
+                                        setState {
+                                            copy(
+                                                errorMessage = resourceProvider.getString(
+                                                    OtpErrorCause.Blocked.cause,
+                                                    timerStatus.remainingTime
+                                                ),
+                                                otpBlockRemainingTime = timerStatus.remainingTime
+                                            )
+                                        }
                                     }
                                 }
                             }
-                        )
                     }
                 }
             }
         }
     }
-
-    private fun getOtpValidationRules(): List<Rule> =
-        listOf(
-            Rule.ValidateNotBlank("OTP cannot be empty."),
-            Rule.ValidateStringLength(6, "OTP must be 6 characters.")
-        )
 }

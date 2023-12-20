@@ -6,7 +6,7 @@ import com.alexgreece45.marvelx.controllers.AppLoggerController
 import com.alexgreece45.marvelx.controllers.AuthController
 import com.alexgreece45.marvelx.controllers.PrefKeys
 import com.alexgreece45.marvelx.interactors.LogoutPartialState
-import com.alexgreece45.marvelx.interactors.UserInteractor
+import com.alexgreece45.marvelx.interactors.LoginInteractor
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
@@ -53,7 +53,7 @@ class ActivityViewModel @Inject constructor(
     private val authController: AuthController,
     private val prefKeys: PrefKeys,
     private val logger: AppLoggerController,
-    private val userInteractor: UserInteractor,
+    private val loginInteractor: LoginInteractor,
     private val resourceProvider: ResourceProvider
 ) : BaseViewModel<ActivityEvent, ActivityState, ActivityEffect>() {
     override fun setInitialState(): ActivityState = ActivityState()
@@ -77,7 +77,7 @@ class ActivityViewModel @Inject constructor(
                     ActivityEffect.Navigation.NavigateToHomeScreen
                 }
                 viewModelScope.launch {
-                    userInteractor.logout().collect {
+                    loginInteractor.logout().collect {
                         when (it) {
                             is LogoutPartialState.Failed, LogoutPartialState.Success -> {
                                 setState {
