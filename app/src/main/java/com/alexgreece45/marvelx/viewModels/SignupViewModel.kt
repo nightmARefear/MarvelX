@@ -3,6 +3,7 @@ package com.alexgreece45.marvelx.viewModels
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.controllers.PrefKeys
+import com.alexgreece45.marvelx.data.domains.otp.OtpFlowType
 import com.alexgreece45.marvelx.data.domains.user.VerificationStep
 import com.alexgreece45.marvelx.data.models.user.Gender
 import com.alexgreece45.marvelx.data.models.user.signup.UserSignupRequest
@@ -102,6 +103,7 @@ sealed class SignupEffect : BaseEffect {
         data object NavigateToAllCharactersScreen : Navigation()
         data class NavigateToOtpScreen(
             val userId: Int,
+            val otpFlowType: String = OtpFlowType.Register.key,
             val verificationStep: String,
             val shouldRememberUserSession: Boolean
         ) : Navigation()
@@ -406,7 +408,7 @@ class SignupViewModel @Inject constructor(
                                             setEffect {
                                                 SignupEffect.Navigation.NavigateToOtpScreen(
                                                     userId = signupResponseDomain.userId,
-                                                    signupResponseDomain.verificationStep.name,
+                                                    verificationStep = signupResponseDomain.verificationStep.key,
                                                     shouldRememberUserSession = true
                                                 )
                                             }
@@ -416,7 +418,7 @@ class SignupViewModel @Inject constructor(
                                             setEffect {
                                                 SignupEffect.Navigation.NavigateToOtpScreen(
                                                     userId = signupResponseDomain.userId,
-                                                    signupResponseDomain.verificationStep.name,
+                                                    verificationStep = signupResponseDomain.verificationStep.key,
                                                     shouldRememberUserSession = true
                                                 )
                                             }

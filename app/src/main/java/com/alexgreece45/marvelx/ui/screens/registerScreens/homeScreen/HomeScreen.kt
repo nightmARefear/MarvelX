@@ -23,6 +23,7 @@ import com.alexgreece45.marvelx.ui.components.AlertDialogButton
 import com.alexgreece45.marvelx.ui.components.AlertDialogError
 import com.alexgreece45.marvelx.ui.components.ContainedButton
 import com.alexgreece45.marvelx.ui.components.ContentScreen
+import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
 import com.alexgreece45.marvelx.ui.navigation.Screen
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.viewModels.HomeEffect
@@ -37,8 +38,10 @@ fun HomeScreen(
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
     ContentScreen(
-        onBack = { viewModel.setEvent(HomeEvent.OnBack) },
         isLoading = state.isLoading,
+        navigableAction = ScreenNavigableAction.Backable {
+            viewModel.setEvent(HomeEvent.OnBack )
+        },
     ) { paddingValues ->
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
@@ -50,7 +53,7 @@ fun HomeScreen(
                         title = state.alertDialogTitle,
                         errorMessage = state.alertDialogErrorMessage,
                         confirmButton = AlertDialogButton(
-                            value = stringResource(R.string.ok),
+                            value = stringResource(R.string.generic_ok_button),
                             onClick = { viewModel.setEvent(HomeEvent.AlertDialog.OnOkClick) }
                         )
                     )
@@ -105,7 +108,7 @@ fun HomeScreen(
         viewModel.uiEffect.collect { homeEffect ->
             when (homeEffect) {
                 HomeEffect.Navigation.NavigateToLoginScreen -> {
-                    navController.navigate(Screen.RegisterScreens.LoginScreen.route) {
+                    navController.navigate(Screen.RegisterScreens.LoginScreens.LoginScreen.route) {
                         launchSingleTop = true
                     }
                 }
@@ -128,6 +131,7 @@ fun HomeScreen(
                     navController.navigate(
                         Screen.OtpScreen.createNavRoute(
                             userId = homeEffect.userId,
+                            otpFlowType = homeEffect.otpFlowType,
                             verificationStep = homeEffect.verificationStep,
                             shouldRememberUserSession = homeEffect.shouldRememberUserSession
                         )

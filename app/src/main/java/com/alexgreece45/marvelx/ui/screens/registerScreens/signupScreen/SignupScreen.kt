@@ -37,10 +37,11 @@ import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.data.models.user.Gender
 import com.alexgreece45.marvelx.ui.components.AlertDialogButton
 import com.alexgreece45.marvelx.ui.components.AlertDialogError
-import com.alexgreece45.marvelx.ui.components.AlertDialogErrorButtonType
+import com.alexgreece45.marvelx.ui.components.ErrorButtonType
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.ExposedDropdownMenu
 import com.alexgreece45.marvelx.ui.components.OutlinedTextFieldValidation
+import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
 import com.alexgreece45.marvelx.ui.navigation.Screen
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.VSpacer
@@ -85,6 +86,7 @@ fun SignUpScreen(
                     navController.navigate(
                         Screen.OtpScreen.createNavRoute(
                             userId = effect.userId,
+                            otpFlowType = effect.otpFlowType,
                             verificationStep = effect.verificationStep,
                             shouldRememberUserSession = effect.shouldRememberUserSession
                         )
@@ -103,8 +105,10 @@ fun SignUpScreen(
     }
 
     ContentScreen(
-        onBack = { navController.popBackStack() },
         isLoading = state.isLoading,
+        navigableAction = ScreenNavigableAction.Backable {
+            navController.popBackStack()
+        },
         showToolbar = true,
         toolbarTitle = stringResource(R.string.sign_up_screen_toolbar_title)
     ) { paddingValues ->
@@ -120,8 +124,8 @@ fun SignUpScreen(
                         title = state.alertDialogTitle,
                         errorMessage = state.alertDialogErrorMessage,
                         confirmButton = AlertDialogButton(
-                            value = stringResource(R.string.ok),
-                            buttonType = AlertDialogErrorButtonType.Text,
+                            value = stringResource(R.string.generic_ok_button),
+                            buttonType = ErrorButtonType.Text,
                             onClick = { viewModel.setEvent(SignupEvent.AlertDialogError.OnOkClick) }
                         )
                     )

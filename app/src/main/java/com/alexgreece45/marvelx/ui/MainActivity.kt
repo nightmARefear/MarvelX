@@ -68,7 +68,7 @@ class MainActivity : ComponentActivity() {
                             title = mainActivityErrorDialog.title,
                             errorMessage = mainActivityErrorDialog.errorMessage,
                             confirmButton = AlertDialogButton(
-                                value = stringResource(R.string.ok),
+                                value = stringResource(R.string.generic_ok_button),
                                 onClick = { activityViewModel.setEvent(mainActivityErrorDialog.onOkClick) }
                             )
                         )

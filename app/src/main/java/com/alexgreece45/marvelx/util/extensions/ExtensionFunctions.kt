@@ -61,6 +61,13 @@ fun screenPaddingsSte(padding: Dp = DEFAULT_SCREEN_PADDING): PaddingValues {
     )
 }
 
+/**
+ * Applies `0.`[dp] padding to all the edges inside a box.
+ */
+@Composable
+fun screenPaddingsNone(): PaddingValues =
+    PaddingValues(all = 0.dp)
+
 @Composable
 fun PlaceholderDefaults.color(
     backgroundColor: Color = MaterialTheme.colors.surface,

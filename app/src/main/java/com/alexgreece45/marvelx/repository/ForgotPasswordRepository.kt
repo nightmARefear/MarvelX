@@ -2,17 +2,13 @@ package com.alexgreece45.marvelx.repository
 
 import com.alexgreece45.marvelx.data.api.ApiClient
 import com.alexgreece45.marvelx.data.models.forgotPassword.email.RequestForgotPasswordOtpBlockedEmail
-import com.alexgreece45.marvelx.data.models.forgotPassword.email.RequestForgotPasswordSendOtpToEmail
-import com.alexgreece45.marvelx.data.models.forgotPassword.email.RequestForgotPasswordValidateOtpFromEmail
+import com.alexgreece45.marvelx.data.models.forgotPassword.email.RequestForgotPasswordSendOtp
+import com.alexgreece45.marvelx.data.models.forgotPassword.email.RequestForgotPasswordValidateOtp
 import com.alexgreece45.marvelx.data.models.forgotPassword.email.ResponseForgotPasswordOtpBlockedEmail
-import com.alexgreece45.marvelx.data.models.forgotPassword.email.ResponseForgotPasswordSendOtpToEmail
-import com.alexgreece45.marvelx.data.models.forgotPassword.email.ResponseForgotPasswordValidateOtpFromEmail
+import com.alexgreece45.marvelx.data.models.forgotPassword.email.ResponseForgotPasswordSendOtp
+import com.alexgreece45.marvelx.data.models.forgotPassword.email.ResponseForgotPasswordValidateOtp
 import com.alexgreece45.marvelx.data.models.forgotPassword.phoneNumber.RequestForgotPasswordOtpBlockedPhoneNumber
-import com.alexgreece45.marvelx.data.models.forgotPassword.phoneNumber.RequestForgotPasswordSendOtpToPhoneNumber
-import com.alexgreece45.marvelx.data.models.forgotPassword.phoneNumber.RequestForgotPasswordValidateOtpFromPhoneNumber
 import com.alexgreece45.marvelx.data.models.forgotPassword.phoneNumber.ResponseForgotPasswordOtpBlockedPhoneNumber
-import com.alexgreece45.marvelx.data.models.forgotPassword.phoneNumber.ResponseForgotPasswordSendOtpToPhoneNumber
-import com.alexgreece45.marvelx.data.models.forgotPassword.phoneNumber.ResponseForgotPasswordValidateOtpFromPhoneNumber
 import com.alexgreece45.marvelx.data.models.otp.OtpResponseError
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.google.gson.Gson
@@ -22,14 +18,13 @@ import javax.inject.Inject
 
 interface ForgotPasswordRepository {
     /**
-     * Forgot password flow. This method is used to send an OTP to the given [email].
+     * Forgot password flow. This method is used to send an OTP to the given [data] based on the
+     * [verificationStep].
      */
-    suspend fun sendOtpToEmail(email: String): Flow<ForgotPasswordRepositorySendOtpEmailResponse>
-
-    /**
-     * Forgot password flow. This method is used to send an OTP to the given [phoneNumber].
-     */
-    suspend fun sendOtpToPhoneNumber(phoneNumber: String): Flow<ForgotPasswordRepositorySendOtpPhoneNumberResponse>
+    suspend fun sendOtp(
+        data: String,
+        verificationStep: String
+    ): Flow<ForgotPasswordRepositorySendOtpResponse>
 
     /**
      * Checks if the OTP functionality for the email is blocked.
@@ -44,69 +39,41 @@ interface ForgotPasswordRepository {
     /**
      * Sends the given OTP to the backend for validation.
      *
-     * @param requestId     The unique request ID initially used to send the OTP. It will be used
-     * for the validation in the backend.
-     * @param otp           The OTP that the user has entered. It will be used for validation in the
-     * backend.
+     * @param requestId         The unique request ID initially used to send the OTP. It will be
+     * used for the validation in the backend.
+     * @param otp               The OTP that the user has entered. It will be used for validation in
+     * the backend.
      */
-    suspend fun validateOtpFromEmail(
+    suspend fun validateOtp(
         requestId: String,
         otp: String
     ): Flow<ForgotPasswordRepositoryValidateOtpFromEmailResponse>
-
-    /**
-     * Sends the given OTP to the backend for validation.
-     *
-     * @param requestId     The unique request ID initially used to send the OTP. It will be used
-     * for the validation in the backend.
-     * @param otp           The OTP that the user has entered. It will be used for validation in the
-     * backend.
-     */
-    suspend fun validateOtpFromPhoneNumber(
-        requestId: String,
-        otp: String
-    ): Flow<ForgotPasswordRepositoryValidateOtpFromPhoneNumberResponse>
 }
 
 class ForgotPasswordRepositoryImpl @Inject constructor(
     private val apiClient: ApiClient,
     private val resourceProvider: ResourceProvider
 ) : ForgotPasswordRepository {
-    override suspend fun sendOtpToEmail(email: String): Flow<ForgotPasswordRepositorySendOtpEmailResponse> =
+    override suspend fun sendOtp(
+        data: String,
+        verificationStep: String
+    ): Flow<ForgotPasswordRepositorySendOtpResponse> =
         flow {
-            apiClient.forgotPasswordSendOtpToEmail(
-                body = RequestForgotPasswordSendOtpToEmail(email = email)
+            apiClient.forgotPasswordSendOtp(
+                body = RequestForgotPasswordSendOtp(
+                    data = data,
+                    verificationStep = verificationStep
+                )
             ).let { response ->
                 if (response.isSuccessful) {
                     emit(
-                        ForgotPasswordRepositorySendOtpEmailResponse.Success(
+                        ForgotPasswordRepositorySendOtpResponse.Success(
                             response = response.body()
                         )
                     )
                 } else {
                     emit(
-                        ForgotPasswordRepositorySendOtpEmailResponse.Failed(
-                            errorMessage = resourceProvider.getGenericErrorMessage()
-                        )
-                    )
-                }
-            }
-        }
-
-    override suspend fun sendOtpToPhoneNumber(phoneNumber: String): Flow<ForgotPasswordRepositorySendOtpPhoneNumberResponse> =
-        flow {
-            apiClient.forgotPasswordSendOtpToPhoneNumber(
-                body = RequestForgotPasswordSendOtpToPhoneNumber(phoneNumber = phoneNumber)
-            ).let { response ->
-                if (response.isSuccessful) {
-                    emit(
-                        ForgotPasswordRepositorySendOtpPhoneNumberResponse.Success(
-                            response = response.body()
-                        )
-                    )
-                } else {
-                    emit(
-                        ForgotPasswordRepositorySendOtpPhoneNumberResponse.Failed(
+                        ForgotPasswordRepositorySendOtpResponse.Failed(
                             errorMessage = resourceProvider.getGenericErrorMessage()
                         )
                     )
@@ -156,12 +123,12 @@ class ForgotPasswordRepositoryImpl @Inject constructor(
             }
         }
 
-    override suspend fun validateOtpFromEmail(
+    override suspend fun validateOtp(
         requestId: String,
         otp: String
     ): Flow<ForgotPasswordRepositoryValidateOtpFromEmailResponse> = flow {
-        apiClient.forgotPasswordValidateOtpFromEmail(
-            body = RequestForgotPasswordValidateOtpFromEmail(
+        apiClient.forgotPasswordValidateOtp(
+            body = RequestForgotPasswordValidateOtp(
                 requestId = requestId,
                 otp = otp
             )
@@ -184,49 +151,13 @@ class ForgotPasswordRepositoryImpl @Inject constructor(
             }
         }
     }
-
-    override suspend fun validateOtpFromPhoneNumber(
-        requestId: String,
-        otp: String
-    ): Flow<ForgotPasswordRepositoryValidateOtpFromPhoneNumberResponse> = flow {
-        apiClient.forgotPasswordValidateOtpFromPhoneNumber(
-            body = RequestForgotPasswordValidateOtpFromPhoneNumber(
-                requestId = requestId,
-                otp = otp
-            )
-        ).let { response ->
-            if (response.isSuccessful) {
-                emit(
-                    ForgotPasswordRepositoryValidateOtpFromPhoneNumberResponse.Success(
-                        response = response.body()
-                    )
-                )
-            } else {
-                emit(
-                    ForgotPasswordRepositoryValidateOtpFromPhoneNumberResponse.Failed(
-                        otpResponseError = Gson().fromJson(
-                            response.errorBody()?.string(),
-                            OtpResponseError::class.java
-                        )
-                    )
-                )
-            }
-        }
-    }
 }
 
-sealed interface ForgotPasswordRepositorySendOtpEmailResponse {
-    data class Success(val response: ResponseForgotPasswordSendOtpToEmail?) :
-        ForgotPasswordRepositorySendOtpEmailResponse
+sealed interface ForgotPasswordRepositorySendOtpResponse {
+    data class Success(val response: ResponseForgotPasswordSendOtp?) :
+        ForgotPasswordRepositorySendOtpResponse
 
-    data class Failed(val errorMessage: String) : ForgotPasswordRepositorySendOtpEmailResponse
-}
-
-sealed interface ForgotPasswordRepositorySendOtpPhoneNumberResponse {
-    data class Success(val response: ResponseForgotPasswordSendOtpToPhoneNumber?) :
-        ForgotPasswordRepositorySendOtpPhoneNumberResponse
-
-    data class Failed(val errorMessage: String) : ForgotPasswordRepositorySendOtpPhoneNumberResponse
+    data class Failed(val errorMessage: String) : ForgotPasswordRepositorySendOtpResponse
 }
 
 sealed interface ForgotPasswordRepositoryIsOtpBlockedEmailResponse {
@@ -245,17 +176,9 @@ sealed interface ForgotPasswordRepositoryIsOtpBlockedPhoneNumberResponse {
 }
 
 sealed interface ForgotPasswordRepositoryValidateOtpFromEmailResponse {
-    data class Success(val response: ResponseForgotPasswordValidateOtpFromEmail?) :
+    data class Success(val response: ResponseForgotPasswordValidateOtp?) :
         ForgotPasswordRepositoryValidateOtpFromEmailResponse
 
     data class Failed(val otpResponseError: OtpResponseError) :
         ForgotPasswordRepositoryValidateOtpFromEmailResponse
-}
-
-sealed interface ForgotPasswordRepositoryValidateOtpFromPhoneNumberResponse {
-    data class Success(val response: ResponseForgotPasswordValidateOtpFromPhoneNumber?) :
-        ForgotPasswordRepositoryValidateOtpFromPhoneNumberResponse
-
-    data class Failed(val otpResponseError: OtpResponseError) :
-        ForgotPasswordRepositoryValidateOtpFromPhoneNumberResponse
 }

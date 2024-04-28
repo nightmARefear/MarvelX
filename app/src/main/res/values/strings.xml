@@ -1,13 +1,11 @@
 <resources>
     // Generic
-    <string name="back">Back</string>
     <string name="error">error</string>
     <string name="male">male</string>
     <string name="female">female</string>
     <string name="other">other</string>
     <string name="email">email</string>
     <string name="phone_number">phone number</string>
-    <string name="ok">OK</string>
     <string name="loading">Please wait…</string>
     <string name="character">character</string>
     <string name="is_password_visible_content_description">Hide Password</string>
@@ -18,13 +16,24 @@
     <string name="ic_not_favorite_content_description">not favorite</string>
     <string name="not_favorite_message">This %1$s was removed from your favorites.</string>
 
+    <string name="generic_ok_button">OK</string>
+    <string name="generic_close_button">Close</string>
+
     // ERROR HANDLING
-    <string name="retry">Retry</string>
+    // • Generic Errors
+    <string name="generic_error">An error has occurred!</string>
+    <string name="generic_error_with_code">An error has occurred!\nError Code: %1$s</string>
+    <string name="generic_unknown_error">An unknown error has occurred.</string>
+    <string name="generic_unknown_error_with_code">An unknown error has occurred.\nError Code: %1$s</string>
+
+    // • Specific Errors
     <string name="no_internet_connection_error_message">No internet connection! Please try again!</string>
-    <string name="unknown_error">An unknown error has occurred!</string>
-    <string name="fatal_error">A fatal error has occurred!</string>
     <string name="internal_server_error">An internal server error has occurred!</string>
     <string name="no_data_was_found">No data was found!</string>
+
+    // • Generic Error Buttons
+    <string name="generic_retry_button">Try again</string>
+    <string name="generic_go_to_previous_screen_button">Go To Previous Screen</string>
 
     // Insecure application.
     <string name="splash_screen_alert_dialog_title">Insecure application</string>
@@ -64,6 +73,7 @@
     <string name="all_characters_screen_favorite_character_icon_description">favorite</string>
     <string name="all_characters_screen_not_favorite_character_icon_description">not favorite</string>
 
+    <string name="all_characters_screen_error_no_characters_found_search">No characters were found based on the specified criteria...</string>
     <string name="all_characters_screen_error_favoring_character">An error occurred while favoring this character.</string>
     <string name="all_characters_screen_error_unfavoring_character">An error occurred while unfavoring this character.</string>
     <string name="all_characters_screen_error_retrieving_favorite_characters">An error occurred while retrieving favorite characters.</string>
@@ -99,7 +109,7 @@
     <string name="home_screen_label_log_in_button">Login</string>
     <string name="home_screen_label_sign_up_button">Signup</string>
 
-    // Log In Screen
+    // Login Screen
     <string name="login_screen_toolbar_title">Login</string>
 
     <string name="login_screen_input_field_label_email">Email</string>
@@ -108,13 +118,14 @@
     <string name="login_screen_remember_me">Remember Me?</string>
     <string name="login_screen_do_not_have_an_account">Don\'t have an account? Signup</string>
 
-    <string name="login_screen_alert_dialog_title">Login failed</string>
+    <string name="login_screen_error_view_title">Login failed</string>
 
     <string name="login_screen_forgot_password_button">Forgot Password?</string>
     <string name="login_screen_signup_text_button">Signup</string>
     <string name="login_screen_login_button">LOGIN</string>
+    <string name="login_screen_back_to_login_button">Back to login</string>
 
-    // Sign Up Screen
+    // Signup Screen
     <string name="sign_up_screen_toolbar_title">Sign Up</string>
 
     <string name="sign_up_screen_input_field_label_first_name">First Name</string>
@@ -149,34 +160,38 @@
 
     <string name="sign_up_screen_signup_button">SIGN UP</string>
 
-    // FORGOT PASSWORD Screen and Sub-Screens
+    // ChangePassword Screen
+    <string name="change_password_screen_title">Enter your new password</string>
+    <string name="change_password_screen_subtitle">Enter the new password for your account.</string>
+    <string name="change_password_screen_button_sticky">change password</string>
+
+    // FORGOT PASSWORD Screen and related screens
     // • EnterEmail
-    <string name="forgot_password_screen_enter_email_subscreen_title">Forgot Your Password?</string>
-    <string name="forgot_password_screen_enter_email_subscreen_subtitle">Enter the email associated with your account and we\'ll send an email with the OTP code.</string>
+    <string name="forgot_password_enter_email_screen_title">Forgot Your Password?</string>
+    <string name="forgot_password_enter_email_screen_subtitle">Enter the email associated with your account and we\'ll send an email with the OTP code.</string>
 
     <string name="forgot_password_screen_input_field_label_email">Email</string>
 
-    <string name="forgot_password_screen_enter_email_subscreen_sticky_button">Continue</string>
+    <string name="forgot_password_enter_email_screen_sticky_button">Continue</string>
 
     // • ValidateEmail
-    <string name="forgot_password_screen_validate_email_subscreen_title">Verification code</string>
-    <string name="forgot_password_screen_validate_email_subscreen_subtitle">Enter the OTP code that was sent to your email.</string>
-    <string name="forgot_password_screen_validate_email_subscreen_sticky_button">Verify OTP</string>
+    <string name="forgot_password_validate_email_screen_title">Verification code</string>
+    <string name="forgot_password_validate_email_screen_subtitle">Enter the OTP code that was sent to your email.</string>
+
+    <string name="forgot_password_validate_email_screen_error_view_title">Validating Email Error</string>
+
+    <string name="forgot_password_validate_email_screen_go_to_previous_screen_button">Go to previous screen</string>
+    <string name="forgot_password_validate_email_screen_sticky_button">Verify OTP</string>
 
     // • EnterPhoneNumber
-    <string name="forgot_password_screen_enter_phone_number_subscreen_title">Enter your phone number</string>
-    <string name="forgot_password_screen_enter_phone_number_subscreen_subtitle">Enter the phone number associated with your account and we\'ll send a SMS with the OTP code.</string>
-    <string name="forgot_password_screen_enter_phone_number_subscreen_sticky_button">Continue</string>
+    <string name="forgot_password_enter_phone_number_screen_title">Enter your phone number</string>
+    <string name="forgot_password_enter_phone_number_screen_subtitle">Enter the phone number associated with your account and we\'ll send a SMS with the OTP code.</string>
+    <string name="forgot_password_enter_phone_number_screen_sticky_button">Continue</string>
 
     // • ValidatePhoneNumber
-    <string name="forgot_password_screen_validate_phone_number_subscreen_title">Verification code</string>
-    <string name="forgot_password_screen_validate_phone_number_subscreen_subtitle">Enter the OTP code that was sent to your phone number.</string>
-    <string name="forgot_password_screen_validate_phone_number_subscreen_sticky_button">Verify OTP</string>
-
-    // • EnterNewPassword
-    <string name="forgot_password_screen_enter_new_password_subscreen_title">Enter your new password</string>
-    <string name="forgot_password_screen_enter_new_password_subscreen_subtitle">Enter the new password for your account.</string>
-    <string name="forgot_password_screen_enter_new_password_subscreen_sticky_button">reset password</string>
+    <string name="forgot_password_validate_phone_number_screen_title">Verification code</string>
+    <string name="forgot_password_validate_phone_number_screen_subtitle">Enter the OTP code that was sent to your phone number.</string>
+    <string name="forgot_password_validate_phone_number_screen_sticky_button">Verify OTP</string>
 
     // OTP Screen
     <string name="otp_screen_toolbar_title">OTP</string>
@@ -185,9 +200,13 @@
     <string name="otp_screen_input_field_label">Enter the code that was sent to your %1$s: %2$s</string>
     <string name="otp_screen_not_receive_otp_label">Didn\'t receive an OTP code?</string>
 
+    <string name="otp_screen_generic_error_title">OTP Generic Error</string>
+    <string name="otp_screen_generic_error_subtitle_with_error_code">An error has occurred whilst retrieving the details for the OTP validation.\nError Code: %1$s</string>
+
     <string name="otp_screen_resend_otp_button">Resend OTP</string>
     <string name="otp_screen_resend_otp_button_with_delay">Resend OTP (%1$s)</string>
     <string name="otp_screen_verify_button">Verify</string>
+    <string name="otp_screen_back_to_login_button">Back To Login</string>
 
     // `OtpErrorCause` sealed class strings
     <string name="otp_error_cause_not_match">OTP is incorrect.</string>
@@ -211,6 +230,8 @@
     <string name="input_field_error_validate_email_email">Email is invalid.</string>
 
     // Content descriptions
+    <string name="content_description_back">Back</string>
+    <string name="content_description_close">Close</string>
     <string name="content_description_splash_loading_animation">Loading animation</string>
     <string name="content_description_lock">lock</string>
     <string name="content_description_person">person</string>

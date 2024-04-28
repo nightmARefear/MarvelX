@@ -1,5 +1,6 @@
 package com.alexgreece45.marvelx.util.extensions
 
+import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.material.IconButton
@@ -9,6 +10,7 @@ import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -49,6 +51,64 @@ data class ClickState(
     val event: () -> Unit,
     var currentTimeInMillis: Long
 )
+
+/**
+ * Provides protection against clicking a UI element multiple times within a short period of time.
+ * This [Modifier] allows this UI element to be clicked at the most `1` time per the given [delay].
+ *
+ * @param delay         The delay between click events.
+ * @param enabled       Controls the enabled state. When `false`, [onClick], and this modifier will
+ * appear disabled for accessibility services.
+ * @param role          The type of user interface element. This is used by the accessibility
+ * services.
+ * @param onClickLabel  Semantic / accessibility label for the [onClick] action.
+ * @param onClick       The action(s) to be invoked when a UI element is clicked.
+ */
+fun Modifier.throttledClickable(
+    delay: Long = THROTTLE_CLICKABLE_DEFAULT_DELAY,
+    enabled: Boolean = true,
+    role: Role? = null,
+    onClickLabel: String? = null,
+    onClick: () -> Unit
+) = composed(
+    inspectorInfo = debugInspectorInfo {
+        name = "clickable"
+        properties["enabled"] = enabled
+        properties["onClickLabel"] = onClickLabel
+        properties["role"] = role
+        properties["onClick"] = onClick
+    }
+) {
+
+    var lastClicked: Long by remember { mutableLongStateOf(0) }
+
+    val debounceState = remember {
+        MutableSharedFlow<ClickState>(
+            replay = 0,
+            extraBufferCapacity = 1,
+            onBufferOverflow = BufferOverflow.DROP_OLDEST
+        )
+    }
+
+    LaunchedEffect(Unit) {
+        debounceState
+            .collect {
+                if (lastClicked <= 0 || (it.currentTimeInMillis - lastClicked) >= delay) {
+                    it.event()
+                    lastClicked = it.currentTimeInMillis
+                }
+            }
+    }
+
+    Modifier.clickable(
+        interactionSource = remember { MutableInteractionSource() },
+        indication = LocalIndication.current,
+        enabled = enabled,
+        onClickLabel = onClickLabel,
+        role = role,
+        onClick = { debounceState.tryEmit(ClickState(onClick, System.currentTimeMillis())) }
+    )
+}
 
 fun Modifier.throttledClickableIcon(
     onClick: () -> Unit,

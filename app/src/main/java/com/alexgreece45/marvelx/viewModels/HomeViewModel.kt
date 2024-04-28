@@ -4,6 +4,7 @@ import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.controllers.AuthController
 import com.alexgreece45.marvelx.controllers.PrefKeys
+import com.alexgreece45.marvelx.data.domains.otp.OtpFlowType
 import com.alexgreece45.marvelx.data.domains.user.VerificationStep
 import com.alexgreece45.marvelx.data.models.user.loginWithToken.UserLoginWithTokenRequest
 import com.alexgreece45.marvelx.interactors.LogoutPartialState
@@ -56,6 +57,7 @@ sealed interface HomeEffect : BaseEffect {
         data object NavigateToSignupScreen : Navigation()
         data class NavigateToOtpScreen(
             val userId: Int,
+            val otpFlowType: String,
             val verificationStep: String,
             val shouldRememberUserSession: Boolean
         ) : Navigation()
@@ -183,7 +185,7 @@ class HomeViewModel @Inject constructor(
 
     private fun postLogin() {
         viewModelScope.launch {
-            registerInteractor.postLoginWithToken(getUserLoginWithTokenRequest()).collect {
+            registerInteractor.postLoginWithToken().collect {
                 when (it) {
                     is PostLoginWithTokenPartialState.Failed -> {
                         // An error occurred either due to an invalid token, or user id; proceed to remove the stored user credentials (userId, UserAuthData).
@@ -220,7 +222,8 @@ class HomeViewModel @Inject constructor(
                                     setEffect {
                                         HomeEffect.Navigation.NavigateToOtpScreen(
                                             userId = prefKeys.getUserId(),
-                                            verificationStep = verificationStep.name,
+                                            otpFlowType = OtpFlowType.Register.key,
+                                            verificationStep = verificationStep.key,
                                             shouldRememberUserSession = prefKeys.shouldRememberUserSession()
                                         )
                                     }
@@ -299,14 +302,8 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    private fun getUserLoginWithTokenRequest(): UserLoginWithTokenRequest =
-        UserLoginWithTokenRequest(
-            userId = prefKeys.getUserId(),
-            epoch = DateUtil.getSecondsFromEpoch()
-        )
-
     private fun getAlertDialogTitle(): String =
-        resourceProvider.getString(R.string.login_screen_alert_dialog_title)
+        resourceProvider.getString(R.string.login_screen_error_view_title)
 
     private fun showAlertDialog(errorMessage: String) {
         setState {

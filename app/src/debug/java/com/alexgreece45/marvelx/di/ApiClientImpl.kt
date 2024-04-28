@@ -5,17 +5,13 @@ import com.alexgreece45.marvelx.data.api.ApiService
 import com.alexgreece45.marvelx.data.models.character.CharacterDataWrapper
 import com.alexgreece45.marvelx.data.models.character.comic.ComicDataWrapper
 import com.alexgreece45.marvelx.data.models.forgotPassword.email.RequestForgotPasswordOtpBlockedEmail
-import com.alexgreece45.marvelx.data.models.forgotPassword.email.RequestForgotPasswordSendOtpToEmail
-import com.alexgreece45.marvelx.data.models.forgotPassword.email.RequestForgotPasswordValidateOtpFromEmail
+import com.alexgreece45.marvelx.data.models.forgotPassword.email.RequestForgotPasswordSendOtp
+import com.alexgreece45.marvelx.data.models.forgotPassword.email.RequestForgotPasswordValidateOtp
 import com.alexgreece45.marvelx.data.models.forgotPassword.email.ResponseForgotPasswordOtpBlockedEmail
-import com.alexgreece45.marvelx.data.models.forgotPassword.email.ResponseForgotPasswordSendOtpToEmail
-import com.alexgreece45.marvelx.data.models.forgotPassword.email.ResponseForgotPasswordValidateOtpFromEmail
+import com.alexgreece45.marvelx.data.models.forgotPassword.email.ResponseForgotPasswordSendOtp
+import com.alexgreece45.marvelx.data.models.forgotPassword.email.ResponseForgotPasswordValidateOtp
 import com.alexgreece45.marvelx.data.models.forgotPassword.phoneNumber.RequestForgotPasswordOtpBlockedPhoneNumber
-import com.alexgreece45.marvelx.data.models.forgotPassword.phoneNumber.RequestForgotPasswordSendOtpToPhoneNumber
-import com.alexgreece45.marvelx.data.models.forgotPassword.phoneNumber.RequestForgotPasswordValidateOtpFromPhoneNumber
 import com.alexgreece45.marvelx.data.models.forgotPassword.phoneNumber.ResponseForgotPasswordOtpBlockedPhoneNumber
-import com.alexgreece45.marvelx.data.models.forgotPassword.phoneNumber.ResponseForgotPasswordSendOtpToPhoneNumber
-import com.alexgreece45.marvelx.data.models.forgotPassword.phoneNumber.ResponseForgotPasswordValidateOtpFromPhoneNumber
 import com.alexgreece45.marvelx.data.models.jwtSensitiveUserData.RequestJwtSensitiveUserData
 import com.alexgreece45.marvelx.data.models.jwtSensitiveUserData.ResponseJwtSensitiveUserData
 import com.alexgreece45.marvelx.data.models.otp.OtpRequest
@@ -86,11 +82,8 @@ class ApiClientImpl @Inject constructor(
     override suspend fun resendOtp(requestResendOtp: RequestResendOtp): Response<ResponseResendOtpSuccess> =
         apiService.resendOtp(requestResendOtp)
 
-    override suspend fun forgotPasswordSendOtpToEmail(body: RequestForgotPasswordSendOtpToEmail): Response<ResponseForgotPasswordSendOtpToEmail> =
-        apiService.forgotPasswordSendOtpToEmail(body)
-
-    override suspend fun forgotPasswordSendOtpToPhoneNumber(body: RequestForgotPasswordSendOtpToPhoneNumber): Response<ResponseForgotPasswordSendOtpToPhoneNumber> =
-        apiService.forgotPasswordSendOtpToPhoneNumber(body)
+    override suspend fun forgotPasswordSendOtp(body: RequestForgotPasswordSendOtp): Response<ResponseForgotPasswordSendOtp> =
+        apiService.forgotPasswordSendOtp(body)
 
     override suspend fun forgotPasswordIsOtpBlockedEmail(body: RequestForgotPasswordOtpBlockedEmail): Response<ResponseForgotPasswordOtpBlockedEmail> =
         apiService.forgotPasswordIsOtpBlockedEmail(body)
@@ -98,11 +91,8 @@ class ApiClientImpl @Inject constructor(
     override suspend fun forgotPasswordIsOtpBlockedPhoneNumber(body: RequestForgotPasswordOtpBlockedPhoneNumber): Response<ResponseForgotPasswordOtpBlockedPhoneNumber> =
         apiService.forgotPasswordIsOtpBlockedPhoneNumber(body)
 
-    override suspend fun forgotPasswordValidateOtpFromEmail(body: RequestForgotPasswordValidateOtpFromEmail): Response<ResponseForgotPasswordValidateOtpFromEmail> =
-        apiService.forgotPasswordValidateOtpFromEmail(body)
-
-    override suspend fun forgotPasswordValidateOtpFromPhoneNumber(body: RequestForgotPasswordValidateOtpFromPhoneNumber): Response<ResponseForgotPasswordValidateOtpFromPhoneNumber> =
-        apiService.forgotPasswordValidateOtpFromPhoneNumber(body)
+    override suspend fun forgotPasswordValidateOtp(body: RequestForgotPasswordValidateOtp): Response<ResponseForgotPasswordValidateOtp> =
+        apiService.forgotPasswordValidateOtp(body)
 
     override suspend fun getUserProfileDetails(userId: Int): Response<ResponseProfileDetails> =
         apiService.getUserProfileDetails(userId = userId)

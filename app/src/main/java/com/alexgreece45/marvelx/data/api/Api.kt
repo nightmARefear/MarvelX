@@ -3,17 +3,13 @@ package com.alexgreece45.marvelx.data.api
 import com.alexgreece45.marvelx.data.models.character.CharacterDataWrapper
 import com.alexgreece45.marvelx.data.models.character.comic.ComicDataWrapper
 import com.alexgreece45.marvelx.data.models.forgotPassword.email.RequestForgotPasswordOtpBlockedEmail
-import com.alexgreece45.marvelx.data.models.forgotPassword.email.RequestForgotPasswordSendOtpToEmail
-import com.alexgreece45.marvelx.data.models.forgotPassword.email.RequestForgotPasswordValidateOtpFromEmail
+import com.alexgreece45.marvelx.data.models.forgotPassword.email.RequestForgotPasswordSendOtp
+import com.alexgreece45.marvelx.data.models.forgotPassword.email.RequestForgotPasswordValidateOtp
 import com.alexgreece45.marvelx.data.models.forgotPassword.email.ResponseForgotPasswordOtpBlockedEmail
-import com.alexgreece45.marvelx.data.models.forgotPassword.email.ResponseForgotPasswordSendOtpToEmail
-import com.alexgreece45.marvelx.data.models.forgotPassword.email.ResponseForgotPasswordValidateOtpFromEmail
+import com.alexgreece45.marvelx.data.models.forgotPassword.email.ResponseForgotPasswordSendOtp
+import com.alexgreece45.marvelx.data.models.forgotPassword.email.ResponseForgotPasswordValidateOtp
 import com.alexgreece45.marvelx.data.models.forgotPassword.phoneNumber.RequestForgotPasswordOtpBlockedPhoneNumber
-import com.alexgreece45.marvelx.data.models.forgotPassword.phoneNumber.RequestForgotPasswordSendOtpToPhoneNumber
-import com.alexgreece45.marvelx.data.models.forgotPassword.phoneNumber.RequestForgotPasswordValidateOtpFromPhoneNumber
 import com.alexgreece45.marvelx.data.models.forgotPassword.phoneNumber.ResponseForgotPasswordOtpBlockedPhoneNumber
-import com.alexgreece45.marvelx.data.models.forgotPassword.phoneNumber.ResponseForgotPasswordSendOtpToPhoneNumber
-import com.alexgreece45.marvelx.data.models.forgotPassword.phoneNumber.ResponseForgotPasswordValidateOtpFromPhoneNumber
 import com.alexgreece45.marvelx.data.models.jwtSensitiveUserData.RequestJwtSensitiveUserData
 import com.alexgreece45.marvelx.data.models.jwtSensitiveUserData.ResponseJwtSensitiveUserData
 import com.alexgreece45.marvelx.data.models.otp.OtpRequest
@@ -91,11 +87,8 @@ interface ApiService {
     @POST("/api/private/marvelx/user/resend_otp")
     suspend fun resendOtp(@Body requestResendOtp: RequestResendOtp): Response<ResponseResendOtpSuccess>
 
-    @POST("/api/private/marvelx/user/forgot_password/send_otp/email")
-    suspend fun forgotPasswordSendOtpToEmail(@Body body: RequestForgotPasswordSendOtpToEmail): Response<ResponseForgotPasswordSendOtpToEmail>
-
-    @POST("/api/private/marvelx/user/forgot_password/send_otp/phone_number")
-    suspend fun forgotPasswordSendOtpToPhoneNumber(@Body body: RequestForgotPasswordSendOtpToPhoneNumber): Response<ResponseForgotPasswordSendOtpToPhoneNumber>
+    @POST("/api/private/marvelx/user/forgot_password/send_otp")
+    suspend fun forgotPasswordSendOtp(@Body body: RequestForgotPasswordSendOtp): Response<ResponseForgotPasswordSendOtp>
 
     @POST("/api/private/marvelx/user/forgot_password/otp_blocked/email")
     suspend fun forgotPasswordIsOtpBlockedEmail(@Body body: RequestForgotPasswordOtpBlockedEmail): Response<ResponseForgotPasswordOtpBlockedEmail>
@@ -103,11 +96,8 @@ interface ApiService {
     @POST("/api/private/marvelx/user/forgot_password/otp_blocked/phone_number")
     suspend fun forgotPasswordIsOtpBlockedPhoneNumber(@Body body: RequestForgotPasswordOtpBlockedPhoneNumber): Response<ResponseForgotPasswordOtpBlockedPhoneNumber>
 
-    @POST("/api/private/marvelx/user/forgot_password/validate_otp/email")
-    suspend fun forgotPasswordValidateOtpFromEmail(@Body body: RequestForgotPasswordValidateOtpFromEmail): Response<ResponseForgotPasswordValidateOtpFromEmail>
-
-    @POST("/api/private/marvelx/user/forgot_password/validate_otp/phone_number")
-    suspend fun forgotPasswordValidateOtpFromPhoneNumber(@Body body: RequestForgotPasswordValidateOtpFromPhoneNumber): Response<ResponseForgotPasswordValidateOtpFromPhoneNumber>
+    @POST("/api/private/marvelx/user/forgot_password/validate_otp")
+    suspend fun forgotPasswordValidateOtp(@Body body: RequestForgotPasswordValidateOtp): Response<ResponseForgotPasswordValidateOtp>
 
     @GET("/api/private/marvelx/user/profile_details/{userId}")
     suspend fun getUserProfileDetails(@Path("userId") userId: Int): Response<ResponseProfileDetails>
@@ -149,17 +139,13 @@ interface ApiClient {
 
     suspend fun resendOtp(requestResendOtp: RequestResendOtp): Response<ResponseResendOtpSuccess>
 
-    suspend fun forgotPasswordSendOtpToEmail(body: RequestForgotPasswordSendOtpToEmail): Response<ResponseForgotPasswordSendOtpToEmail>
-
-    suspend fun forgotPasswordSendOtpToPhoneNumber(body: RequestForgotPasswordSendOtpToPhoneNumber): Response<ResponseForgotPasswordSendOtpToPhoneNumber>
+    suspend fun forgotPasswordSendOtp(body: RequestForgotPasswordSendOtp): Response<ResponseForgotPasswordSendOtp>
 
     suspend fun forgotPasswordIsOtpBlockedEmail(body: RequestForgotPasswordOtpBlockedEmail): Response<ResponseForgotPasswordOtpBlockedEmail>
 
     suspend fun forgotPasswordIsOtpBlockedPhoneNumber(body: RequestForgotPasswordOtpBlockedPhoneNumber): Response<ResponseForgotPasswordOtpBlockedPhoneNumber>
 
-    suspend fun forgotPasswordValidateOtpFromEmail(body: RequestForgotPasswordValidateOtpFromEmail): Response<ResponseForgotPasswordValidateOtpFromEmail>
-
-    suspend fun forgotPasswordValidateOtpFromPhoneNumber(body: RequestForgotPasswordValidateOtpFromPhoneNumber): Response<ResponseForgotPasswordValidateOtpFromPhoneNumber>
+    suspend fun forgotPasswordValidateOtp(body: RequestForgotPasswordValidateOtp): Response<ResponseForgotPasswordValidateOtp>
 
     suspend fun getUserProfileDetails(userId: Int): Response<ResponseProfileDetails>
 

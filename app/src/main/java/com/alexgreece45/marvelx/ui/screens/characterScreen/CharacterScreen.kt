@@ -44,18 +44,19 @@ import coil.request.ImageRequest
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.data.domains.character.CharacterDomain
 import com.alexgreece45.marvelx.data.domains.comic.ComicDomain
-import com.alexgreece45.marvelx.viewModels.CharacterEffect
-import com.alexgreece45.marvelx.viewModels.CharacterEvent
-import com.alexgreece45.marvelx.viewModels.CharacterViewModel
-import com.alexgreece45.marvelx.ui.navigation.Screen
+import com.alexgreece45.marvelx.ui.components.ContentErrorScreen
 import com.alexgreece45.marvelx.ui.components.ContentScreen
-import com.alexgreece45.marvelx.ui.components.GenericErrorScreen
 import com.alexgreece45.marvelx.ui.components.IconData
 import com.alexgreece45.marvelx.ui.components.ItemDescription
+import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
 import com.alexgreece45.marvelx.ui.components.ToolbarAction
+import com.alexgreece45.marvelx.ui.navigation.Screen
 import com.alexgreece45.marvelx.util.IMAGE_BORDER_WIDTH
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.VSpacer
+import com.alexgreece45.marvelx.viewModels.CharacterEffect
+import com.alexgreece45.marvelx.viewModels.CharacterEvent
+import com.alexgreece45.marvelx.viewModels.CharacterViewModel
 
 @Composable
 fun CharacterScreen(
@@ -106,8 +107,10 @@ fun CharacterScreen(
     }
 
     ContentScreen(
-        onBack = { viewModel.setEvent(CharacterEvent.OnBackClick) },
         isLoading = state.isLoading,
+        navigableAction = ScreenNavigableAction.Backable {
+            viewModel.setEvent(CharacterEvent.OnBackClick)
+        },
         showToolbar = true,
         toolbarTitle = state.character?.name,
         toolbarActions = state.character?.let { characterDomain ->
@@ -145,7 +148,7 @@ fun CharacterScreen(
         ) {
             state.error?.let { error ->
                 item {
-                    GenericErrorScreen(
+                    ContentErrorScreen(
                         errorMessage = error.errorMessage,
                         onRetryClick = { error.onRetryClick.invoke() })
                 }

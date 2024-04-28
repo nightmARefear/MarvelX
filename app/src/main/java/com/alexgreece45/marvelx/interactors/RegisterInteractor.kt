@@ -2,6 +2,7 @@ package com.alexgreece45.marvelx.interactors
 
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.controllers.AppLoggerController
+import com.alexgreece45.marvelx.controllers.PrefKeys
 import com.alexgreece45.marvelx.controllers.RefreshTokenController
 import com.alexgreece45.marvelx.data.domains.jwtSensitiveUserData.JwtSensitiveUserDataDomain
 import com.alexgreece45.marvelx.data.domains.user.VerificationStep
@@ -34,7 +35,7 @@ interface RegisterInteractor {
 
     suspend fun postLogin(email: String, password: String): Flow<PostLoginPartialState>
 
-    suspend fun postLoginWithToken(userLoginWithTokenRequest: UserLoginWithTokenRequest): Flow<PostLoginWithTokenPartialState>
+    suspend fun postLoginWithToken(): Flow<PostLoginWithTokenPartialState>
 
     suspend fun getJwtForSensitiveUserData(
         userId: Int,
@@ -46,6 +47,7 @@ class RegisterInteractorImpl @Inject constructor(
     private val repository: RegisterRepository,
     private val resourceProvider: ResourceProvider,
     private val refreshTokenController: RefreshTokenController,
+    private val prefKeys: PrefKeys,
     private val logger: AppLoggerController
 ) : RegisterInteractor {
     override suspend fun postSignup(userSignupRequest: UserSignupRequest): Flow<PostSignupPartialState> =
@@ -110,10 +112,10 @@ class RegisterInteractorImpl @Inject constructor(
                     is PostLoginRepositoryResponse.Success -> {
                         it.response?.let { loginResponse ->
                             val userLoginResponseDomain = loginResponse.toUserLoginResponseDomain()
-
                             if (userLoginResponseDomain.verificationStep is VerificationStep.None) {
-                                // Start refresh token worker if there is no verification step pending (i.e., `VerificationStep.None`).
-                                refreshTokenController.startWorker()
+                                // Verification step cannot be null for `postLogin`. Propagate error to client.
+                                emit(PostLoginPartialState.Failed(errorMessage = genericErrorMessage))
+                                return@collect
                             }
 
                             emit(
@@ -142,9 +144,14 @@ class RegisterInteractorImpl @Inject constructor(
             }
         }
 
-    override suspend fun postLoginWithToken(userLoginWithTokenRequest: UserLoginWithTokenRequest): Flow<PostLoginWithTokenPartialState> =
+    override suspend fun postLoginWithToken(): Flow<PostLoginWithTokenPartialState> =
         flow {
             val genericErrorMessage = resourceProvider.getGenericErrorMessage()
+
+            val userLoginWithTokenRequest = UserLoginWithTokenRequest(
+                userId = prefKeys.getUserId(),
+                epoch = DateUtil.getSecondsFromEpoch()
+            )
             repository.postLoginWithToken(userLoginWithTokenRequest).collect {
                 when (it) {
                     is PostLoginWithTokenRepositoryResponse.Failed -> {
@@ -197,7 +204,7 @@ class RegisterInteractorImpl @Inject constructor(
         val request =
             RequestJwtSensitiveUserData(
                 userId = userId,
-                verificationStep = verificationStep.name
+                verificationStep = verificationStep.key
             )
 
         repository.getJwtForSensitiveUserData(request).collect {

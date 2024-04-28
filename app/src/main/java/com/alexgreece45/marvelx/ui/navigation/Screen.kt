@@ -80,21 +80,62 @@ sealed class Screen(
         }
 
         data object HomeScreen : Screen(baseRoute = "homeScreen")
-        data object LoginScreen : Screen(baseRoute = "loginScreen")
-        data object ForgotPasswordScreen : Screen(baseRoute = "forgotPasswordScreen")
+        sealed class LoginScreens {
+            data object LoginScreen : Screen(baseRoute = "loginScreen")
+            sealed class ForgotPasswordScreens {
+                data object ForgotPasswordScreen : Screen(baseRoute = "forgotPasswordScreen")
+                data object ForgotPasswordValidateEmailScreen :
+                    Screen(baseRoute = "forgotPasswordValidateEmailScreen") {
+                    fun createNavRoute(requestIdEmail: String): String =
+                        "$baseRoute/$requestIdEmail"
+                }
+
+                data object ForgotPasswordEnterPhoneNumberScreen :
+                    Screen(baseRoute = "forgotPasswordEnterPhoneNumberScreen") {
+                    fun createNavRoute(requestIdEmail: String): String =
+                        "$baseRoute/$requestIdEmail"
+                }
+
+                data object ForgotPasswordValidatePhoneNumberScreen :
+                    Screen(baseRoute = "forgotPasswordValidatePhoneNumberScreen") {
+                    fun createNavRoute(
+                        requestIdEmail: String,
+                        requestIdPhoneNumber: String
+                    ): String = "$baseRoute/$requestIdEmail/$requestIdPhoneNumber"
+                }
+            }
+        }
+
+        data object ChangePasswordScreen : Screen(baseRoute = "changePasswordScreen") {
+            fun createNavRoute(
+                requestIdEmail: String,
+                requestIdPhoneNumber: String?
+            ): String = "$baseRoute/$requestIdEmail/$requestIdPhoneNumber"
+        }
+
         data object SignupScreen : Screen(baseRoute = "signupScreen")
         data object SplashScreen : Screen(baseRoute = "splashScreen")
     }
 
     data object OtpScreen : Screen(
         baseRoute = "otpScreen",
-        navArgs = listOf(NavItem.User, NavItem.VerificationStep, NavItem.ShouldRememberUserSession)
+        navArgs = listOf(
+            NavItem.UserId,
+            NavItem.OtpFlowType,
+            NavItem.VerificationStep,
+            NavItem.ShouldRememberUserSession,
+            NavItem.RequestIdEmail,
+            NavItem.RequestIdPhoneNumber
+        )
     ) {
         fun createNavRoute(
-            userId: Int,
+            userId: Int? = -1,
+            otpFlowType: String,
             verificationStep: String,
-            shouldRememberUserSession: Boolean
-        ): String = "$baseRoute/$userId/$verificationStep/$shouldRememberUserSession"
+            shouldRememberUserSession: Boolean,
+            requestIdEmail: String = "-1",
+            requestIdPhoneNumber: String = "-1"
+        ): String = "$baseRoute/$userId/$otpFlowType/$verificationStep/$shouldRememberUserSession/$requestIdEmail/$requestIdPhoneNumber".also{ println(it) }
     }
 }
 
@@ -102,7 +143,10 @@ enum class NavItem(val key: String, val type: NavType<*>) {
     Character(key = "characterId", NavType.IntType),
     Comic(key = "comicId", type = NavType.IntType),
     ToolbarTitlePrefix(key = "toolbarTitlePrefix", NavType.StringType),
-    User(key = "userId", NavType.IntType),
+    UserId(key = "userId", NavType.IntType),
+    OtpFlowType(key = "otpFlowType", NavType.StringType),
     VerificationStep(key = "verificationStep", NavType.StringType),
-    ShouldRememberUserSession(key = "shouldRememberUserSession", NavType.BoolType)
+    ShouldRememberUserSession(key = "shouldRememberUserSession", NavType.BoolType),
+    RequestIdEmail(key = "requestIdEmail", NavType.StringType),
+    RequestIdPhoneNumber(key = "requestIdPhoneNumber", NavType.StringType),
 }

@@ -1,6 +1,5 @@
 package com.alexgreece45.marvelx.ui.screens.otpScreen
 
-import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -20,9 +19,6 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -33,6 +29,9 @@ import androidx.navigation.NavController
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.ui.components.ContainedButton
 import com.alexgreece45.marvelx.ui.components.ContentScreen
+import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
+import com.alexgreece45.marvelx.ui.components.effect.OneTimeLaunchedEffect
+import com.alexgreece45.marvelx.ui.components.error.ContentErrorScreen
 import com.alexgreece45.marvelx.ui.components.otpTextField.OtpTextField
 import com.alexgreece45.marvelx.ui.navigation.Screen
 import com.alexgreece45.marvelx.util.SPACING_SMALL
@@ -43,51 +42,46 @@ import com.alexgreece45.marvelx.viewModels.OtpEvent
 import com.alexgreece45.marvelx.viewModels.OtpViewModel
 
 /**
- * The OTP (One Time Password) screen is used to double check the user's identity when signing up
+ * The OTP (One Time Password) screen is used to double check the user's identity when signing up or
  * logging in.
  *
  * Navigation **to** and **from** this screen ***must*** be handled with caution.
  * Navigation to this screen MUST only happen when instructed either by `LoginScreen`,
  * or `SignupScreen`.
  */
-@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun OtpScreen(
     navController: NavController,
     viewModel: OtpViewModel = hiltViewModel(),
     userId: Int?,
+    otpFlowType: String?,
     verificationStep: String?,
-    shouldRememberUserSession: Boolean?
+    shouldRememberUserSession: Boolean?,
+    requestIdEmail: String?,
+    requestIdPhoneNumber: String?
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
-    val context = LocalContext.current
-    val keyboard = LocalSoftwareKeyboardController.current
     val focusRequester = remember { FocusRequester() }
 
-    LaunchedEffect(Unit) {
+    OneTimeLaunchedEffect {
         viewModel.setEvent(
-            OtpEvent.InitView(
+            OtpEvent.Init(
                 userId = userId,
+                otpFlowType = otpFlowType,
                 verificationStep = verificationStep,
-                shouldRememberUserSession = shouldRememberUserSession
+                shouldRememberUserSession = shouldRememberUserSession,
+                requestIdEmail = requestIdEmail,
+                requestIdPhoneNumber = requestIdPhoneNumber
             )
         )
+    }
 
+    LaunchedEffect(Unit) {
         viewModel.uiEffect.collect { effect ->
             when (effect) {
-                is OtpEffect.Navigation.NavigateToPreviousScreenWithError -> {
-                    Toast.makeText(context, effect.errorMessage, Toast.LENGTH_LONG).show()
+                OtpEffect.Navigation.PopBackStack -> {
                     navController.popBackStack()
-                }
-
-                OtpEffect.Navigation.NavigateToAllCharactersScreen -> {
-                    keyboard?.hide()
-                    navController.navigate(Screen.BottomNavigationScreens.AllCharactersScreen.route) {
-                        popUpTo(Screen.RegisterScreens.getNestedGraphRootRoute()) {
-                            inclusive = true
-                        }
-                    }
                 }
 
                 OtpEffect.OnUserSensitiveDataReceived -> {
@@ -95,29 +89,43 @@ fun OtpScreen(
                     focusRequester.requestFocus()
                 }
 
-                OtpEffect.Navigation.PopBackStack -> {
-                    navController.popBackStack()
-                }
-
                 OtpEffect.OtpFieldRequestFocus -> {
                     focusRequester.requestFocus()
+                }
+
+                OtpEffect.Navigation.NavigateToAllCharactersScreen -> {
+                    navController.navigate(Screen.BottomNavigationScreens.AllCharactersScreen.route) {
+                        popUpTo(Screen.RegisterScreens.getNestedGraphRootRoute()) {
+                            inclusive = true
+                        }
+                    }
+                }
+
+                is OtpEffect.Navigation.NavigateToChangePasswordScreen -> {
+                    navController.navigate(
+                        Screen.RegisterScreens.ChangePasswordScreen.createNavRoute(
+                            requestIdEmail = effect.requestIdEmail,
+                            requestIdPhoneNumber = effect.requestIdPhoneNumber
+                        )
+                    )
                 }
             }
         }
     }
 
     ContentScreen(
-        onBack = { viewModel.setEvent(OtpEvent.OnBackClick) },
         isLoading = state.isLoading,
-        showToolbar = true,
-        toolbarBackgroundColor = Color.Transparent
+        navigableAction = ScreenNavigableAction.Backable {
+            viewModel.setEvent(OtpEvent.OnBackClick)
+        },
+        showToolbar = true
     ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            // Title and where OTP has been sent to.
+            // Title and where the OTP has been sent to.
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 // Title.
                 Text(
@@ -208,18 +216,27 @@ fun OtpScreen(
                 }
             }
 
-            // "Verify" button.
             Spacer(modifier = Modifier.weight(1f))
 
+            // "Verify" button.
             ContainedButton(
+                onClick = { viewModel.setEvent(OtpEvent.OnVerifyButtonClicked) },
                 modifier = Modifier.fillMaxWidth(),
-                enabled = state.isVerifyButtonEnabled,
-                onClick = { viewModel.setEvent(OtpEvent.OnVerifyButtonClicked) }
+                enabled = state.isVerifyButtonEnabled
             ) {
                 Text(
                     text = stringResource(R.string.otp_screen_verify_button)
                 )
             }
         }
+    }
+
+    state.error?.let { error ->
+        ContentErrorScreen(
+            errorTitle = error.errorTitle,
+            errorSubtitle = error.errorSubtitle,
+            onClose = error.onCloseClicked,
+            errorButtonLayout = error.errorButtonLayout
+        )
     }
 }

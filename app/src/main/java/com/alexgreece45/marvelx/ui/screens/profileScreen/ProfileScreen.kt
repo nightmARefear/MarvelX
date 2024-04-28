@@ -32,7 +32,7 @@ import com.alexgreece45.marvelx.ui.components.BottomBarItem
 import com.alexgreece45.marvelx.ui.components.BottomNavigationBarData
 import com.alexgreece45.marvelx.ui.components.ContainedButton
 import com.alexgreece45.marvelx.ui.components.ContentScreen
-import com.alexgreece45.marvelx.ui.components.GenericErrorScreen
+import com.alexgreece45.marvelx.ui.components.ContentErrorScreen
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.VSpacer
 import com.alexgreece45.marvelx.util.extensions.shimmer
@@ -83,7 +83,7 @@ fun ProfileScreen(
         ) {
             state.error?.let { error ->
                 item {
-                    GenericErrorScreen(
+                    ContentErrorScreen(
                         errorMessage = error.errorMessage,
                         onRetryClick = {
                             viewModel.setEvent(error.profileEvent)

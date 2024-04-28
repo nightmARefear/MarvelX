@@ -4,15 +4,14 @@ import androidx.annotation.StringRes
 import androidx.core.text.isDigitsOnly
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.controllers.PrefKeys
 import com.alexgreece45.marvelx.controllers.TimerController
 import com.alexgreece45.marvelx.controllers.TimerStatus
 import com.alexgreece45.marvelx.data.domains.otp.OtpErrorCause
 import com.alexgreece45.marvelx.data.domains.user.VerificationStep
 import com.alexgreece45.marvelx.interactors.ForgotPasswordInteractor
 import com.alexgreece45.marvelx.interactors.ForgotPasswordIsOtpBlockedEmailPartialState
-import com.alexgreece45.marvelx.interactors.ForgotPasswordValidateOtpFromEmailPartialState
-import com.alexgreece45.marvelx.interactors.SendOtpToEmailPartialState
+import com.alexgreece45.marvelx.interactors.ForgotPasswordSendOtpPartialState
+import com.alexgreece45.marvelx.interactors.ForgotPasswordValidateOtpPartialState
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
@@ -68,9 +67,9 @@ sealed class ForgotPasswordSubScreens(
      */
     data object EnterEmail : ForgotPasswordSubScreens(
         step = 1,
-        titleResId = R.string.forgot_password_screen_enter_email_subscreen_title,
-        subtitleResId = R.string.forgot_password_screen_enter_email_subscreen_subtitle,
-        stickyButtonResId = R.string.forgot_password_screen_enter_email_subscreen_sticky_button
+        titleResId = R.string.forgot_password_enter_email_screen_title,
+        subtitleResId = R.string.forgot_password_enter_email_screen_subtitle,
+        stickyButtonResId = R.string.forgot_password_enter_email_screen_sticky_button
     )
 
     /**
@@ -83,23 +82,23 @@ sealed class ForgotPasswordSubScreens(
      */
     data object ValidateEmail : ForgotPasswordSubScreens(
         step = 2,
-        titleResId = R.string.forgot_password_screen_validate_email_subscreen_title,
-        subtitleResId = R.string.forgot_password_screen_validate_email_subscreen_subtitle,
-        stickyButtonResId = R.string.forgot_password_screen_validate_email_subscreen_sticky_button
+        titleResId = R.string.forgot_password_validate_email_screen_title,
+        subtitleResId = R.string.forgot_password_validate_email_screen_subtitle,
+        stickyButtonResId = R.string.forgot_password_validate_email_screen_sticky_button
     )
 
     data object EnterPhoneNumber : ForgotPasswordSubScreens(
         step = 3,
-        titleResId = R.string.forgot_password_screen_enter_phone_number_subscreen_title,
-        subtitleResId = R.string.forgot_password_screen_enter_phone_number_subscreen_subtitle,
-        stickyButtonResId = R.string.forgot_password_screen_enter_phone_number_subscreen_sticky_button
+        titleResId = R.string.forgot_password_enter_phone_number_screen_title,
+        subtitleResId = R.string.forgot_password_enter_phone_number_screen_subtitle,
+        stickyButtonResId = R.string.forgot_password_enter_phone_number_screen_sticky_button
     )
 
     data object ValidatePhoneNumber : ForgotPasswordSubScreens(
         step = 4,
-        titleResId = R.string.forgot_password_screen_validate_phone_number_subscreen_title,
-        subtitleResId = R.string.forgot_password_screen_validate_phone_number_subscreen_subtitle,
-        stickyButtonResId = R.string.forgot_password_screen_validate_phone_number_subscreen_sticky_button
+        titleResId = R.string.forgot_password_validate_phone_number_screen_title,
+        subtitleResId = R.string.forgot_password_validate_phone_number_screen_subtitle,
+        stickyButtonResId = R.string.forgot_password_validate_phone_number_screen_sticky_button
     )
 
     /**
@@ -112,9 +111,9 @@ sealed class ForgotPasswordSubScreens(
      */
     data object EnterNewPassword : ForgotPasswordSubScreens(
         step = 5,
-        titleResId = R.string.forgot_password_screen_enter_new_password_subscreen_title,
-        subtitleResId = R.string.forgot_password_screen_enter_new_password_subscreen_subtitle,
-        stickyButtonResId = R.string.forgot_password_screen_enter_new_password_subscreen_sticky_button
+        titleResId = R.string.change_password_screen_title,
+        subtitleResId = R.string.change_password_screen_subtitle,
+        stickyButtonResId = R.string.change_password_screen_button_sticky
     )
 
     /**
@@ -127,14 +126,14 @@ sealed class ForgotPasswordSubScreens(
      */
     data object PasswordChanged : ForgotPasswordSubScreens(
         step = 6,
-        titleResId = R.string.forgot_password_screen_enter_new_password_subscreen_title,
-        subtitleResId = R.string.forgot_password_screen_enter_new_password_subscreen_subtitle,
-        stickyButtonResId = R.string.forgot_password_screen_enter_new_password_subscreen_sticky_button
+        titleResId = R.string.change_password_screen_title,
+        subtitleResId = R.string.change_password_screen_subtitle,
+        stickyButtonResId = R.string.change_password_screen_button_sticky
     )
 }
 
 sealed class ForgotPasswordEvent : BaseEvent {
-    data class InitView(
+    data class Init(
         val verificationStep: String?,
         val email: String?
     ) : ForgotPasswordEvent()
@@ -152,13 +151,17 @@ sealed class ForgotPasswordEvent : BaseEvent {
     data object OnContinueButtonClicked : ForgotPasswordEvent()
 
     data object OnResendOtpButtonClick : ForgotPasswordEvent()
+
+    sealed class Navigation : ForgotPasswordEvent() {
+        data object NavigateToValidateEmailSubScreen : Navigation()
+    }
 }
 
 data class ForgotPasswordState(
     /**
      * Controls whether the loading animation is visible.
      */
-    val isLoading: Boolean = true,
+    val isLoading: Boolean = false,
 
     /**
      * The current step of the `Forgot Password` flow.
@@ -223,7 +226,11 @@ sealed class ForgotPasswordEffect : BaseEffect {
 
     sealed class Navigation : ForgotPasswordEffect() {
         data object PopBackStack : Navigation()
-        data class NavigateToPreviousScreenWithError(val errorMessage: String) : Navigation()
+        data object PopToLoginScreen : Navigation()
+        data class NavigateToLoginScreenWithError(val errorMessage: String) : Navigation()
+
+        // Sub-Screens.
+        data object NavigateToValidateEmailSubScreen : Navigation()
     }
 }
 
@@ -231,7 +238,6 @@ sealed class ForgotPasswordEffect : BaseEffect {
 class ForgotPasswordViewModel @Inject constructor(
     private val forgotPasswordInteractor: ForgotPasswordInteractor,
     private val resourceProvider: ResourceProvider,
-    private val prefKeys: PrefKeys,
     private val timerController: TimerController,
     private val formValidator: FormValidator
 ) : BaseViewModel<ForgotPasswordEvent, ForgotPasswordState, ForgotPasswordEffect>() {
@@ -284,7 +290,7 @@ class ForgotPasswordViewModel @Inject constructor(
 
     override fun handleEvents(event: ForgotPasswordEvent) {
         when (event) {
-            is ForgotPasswordEvent.InitView -> {
+            is ForgotPasswordEvent.Init -> {
                 setState {
                     copy(
                         isLoading = true
@@ -321,8 +327,26 @@ class ForgotPasswordViewModel @Inject constructor(
             }
 
             ForgotPasswordEvent.OnBackClick -> {
-                setEffect {
-                    ForgotPasswordEffect.Navigation.PopBackStack
+                // Based on the current sub-screen, navigate the user appropriately.
+                when (currentState.currentSubScreen) {
+                    EnterEmail -> {
+                        setEffect {
+                            ForgotPasswordEffect.Navigation.PopToLoginScreen
+                        }
+                    }
+
+                    ForgotPasswordSubScreens.ValidateEmail -> {
+                        setState {
+                            copy(
+                                currentSubScreen = EnterEmail
+                            )
+                        }
+                    }
+
+                    ForgotPasswordSubScreens.EnterPhoneNumber -> TODO()
+                    ForgotPasswordSubScreens.ValidatePhoneNumber -> TODO()
+                    ForgotPasswordSubScreens.EnterNewPassword -> TODO()
+                    PasswordChanged -> TODO()
                 }
             }
 
@@ -336,6 +360,14 @@ class ForgotPasswordViewModel @Inject constructor(
                     sendOtpToEmail()
                 }
             }
+
+            ForgotPasswordEvent.Navigation.NavigateToValidateEmailSubScreen -> {
+                setState {
+                    copy(
+                        currentSubScreen = ForgotPasswordSubScreens.ValidateEmail
+                    )
+                }
+            }
         }
     }
 
@@ -343,7 +375,7 @@ class ForgotPasswordViewModel @Inject constructor(
         // Verification step && email are required.
         if (verificationStep == null || email == null) {
             setEffect {
-                ForgotPasswordEffect.Navigation.NavigateToPreviousScreenWithError(
+                ForgotPasswordEffect.Navigation.NavigateToLoginScreenWithError(
                     errorMessage = resourceProvider.getGenericErrorMessage()
                 )
             }
@@ -363,25 +395,38 @@ class ForgotPasswordViewModel @Inject constructor(
      * Sends an OTP to the provided email address.
      */
     private fun sendOtpToEmail() {
+        setState {
+            copy(
+                isLoading = true
+            )
+        }
         viewModelScope.launch {
-            forgotPasswordInteractor.sendOtpToEmail(currentState.email).collect {
+            forgotPasswordInteractor.sendOtp(
+                data = currentState.email,
+                verificationStep = VerificationStep.OtpEmail
+            ).collect {
                 when (it) {
-                    is SendOtpToEmailPartialState.Failed -> {
+                    is ForgotPasswordSendOtpPartialState.Failed -> {
                         setEffect {
-                            ForgotPasswordEffect.Navigation.NavigateToPreviousScreenWithError(
+                            ForgotPasswordEffect.Navigation.NavigateToLoginScreenWithError(
                                 errorMessage = resourceProvider.getGenericErrorMessage()
                             )
                         }
                         return@collect
                     }
 
-                    is SendOtpToEmailPartialState.Success -> {
+                    is ForgotPasswordSendOtpPartialState.Success -> {
                         setState {
                             copy(
+                                isLoading = false,
                                 requestIdEmail = it.requestId
                             )
                         }
-                        checkIfOtpBlockedEmail()
+
+                        setEffect {
+                            ForgotPasswordEffect.Navigation.NavigateToValidateEmailSubScreen
+                        }
+//                        checkIfOtpBlockedEmail()
                     }
                 }
             }
@@ -476,7 +521,7 @@ class ForgotPasswordViewModel @Inject constructor(
 
                         is ForgotPasswordIsOtpBlockedEmailPartialState.Failed -> {
                             setEffect {
-                                ForgotPasswordEffect.Navigation.NavigateToPreviousScreenWithError(
+                                ForgotPasswordEffect.Navigation.NavigateToLoginScreenWithError(
                                     errorMessage = forgotPasswordPartialState.errorMessage
                                 )
                             }
@@ -549,22 +594,22 @@ class ForgotPasswordViewModel @Inject constructor(
         }
         countdownJob?.cancel()
         countdownJob = viewModelScope.launch {
-            forgotPasswordInteractor.validateOtpFromEmail(
+            forgotPasswordInteractor.validateOtp(
                 requestId = currentState.requestIdEmail,
                 otp = currentState.otp
             ).collect {
                 when (it) {
-                    is ForgotPasswordValidateOtpFromEmailPartialState.Success -> {
+                    is ForgotPasswordValidateOtpPartialState.Success -> {
 
                     }
 
-                    is ForgotPasswordValidateOtpFromEmailPartialState.ClientError -> {
+                    is ForgotPasswordValidateOtpPartialState.ClientError -> {
 
                     }
 
-                    is ForgotPasswordValidateOtpFromEmailPartialState.Failed -> {
+                    is ForgotPasswordValidateOtpPartialState.Failed -> {
                         setEffect {
-                            ForgotPasswordEffect.Navigation.NavigateToPreviousScreenWithError(
+                            ForgotPasswordEffect.Navigation.NavigateToLoginScreenWithError(
                                 errorMessage = it.errorMessage
                             )
                         }

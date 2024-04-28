@@ -44,8 +44,9 @@ import com.alexgreece45.marvelx.viewModels.AllCharacterComicsEvent
 import com.alexgreece45.marvelx.viewModels.AllCharacterComicsViewModel
 import com.alexgreece45.marvelx.ui.navigation.Screen
 import com.alexgreece45.marvelx.ui.components.ContentScreen
-import com.alexgreece45.marvelx.ui.components.GenericErrorScreen
+import com.alexgreece45.marvelx.ui.components.ContentErrorScreen
 import com.alexgreece45.marvelx.ui.components.ModalBottomSheet
+import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
 import com.alexgreece45.marvelx.ui.components.SortingModalBottomSheetContent
 import com.alexgreece45.marvelx.util.DEFAULT_SCREEN_PADDING
 import com.alexgreece45.marvelx.util.HSpacer
@@ -123,8 +124,10 @@ fun AllCharacterComicsScreen(
         }
     ) {
         ContentScreen(
-            onBack = { navController.popBackStack() },
             isLoading = state.isLoading,
+            navigableAction = ScreenNavigableAction.Backable {
+               navController.popBackStack()
+            },
             showToolbar = true,
             toolbarTitle = stringResource(
                 R.string.all_character_comics_screen_toolbar_title,
@@ -137,7 +140,7 @@ fun AllCharacterComicsScreen(
             ) {
                 state.error?.let {
                     item {
-                        GenericErrorScreen(errorMessage = it.errorMessage) {
+                        ContentErrorScreen(errorMessage = it.errorMessage) {
                             it.onRetryClick.invoke()
                         }
                     }
@@ -145,7 +148,7 @@ fun AllCharacterComicsScreen(
 
                 if (!state.hasInternetConnection) {
                     item {
-                        GenericErrorScreen(errorMessage = stringResource(R.string.no_internet_connection_error_message)) {
+                        ContentErrorScreen(errorMessage = stringResource(R.string.no_internet_connection_error_message)) {
                             viewModel.setEvent(AllCharacterComicsEvent.InitView(characterId = characterId))
                         }
                     }

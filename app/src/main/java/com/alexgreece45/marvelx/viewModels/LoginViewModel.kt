@@ -3,6 +3,7 @@ package com.alexgreece45.marvelx.viewModels
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.controllers.PrefKeys
+import com.alexgreece45.marvelx.data.domains.otp.OtpFlowType
 import com.alexgreece45.marvelx.data.domains.user.VerificationStep
 import com.alexgreece45.marvelx.interactors.PostLoginPartialState
 import com.alexgreece45.marvelx.interactors.RegisterInteractor
@@ -10,6 +11,7 @@ import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
 import com.alexgreece45.marvelx.mvi.BaseViewModel
+import com.alexgreece45.marvelx.ui.components.models.ErrorButtonLayout
 import com.alexgreece45.marvelx.util.Form
 import com.alexgreece45.marvelx.util.FormValidator
 import com.alexgreece45.marvelx.util.FormsValidationResult
@@ -22,6 +24,13 @@ import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+data class LoginScreenErrorView(
+    val errorTitle: String,
+    val errorSubtitle: String,
+    val onCloseClicked: (() -> Unit)? = null,
+    val errorButtonLayout: ErrorButtonLayout.Single
+)
+
 sealed class LoginEvent : BaseEvent {
     data object InitView : LoginEvent()
 
@@ -30,7 +39,6 @@ sealed class LoginEvent : BaseEvent {
     sealed class FieldValueChange : LoginEvent() {
         data class Email(val email: String) : FieldValueChange()
         data class Password(val password: String) : FieldValueChange()
-
     }
 
     data object OnPasswordVisibilityIconClick : LoginEvent()
@@ -45,13 +53,12 @@ sealed class LoginEvent : BaseEvent {
 
     data object OnSignupTextClicked : LoginEvent()
 
-    sealed class AlertDialog : LoginEvent() {
-        data object OnOkClick : AlertDialog()
+    sealed class ErrorView : LoginEvent() {
+        /**
+         * Hides the error view.
+         */
+        data object Hide : ErrorView()
     }
-
-    data class OnShowErrorDialog(val errorMessage: String) : LoginEvent()
-
-    data object OnNoInternetRetryButtonClick : LoginEvent()
 }
 
 data class LoginState(
@@ -75,6 +82,7 @@ data class LoginState(
     val isLoginButtonEnabled: Boolean = false,
 
     // Alert Dialog.
+    val error: LoginScreenErrorView? = null,
     val isAlertDialogVisible: Boolean = false,
     val alertDialogTitle: String = "",
     val alertDialogErrorMessage: String = "",
@@ -94,6 +102,7 @@ sealed class LoginEffect : BaseEffect {
 
         data class NavigateToOtpScreen(
             val userId: Int,
+            val otpFlowType: String,
             val verificationStep: String,
             val shouldRememberUserSession: Boolean
         ) : Navigation()
@@ -116,7 +125,10 @@ sealed class LoginEffect : BaseEffect {
      */
     data object CloseKeyboardAndClearFocus : LoginEffect()
 
-    data class ShowErrorDialog(val errorMessage: String) : LoginEffect()
+    /**
+     * The [LoginEvent] to be executed. This effect ***must*** be solely used when an error occurs.
+     */
+    data class ExecuteEvent(val event: LoginEvent) : LoginEffect()
 
     data object OnDoneClick : LoginEffect()
 }
@@ -129,19 +141,7 @@ class LoginViewModel @Inject constructor(
     private val prefKeys: PrefKeys
 ) : BaseViewModel<LoginEvent, LoginState, LoginEffect>() {
 
-    override fun setInitialState(): LoginState =
-        LoginState(
-            isLoading = false,
-            email = "",
-            password = "",
-            isPasswordVisible = false,
-            isLoginButtonEnabled = false,
-            isAlertDialogVisible = false,
-            alertDialogTitle = "",
-            alertDialogErrorMessage = "",
-            emailValidationResult = FormsValidationResult(isValid = false),
-            passwordValidationResult = FormsValidationResult(isValid = false)
-        )
+    override fun setInitialState(): LoginState = LoginState()
 
     override fun handleEvents(event: LoginEvent) {
         when (event) {
@@ -186,7 +186,7 @@ class LoginViewModel @Inject constructor(
             }
 
             LoginEvent.OnLoginButtonClick -> {
-                onLoginButtonClick()
+                onLoginButtonClick(event)
             }
 
             LoginEvent.OnSignupTextClicked -> {
@@ -203,20 +203,6 @@ class LoginViewModel @Inject constructor(
                 }
             }
 
-            LoginEvent.OnNoInternetRetryButtonClick -> {
-                setEvent(
-                    LoginEvent.InitView
-                )
-            }
-
-            LoginEvent.AlertDialog.OnOkClick -> {
-                hideAlertDialog()
-            }
-
-            is LoginEvent.OnShowErrorDialog -> {
-                showAlertDialog(errorMessage = event.errorMessage)
-            }
-
             LoginEvent.OnForgotPasswordButtonClick -> {
                 setEffect {
                     LoginEffect.Navigation.NavigateToForgotPasswordScreen
@@ -229,6 +215,10 @@ class LoginViewModel @Inject constructor(
                         isRememberMeCheckboxChecked = currentState.isRememberMeCheckboxChecked.not()
                     )
                 }
+            }
+
+            is LoginEvent.ErrorView.Hide -> {
+                hideErrorView()
             }
         }
     }
@@ -278,7 +268,7 @@ class LoginViewModel @Inject constructor(
         }
     }
 
-    private fun onLoginButtonClick() {
+    private fun onLoginButtonClick(event: LoginEvent) {
         // First of all, close the keyboard, and remove focus from all UI elements.
         setEffect {
             LoginEffect.CloseKeyboardAndClearFocus
@@ -291,7 +281,7 @@ class LoginViewModel @Inject constructor(
             )
         }
 
-        // TODO: get user's ip address, and device info.
+        // TODO: get user's device info.
 
         // One or more fields are invalid. We don't know which one, so we reset
         // the UI field states and display an error message.
@@ -301,11 +291,23 @@ class LoginViewModel @Inject constructor(
                     isLoading = false
                 )
             }
-            setEffect {
-                LoginEffect.ShowErrorDialog(
-                    errorMessage = resourceProvider.getGenericErrorMessage()
-                )
-            }
+
+            resetUiFieldStates()
+
+            showErrorView(
+                errorMessage = resourceProvider.getGenericErrorMessage(),
+                onClose = {
+                    setEffect {
+                        LoginEffect.ExecuteEvent(LoginEvent.ErrorView.Hide)
+                    }
+                },
+                primaryButtonLabel = resourceProvider.getString(R.string.login_screen_back_to_login_button),
+                onPrimaryButtonClicked = {
+                    setEffect {
+                        LoginEffect.ExecuteEvent(LoginEvent.ErrorView.Hide)
+                    }
+                }
+            )
             return
         }
 
@@ -317,43 +319,43 @@ class LoginViewModel @Inject constructor(
             ).collect { userPartialStatePostLogIn ->
                 when (userPartialStatePostLogIn) {
                     is PostLoginPartialState.Failed -> {
-                        resetUiFieldStates()
-                        setEffect {
-                            LoginEffect.ShowErrorDialog(
-                                errorMessage = userPartialStatePostLogIn.errorMessage
-                            )
-                        }
+                        showErrorView(
+                            errorMessage = userPartialStatePostLogIn.errorMessage,
+                            onClose = {
+                                resetUiFieldStates()
+                                setEffect {
+                                    LoginEffect.ExecuteEvent(LoginEvent.ErrorView.Hide)
+                                }
+                            },
+                            primaryButtonLabel = resourceProvider.getString(R.string.login_screen_back_to_login_button),
+                            onPrimaryButtonClicked = {
+                                resetUiFieldStates()
+                                setEffect {
+                                    LoginEffect.ExecuteEvent(LoginEvent.ErrorView.Hide)
+                                }
+                            }
+                        )
                     }
 
                     is PostLoginPartialState.Success -> {
                         // Act accordingly based on the verification step.
                         userPartialStatePostLogIn.loginResponseDomain.let { loginResponseDomain ->
                             when (loginResponseDomain.verificationStep) {
-                                is VerificationStep.None -> {
-                                    // Save userId in device.
-                                    prefKeys.setUserId(userPartialStatePostLogIn.loginResponseDomain.userId)
-
-                                    // No verification step, thus user is logged in.
-                                    prefKeys.setUserLoggedIn(isLoggedIn = true)
-
-                                    // Save "Remember Me" in device since we're logged in.
-                                    prefKeys.setRememberUserSession(shouldRemember = currentState.isRememberMeCheckboxChecked)
-
+                                is VerificationStep.Invalid, VerificationStep.None -> {
                                     resetUiFieldStates()
-
-                                    // No verification step, so navigate to All Characters Screen.
-                                    setEffect {
-                                        LoginEffect.Navigation.NavigateToAllCharactersScreen(userId = loginResponseDomain.userId)
-                                    }
-                                }
-
-                                is VerificationStep.Invalid -> {
-                                    resetUiFieldStates()
-                                    setEffect {
-                                        LoginEffect.ShowErrorDialog(
-                                            errorMessage = resourceProvider.getGenericErrorMessage()
-                                        )
-                                    }
+                                    showErrorView(
+                                        errorMessage = resourceProvider.getGenericErrorMessage(),
+                                        onClose = {
+                                            setEffect {
+                                                LoginEffect.ExecuteEvent(LoginEvent.ErrorView.Hide)
+                                            }
+                                        },
+                                        onPrimaryButtonClicked = {
+                                            setEffect {
+                                                LoginEffect.ExecuteEvent(LoginEvent.ErrorView.Hide)
+                                            }
+                                        }
+                                    )
                                 }
 
                                 is VerificationStep.OtpEmail -> {
@@ -368,7 +370,8 @@ class LoginViewModel @Inject constructor(
                                     setEffect {
                                         LoginEffect.Navigation.NavigateToOtpScreen(
                                             userId = loginResponseDomain.userId,
-                                            verificationStep = loginResponseDomain.verificationStep.name,
+                                            otpFlowType = OtpFlowType.Register.key,
+                                            verificationStep = loginResponseDomain.verificationStep.key,
                                             shouldRememberUserSession = isRememberMeCheckboxChecked
                                         )
                                     }
@@ -444,36 +447,58 @@ class LoginViewModel @Inject constructor(
     }
 
     /**
-     * Returns the title of the Alert Dialog in `LoginScreen`.
+     * The title of the error view of `LoginScreen`.
      */
-    private fun getAlertDialogTitle(): String =
-        resourceProvider.getString(R.string.login_screen_alert_dialog_title)
+    private val errorViewTitle: String
+        get() =
+            resourceProvider.getString(R.string.login_screen_error_view_title)
 
-    private fun showAlertDialog(errorMessage: String) {
+    /**
+     * Displays the error view. It has a default title so there's no need to set it.
+     *
+     * @param errorMessage              The error message to be displayed as the subtitle of the
+     * error view.
+     * @param onClose                   The action(s) to be invoked when the `close` button on the
+     * toolbar is clicked. Set to `null` if you don't want a toolbar action button at all.
+     * @param primaryButtonLabel        The label of the primary button. It has a default of `blank`.
+     * If you wish to change the label, you ***must*** provide a value.
+     * @param onPrimaryButtonClicked    The action(s) to be invoked when the `primary` button is
+     * clicked. If you wish to execute an event, set an effect to [LoginEffect.ExecuteEvent].
+     */
+    private fun showErrorView(
+        errorMessage: String,
+        onClose: (() -> Unit)? = null,
+        primaryButtonLabel: String = resourceProvider.getString(R.string.generic_retry_button),
+        onPrimaryButtonClicked: () -> Unit
+    ) {
         setState {
             copy(
-                isAlertDialogVisible = true,
-                alertDialogTitle = getAlertDialogTitle(),
-                alertDialogErrorMessage = errorMessage
+                error = LoginScreenErrorView(
+                    errorTitle = errorViewTitle,
+                    errorSubtitle = errorMessage,
+                    onCloseClicked = onClose,
+                    errorButtonLayout = ErrorButtonLayout.Single(
+                        primaryButtonLabel = primaryButtonLabel,
+                        onPrimaryButtonClicked = onPrimaryButtonClicked
+                    )
+                )
             )
         }
     }
 
-    private fun hideAlertDialog() {
+    private fun hideErrorView() {
         setState {
             copy(
-                isAlertDialogVisible = false,
-                alertDialogTitle = "",
-                alertDialogErrorMessage = ""
+                error = null
             )
         }
     }
 
     /**
-     * This method MUST only be used when an error occurs and it is
-     * necessary to reset the UI field states.
+     * This method MUST only be used when an error occurs and it is necessary to reset the UI field
+     * states.
      *
-     * ### Note: this method, also, DISABLES the loading animation.
+     * ### Note: This method _disables_ the loading animation.
      */
     private fun resetUiFieldStates() {
         setState {

@@ -3,14 +3,13 @@ package com.alexgreece45.marvelx.interactors
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.data.domains.otp.OtpErrorCause
 import com.alexgreece45.marvelx.data.domains.otp.OtpResponseErrorDomain
+import com.alexgreece45.marvelx.data.domains.user.VerificationStep
 import com.alexgreece45.marvelx.data.models.otp.toOtpResponseErrorDomain
 import com.alexgreece45.marvelx.repository.ForgotPasswordRepository
 import com.alexgreece45.marvelx.repository.ForgotPasswordRepositoryIsOtpBlockedEmailResponse
 import com.alexgreece45.marvelx.repository.ForgotPasswordRepositoryIsOtpBlockedPhoneNumberResponse
-import com.alexgreece45.marvelx.repository.ForgotPasswordRepositorySendOtpEmailResponse
-import com.alexgreece45.marvelx.repository.ForgotPasswordRepositorySendOtpPhoneNumberResponse
+import com.alexgreece45.marvelx.repository.ForgotPasswordRepositorySendOtpResponse
 import com.alexgreece45.marvelx.repository.ForgotPasswordRepositoryValidateOtpFromEmailResponse
-import com.alexgreece45.marvelx.repository.ForgotPasswordRepositoryValidateOtpFromPhoneNumberResponse
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.extensions.safeAsync
 import kotlinx.coroutines.flow.Flow
@@ -20,28 +19,20 @@ import javax.inject.Inject
 
 interface ForgotPasswordInteractor {
     /**
-     * Forgot password flow. This method is used to send an OTP to the given [email].
+     * Forgot password flow. This method is used to send an OTP to the given [data] based on the
+     * [verificationStep].
      *
      * If the request is successful, the `requestId` field will be later used to authenticate
      * this unique session of resetting a password.
      *
      * If the request fails because an OTP was requested too soon, the `requestId` field must be
-     * preserved for future email OTP transmissions. Otherwise, the forgot password flow is
-     * terminated as an another error has occurred.
+     * preserved for future email/phone number OTP transmissions. Otherwise, the forgot password
+     * flow is terminated as another error has occurred.
      */
-    suspend fun sendOtpToEmail(email: String): Flow<SendOtpToEmailPartialState>
-
-    /**
-     * Forgot password flow. This method is used to send an OTP to the given [phoneNumber].
-     *
-     * If the request is successful, the `requestId` field will be later used to authenticate this
-     * unique session of resetting a password.
-     *
-     * If the request fails because an OTP was requested too soon, the `requestId` field must be
-     * preserved for future phone number OTP transmissions. Otherwise, the forgot password flow is
-     * terminated as an another error has occurred.
-     */
-    suspend fun sendOtpToPhoneNumber(phoneNumber: String): Flow<SendOtpToPhoneNumberPartialState>
+    suspend fun sendOtp(
+        data: String,
+        verificationStep: VerificationStep
+    ): Flow<ForgotPasswordSendOtpPartialState>
 
     /**
      * Checks if the OTP functionality for the email is blocked.
@@ -54,95 +45,58 @@ interface ForgotPasswordInteractor {
     suspend fun isOtpBlockedPhoneNumber(requestId: String): Flow<ForgotPasswordIsOtpBlockedPhoneNumberPartialState>
 
     /**
-     * Validates the given OTP against the one that was sent to the user's email address.
+     * Validates the given OTP against the one that was sent to the user's email address / phone
+     * based on the provided [requestId].
      *
      * @param requestId     The unique request ID.
      * @param otp           The OTP to be validated.
      */
-    suspend fun validateOtpFromEmail(
+    suspend fun validateOtp(
         requestId: String,
         otp: String
-    ): Flow<ForgotPasswordValidateOtpFromEmailPartialState>
-
-    /**
-     * Validates the given OTP against the one that was sent to the user's phone number.
-     *
-     * @param requestId     The unique request ID.
-     * @param otp           The OTP to be validated.
-     */
-    suspend fun validateOtpFromPhoneNumber(
-        requestId: String,
-        otp: String
-    ): Flow<ForgotPasswordValidateOtpFromPhoneNumberPartialState>
+    ): Flow<ForgotPasswordValidateOtpPartialState>
 }
 
 class ForgotPasswordInteractorImpl @Inject constructor(
     private val repository: ForgotPasswordRepository,
     private val resourceProvider: ResourceProvider
 ) : ForgotPasswordInteractor {
-    override suspend fun sendOtpToEmail(email: String): Flow<SendOtpToEmailPartialState> = flow {
-        repository.sendOtpToEmail(email = email).collect { sendOtpToEmailRepositoryPartialState ->
+    override suspend fun sendOtp(
+        data: String,
+        verificationStep: VerificationStep
+    ): Flow<ForgotPasswordSendOtpPartialState> = flow {
+        repository.sendOtp(
+            data = data,
+            verificationStep = verificationStep.key
+        ).collect { sendOtpToEmailRepositoryPartialState ->
             when (sendOtpToEmailRepositoryPartialState) {
-                is ForgotPasswordRepositorySendOtpEmailResponse.Failed -> {
-                    emit(SendOtpToEmailPartialState.Failed(errorMessage = sendOtpToEmailRepositoryPartialState.errorMessage))
+                is ForgotPasswordRepositorySendOtpResponse.Failed -> {
+                    emit(ForgotPasswordSendOtpPartialState.Failed(errorMessage = sendOtpToEmailRepositoryPartialState.errorMessage))
                 }
 
-                is ForgotPasswordRepositorySendOtpEmailResponse.Success -> {
+                is ForgotPasswordRepositorySendOtpResponse.Success -> {
                     sendOtpToEmailRepositoryPartialState.response?.let { response ->
                         emit(
-                            SendOtpToEmailPartialState.Success(
+                            ForgotPasswordSendOtpPartialState.Success(
                                 requestId = response.requestId
                             )
                         )
                     }
-                        ?: emit(SendOtpToEmailPartialState.Failed(errorMessage = resourceProvider.getGenericErrorMessage()))
+                        ?: emit(ForgotPasswordSendOtpPartialState.Failed(errorMessage = resourceProvider.getGenericErrorMessage()))
                 }
             }
         }
     }.safeAsync {
         when (it) {
             is IOException -> {
-                SendOtpToEmailPartialState.Failed(
+                ForgotPasswordSendOtpPartialState.Failed(
                     errorMessage = resourceProvider.getNoInternetConnectionMessage()
                 )
             }
 
-            else -> (SendOtpToEmailPartialState.Failed(errorMessage = resourceProvider.getGenericErrorMessage()))
+            else -> (ForgotPasswordSendOtpPartialState.Failed(errorMessage = resourceProvider.getGenericErrorMessage()))
         }
     }
-
-    override suspend fun sendOtpToPhoneNumber(phoneNumber: String): Flow<SendOtpToPhoneNumberPartialState> =
-        flow {
-            repository.sendOtpToPhoneNumber(phoneNumber = phoneNumber)
-                .collect { sendOtpToPhoneNumberRepositoryPartialState ->
-                    when (sendOtpToPhoneNumberRepositoryPartialState) {
-                        is ForgotPasswordRepositorySendOtpPhoneNumberResponse.Failed -> {
-                            emit(SendOtpToPhoneNumberPartialState.Failed(errorMessage = sendOtpToPhoneNumberRepositoryPartialState.errorMessage))
-                        }
-
-                        is ForgotPasswordRepositorySendOtpPhoneNumberResponse.Success -> {
-                            sendOtpToPhoneNumberRepositoryPartialState.response?.let { response ->
-                                emit(
-                                    SendOtpToPhoneNumberPartialState.Success(
-                                        requestId = response.requestId
-                                    )
-                                )
-                            }
-                                ?: emit(SendOtpToPhoneNumberPartialState.Failed(errorMessage = resourceProvider.getGenericErrorMessage()))
-                        }
-                    }
-                }
-        }.safeAsync {
-            when (it) {
-                is IOException -> {
-                    SendOtpToPhoneNumberPartialState.Failed(
-                        errorMessage = resourceProvider.getNoInternetConnectionMessage()
-                    )
-                }
-
-                else -> (SendOtpToPhoneNumberPartialState.Failed(errorMessage = resourceProvider.getGenericErrorMessage()))
-            }
-        }
 
     override suspend fun isOtpBlockedEmail(requestId: String): Flow<ForgotPasswordIsOtpBlockedEmailPartialState> =
         flow {
@@ -250,11 +204,11 @@ class ForgotPasswordInteractorImpl @Inject constructor(
             }
         }
 
-    override suspend fun validateOtpFromEmail(
+    override suspend fun validateOtp(
         requestId: String,
         otp: String
-    ): Flow<ForgotPasswordValidateOtpFromEmailPartialState> = flow {
-        repository.validateOtpFromEmail(requestId, otp).collect {
+    ): Flow<ForgotPasswordValidateOtpPartialState> = flow {
+        repository.validateOtp(requestId, otp).collect {
             when (it) {
                 is ForgotPasswordRepositoryValidateOtpFromEmailResponse.Failed -> {
                     val otpResponseErrorDomain = it.otpResponseError.toOtpResponseErrorDomain()
@@ -262,7 +216,7 @@ class ForgotPasswordInteractorImpl @Inject constructor(
                         OtpErrorCause.Blocked -> {
                             if (otpResponseErrorDomain.blockExpiresIn == null) {
                                 emit(
-                                    ForgotPasswordValidateOtpFromEmailPartialState.Failed(
+                                    ForgotPasswordValidateOtpPartialState.Failed(
                                         errorMessage = resourceProvider.getString(R.string.internal_server_error)
                                     )
                                 )
@@ -270,7 +224,7 @@ class ForgotPasswordInteractorImpl @Inject constructor(
                             }
 
                             emit(
-                                ForgotPasswordValidateOtpFromEmailPartialState.ClientError(
+                                ForgotPasswordValidateOtpPartialState.ClientError(
                                     otpResponseErrorDomain = otpResponseErrorDomain
                                 )
                             )
@@ -278,7 +232,7 @@ class ForgotPasswordInteractorImpl @Inject constructor(
 
                         OtpErrorCause.Expired, OtpErrorCause.NotMatch -> {
                             emit(
-                                ForgotPasswordValidateOtpFromEmailPartialState.ClientError(
+                                ForgotPasswordValidateOtpPartialState.ClientError(
                                     otpResponseErrorDomain = otpResponseErrorDomain
                                 )
                             )
@@ -286,7 +240,7 @@ class ForgotPasswordInteractorImpl @Inject constructor(
 
                         OtpErrorCause.InvalidLength, is OtpErrorCause.Invalid, OtpErrorCause.InternalServerError -> {
                             emit(
-                                ForgotPasswordValidateOtpFromEmailPartialState.Failed(
+                                ForgotPasswordValidateOtpPartialState.Failed(
                                     errorMessage = resourceProvider.getString(R.string.internal_server_error)
                                 )
                             )
@@ -297,12 +251,12 @@ class ForgotPasswordInteractorImpl @Inject constructor(
                 is ForgotPasswordRepositoryValidateOtpFromEmailResponse.Success -> {
                     it.response?.let { response ->
                         emit(
-                            ForgotPasswordValidateOtpFromEmailPartialState.Success(
+                            ForgotPasswordValidateOtpPartialState.Success(
                                 isPhoneNumberRequired = response.isPhoneNumberRequired
                             )
                         )
                     } ?: emit(
-                        ForgotPasswordValidateOtpFromEmailPartialState.Failed(
+                        ForgotPasswordValidateOtpPartialState.Failed(
                             errorMessage = resourceProvider.getGenericErrorMessage()
                         )
                     )
@@ -312,89 +266,13 @@ class ForgotPasswordInteractorImpl @Inject constructor(
     }.safeAsync {
         when (it) {
             is IOException -> {
-                ForgotPasswordValidateOtpFromEmailPartialState.Failed(
+                ForgotPasswordValidateOtpPartialState.Failed(
                     errorMessage = resourceProvider.getNoInternetConnectionMessage()
                 )
             }
 
             else -> {
-                ForgotPasswordValidateOtpFromEmailPartialState.Failed(
-                    errorMessage = resourceProvider.getGenericErrorMessage()
-                )
-            }
-        }
-    }
-
-    override suspend fun validateOtpFromPhoneNumber(
-        requestId: String,
-        otp: String
-    ): Flow<ForgotPasswordValidateOtpFromPhoneNumberPartialState> = flow {
-        resourceProvider.getGenericErrorMessage()
-        repository.validateOtpFromPhoneNumber(requestId, otp).collect {
-            when (it) {
-                is ForgotPasswordRepositoryValidateOtpFromPhoneNumberResponse.Failed -> {
-                    val otpResponseErrorDomain = it.otpResponseError.toOtpResponseErrorDomain()
-                    when (otpResponseErrorDomain.errorCause) {
-                        OtpErrorCause.Blocked -> {
-                            if (otpResponseErrorDomain.blockExpiresIn == null) {
-                                emit(
-                                    ForgotPasswordValidateOtpFromPhoneNumberPartialState.Failed(
-                                        errorMessage = resourceProvider.getString(R.string.internal_server_error)
-                                    )
-                                )
-                                return@collect
-                            }
-
-                            emit(
-                                ForgotPasswordValidateOtpFromPhoneNumberPartialState.ClientError(
-                                    otpResponseErrorDomain = otpResponseErrorDomain
-                                )
-                            )
-                        }
-
-                        OtpErrorCause.Expired, OtpErrorCause.NotMatch -> {
-                            emit(
-                                ForgotPasswordValidateOtpFromPhoneNumberPartialState.ClientError(
-                                    otpResponseErrorDomain = otpResponseErrorDomain
-                                )
-                            )
-                        }
-
-                        OtpErrorCause.InvalidLength, is OtpErrorCause.Invalid, OtpErrorCause.InternalServerError -> {
-                            emit(
-                                ForgotPasswordValidateOtpFromPhoneNumberPartialState.Failed(
-                                    errorMessage = resourceProvider.getString(R.string.internal_server_error)
-                                )
-                            )
-                        }
-                    }
-                }
-
-                is ForgotPasswordRepositoryValidateOtpFromPhoneNumberResponse.Success -> {
-                    it.response?.let { response ->
-                        emit(
-                            ForgotPasswordValidateOtpFromPhoneNumberPartialState.Success(
-                                isEmailRequired = response.isEmailRequired
-                            )
-                        )
-                    } ?: emit(
-                        ForgotPasswordValidateOtpFromPhoneNumberPartialState.Failed(
-                            errorMessage = resourceProvider.getGenericErrorMessage()
-                        )
-                    )
-                }
-            }
-        }
-    }.safeAsync {
-        when (it) {
-            is IOException -> {
-                ForgotPasswordValidateOtpFromPhoneNumberPartialState.Failed(
-                    errorMessage = resourceProvider.getNoInternetConnectionMessage()
-                )
-            }
-
-            else -> {
-                ForgotPasswordValidateOtpFromPhoneNumberPartialState.Failed(
+                ForgotPasswordValidateOtpPartialState.Failed(
                     errorMessage = resourceProvider.getGenericErrorMessage()
                 )
             }
@@ -402,29 +280,18 @@ class ForgotPasswordInteractorImpl @Inject constructor(
     }
 }
 
-sealed interface ForgotPasswordValidateOtpFromEmailPartialState {
+sealed interface ForgotPasswordValidateOtpPartialState {
     data class Success(val isPhoneNumberRequired: Boolean) :
-        ForgotPasswordValidateOtpFromEmailPartialState
+        ForgotPasswordValidateOtpPartialState
 
-    data class Failed(val errorMessage: String) : ForgotPasswordValidateOtpFromEmailPartialState
+    data class Failed(val errorMessage: String) : ForgotPasswordValidateOtpPartialState
     data class ClientError(val otpResponseErrorDomain: OtpResponseErrorDomain) :
-        ForgotPasswordValidateOtpFromEmailPartialState
+        ForgotPasswordValidateOtpPartialState
 }
 
-sealed interface ForgotPasswordValidateOtpFromPhoneNumberPartialState {
-    data class Success(val isEmailRequired: Boolean) :
-        ForgotPasswordValidateOtpFromPhoneNumberPartialState
-
-    data class Failed(val errorMessage: String) :
-        ForgotPasswordValidateOtpFromPhoneNumberPartialState
-
-    data class ClientError(val otpResponseErrorDomain: OtpResponseErrorDomain) :
-        ForgotPasswordValidateOtpFromPhoneNumberPartialState
-}
-
-sealed interface SendOtpToEmailPartialState {
-    data class Success(val requestId: String) : SendOtpToEmailPartialState
-    data class Failed(val errorMessage: String) : SendOtpToEmailPartialState
+sealed interface ForgotPasswordSendOtpPartialState {
+    data class Success(val requestId: String) : ForgotPasswordSendOtpPartialState
+    data class Failed(val errorMessage: String) : ForgotPasswordSendOtpPartialState
 }
 
 sealed interface SendOtpToPhoneNumberPartialState {

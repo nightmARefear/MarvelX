@@ -43,11 +43,11 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.ui.components.AlertDialogButton
-import com.alexgreece45.marvelx.ui.components.AlertDialogError
 import com.alexgreece45.marvelx.ui.components.ContainedButton
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.OutlinedTextFieldValidation
+import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
+import com.alexgreece45.marvelx.ui.components.error.ContentErrorScreen
 import com.alexgreece45.marvelx.ui.components.hightlightedText.WrapClickableText
 import com.alexgreece45.marvelx.ui.components.models.ClickableString
 import com.alexgreece45.marvelx.ui.navigation.Screen
@@ -86,6 +86,7 @@ fun LoginScreen(
                     navController.navigate(
                         Screen.OtpScreen.createNavRoute(
                             userId = effect.userId,
+                            otpFlowType = effect.otpFlowType,
                             verificationStep = effect.verificationStep,
                             shouldRememberUserSession = effect.shouldRememberUserSession
                         )
@@ -107,28 +108,26 @@ fun LoginScreen(
                     navController.popBackStack()
                 }
 
-                is LoginEffect.ShowErrorDialog -> {
-                    viewModel.setEvent(
-                        LoginEvent.OnShowErrorDialog(
-                            errorMessage = effect.errorMessage
-                        )
-                    )
-                }
-
                 LoginEffect.OnDoneClick -> {
                     viewModel.setEvent(LoginEvent.OnLoginButtonClick)
                 }
 
                 LoginEffect.Navigation.NavigateToForgotPasswordScreen -> {
-                    navController.navigate(Screen.RegisterScreens.ForgotPasswordScreen.route)
+                    navController.navigate(Screen.RegisterScreens.LoginScreens.ForgotPasswordScreens.ForgotPasswordScreen.route)
+                }
+
+                is LoginEffect.ExecuteEvent -> {
+                    viewModel.setEvent(effect.event)
                 }
             }
         }
     }
 
     ContentScreen(
-        onBack = { viewModel.setEvent(LoginEvent.OnBack) },
         isLoading = state.isLoading,
+        navigableAction = ScreenNavigableAction.Backable {
+            viewModel.setEvent(LoginEvent.OnBack)
+        },
         showToolbar = true,
         toolbarTitle = stringResource(R.string.login_screen_toolbar_title)
     ) { paddingValues ->
@@ -137,17 +136,6 @@ fun LoginScreen(
                 .fillMaxSize()
                 .padding(paddingValues),
         ) {
-            if (state.isAlertDialogVisible) {
-                AlertDialogError(
-                    title = state.alertDialogTitle,
-                    errorMessage = state.alertDialogErrorMessage,
-                    confirmButton = AlertDialogButton(
-                        value = stringResource(R.string.ok),
-                        onClick = { viewModel.setEvent(LoginEvent.AlertDialog.OnOkClick) }
-                    )
-                )
-            }
-
             // Email
             OutlinedTextFieldValidation(
                 modifier = Modifier
@@ -309,5 +297,14 @@ fun LoginScreen(
                 )
             }
         }
+    }
+
+    state.error?.let { error ->
+        ContentErrorScreen(
+            errorTitle = error.errorTitle,
+            errorSubtitle = error.errorSubtitle,
+            onClose = error.onCloseClicked,
+            errorButtonLayout = error.errorButtonLayout
+        )
     }
 }

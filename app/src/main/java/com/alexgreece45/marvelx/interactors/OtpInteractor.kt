@@ -123,7 +123,7 @@ class OtpInteractorImpl @Inject constructor(
     ): Flow<ResendOtpPartialState> = flow {
         val genericErrorMessage = resourceProvider.getGenericErrorMessage()
         val requestResendOtp =
-            RequestResendOtp(userId = userId, verificationStep = verificationStep.name)
+            RequestResendOtp(userId = userId, verificationStep = verificationStep.key)
         repository.resendOtp(requestResendOtp).collect {
             when (it) {
                 is ResendOtpRepositoryResponse.Failed -> {

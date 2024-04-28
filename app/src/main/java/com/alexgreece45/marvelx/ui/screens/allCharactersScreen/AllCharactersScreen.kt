@@ -61,7 +61,7 @@ import com.alexgreece45.marvelx.ui.components.BottomBarItem
 import com.alexgreece45.marvelx.ui.components.BottomNavigationBarData
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.ExtendedFabData
-import com.alexgreece45.marvelx.ui.components.GenericErrorScreen
+import com.alexgreece45.marvelx.ui.components.ContentErrorScreen
 import com.alexgreece45.marvelx.ui.components.ModalBottomSheet
 import com.alexgreece45.marvelx.ui.components.NormalFabData
 import com.alexgreece45.marvelx.ui.components.SearchBar
@@ -71,7 +71,6 @@ import com.alexgreece45.marvelx.ui.components.isScrollingUp
 import com.alexgreece45.marvelx.util.DEFAULT_SCREEN_PADDING
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.SPACING_TINY
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 
 @OptIn(
@@ -118,7 +117,7 @@ fun AllCharactersScreen(
     }
 
     LaunchedEffect(Unit) {
-        viewModel.setEvent(AllCharactersEvent.InitView)
+        viewModel.setEvent(AllCharactersEvent.Init)
 
         viewModel.uiEffect.collect { effect ->
             when (effect) {
@@ -188,6 +187,13 @@ fun AllCharactersScreen(
             isLoading = state.isLoading,
             showToolbar = true,
             toolbarTitle = stringResource(R.string.all_characters_screen_toolbar_title),
+            bottomNavigationBarData = bottomNavigationBarData(
+                state.bottomNavigationItems,
+                MaterialTheme.colors.background,
+                MaterialTheme.colors.onBackground.copy(alpha = 0.8f),
+                MaterialTheme.colors.primaryVariant.copy(alpha = 0.8f),
+                16.dp,
+            ),
             fabData = if (state.error == null) { // Display FAB only when there's no error.
                 ExtendedFabData(
                     extended = lazyGridState.isScrollingUp(),
@@ -199,14 +205,7 @@ fun AllCharactersScreen(
                         onClick = { viewModel.setEvent(AllCharactersEvent.OnFabClick) }
                     )
                 )
-            } else null,
-            bottomNavigationBarData = bottomNavigationBarData(
-                state.bottomNavigationItems,
-                MaterialTheme.colors.background,
-                MaterialTheme.colors.onBackground.copy(alpha = 0.8f),
-                MaterialTheme.colors.primaryVariant.copy(alpha = 0.8f),
-                16.dp,
-            )
+            } else null
         ) { contentPadding ->
             state.error?.let { error ->
                 LazyColumn(
@@ -214,7 +213,7 @@ fun AllCharactersScreen(
                     contentPadding = contentPadding
                 ) {
                     item {
-                        GenericErrorScreen(
+                        ContentErrorScreen(
                             errorMessage = error.errorMessage,
                             onRetryClick = {
                                 error.onRetryClick.invoke()
@@ -252,7 +251,7 @@ fun AllCharactersScreen(
                     if (state.filteredCharacters.isEmpty()) {
                         item(span = { GridItemSpan(2) }) {
                             Text(
-                                text = "No characters were found based on the specified criteria...",
+                                text = stringResource(R.string.all_characters_screen_error_no_characters_found_search),
                                 style = MaterialTheme.typography.h6
                             )
                         }

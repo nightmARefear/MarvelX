@@ -31,7 +31,7 @@ data class AllCharactersScreenErrorView(
 )
 
 sealed interface AllCharactersEvent : BaseEvent {
-    data object InitView : AllCharactersEvent
+    data object Init : AllCharactersEvent
     data object LoadAllCharacters : AllCharactersEvent
     data object LoadFavoriteCharacters : AllCharactersEvent
     data class OnCharacterClick(val characterId: Int) : AllCharactersEvent
@@ -120,7 +120,7 @@ class AllCharactersViewModel @Inject constructor(
 
     override fun handleEvents(event: AllCharactersEvent) {
         when (event) {
-            AllCharactersEvent.InitView -> {
+            AllCharactersEvent.Init -> {
                 initView()
             }
 
@@ -375,7 +375,7 @@ class AllCharactersViewModel @Inject constructor(
             // Check if character is favorite.
             when (character.isFavorite) {
                 true -> {
-                    // Character is favorite, so unfavorite it.
+                    // Character is favorite, so un-favorite it.
                     unFavoriteCharacterById(characterId = characterId)
                 }
 
