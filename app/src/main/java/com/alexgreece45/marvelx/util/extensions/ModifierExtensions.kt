@@ -10,7 +10,6 @@ import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -27,25 +26,8 @@ import androidx.compose.ui.platform.debugInspectorInfo
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import com.alexgreece45.marvelx.util.THROTTLE_CLICKABLE_DEFAULT_DELAY
-import com.google.accompanist.placeholder.PlaceholderDefaults
-import com.google.accompanist.placeholder.PlaceholderHighlight
-import com.google.accompanist.placeholder.placeholder
-import com.google.accompanist.placeholder.shimmer
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
-
-fun Modifier.shimmer(shouldShimmer: Boolean = false) = composed {
-    if (!shouldShimmer)
-        this
-    else
-        this.placeholder(
-            visible = true,
-            color = PlaceholderDefaults.color(),
-            highlight = PlaceholderHighlight.shimmer(
-                highlightColor = PlaceholderDefaults.shimmerHighlightColor()
-            )
-        )
-}
 
 data class ClickState(
     val event: () -> Unit,

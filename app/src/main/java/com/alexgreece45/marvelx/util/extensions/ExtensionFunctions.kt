@@ -1,15 +1,10 @@
 package com.alexgreece45.marvelx.util.extensions
 
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.contentColorFor
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.alexgreece45.marvelx.util.DEFAULT_SCREEN_PADDING
-import com.google.accompanist.placeholder.PlaceholderDefaults
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
@@ -67,18 +62,3 @@ fun screenPaddingsSte(padding: Dp = DEFAULT_SCREEN_PADDING): PaddingValues {
 @Composable
 fun screenPaddingsNone(): PaddingValues =
     PaddingValues(all = 0.dp)
-
-@Composable
-fun PlaceholderDefaults.color(
-    backgroundColor: Color = MaterialTheme.colors.surface,
-    contentColor: Color = contentColorFor(backgroundColor),
-    contentAlpha: Float = 0.1f,
-): Color = contentColor.copy(contentAlpha).compositeOver(backgroundColor)
-
-@Composable
-fun PlaceholderDefaults.shimmerHighlightColor(
-    backgroundColor: Color = MaterialTheme.colors.surface,
-    alpha: Float = 0.75f,
-): Color {
-    return backgroundColor.copy(alpha = alpha)
-}

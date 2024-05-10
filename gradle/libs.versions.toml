@@ -1,0 +1,159 @@
+[versions]
+compose-bom = "2024.05.00"
+compose-compiler = "1.5.10"
+compose-navigation = "2.7.7"
+
+plugin-agp = "8.4.0"
+plugin-kotlin = "1.9.22"
+plugin-google-dagger-hilt = "2.51.1"
+plugin-google-mapsplatform-secrets = "2.0.1"
+plugin-ksp = "1.9.22-1.0.17"
+
+airbnb-lottie-compose = "6.1.0"
+
+androidx-core = "1.13.1"
+androidx-lifecycle = "2.7.0"
+androidx-activity-compose = "1.9.0"
+androidx-appcompat = "1.6.1"
+androidx-room = "2.6.1"
+androidx-security-crypto = "1.0.0"
+androidx-work = "2.9.0"
+
+androidx-test-ext-junit = "1.1.5"
+androidx-test-espresso-core = "3.5.1"
+
+chucker = "4.0.0"
+
+coil = "2.5.0"
+
+google-accompanist = "0.32.0"
+google-code-gson = "2.10.1"
+
+hilt-worker = "1.2.0"
+hilt-navigation = "1.2.0"
+
+junit = "4.13.2"
+
+lambdapioneer-argon2kt = "1.4.0"
+
+rootbeer = "0.1.0"
+
+squareup-logcat = "0.1"
+squareup-okhttp3-logging-intereceptor = "4.11.0"
+squareup-retrofit2 = "2.9.0"
+squareup-leakcanary = "2.12"
+
+[libraries]
+airbnb-lottie-compose = { module = "com.airbnb.android:lottie-compose", version.ref = "airbnb-lottie-compose" }
+
+androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activity-compose" }
+androidx-compose-bom = { module = "androidx.compose:compose-bom", version.ref = "compose-bom" }
+androidx-core = { module = "androidx.core:core-ktx", version.ref = "androidx-core" }
+androidx-lifecycle-runtime-ktx = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version.ref = "androidx-lifecycle" }
+androidx-lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "androidx-lifecycle" }
+androidx-compat = { module = "androidx.appcompat:appcompat", version.ref = "androidx-appcompat" }
+androidx-compose-material = { module = "androidx.compose.material:material" }
+androidx-compose-material-icons-extended = { module = "androidx.compose.material:material-icons-extended" } # Extra icons
+androidx-hilt-work = { module = "androidx.hilt:hilt-work", version.ref = "hilt-worker" }
+androidx-hilt-compiler = { module = "androidx.hilt:hilt-compiler", version.ref = "hilt-worker" }
+androidx-navigation = { module = "androidx.navigation:navigation-compose", version.ref = "compose-navigation" }
+androidx-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "hilt-navigation" }
+androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "androidx-room" }
+androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "androidx-room" }
+androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "androidx-room" }
+androidx-room-paging = { module = "androidx.room:room-paging", version.ref = "androidx-room" }
+androidx-security-crypto = { module = "androidx.security:security-crypto", version.ref = "androidx-security-crypto" }
+androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "androidx-work" }
+
+androidx-compose-ui = { module = "androidx.compose.ui:ui" }
+androidx-compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling" }
+androidx-compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview" }
+androidx-room-testing = { module = "androidx.room:room-testing", version.ref = "androidx-room" }
+androidx-work-testing = { module = "androidx.work:work-testing", version.ref = "androidx-work" }
+
+androidx-test-ext-junit = { module = "androidx.test.ext:junit", version.ref = "androidx-test-ext-junit" }
+androidx-test-espresso-core = { module = "androidx.test.espresso:espresso-core", version.ref = "androidx-test-espresso-core" }
+
+chucker = { module = "com.github.chuckerteam.chucker:library", version.ref = "chucker" }
+chucker-no-op = { module = "com.github.chuckerteam.chucker:library-no-op", version.ref = "chucker" }
+
+coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coil" }
+coil-gif = { module = "io.coil-kt:coil-gif", version.ref = "coil" }
+
+google-accompanist-systemuicontroller = { module = "com.google.accompanist:accompanist-systemuicontroller", version.ref = "google-accompanist" }
+google-accompanist-placeholder = { module = "com.google.accompanist:accompanist-systemuicontroller", version.ref = "google-accompanist" }
+google-code-gson = { module = "com.google.code.gson:gson", version.ref = "google-code-gson" }
+google-dagger-hilt = { module = "com.google.dagger:hilt-android", version.ref = "plugin-google-dagger-hilt" }
+google-dagger-hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref = "plugin-google-dagger-hilt" }
+google-dagger-hilt-android-testing = { module = "com.google.dagger:hilt-android-testing", version.ref = "plugin-google-dagger-hilt" }
+
+junit = { module = "junit:junit", version.ref = "junit" }
+
+lambdapioneer-argon2kt = { module = "com.lambdapioneer.argon2kt:argon2kt", version.ref = "lambdapioneer-argon2kt" }
+
+rootbeer = { module = "com.scottyab:rootbeer-lib", version.ref = "rootbeer" }
+
+squareup-logcat = { module = "com.squareup.logcat:logcat", version.ref = "squareup-logcat" }
+squareup-okhttp3-logging-interceptor = { module = "com.squareup.okhttp3:logging-interceptor", version.ref = "squareup-okhttp3-logging-intereceptor" }
+squareup-retrofit2 = { module = "com.squareup.retrofit2:retrofit", version.ref = "squareup-retrofit2" }
+squareup-retrofit2-converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "squareup-retrofit2" }
+squareup-leakcanary = { module = "com.squareup.leakcanary:leakcanary-android", version.ref = "squareup-leakcanary" }
+
+[plugins]
+android-application = { id = "com.android.application", version.ref = "plugin-agp" }
+android-library = { id = "com.android.library", version.ref = "plugin-agp" }
+
+google-dagger-hilt = { id = "com.google.dagger.hilt.android", version.ref = "plugin-google-dagger-hilt" }
+google-mapsplatform-secrets = { id = "com.google.android.libraries.mapsplatform.secrets-gradle-plugin", version.ref = "plugin-google-mapsplatform-secrets" }
+
+kotlin = { id = "org.jetbrains.kotlin.android", version.ref = "plugin-kotlin" }
+kotlin-parcelize = { id = "org.jetbrains.kotlin.plugin.parcelize", version.ref = "plugin-kotlin" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "plugin-ksp" }
+
+[bundles]
+app-ui-release = [
+    "androidx-core",
+    "androidx-lifecycle-runtime-ktx",
+    "androidx-lifecycle-runtime-compose",
+    "androidx-activity-compose",
+    "androidx-compat",
+    "androidx-compose-ui",
+    "androidx-compose-material",
+    "androidx-compose-material-icons-extended",
+    "androidx-navigation",
+    "androidx-navigation-compose",
+    "google-accompanist-systemuicontroller",
+    "google-accompanist-placeholder",
+]
+
+app-ui-debug = [
+    "androidx-compose-ui-tooling-preview",
+    "androidx-compose-ui-tooling"
+]
+
+test-implementation = [
+    "junit"
+]
+
+android-test-implementation = [
+    "androidx-test-ext-junit",
+    "androidx-test-espresso-core"
+]
+
+coil = [
+    "coil-compose",
+    "coil-gif"
+]
+
+networking = [
+    "google-code-gson",
+    "squareup-okhttp3-logging-interceptor",
+    "squareup-retrofit2",
+    "squareup-retrofit2-converter-gson"
+]
+
+# Security (i.e., storing data locally, password hashing).
+security = [
+    "androidx-security-crypto",
+    "lambdapioneer-argon2kt"
+]
