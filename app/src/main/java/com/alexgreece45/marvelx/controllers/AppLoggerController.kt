@@ -37,7 +37,7 @@ class AppLoggerControllerImpl @Inject constructor(
     }
 
     override fun d(message: () -> String) {
-        d(tag = configLogic.appBuildType.name, message = message)
+        d(tag = configLogic.appBuildType.key, message = message)
     }
 
     override fun d(tag: String, message: () -> String) {
@@ -45,7 +45,7 @@ class AppLoggerControllerImpl @Inject constructor(
     }
 
     override fun i(message: () -> String) {
-        i(tag = configLogic.appBuildType.name, message = message)
+        i(tag = configLogic.appBuildType.key, message = message)
     }
 
     override fun i(tag: String, message: () -> String) {
@@ -53,7 +53,7 @@ class AppLoggerControllerImpl @Inject constructor(
     }
 
     override fun e(message: () -> String) {
-        e(tag = configLogic.appBuildType.name, message = message)
+        e(tag = configLogic.appBuildType.key, message = message)
     }
 
     override fun e(tag: String, message: () -> String) {

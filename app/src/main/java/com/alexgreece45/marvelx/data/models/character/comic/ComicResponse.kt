@@ -9,8 +9,9 @@ import com.alexgreece45.marvelx.data.models.character.ImageResponse
 import com.alexgreece45.marvelx.data.models.character.SeriesSummary
 import com.alexgreece45.marvelx.data.models.character.StoryList
 import com.alexgreece45.marvelx.data.models.character.toDomain
+import com.alexgreece45.marvelx.util.extensions.toSystemLocalDateTime
 import com.google.gson.annotations.SerializedName
-import java.util.Date
+import java.time.OffsetDateTime
 
 data class ComicResponse(
     @SerializedName("id") val id: Int,
@@ -18,8 +19,8 @@ data class ComicResponse(
     @SerializedName("title") val title: String,
     @SerializedName("issueNumber") val issueNumber: Double,
     @SerializedName("variantDescription") val variantDescription: String,
-    @SerializedName("description") val description: String,
-    @SerializedName("modified") val modified: Date,
+    @SerializedName("description") val description: String?,
+    @SerializedName("modified") val modified: OffsetDateTime,
     @SerializedName("isbn") val isbn: String,
     @SerializedName("upc") val upc: String,
     @SerializedName("diamondCode") val diamondCode: String,
@@ -43,43 +44,44 @@ data class ComicResponse(
     @SerializedName("events") val events: EventList,
 )
 
-fun ComicResponse.toComicDomain(): ComicDomain = ComicDomain(
-    id = this.id,
-    digitalId = this.digitalId,
-    title = this.title,
-    issueNumber = this.issueNumber,
-    variantDescription = this.variantDescription,
-    description = this.description,
-    modified = this.modified,
-    isbn = this.isbn,
-    upc = this.upc,
-    diamondCode = this.diamondCode,
-    ean = this.ean,
-    issn = this.issn,
-    format = this.format,
-    pageCount = this.pageCount,
-    textObjects = this.textObjects,
-    resourceURI = this.resourceURI,
-    series = this.series,
-    variants = this.variants,
-    collections = this.collections,
-    collectedIssues = this.collectedIssues,
-    dates = this.dates,
-    prices = this.prices?.map { comicPrice ->
-        ComicPriceDomain(
-            type = ComicPriceType.getType(comicPrice.type),
-            price = comicPrice.price
-        )
-    }.orEmpty(),
-    thumbnail = this.thumbnail.toDomain(
-        containerClassType = this::class
-    ),
-    images = this.images,
-    creators = this.creators,
-    characters = this.characters,
-    stories = this.stories,
-    events = this.events
-)
+fun ComicResponse.toComicDomain(): ComicDomain =
+    ComicDomain(
+        id = this.id,
+        digitalId = this.digitalId,
+        title = this.title,
+        issueNumber = this.issueNumber,
+        variantDescription = this.variantDescription,
+        description = this.description.orEmpty(),
+        modified = this.modified.toSystemLocalDateTime().toLocalDate(),
+        isbn = this.isbn,
+        upc = this.upc,
+        diamondCode = this.diamondCode,
+        ean = this.ean,
+        issn = this.issn,
+        format = this.format,
+        pageCount = this.pageCount,
+        textObjects = this.textObjects,
+        resourceURI = this.resourceURI,
+        series = this.series,
+        variants = this.variants,
+        collections = this.collections,
+        collectedIssues = this.collectedIssues,
+        dates = this.dates,
+        prices = this.prices?.map { comicPrice ->
+            ComicPriceDomain(
+                type = ComicPriceType.getType(comicPrice.type),
+                price = comicPrice.price
+            )
+        }.orEmpty(),
+        thumbnail = this.thumbnail.toDomain(
+            containerClassType = this::class
+        ),
+        images = this.images,
+        creators = this.creators,
+        characters = this.characters,
+        stories = this.stories,
+        events = this.events
+    )
 
 fun List<ComicResponse>.toComicDomainList(): List<ComicDomain> =
     this.map { comicResponse -> comicResponse.toComicDomain() }

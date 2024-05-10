@@ -1,10 +1,8 @@
 package com.alexgreece45.marvelx.ui.navigation
 
-import androidx.compose.runtime.State
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.navigation
-import com.alexgreece45.marvelx.viewModels.ActivityState
 import com.alexgreece45.marvelx.ui.components.BottomNavigationBarData
 import com.alexgreece45.marvelx.ui.screens.allCharactersScreen.AllCharactersScreen
 import com.alexgreece45.marvelx.ui.screens.allFavoriteCharactersScreen.AllFavoriteCharactersScreen
@@ -15,8 +13,7 @@ import com.alexgreece45.marvelx.ui.screens.profileScreen.ProfileScreen
 
 @Suppress("FunctionName")
 fun NavGraphBuilder.MainNavGraph(
-    navController: NavController,
-    activityState: State<ActivityState>
+    navController: NavController
 ) =
     navigation(
         route = Screen.BottomNavigationScreens.getNestedGraphRootRoute(),

@@ -5,7 +5,7 @@ package com.alexgreece45.marvelx.util.constants
  *
  * Notable examples are [Email], and [Password].
  */
-object InputFieldConstants {
+object ConstantsInputField {
     data object Email {
         const val minLength = 5
         const val maxLength = 100

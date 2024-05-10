@@ -18,7 +18,7 @@ import com.alexgreece45.marvelx.util.FormsValidationResult
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.Rule
 import com.alexgreece45.marvelx.util.SecurityUtil
-import com.alexgreece45.marvelx.util.constants.InputFieldConstants
+import com.alexgreece45.marvelx.util.constants.ConstantsInputField
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.launch
@@ -32,7 +32,7 @@ data class LoginScreenErrorView(
 )
 
 sealed class LoginEvent : BaseEvent {
-    data object InitView : LoginEvent()
+    data object Init : LoginEvent()
 
     data object OnBack : LoginEvent()
 
@@ -145,7 +145,7 @@ class LoginViewModel @Inject constructor(
 
     override fun handleEvents(event: LoginEvent) {
         when (event) {
-            LoginEvent.InitView -> {
+            LoginEvent.Init -> {
                 initView()
             }
 
@@ -407,17 +407,17 @@ class LoginViewModel @Inject constructor(
                 errorMessage = resourceProvider.getString(R.string.input_field_error_blank_email)
             ),
             Rule.ValidateStringMinLength(
-                length = InputFieldConstants.Email.minLength,
+                length = ConstantsInputField.Email.minLength,
                 errorMessage = resourceProvider.getString(
                     R.string.input_field_error_min_length_email,
-                    InputFieldConstants.Email.minLength
+                    ConstantsInputField.Email.minLength
                 )
             ),
             Rule.ValidateStringMaxLength(
-                length = InputFieldConstants.Email.maxLength,
+                length = ConstantsInputField.Email.maxLength,
                 errorMessage = resourceProvider.getString(
                     R.string.input_field_error_max_length_email,
-                    InputFieldConstants.Email.maxLength
+                    ConstantsInputField.Email.maxLength
                 )
             ),
             Rule.ValidateEmail(
@@ -430,17 +430,17 @@ class LoginViewModel @Inject constructor(
         return listOf(
             Rule.ValidateNotBlank(errorMessage = resourceProvider.getString(R.string.sign_up_screen_input_field_error_blank_password)),
             Rule.ValidateStringMinLength(
-                length = InputFieldConstants.Password.minLength,
+                length = ConstantsInputField.Password.minLength,
                 errorMessage = resourceProvider.getString(
                     R.string.input_field_error_min_length_password,
-                    InputFieldConstants.Password.minLength
+                    ConstantsInputField.Password.minLength
                 )
             ),
             Rule.ValidateStringMaxLength(
-                length = InputFieldConstants.Password.maxLength,
+                length = ConstantsInputField.Password.maxLength,
                 errorMessage = resourceProvider.getString(
                     R.string.input_field_error_max_length_password,
-                    InputFieldConstants.Password.maxLength
+                    ConstantsInputField.Password.maxLength
                 )
             )
         )

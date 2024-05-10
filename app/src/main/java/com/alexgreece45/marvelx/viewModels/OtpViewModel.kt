@@ -157,6 +157,7 @@ data class OtpState(
 
 sealed class OtpEffect : BaseEffect {
     data object OtpFieldRequestFocus : OtpEffect()
+    data object CloseKeyboard : OtpEffect()
 
     sealed class Navigation : OtpEffect() {
         data object PopBackStack : Navigation()
@@ -335,7 +336,7 @@ class OtpViewModel @Inject constructor(
             }
 
             OtpEvent.OnVerifyButtonClicked -> {
-                if (currentState.otp.length != 6) {
+               if (currentState.otp.length != 6) {
                     showGenericErrorViewWithErrorMessage(
                         errorMessage = resourceProvider.getGenericErrorMessage(),
                         otpFlowType = currentState.otpFlowType
@@ -582,6 +583,9 @@ class OtpViewModel @Inject constructor(
      * Validates the user-entered OTP based on the [OtpFlowType].
      */
     private fun validateOtp() {
+        setEffect {
+            OtpEffect.CloseKeyboard
+        }
         when (currentState.otpFlowType) {
             is OtpFlowType.Invalid -> {
                 showGenericErrorViewWithErrorCode(
@@ -824,6 +828,9 @@ class OtpViewModel @Inject constructor(
                                                     otpBlockRemainingTime = timerStatus.remainingTime,
                                                     isResendOtpButtonEnabled = false
                                                 )
+                                            }
+                                            setEffect {
+                                                OtpEffect.OtpFieldRequestFocus
                                             }
                                         }
                                     }

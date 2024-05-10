@@ -53,24 +53,24 @@ import androidx.lifecycle.Lifecycle
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.ui.screens.allCharactersScreen.uiModels.CharacterCardUi
-import com.alexgreece45.marvelx.viewModels.AllCharactersEffect
-import com.alexgreece45.marvelx.viewModels.AllCharactersEvent
-import com.alexgreece45.marvelx.viewModels.AllCharactersViewModel
 import com.alexgreece45.marvelx.ui.components.BottomBarItem
 import com.alexgreece45.marvelx.ui.components.BottomNavigationBarData
+import com.alexgreece45.marvelx.ui.components.ContentErrorScreen
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.ExtendedFabData
-import com.alexgreece45.marvelx.ui.components.ContentErrorScreen
 import com.alexgreece45.marvelx.ui.components.ModalBottomSheet
 import com.alexgreece45.marvelx.ui.components.NormalFabData
 import com.alexgreece45.marvelx.ui.components.SearchBar
 import com.alexgreece45.marvelx.ui.components.SortingModalBottomSheetContent
 import com.alexgreece45.marvelx.ui.components.effect.DisposableEffectWithLifecycle
 import com.alexgreece45.marvelx.ui.components.isScrollingUp
+import com.alexgreece45.marvelx.ui.screens.allCharactersScreen.uiModels.CharacterCardUi
 import com.alexgreece45.marvelx.util.DEFAULT_SCREEN_PADDING
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.SPACING_TINY
+import com.alexgreece45.marvelx.viewModels.AllCharactersEffect
+import com.alexgreece45.marvelx.viewModels.AllCharactersEvent
+import com.alexgreece45.marvelx.viewModels.AllCharactersViewModel
 import kotlinx.coroutines.launch
 
 @OptIn(
@@ -299,10 +299,7 @@ private fun CharacterItem(
             .fillMaxWidth()
             .clickable(onClick = onClick)
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-        ) {
+        Box(modifier = Modifier.fillMaxSize()) {
             // Image.
             AsyncImage(
                 modifier = Modifier

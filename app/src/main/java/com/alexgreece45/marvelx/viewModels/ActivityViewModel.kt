@@ -23,7 +23,7 @@ data class MainActivityErrorDialog(
 )
 
 sealed class ActivityEvent : BaseEvent {
-    data object InitView : ActivityEvent()
+    data object Init : ActivityEvent()
     data object LogoutUser : ActivityEvent()
 
     sealed class ErrorDialog : ActivityEvent() {
@@ -60,8 +60,8 @@ class ActivityViewModel @Inject constructor(
 
     override fun handleEvents(event: ActivityEvent) {
         when (event) {
-            ActivityEvent.InitView -> {
-                initView()
+            ActivityEvent.Init -> {
+                init()
             }
 
             is ActivityEvent.SetUserId -> {
@@ -105,7 +105,7 @@ class ActivityViewModel @Inject constructor(
         }
     }
 
-    private fun initView() {
+    private fun init() {
         authController.getAccessToken()?.let { accessToken ->
             logger.d { "accessToken : $accessToken" }
         }

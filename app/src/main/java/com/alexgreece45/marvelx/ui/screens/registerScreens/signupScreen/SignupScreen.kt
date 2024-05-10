@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.Button
 import androidx.compose.material.DropdownMenuItem
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
@@ -37,8 +36,9 @@ import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.data.models.user.Gender
 import com.alexgreece45.marvelx.ui.components.AlertDialogButton
 import com.alexgreece45.marvelx.ui.components.AlertDialogError
-import com.alexgreece45.marvelx.ui.components.ErrorButtonType
+import com.alexgreece45.marvelx.ui.components.ContainedButton
 import com.alexgreece45.marvelx.ui.components.ContentScreen
+import com.alexgreece45.marvelx.ui.components.ErrorButtonType
 import com.alexgreece45.marvelx.ui.components.ExposedDropdownMenu
 import com.alexgreece45.marvelx.ui.components.OutlinedTextFieldValidation
 import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
@@ -62,8 +62,6 @@ fun SignUpScreen(
     val keyboard = LocalSoftwareKeyboardController.current
 
     LaunchedEffect(Unit) {
-        viewModel.setEvent(SignupEvent.InitView)
-
         viewModel.uiEffect.collect { effect ->
             when (effect) {
                 is SignupEffect.ShowAlertDialogError -> {
@@ -118,18 +116,17 @@ fun SignUpScreen(
             verticalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp)
         ) {
             // Alert Dialog Error
-            if (state.isAlertDialogVisible) {
-                item {
-                    AlertDialogError(
-                        title = state.alertDialogTitle,
-                        errorMessage = state.alertDialogErrorMessage,
-                        confirmButton = AlertDialogButton(
-                            value = stringResource(R.string.generic_ok_button),
-                            buttonType = ErrorButtonType.Text,
-                            onClick = { viewModel.setEvent(SignupEvent.AlertDialogError.OnOkClick) }
-                        )
+            item {
+                AlertDialogError(
+                    isVisible = state.isAlertDialogVisible,
+                    title = state.alertDialogTitle,
+                    errorMessage = state.alertDialogErrorMessage,
+                    confirmButton = AlertDialogButton(
+                        value = stringResource(R.string.generic_ok_button),
+                        buttonType = ErrorButtonType.Text,
+                        onClick = { viewModel.setEvent(SignupEvent.AlertDialogError.OnOkClick) }
                     )
-                }
+                )
             }
 
             // First name & Last name
@@ -297,14 +294,13 @@ fun SignUpScreen(
                 )
             }
 
-            // Vertical spacing.
             item {
                 VSpacer.Small()
             }
 
             // Signup button
             item {
-                Button(
+                ContainedButton(
                     modifier = Modifier.fillMaxWidth(),
                     enabled = state.signupButton,
                     onClick = { viewModel.setEvent(SignupEvent.OnSignupButtonClick) }

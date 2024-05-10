@@ -493,6 +493,7 @@ data class ExtendedFabData(
 fun ContentScreen(
     isLoading: Boolean,
     navigableAction: ScreenNavigableAction = ScreenNavigableAction.None,
+    onBack: (() -> Unit)? = null,
     showToolbar: Boolean = false,
     toolbarTitle: String? = null,
     toolbarActions: List<ToolbarAction>? = null,
@@ -602,14 +603,9 @@ fun ContentScreen(
         }
     }
 
-    // TODO: Refactor back handling mechanism to match ThrottledIconButton.
-    /*BackHandler(enabled = onBack != null) {
+    BackHandler(enabled = onBack != null) {
         onBack?.invoke()
-    }*/
-
-    /* ThrottledBackHandler(enabled = onBack != null) {
-         onBack?.invoke()
-     }*/
+    }
 }
 
 /**
@@ -1223,6 +1219,25 @@ fun WrapOutlinedButton(
     )
 }
 
+/**
+ * A wrapper [Composable] for the native [TextButton]. Use this implementation instead as it
+ * provides custom padding, and multiple clicks protection.
+ */
+@Composable
+fun WrapTextButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    content: @Composable RowScope.() -> Unit
+) {
+    TextButton(
+        onClick = onClick,
+        modifier = modifier.throttledClickable(delay = 1500L, onClick = onClick),
+        enabled = enabled,
+        content = content
+    )
+}
+
 sealed class ErrorButtonType {
     data object Text : ErrorButtonType()
 
@@ -1251,6 +1266,7 @@ data class AlertDialogButton(
  * native one. Use this wrapper instead.
  *
  * @param modifier          The modifier to be applied.
+ * @param isVisible         Defines whether this alert is visible.
  * @param title             The title of this dialog.
  * @param errorMessage      The error message of this dialog.
  * @param dismissButton     The dismiss button of this dialog. Can be `null`.
@@ -1268,6 +1284,7 @@ data class AlertDialogButton(
 @Composable
 fun AlertDialogError(
     modifier: Modifier = Modifier,
+    isVisible: Boolean,
     title: String,
     errorMessage: String,
     dismissButton: AlertDialogButton? = null,
@@ -1278,6 +1295,7 @@ fun AlertDialogError(
     properties: DialogProperties = DialogProperties(),
     onDismissRequest: (() -> Unit)? = null
 ) {
+    if (!isVisible) return
     AlertDialog(
         modifier = modifier,
         title = {
@@ -1299,7 +1317,7 @@ fun AlertDialogError(
         },
         dismissButton = {
             dismissButton?.let { button ->
-                TextButton(onClick = { button.onClick() }) {
+                WrapTextButton(onClick = button.onClick) {
                     Text(
                         text = button.value
                     )
@@ -1310,7 +1328,7 @@ fun AlertDialogError(
             confirmButton.let { button ->
                 when (button.buttonType) {
                     ErrorButtonType.Contained -> {
-                        Button(onClick = button.onClick) {
+                        ContainedButton(onClick = button.onClick) {
                             Text(
                                 text = button.value
                             )
@@ -1318,7 +1336,7 @@ fun AlertDialogError(
                     }
 
                     ErrorButtonType.Outlined -> {
-                        OutlinedButton(onClick = button.onClick) {
+                        WrapOutlinedButton(onClick = button.onClick) {
                             Text(
                                 text = button.value
                             )
@@ -1326,7 +1344,7 @@ fun AlertDialogError(
                     }
 
                     ErrorButtonType.Text -> {
-                        TextButton(onClick = button.onClick) {
+                        WrapTextButton(onClick = button.onClick) {
                             Text(
                                 text = button.value
                             )

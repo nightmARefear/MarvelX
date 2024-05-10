@@ -28,7 +28,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.alexgreece45.marvelx.util.HSpacer
-import com.alexgreece45.marvelx.util.OTP_LENGTH
+import com.alexgreece45.marvelx.util.constants.ConstantsSecurity
 
 /**
  * This composable represents an `OTP` text-field capable of receiving 6 digits. Each digit is
@@ -57,8 +57,8 @@ fun OtpTextField(
             selection = TextRange(otp.length)
         ),
         onValueChange = {
-            if (it.text.length <= OTP_LENGTH) {
-                onValueChange.invoke(it.text, it.text.length == OTP_LENGTH)
+            if (it.text.length <= ConstantsSecurity.OTP.LENGTH) {
+                onValueChange.invoke(it.text, it.text.length == ConstantsSecurity.OTP.LENGTH)
             }
         },
         keyboardOptions = KeyboardOptions(
@@ -72,7 +72,7 @@ fun OtpTextField(
         ),
         decorationBox = {
             Row(horizontalArrangement = Arrangement.Center) {
-                repeat(OTP_LENGTH) { index ->
+                repeat(ConstantsSecurity.OTP.LENGTH) { index ->
                     CharView(
                         index = index,
                         text = otp

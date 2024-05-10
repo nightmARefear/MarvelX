@@ -40,24 +40,23 @@ fun HomeScreen(
     ContentScreen(
         isLoading = state.isLoading,
         navigableAction = ScreenNavigableAction.Backable {
-            viewModel.setEvent(HomeEvent.OnBack )
+            viewModel.setEvent(HomeEvent.OnBack)
         },
     ) { paddingValues ->
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = paddingValues,
         ) {
-            if (state.isAlertDialogVisible) {
-                item {
-                    AlertDialogError(
-                        title = state.alertDialogTitle,
-                        errorMessage = state.alertDialogErrorMessage,
-                        confirmButton = AlertDialogButton(
-                            value = stringResource(R.string.generic_ok_button),
-                            onClick = { viewModel.setEvent(HomeEvent.AlertDialog.OnOkClick) }
-                        )
+            item {
+                AlertDialogError(
+                    isVisible = state.isAlertDialogVisible,
+                    title = state.alertDialogTitle,
+                    errorMessage = state.alertDialogErrorMessage,
+                    confirmButton = AlertDialogButton(
+                        value = stringResource(R.string.generic_ok_button),
+                        onClick = { viewModel.setEvent(HomeEvent.AlertDialog.OnOkClick) }
                     )
-                }
+                )
             }
 
             item {

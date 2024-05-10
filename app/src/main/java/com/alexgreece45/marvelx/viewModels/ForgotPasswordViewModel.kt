@@ -22,7 +22,7 @@ import com.alexgreece45.marvelx.util.FormValidator
 import com.alexgreece45.marvelx.util.FormsValidationResult
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.Rule
-import com.alexgreece45.marvelx.util.constants.InputFieldConstants
+import com.alexgreece45.marvelx.util.constants.ConstantsInputField
 import com.alexgreece45.marvelx.viewModels.ForgotPasswordSubScreens.EnterEmail
 import com.alexgreece45.marvelx.viewModels.ForgotPasswordSubScreens.PasswordChanged
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -625,17 +625,17 @@ class ForgotPasswordViewModel @Inject constructor(
                 errorMessage = resourceProvider.getString(R.string.input_field_error_blank_email)
             ),
             Rule.ValidateStringMinLength(
-                length = InputFieldConstants.Email.minLength,
+                length = ConstantsInputField.Email.minLength,
                 errorMessage = resourceProvider.getString(
                     R.string.input_field_error_min_length_email,
-                    InputFieldConstants.Email.minLength
+                    ConstantsInputField.Email.minLength
                 )
             ),
             Rule.ValidateStringMaxLength(
-                length = InputFieldConstants.Email.maxLength,
+                length = ConstantsInputField.Email.maxLength,
                 errorMessage = resourceProvider.getString(
                     R.string.input_field_error_max_length_email,
-                    InputFieldConstants.Email.maxLength
+                    ConstantsInputField.Email.maxLength
                 )
             ),
             Rule.ValidateEmail(

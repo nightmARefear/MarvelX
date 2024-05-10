@@ -25,8 +25,6 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 sealed class SignupEvent : BaseEvent {
-    data object InitView : SignupEvent()
-
     sealed class GenderDropdownMenu : SignupEvent() {
         data object OnClick : GenderDropdownMenu()
         data object OnDismiss : GenderDropdownMenu()
@@ -147,11 +145,7 @@ class SignupViewModel @Inject constructor(
 
     override fun handleEvents(event: SignupEvent) {
         when (event) {
-            SignupEvent.InitView -> {
-                initView()
-            }
-
-            is SignupEvent.FieldValueChange.FirstName -> {
+           is SignupEvent.FieldValueChange.FirstName -> {
                 setState {
                     copy(
                         firstName = event.firstName
@@ -242,8 +236,6 @@ class SignupViewModel @Inject constructor(
             }
         }
     }
-
-    private fun initView() {}
 
     private fun validateFirstName(firstName: String) {
         viewModelScope.launch {

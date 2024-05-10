@@ -70,7 +70,7 @@ fun LoginScreen(
     val focusManager = LocalFocusManager.current
 
     LaunchedEffect(Unit) {
-        viewModel.setEvent(LoginEvent.InitView)
+        viewModel.setEvent(LoginEvent.Init)
 
         viewModel.uiEffect.collect { effect ->
             when (effect) {
@@ -126,6 +126,9 @@ fun LoginScreen(
     ContentScreen(
         isLoading = state.isLoading,
         navigableAction = ScreenNavigableAction.Backable {
+            viewModel.setEvent(LoginEvent.OnBack)
+        },
+        onBack = {
             viewModel.setEvent(LoginEvent.OnBack)
         },
         showToolbar = true,

@@ -20,7 +20,7 @@ data class SplashScreenError(
 )
 
 sealed interface SplashEvent : BaseEvent {
-    data object InitView : SplashEvent
+    data object Init : SplashEvent
 
     data object OnCloseClick : SplashEvent
 }
@@ -48,7 +48,7 @@ class SplashViewModel @Inject constructor(
 
     override fun handleEvents(event: SplashEvent) {
         when (event) {
-            SplashEvent.InitView -> {
+            SplashEvent.Init -> {
                 viewModelScope.launch {
                     // Purposeful delay so that the GIF animation can be displayed.
                     delay(3000L)
