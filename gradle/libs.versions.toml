@@ -1,18 +1,19 @@
 [versions]
-compose-version = "1.6.7"
+compose-bom = "2024.05.00"
+compose-compiler = "1.5.10"
 compose-navigation = "2.7.7"
 
-plugin-agp = "8.1.4"
-plugin-kotlin = "1.9.10"
-plugin-google-dagger-hilt = "2.48"
+plugin-agp = "8.3.0"
+plugin-kotlin = "1.9.22"
+plugin-google-dagger-hilt = "2.44"
 plugin-google-mapsplatform-secrets = "2.0.1"
-plugin-ksp = "1.9.10-1.0.13"
+plugin-ksp = "1.9.22-1.0.17"
 
 airbnb-lottie-compose = "6.1.0"
 
 androidx-core = "1.13.1"
-androidx-lifecycle-runtime = "2.7.0"
-androidx-activity-compose = "1.13.1"
+androidx-lifecycle = "2.7.0"
+androidx-activity-compose = "1.9.0"
 androidx-appcompat = "1.6.1"
 androidx-room = "2.6.1"
 androidx-security-crypto = "1.0.0"
@@ -47,13 +48,13 @@ squareup-leakcanary = "2.12"
 [libraries]
 airbnb-lottie-compose = { module = "com.airbnb.android:lottie-compose", version.ref = "airbnb-lottie-compose" }
 
+androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activity-compose" }
+androidx-compose-bom = { module = "androidx.compose:compose-bom", version.ref = "compose-bom" }
 androidx-core = { module = "androidx.core:core-ktx", version.ref = "androidx-core" }
-androidx-lifecycle-runtime-ktx = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version.ref = "androidx-lifecycle-runtime" }
-androidx-lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "compose-version" }
-androidx-activity-compose = { module = "androidx.core:core-ktx", version.ref = "androidx-activity-compose" }
+androidx-lifecycle-runtime-ktx = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version.ref = "androidx-lifecycle" }
+androidx-lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "androidx-lifecycle" }
 androidx-compat = { module = "androidx.appcompat:appcompat", version.ref = "androidx-appcompat" }
-androidx-compose-ui = { module = "androidx.compose.ui:ui", version.ref = "compose-version" }
-androidx-compose-material = { module = "androidx.compose.material:material", version.ref = "compose-version" }
+androidx-compose-material = { module = "androidx.compose.material:material" }
 androidx-compose-material-icons-extended = { module = "androidx.compose.material:material-icons-extended" } # Extra icons
 androidx-hilt-work = { module = "androidx.hilt:hilt-work", version.ref = "hilt-worker" }
 androidx-hilt-compiler = { module = "androidx.hilt:hilt-compiler", version.ref = "hilt-worker" }
@@ -66,15 +67,14 @@ androidx-room-paging = { module = "androidx.room:room-paging", version.ref = "an
 androidx-security-crypto = { module = "androidx.security:security-crypto", version.ref = "androidx-security-crypto" }
 androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "androidx-work" }
 
-androidx-compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview", version.ref = "compose-version" }
-androidx-compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling", version.ref = "compose-version" }
-androidx-compose-ui-test-manifest = { module = "androidx.compose.ui:ui-test-manifest", version.ref = "compose-version" }
+androidx-compose-ui = { module = "androidx.compose.ui:ui" }
+androidx-compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling" }
+androidx-compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview" }
 androidx-room-testing = { module = "androidx.room:room-testing", version.ref = "androidx-room" }
 androidx-work-testing = { module = "androidx.work:work-testing", version.ref = "androidx-work" }
 
 androidx-test-ext-junit = { module = "androidx.test.ext:junit", version.ref = "androidx-test-ext-junit" }
 androidx-test-espresso-core = { module = "androidx.test.espresso:espresso-core", version.ref = "androidx-test-espresso-core" }
-androidx-compose-ui-test-junit4 = { module = "androidx.compose.ui:ui-test-junit4", version.ref = "compose-version" }
 
 chucker = { module = "com.github.chuckerteam.chucker:library", version.ref = "chucker" }
 chucker-no-op = { module = "com.github.chuckerteam.chucker:library-no-op", version.ref = "chucker" }
@@ -104,9 +104,12 @@ squareup-leakcanary = { module = "com.squareup.leakcanary:leakcanary-android", v
 [plugins]
 android-application = { id = "com.android.application", version.ref = "plugin-agp" }
 android-library = { id = "com.android.library", version.ref = "plugin-agp" }
-kotlin = { id = "org.jetbrains.kotlin.android", version.ref = "plugin-kotlin" }
+
 google-dagger-hilt = { id = "com.google.dagger.hilt.android", version.ref = "plugin-google-dagger-hilt" }
 google-mapsplatform-secrets = { id = "com.google.android.libraries.mapsplatform.secrets-gradle-plugin", version.ref = "plugin-google-mapsplatform-secrets" }
+
+kotlin = { id = "org.jetbrains.kotlin.android", version.ref = "plugin-kotlin" }
+kotlin-parcelize = { id = "org.jetbrains.kotlin.plugin.parcelize", version.ref = "plugin-kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "plugin-ksp" }
 
 [bundles]
@@ -127,8 +130,7 @@ app-ui-release = [
 
 app-ui-debug = [
     "androidx-compose-ui-tooling-preview",
-    "androidx-compose-ui-tooling",
-    "androidx-compose-ui-test-manifest"
+    "androidx-compose-ui-tooling"
 ]
 
 test-implementation = [
@@ -137,8 +139,7 @@ test-implementation = [
 
 android-test-implementation = [
     "androidx-test-ext-junit",
-    "androidx-test-espresso-core",
-    "androidx-compose-ui-test-junit4"
+    "androidx-test-espresso-core"
 ]
 
 coil = [

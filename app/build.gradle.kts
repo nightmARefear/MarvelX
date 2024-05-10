@@ -1,3 +1,14 @@
+import java.io.FileInputStream
+import java.util.Properties
+
+plugins {
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin)
+    id("kotlin-kapt")
+    alias(libs.plugins.google.mapsplatform.secrets)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.kotlin.parcelize)
+}
 
 // Load keystore credentials.
 val keystoreProperties = Properties()
@@ -24,10 +35,10 @@ android {
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
-        testInstrumentationRunner ="androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         vectorDrawables {
-            useSupportLibrary= true
+            useSupportLibrary = true
         }
     }
 
@@ -40,28 +51,29 @@ android {
             isShrinkResources = true
 
             manifestPlaceholders["appNameSuffix"] = ""
-            proguardFiles (getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
             signingConfig = signingConfigs.getByName("release")
         }
 
         getByName("debug") {
-            applicationIdSuffix =".debug"
-            debuggable= true
-            minifyEnabled =false
+            applicationIdSuffix = ".debug"
+            isMinifyEnabled = false
+            enableUnitTestCoverage = true
 
             manifestPlaceholders["appNameSuffix"] = "[DEBUG]"
-            versionNameSuffix ="-DEBUG"
-//            signingConfig signingConfigs.debug // If uncommented, the respective .apk files are generated.
+            versionNameSuffix = "-DEBUG"
         }
 
-        getByName("mock") {
-            applicationIdSuffix= ".mock"
-            debuggable =true
-            minifyEnabled= false
+        create("mock") {
+            applicationIdSuffix = ".mock"
+            isMinifyEnabled = false
+            enableUnitTestCoverage = true
 
             manifestPlaceholders["appNameSuffix"] = "[MOCK]"
-            versionNameSuffix= "-MOCK"
-//            signingConfig signingConfigs.debug // If uncommented, the respective .apk files are generated.
+            versionNameSuffix = "-MOCK"
         }
     }
 
@@ -70,22 +82,18 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    kotlinOptions {
-        jvmTarget = "17"
-    }
-
     buildFeatures {
         buildConfig = true
         compose = true
     }
 
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.3"
+        kotlinCompilerExtensionVersion = libs.versions.compose.compiler.get()
     }
 
     packaging {
         resources.excludes.add(
-                "/META-INF/{AL2.0,LGPL2.1}"
+            "/META-INF/{AL2.0,LGPL2.1}"
         )
     }
 
@@ -96,50 +104,51 @@ android {
 
 dependencies {
     implementation(libs.bundles.app.ui.release)
+    implementation(project.dependencies.platform(libs.androidx.compose.bom))
     debugImplementation(libs.bundles.app.ui.debug)
 
-    testImplementation(libs.bundles.test-implementation)
+    testImplementation(libs.bundles.test.implementation)
     androidTestImplementation(libs.bundles.android.test.implementation)
 
     implementation(libs.bundles.networking)
 
     // Chucker
-    debugImplementantion(libs.libraries.chucker)
-    releaseImplementantion(libs.libraries.chucker.no.op)
+    debugImplementation(libs.chucker)
+    releaseImplementation(libs.chucker.no.op)
 
     // Dagger - Hilt
-    implementation(libs.libraries.androidx.hilt.work)
-    implementation(libs.libraries.google.dagger.hilt)
-    kapt(libs.libraries.google.dagger.hilt.compiler)
-    ksp(libs.libraries.androidx.hilt.compiler)
-    testImplementation(libs.libraries.google.dagger.hilt.android.testing)
-    kaptTest(libs.libraries.google.dagger.hilt.compiler)
+    implementation(libs.androidx.hilt.work)
+    implementation(libs.google.dagger.hilt)
+    kapt(libs.google.dagger.hilt.compiler)
+    ksp(libs.androidx.hilt.compiler)
+    testImplementation(libs.google.dagger.hilt.android.testing)
+    kaptTest(libs.google.dagger.hilt.compiler)
 
-    implementation(libs.libraries.squareup.logcat)
+    implementation(libs.squareup.logcat)
     implementation(libs.bundles.coil)
 
     // Database
-    implementation(libs.libraries.androidx.room.runtime)
-    implementation(libs.libraries.androidx.room.ktx)
-    annotationProcessor(libs.libraries.androidx.room.compiler)
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+    annotationProcessor(libs.androidx.room.compiler)
 
-    ksp(libs.libraries.androidx.room.ktx)
+    ksp(libs.androidx.room.ktx)
 
     // optional - Test helpers
-    testImplementation(libs.libraries.androidx.room.testing)
+    testImplementation(libs.androidx.room.testing)
 
     // optional - Paging 3 Integration
-    implementation(libs.libraries.androidx.room.paging)
+    implementation(libs.androidx.room.paging)
 
     implementation(libs.bundles.security)
 
-    implementation(libs.libraries.airbnb.lottie.compose)
+    implementation(libs.airbnb.lottie.compose)
 
-    debugImplementation(libs.libraries.squareup.leakcanary)
+    debugImplementation(libs.squareup.leakcanary)
 
     // Work Manager - Kotlin + coroutines & Test helpers
-    implementation(libs.libraries.androidx.work.runtime.ktx)
-    androidTestImplementation(libs.libraries.androidx.work.testing)
+    implementation(libs.androidx.work.runtime.ktx)
+    androidTestImplementation(libs.androidx.work.testing)
 
-    implementation(libs.libraries.rootbeer)
+    implementation(libs.rootbeer)
 }

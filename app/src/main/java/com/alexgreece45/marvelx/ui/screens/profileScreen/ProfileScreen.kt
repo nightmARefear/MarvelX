@@ -25,17 +25,16 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.viewModels.ProfileEffect
-import com.alexgreece45.marvelx.viewModels.ProfileEvent
-import com.alexgreece45.marvelx.viewModels.ProfileViewModel
 import com.alexgreece45.marvelx.ui.components.BottomBarItem
 import com.alexgreece45.marvelx.ui.components.BottomNavigationBarData
 import com.alexgreece45.marvelx.ui.components.ContainedButton
-import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.ContentErrorScreen
+import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.VSpacer
-import com.alexgreece45.marvelx.util.extensions.shimmer
+import com.alexgreece45.marvelx.viewModels.ProfileEffect
+import com.alexgreece45.marvelx.viewModels.ProfileEvent
+import com.alexgreece45.marvelx.viewModels.ProfileViewModel
 
 @Composable
 fun ProfileScreen(
@@ -181,7 +180,7 @@ private fun Section(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                modifier = Modifier.shimmer(shimmer),
+//                modifier = Modifier.shimmer(shimmer),
                 text = title,
                 textAlign = TextAlign.Center,
                 style = MaterialTheme.typography.h5
@@ -201,12 +200,12 @@ private fun Item(
     Column(modifier = Modifier.fillMaxWidth()) {
         // Label.
         Text(
-            modifier = Modifier.shimmer(shimmer),
+//            modifier = Modifier.shimmer(shimmer),
             text = label,
             style = MaterialTheme.typography.h6
         )
         Text(
-            modifier = Modifier.shimmer(shimmer),
+//            modifier = Modifier.shimmer(shimmer),
             text = value,
             style = MaterialTheme.typography.subtitle1
         )
