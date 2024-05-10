@@ -2,7 +2,6 @@ package com.alexgreece45.marvelx
 
 import android.app.Application
 import android.content.Context
-import androidx.compose.material.Text
 import androidx.work.Configuration
 import androidx.work.ListenableWorker
 import androidx.work.WorkerFactory
@@ -11,7 +10,6 @@ import com.alexgreece45.marvelx.configuration.ConfigLogic
 import com.alexgreece45.marvelx.controllers.AppLoggerController
 import com.alexgreece45.marvelx.controllers.AuthController
 import com.alexgreece45.marvelx.data.api.ApiClient
-import com.alexgreece45.marvelx.viewModels.ActivityViewModel
 import com.alexgreece45.marvelx.worker.RefreshTokenWorker
 import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
@@ -31,8 +29,8 @@ class MarvelXApplication : Application(), Configuration.Provider {
         appLoggerController.installLogger()
     }
 
-    override fun getWorkManagerConfiguration(): Configuration =
-        Configuration.Builder()
+    override val workManagerConfiguration: Configuration
+        get() = Configuration.Builder()
             .setWorkerFactory(refreshTokenWorkerFactory)
             .build()
 }
