@@ -4,7 +4,7 @@ import java.util.Properties
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin)
-    id("kotlin-kapt")
+    alias(libs.plugins.google.dagger.hilt)
     alias(libs.plugins.google.mapsplatform.secrets)
     alias(libs.plugins.ksp)
     alias(libs.plugins.kotlin.parcelize)
@@ -96,10 +96,6 @@ android {
             "/META-INF/{AL2.0,LGPL2.1}"
         )
     }
-
-    kapt {
-        correctErrorTypes = true
-    }
 }
 
 dependencies {
@@ -119,10 +115,10 @@ dependencies {
     // Dagger - Hilt
     implementation(libs.androidx.hilt.work)
     implementation(libs.google.dagger.hilt)
-    kapt(libs.google.dagger.hilt.compiler)
+    ksp(libs.google.dagger.hilt.compiler)
     ksp(libs.androidx.hilt.compiler)
     testImplementation(libs.google.dagger.hilt.android.testing)
-    kaptTest(libs.google.dagger.hilt.compiler)
+    kspTest(libs.google.dagger.hilt.compiler)
 
     implementation(libs.squareup.logcat)
     implementation(libs.bundles.coil)

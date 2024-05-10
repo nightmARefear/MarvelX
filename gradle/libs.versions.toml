@@ -3,9 +3,9 @@ compose-bom = "2024.05.00"
 compose-compiler = "1.5.10"
 compose-navigation = "2.7.7"
 
-plugin-agp = "8.3.0"
+plugin-agp = "8.4.0"
 plugin-kotlin = "1.9.22"
-plugin-google-dagger-hilt = "2.44"
+plugin-google-dagger-hilt = "2.51.1"
 plugin-google-mapsplatform-secrets = "2.0.1"
 plugin-ksp = "1.9.22-1.0.17"
 
@@ -25,8 +25,6 @@ androidx-test-espresso-core = "3.5.1"
 chucker = "4.0.0"
 
 coil = "2.5.0"
-
-dagger = "2.49"
 
 google-accompanist = "0.32.0"
 google-code-gson = "2.10.1"
@@ -85,9 +83,9 @@ coil-gif = { module = "io.coil-kt:coil-gif", version.ref = "coil" }
 google-accompanist-systemuicontroller = { module = "com.google.accompanist:accompanist-systemuicontroller", version.ref = "google-accompanist" }
 google-accompanist-placeholder = { module = "com.google.accompanist:accompanist-systemuicontroller", version.ref = "google-accompanist" }
 google-code-gson = { module = "com.google.code.gson:gson", version.ref = "google-code-gson" }
-google-dagger-hilt = { module = "com.google.dagger:hilt-android", version.ref = "dagger" }
-google-dagger-hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref = "dagger" }
-google-dagger-hilt-android-testing = { module = "com.google.dagger:hilt-android-testing", version.ref = "dagger" }
+google-dagger-hilt = { module = "com.google.dagger:hilt-android", version.ref = "plugin-google-dagger-hilt" }
+google-dagger-hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref = "plugin-google-dagger-hilt" }
+google-dagger-hilt-android-testing = { module = "com.google.dagger:hilt-android-testing", version.ref = "plugin-google-dagger-hilt" }
 
 junit = { module = "junit:junit", version.ref = "junit" }
 

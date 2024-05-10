@@ -19,10 +19,10 @@ import kotlinx.coroutines.withContext
 class RefreshTokenWorker @AssistedInject constructor(
     @Assisted context: Context,
     @Assisted workerParameters: WorkerParameters,
-    @Assisted private val apiClient: ApiClient,
-    @Assisted private val authController: AuthController,
-    @Assisted private val configLogic: ConfigLogic,
-    @Assisted private val logger: AppLoggerController
+    private val apiClient: ApiClient,
+    private val authController: AuthController,
+    private val configLogic: ConfigLogic,
+    private val logger: AppLoggerController
 ) : CoroutineWorker(context, workerParameters) {
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
         try {
