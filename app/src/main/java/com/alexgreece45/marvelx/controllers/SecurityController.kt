@@ -68,13 +68,6 @@ class SecurityControllerImpl @Inject constructor(
     private val rootController: RootController,
     private val applicationPackageController: ApplicationPackageController
 ) : SecurityController {
-    private val isApplicationSecure: Boolean
-        get() = isPackageSignatureValid()
-                && !isDebuggerAttached()
-                && !isAppDebuggable()
-                && !isAppRunningOnEmulator()
-                && !isDeviceRooted()
-                && !areRootCloakingAppsInstalled()
 
     override fun isPackageSignatureValid(): Boolean {
         if (configLogic.appBuildType != AppBuildType.RELEASE) return true
@@ -92,8 +85,8 @@ class SecurityControllerImpl @Inject constructor(
     override fun isAppRunningOnEmulator(): Boolean =
         configLogic.appBuildType == AppBuildType.RELEASE
                 && (
-                    // Android SDK emulator
-                    (Build.MANUFACTURER == "Google" && Build.BRAND == "google"
+                // Android SDK emulator
+                (Build.MANUFACTURER == "Google" && Build.BRAND == "google"
                         && (Build.FINGERPRINT.startsWith("google/sdk_gphone")
                                 && Build.PRODUCT.startsWith("sdk_gphone")
                                 && Build.MODEL.startsWith("sdk_gphone")
@@ -122,6 +115,13 @@ class SecurityControllerImpl @Inject constructor(
                 && rootController.areRootCloakingAppsInstalled()
 
     override fun isApplicationSecure(): Flow<Boolean> = flow {
-        emit(isApplicationSecure)
+        emit(
+            isPackageSignatureValid()
+                    && !isDebuggerAttached()
+                    && !isAppDebuggable()
+                    && !isAppRunningOnEmulator()
+                    && !isDeviceRooted()
+                    && !areRootCloakingAppsInstalled()
+        )
     }.flowOn(Dispatchers.IO)
 }

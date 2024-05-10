@@ -6,8 +6,8 @@ import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequest
 import androidx.work.WorkManager
 import com.alexgreece45.marvelx.configuration.ConfigLogic
-import com.alexgreece45.marvelx.util.REFRESH_TOKEN_WORKER_NAME
 import com.alexgreece45.marvelx.util.ResourceProvider
+import com.alexgreece45.marvelx.util.constants.ConstantsWorker
 import com.alexgreece45.marvelx.worker.RefreshTokenWorker
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
@@ -26,7 +26,7 @@ class RefreshTokenControllerImpl @Inject constructor(
     override fun startWorker() {
         try {
             WorkManager.getInstance(resourceProvider.getContext()).enqueueUniquePeriodicWork(
-                REFRESH_TOKEN_WORKER_NAME,
+                ConstantsWorker.RefreshToken.WORKER_NAME,
                 ExistingPeriodicWorkPolicy.UPDATE,
                 PeriodicWorkRequest
                     .Builder(
@@ -53,7 +53,7 @@ class RefreshTokenControllerImpl @Inject constructor(
 
     override fun stopWorker() {
         WorkManager.getInstance(resourceProvider.getContext())
-            .cancelUniqueWork(REFRESH_TOKEN_WORKER_NAME)
+            .cancelUniqueWork(ConstantsWorker.RefreshToken.WORKER_NAME)
         logger.i { "Refresh token worker stopped." }
     }
 }

@@ -4,6 +4,14 @@ import com.alexgreece45.marvelx.data.api.ApiClient
 import com.alexgreece45.marvelx.data.api.ApiService
 import com.alexgreece45.marvelx.data.models.character.CharacterDataWrapper
 import com.alexgreece45.marvelx.data.models.character.comic.ComicDataWrapper
+import com.alexgreece45.marvelx.data.models.forgotPassword.email.RequestForgotPasswordOtpBlockedEmail
+import com.alexgreece45.marvelx.data.models.forgotPassword.email.RequestForgotPasswordSendOtp
+import com.alexgreece45.marvelx.data.models.forgotPassword.email.RequestForgotPasswordValidateOtp
+import com.alexgreece45.marvelx.data.models.forgotPassword.email.ResponseForgotPasswordOtpBlockedEmail
+import com.alexgreece45.marvelx.data.models.forgotPassword.email.ResponseForgotPasswordSendOtp
+import com.alexgreece45.marvelx.data.models.forgotPassword.email.ResponseForgotPasswordValidateOtp
+import com.alexgreece45.marvelx.data.models.forgotPassword.phoneNumber.RequestForgotPasswordOtpBlockedPhoneNumber
+import com.alexgreece45.marvelx.data.models.forgotPassword.phoneNumber.ResponseForgotPasswordOtpBlockedPhoneNumber
 import com.alexgreece45.marvelx.data.models.jwtSensitiveUserData.RequestJwtSensitiveUserData
 import com.alexgreece45.marvelx.data.models.jwtSensitiveUserData.ResponseJwtSensitiveUserData
 import com.alexgreece45.marvelx.data.models.otp.OtpRequest
@@ -29,57 +37,69 @@ import javax.inject.Inject
 @Module
 @InstallIn(SingletonComponent::class)
 class ApiClientImpl @Inject constructor(
-    private val api: ApiService
+    private val apiService: ApiService
 ) : ApiClient {
 
     override suspend fun getCharacters(): Response<CharacterDataWrapper> =
-        api.getCharacters()
+        apiService.getCharacters()
 
     override suspend fun getCharacterById(characterId: Int): Response<CharacterDataWrapper> =
-        api.getCharacter(characterId)
+        apiService.getCharacter(characterId)
 
     override suspend fun getCharacterComics(characterId: Int): Response<ComicDataWrapper> =
-        api.getCharacterComics(characterId)
+        apiService.getCharacterComics(characterId)
 
     override suspend fun getComicById(comicId: Int): Response<ComicDataWrapper> =
-        api.getComicById(comicId)
+        apiService.getComicById(comicId)
 
     override suspend fun postSignup(userSignupRequest: UserSignupRequest): Response<SignupResponse> =
-        api.postSignup(userSignupRequest)
+        apiService.postSignup(userSignupRequest)
 
     override suspend fun postLogin(userLoginRequest: UserLoginRequest): Response<LoginResponse> =
-        api.postLogin(userLoginRequest)
+        apiService.postLogin(userLoginRequest)
 
     override suspend fun postLoginWithToken(userLoginWithTokenRequest: UserLoginWithTokenRequest): Response<LoginWithTokenResponse> =
-        api.postLoginWithToken(userLoginWithTokenRequest)
+        apiService.postLoginWithToken(userLoginWithTokenRequest)
 
     override suspend fun grantNewAccessToken(
         clientId: String,
         clientSecret: String,
         code: String,
         uri: String
-    ): Response<TokenResponse> = api.grantNewAccessToken(clientId, clientSecret, code, uri)
+    ): Response<TokenResponse> = apiService.grantNewAccessToken(clientId, clientSecret, code, uri)
 
     override suspend fun refreshAccessToken(
         clientId: String,
         refreshToken: String
-    ): Response<TokenResponse> = api.refreshAccessToken(clientId, refreshToken)
+    ): Response<TokenResponse> = apiService.refreshAccessToken(clientId, refreshToken)
 
     override suspend fun logout(clientId: String, refreshToken: String): Response<Void> =
-        api.logout(clientId, refreshToken)
+        apiService.logout(clientId, refreshToken)
 
     override suspend fun validateOtp(otpRequest: OtpRequest): Response<OtpResponseSuccess> =
-        api.validateOtp(otpRequest)
+        apiService.validateOtp(otpRequest)
 
     override suspend fun resendOtp(requestResendOtp: RequestResendOtp): Response<ResponseResendOtpSuccess> =
-        api.resendOtp(requestResendOtp)
+        apiService.resendOtp(requestResendOtp)
+
+    override suspend fun forgotPasswordSendOtp(body: RequestForgotPasswordSendOtp): Response<ResponseForgotPasswordSendOtp> =
+        apiService.forgotPasswordSendOtp(body)
+
+    override suspend fun forgotPasswordIsOtpBlockedEmail(body: RequestForgotPasswordOtpBlockedEmail): Response<ResponseForgotPasswordOtpBlockedEmail> =
+        apiService.forgotPasswordIsOtpBlockedEmail(body)
+
+    override suspend fun forgotPasswordIsOtpBlockedPhoneNumber(body: RequestForgotPasswordOtpBlockedPhoneNumber): Response<ResponseForgotPasswordOtpBlockedPhoneNumber> =
+        apiService.forgotPasswordIsOtpBlockedPhoneNumber(body)
+
+    override suspend fun forgotPasswordValidateOtp(body: RequestForgotPasswordValidateOtp): Response<ResponseForgotPasswordValidateOtp> =
+        apiService.forgotPasswordValidateOtp(body)
 
     override suspend fun getUserProfileDetails(userId: Int): Response<ResponseProfileDetails> =
-        api.getUserProfileDetails(userId = userId)
+        apiService.getUserProfileDetails(userId = userId)
 
     override suspend fun getJwtForSensitiveUserData(requestJwtSensitiveUserData: RequestJwtSensitiveUserData): Response<ResponseJwtSensitiveUserData> =
-        api.getJwtForSensitiveUserData(requestJwtSensitiveUserData)
+        apiService.getJwtForSensitiveUserData(requestJwtSensitiveUserData)
 
     override suspend fun getSensitiveUserData(requestSensitiveUserData: RequestSensitiveUserData): Response<ResponseSensitiveUserData> =
-        api.getSensitiveUserData(requestSensitiveUserData)
+        apiService.getSensitiveUserData(requestSensitiveUserData)
 }

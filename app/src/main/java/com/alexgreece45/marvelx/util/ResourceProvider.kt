@@ -30,7 +30,7 @@ class ResourceProviderImpl @Inject constructor(
             ""
         }
 
-    override fun getGenericErrorMessage(): String = getString(R.string.unknown_error)
+    override fun getGenericErrorMessage(): String = getString(R.string.generic_error)
 
     override fun getNoInternetConnectionMessage(): String =
         getString(R.string.no_internet_connection_error_message)

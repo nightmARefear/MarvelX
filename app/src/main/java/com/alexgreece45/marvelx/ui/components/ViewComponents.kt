@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -63,8 +64,7 @@ import androidx.compose.material.contentColorFor
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.primarySurface
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.Composable
@@ -77,6 +77,7 @@ import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.drawWithContent
@@ -84,18 +85,17 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.zIndex
 import androidx.navigation.NavController
@@ -110,15 +110,18 @@ import com.alexgreece45.marvelx.ui.navigation.Screen
 import com.alexgreece45.marvelx.util.BOTTOM_NAVIGATION_BAR_ITEM_LABEL_MAX_LENGTH
 import com.alexgreece45.marvelx.util.BOTTOM_NAVIGATION_BAR_MAX_ITEMS
 import com.alexgreece45.marvelx.util.BOTTOM_NAVIGATION_BAR_MIN_ITEMS
+import com.alexgreece45.marvelx.util.DEFAULT_SCREEN_PADDING
 import com.alexgreece45.marvelx.util.HSpacer
 import com.alexgreece45.marvelx.util.SPACING_LARGE
 import com.alexgreece45.marvelx.util.SPACING_MEDIUM
 import com.alexgreece45.marvelx.util.SPACING_SMALL
+import com.alexgreece45.marvelx.util.STICKY_BOTTOM_Z_INDEX
 import com.alexgreece45.marvelx.util.THROTTLE_CLICKABLE_DEFAULT_DELAY
 import com.alexgreece45.marvelx.util.VSpacer
 import com.alexgreece45.marvelx.util.extensions.ClickState
 import com.alexgreece45.marvelx.util.extensions.applyPadding
-import com.alexgreece45.marvelx.util.extensions.screenPaddingsSte
+import com.alexgreece45.marvelx.util.extensions.screenPaddingsNone
+import com.alexgreece45.marvelx.util.extensions.throttledClickable
 import com.alexgreece45.marvelx.util.extensions.throttledClickableIcon
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -142,7 +145,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
  *) {
  *  Icon(
  *      imageVector = Icons.Filled.ArrowBack,
- *      contentDescription = stringResource(id = R.string.back)
+ *      contentDescription = stringResource(id = R.string.content_description_back)
  *  )
  *}
  * ```
@@ -438,6 +441,27 @@ data class IconData(
     val enabled: Boolean = true
 )
 
+sealed class ScreenNavigableAction() {
+    /**
+     * Indicates that the toolbar has no icon button at all.
+     */
+    data object None : ScreenNavigableAction()
+
+    /**
+     * Indicates that the toolbar has a `back` icon button, and its on-click functionality is
+     * controlled by [onBack]; this action is most commonly used for navigating to the previous
+     * screen.
+     */
+    data class Backable(val onBack: () -> Unit) : ScreenNavigableAction()
+
+    /**
+     * Indicates that the toolbar has a `cancel` icon button, and its on-click functionality is
+     * controlled by [onClose]; this action is most commonly used for exiting from an
+     * erroneous screen.
+     */
+    data class Closeable(val onClose: () -> Unit) : ScreenNavigableAction()
+}
+
 data class ToolbarAction(
     val label: String,
     val order: Int,
@@ -467,66 +491,26 @@ data class ExtendedFabData(
 
 @Composable
 fun ContentScreen(
-    onBack: (() -> Unit)? = null,
     isLoading: Boolean,
+    navigableAction: ScreenNavigableAction = ScreenNavigableAction.None,
+    onBack: (() -> Unit)? = null,
     showToolbar: Boolean = false,
     toolbarTitle: String? = null,
-    toolbarBackgroundColor: Color = MaterialTheme.colors.primarySurface,
     toolbarActions: List<ToolbarAction>? = null,
     bottomBarData: BottomBarData? = null,
     bottomNavigationBarData: BottomNavigationBarData? = null,
     fabData: FabData? = null,
+    stickyBottom: @Composable (() -> Unit)? = null,
     content: @Composable (PaddingValues) -> Unit
 ) {
     Scaffold(
         topBar = {
             if (showToolbar) {
-                TopAppBar(
-                    modifier = Modifier.fillMaxWidth(),
-                    backgroundColor = toolbarBackgroundColor,
-                    elevation = 0.dp,
-                    contentPadding = screenPaddingsSte()
-                ) {
-                    CompositionLocalProvider(
-                        LocalContentAlpha provides ContentAlpha.high,
-                        LocalTextStyle provides MaterialTheme.typography.h6
-                    ) {
-                        onBack?.let { onBack ->
-                            ThrottledIconButton(
-                                onClick = onBack
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Filled.ArrowBack,
-                                    contentDescription = stringResource(id = R.string.back),
-                                )
-                            }
-                            HSpacer.Medium()
-                        }
-
-                        toolbarTitle?.let { toolbarTitle ->
-                            Text(
-                                modifier = Modifier.weight(1f),
-                                text = toolbarTitle,
-                                maxLines = 1
-                            )
-                        }
-
-                        toolbarActions?.sortedBy { it.order }?.forEach { toolbarAction ->
-                            IconButton(
-                                onClick = { toolbarAction.onClick() },
-                                enabled = toolbarAction.iconData.enabled
-                            ) {
-                                Icon(
-                                    modifier = Modifier.size(SPACING_LARGE.dp),
-                                    painter = painterResource(toolbarAction.iconData.iconResource),
-                                    contentDescription = stringResource(toolbarAction.iconData.contentDescription),
-                                    tint = toolbarAction.iconData.colorTint
-                                        ?: LocalContentColor.current.copy(alpha = LocalContentAlpha.current)
-                                )
-                            }
-                        }
-                    }
-                }
+                Toolbar(
+                    navigableAction = navigableAction,
+                    toolbarTitle = toolbarTitle,
+                    toolbarActions = toolbarActions
+                )
             }
         },
         bottomBar = {
@@ -595,22 +579,169 @@ fun ContentScreen(
             }
         }
     ) { paddingValues ->
-        Box(modifier = Modifier.fillMaxSize()) {
-            if (isLoading) {
-                LoadingScreen()
+        Column(modifier = Modifier.fillMaxSize()) {
+            Box(modifier = Modifier.weight(1f)) {
+                if (isLoading) {
+                    LoadingScreen()
+                }
+                content(paddingValues.applyPadding())
             }
-            content(paddingValues.applyPadding())
+
+            // Sticky bottom.
+            stickyBottom?.let {
+                if (!isLoading) {
+                    Box(
+                        modifier = Modifier
+                            .zIndex(STICKY_BOTTOM_Z_INDEX)
+                            .padding(paddingValues.applyPadding())
+                            .fillMaxWidth()
+                    ) {
+                        stickyBottom()
+                    }
+                }
+            }
         }
     }
 
-    // TODO: Refactor back handling mechanism to match ThrottledIconButton.
-    /*BackHandler(enabled = onBack != null) {
+    BackHandler(enabled = onBack != null) {
         onBack?.invoke()
-    }*/
+    }
+}
 
-    /* ThrottledBackHandler(enabled = onBack != null) {
-         onBack?.invoke()
-     }*/
+/**
+ * A wrapper [Composable] for native [TopAppBar]. It offers additional functionality and custom
+ * styling options.
+ */
+@OptIn(ExperimentalComposeUiApi::class)
+@Composable
+private fun Toolbar(
+    navigableAction: ScreenNavigableAction,
+    toolbarTitle: String? = null,
+    toolbarActions: List<ToolbarAction>? = null,
+) {
+    val keyboard = LocalSoftwareKeyboardController.current
+
+    TopAppBar(
+        modifier = Modifier.fillMaxWidth(),
+        backgroundColor = MaterialTheme.colors.background,
+        elevation = 0.dp,
+        contentPadding = screenPaddingsNone()
+    ) {
+        CompositionLocalProvider(LocalContentAlpha provides ContentAlpha.high) {
+            // Navigable action button; either `Close` or `Back`.
+            if (navigableAction !is ScreenNavigableAction.None) {
+                ThrottledIconButton(
+                    onClick = {
+                        keyboard?.hide()
+                        when (navigableAction) {
+                            is ScreenNavigableAction.Closeable -> navigableAction.onClose.invoke()
+                            is ScreenNavigableAction.Backable -> navigableAction.onBack.invoke()
+                            else -> {}
+                        }
+                    }
+                ) {
+                    Icon(
+                        imageVector = when (navigableAction) {
+                            is ScreenNavigableAction.Closeable -> Icons.Filled.Close
+                            else -> Icons.Filled.ArrowBack
+                        },
+                        contentDescription = when (navigableAction) {
+                            is ScreenNavigableAction.Closeable -> stringResource(R.string.content_description_close)
+                            else -> stringResource(R.string.content_description_back)
+                        }
+                    )
+                }
+                HSpacer.Medium()
+            }
+
+            toolbarTitle?.let { toolbarTitle ->
+                if (navigableAction is ScreenNavigableAction.None) {
+                    HSpacer.Custom(DEFAULT_SCREEN_PADDING)
+                }
+
+                Text(
+                    modifier = Modifier.weight(1f),
+                    text = toolbarTitle,
+                    maxLines = 1,
+                    style = MaterialTheme.typography.h5
+                )
+            }
+
+            toolbarActions?.sortedBy { it.order }?.forEach { toolbarAction ->
+                IconButton(
+                    onClick = { toolbarAction.onClick() },
+                    enabled = toolbarAction.iconData.enabled
+                ) {
+                    val iconTintAlpha =
+                        if (toolbarAction.iconData.enabled) LocalContentAlpha.current else ContentAlpha.disabled
+                    Icon(
+                        modifier = Modifier.size(SPACING_LARGE.dp),
+                        painter = painterResource(toolbarAction.iconData.iconResource),
+                        contentDescription = stringResource(toolbarAction.iconData.contentDescription),
+                        // TODO: To be reviewed.
+                        tint = toolbarAction.iconData.colorTint?.copy(alpha = iconTintAlpha)
+                            ?: LocalContentColor.current.copy(alpha = iconTintAlpha)
+                    )
+                }
+            }
+        }
+    }
+}
+
+/**
+ * A [Composable] that sticks the [content] to the bottom of a screen. This function should be used
+ * outside of [ContentScreen] only.
+ *
+ * @param paddingValues     The padding values to be applied to this composable. If a value isn't
+ * provided, then all the sides will have a padding of `0.`[dp].
+ * @param content           The content to be displayed.
+ */
+@Composable
+fun StickyBottom(
+    paddingValues: PaddingValues = screenPaddingsNone(),
+    content: @Composable () -> Unit
+) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Spacer(modifier = Modifier.weight(1f))
+        Box(
+            modifier = Modifier
+                .zIndex(STICKY_BOTTOM_Z_INDEX)
+                .padding(paddingValues)
+                .fillMaxWidth()
+        ) {
+            content()
+        }
+    }
+}
+
+/**
+ * Defines the header section of the [ContentScreen]. This [Composable] is optional to use inside a
+ * [ContentScreen].
+ *
+ * @param title        The title of the header.
+ * @param subtitle     The subtitle of the header.
+ */
+@Composable
+fun ContentScreenHeader(
+    title: String,
+    subtitle: String,
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        // Title.
+        Text(
+            text = title,
+            style = MaterialTheme.typography.h4
+        )
+        VSpacer.Large()
+
+        // Subtitle.
+        Text(
+            text = subtitle,
+            style = MaterialTheme.typography.h6.copy(fontSize = 18.sp)
+        )
+    }
 }
 
 @Composable
@@ -721,8 +852,8 @@ fun SearchBar(
                                     radius = this.size.maxDimension.div(2) + SPACING_SMALL
                                 )
                             },
-                        painter = painterResource(R.drawable.ic_close_32),
-                        contentDescription = stringResource(R.string.close),
+                        painter = painterResource(R.drawable.ic_close),
+                        contentDescription = stringResource(R.string.content_description_close),
                         tint = MaterialTheme.colors.onBackground
                     )
                 }
@@ -803,7 +934,7 @@ fun ModalBottomSheetScaffold(
                             IconButton(onClick = { it.invoke() }) {
                                 Icon(
                                     imageVector = Icons.Filled.ArrowBack,
-                                    contentDescription = stringResource(R.string.back),
+                                    contentDescription = stringResource(R.string.content_description_back),
                                 )
                             }
                         }
@@ -912,26 +1043,15 @@ fun ItemDescription(
     }
 }
 
-sealed interface ValueType {
-    object Text : ValueType
-
-    object Email : ValueType
-
-    data class Password(
-        val isPasswordVisible: Boolean = false,
-        val onVisibilityIconClick: () -> Unit
-    ) : ValueType
-}
-
 @Composable
 fun OutlinedTextFieldValidation(
     modifier: Modifier = Modifier,
     value: String,
-    valueType: ValueType = ValueType.Text,
     onValueChange: (String) -> Unit,
     label: String = "",
     placeholder: String? = null,
     leadingIcon: @Composable (() -> Unit)? = null,
+    trailingIcon: @Composable (() -> Unit)? = null,
     errorMessage: String = "",
     isError: Boolean = false,
     visualTransformation: VisualTransformation = VisualTransformation.None,
@@ -940,7 +1060,7 @@ fun OutlinedTextFieldValidation(
     singleLine: Boolean = true,
     maxLines: Int = if (singleLine) 1 else Int.MAX_VALUE,
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
-    shape: Shape = MaterialTheme.shapes.small
+    shape: Shape = MaterialTheme.shapes.medium
 ) {
     Box(
         modifier = modifier
@@ -969,63 +1089,10 @@ fun OutlinedTextFieldValidation(
                 }
             },
             leadingIcon = leadingIcon,
-            trailingIcon = {
-                /** Default trailing Icon color as defined in [TextFieldDefaults.textFieldColors].
-                 *  It should be used by [ValueType.Password] only, as the trailing icon's color
-                 *  is changed if an error has occurred.
-                 * */
-                val defaultIconColor =
-                    MaterialTheme.colors.onSurface.copy(alpha = TextFieldDefaults.IconOpacity)
-
-                when (valueType) {
-                    ValueType.Text, ValueType.Email -> {
-                        if (isError)
-                            Icon(
-                                modifier = Modifier.size(SPACING_LARGE.dp),
-                                imageVector = ImageVector.vectorResource(R.drawable.ic_error_32),
-                                contentDescription = stringResource(R.string.error),
-                            )
-                    }
-
-                    is ValueType.Password -> {
-                        IconButton(onClick = { valueType.onVisibilityIconClick() }) {
-                            if (valueType.isPasswordVisible) {
-                                Icon(
-                                    imageVector = Icons.Filled.VisibilityOff,
-                                    contentDescription = stringResource(R.string.is_password_visible_content_description),
-                                    tint = defaultIconColor
-                                )
-                            } else {
-                                Icon(
-                                    imageVector = Icons.Filled.Visibility,
-                                    contentDescription = stringResource(R.string.is_password_not_visible_content_description),
-                                    tint = defaultIconColor
-                                )
-                            }
-                        }
-                    }
-                }
-            },
+            trailingIcon = trailingIcon,
             isError = isError,
             visualTransformation = visualTransformation,
-            keyboardOptions = when (valueType) {
-                ValueType.Text -> {
-                    keyboardOptions
-                }
-
-                ValueType.Email -> {
-                    keyboardOptions.copy(
-                        keyboardType = KeyboardType.Email
-                    )
-                }
-
-                is ValueType.Password -> {
-                    // Restricts the implementation so as to avoid exposing the password in the user's keyboard.
-                    keyboardOptions.copy(
-                        keyboardType = KeyboardType.Password,
-                    )
-                }
-            },
+            keyboardOptions = keyboardOptions,
             keyboardActions = keyboardActions,
             singleLine = singleLine,
             maxLines = maxLines,
@@ -1040,28 +1107,30 @@ fun OutlinedTextFieldValidation(
             exit = fadeOut()
         ) {
             Text(
-                modifier = Modifier.padding(start = SPACING_SMALL.dp, top = 68.dp),
+                modifier = Modifier
+                    .padding(start = 10.dp, top = 66.dp),
                 text = errorMessage,
                 color = MaterialTheme.colors.error,
-                style = MaterialTheme.typography.body2,
+                style = MaterialTheme.typography.body2
             )
         }
     }
 }
 
 /**
- * Simple Exposed Dropdown menu constructed using [ExposedDropdownMenuBox],
- * [OutlinedTextField], and [DropdownMenu]. Avoid using [ExposedDropdownMenuBox].
- * Use this wrapper instead. This is required since the native
- * [ExposedDropdownMenuBox] does not provide an implementation for the
+ * Simple Exposed Dropdown menu constructed using [ExposedDropdownMenuBox], [OutlinedTextField], and
+ * [DropdownMenu]. Avoid using [ExposedDropdownMenuBox]. Use this wrapper instead. This is required
+ * since the native [ExposedDropdownMenuBox] does not provide an implementation for the
  * [OutlinedTextField], nor the [ExposedDropdownMenu].
  *
  * @param modifier          The modifier to be applied.
  * @param expanded          Indicates if the dropdown menu is visible.
  * @param value             The currently selected value.
  * @param label             A placeholder text when no item has been selected.
- * @param maxLines          The maximum number of lines that [value] can be displayed to; set to `1` by default.
- * @param onDismissRequest  The action(s) to invoke when the dropdown menu is expanded, and the user clicks outside it.
+ * @param maxLines          The maximum number of lines that [value] can be displayed to; set to `1`
+ * by default.
+ * @param onDismissRequest  The action(s) to invoke when the dropdown menu is expanded, and the user
+ * clicks outside of it.
  * @param onExpandedChange  The action(s) to invoke when the user clicks on this dropdown menu.
  * @param content           The content to be shown when the dropdown menu is visible.
  */
@@ -1110,52 +1179,112 @@ fun ExposedDropdownMenu(
     }
 }
 
+/**
+ * A simple composable button. Avoid using the native [Button]. Use this wrapper instead
+ * as it provides custom padding and multiple clicks protection.
+ */
 @Composable
 fun ContainedButton(
     onClick: () -> Unit,
-    modifier: Modifier,
+    modifier: Modifier = Modifier,
     enabled: Boolean = true,
     content: @Composable RowScope.() -> Unit
 ) {
     Button(
         onClick = onClick,
-        modifier = modifier,
+        modifier = modifier.throttledClickable(delay = 1500L, onClick = onClick),
         enabled = enabled,
-        contentPadding = PaddingValues(vertical = 8.dp, horizontal = 16.dp),
+        contentPadding = PaddingValues(vertical = 12.dp, horizontal = 32.dp),
         content = content
     )
 }
 
-sealed class AlertDialogErrorButtonType {
-    data object Text : AlertDialogErrorButtonType()
+/**
+ * A simple composable outlined button. Avoid using the native [OutlinedButton]. Use this wrapper
+ * instead as it provides custom padding and multiple clicks protection.
+ */
+@Composable
+fun WrapOutlinedButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    content: @Composable RowScope.() -> Unit
+) {
+    OutlinedButton(
+        onClick = onClick,
+        modifier = modifier.throttledClickable(delay = 1500L, onClick = onClick),
+        enabled = enabled,
+        contentPadding = PaddingValues(vertical = 12.dp, horizontal = 32.dp),
+        content = content
+    )
+}
 
-    data object Outlined : AlertDialogErrorButtonType()
+/**
+ * A wrapper [Composable] for the native [TextButton]. Use this implementation instead as it
+ * provides custom padding, and multiple clicks protection.
+ */
+@Composable
+fun WrapTextButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    content: @Composable RowScope.() -> Unit
+) {
+    TextButton(
+        onClick = onClick,
+        modifier = modifier.throttledClickable(delay = 1500L, onClick = onClick),
+        enabled = enabled,
+        content = content
+    )
+}
 
-    data object Contained : AlertDialogErrorButtonType()
+sealed class ErrorButtonType {
+    data object Text : ErrorButtonType()
+
+    data object Outlined : ErrorButtonType()
+
+    data object Contained : ErrorButtonType()
 
     companion object {
-        val defaultType: AlertDialogErrorButtonType = Text
+        val defaultType: ErrorButtonType = Contained
     }
 }
 
 
 /**
  * @param buttonType The button type. For the dismiss button, the type is
- * always [AlertDialogErrorButtonType.Text].
+ * always [ErrorButtonType.Text].
  * */
 data class AlertDialogButton(
     val value: String,
-    val buttonType: AlertDialogErrorButtonType = AlertDialogErrorButtonType.defaultType,
+    val buttonType: ErrorButtonType = ErrorButtonType.defaultType,
     val onClick: () -> Unit
 )
 
 /**
- * @param title         The title of this alert dialog.
- * @param errorMessage  The error message of this alert dialog.
+ * A wrapper for [AlertDialog] providing additional functionality and custom styling. Avoid using the
+ * native one. Use this wrapper instead.
+ *
+ * @param modifier          The modifier to be applied.
+ * @param isVisible         Defines whether this alert is visible.
+ * @param title             The title of this dialog.
+ * @param errorMessage      The error message of this dialog.
+ * @param dismissButton     The dismiss button of this dialog. Can be `null`.
+ * @param confirmButton     The confirm button of this dialog. It is always required.
+ * @param shape             The shape of this dialog. It has a default value of
+ * [MaterialTheme.shapes.medium].
+ * @param backgroundColor   The background color of this dialog. It has a default value of
+ * [MaterialTheme.colors.surface].
+ * @param contentColor      The content color of this dialog. Has a default color based on the
+ * [backgroundColor].
+ * @param properties        The dialog properties of this dialog. It has a default value of
+ * [DialogProperties].
+ * @param onDismissRequest  The action(s) to be invoked when the user clicks outside of this dialog.
  */
 @Composable
 fun AlertDialogError(
     modifier: Modifier = Modifier,
+    isVisible: Boolean,
     title: String,
     errorMessage: String,
     dismissButton: AlertDialogButton? = null,
@@ -1166,6 +1295,7 @@ fun AlertDialogError(
     properties: DialogProperties = DialogProperties(),
     onDismissRequest: (() -> Unit)? = null
 ) {
+    if (!isVisible) return
     AlertDialog(
         modifier = modifier,
         title = {
@@ -1187,7 +1317,7 @@ fun AlertDialogError(
         },
         dismissButton = {
             dismissButton?.let { button ->
-                TextButton(onClick = { button.onClick() }) {
+                WrapTextButton(onClick = button.onClick) {
                     Text(
                         text = button.value
                     )
@@ -1197,24 +1327,24 @@ fun AlertDialogError(
         confirmButton = {
             confirmButton.let { button ->
                 when (button.buttonType) {
-                    AlertDialogErrorButtonType.Contained -> {
-                        Button(onClick = { button.onClick() }) {
+                    ErrorButtonType.Contained -> {
+                        ContainedButton(onClick = button.onClick) {
                             Text(
                                 text = button.value
                             )
                         }
                     }
 
-                    AlertDialogErrorButtonType.Outlined -> {
-                        OutlinedButton(onClick = { button.onClick() }) {
+                    ErrorButtonType.Outlined -> {
+                        WrapOutlinedButton(onClick = button.onClick) {
                             Text(
                                 text = button.value
                             )
                         }
                     }
 
-                    AlertDialogErrorButtonType.Text -> {
-                        TextButton(onClick = { button.onClick() }) {
+                    ErrorButtonType.Text -> {
+                        WrapTextButton(onClick = button.onClick) {
                             Text(
                                 text = button.value
                             )
@@ -1227,7 +1357,7 @@ fun AlertDialogError(
         backgroundColor = backgroundColor,
         contentColor = contentColor,
         properties = properties,
-        onDismissRequest = { onDismissRequest?.invoke() },
+        onDismissRequest = { onDismissRequest?.invoke() }
     )
 }
 
@@ -1237,10 +1367,10 @@ fun AlertDialogError(
 
 sealed class SortingType(val order: Int, val label: String) {
 
-    object Random : SortingType(order = 0, label = "Random")
-    object TextAscending : SortingType(order = 1, label = "A-Z Asc")
+    data object Random : SortingType(order = 0, label = "Random")
+    data object TextAscending : SortingType(order = 1, label = "A-Z Asc")
 
-    object TextDescending : SortingType(order = 2, label = "A-Z Desc")
+    data object TextDescending : SortingType(order = 2, label = "A-Z Desc")
 
     companion object {
         fun asList(): List<SortingType> = listOf(Random, TextAscending, TextDescending)
@@ -1342,7 +1472,7 @@ fun SortingModalBottomSheetContent(
                                 radius = this.size.maxDimension.div(2) + SPACING_MEDIUM
                             )
                         },
-                    painter = painterResource(R.drawable.ic_close_32),
+                    painter = painterResource(R.drawable.ic_close),
                     contentDescription = stringResource(R.string.close)
                 )
             }
@@ -1363,7 +1493,7 @@ fun SortingModalBottomSheetContent(
 //        Error Screens
 // ==========================
 @Composable
-fun LazyItemScope.GenericErrorScreen(
+fun LazyItemScope.ContentErrorScreen(
     errorMessage: String,
     onRetryClick: () -> Unit
 ) {
@@ -1386,7 +1516,7 @@ fun LazyItemScope.GenericErrorScreen(
             onClick = { onRetryClick() }
         ) {
             Text(
-                text = stringResource(R.string.retry).uppercase(),
+                text = stringResource(R.string.generic_retry_button).uppercase(),
                 style = MaterialTheme.typography.h5
             )
         }
@@ -1416,46 +1546,7 @@ fun LazyItemScope.NoInternetErrorScreen(
             onClick = { onRetryClick() }
         ) {
             Text(
-                text = stringResource(R.string.retry).uppercase(),
-                style = MaterialTheme.typography.h5
-            )
-        }
-    }
-}
-
-@Composable
-fun GenericErrorScreen(
-    errorMessage: String,
-    onRetryClick: () -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .zIndex(100f)
-            .background(MaterialTheme.colors.background)
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null,
-                onClick = {}
-            ),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = errorMessage,
-            textAlign = TextAlign.Center,
-            style = MaterialTheme.typography.h4.copy(
-                color = MaterialTheme.colors.error
-            )
-        )
-
-        VSpacer.Medium()
-
-        Button(
-            onClick = { onRetryClick() }
-        ) {
-            Text(
-                text = stringResource(R.string.retry).uppercase(),
+                text = stringResource(R.string.generic_retry_button).uppercase(),
                 style = MaterialTheme.typography.h5
             )
         }
@@ -1466,6 +1557,9 @@ fun GenericErrorScreen(
 //        Error Screens
 // ==========================
 
+/**
+ * Detects scrolling up motion in a [LazyColumn]. Returns `true` if detected, otherwise `false`.
+ */
 @Composable
 fun LazyGridState.isScrollingUp(): Boolean {
     var previousIndex by remember(this) {

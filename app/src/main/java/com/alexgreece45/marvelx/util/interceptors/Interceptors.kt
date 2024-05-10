@@ -1,10 +1,9 @@
 package com.alexgreece45.marvelx.util.interceptors
 
 import com.alexgreece45.marvelx.BuildConfig
-import com.alexgreece45.marvelx.controllers.AuthController
 import com.alexgreece45.marvelx.configuration.ConfigLogic
-import com.alexgreece45.marvelx.util.APP_USER_AGENT
-import com.alexgreece45.marvelx.util.HeaderConstants
+import com.alexgreece45.marvelx.controllers.AuthController
+import com.alexgreece45.marvelx.util.constants.ConstantsSecurity
 import com.alexgreece45.marvelx.util.extensions.toMd5
 import okhttp3.Interceptor
 import okhttp3.Request
@@ -96,14 +95,20 @@ private fun applyMarvelXBackendTransformations(
     // Create modified request based on the modifiedUrl and the config.
     var modifiedRequest = Request.Builder()
         .url(modifiedUrl)
-        .addHeader(HeaderConstants.UserAgent.name, APP_USER_AGENT)
+        .addHeader(
+            name = ConstantsSecurity.HeaderNames.UserAgent.name,
+            value = ConstantsSecurity.HeaderValues.APP_USER_AGENT
+        )
         .method(originalRequest.method, originalRequest.body)
 
     // Add headers where necessary.
     when {
         path.contains("login_with_token") || path.contains("profile_details") -> {
             modifiedRequest = modifiedRequest
-                .addHeader(HeaderConstants.Authorization.name, "${authController.getAccessToken()}")
+                .addHeader(
+                    name = ConstantsSecurity.HeaderNames.Authorization.name,
+                    value = "${authController.getAccessToken()}"
+                )
         }
 
         else -> {}

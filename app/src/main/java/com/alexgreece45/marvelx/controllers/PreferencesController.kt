@@ -9,8 +9,7 @@ import javax.inject.Inject
 
 interface PreferencesController {
     /**
-     * Returns true if the provided [key] exists
-     * in the [SharedPreferences], otherwise false.
+     * Returns true if the provided [key] exists in the [SharedPreferences], otherwise false.
      * */
     fun containsKey(key: String): Boolean
 
@@ -27,7 +26,7 @@ interface PreferencesController {
     /**
      * Removes the provided [key] from the [SharedPreferences].
      *
-     * @param key the preference key to be removed
+     * @param key The preference key to be removed.
      * */
     fun remove(key: String)
 
@@ -105,8 +104,33 @@ interface PrefKeys {
     fun getUserId(): Int
     fun getUserAuthData(): String
 
+    /**
+     * Retrieves whether the application should remember the user's session once logged in. It has a
+     * default value of `false`.
+     */
+    fun shouldRememberUserSession(): Boolean
+
+    /**
+     * Retrieves whether the user is logged in. It has a default value of `false`.
+     */
+    fun isUserLoggedIn(): Boolean
+
     fun setUserId(userId: Int)
     fun setUserAuthData(userAuthData: String)
+
+    /**
+     * Sets whether the application should remember the user's session once logged in.
+     *
+     * ### Note: During logout, this value is set to `false`.
+     */
+    fun setRememberUserSession(shouldRemember: Boolean)
+
+    /**
+     * Sets whether the user is logged in.
+     *
+     * ### Note: During logout, this value is set to `false`.
+     */
+    fun setUserLoggedIn(isLoggedIn: Boolean)
 
     fun removeUserId()
 
@@ -136,6 +160,12 @@ class PrefKeysImpl @Inject constructor(
     override fun getUserAuthData(): String =
         preferencesController.getString("UserAuthData", "{}")
 
+    override fun shouldRememberUserSession(): Boolean =
+        preferencesController.getBoolean("rememberMe", false)
+
+    override fun isUserLoggedIn(): Boolean =
+        preferencesController.getBoolean("isUserLoggedIn", false)
+
     override fun setUserId(userId: Int) =
         preferencesController.setInt(
             BuildConfig.ENCRYPTED_SHARED_PREFERENCES_KEY_USER_ID,
@@ -147,6 +177,12 @@ class PrefKeysImpl @Inject constructor(
             key = "UserAuthData",
             value = userAuthData
         )
+
+    override fun setRememberUserSession(shouldRemember: Boolean) =
+        preferencesController.setBoolean("rememberMe", shouldRemember)
+
+    override fun setUserLoggedIn(isLoggedIn: Boolean) =
+        preferencesController.setBoolean("isUserLoggedIn", isLoggedIn)
 
     override fun removeUserId() =
         preferencesController.remove(BuildConfig.ENCRYPTED_SHARED_PREFERENCES_KEY_USER_ID)

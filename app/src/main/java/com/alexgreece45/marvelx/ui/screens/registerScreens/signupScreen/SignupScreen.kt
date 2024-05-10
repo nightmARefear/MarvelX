@@ -1,23 +1,25 @@
 package com.alexgreece45.marvelx.ui.screens.registerScreens.signupScreen
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.Button
 import androidx.compose.material.DropdownMenuItem
-import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
 import androidx.compose.material.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.autofill.AutofillType
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -32,19 +34,21 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.data.models.user.Gender
+import com.alexgreece45.marvelx.ui.components.AlertDialogButton
+import com.alexgreece45.marvelx.ui.components.AlertDialogError
+import com.alexgreece45.marvelx.ui.components.ContainedButton
+import com.alexgreece45.marvelx.ui.components.ContentScreen
+import com.alexgreece45.marvelx.ui.components.ErrorButtonType
+import com.alexgreece45.marvelx.ui.components.ExposedDropdownMenu
+import com.alexgreece45.marvelx.ui.components.OutlinedTextFieldValidation
+import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
+import com.alexgreece45.marvelx.ui.navigation.Screen
+import com.alexgreece45.marvelx.util.SPACING_SMALL
+import com.alexgreece45.marvelx.util.VSpacer
+import com.alexgreece45.marvelx.util.extensions.autofill
 import com.alexgreece45.marvelx.viewModels.SignupEffect
 import com.alexgreece45.marvelx.viewModels.SignupEvent
 import com.alexgreece45.marvelx.viewModels.SignupViewModel
-import com.alexgreece45.marvelx.ui.navigation.Screen
-import com.alexgreece45.marvelx.ui.components.AlertDialogButton
-import com.alexgreece45.marvelx.ui.components.AlertDialogError
-import com.alexgreece45.marvelx.ui.components.AlertDialogErrorButtonType
-import com.alexgreece45.marvelx.ui.components.ContentScreen
-import com.alexgreece45.marvelx.ui.components.ExposedDropdownMenu
-import com.alexgreece45.marvelx.ui.components.OutlinedTextFieldValidation
-import com.alexgreece45.marvelx.ui.components.ValueType
-import com.alexgreece45.marvelx.util.SPACING_SMALL
-import com.alexgreece45.marvelx.util.VSpacer
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -58,8 +62,6 @@ fun SignUpScreen(
     val keyboard = LocalSoftwareKeyboardController.current
 
     LaunchedEffect(Unit) {
-        viewModel.setEvent(SignupEvent.InitView)
-
         viewModel.uiEffect.collect { effect ->
             when (effect) {
                 is SignupEffect.ShowAlertDialogError -> {
@@ -82,7 +84,9 @@ fun SignUpScreen(
                     navController.navigate(
                         Screen.OtpScreen.createNavRoute(
                             userId = effect.userId,
-                            verificationStep = effect.verificationStep
+                            otpFlowType = effect.otpFlowType,
+                            verificationStep = effect.verificationStep,
+                            shouldRememberUserSession = effect.shouldRememberUserSession
                         )
                     )
                 }
@@ -99,8 +103,10 @@ fun SignUpScreen(
     }
 
     ContentScreen(
-        onBack = { navController.popBackStack() },
         isLoading = state.isLoading,
+        navigableAction = ScreenNavigableAction.Backable {
+            navController.popBackStack()
+        },
         showToolbar = true,
         toolbarTitle = stringResource(R.string.sign_up_screen_toolbar_title)
     ) { paddingValues ->
@@ -110,77 +116,68 @@ fun SignUpScreen(
             verticalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp)
         ) {
             // Alert Dialog Error
-            if (state.isAlertDialogVisible) {
-                item {
-                    AlertDialogError(
-                        title = state.alertDialogTitle,
-                        errorMessage = state.alertDialogErrorMessage,
-                        confirmButton = AlertDialogButton(
-                            value = stringResource(R.string.ok),
-                            buttonType = AlertDialogErrorButtonType.Text,
-                            onClick = { viewModel.setEvent(SignupEvent.AlertDialogError.OnOkClick) }
-                        )
+            item {
+                AlertDialogError(
+                    isVisible = state.isAlertDialogVisible,
+                    title = state.alertDialogTitle,
+                    errorMessage = state.alertDialogErrorMessage,
+                    confirmButton = AlertDialogButton(
+                        value = stringResource(R.string.generic_ok_button),
+                        buttonType = ErrorButtonType.Text,
+                        onClick = { viewModel.setEvent(SignupEvent.AlertDialogError.OnOkClick) }
                     )
-                }
+                )
             }
 
             // First name & Last name
             item {
-                Column(
-                    modifier = Modifier.fillMaxWidth()
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp)
                 ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp)
-                    ) {
-                        // First Name.
-                        OutlinedTextFieldValidation(
-                            modifier = Modifier.weight(1f),
-                            value = state.firstName,
-                            label = stringResource(R.string.sign_up_screen_input_field_label_first_name),
-                            placeholder = stringResource(R.string.sign_up_screen_input_field_placeholder_first_name),
-                            onValueChange = { newValue ->
-                                viewModel.setEvent(SignupEvent.FieldValueChange.FirstName(firstName = newValue))
-                            },
-                            errorMessage = state.firstNameValidationResult.messages.firstOrNull()
-                                .orEmpty(),
-                            isError = state.firstNameValidationResult.isValid.not() &&
-                                    state.firstNameValidationResult.messages.firstOrNull() != null,
-                            keyboardOptions = KeyboardOptions(
-                                imeAction = ImeAction.Next
-                            ),
-                            keyboardActions = KeyboardActions(
-                                onNext = {
-                                    focusManager.moveFocus(FocusDirection.Next)
-                                }
-                            ),
-                            shape = MaterialTheme.shapes.medium
+                    // First Name.
+                    OutlinedTextFieldValidation(
+                        modifier = Modifier.weight(1f),
+                        value = state.firstName,
+                        label = stringResource(R.string.sign_up_screen_input_field_label_first_name),
+                        onValueChange = { newValue ->
+                            viewModel.setEvent(SignupEvent.FieldValueChange.FirstName(firstName = newValue))
+                        },
+                        errorMessage = state.firstNameValidationResult.messages.firstOrNull()
+                            .orEmpty(),
+                        isError = state.firstNameValidationResult.isValid.not() &&
+                                state.firstNameValidationResult.messages.firstOrNull() != null,
+                        keyboardOptions = KeyboardOptions(
+                            imeAction = ImeAction.Next
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onNext = {
+                                focusManager.moveFocus(FocusDirection.Next)
+                            }
                         )
+                    )
 
-                        // Last Name.
-                        OutlinedTextFieldValidation(
-                            modifier = Modifier.weight(1f),
-                            value = state.lastName,
-                            label = stringResource(R.string.sign_up_screen_input_field_label_last_name),
-                            placeholder = stringResource(R.string.sign_up_screen_input_field_placeholder_last_name),
-                            onValueChange = { newValue ->
-                                viewModel.setEvent(SignupEvent.FieldValueChange.LastName(lastName = newValue))
-                            },
-                            errorMessage = state.lastNameValidationResult.messages.firstOrNull()
-                                .orEmpty(),
-                            isError = state.lastNameValidationResult.isValid.not() &&
-                                    state.lastNameValidationResult.messages.firstOrNull() != null,
-                            keyboardOptions = KeyboardOptions(
-                                imeAction = ImeAction.Next
-                            ),
-                            keyboardActions = KeyboardActions(
-                                onNext = {
-                                    focusManager.moveFocus(FocusDirection.Next)
-                                }
-                            ),
-                            shape = MaterialTheme.shapes.medium
+                    // Last Name.
+                    OutlinedTextFieldValidation(
+                        modifier = Modifier.weight(1f),
+                        value = state.lastName,
+                        label = stringResource(R.string.sign_up_screen_input_field_label_last_name),
+                        onValueChange = { newValue ->
+                            viewModel.setEvent(SignupEvent.FieldValueChange.LastName(lastName = newValue))
+                        },
+                        errorMessage = state.lastNameValidationResult.messages.firstOrNull()
+                            .orEmpty(),
+                        isError = state.lastNameValidationResult.isValid.not() &&
+                                state.lastNameValidationResult.messages.firstOrNull() != null,
+                        keyboardOptions = KeyboardOptions(
+                            imeAction = ImeAction.Next
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onNext = {
+                                focusManager.moveFocus(FocusDirection.Next)
+                            }
                         )
-                    }
+                    )
                 }
             }
 
@@ -215,10 +212,16 @@ fun SignUpScreen(
             // Email
             item {
                 OutlinedTextFieldValidation(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .autofill(
+                            autofillTypes = listOf(AutofillType.EmailAddress),
+                            onFill = { suggestionValue ->
+                                viewModel.setEvent(SignupEvent.FieldValueChange.Email(email = suggestionValue))
+                            }
+                        ),
                     value = state.email,
                     label = stringResource(R.string.sign_up_screen_input_field_label_email),
-                    placeholder = stringResource(R.string.sign_up_screen_input_field_placeholder_email),
                     onValueChange = { newEmail ->
                         viewModel.setEvent(
                             SignupEvent.FieldValueChange.Email(
@@ -237,22 +240,23 @@ fun SignUpScreen(
                         onNext = {
                             focusManager.moveFocus(FocusDirection.Next)
                         }
-                    ),
-                    shape = MaterialTheme.shapes.medium
+                    )
                 )
             }
 
             // Password
             item {
                 OutlinedTextFieldValidation(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .autofill(
+                            autofillTypes = listOf(AutofillType.Password),
+                            onFill = { suggestionValue ->
+                                viewModel.setEvent(SignupEvent.FieldValueChange.Password(password = suggestionValue))
+                            }
+                        ),
                     value = state.password,
-                    valueType = ValueType.Password(
-                        isPasswordVisible = state.isPasswordVisible,
-                        onVisibilityIconClick = { viewModel.setEvent(SignupEvent.OnPasswordVisibilityIconClick) }
-                    ),
                     label = stringResource(R.string.sign_up_screen_input_field_label_password),
-                    placeholder = stringResource(R.string.sign_up_screen_input_field_placeholder_password),
                     onValueChange = { newPassword ->
                         viewModel.setEvent(
                             SignupEvent.FieldValueChange.Password(
@@ -260,42 +264,50 @@ fun SignUpScreen(
                             )
                         )
                     },
+                    trailingIcon = {
+                        IconButton(onClick = { viewModel.setEvent(SignupEvent.OnPasswordVisibilityIconClick) }) {
+                            if (state.isPasswordVisible) {
+                                Icon(
+                                    imageVector = Icons.Filled.VisibilityOff,
+                                    contentDescription = stringResource(R.string.is_password_visible_content_description)
+                                )
+                            } else {
+                                Icon(
+                                    imageVector = Icons.Filled.Visibility,
+                                    contentDescription = stringResource(R.string.is_password_not_visible_content_description)
+                                )
+                            }
+                        }
+                    },
                     errorMessage = state.passwordValidationResult.messages.firstOrNull()
                         .orEmpty(),
                     isError = state.passwordValidationResult.isValid.not() &&
                             state.passwordValidationResult.messages.firstOrNull() != null,
                     visualTransformation = if (state.isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                     keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Password,
                         imeAction = ImeAction.Done
                     ),
                     keyboardActions = KeyboardActions(
-                        onDone = {
-                            viewModel.setEvent(SignupEvent.OnDoneClick)
-                        }
-                    ),
-                    shape = MaterialTheme.shapes.medium
+                        onDone = { viewModel.setEvent(SignupEvent.OnDoneClick) }
+                    )
                 )
             }
 
-            // Vertical spacing.
             item {
                 VSpacer.Small()
             }
 
             // Signup button
             item {
-                Row(
+                ContainedButton(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center
+                    enabled = state.signupButton,
+                    onClick = { viewModel.setEvent(SignupEvent.OnSignupButtonClick) }
                 ) {
-                    Button(
-                        enabled = state.signupButton,
-                        onClick = { viewModel.setEvent(SignupEvent.OnSignupButtonClick) }
-                    ) {
-                        Text(
-                            text = stringResource(R.string.sign_up_screen_signup_button)
-                        )
-                    }
+                    Text(
+                        text = stringResource(R.string.sign_up_screen_signup_button)
+                    )
                 }
             }
         }

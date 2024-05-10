@@ -2,39 +2,93 @@ package com.alexgreece45.marvelx.viewModels
 
 import androidx.core.text.isDigitsOnly
 import androidx.lifecycle.viewModelScope
+import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.controllers.PrefKeys
 import com.alexgreece45.marvelx.controllers.TimerController
+import com.alexgreece45.marvelx.controllers.TimerStatus
 import com.alexgreece45.marvelx.data.domains.otp.OtpErrorCause
+import com.alexgreece45.marvelx.data.domains.otp.OtpFlowType
 import com.alexgreece45.marvelx.data.domains.resendOtp.ResendOtpErrorCause
 import com.alexgreece45.marvelx.data.domains.sensitiveUserData.SensitiveUserDataDomain
 import com.alexgreece45.marvelx.data.domains.user.VerificationStep
+import com.alexgreece45.marvelx.interactors.ForgotPasswordInteractor
+import com.alexgreece45.marvelx.interactors.ForgotPasswordValidateOtpPartialState
 import com.alexgreece45.marvelx.interactors.GetJwtForSensitiveUserDataPartialState
 import com.alexgreece45.marvelx.interactors.GetSensitiveUserDataPartialState
 import com.alexgreece45.marvelx.interactors.GrandNewAccessTokenPartialState
+import com.alexgreece45.marvelx.interactors.LoginInteractor
 import com.alexgreece45.marvelx.interactors.OtpInteractor
 import com.alexgreece45.marvelx.interactors.RegisterInteractor
 import com.alexgreece45.marvelx.interactors.ResendOtpPartialState
-import com.alexgreece45.marvelx.interactors.UserInteractor
 import com.alexgreece45.marvelx.interactors.ValidateOtpPartialState
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
 import com.alexgreece45.marvelx.mvi.BaseViewModel
+import com.alexgreece45.marvelx.ui.components.models.ErrorButtonLayout
 import com.alexgreece45.marvelx.util.FormsValidationResult
 import com.alexgreece45.marvelx.util.ResourceProvider
-import com.alexgreece45.marvelx.util.Rule
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+/**
+ * All the error codes of the `OtpScreen` for error reporting by the users.
+ */
+private sealed class OtpScreenErrorCodes(val code: String) {
+    sealed class InitViewChecks(code: String) : OtpScreenErrorCodes(code) {
+        data object UnexpectedError : InitViewChecks("OTP_1000")
+        data object NullableFields : InitViewChecks("OTP_1001")
+        data object InvalidOtpFlowType : InitViewChecks("OTP_1002")
+        data object InvalidVerificationStep : InitViewChecks("OTP_1003")
+    }
+
+    sealed class RetrieveJwt(code: String) : OtpScreenErrorCodes(code) {
+        data object GenericError : RetrieveJwt("OTP_1004")
+    }
+
+    sealed class GetSensitiveUserData(code: String) : OtpScreenErrorCodes(code) {
+        data object GenericError : GetSensitiveUserData("OTP_1005")
+        data object OtpBlocksExpiresInNull : GetSensitiveUserData("OTP_1006")
+    }
+
+    sealed class GrandNewAccessToken(code: String) : OtpScreenErrorCodes(code) {
+        data object GenericError : GrandNewAccessToken("OTP_1007")
+    }
+
+    sealed class ForgotPasswordValidateOtp(code: String) : OtpScreenErrorCodes(code) {
+        data object GenericError : ForgotPasswordValidateOtp("OTP_1008")
+        data object Email : ForgotPasswordValidateOtp("OTP_1009")
+        data object PhoneNumber : ForgotPasswordValidateOtp("OTP_1010")
+    }
+}
+
+data class OtpScreenErrorView(
+    val errorTitle: String,
+    val errorSubtitle: String,
+    val onCloseClicked: (() -> Unit)? = null,
+    val errorButtonLayout: ErrorButtonLayout.Single
+)
+
 sealed class OtpEvent : BaseEvent {
-    data class InitView(val userId: Int?, val verificationStep: String?) : OtpEvent()
+    data class Init(
+        val userId: Int?,
+        val otpFlowType: String?,
+        val verificationStep: String?,
+        val shouldRememberUserSession: Boolean?,
+        val requestIdEmail: String?,
+        val requestIdPhoneNumber: String?
+    ) : OtpEvent()
 
     data class OnOtpFieldValueChange(val otp: String) : OtpEvent()
 
     data object OnBackClick : OtpEvent()
 
     data object OnDoneClick : OtpEvent()
+
+    data object OnVerifyButtonClicked : OtpEvent()
 
     data object OnResendOtpButtonClick : OtpEvent()
 }
@@ -47,16 +101,30 @@ data class OtpState(
      * Error message retrieved from the MarvelX-Backend API for invalid user input.
      * */
     val errorMessage: String? = null,
+    val error: OtpScreenErrorView? = null,
 
     /**
      * The user ID.
      * */
     val userId: Int = -1,
 
+    val requestIdEmail: String = "",
+    val requestIdPhoneNumber: String = "",
+
     /**
      * The verification step.
      */
     val verificationStep: VerificationStep = VerificationStep.Invalid(""),
+
+    /**
+     * The OTP flow type. Either `Forgot Password` or `Register`.
+     */
+    val otpFlowType: OtpFlowType,
+
+    /**
+     * Defines if the application should remember the session when the user exits the app.
+     */
+    val shouldRememberUserSession: Boolean = false,
 
     /**
      * The OTP that the user has entered in the TextField.
@@ -73,7 +141,14 @@ data class OtpState(
 
     val otpFieldEnabled: Boolean = true,
 
-    val resendOtpButtonEnabled: Boolean = true,
+    val isResendOtpButtonEnabled: Boolean = true,
+
+    /**
+     * Controls whether the verify button is enabled. When clicked, the user-entered OTP is verified.
+     * This button must _only_ be enabled when the length of the OTP is 6. Also, when the OTP field
+     * clears, this button should be disabled.
+     */
+    val isVerifyButtonEnabled: Boolean = false,
 
     // Validations.
     val enteredOtpValidationResult: FormsValidationResult = FormsValidationResult(true)
@@ -82,10 +157,15 @@ data class OtpState(
 
 sealed class OtpEffect : BaseEffect {
     data object OtpFieldRequestFocus : OtpEffect()
+    data object CloseKeyboard : OtpEffect()
 
     sealed class Navigation : OtpEffect() {
         data object PopBackStack : Navigation()
-        data class NavigateToPreviousScreenWithError(val errorMessage: String) : Navigation()
+
+        data class NavigateToChangePasswordScreen(
+            val requestIdEmail: String,
+            val requestIdPhoneNumber: String?
+        ) : Navigation()
 
         data object NavigateToAllCharactersScreen : Navigation()
     }
@@ -96,35 +176,152 @@ sealed class OtpEffect : BaseEffect {
 @HiltViewModel
 class OtpViewModel @Inject constructor(
     private val otpInteractor: OtpInteractor,
-    private val userInteractor: UserInteractor,
+    private val loginInteractor: LoginInteractor,
     private val registerInteractor: RegisterInteractor,
+    private val forgotPasswordInteractor: ForgotPasswordInteractor,
     private val resourceProvider: ResourceProvider,
     private val prefKeys: PrefKeys,
     private val timerController: TimerController
 ) : BaseViewModel<OtpEvent, OtpState, OtpEffect>() {
-    override fun setInitialState(): OtpState = OtpState()
+
+    /**
+     * A [Job] for the OTP countdown timer. Its initial value is set to `null` to represent that no
+     * job is present. This job should be set to the respective parent [CoroutineScope] of the
+     * caller of [TimerController.startCountdown], which usually is [viewModelScope].
+     *
+     * Before setting this job to a coroutine scope, make sure to cancel it by calling `cancel()`.
+     * It is highly recommended to _**always**_ cancel this job before setting it to a new one.
+     *
+     * ## Example usage
+     *
+     * ### 1. Cancel this job.
+     * ```
+     * countdownJob?.cancel()
+     * ```
+     *
+     * ### 2. Initialize this job.
+     * ```
+     * countdownJob = viewModelScope.launch {
+     *                 timerController.startCountdown(duration = it.expiresIn)
+     *                     .collect { timerStatus ->
+     *                         when (timerStatus) {
+     *                             TimerStatus.Completed -> {
+     *                                 setState {
+     *                                     copy(
+     *                                         otpBlockRemainingTime = null,
+     *                                         resendOtpButtonEnabled = true
+     *                                     )
+     *                                 }
+     *                             }
+     *
+     *                             is TimerStatus.Ticking -> {
+     *                                 setState {
+     *                                     copy(
+     *                                         otpBlockRemainingTime = timerStatus.remainingTime,
+     *                                     )
+     *                                 }
+     *                             }
+     *                         }
+     *                     }
+     *             }
+     * ```
+     */
+    private var countdownJob: Job? = null
+
+    override fun setInitialState(): OtpState = OtpState(
+        otpFlowType = OtpFlowType.Invalid("")
+    )
 
     override fun handleEvents(event: OtpEvent) {
         when (event) {
-            is OtpEvent.InitView -> {
+            is OtpEvent.Init -> {
                 setState {
                     copy(
                         isLoading = true
                     )
                 }
-                initView(event.userId, event.verificationStep)
+
+                // Invalid nullable field checks.
+                if (
+                    event.otpFlowType.isNullOrBlank()
+                    || event.verificationStep.isNullOrBlank()
+                ) {
+                    showGenericErrorViewWithErrorCode(
+                        errorCode = OtpScreenErrorCodes.InitViewChecks.NullableFields,
+                        otpFlowType = OtpFlowType.Invalid("")
+                    )
+                    return
+                }
+
+                // Invalid otp flow type checks.
+                val finalOtpFlowType = OtpFlowType.getType(event.otpFlowType)
+                if (
+                    finalOtpFlowType is OtpFlowType.Invalid
+                    || (finalOtpFlowType is OtpFlowType.Register && event.userId == null)
+                    || (finalOtpFlowType is OtpFlowType.Register && event.shouldRememberUserSession == null)
+                    || (finalOtpFlowType is OtpFlowType.ForgotPassword && event.requestIdEmail.isNullOrBlank())
+                ) {
+                    showGenericErrorViewWithErrorCode(
+                        errorCode = OtpScreenErrorCodes.InitViewChecks.InvalidOtpFlowType,
+                        otpFlowType = finalOtpFlowType
+                    )
+                    return
+                }
+
+                // Invalid verification step checks.
+                val finalVerificationStep = VerificationStep.of(event.verificationStep)
+                if (
+                    finalVerificationStep is VerificationStep.Invalid
+                    || (finalVerificationStep is VerificationStep.OtpPhoneNumber && event.requestIdPhoneNumber.isNullOrBlank())
+                ) {
+                    showGenericErrorViewWithErrorCode(
+                        errorCode = OtpScreenErrorCodes.InitViewChecks.InvalidVerificationStep,
+                        otpFlowType = finalOtpFlowType
+                    )
+                    return
+                }
+
+                when (finalOtpFlowType) {
+                    OtpFlowType.Register -> {
+                        initRegisterFlow(
+                            userId = event.userId,
+                            verificationStep = finalVerificationStep,
+                            otpFlowType = finalOtpFlowType,
+                            shouldRememberUserSession = event.shouldRememberUserSession
+                        )
+                    }
+
+                    OtpFlowType.ForgotPassword.Email, OtpFlowType.ForgotPassword.PhoneNumber -> {
+                        initForgotPasswordFlow(
+                            verificationStep = finalVerificationStep,
+                            otpFlowType = finalOtpFlowType,
+                            requestIdEmail = event.requestIdEmail.orEmpty(),
+                            requestIdPhoneNumber = event.requestIdPhoneNumber
+                        )
+                    }
+
+                    else -> {
+                        showGenericErrorViewWithErrorCode(
+                            errorCode = OtpScreenErrorCodes.InitViewChecks.UnexpectedError,
+                            otpFlowType = finalOtpFlowType
+                        )
+
+                        // Just in case any further code is added, in the future, after the `when` block.
+                        return
+                    }
+                }
             }
 
             is OtpEvent.OnOtpFieldValueChange -> {
                 // Update state, ONLY if the new OTP is different from the old one.
                 if (event.otp != currentState.otp) {
-                    onOtpFieldValueChange(otp = event.otp, event = event)
+                    onOtpFieldValueChange(otp = event.otp)
                 }
             }
 
             OtpEvent.OnDoneClick -> {
                 if (currentState.otpFieldEnabled) {
-                    validateOtp(event)
+                    validateOtp()
                 }
             }
 
@@ -137,24 +334,45 @@ class OtpViewModel @Inject constructor(
             OtpEvent.OnResendOtpButtonClick -> {
                 resendOtp()
             }
+
+            OtpEvent.OnVerifyButtonClicked -> {
+               if (currentState.otp.length != 6) {
+                    showGenericErrorViewWithErrorMessage(
+                        errorMessage = resourceProvider.getGenericErrorMessage(),
+                        otpFlowType = currentState.otpFlowType
+                    )
+                    return
+                }
+
+                validateOtp()
+            }
         }
     }
 
-    private fun initView(userId: Int?, verificationStep: String?) {
-        if (userId == null || verificationStep == null) {
-            // User id and/or verification step is null, so go back to the previous screen by displaying that an unknown error occurred.
-            setEffect {
-                OtpEffect.Navigation.NavigateToPreviousScreenWithError(
-                    errorMessage = resourceProvider.getGenericErrorMessage()
-                )
-            }
+    /**
+     * The initial operations to be executed when the `Register` flow (i.e., login, or signup)
+     * begins.
+     */
+    private fun initRegisterFlow(
+        userId: Int?,
+        verificationStep: VerificationStep,
+        otpFlowType: OtpFlowType,
+        shouldRememberUserSession: Boolean?
+    ) {
+        if (userId == null || shouldRememberUserSession == null) {
+            showGenericErrorViewWithErrorCode(
+                errorCode = OtpScreenErrorCodes.InitViewChecks.NullableFields,
+                otpFlowType = OtpFlowType.Register
+            )
             return
         }
 
         setState {
             copy(
                 userId = userId,
-                verificationStep = VerificationStep.of(verificationStep)
+                verificationStep = verificationStep,
+                otpFlowType = otpFlowType,
+                shouldRememberUserSession = shouldRememberUserSession
             )
         }
 
@@ -166,18 +384,58 @@ class OtpViewModel @Inject constructor(
         )
     }
 
-    private fun onOtpFieldValueChange(otp: String, event: OtpEvent.OnOtpFieldValueChange) {
+    /**
+     * The initial operations to be executed when the `Forgot Password` flow begins.
+     *
+     * [requestIdEmail] is mandatory, while [requestIdPhoneNumber] is **only** mandatory if
+     * [verificationStep] is [VerificationStep.OtpPhoneNumber].
+     */
+    private fun initForgotPasswordFlow(
+        verificationStep: VerificationStep,
+        otpFlowType: OtpFlowType,
+        requestIdEmail: String,
+        requestIdPhoneNumber: String?
+    ) {
+        if (verificationStep is VerificationStep.OtpPhoneNumber && requestIdPhoneNumber == null) {
+            showGenericErrorViewWithErrorCode(
+                errorCode = OtpScreenErrorCodes.InitViewChecks.InvalidVerificationStep,
+                otpFlowType = otpFlowType
+            )
+            return
+        }
+
+        setState {
+            copy(
+                requestIdEmail = requestIdEmail,
+                requestIdPhoneNumber = requestIdPhoneNumber.orEmpty(),
+                verificationStep = verificationStep,
+                otpFlowType = otpFlowType
+            )
+        }
+
+        when (verificationStep) {
+            VerificationStep.OtpEmail -> {
+
+            }
+
+            VerificationStep.OtpPhoneNumber -> TODO()
+            else -> {
+                showGenericErrorViewWithErrorCode(
+                    errorCode = OtpScreenErrorCodes.InitViewChecks.InvalidVerificationStep,
+                    otpFlowType = currentState.otpFlowType
+                )
+            }
+        }
+    }
+
+    private fun onOtpFieldValueChange(otp: String) {
         if (otp.isDigitsOnly() && otp.length <= 6) {
             setState {
                 copy(
                     errorMessage = null,
-                    otp = otp
+                    otp = otp,
+                    isVerifyButtonEnabled = otp.length == 6
                 )
-            }
-
-            // Automatically validate user entered OTP if its length is 6 characters.
-            if (otp.length == 6) {
-                validateOtp(event)
             }
         }
     }
@@ -187,7 +445,7 @@ class OtpViewModel @Inject constructor(
             // OTP block is in place. Disable "Resend OTP" button, and don't proceed any further.
             setState {
                 copy(
-                    resendOtpButtonEnabled = false
+                    isResendOtpButtonEnabled = false
                 )
             }
             return
@@ -198,18 +456,18 @@ class OtpViewModel @Inject constructor(
                 isLoading = true
             )
         }
-        viewModelScope.launch {
+        countdownJob?.cancel()
+        countdownJob = viewModelScope.launch {
             otpInteractor.resendOtp(
                 userId = currentState.userId,
                 verificationStep = currentState.verificationStep
             ).collect {
                 when (it) {
                     is ResendOtpPartialState.Error -> {
-                        setEffect {
-                            OtpEffect.Navigation.NavigateToPreviousScreenWithError(
-                                errorMessage = it.errorMessage
-                            )
-                        }
+                        showGenericErrorViewWithErrorMessage(
+                            errorMessage = it.errorMessage,
+                            otpFlowType = OtpFlowType.Register
+                        )
                     }
 
                     is ResendOtpPartialState.Success -> {
@@ -217,25 +475,33 @@ class OtpViewModel @Inject constructor(
                             copy(
                                 isLoading = false,
                                 errorMessage = null,
-                                resendOtpButtonEnabled = false
+                                isResendOtpButtonEnabled = false
                             )
                         }
-                        timerController.startTimer(expiresIn = it.expiresIn) { formattedTime, isLastSecond ->
-                            if (isLastSecond) {
-                                setState {
-                                    copy(
-                                        otpBlockRemainingTime = null,
-                                        resendOtpButtonEnabled = true
-                                    )
-                                }
-                            } else {
-                                setState {
-                                    copy(
-                                        otpBlockRemainingTime = formattedTime,
-                                    )
+                        timerController.startCountdown(duration = it.expiresIn)
+                            .collect { timerStatus ->
+                                when (timerStatus) {
+                                    TimerStatus.Completed -> {
+                                        setState {
+                                            copy(
+                                                otpBlockRemainingTime = null,
+                                                isResendOtpButtonEnabled = true
+                                            )
+                                        }
+                                        setEffect {
+                                            OtpEffect.OtpFieldRequestFocus
+                                        }
+                                    }
+
+                                    is TimerStatus.Ticking -> {
+                                        setState {
+                                            copy(
+                                                otpBlockRemainingTime = timerStatus.remainingTime,
+                                            )
+                                        }
+                                    }
                                 }
                             }
-                        }
                     }
 
                     is ResendOtpPartialState.Failed -> {
@@ -244,63 +510,67 @@ class OtpViewModel @Inject constructor(
                         when (otpFailedDomain.resendOtpErrorCause) {
                             ResendOtpErrorCause.Blocked, ResendOtpErrorCause.TooSoon -> {
                                 if (otpFailedDomain.expiresIn == null) {
-                                    setEffect {
-                                        OtpEffect.Navigation.NavigateToPreviousScreenWithError(
-                                            errorMessage = resourceProvider.getGenericErrorMessage()
-                                        )
-                                    }
+                                    showGenericErrorViewWithErrorMessage(
+                                        errorMessage = resourceProvider.getGenericErrorMessage(),
+                                        otpFlowType = OtpFlowType.Register
+                                    )
                                     return@collect
                                 }
 
                                 setState {
                                     copy(
                                         isLoading = false,
-                                        errorMessage = null,
                                         otp = "",
-                                        resendOtpButtonEnabled = false,
-                                        otpFieldEnabled = false
+                                        isResendOtpButtonEnabled = false,
+                                        otpFieldEnabled = false,
+                                        isVerifyButtonEnabled = false
                                     )
                                 }
-                                timerController.startTimer(expiresIn = otpFailedDomain.expiresIn) { formattedTime, isLastSecond ->
-                                    if (isLastSecond) {
-                                        setState {
-                                            copy(
-                                                errorMessage = null,
-                                                otpBlockRemainingTime = null,
-                                                resendOtpButtonEnabled = true,
-                                                otpFieldEnabled = true
-                                            )
-                                        }
-                                    } else {
-                                        setState {
-                                            copy(
-                                                errorMessage = resourceProvider.getString(
-                                                    otpFailedDomain.resendOtpErrorCause.cause,
-                                                    formattedTime
-                                                ),
-                                                otpBlockRemainingTime = formattedTime,
-                                            )
+                                timerController.startCountdown(duration = otpFailedDomain.expiresIn)
+                                    .collect { timerStatus ->
+                                        when (timerStatus) {
+                                            TimerStatus.Completed -> {
+                                                setState {
+                                                    copy(
+                                                        otpBlockRemainingTime = null,
+                                                        isResendOtpButtonEnabled = true,
+                                                        otpFieldEnabled = true
+                                                    )
+                                                }
+                                                setEffect {
+                                                    OtpEffect.OtpFieldRequestFocus
+                                                }
+                                            }
+
+                                            is TimerStatus.Ticking -> {
+                                                setState {
+                                                    copy(
+                                                        errorMessage = resourceProvider.getString(
+                                                            otpFailedDomain.resendOtpErrorCause.cause,
+                                                            timerStatus.remainingTime
+                                                        ),
+                                                        otpBlockRemainingTime = timerStatus.remainingTime,
+                                                    )
+                                                }
+                                            }
                                         }
                                     }
-                                }
                             }
 
                             ResendOtpErrorCause.InternalServerError, ResendOtpErrorCause.UserNotFound -> {
-                                setEffect {
-                                    OtpEffect.Navigation.NavigateToPreviousScreenWithError(
-                                        errorMessage = resourceProvider.getString(
-                                            it.responseResendOtpFailedDomain.resendOtpErrorCause.cause
-                                        )
-                                    )
-                                }
+                                showGenericErrorViewWithErrorMessage(
+                                    errorMessage = resourceProvider.getString(
+                                        it.responseResendOtpFailedDomain.resendOtpErrorCause.cause
+                                    ),
+                                    otpFlowType = OtpFlowType.Register
+                                )
                             }
 
                             is ResendOtpErrorCause.Invalid -> {
-                                setEffect {
-                                    OtpEffect.Navigation.NavigateToPreviousScreenWithError(
-                                        errorMessage = resourceProvider.getGenericErrorMessage()
-                                    )
-                                }
+                                showGenericErrorViewWithErrorMessage(
+                                    errorMessage = resourceProvider.getGenericErrorMessage(),
+                                    otpFlowType = OtpFlowType.Register
+                                )
                             }
                         }
                     }
@@ -309,7 +579,65 @@ class OtpViewModel @Inject constructor(
         }
     }
 
-    private fun validateOtp(event: OtpEvent) {
+    /**
+     * Validates the user-entered OTP based on the [OtpFlowType].
+     */
+    private fun validateOtp() {
+        setEffect {
+            OtpEffect.CloseKeyboard
+        }
+        when (currentState.otpFlowType) {
+            is OtpFlowType.Invalid -> {
+                showGenericErrorViewWithErrorCode(
+                    errorCode = OtpScreenErrorCodes.InitViewChecks.InvalidOtpFlowType,
+                    otpFlowType = currentState.otpFlowType
+                )
+            }
+
+            OtpFlowType.ForgotPassword.Email, OtpFlowType.ForgotPassword.PhoneNumber -> {
+                viewModelScope.launch {
+                    forgotPasswordInteractor.validateOtp(
+                        requestId = if (currentState.otpFlowType is OtpFlowType.ForgotPassword.Email) currentState.requestIdEmail else currentState.requestIdPhoneNumber,
+                        otp = currentState.otp
+                    ).collect {
+                        when (it) {
+                            is ForgotPasswordValidateOtpPartialState.ClientError -> TODO()
+
+                            is ForgotPasswordValidateOtpPartialState.Failed -> {
+
+                            }
+
+                            is ForgotPasswordValidateOtpPartialState.Success -> {
+                                when (it.isPhoneNumberRequired) {
+                                    // NOT SUPPORTED YET.
+                                    true -> {
+                                        setEffect {
+                                            OtpEffect.Navigation.PopBackStack
+                                        }
+                                    }
+
+                                    false -> {
+                                        setEffect {
+                                            OtpEffect.Navigation.NavigateToChangePasswordScreen(
+                                                requestIdEmail = currentState.requestIdEmail,
+                                                requestIdPhoneNumber = currentState.requestIdPhoneNumber
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            OtpFlowType.Register -> {
+                validateOtpRegisterFlow()
+            }
+        }
+    }
+
+    private fun validateOtpRegisterFlow() {
         // Current OTP length is not equal to 6, thus, do NOT proceed with the validation process.
         if (currentState.otp.length != 6) return
 
@@ -326,68 +654,39 @@ class OtpViewModel @Inject constructor(
                         is ValidateOtpPartialState.Success -> {
                             // User entered OTP was correct, thus, proceed to retrieve the Access & Refresh tokens.
                             grandNewAccessToken(
-                                code = validateOtpPartialState.otpDomain.authenticationCode,
-                                event = event
+                                code = validateOtpPartialState.otpDomain.authenticationCode
                             )
                         }
 
                         is ValidateOtpPartialState.Failed -> {
-                            setEffect {
-                                OtpEffect.Navigation.NavigateToPreviousScreenWithError(
-                                    errorMessage = validateOtpPartialState.errorMessage
-                                )
-                            }
+                            showGenericErrorViewWithErrorMessage(
+                                errorMessage = validateOtpPartialState.errorMessage,
+                                otpFlowType = OtpFlowType.Register
+                            )
                         }
 
                         is ValidateOtpPartialState.ClientError -> {
                             // User-input related error.
+                            setState {
+                                copy(
+                                    isVerifyButtonEnabled = false
+                                )
+                            }
 
                             // If the OTP error cause it Blocked, perform additional operations.
                             if (validateOtpPartialState.otpResponseErrorDomain.errorCause is OtpErrorCause.Blocked) {
                                 if (validateOtpPartialState.otpResponseErrorDomain.blockExpiresIn == null) {
-                                    // "blocksExpiresIn" is null when the error cause is "Blocked". Propagate "an unknown error occurred" to the user.
-                                    setEffect {
-                                        OtpEffect.Navigation.NavigateToPreviousScreenWithError(
-                                            errorMessage = resourceProvider.getGenericErrorMessage()
-                                        )
-                                    }
+                                    // "blocksExpiresIn" shouldn't be `null` when the error cause is "Blocked". Thus, propagate "an unknown error occurred" to the user.
+                                    showGenericErrorViewWithErrorMessage(
+                                        errorMessage = resourceProvider.getGenericErrorMessage(),
+                                        otpFlowType = OtpFlowType.Register
+                                    )
                                     return@collect
                                 }
 
-                                setState {
-                                    copy(
-                                        isLoading = false,
-                                        errorMessage = null,
-                                        otp = "",
-                                        otpFieldEnabled = false,
-                                        resendOtpButtonEnabled = false
-                                    )
-                                }
-                                timerController.startTimer(
-                                    expiresIn = validateOtpPartialState.otpResponseErrorDomain.blockExpiresIn,
-                                    onTick = { formattedRemainingTime, isLastSecond ->
-                                        // Current second is the last one.
-                                        if (isLastSecond) {
-                                            setState {
-                                                copy(
-                                                    errorMessage = null,
-                                                    otpBlockRemainingTime = null,
-                                                    otpFieldEnabled = true,
-                                                    resendOtpButtonEnabled = true
-                                                )
-                                            }
-                                        } else {
-                                            setState {
-                                                copy(
-                                                    errorMessage = resourceProvider.getString(
-                                                        validateOtpPartialState.otpResponseErrorDomain.errorCause.cause,
-                                                        formattedRemainingTime
-                                                    ),
-                                                    otpBlockRemainingTime = formattedRemainingTime
-                                                )
-                                            }
-                                        }
-                                    }
+                                setBlockedTimer(
+                                    blockExpiresIn = validateOtpPartialState.otpResponseErrorDomain.blockExpiresIn,
+                                    otpErrorCause = validateOtpPartialState.otpResponseErrorDomain.errorCause
                                 )
                                 return@collect
                             }
@@ -414,17 +713,15 @@ class OtpViewModel @Inject constructor(
         }
     }
 
-    private fun grandNewAccessToken(code: String, event: OtpEvent) {
+    private fun grandNewAccessToken(code: String) {
         viewModelScope.launch {
-            userInteractor.grandNewAccessToken(code = code).collect { accessTokenPartialState ->
+            loginInteractor.grandNewAccessToken(code = code).collect { accessTokenPartialState ->
                 when (accessTokenPartialState) {
                     is GrandNewAccessTokenPartialState.Failed -> {
-                        setState {
-                            copy(
-                                isLoading = false,
-                                errorMessage = accessTokenPartialState.errorMessage // TODO: Fix error display. 
-                            )
-                        }
+                        showGenericErrorViewWithErrorCode(
+                            errorCode = OtpScreenErrorCodes.GrandNewAccessToken.GenericError,
+                            otpFlowType = OtpFlowType.Register
+                        )
                     }
 
                     is GrandNewAccessTokenPartialState.Success -> {
@@ -432,6 +729,12 @@ class OtpViewModel @Inject constructor(
 
                         // Save userId in device.
                         prefKeys.setUserId(currentState.userId)
+
+                        // User is now logged in. Save the flag.
+                        prefKeys.setUserLoggedIn(isLoggedIn = true)
+
+                        // Save remember user session flag.
+                        prefKeys.setRememberUserSession(currentState.shouldRememberUserSession)
 
                         // Navigate the client to AllCharactersScreen
                         setEffect {
@@ -462,11 +765,10 @@ class OtpViewModel @Inject constructor(
             ).collect {
                 when (it) {
                     is GetJwtForSensitiveUserDataPartialState.Failed -> {
-                        setEffect {
-                            OtpEffect.Navigation.NavigateToPreviousScreenWithError(
-                                errorMessage = it.errorMessage
-                            )
-                        }
+                        showGenericErrorViewWithErrorCode(
+                            errorCode = OtpScreenErrorCodes.RetrieveJwt.GenericError,
+                            otpFlowType = OtpFlowType.Register
+                        )
                     }
 
                     is GetJwtForSensitiveUserDataPartialState.Success -> {
@@ -481,81 +783,223 @@ class OtpViewModel @Inject constructor(
      * Retrieves the user's preferred medium of communication for sending OTPs.
      */
     private fun getSensitiveUserData(token: String) {
-        viewModelScope.launch {
-            userInteractor.getSensitiveUserData(token = token).collect {
+        countdownJob?.cancel()
+        countdownJob = viewModelScope.launch {
+            loginInteractor.getSensitiveUserData(token = token).collect {
                 when (it) {
                     is GetSensitiveUserDataPartialState.Failed -> {
-                        setEffect {
-                            OtpEffect.Navigation.NavigateToPreviousScreenWithError(
-                                errorMessage = it.errorMessage
-                            )
-                        }
+                        showGenericErrorViewWithErrorCode(
+                            errorCode = OtpScreenErrorCodes.GetSensitiveUserData.GenericError,
+                            otpFlowType = OtpFlowType.Register
+                        )
                     }
 
                     is GetSensitiveUserDataPartialState.Success -> {
                         val sensitiveUserDataDomain = it.sensitiveUserDataDomain
                         if (sensitiveUserDataDomain.isOtpBlocked.not()) {
                             // OTP functionality isn't blocked.
+
                             setState {
                                 copy(
                                     isLoading = false,
-                                    sensitiveUserData = it.sensitiveUserDataDomain
+                                    sensitiveUserData = sensitiveUserDataDomain
                                 )
                             }
 
-                            setEffect {
-                                OtpEffect.OtpFieldRequestFocus
-                            }
+                            // Block "Resend OTP functionality."
+                            timerController.startCountdown(sensitiveUserDataDomain.otpInterval)
+                                .collect { timerStatus ->
+                                    when (timerStatus) {
+                                        TimerStatus.Completed -> {
+                                            setState {
+                                                copy(
+                                                    otpBlockRemainingTime = null,
+                                                    isResendOtpButtonEnabled = true
+                                                )
+                                            }
+                                            setEffect {
+                                                OtpEffect.OtpFieldRequestFocus
+                                            }
+                                        }
+
+                                        is TimerStatus.Ticking -> {
+                                            setState {
+                                                copy(
+                                                    otpBlockRemainingTime = timerStatus.remainingTime,
+                                                    isResendOtpButtonEnabled = false
+                                                )
+                                            }
+                                            setEffect {
+                                                OtpEffect.OtpFieldRequestFocus
+                                            }
+                                        }
+                                    }
+                                }
                             return@collect
                         }
 
                         // OTP functionality is blocked.
 
                         if (sensitiveUserDataDomain.otpBlockExpiresIn == null) {
-                            setEffect {
-                                OtpEffect.Navigation.NavigateToPreviousScreenWithError(
-                                    errorMessage = resourceProvider.getGenericErrorMessage()
-                                )
-                            }
+                            showGenericErrorViewWithErrorCode(
+                                errorCode = OtpScreenErrorCodes.GetSensitiveUserData.OtpBlocksExpiresInNull,
+                                otpFlowType = OtpFlowType.Register
+                            )
                             return@collect
                         }
 
                         setState {
                             copy(
                                 isLoading = false,
-                                otpFieldEnabled = false,
-                                resendOtpButtonEnabled = false,
+                                otpFieldEnabled = !sensitiveUserDataDomain.isOtpBlocked,
+                                isResendOtpButtonEnabled = false,
                                 sensitiveUserData = it.sensitiveUserDataDomain
                             )
                         }
-                        timerController.startTimer(
-                            expiresIn = sensitiveUserDataDomain.otpBlockExpiresIn,
-                            onTick = { formattedRemainingTime, isLastSecond ->
-                                // Current second is the last one.
-                                if (isLastSecond) {
-                                    setState {
-                                        copy(
-                                            errorMessage = null,
-                                            otpBlockRemainingTime = null,
-                                            otpFieldEnabled = true,
-                                            resendOtpButtonEnabled = true
-                                        )
+                        timerController.startCountdown(duration = sensitiveUserDataDomain.otpBlockExpiresIn)
+                            .collect { timerStatus ->
+                                when (timerStatus) {
+                                    TimerStatus.Completed -> {
+                                        setState {
+                                            copy(
+                                                errorMessage = null,
+                                                otpBlockRemainingTime = null,
+                                                otpFieldEnabled = true,
+                                                isResendOtpButtonEnabled = true
+                                            )
+                                        }
+                                        setEffect {
+                                            OtpEffect.OtpFieldRequestFocus
+                                        }
                                     }
-                                    setEffect {
-                                        OtpEffect.OtpFieldRequestFocus
-                                    }
-                                } else {
-                                    setState {
-                                        copy(
-                                            errorMessage = resourceProvider.getString(
-                                                OtpErrorCause.Blocked.cause,
-                                                formattedRemainingTime
-                                            ),
-                                            otpBlockRemainingTime = formattedRemainingTime
-                                        )
+
+                                    is TimerStatus.Ticking -> {
+                                        setState {
+                                            copy(
+                                                errorMessage = resourceProvider.getString(
+                                                    OtpErrorCause.Blocked.cause,
+                                                    timerStatus.remainingTime
+                                                ),
+                                                otpBlockRemainingTime = timerStatus.remainingTime
+                                            )
+                                        }
                                     }
                                 }
                             }
+                    }
+                }
+            }
+        }
+    }
+
+    // *********************************************************************************************
+    // *                       `Forgot Password flow` functions                                    *
+    // *********************************************************************************************
+    /**
+     * This function is triggered when the user clicks on the `Validate OTP` button of the `forgot
+     * password flow`. It validates the user-entered OTP against the one that was sent to their
+     * email / phone number.
+     */
+    private fun forgotPasswordValidateOtp() {
+        if (currentState.otp.length != 6) {
+            showGenericErrorViewWithErrorCode(
+                errorCode = if (currentState.otpFlowType is OtpFlowType.ForgotPassword.Email) OtpScreenErrorCodes.ForgotPasswordValidateOtp.Email else OtpScreenErrorCodes.ForgotPasswordValidateOtp.PhoneNumber,
+                otpFlowType = currentState.otpFlowType
+            )
+            return
+        }
+
+        setState {
+            copy(
+                isLoading = true
+            )
+        }
+        countdownJob?.cancel()
+        countdownJob = viewModelScope.launch {
+            forgotPasswordInteractor.validateOtp(
+                requestId = if (currentState.otpFlowType is OtpFlowType.ForgotPassword.Email) currentState.requestIdEmail else currentState.requestIdPhoneNumber,
+                otp = currentState.otp
+            ).collect {
+                when (it) {
+                    is ForgotPasswordValidateOtpPartialState.Success -> {
+                        when (it.isPhoneNumberRequired) {
+                            true -> {
+                                // NOT IMPLEMENTED YET!
+
+                                // Step 1: Prompt user to enter their phone number from the previous screen.
+
+                                // Step 2: Send OTP to phone number and retrieve requestIdPhoneNumber.
+//                                forgotPasswordInteractor.sendOtp()
+//                                    .collect { sendOtpPartialState ->
+//                                        when (sendOtpPartialState) {
+//                                            is SendOtpToPhoneNumberPartialState.Failed -> {}
+//                                            is SendOtpToPhoneNumberPartialState.Success -> {
+//                                                // Step 3: Init forgot password flow with requestIdEmail + requestIdPhoneNumber
+//                                                initViewForgotPasswordFlow(
+//                                                    verificationStep = VerificationStep.OtpPhoneNumber,
+//                                                    otpFlowType = currentState.otpFlowType,
+//                                                    requestIdEmail = currentState.requestIdEmail,
+//                                                    requestIdPhoneNumber = sendOtpPartialState.requestId
+//                                                )
+//                                            }
+//                                        }
+//                                    }
+                                // TODO: Remove the code below when the above functionality has been added.
+                                setEffect {
+                                    OtpEffect.Navigation.NavigateToChangePasswordScreen(
+                                        requestIdEmail = currentState.requestIdEmail,
+                                        requestIdPhoneNumber = currentState.requestIdPhoneNumber
+                                    )
+                                }
+                            }
+
+                            false -> {
+                                setEffect {
+                                    OtpEffect.Navigation.NavigateToChangePasswordScreen(
+                                        requestIdEmail = currentState.requestIdEmail,
+                                        requestIdPhoneNumber = currentState.requestIdPhoneNumber // todo: review case
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    is ForgotPasswordValidateOtpPartialState.ClientError -> {
+                        setState {
+                            copy(
+                                isVerifyButtonEnabled = false
+                            )
+                        }
+
+                        if (it.otpResponseErrorDomain.errorCause is OtpErrorCause.Blocked) {
+                            // set blocked timer.
+                            setBlockedTimer(
+                                blockExpiresIn = it.otpResponseErrorDomain.blockExpiresIn ?: 0L,
+                                otpErrorCause = it.otpResponseErrorDomain.errorCause
+                            )
+                            return@collect
+                        }
+
+                        setState {
+                            copy(
+                                isLoading = false,
+                                errorMessage = resourceProvider.getString(
+                                    it.otpResponseErrorDomain.errorCause.cause
+                                ),
+                                otp = "",
+                                otpFieldEnabled = true
+                            )
+                        }
+
+                        setEffect {
+                            OtpEffect.OtpFieldRequestFocus
+                        }
+                    }
+
+                    is ForgotPasswordValidateOtpPartialState.Failed -> {
+                        showGenericErrorViewWithErrorMessage(
+                            errorMessage = it.errorMessage,
+                            otpFlowType = currentState.otpFlowType
                         )
                     }
                 }
@@ -563,9 +1007,117 @@ class OtpViewModel @Inject constructor(
         }
     }
 
-    private fun getOtpValidationRules(): List<Rule> =
-        listOf(
-            Rule.ValidateNotBlank("OTP cannot be empty."),
-            Rule.ValidateStringLength(6, "OTP must be 6 characters.")
+    // *********************************************************************************************
+    // *                        operational functions                                              *
+    // *********************************************************************************************
+
+    /**
+     * Sets a blocked OTP timer based on [blockExpiresIn], and displays the appropriate error
+     * message by the given [OtpErrorCause].
+     */
+    private fun setBlockedTimer(blockExpiresIn: Long, otpErrorCause: OtpErrorCause) {
+        setState {
+            copy(
+                isLoading = false,
+                errorMessage = null,
+                otp = "",
+                otpFieldEnabled = false,
+                isResendOtpButtonEnabled = false,
+                otpBlockRemainingTime = null,
+            )
+        }
+
+        countdownJob?.cancel()
+        countdownJob = viewModelScope.launch {
+            timerController.startCountdown(duration = blockExpiresIn)
+                .collect{timerStatus ->
+                    when (timerStatus) {
+                        TimerStatus.Completed -> {
+                            setState {
+                                copy(
+                                    errorMessage = null,
+                                    otpBlockRemainingTime = null,
+                                    otpFieldEnabled = true,
+                                    isResendOtpButtonEnabled = true
+                                )
+                            }
+                            setEffect {
+                                OtpEffect.OtpFieldRequestFocus
+                            }
+                        }
+
+                        is TimerStatus.Ticking -> {
+                            timerStatus.remainingTime.let{remainingTime ->
+                                setState {
+                                    copy(
+                                        errorMessage = resourceProvider.getString(
+                                            otpErrorCause.cause,
+                                            remainingTime
+                                        ),
+                                        otpBlockRemainingTime = remainingTime
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+        }
+    }
+
+    // *********************************************************************************************
+    // *                        `Error` functions                                                  *
+    // *********************************************************************************************
+
+    /**
+     * Displays the error view with the given [errorCode] and the `on-close` & `primary` buttons
+     * navigate the user to the previous screen.
+     */
+    private fun showGenericErrorViewWithErrorCode(
+        errorCode: OtpScreenErrorCodes,
+        otpFlowType: OtpFlowType
+    ) {
+        showGenericErrorViewWithErrorMessage(
+            errorMessage = resourceProvider.getString(
+                R.string.otp_screen_generic_error_subtitle_with_error_code,
+                errorCode.code
+            ),
+            otpFlowType = otpFlowType
         )
+    }
+
+    /**
+     * Displays the error view with the given [errorMessage] and the `on-close` & `primary` buttons
+     * navigate the user to the previous screen.
+     */
+    private fun showGenericErrorViewWithErrorMessage(
+        errorMessage: String,
+        otpFlowType: OtpFlowType
+    ) {
+        setState {
+            copy(
+                error = OtpScreenErrorView(
+                    errorTitle = resourceProvider.getString(R.string.otp_screen_generic_error_title),
+                    errorSubtitle = errorMessage,
+                    onCloseClicked = {
+                        setEffect {
+                            OtpEffect.Navigation.PopBackStack
+                        }
+                    },
+                    errorButtonLayout = ErrorButtonLayout.Single(
+                        primaryButtonLabel = when (otpFlowType) {
+                            is OtpFlowType.Invalid -> resourceProvider.getString(R.string.generic_go_to_previous_screen_button)
+                            OtpFlowType.Register -> resourceProvider.getString(R.string.otp_screen_back_to_login_button)
+                            OtpFlowType.ForgotPassword.Email -> resourceProvider.getString(R.string.generic_go_to_previous_screen_button)
+                            OtpFlowType.ForgotPassword.PhoneNumber -> resourceProvider.getString(R.string.generic_go_to_previous_screen_button)
+                        },
+                        onPrimaryButtonClicked = {
+                            setEffect {
+                                OtpEffect.Navigation.PopBackStack
+                            }
+                        }
+                    )
+                )
+            )
+        }
+    }
 }

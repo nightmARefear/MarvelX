@@ -1,8 +1,7 @@
 package com.alexgreece45.marvelx.configuration
 
 import com.alexgreece45.marvelx.BuildConfig
-import com.alexgreece45.marvelx.util.TOKEN_CLIENT_ID
-import com.alexgreece45.marvelx.util.TOKEN_REDIRECT_URI
+import com.alexgreece45.marvelx.util.constants.ConstantsSecurity
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -53,15 +52,17 @@ interface ConfigLogic {
     val packageSignature: String
 }
 
-enum class AppBuildType {
-    DEBUG, MOCK, RELEASE;
+sealed class AppBuildType(val key: String) {
+    data object DEBUG : AppBuildType(key = "debug")
+    data object MOCK : AppBuildType(key = "mock")
+    data object RELEASE : AppBuildType(key = "release")
 
     companion object {
         fun getType(): AppBuildType =
             when (BuildConfig.BUILD_TYPE) {
-                "debug" -> DEBUG
-                "mock" -> MOCK
-                "release" -> RELEASE
+                DEBUG.key -> DEBUG
+                MOCK.key -> MOCK
+                RELEASE.key -> RELEASE
                 else -> RELEASE
             }
     }
@@ -70,10 +71,10 @@ enum class AppBuildType {
 @Singleton
 class ConfigLogicImpl @Inject constructor() : ConfigLogic {
 
-    override val clientId: String get() = TOKEN_CLIENT_ID
+    override val clientId: String get() = ConstantsSecurity.OAuth.TOKEN_CLIENT_ID
     override val clientSecret: String get() = BuildConfig.TOKEN_CLIENT_SECRET
     override val refreshTokenInterval: Long get() = 15L
-    override val uri: String get() = TOKEN_REDIRECT_URI
+    override val uri: String get() = ConstantsSecurity.OAuth.TOKEN_REDIRECT_URI
     override val scheme: String
         get() =
             if (BuildConfig.MARVELX_BACKEND_BASE_URL.startsWith("https")) "https" else "http"

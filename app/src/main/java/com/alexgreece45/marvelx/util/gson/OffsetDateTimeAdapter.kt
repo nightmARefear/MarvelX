@@ -5,7 +5,6 @@ import com.google.gson.stream.JsonReader
 import com.google.gson.stream.JsonWriter
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
-import java.util.Date
 
 class OffsetDateTimeAdapter : TypeAdapter<OffsetDateTime>() {
     override fun write(out: JsonWriter, value: OffsetDateTime?) {
@@ -15,5 +14,12 @@ class OffsetDateTimeAdapter : TypeAdapter<OffsetDateTime>() {
             out.value(value.toString())
         }
     }
-    override fun read(input: JsonReader): OffsetDateTime = OffsetDateTime.parse(input.nextString(), DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssZ"))
+
+    override fun read(input: JsonReader): OffsetDateTime = OffsetDateTime.parse(
+        input.nextString().replace(
+            oldValue = "-0001",
+            newValue = "2001"
+        ), // Special handling since Marvel API incorrectly returns some OffsetDateTimes.
+        DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssZ")
+    )
 }

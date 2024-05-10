@@ -1,8 +1,10 @@
 package com.alexgreece45.marvelx.data.models.character.comic
 
+import com.google.gson.annotations.SerializedName
+
 data class CharacterList(
-    val available: Int,
-    val returned: Int,
-    val collectionURI: String,
-    val items: List<CharacterSummary>
+    @SerializedName("available") val available: Int,
+    @SerializedName("returned") val returned: Int,
+    @SerializedName("collectionURI") val collectionURI: String,
+    @SerializedName("items") val items: List<CharacterSummary>
 )

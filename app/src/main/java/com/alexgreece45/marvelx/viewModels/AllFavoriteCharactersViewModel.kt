@@ -96,7 +96,7 @@ class AllFavoriteCharactersViewModel @Inject constructor(
             route = Screen.BottomNavigationScreens.AllCharactersScreen.route,
             label = R.string.bottom_navigation_label_characters,
             iconData = IconData(
-                iconResource = R.drawable.ic_superhero_32,
+                iconResource = R.drawable.ic_superhero,
                 contentDescription = R.string.bottom_navigation_label_characters
             )
         ),
@@ -104,7 +104,7 @@ class AllFavoriteCharactersViewModel @Inject constructor(
             route = Screen.BottomNavigationScreens.AllFavoriteCharactersScreen.route,
             label = R.string.bottom_navigation_label_favorites,
             iconData = IconData(
-                iconResource = R.drawable.ic_favorite_filled_24,
+                iconResource = R.drawable.ic_favorite_filled,
                 contentDescription = R.string.bottom_navigation_label_favorites
             )
         ),
@@ -112,7 +112,7 @@ class AllFavoriteCharactersViewModel @Inject constructor(
             route = Screen.BottomNavigationScreens.ProfileScreen.route,
             label = R.string.bottom_navigation_label_profile,
             iconData = IconData(
-                iconResource = R.drawable.ic_person_32,
+                iconResource = R.drawable.ic_person,
                 contentDescription = R.string.bottom_navigation_label_profile
             )
         )

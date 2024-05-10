@@ -7,7 +7,7 @@ import java.security.MessageDigest
 /**
  * Hashes the given [String] with the `MD5` algorithm.
  *
- * @return Returns the `MD5` hash of the given [String].
+ * @return Returns the `MD5` hash of the given [String] as a [String].
  */
 fun String.toMd5(): String {
     val md = MessageDigest.getInstance("MD5")
@@ -17,8 +17,7 @@ fun String.toMd5(): String {
 /**
  * Checks if the given [String] is a valid email address.
  *
- * @return Returns `true` if the given [String] is a valid
- * email address, otherwise `false`.
+ * @return Returns `true` if the given [String] is a valid email address, otherwise `false`.
  */
 fun String.isEmail(): Boolean {
     return Patterns.EMAIL_ADDRESS.matcher(this).matches()

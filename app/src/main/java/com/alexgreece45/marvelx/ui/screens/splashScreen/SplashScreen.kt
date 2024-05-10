@@ -41,7 +41,7 @@ fun SplashScreen(
     val context = LocalContext.current
 
     LaunchedEffect(Unit) {
-        viewModel.setEvent(SplashEvent.InitView)
+        viewModel.setEvent(SplashEvent.Init)
 
         viewModel.uiEffect.collect { effect ->
             when (effect) {
@@ -79,6 +79,7 @@ fun SplashScreen(
         ) {
             state.error?.let { splashScreenError ->
                 AlertDialogError(
+                    isVisible = true,
                     title = splashScreenError.title,
                     errorMessage = splashScreenError.errorMessage,
                     confirmButton = AlertDialogButton(

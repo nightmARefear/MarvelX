@@ -2,15 +2,16 @@ package com.alexgreece45.marvelx.viewModels
 
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.data.domains.user.VerificationStep
-import com.alexgreece45.marvelx.data.models.user.loginWithToken.UserLoginWithTokenRequest
 import com.alexgreece45.marvelx.controllers.AuthController
 import com.alexgreece45.marvelx.controllers.PrefKeys
+import com.alexgreece45.marvelx.data.domains.otp.OtpFlowType
+import com.alexgreece45.marvelx.data.domains.user.VerificationStep
+import com.alexgreece45.marvelx.data.models.user.loginWithToken.UserLoginWithTokenRequest
 import com.alexgreece45.marvelx.interactors.LogoutPartialState
 import com.alexgreece45.marvelx.interactors.PostLoginWithTokenPartialState
 import com.alexgreece45.marvelx.interactors.RefreshAccessTokenPartialState
 import com.alexgreece45.marvelx.interactors.RegisterInteractor
-import com.alexgreece45.marvelx.interactors.UserInteractor
+import com.alexgreece45.marvelx.interactors.LoginInteractor
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
@@ -52,9 +53,15 @@ data class HomeState(
 sealed interface HomeEffect : BaseEffect {
     sealed class Navigation : HomeEffect {
         data object PopBackStack : Navigation()
-        data object NavigateToLogInScreen : Navigation()
-        data object NavigateToSignUpScreen : Navigation()
-        data class NavigateToOtpScreen(val userId: Int, val verificationStep: String) : Navigation()
+        data object NavigateToLoginScreen : Navigation()
+        data object NavigateToSignupScreen : Navigation()
+        data class NavigateToOtpScreen(
+            val userId: Int,
+            val otpFlowType: String,
+            val verificationStep: String,
+            val shouldRememberUserSession: Boolean
+        ) : Navigation()
+
         data class NavigateToAllCharactersScreen(val userId: Int) : Navigation()
     }
 
@@ -67,7 +74,7 @@ sealed interface HomeEffect : BaseEffect {
 class HomeViewModel @Inject constructor(
     private val prefKeys: PrefKeys,
     private val resourceProvider: ResourceProvider,
-    private val userInteractor: UserInteractor,
+    private val loginInteractor: LoginInteractor,
     private val registerInteractor: RegisterInteractor,
     private val authController: AuthController
 ) : BaseViewModel<HomeEvent, HomeState, HomeEffect>() {
@@ -152,7 +159,7 @@ class HomeViewModel @Inject constructor(
             )
         }
         viewModelScope.launch {
-            userInteractor.refreshAccessToken().collect {
+            loginInteractor.refreshAccessToken().collect {
                 when (it) {
                     is RefreshAccessTokenPartialState.Failed -> {
                         setState {
@@ -178,7 +185,7 @@ class HomeViewModel @Inject constructor(
 
     private fun postLogin() {
         viewModelScope.launch {
-            registerInteractor.postLoginWithToken(getUserLoginWithTokenRequest()).collect {
+            registerInteractor.postLoginWithToken().collect {
                 when (it) {
                     is PostLoginWithTokenPartialState.Failed -> {
                         // An error occurred either due to an invalid token, or user id; proceed to remove the stored user credentials (userId, UserAuthData).
@@ -215,7 +222,9 @@ class HomeViewModel @Inject constructor(
                                     setEffect {
                                         HomeEffect.Navigation.NavigateToOtpScreen(
                                             userId = prefKeys.getUserId(),
-                                            verificationStep = verificationStep.name
+                                            otpFlowType = OtpFlowType.Register.key,
+                                            verificationStep = verificationStep.key,
+                                            shouldRememberUserSession = prefKeys.shouldRememberUserSession()
                                         )
                                     }
                                 }
@@ -259,7 +268,7 @@ class HomeViewModel @Inject constructor(
             )
         }
         viewModelScope.launch {
-            userInteractor.logout().collect {
+            loginInteractor.logout().collect {
                 when (it) {
                     is LogoutPartialState.Failed -> {
                         setState {
@@ -283,24 +292,18 @@ class HomeViewModel @Inject constructor(
 
     private fun onLoginButtonClick() {
         setEffect {
-            HomeEffect.Navigation.NavigateToLogInScreen
+            HomeEffect.Navigation.NavigateToLoginScreen
         }
     }
 
     private fun onSignupButtonClick() {
         setEffect {
-            HomeEffect.Navigation.NavigateToSignUpScreen
+            HomeEffect.Navigation.NavigateToSignupScreen
         }
     }
 
-    private fun getUserLoginWithTokenRequest(): UserLoginWithTokenRequest =
-        UserLoginWithTokenRequest(
-            userId = prefKeys.getUserId(),
-            epoch = DateUtil.getSecondsFromEpoch()
-        )
-
     private fun getAlertDialogTitle(): String =
-        resourceProvider.getString(R.string.login_screen_alert_dialog_title)
+        resourceProvider.getString(R.string.login_screen_error_view_title)
 
     private fun showAlertDialog(errorMessage: String) {
         setState {

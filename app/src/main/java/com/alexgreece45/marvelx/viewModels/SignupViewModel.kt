@@ -2,6 +2,8 @@ package com.alexgreece45.marvelx.viewModels
 
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.controllers.PrefKeys
+import com.alexgreece45.marvelx.data.domains.otp.OtpFlowType
 import com.alexgreece45.marvelx.data.domains.user.VerificationStep
 import com.alexgreece45.marvelx.data.models.user.Gender
 import com.alexgreece45.marvelx.data.models.user.signup.UserSignupRequest
@@ -23,8 +25,6 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 sealed class SignupEvent : BaseEvent {
-    data object InitView : SignupEvent()
-
     sealed class GenderDropdownMenu : SignupEvent() {
         data object OnClick : GenderDropdownMenu()
         data object OnDismiss : GenderDropdownMenu()
@@ -101,7 +101,9 @@ sealed class SignupEffect : BaseEffect {
         data object NavigateToAllCharactersScreen : Navigation()
         data class NavigateToOtpScreen(
             val userId: Int,
-            val verificationStep: String
+            val otpFlowType: String = OtpFlowType.Register.key,
+            val verificationStep: String,
+            val shouldRememberUserSession: Boolean
         ) : Navigation()
     }
 
@@ -116,7 +118,8 @@ sealed class SignupEffect : BaseEffect {
 class SignupViewModel @Inject constructor(
     private val resourceProvider: ResourceProvider,
     private val formValidator: FormValidator,
-    private val registerInteractor: RegisterInteractor
+    private val registerInteractor: RegisterInteractor,
+    private val prefKeys: PrefKeys
 ) : BaseViewModel<SignupEvent, SignupState, SignupEffect>() {
 
     override fun setInitialState(): SignupState =
@@ -142,11 +145,7 @@ class SignupViewModel @Inject constructor(
 
     override fun handleEvents(event: SignupEvent) {
         when (event) {
-            SignupEvent.InitView -> {
-                initView()
-            }
-
-            is SignupEvent.FieldValueChange.FirstName -> {
+           is SignupEvent.FieldValueChange.FirstName -> {
                 setState {
                     copy(
                         firstName = event.firstName
@@ -237,8 +236,6 @@ class SignupViewModel @Inject constructor(
             }
         }
     }
-
-    private fun initView() {}
 
     private fun validateFirstName(firstName: String) {
         viewModelScope.launch {
@@ -388,6 +385,12 @@ class SignupViewModel @Inject constructor(
                                         }
 
                                         VerificationStep.None -> {
+                                            // User is logged in.
+                                            prefKeys.setUserLoggedIn(isLoggedIn = true)
+
+                                            // ONLY for signup, set the remember user session to `true` by default.
+                                            prefKeys.setRememberUserSession(shouldRemember = true)
+
                                             setEffect {
                                                 SignupEffect.Navigation.NavigateToAllCharactersScreen
                                             }
@@ -397,7 +400,8 @@ class SignupViewModel @Inject constructor(
                                             setEffect {
                                                 SignupEffect.Navigation.NavigateToOtpScreen(
                                                     userId = signupResponseDomain.userId,
-                                                    signupResponseDomain.verificationStep.name
+                                                    verificationStep = signupResponseDomain.verificationStep.key,
+                                                    shouldRememberUserSession = true
                                                 )
                                             }
                                         }
@@ -406,7 +410,8 @@ class SignupViewModel @Inject constructor(
                                             setEffect {
                                                 SignupEffect.Navigation.NavigateToOtpScreen(
                                                     userId = signupResponseDomain.userId,
-                                                    signupResponseDomain.verificationStep.name
+                                                    verificationStep = signupResponseDomain.verificationStep.key,
+                                                    shouldRememberUserSession = true
                                                 )
                                             }
                                         }

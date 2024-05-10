@@ -31,7 +31,7 @@ data class AllCharactersScreenErrorView(
 )
 
 sealed interface AllCharactersEvent : BaseEvent {
-    data object InitView : AllCharactersEvent
+    data object Init : AllCharactersEvent
     data object LoadAllCharacters : AllCharactersEvent
     data object LoadFavoriteCharacters : AllCharactersEvent
     data class OnCharacterClick(val characterId: Int) : AllCharactersEvent
@@ -120,7 +120,7 @@ class AllCharactersViewModel @Inject constructor(
 
     override fun handleEvents(event: AllCharactersEvent) {
         when (event) {
-            AllCharactersEvent.InitView -> {
+            AllCharactersEvent.Init -> {
                 initView()
             }
 
@@ -375,7 +375,7 @@ class AllCharactersViewModel @Inject constructor(
             // Check if character is favorite.
             when (character.isFavorite) {
                 true -> {
-                    // Character is favorite, so unfavorite it.
+                    // Character is favorite, so un-favorite it.
                     unFavoriteCharacterById(characterId = characterId)
                 }
 
@@ -495,7 +495,7 @@ class AllCharactersViewModel @Inject constructor(
             route = Screen.BottomNavigationScreens.AllCharactersScreen.route,
             label = R.string.bottom_navigation_label_characters,
             iconData = IconData(
-                iconResource = R.drawable.ic_superhero_32,
+                iconResource = R.drawable.ic_superhero,
                 contentDescription = R.string.bottom_navigation_label_characters
             )
         ),
@@ -503,7 +503,7 @@ class AllCharactersViewModel @Inject constructor(
             route = Screen.BottomNavigationScreens.AllFavoriteCharactersScreen.route,
             label = R.string.bottom_navigation_label_favorites,
             iconData = IconData(
-                iconResource = R.drawable.ic_favorite_filled_24,
+                iconResource = R.drawable.ic_favorite_filled,
                 contentDescription = R.string.bottom_navigation_label_favorites
             )
         ),
@@ -511,7 +511,7 @@ class AllCharactersViewModel @Inject constructor(
             route = Screen.BottomNavigationScreens.ProfileScreen.route,
             label = R.string.bottom_navigation_label_profile,
             iconData = IconData(
-                iconResource = R.drawable.ic_person_32,
+                iconResource = R.drawable.ic_person,
                 contentDescription = R.string.bottom_navigation_label_profile
             )
         )

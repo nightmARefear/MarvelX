@@ -7,6 +7,7 @@ import com.alexgreece45.marvelx.controllers.PrefKeys
 import com.alexgreece45.marvelx.data.domains.user.profileDetails.ProfileDetailsDomain
 import com.alexgreece45.marvelx.interactors.GetProfileDetailsPartialState
 import com.alexgreece45.marvelx.interactors.LogoutPartialState
+import com.alexgreece45.marvelx.interactors.LoginInteractor
 import com.alexgreece45.marvelx.interactors.UserInteractor
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
@@ -65,6 +66,7 @@ sealed class ProfileEffect : BaseEffect {
 
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
+    private val loginInteractor: LoginInteractor,
     private val userInteractor: UserInteractor,
     private val prefKeys: PrefKeys,
     private val authController: AuthController
@@ -160,7 +162,7 @@ class ProfileViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
-            userInteractor.logout().collect { logoutPartialState ->
+            loginInteractor.logout().collect { logoutPartialState ->
                 when (logoutPartialState) {
                     is LogoutPartialState.Failed -> {
                         // Show error message.
@@ -192,7 +194,7 @@ class ProfileViewModel @Inject constructor(
             route = Screen.BottomNavigationScreens.AllCharactersScreen.route,
             label = R.string.bottom_navigation_label_characters,
             iconData = IconData(
-                iconResource = R.drawable.ic_superhero_32,
+                iconResource = R.drawable.ic_superhero,
                 contentDescription = R.string.bottom_navigation_label_characters
             )
         ),
@@ -200,7 +202,7 @@ class ProfileViewModel @Inject constructor(
             route = Screen.BottomNavigationScreens.AllFavoriteCharactersScreen.route,
             label = R.string.bottom_navigation_label_favorites,
             iconData = IconData(
-                iconResource = R.drawable.ic_favorite_filled_24,
+                iconResource = R.drawable.ic_favorite_filled,
                 contentDescription = R.string.bottom_navigation_label_favorites
             )
         ),
@@ -208,7 +210,7 @@ class ProfileViewModel @Inject constructor(
             route = Screen.BottomNavigationScreens.ProfileScreen.route,
             label = R.string.bottom_navigation_label_profile,
             iconData = IconData(
-                iconResource = R.drawable.ic_person_32,
+                iconResource = R.drawable.ic_person,
                 contentDescription = R.string.bottom_navigation_label_profile
             )
         )

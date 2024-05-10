@@ -10,7 +10,7 @@ import com.alexgreece45.marvelx.data.models.character.comic.CharacterList
 import com.alexgreece45.marvelx.data.models.character.comic.ComicDate
 import com.alexgreece45.marvelx.data.models.character.comic.CreatorList
 import com.alexgreece45.marvelx.data.models.character.comic.TextObject
-import java.util.Date
+import java.time.LocalDate
 
 data class ComicDomain(
     val id: Int,
@@ -19,7 +19,7 @@ data class ComicDomain(
     val issueNumber: Double,
     val variantDescription: String,
     val description: String,
-    val modified: Date,
+    val modified: LocalDate,
     val isbn: String,
     val upc: String,
     val diamondCode: String,
@@ -44,12 +44,15 @@ data class ComicDomain(
 )
 
 sealed class ComicPriceType(open val name: String = "", open val formattedName: String = "") {
-    object Print : ComicPriceType(name = "printPrice", formattedName = "Price")
-    object DigitalPurchase : ComicPriceType(name = "digitalPurchasePrice", formattedName = "Digital Purchase")
-    data class Unknown(override val name: String, override val formattedName: String) : ComicPriceType()
+    data object Print : ComicPriceType(name = "printPrice", formattedName = "Price")
+    data object DigitalPurchase :
+        ComicPriceType(name = "digitalPurchasePrice", formattedName = "Digital Purchase")
+
+    data class Unknown(override val name: String, override val formattedName: String) :
+        ComicPriceType()
 
     companion object {
-        fun asList(): List<ComicPriceType> = listOf(Print, DigitalPurchase)
+        private fun asList(): List<ComicPriceType> = listOf(Print, DigitalPurchase)
 
         fun getType(name: String): ComicPriceType =
             asList().firstOrNull { it.name == name } ?: Unknown(name, name)

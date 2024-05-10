@@ -24,13 +24,14 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.data.domains.comic.ComicDomain
-import com.alexgreece45.marvelx.viewModels.ComicEvent
-import com.alexgreece45.marvelx.viewModels.ComicViewModel
 import com.alexgreece45.marvelx.ui.components.ContentScreen
-import com.alexgreece45.marvelx.util.HSpacer
 import com.alexgreece45.marvelx.ui.components.ItemDescription
+import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
+import com.alexgreece45.marvelx.util.HSpacer
 import com.alexgreece45.marvelx.util.SPACING_TINY
 import com.alexgreece45.marvelx.util.VSpacer
+import com.alexgreece45.marvelx.viewModels.ComicEvent
+import com.alexgreece45.marvelx.viewModels.ComicViewModel
 
 @Composable
 fun ComicScreen(
@@ -55,8 +56,10 @@ fun ComicScreen(
     }
 
     ContentScreen(
-        onBack = { navController.popBackStack() },
         isLoading = state.isLoading,
+        navigableAction = ScreenNavigableAction.Backable {
+            navController.popBackStack()
+        },
         showToolbar = true,
         toolbarTitle = state.comic?.title.orEmpty(),
     ) { padding ->

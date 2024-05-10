@@ -1,5 +1,6 @@
 package com.alexgreece45.marvelx.ui.theme
 
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -17,19 +18,9 @@ class ThemeTypography : ThemeTypographyTemplate() {
                 weight = FontWeight.Normal
             ),
             Font(
-                R.font.roboto_bold,
+                R.font.roboto_medium,
                 style = FontStyle.Normal,
-                weight = FontWeight.Bold
-            ),
-            Font(
-                R.font.roboto_italic,
-                style = FontStyle.Italic,
-                weight = FontWeight.Thin
-            ),
-            Font(
-                R.font.roboto_bold_italic,
-                style = FontStyle.Italic,
-                weight = FontWeight.Bold
+                weight = FontWeight.Medium
             )
         )
     override val secondaryFontFamily: FontFamily
