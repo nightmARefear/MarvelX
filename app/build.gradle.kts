@@ -112,7 +112,6 @@ dependencies {
     debugImplementation(libs.chucker)
     releaseImplementation(libs.chucker.no.op)
 
-    // Dagger - Hilt
     implementation(libs.androidx.hilt.work)
     implementation(libs.google.dagger.hilt)
     ksp(libs.google.dagger.hilt.compiler)
@@ -123,17 +122,10 @@ dependencies {
     implementation(libs.squareup.logcat)
     implementation(libs.bundles.coil)
 
-    // Database
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
     annotationProcessor(libs.androidx.room.compiler)
-
-    ksp(libs.androidx.room.ktx)
-
-    // optional - Test helpers
-    testImplementation(libs.androidx.room.testing)
-
-    // optional - Paging 3 Integration
+    ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.room.paging)
 
     implementation(libs.bundles.security)
