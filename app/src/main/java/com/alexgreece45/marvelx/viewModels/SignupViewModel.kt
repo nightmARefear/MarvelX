@@ -109,7 +109,7 @@ sealed class SignupEffect : BaseEffect {
 
     data class ShowAlertDialogError(val errorMessage: String) : SignupEffect()
 
-    data object CloseKeyboard : SignupEffect()
+    data object CloseKeyboardAndRemoveFocus : SignupEffect()
 
     data object OnDoneClick : SignupEffect()
 }
@@ -145,7 +145,7 @@ class SignupViewModel @Inject constructor(
 
     override fun handleEvents(event: SignupEvent) {
         when (event) {
-           is SignupEvent.FieldValueChange.FirstName -> {
+            is SignupEvent.FieldValueChange.FirstName -> {
                 setState {
                     copy(
                         firstName = event.firstName
@@ -340,9 +340,9 @@ class SignupViewModel @Inject constructor(
     }
 
     private fun onSignUpButtonClick() {
-        // First of all, close the keyboard.
+        // First of all, close the keyboard and remove focus from the last field.
         setEffect {
-            SignupEffect.CloseKeyboard
+            SignupEffect.CloseKeyboardAndRemoveFocus
         }
 
         // Check if all the fields are valid.

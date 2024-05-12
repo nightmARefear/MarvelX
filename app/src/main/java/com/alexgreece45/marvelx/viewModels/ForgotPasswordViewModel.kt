@@ -231,6 +231,8 @@ sealed class ForgotPasswordEffect : BaseEffect {
 
         // Sub-Screens.
         data object NavigateToValidateEmailSubScreen : Navigation()
+
+        data class NavigateToOtpScreen(val requestIdEmail: String) : Navigation()
     }
 }
 
@@ -362,10 +364,14 @@ class ForgotPasswordViewModel @Inject constructor(
             }
 
             ForgotPasswordEvent.Navigation.NavigateToValidateEmailSubScreen -> {
-                setState {
-                    copy(
-                        currentSubScreen = ForgotPasswordSubScreens.ValidateEmail
-                    )
+//                setState {
+//                    copy(
+//                        currentSubScreen = ForgotPasswordSubScreens.ValidateEmail
+//                    )
+//                }
+                // Navigate to OTP screen.
+                setEffect {
+                    ForgotPasswordEffect.Navigation.NavigateToOtpScreen(requestIdEmail = currentState.requestIdEmail)
                 }
             }
         }
@@ -596,7 +602,8 @@ class ForgotPasswordViewModel @Inject constructor(
         countdownJob = viewModelScope.launch {
             forgotPasswordInteractor.validateOtp(
                 requestId = currentState.requestIdEmail,
-                otp = currentState.otp
+                otp = currentState.otp,
+                verificationStep = currentState.verificationStep
             ).collect {
                 when (it) {
                     is ForgotPasswordValidateOtpPartialState.Success -> {

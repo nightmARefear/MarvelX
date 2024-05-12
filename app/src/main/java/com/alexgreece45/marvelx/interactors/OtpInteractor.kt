@@ -47,7 +47,7 @@ class OtpInteractorImpl @Inject constructor(
                         val otpResponseErrorDomain = it.otpResponseError.toOtpResponseErrorDomain()
                         when (otpResponseErrorDomain.errorCause) {
                             // Server errors.
-                            is OtpErrorCause.Invalid, OtpErrorCause.InternalServerError -> {
+                            is OtpErrorCause.Invalid, OtpErrorCause.NotFound, OtpErrorCause.InternalServerError -> {
                                 emit(
                                     ValidateOtpPartialState.Failed(
                                         errorMessage = resourceProvider.getString(R.string.internal_server_error)

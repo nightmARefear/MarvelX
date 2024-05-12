@@ -36,7 +36,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -73,9 +72,7 @@ import com.alexgreece45.marvelx.viewModels.AllCharactersEvent
 import com.alexgreece45.marvelx.viewModels.AllCharactersViewModel
 import kotlinx.coroutines.launch
 
-@OptIn(
-    ExperimentalMaterialApi::class, ExperimentalComposeUiApi::class
-)
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun AllCharactersScreen(
     navigateToCharacterScreen: (characterId: Int) -> Unit,

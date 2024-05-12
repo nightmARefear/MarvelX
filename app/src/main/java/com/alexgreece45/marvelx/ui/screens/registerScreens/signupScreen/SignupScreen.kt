@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -91,8 +92,9 @@ fun SignUpScreen(
                     )
                 }
 
-                SignupEffect.CloseKeyboard -> {
+                SignupEffect.CloseKeyboardAndRemoveFocus -> {
                     keyboard?.hide()
+                    focusManager.clearFocus(true)
                 }
 
                 SignupEffect.OnDoneClick -> {
@@ -193,6 +195,7 @@ fun SignUpScreen(
                 ) {
                     Gender.asList().forEach { gender ->
                         DropdownMenuItem(
+                            modifier = Modifier.fillMaxWidth(),
                             onClick = {
                                 viewModel.setEvent(
                                     SignupEvent.FieldValueChange.Gender(
@@ -202,7 +205,8 @@ fun SignUpScreen(
                             }
                         ) {
                             Text(
-                                text = stringResource(gender.label)
+                                text = stringResource(gender.label),
+                                modifier = Modifier.wrapContentWidth()
                             )
                         }
                     }

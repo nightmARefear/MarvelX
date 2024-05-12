@@ -157,7 +157,7 @@ data class OtpState(
 
 sealed class OtpEffect : BaseEffect {
     data object OtpFieldRequestFocus : OtpEffect()
-    data object CloseKeyboard : OtpEffect()
+    data object CloseKeyboardAndRemoveFocus : OtpEffect()
 
     sealed class Navigation : OtpEffect() {
         data object PopBackStack : Navigation()
@@ -415,7 +415,11 @@ class OtpViewModel @Inject constructor(
 
         when (verificationStep) {
             VerificationStep.OtpEmail -> {
-
+                setState {
+                    copy(
+                        isLoading = false
+                    )
+                }
             }
 
             VerificationStep.OtpPhoneNumber -> TODO()
@@ -584,7 +588,7 @@ class OtpViewModel @Inject constructor(
      */
     private fun validateOtp() {
         setEffect {
-            OtpEffect.CloseKeyboard
+            OtpEffect.CloseKeyboardAndRemoveFocus
         }
         when (currentState.otpFlowType) {
             is OtpFlowType.Invalid -> {
@@ -595,40 +599,7 @@ class OtpViewModel @Inject constructor(
             }
 
             OtpFlowType.ForgotPassword.Email, OtpFlowType.ForgotPassword.PhoneNumber -> {
-                viewModelScope.launch {
-                    forgotPasswordInteractor.validateOtp(
-                        requestId = if (currentState.otpFlowType is OtpFlowType.ForgotPassword.Email) currentState.requestIdEmail else currentState.requestIdPhoneNumber,
-                        otp = currentState.otp
-                    ).collect {
-                        when (it) {
-                            is ForgotPasswordValidateOtpPartialState.ClientError -> TODO()
-
-                            is ForgotPasswordValidateOtpPartialState.Failed -> {
-
-                            }
-
-                            is ForgotPasswordValidateOtpPartialState.Success -> {
-                                when (it.isPhoneNumberRequired) {
-                                    // NOT SUPPORTED YET.
-                                    true -> {
-                                        setEffect {
-                                            OtpEffect.Navigation.PopBackStack
-                                        }
-                                    }
-
-                                    false -> {
-                                        setEffect {
-                                            OtpEffect.Navigation.NavigateToChangePasswordScreen(
-                                                requestIdEmail = currentState.requestIdEmail,
-                                                requestIdPhoneNumber = currentState.requestIdPhoneNumber
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
+                forgotPasswordValidateOtp()
             }
 
             OtpFlowType.Register -> {
@@ -895,6 +866,7 @@ class OtpViewModel @Inject constructor(
     // *********************************************************************************************
     // *                       `Forgot Password flow` functions                                    *
     // *********************************************************************************************
+
     /**
      * This function is triggered when the user clicks on the `Validate OTP` button of the `forgot
      * password flow`. It validates the user-entered OTP against the one that was sent to their
@@ -918,7 +890,8 @@ class OtpViewModel @Inject constructor(
         countdownJob = viewModelScope.launch {
             forgotPasswordInteractor.validateOtp(
                 requestId = if (currentState.otpFlowType is OtpFlowType.ForgotPassword.Email) currentState.requestIdEmail else currentState.requestIdPhoneNumber,
-                otp = currentState.otp
+                otp = currentState.otp,
+                verificationStep = currentState.verificationStep
             ).collect {
                 when (it) {
                     is ForgotPasswordValidateOtpPartialState.Success -> {

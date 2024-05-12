@@ -15,7 +15,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -50,7 +49,6 @@ import com.alexgreece45.marvelx.viewModels.OtpViewModel
  * Navigation to this screen MUST only happen when instructed either by `LoginScreen`,
  * or `SignupScreen`.
  */
-@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun OtpScreen(
     navController: NavController,
@@ -113,8 +111,9 @@ fun OtpScreen(
                     )
                 }
 
-                OtpEffect.CloseKeyboard -> {
+                OtpEffect.CloseKeyboardAndRemoveFocus -> {
                     keyboardController?.hide()
+                    focusRequester.freeFocus()
                 }
             }
         }

@@ -1,10 +1,9 @@
 package com.alexgreece45.marvelx.ui.navigation
 
-import androidx.compose.ui.ExperimentalComposeUiApi
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.navigation
+import com.alexgreece45.marvelx.ui.screens.changePassword.ChangePasswordScreen
 import com.alexgreece45.marvelx.ui.screens.otpScreen.OtpScreen
 import com.alexgreece45.marvelx.ui.screens.registerScreens.homeScreen.HomeScreen
 import com.alexgreece45.marvelx.ui.screens.registerScreens.loginScreen.LoginScreen
@@ -14,9 +13,7 @@ import com.alexgreece45.marvelx.ui.screens.registerScreens.signupScreen.SignUpSc
 import com.alexgreece45.marvelx.ui.screens.splashScreen.SplashScreen
 
 @Suppress("FunctionName")
-fun NavGraphBuilder.RegisterNavGraph(
-    navController: NavController
-) {
+fun NavGraphBuilder.RegisterNavGraph(navController: NavController) {
     navigation(
         route = Screen.RegisterScreens.getNestedGraphRootRoute(),
         startDestination = Screen.RegisterScreens.getStartDestination()
@@ -39,7 +36,8 @@ fun NavGraphBuilder.RegisterNavGraph(
 
         composable(Screen.RegisterScreens.LoginScreens.ForgotPasswordScreens.ForgotPasswordScreen) {
             ForgotPasswordScreen(
-                popUpToLoginScreen = { navController.popBackStack() }
+                popUpToLoginScreen = { navController.popBackStack() },
+                navController = navController
             )
         }
 
@@ -57,17 +55,12 @@ fun NavGraphBuilder.RegisterNavGraph(
             )
         }
 
-        composable(Screen.RegisterScreens.LoginScreens.ForgotPasswordScreens.ForgotPasswordValidateEmailScreen) { entry ->
-            ForgotPasswordValidateEmailScreen(
+        composable(Screen.RegisterScreens.ChangePasswordScreen) { entry ->
+            ChangePasswordScreen(
                 popBackStack = { navController.popBackStack() },
-                navigateToForgotPasswordEnterPhoneNumberScreen = { requestIdEmail ->
-                    navController.navigate(
-                        Screen.RegisterScreens.LoginScreens.ForgotPasswordScreens.ForgotPasswordEnterPhoneNumberScreen.createNavRoute(
-                            requestIdEmail = requestIdEmail
-                        )
-                    )
-                },
-                requestIdEmail = entry.arguments?.getString(NavItem.RequestIdEmail.key)
+                otpFlowType = entry.arguments?.getString(NavItem.OtpFlowType.key),
+                requestIdEmail = entry.arguments?.getString(NavItem.RequestIdEmail.key).orEmpty(),
+                requestIdPhoneNumber = entry.arguments?.getString(NavItem.RequestIdPhoneNumber.key)
             )
         }
 

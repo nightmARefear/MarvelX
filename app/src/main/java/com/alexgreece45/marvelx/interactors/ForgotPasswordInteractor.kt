@@ -48,12 +48,14 @@ interface ForgotPasswordInteractor {
      * Validates the given OTP against the one that was sent to the user's email address / phone
      * based on the provided [requestId].
      *
-     * @param requestId     The unique request ID.
-     * @param otp           The OTP to be validated.
+     * @param requestId         The unique request ID.
+     * @param otp               The OTP to be validated.
+     * @param verificationStep  The verification step; either [VerificationStep.OtpEmail] or [VerificationStep.OtpPhoneNumber].
      */
     suspend fun validateOtp(
         requestId: String,
-        otp: String
+        otp: String,
+        verificationStep: VerificationStep
     ): Flow<ForgotPasswordValidateOtpPartialState>
 }
 
@@ -206,9 +208,10 @@ class ForgotPasswordInteractorImpl @Inject constructor(
 
     override suspend fun validateOtp(
         requestId: String,
-        otp: String
+        otp: String,
+        verificationStep: VerificationStep
     ): Flow<ForgotPasswordValidateOtpPartialState> = flow {
-        repository.validateOtp(requestId, otp).collect {
+        repository.validateOtp(requestId, otp, verificationStep.key).collect {
             when (it) {
                 is ForgotPasswordRepositoryValidateOtpFromEmailResponse.Failed -> {
                     val otpResponseErrorDomain = it.otpResponseError.toOtpResponseErrorDomain()
@@ -238,7 +241,7 @@ class ForgotPasswordInteractorImpl @Inject constructor(
                             )
                         }
 
-                        OtpErrorCause.InvalidLength, is OtpErrorCause.Invalid, OtpErrorCause.InternalServerError -> {
+                        OtpErrorCause.NotFound, OtpErrorCause.InvalidLength, is OtpErrorCause.Invalid, OtpErrorCause.InternalServerError -> {
                             emit(
                                 ForgotPasswordValidateOtpPartialState.Failed(
                                     errorMessage = resourceProvider.getString(R.string.internal_server_error)
