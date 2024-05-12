@@ -66,6 +66,9 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.primarySurface
+import androidx.compose.material.pullrefresh.PullRefreshIndicator
+import androidx.compose.material.pullrefresh.pullRefresh
+import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -86,6 +89,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
@@ -899,6 +903,45 @@ fun ModalBottomSheet(
         scrimColor = scrimColor,
     ) {
         content()
+    }
+}
+
+/**
+ * Pull-to-refresh functionality. This [Composable] is used in scrollable lists where if you pull at
+ * the top of the list, the items refresh.
+ *
+ * @param onRefresh     The action(s) to be invoked when the pull-to-refresh functionality has been
+ * invoked.
+ * @param isRefreshing  Defines whether the [content] is in a loading state.
+ * @param content       The content to display when [isRefreshing] is `false`.
+ */
+@OptIn(ExperimentalMaterialApi::class)
+@Composable
+fun PullRefreshable(
+    onRefresh: () -> Unit,
+    isRefreshing: Boolean,
+    content: @Composable () -> Unit
+) {
+    val pullRefreshState = rememberPullRefreshState(
+        refreshing = isRefreshing,
+        onRefresh = onRefresh
+    )
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .pullRefresh(pullRefreshState)
+    ) {
+        content()
+
+        PullRefreshIndicator(
+            refreshing = isRefreshing,
+            state = pullRefreshState,
+            modifier = Modifier.align(
+                Alignment.TopCenter
+            ),
+            contentColor = MaterialTheme.colors.primaryVariant
+        )
     }
 }
 

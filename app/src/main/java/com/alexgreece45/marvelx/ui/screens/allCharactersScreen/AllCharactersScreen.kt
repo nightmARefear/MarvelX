@@ -37,31 +37,31 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.ui.components.BottomBarItem
 import com.alexgreece45.marvelx.ui.components.BottomNavigationBarData
 import com.alexgreece45.marvelx.ui.components.ContentErrorScreen
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.ExtendedFabData
 import com.alexgreece45.marvelx.ui.components.ModalBottomSheet
 import com.alexgreece45.marvelx.ui.components.NormalFabData
+import com.alexgreece45.marvelx.ui.components.PullRefreshable
 import com.alexgreece45.marvelx.ui.components.SearchBar
 import com.alexgreece45.marvelx.ui.components.SortingModalBottomSheetContent
 import com.alexgreece45.marvelx.ui.components.effect.DisposableEffectWithLifecycle
+import com.alexgreece45.marvelx.ui.components.effect.OneTimeLaunchedEffect
 import com.alexgreece45.marvelx.ui.components.isScrollingUp
 import com.alexgreece45.marvelx.ui.screens.allCharactersScreen.uiModels.CharacterCardUi
 import com.alexgreece45.marvelx.util.DEFAULT_SCREEN_PADDING
@@ -76,25 +76,24 @@ import kotlinx.coroutines.launch
 @Composable
 fun AllCharactersScreen(
     navigateToCharacterScreen: (characterId: Int) -> Unit,
-    bottomNavigationBarData: (items: List<BottomBarItem>, backgroundColor: Color, topHorizontalColor: Color?, selectedItemTopHorizontalColor: Color?, elevation: Dp) -> BottomNavigationBarData,
+    bottomNavigationBarData: @Composable () -> BottomNavigationBarData,
     viewModel: AllCharactersViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
-
-    val coroutineScope = rememberCoroutineScope()
-
     val modalBottomSheetState = rememberModalBottomSheetState(
         initialValue = ModalBottomSheetValue.Hidden,
         confirmValueChange = { it != ModalBottomSheetValue.Hidden },
         skipHalfExpanded = true
     )
-
     val lazyGridState = rememberLazyGridState()
+
+    val coroutineScope = rememberCoroutineScope()
 
     val context = LocalContext.current
     var initLock: Unit by remember { mutableStateOf(Unit) }
 
     val keyboard = LocalSoftwareKeyboardController.current
+    val focusManager = LocalFocusManager.current
 
     LaunchedEffect(initLock) {
         if (!state.isFirstLaunch) {
@@ -113,9 +112,11 @@ fun AllCharactersScreen(
         }
     }
 
-    LaunchedEffect(Unit) {
+    OneTimeLaunchedEffect {
         viewModel.setEvent(AllCharactersEvent.Init)
+    }
 
+    LaunchedEffect(Unit) {
         viewModel.uiEffect.collect { effect ->
             when (effect) {
                 is AllCharactersEffect.Navigation.NavigateToCharacterScreen -> {
@@ -151,8 +152,9 @@ fun AllCharactersScreen(
                     }
                 }
 
-                AllCharactersEffect.CloseKeyboard -> {
+                AllCharactersEffect.CloseKeyboardAndRemoveFocus -> {
                     keyboard?.hide()
+                    focusManager.clearFocus()
                 }
             }
         }
@@ -184,13 +186,7 @@ fun AllCharactersScreen(
             isLoading = state.isLoading,
             showToolbar = true,
             toolbarTitle = stringResource(R.string.all_characters_screen_toolbar_title),
-            bottomNavigationBarData = bottomNavigationBarData(
-                state.bottomNavigationItems,
-                MaterialTheme.colors.background,
-                MaterialTheme.colors.onBackground.copy(alpha = 0.8f),
-                MaterialTheme.colors.primaryVariant.copy(alpha = 0.8f),
-                16.dp,
-            ),
+            bottomNavigationBarData = bottomNavigationBarData(),
             fabData = if (state.error == null) { // Display FAB only when there's no error.
                 ExtendedFabData(
                     extended = lazyGridState.isScrollingUp(),
@@ -219,63 +215,68 @@ fun AllCharactersScreen(
                     }
                 }
             } ?: run {
-                LazyVerticalGrid(
-                    modifier = Modifier.fillMaxSize(),
-                    columns = GridCells.Fixed(2),
-                    state = lazyGridState,
-                    contentPadding = contentPadding,
-                    verticalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp),
-                    horizontalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp)
+                PullRefreshable(
+                    onRefresh = { viewModel.setEvent(AllCharactersEvent.OnRefresh) },
+                    isRefreshing = state.isLoading
                 ) {
-                    item(span = { GridItemSpan(2) }) {
-                        SearchBar(
-                            searchTerm = state.searchBarTerm,
-                            hint = stringResource(R.string.all_characters_screen_search_bar_hint),
-                            onValueChange = { newSearchTerm ->
-                                viewModel.setEvent(
-                                    AllCharactersEvent.SearchBar.OnKeyboardType(
-                                        searchTerm = newSearchTerm
-                                    )
-                                )
-                            },
-                            onCloseClick = {
-                                viewModel.setEvent(AllCharactersEvent.SearchBar.OnCloseClick)
-                            }
-                        )
-                    }
-
-                    // If the search term does not match any character's name.
-                    if (state.filteredCharacters.isEmpty()) {
+                    LazyVerticalGrid(
+                        modifier = Modifier.fillMaxSize(),
+                        columns = GridCells.Fixed(2),
+                        state = lazyGridState,
+                        contentPadding = contentPadding,
+                        verticalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp),
+                        horizontalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp)
+                    ) {
                         item(span = { GridItemSpan(2) }) {
-                            Text(
-                                text = stringResource(R.string.all_characters_screen_error_no_characters_found_search),
-                                style = MaterialTheme.typography.h6
+                            SearchBar(
+                                searchTerm = state.searchBarTerm,
+                                hint = stringResource(R.string.all_characters_screen_search_bar_hint),
+                                onValueChange = { newSearchTerm ->
+                                    viewModel.setEvent(
+                                        AllCharactersEvent.SearchBar.OnKeyboardType(
+                                            searchTerm = newSearchTerm
+                                        )
+                                    )
+                                },
+                                onCloseClick = {
+                                    viewModel.setEvent(AllCharactersEvent.SearchBar.OnCloseClick)
+                                }
                             )
                         }
-                    }
 
-                    items(
-                        items = state.filteredCharacters,
-                        key = { characterCardUi ->
-                            characterCardUi.id
-                        }
-                    ) { characterCardUi ->
-                        CharacterItem(
-                            character = characterCardUi,
-                            context = context,
-                            onClick = {
-                                viewModel.setEvent(
-                                    AllCharactersEvent.OnCharacterClick(characterId = characterCardUi.id)
-                                )
-                            },
-                            onFavoriteClick = {
-                                viewModel.setEvent(
-                                    AllCharactersEvent.OnHeartClick(
-                                        characterId = characterCardUi.id
-                                    )
+                        // If the search term does not match any character's name.
+                        if (state.filteredCharacters.isEmpty()) {
+                            item(span = { GridItemSpan(2) }) {
+                                Text(
+                                    text = stringResource(R.string.all_characters_screen_error_no_characters_found_search),
+                                    style = MaterialTheme.typography.h6
                                 )
                             }
-                        )
+                        }
+
+                        items(
+                            items = state.filteredCharacters,
+                            key = { characterCardUi ->
+                                characterCardUi.id
+                            }
+                        ) { characterCardUi ->
+                            CharacterItem(
+                                character = characterCardUi,
+                                context = context,
+                                onClick = {
+                                    viewModel.setEvent(
+                                        AllCharactersEvent.OnCharacterClick(characterId = characterCardUi.id)
+                                    )
+                                },
+                                onFavoriteClick = {
+                                    viewModel.setEvent(
+                                        AllCharactersEvent.OnHeartClick(
+                                            characterId = characterCardUi.id
+                                        )
+                                    )
+                                }
+                            )
+                        }
                     }
                 }
             }

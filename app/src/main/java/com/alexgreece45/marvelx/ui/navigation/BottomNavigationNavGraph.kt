@@ -1,9 +1,15 @@
 package com.alexgreece45.marvelx.ui.navigation
 
+import androidx.compose.material.MaterialTheme
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.navigation
+import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.ui.components.BottomBarItem
 import com.alexgreece45.marvelx.ui.components.BottomNavigationBarData
+import com.alexgreece45.marvelx.ui.components.IconData
 import com.alexgreece45.marvelx.ui.screens.allCharactersScreen.AllCharactersScreen
 import com.alexgreece45.marvelx.ui.screens.allFavoriteCharactersScreen.AllFavoriteCharactersScreen
 import com.alexgreece45.marvelx.ui.screens.characterScreen.CharacterScreen
@@ -30,16 +36,7 @@ fun NavGraphBuilder.MainNavGraph(
                         launchSingleTop = true
                     }
                 },
-                bottomNavigationBarData = { items, backgroundColor, topHorizontalColor, selectedItemTopHorizontalColor, elevation ->
-                    BottomNavigationBarData(
-                        navController = navController,
-                        items = items,
-                        backgroundColor = backgroundColor,
-                        topHorizontalColor = topHorizontalColor,
-                        selectedItemTopHorizontalColor = selectedItemTopHorizontalColor,
-                        elevation = elevation
-                    )
-                }
+                bottomNavigationBarData = { getBottomNavigationBarData(navController = navController) }
             )
         }
 
@@ -75,16 +72,7 @@ fun NavGraphBuilder.MainNavGraph(
 
         composable(Screen.BottomNavigationScreens.AllFavoriteCharactersScreen) {
             AllFavoriteCharactersScreen(
-                bottomNavigationBarData = { items, backgroundColor, topHorizontalColor, selectedItemTopHorizontalColor, elevation ->
-                    BottomNavigationBarData(
-                        navController = navController,
-                        items = items,
-                        backgroundColor = backgroundColor,
-                        topHorizontalColor = topHorizontalColor,
-                        selectedItemTopHorizontalColor = selectedItemTopHorizontalColor,
-                        elevation = elevation
-                    )
-                }
+                bottomNavigationBarData = { getBottomNavigationBarData(navController = navController) }
             )
         }
 
@@ -97,16 +85,53 @@ fun NavGraphBuilder.MainNavGraph(
                         }
                     }
                 },
-                bottomNavigationBarData = { items, backgroundColor, topHorizontalColor, selectedItemTopHorizontalColor, elevation ->
-                    BottomNavigationBarData(
-                        navController = navController,
-                        items = items,
-                        backgroundColor = backgroundColor,
-                        topHorizontalColor = topHorizontalColor,
-                        selectedItemTopHorizontalColor = selectedItemTopHorizontalColor,
-                        elevation = elevation
-                    )
-                }
+                bottomNavigationBarData = { getBottomNavigationBarData(navController = navController) }
             )
         }
     }
+
+/**
+ * Returns the bottom navigation items.
+ */
+private fun getBottomNavigationItems(): List<BottomBarItem> = listOf(
+    BottomBarItem(
+        route = Screen.BottomNavigationScreens.AllCharactersScreen.route,
+        label = R.string.bottom_navigation_label_characters,
+        iconData = IconData(
+            iconResource = R.drawable.ic_superhero,
+            contentDescription = R.string.bottom_navigation_label_characters
+        )
+    ),
+    BottomBarItem(
+        route = Screen.BottomNavigationScreens.AllFavoriteCharactersScreen.route,
+        label = R.string.bottom_navigation_label_favorites,
+        iconData = IconData(
+            iconResource = R.drawable.ic_favorite_filled,
+            contentDescription = R.string.bottom_navigation_label_favorites
+        )
+    ),
+    BottomBarItem(
+        route = Screen.BottomNavigationScreens.ProfileScreen.route,
+        label = R.string.bottom_navigation_label_profile,
+        iconData = IconData(
+            iconResource = R.drawable.ic_person,
+            contentDescription = R.string.bottom_navigation_label_profile
+        )
+    )
+)
+
+/**
+ * Returns the [BottomNavigationBarData] required for the bottom navigation bar in the main screens.
+ *
+ * @param navController The associated [NavController] of the graph.
+ */
+@Composable
+private fun getBottomNavigationBarData(navController: NavController): BottomNavigationBarData =
+    BottomNavigationBarData(
+        navController = navController,
+        items = getBottomNavigationItems(),
+        backgroundColor = MaterialTheme.colors.background,
+        topHorizontalColor = MaterialTheme.colors.onBackground.copy(alpha = 0.8f),
+        selectedItemTopHorizontalColor = MaterialTheme.colors.primaryVariant.copy(alpha = 0.8f),
+        elevation = 16.dp
+    )
