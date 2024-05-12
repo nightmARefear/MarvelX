@@ -14,10 +14,7 @@ import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
 import com.alexgreece45.marvelx.mvi.BaseViewModel
-import com.alexgreece45.marvelx.ui.components.BottomBarItem
-import com.alexgreece45.marvelx.ui.components.IconData
 import com.alexgreece45.marvelx.ui.components.SortingType
-import com.alexgreece45.marvelx.ui.navigation.Screen
 import com.alexgreece45.marvelx.ui.screens.allCharactersScreen.uiModels.CharacterCardUi
 import com.alexgreece45.marvelx.ui.screens.allCharactersScreen.uiModels.toFavoriteCharacterEntity
 import com.alexgreece45.marvelx.util.ResourceProvider
@@ -32,6 +29,11 @@ data class AllCharactersScreenErrorView(
 
 sealed interface AllCharactersEvent : BaseEvent {
     data object Init : AllCharactersEvent
+
+    /**
+     * Pull to refresh.
+     */
+    data object OnRefresh : AllCharactersEvent
     data object LoadAllCharacters : AllCharactersEvent
     data object LoadFavoriteCharacters : AllCharactersEvent
     data class OnCharacterClick(val characterId: Int) : AllCharactersEvent
@@ -71,7 +73,7 @@ sealed interface AllCharactersEffect : BaseEffect {
         data object Hide : SortingBottomSheet
     }
 
-    data object CloseKeyboard : AllCharactersEffect
+    data object CloseKeyboardAndRemoveFocus : AllCharactersEffect
 }
 
 data class AllCharactersState(
@@ -80,7 +82,6 @@ data class AllCharactersState(
     val error: AllCharactersScreenErrorView? = null,
 
     // Data.
-    val bottomNavigationItems: List<BottomBarItem> = emptyList(),
     val characters: List<CharacterCardUi> = emptyList(),
     val sortingType: SortingType = SortingType.DEFAULT_SORTING_TYPE,
 
@@ -110,7 +111,6 @@ class AllCharactersViewModel @Inject constructor(
         AllCharactersState(
             isLoading = true,
             error = null,
-            bottomNavigationItems = getBottomNavigationItems(),
             characters = emptyList(),
             sortingType = SortingType.DEFAULT_SORTING_TYPE,
             searchBarTerm = "",
@@ -124,6 +124,10 @@ class AllCharactersViewModel @Inject constructor(
                 initView()
             }
 
+            AllCharactersEvent.OnRefresh -> {
+                pullToRefresh()
+            }
+
             AllCharactersEvent.LoadAllCharacters -> {
                 loadAllCharacters()
             }
@@ -135,7 +139,7 @@ class AllCharactersViewModel @Inject constructor(
                     )
                 }
                 setEffect {
-                    AllCharactersEffect.CloseKeyboard
+                    AllCharactersEffect.CloseKeyboardAndRemoveFocus
                 }
                 setEffect {
                     AllCharactersEffect.Navigation.NavigateToCharacterScreen(
@@ -238,17 +242,34 @@ class AllCharactersViewModel @Inject constructor(
                 }
 
                 setEffect {
-                    AllCharactersEffect.CloseKeyboard
+                    AllCharactersEffect.CloseKeyboardAndRemoveFocus
                 }
             }
         }
     }
 
+    /**
+     * This function is ONLY invoked when the screen first launches.
+     */
     private fun initView() {
-        /*setState {
-            AllCharactersState.getDefaultValues()
-        }*/
         loadAllCharacters()
+    }
+
+    /**
+     * This function is invoked when the pull-to-refresh functionality has been triggered by the user.
+     */
+    private fun pullToRefresh() {
+        setEffect {
+            AllCharactersEffect.CloseKeyboardAndRemoveFocus
+        }
+
+        // Reset all states.
+        setState {
+            setInitialState()
+        }
+
+        // Initialize view.
+        initView()
     }
 
     private fun loadAllCharacters() {
@@ -489,31 +510,4 @@ class AllCharactersViewModel @Inject constructor(
                 }
         }
     }
-
-    private fun getBottomNavigationItems(): List<BottomBarItem> = listOf(
-        BottomBarItem(
-            route = Screen.BottomNavigationScreens.AllCharactersScreen.route,
-            label = R.string.bottom_navigation_label_characters,
-            iconData = IconData(
-                iconResource = R.drawable.ic_superhero,
-                contentDescription = R.string.bottom_navigation_label_characters
-            )
-        ),
-        BottomBarItem(
-            route = Screen.BottomNavigationScreens.AllFavoriteCharactersScreen.route,
-            label = R.string.bottom_navigation_label_favorites,
-            iconData = IconData(
-                iconResource = R.drawable.ic_favorite_filled,
-                contentDescription = R.string.bottom_navigation_label_favorites
-            )
-        ),
-        BottomBarItem(
-            route = Screen.BottomNavigationScreens.ProfileScreen.route,
-            label = R.string.bottom_navigation_label_profile,
-            iconData = IconData(
-                iconResource = R.drawable.ic_person,
-                contentDescription = R.string.bottom_navigation_label_profile
-            )
-        )
-    )
 }

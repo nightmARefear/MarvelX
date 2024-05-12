@@ -23,7 +23,8 @@ import com.alexgreece45.marvelx.ui.components.models.ClickableString
  * also has its own custom styling and on-click functionality.
  *
  * The order of [clickableStrings] doesn't matter as it's handled internally by sorting this list in
- * ascending order based on the start index of the first occurrence of [ClickableString.text] in [text].
+ * ascending order based on the start index of the first occurrence of [ClickableString.text] in
+ * [text].
  *
  * @param text              The whole text to be displayed.
  * @param modifier          The modifier to be applied to the whole text.

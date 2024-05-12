@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -28,24 +27,22 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.viewModels.AllFavoriteCharactersEvent
-import com.alexgreece45.marvelx.viewModels.AllFavoriteCharactersViewModel
-import com.alexgreece45.marvelx.ui.components.BottomBarItem
 import com.alexgreece45.marvelx.ui.components.BottomNavigationBarData
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.SPACING_TINY
+import com.alexgreece45.marvelx.viewModels.AllFavoriteCharactersEvent
+import com.alexgreece45.marvelx.viewModels.AllFavoriteCharactersViewModel
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun AllFavoriteCharactersScreen(
-    bottomNavigationBarData: (items: List<BottomBarItem>, backgroundColor: Color, topHorizontalColor: Color?, selectedItemTopHorizontalColor: Color?, elevation: Dp) -> BottomNavigationBarData,
+    bottomNavigationBarData: @Composable () -> BottomNavigationBarData,
     viewModel: AllFavoriteCharactersViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
@@ -54,13 +51,7 @@ fun AllFavoriteCharactersScreen(
         isLoading = false,
         showToolbar = true,
         toolbarTitle = stringResource(R.string.all_favorite_characters_screen_toolbar_title),
-        bottomNavigationBarData = bottomNavigationBarData(
-            state.bottomNavigationItems,
-            MaterialTheme.colors.background,
-            MaterialTheme.colors.onBackground,
-            MaterialTheme.colors.primaryVariant.copy(alpha = 0.8f),
-            16.dp,
-        )
+        bottomNavigationBarData = bottomNavigationBarData()
     ) { paddingValues ->
         LazyVerticalGrid(
             modifier = Modifier.fillMaxSize(),

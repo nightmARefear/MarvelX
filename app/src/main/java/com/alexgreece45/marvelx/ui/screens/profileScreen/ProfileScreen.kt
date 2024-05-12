@@ -21,11 +21,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.ui.components.BottomBarItem
 import com.alexgreece45.marvelx.ui.components.BottomNavigationBarData
 import com.alexgreece45.marvelx.ui.components.ContainedButton
 import com.alexgreece45.marvelx.ui.components.ContentErrorScreen
@@ -39,7 +37,7 @@ import com.alexgreece45.marvelx.viewModels.ProfileViewModel
 @Composable
 fun ProfileScreen(
     navigateToHomeScreen: () -> Unit,
-    bottomNavigationBarData: (items: List<BottomBarItem>, backgroundColor: Color, topHorizontalColor: Color?, selectedItemTopHorizontalColor: Color?, elevation: Dp) -> BottomNavigationBarData,
+    bottomNavigationBarData: @Composable () -> BottomNavigationBarData,
     viewModel: ProfileViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
@@ -66,13 +64,7 @@ fun ProfileScreen(
         isLoading = state.isLoading,
         showToolbar = true,
         toolbarTitle = stringResource(R.string.profile_screen_toolbar_title),
-        bottomNavigationBarData = bottomNavigationBarData(
-            state.bottomNavigationItems,
-            MaterialTheme.colors.background,
-            MaterialTheme.colors.onBackground,
-            MaterialTheme.colors.primaryVariant.copy(alpha = 0.8f),
-            16.dp,
-        )
+        bottomNavigationBarData = bottomNavigationBarData()
     ) { paddingValues ->
         LazyColumn(
             modifier = Modifier
