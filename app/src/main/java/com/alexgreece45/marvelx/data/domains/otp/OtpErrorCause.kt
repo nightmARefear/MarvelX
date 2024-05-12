@@ -22,6 +22,12 @@ sealed class OtpErrorCause(val key: String, @StringRes val cause: Int) {
             cause = R.string.otp_error_cause_blocked
         )
 
+    data object NotFound :
+        OtpErrorCause(
+            key = "otp_not_found",
+            cause = R.string.internal_server_error
+        )
+
     data object InternalServerError :
         OtpErrorCause(
             key = "internal_server_error",
@@ -33,7 +39,7 @@ sealed class OtpErrorCause(val key: String, @StringRes val cause: Int) {
 
     companion object {
         private fun asList(): List<OtpErrorCause> =
-            listOf(NotMatch, InvalidLength, Expired, Blocked, InternalServerError)
+            listOf(NotMatch, InvalidLength, Expired, Blocked, NotFound, InternalServerError)
 
         fun of(value: String): OtpErrorCause =
             asList().firstOrNull { it.key == value } ?: Invalid(value = value)

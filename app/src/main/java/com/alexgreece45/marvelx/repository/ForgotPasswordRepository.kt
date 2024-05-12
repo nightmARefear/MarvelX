@@ -43,10 +43,13 @@ interface ForgotPasswordRepository {
      * used for the validation in the backend.
      * @param otp               The OTP that the user has entered. It will be used for validation in
      * the backend.
+     * @param verificationStep  The verification step as a [String] describing if the step is
+     * validation via email or phone number.
      */
     suspend fun validateOtp(
         requestId: String,
-        otp: String
+        otp: String,
+        verificationStep: String
     ): Flow<ForgotPasswordRepositoryValidateOtpFromEmailResponse>
 }
 
@@ -125,12 +128,14 @@ class ForgotPasswordRepositoryImpl @Inject constructor(
 
     override suspend fun validateOtp(
         requestId: String,
-        otp: String
+        otp: String,
+        verificationStep: String
     ): Flow<ForgotPasswordRepositoryValidateOtpFromEmailResponse> = flow {
         apiClient.forgotPasswordValidateOtp(
             body = RequestForgotPasswordValidateOtp(
                 requestId = requestId,
-                otp = otp
+                otp = otp,
+                verificationStep = verificationStep
             )
         ).let { response ->
             if (response.isSuccessful) {

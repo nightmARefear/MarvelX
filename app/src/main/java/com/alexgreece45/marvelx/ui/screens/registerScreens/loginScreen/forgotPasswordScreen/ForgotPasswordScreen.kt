@@ -21,12 +21,16 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavController
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.data.domains.otp.OtpFlowType
+import com.alexgreece45.marvelx.data.domains.user.VerificationStep
 import com.alexgreece45.marvelx.ui.components.ContainedButton
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.ContentScreenHeader
 import com.alexgreece45.marvelx.ui.components.OutlinedTextFieldValidation
 import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
+import com.alexgreece45.marvelx.ui.navigation.Screen
 import com.alexgreece45.marvelx.util.VSpacer
 import com.alexgreece45.marvelx.util.extensions.autofill
 import com.alexgreece45.marvelx.viewModels.ForgotPasswordEffect
@@ -38,6 +42,7 @@ import com.alexgreece45.marvelx.viewModels.ForgotPasswordViewModel
 @Composable
 fun ForgotPasswordScreen(
     popUpToLoginScreen: () -> Unit,
+    navController: NavController,
     viewModel: ForgotPasswordViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -63,8 +68,16 @@ fun ForgotPasswordScreen(
                     viewModel.setEvent(ForgotPasswordEvent.Navigation.NavigateToValidateEmailSubScreen)
                 }
 
-                else -> {
-                    // TODO: Replace else with every case of [ForgotPasswordEffect].
+                ForgotPasswordEffect.OtpFieldRequestFocus -> {}
+                is ForgotPasswordEffect.Navigation.NavigateToOtpScreen -> {
+                    navController.navigate(
+                        Screen.OtpScreen.createNavRoute(
+                            otpFlowType = OtpFlowType.ForgotPassword.Email.key,
+                            verificationStep = VerificationStep.OtpEmail.key,
+                            shouldRememberUserSession = false,
+                            requestIdEmail = effect.requestIdEmail
+                        )
+                    )
                 }
             }
         }

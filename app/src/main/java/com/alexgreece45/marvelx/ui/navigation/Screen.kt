@@ -48,14 +48,14 @@ sealed class Screen(
 
     data object CharacterScreen : Screen(
         baseRoute = "characterScreen",
-        navArgs = listOf(NavItem.Character)
+        navArgs = listOf(NavItem.CharacterId)
     ) {
         fun createNavRoute(characterId: Int) = "$baseRoute/$characterId"
     }
 
     data object AllCharacterComicsScreen : Screen(
         baseRoute = "allCharacterComicsScreen",
-        navArgs = listOf(NavItem.Character, NavItem.ToolbarTitlePrefix)
+        navArgs = listOf(NavItem.CharacterId, NavItem.ToolbarTitlePrefix)
     ) {
         fun createNavRoute(
             characterId: Int,
@@ -65,7 +65,7 @@ sealed class Screen(
 
     data object ComicScreen : Screen(
         baseRoute = "comicScreen",
-        navArgs = listOf(NavItem.Comic)
+        navArgs = listOf(NavItem.ComicId)
     ) {
         fun createNavRoute(comicId: Int): String = "$baseRoute/$comicId"
     }
@@ -85,7 +85,10 @@ sealed class Screen(
             sealed class ForgotPasswordScreens {
                 data object ForgotPasswordScreen : Screen(baseRoute = "forgotPasswordScreen")
                 data object ForgotPasswordValidateEmailScreen :
-                    Screen(baseRoute = "forgotPasswordValidateEmailScreen") {
+                    Screen(
+                        baseRoute = "forgotPasswordValidateEmailScreen",
+                        navArgs = listOf(NavItem.RequestIdEmail)
+                    ) {
                     fun createNavRoute(requestIdEmail: String): String =
                         "$baseRoute/$requestIdEmail"
                 }
@@ -95,18 +98,13 @@ sealed class Screen(
                     fun createNavRoute(requestIdEmail: String): String =
                         "$baseRoute/$requestIdEmail"
                 }
-
-                data object ForgotPasswordValidatePhoneNumberScreen :
-                    Screen(baseRoute = "forgotPasswordValidatePhoneNumberScreen") {
-                    fun createNavRoute(
-                        requestIdEmail: String,
-                        requestIdPhoneNumber: String
-                    ): String = "$baseRoute/$requestIdEmail/$requestIdPhoneNumber"
-                }
             }
         }
 
-        data object ChangePasswordScreen : Screen(baseRoute = "changePasswordScreen") {
+        data object ChangePasswordScreen : Screen(
+            baseRoute = "changePasswordScreen",
+            navArgs = listOf(NavItem.RequestIdEmail, NavItem.RequestIdPhoneNumber)
+        ) {
             fun createNavRoute(
                 requestIdEmail: String,
                 requestIdPhoneNumber: String?
@@ -135,13 +133,14 @@ sealed class Screen(
             shouldRememberUserSession: Boolean,
             requestIdEmail: String = "-1",
             requestIdPhoneNumber: String = "-1"
-        ): String = "$baseRoute/$userId/$otpFlowType/$verificationStep/$shouldRememberUserSession/$requestIdEmail/$requestIdPhoneNumber".also{ println(it) }
+        ): String =
+            "$baseRoute/$userId/$otpFlowType/$verificationStep/$shouldRememberUserSession/$requestIdEmail/$requestIdPhoneNumber"
     }
 }
 
 enum class NavItem(val key: String, val type: NavType<*>) {
-    Character(key = "characterId", NavType.IntType),
-    Comic(key = "comicId", type = NavType.IntType),
+    CharacterId(key = "characterId", NavType.IntType),
+    ComicId(key = "comicId", type = NavType.IntType),
     ToolbarTitlePrefix(key = "toolbarTitlePrefix", NavType.StringType),
     UserId(key = "userId", NavType.IntType),
     OtpFlowType(key = "otpFlowType", NavType.StringType),

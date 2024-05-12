@@ -48,7 +48,7 @@ fun NavGraphBuilder.MainNavGraph(
         ) { navBackStackEntry ->
             CharacterScreen(
                 navController = navController,
-                characterId = navBackStackEntry.arguments?.getInt(NavItem.Character.key)
+                characterId = navBackStackEntry.arguments?.getInt(NavItem.CharacterId.key)
                     ?: -1
             )
         }
@@ -58,7 +58,7 @@ fun NavGraphBuilder.MainNavGraph(
         ) { navBackStackEntry ->
             ComicScreen(
                 navController = navController,
-                comicId = navBackStackEntry.arguments?.getInt(NavItem.Comic.key) ?: -1
+                comicId = navBackStackEntry.arguments?.getInt(NavItem.ComicId.key) ?: -1
             )
         }
 
@@ -67,7 +67,7 @@ fun NavGraphBuilder.MainNavGraph(
         ) { navBackStackEntry ->
             AllCharacterComicsScreen(
                 navController = navController,
-                characterId = navBackStackEntry.arguments?.getInt(NavItem.Character.key) ?: -1,
+                characterId = navBackStackEntry.arguments?.getInt(NavItem.CharacterId.key) ?: -1,
                 toolbarTitlePrefix = navBackStackEntry.arguments?.getString(NavItem.ToolbarTitlePrefix.key)
                     .orEmpty()
             )
