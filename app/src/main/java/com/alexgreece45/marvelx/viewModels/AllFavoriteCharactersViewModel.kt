@@ -2,20 +2,18 @@ package com.alexgreece45.marvelx.viewModels
 
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.ui.screens.allCharactersScreen.uiModels.CharacterCardUi
 import com.alexgreece45.marvelx.database.toCharacterCardUiList
 import com.alexgreece45.marvelx.interactors.CharacterInteractor
 import com.alexgreece45.marvelx.interactors.GetFavoriteCharactersPartialState
-import com.alexgreece45.marvelx.ui.navigation.Screen
-import com.alexgreece45.marvelx.ui.components.BottomBarItem
-import com.alexgreece45.marvelx.ui.components.IconData
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
 import com.alexgreece45.marvelx.mvi.BaseViewModel
-import dagger.hilt.android.lifecycle.HiltViewModel
+import com.alexgreece45.marvelx.ui.components.BottomBarItem
+import com.alexgreece45.marvelx.ui.components.IconData
+import com.alexgreece45.marvelx.ui.navigation.Screen
+import com.alexgreece45.marvelx.ui.screens.allCharactersScreen.uiModels.CharacterCardUi
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 data class AllFavoriteCharactersScreenErrorView(
     val errorMessage: String,
@@ -37,8 +35,7 @@ data class AllFavoriteCharactersState(
 
 sealed class AllFavoriteCharactersEffect : BaseEffect
 
-@HiltViewModel
-class AllFavoriteCharactersViewModel @Inject constructor(
+class AllFavoriteCharactersViewModel(
     private val characterInteractor: CharacterInteractor
 ) : BaseViewModel<AllFavoriteCharactersEvent, AllFavoriteCharactersState, AllFavoriteCharactersEffect>() {
     override fun setInitialState(): AllFavoriteCharactersState =

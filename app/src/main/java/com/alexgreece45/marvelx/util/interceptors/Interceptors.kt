@@ -8,11 +8,8 @@ import com.alexgreece45.marvelx.util.extensions.toMd5
 import okhttp3.Interceptor
 import okhttp3.Request
 import okhttp3.Response
-import javax.inject.Inject
-import javax.inject.Singleton
 
-@Singleton
-class BaseUrlChangerAndAuthenticationInterceptor @Inject constructor(
+class BaseUrlChangerAndAuthenticationInterceptor(
     private val authController: AuthController,
     private val configLogic: ConfigLogic
 ) : Interceptor {
@@ -42,76 +39,82 @@ class BaseUrlChangerAndAuthenticationInterceptor @Inject constructor(
             }
         }
     }
-}
 
-private fun applyMarvelApiTransformations(chain: Interceptor.Chain): Response {
-    val timestamp = (System.currentTimeMillis() / 1000).toString()
-    val hash =
-        "$timestamp${BuildConfig.API_PRIVATE_KEY}${BuildConfig.API_PUBLIC_KEY}".toMd5()
+    /**
+     * Applies the necessary transformations for the Marvel API.
+     */
+    private fun applyMarvelApiTransformations(chain: Interceptor.Chain): Response {
+        val timestamp = (System.currentTimeMillis() / 1000).toString()
+        val hash =
+            "$timestamp${BuildConfig.API_PRIVATE_KEY}${BuildConfig.API_PUBLIC_KEY}".toMd5()
 
-    val finalUrl = chain
-        .request()
-        .url
-        .newBuilder()
-        .addQueryParameter("ts", timestamp)
-        .addQueryParameter("apikey", BuildConfig.API_PUBLIC_KEY)
-        .addQueryParameter("hash", hash)
-        .build()
-    return chain.proceed(
-        chain
+        val finalUrl = chain
             .request()
+            .url
             .newBuilder()
-            .url(finalUrl)
+            .addQueryParameter("ts", timestamp)
+            .addQueryParameter("apikey", BuildConfig.API_PUBLIC_KEY)
+            .addQueryParameter("hash", hash)
             .build()
-    )
-}
-
-private fun applyMarvelXBackendTransformations(
-    path: String,
-    chain: Interceptor.Chain,
-    authController: AuthController,
-    configLogic: ConfigLogic
-): Response {
-    // Get request from chain.
-    val originalRequest = chain.request()
-
-    // Get scheme from MarvelX Backend's baseUrl.
-    val scheme = configLogic.scheme
-
-    // Get host from config.
-    val host = configLogic.host
-
-    // Get port from config.
-    val port = configLogic.port
-
-    // Create modified URL based on the config.
-    val modifiedUrl =
-        originalRequest.url.newBuilder()
-            .scheme(scheme)
-            .host(host)
-            .port(port)
-            .build()
-
-    // Create modified request based on the modifiedUrl and the config.
-    var modifiedRequest = Request.Builder()
-        .url(modifiedUrl)
-        .addHeader(
-            name = ConstantsSecurity.HeaderNames.UserAgent.name,
-            value = ConstantsSecurity.HeaderValues.APP_USER_AGENT
+        return chain.proceed(
+            chain
+                .request()
+                .newBuilder()
+                .url(finalUrl)
+                .build()
         )
-        .method(originalRequest.method, originalRequest.body)
-
-    // Add headers where necessary.
-    when {
-        path.contains("login_with_token") || path.contains("profile_details") -> {
-            modifiedRequest = modifiedRequest
-                .addHeader(
-                    name = ConstantsSecurity.HeaderNames.Authorization.name,
-                    value = "${authController.getAccessToken()}"
-                )
-        }
-
-        else -> {}
     }
-    return chain.proceed(modifiedRequest.build())
+
+    /**
+     * Applies the necessary transformations for the Marvel backend.
+     */
+    private fun applyMarvelXBackendTransformations(
+        path: String,
+        chain: Interceptor.Chain,
+        authController: AuthController,
+        configLogic: ConfigLogic
+    ): Response {
+        // Get request from chain.
+        val originalRequest = chain.request()
+
+        // Get scheme from MarvelX Backend's baseUrl.
+        val scheme = configLogic.scheme
+
+        // Get host from config.
+        val host = configLogic.host
+
+        // Get port from config.
+        val port = configLogic.port
+
+        // Create modified URL based on the config.
+        val modifiedUrl =
+            originalRequest.url.newBuilder()
+                .scheme(scheme)
+                .host(host)
+                .port(port)
+                .build()
+
+        // Create modified request based on the modifiedUrl and the config.
+        var modifiedRequest = Request.Builder()
+            .url(modifiedUrl)
+            .addHeader(
+                name = ConstantsSecurity.HeaderNames.UserAgent.name,
+                value = ConstantsSecurity.HeaderValues.APP_USER_AGENT
+            )
+            .method(originalRequest.method, originalRequest.body)
+
+        // Add headers where necessary.
+        when {
+            path.contains("login_with_token") || path.contains("profile_details") -> {
+                modifiedRequest = modifiedRequest
+                    .addHeader(
+                        name = ConstantsSecurity.HeaderNames.Authorization.name,
+                        value = "${authController.getAccessToken()}"
+                    )
+            }
+
+            else -> {}
+        }
+        return chain.proceed(modifiedRequest.build())
+    }
 }

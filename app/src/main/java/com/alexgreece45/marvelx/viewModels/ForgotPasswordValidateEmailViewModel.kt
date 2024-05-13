@@ -7,8 +7,6 @@ import com.alexgreece45.marvelx.mvi.BaseState
 import com.alexgreece45.marvelx.mvi.BaseViewModel
 import com.alexgreece45.marvelx.ui.components.models.ErrorButtonLayout
 import com.alexgreece45.marvelx.util.ResourceProvider
-import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
 
 /**
  * The error codes of this screen.
@@ -56,8 +54,7 @@ sealed interface ForgotPasswordValidateEmailEffect : BaseEffect {
     }
 }
 
-@HiltViewModel
-class ForgotPasswordValidateEmailViewModel @Inject constructor(
+class ForgotPasswordValidateEmailViewModel(
     private val resourceProvider: ResourceProvider
 ) :
     BaseViewModel<ForgotPasswordValidateEmailEvent, ForgotPasswordValidateEmailState, ForgotPasswordValidateEmailEffect>() {

@@ -18,7 +18,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
@@ -32,11 +31,12 @@ import com.alexgreece45.marvelx.util.SPACING_TINY
 import com.alexgreece45.marvelx.util.VSpacer
 import com.alexgreece45.marvelx.viewModels.ComicEvent
 import com.alexgreece45.marvelx.viewModels.ComicViewModel
+import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun ComicScreen(
     navController: NavController,
-    viewModel: ComicViewModel = hiltViewModel(),
+    viewModel: ComicViewModel = koinViewModel(),
     comicId: Int
 ) {
     val state by viewModel.uiState.collectAsState()

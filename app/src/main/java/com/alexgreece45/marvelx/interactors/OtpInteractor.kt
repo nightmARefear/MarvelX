@@ -20,7 +20,6 @@ import com.alexgreece45.marvelx.util.extensions.safeAsync
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import okio.IOException
-import javax.inject.Inject
 
 interface OtpInteractor {
     suspend fun validateOtp(otp: String, userId: Int): Flow<ValidateOtpPartialState>
@@ -30,7 +29,7 @@ interface OtpInteractor {
     ): Flow<ResendOtpPartialState>
 }
 
-class OtpInteractorImpl @Inject constructor(
+class OtpInteractorImpl(
     private val repository: OtpRepository,
     private val resourceProvider: ResourceProvider,
     private val logger: AppLoggerController

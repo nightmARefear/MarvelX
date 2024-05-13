@@ -19,10 +19,8 @@ import com.alexgreece45.marvelx.util.FormsValidationResult
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.Rule
 import com.alexgreece45.marvelx.util.SecurityUtil
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 sealed class SignupEvent : BaseEvent {
     sealed class GenderDropdownMenu : SignupEvent() {
@@ -114,8 +112,7 @@ sealed class SignupEffect : BaseEffect {
     data object OnDoneClick : SignupEffect()
 }
 
-@HiltViewModel
-class SignupViewModel @Inject constructor(
+class SignupViewModel(
     private val resourceProvider: ResourceProvider,
     private val formValidator: FormValidator,
     private val registerInteractor: RegisterInteractor,

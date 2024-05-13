@@ -18,9 +18,7 @@ import com.alexgreece45.marvelx.ui.components.SortingType
 import com.alexgreece45.marvelx.ui.screens.allCharactersScreen.uiModels.CharacterCardUi
 import com.alexgreece45.marvelx.ui.screens.allCharactersScreen.uiModels.toFavoriteCharacterEntity
 import com.alexgreece45.marvelx.util.ResourceProvider
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 data class AllCharactersScreenErrorView(
     val errorMessage: String,
@@ -102,8 +100,7 @@ data class AllCharactersState(
     val isFirstLaunch: Boolean = true
 ) : BaseState
 
-@HiltViewModel
-class AllCharactersViewModel @Inject constructor(
+class AllCharactersViewModel(
     private val interactor: CharacterInteractor,
     private val resourceProvider: ResourceProvider
 ) : BaseViewModel<AllCharactersEvent, AllCharactersState, AllCharactersEffect>() {

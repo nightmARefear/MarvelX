@@ -22,7 +22,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.ui.components.BottomNavigationBarData
 import com.alexgreece45.marvelx.ui.components.ContainedButton
@@ -33,12 +32,13 @@ import com.alexgreece45.marvelx.util.VSpacer
 import com.alexgreece45.marvelx.viewModels.ProfileEffect
 import com.alexgreece45.marvelx.viewModels.ProfileEvent
 import com.alexgreece45.marvelx.viewModels.ProfileViewModel
+import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun ProfileScreen(
     navigateToHomeScreen: () -> Unit,
     bottomNavigationBarData: @Composable () -> BottomNavigationBarData,
-    viewModel: ProfileViewModel = hiltViewModel()
+    viewModel: ProfileViewModel = koinViewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
 

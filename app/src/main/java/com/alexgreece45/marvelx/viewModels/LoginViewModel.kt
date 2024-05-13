@@ -19,10 +19,8 @@ import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.Rule
 import com.alexgreece45.marvelx.util.SecurityUtil
 import com.alexgreece45.marvelx.util.constants.ConstantsInputField
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 data class LoginScreenErrorView(
     val errorTitle: String,
@@ -133,8 +131,7 @@ sealed class LoginEffect : BaseEffect {
     data object OnDoneClick : LoginEffect()
 }
 
-@HiltViewModel
-class LoginViewModel @Inject constructor(
+class LoginViewModel(
     private val resourceProvider: ResourceProvider,
     private val formValidator: FormValidator,
     private val registerInteractor: RegisterInteractor,

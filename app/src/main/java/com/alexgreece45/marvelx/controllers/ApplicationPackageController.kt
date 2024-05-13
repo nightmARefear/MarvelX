@@ -8,7 +8,6 @@ import android.os.Build.VERSION.SDK_INT
 import android.util.Base64
 import com.alexgreece45.marvelx.util.ResourceProvider
 import java.security.MessageDigest
-import javax.inject.Inject
 
 interface ApplicationPackageController {
     /**
@@ -27,7 +26,7 @@ interface ApplicationPackageController {
     fun isAppDebuggable(): Boolean
 }
 
-class ApplicationPackageControllerImpl @Inject constructor(
+class ApplicationPackageControllerImpl(
     private val resourceProvider: ResourceProvider,
     private val logger: AppLoggerController
 ) : ApplicationPackageController {

@@ -12,7 +12,6 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alexgreece45.marvelx.ui.components.ContainedButton
 import com.alexgreece45.marvelx.ui.components.ContentScreen
@@ -22,6 +21,7 @@ import com.alexgreece45.marvelx.ui.components.error.ContentErrorScreen
 import com.alexgreece45.marvelx.viewModels.ForgotPasswordValidateEmailEffect
 import com.alexgreece45.marvelx.viewModels.ForgotPasswordValidateEmailEvent
 import com.alexgreece45.marvelx.viewModels.ForgotPasswordValidateEmailViewModel
+import org.koin.androidx.compose.koinViewModel
 
 /**
  * This sub-screen is used to validate the OTP that the user has received to their email.
@@ -31,7 +31,7 @@ import com.alexgreece45.marvelx.viewModels.ForgotPasswordValidateEmailViewModel
 fun ForgotPasswordValidateEmailScreen(
     popBackStack: () -> Unit,
     navigateToForgotPasswordEnterPhoneNumberScreen: (requestIdEmail: String) -> Unit,
-    viewModel: ForgotPasswordValidateEmailViewModel = hiltViewModel(),
+    viewModel: ForgotPasswordValidateEmailViewModel = koinViewModel(),
     requestIdEmail: String?
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()

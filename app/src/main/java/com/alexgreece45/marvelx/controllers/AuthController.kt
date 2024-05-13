@@ -3,7 +3,6 @@ package com.alexgreece45.marvelx.controllers
 import com.alexgreece45.marvelx.data.domains.userAuthData.UserAuthData
 import com.alexgreece45.marvelx.util.DateUtil
 import com.google.gson.Gson
-import javax.inject.Inject
 
 interface AuthController {
     /**
@@ -42,7 +41,7 @@ interface AuthController {
     fun removeUserCredentials()
 }
 
-class AuthControllerImpl @Inject constructor(
+class AuthControllerImpl(
     private val prefKeys: PrefKeys,
     private val logger: AppLoggerController
 ) : AuthController {

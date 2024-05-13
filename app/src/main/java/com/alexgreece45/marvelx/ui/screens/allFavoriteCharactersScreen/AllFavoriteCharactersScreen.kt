@@ -28,7 +28,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.alexgreece45.marvelx.R
@@ -38,12 +37,13 @@ import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.SPACING_TINY
 import com.alexgreece45.marvelx.viewModels.AllFavoriteCharactersEvent
 import com.alexgreece45.marvelx.viewModels.AllFavoriteCharactersViewModel
+import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun AllFavoriteCharactersScreen(
     bottomNavigationBarData: @Composable () -> BottomNavigationBarData,
-    viewModel: AllFavoriteCharactersViewModel = hiltViewModel()
+    viewModel: AllFavoriteCharactersViewModel = koinViewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
 

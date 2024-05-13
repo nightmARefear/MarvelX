@@ -2,14 +2,13 @@ package com.alexgreece45.marvelx.controllers
 
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.scottyab.rootbeer.RootBeer
-import javax.inject.Inject
 
 interface RootController {
     fun isRooted(): Boolean
     fun areRootCloakingAppsInstalled(): Boolean
 }
 
-class RootControllerImpl @Inject constructor(
+class RootControllerImpl(
     resourceProvider: ResourceProvider
 ) : RootController {
 

@@ -28,11 +28,9 @@ import com.alexgreece45.marvelx.mvi.BaseViewModel
 import com.alexgreece45.marvelx.ui.components.models.ErrorButtonLayout
 import com.alexgreece45.marvelx.util.FormsValidationResult
 import com.alexgreece45.marvelx.util.ResourceProvider
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 /**
  * All the error codes of the `OtpScreen` for error reporting by the users.
@@ -173,8 +171,7 @@ sealed class OtpEffect : BaseEffect {
     data object OnUserSensitiveDataReceived : OtpEffect()
 }
 
-@HiltViewModel
-class OtpViewModel @Inject constructor(
+class OtpViewModel(
     private val otpInteractor: OtpInteractor,
     private val loginInteractor: LoginInteractor,
     private val registerInteractor: RegisterInteractor,
@@ -336,7 +333,7 @@ class OtpViewModel @Inject constructor(
             }
 
             OtpEvent.OnVerifyButtonClicked -> {
-               if (currentState.otp.length != 6) {
+                if (currentState.otp.length != 6) {
                     showGenericErrorViewWithErrorMessage(
                         errorMessage = resourceProvider.getGenericErrorMessage(),
                         otpFlowType = currentState.otpFlowType
@@ -1003,7 +1000,7 @@ class OtpViewModel @Inject constructor(
         countdownJob?.cancel()
         countdownJob = viewModelScope.launch {
             timerController.startCountdown(duration = blockExpiresIn)
-                .collect{timerStatus ->
+                .collect { timerStatus ->
                     when (timerStatus) {
                         TimerStatus.Completed -> {
                             setState {
@@ -1020,7 +1017,7 @@ class OtpViewModel @Inject constructor(
                         }
 
                         is TimerStatus.Ticking -> {
-                            timerStatus.remainingTime.let{remainingTime ->
+                            timerStatus.remainingTime.let { remainingTime ->
                                 setState {
                                     copy(
                                         errorMessage = resourceProvider.getString(

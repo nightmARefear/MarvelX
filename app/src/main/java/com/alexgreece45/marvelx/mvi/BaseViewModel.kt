@@ -10,9 +10,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import org.koin.core.component.KoinComponent
 
 abstract class BaseViewModel<Event : BaseEvent, State : BaseState, Effect : BaseEffect> :
-    ViewModel() {
+    ViewModel(), KoinComponent {
 
     private val initialState: State by lazy { setInitialState() }
 

@@ -2,7 +2,6 @@ package com.alexgreece45.marvelx.repository
 
 import com.alexgreece45.marvelx.database.FavoriteCharacterEntity
 import com.alexgreece45.marvelx.database.FavoriteCharactersDao
-import javax.inject.Inject
 
 interface FavoriteCharactersRepository {
     suspend fun insertCharacters(vararg favoriteCharacterEntity: FavoriteCharacterEntity): LongArray
@@ -18,7 +17,7 @@ interface FavoriteCharactersRepository {
     suspend fun getCharacterById(characterId: Int): FavoriteCharacterEntity
 }
 
-class FavoriteCharactersRepositoryImpl @Inject constructor(
+class FavoriteCharactersRepositoryImpl(
     private val favoriteCharactersDao: FavoriteCharactersDao
 ) : FavoriteCharactersRepository {
     override suspend fun insertCharacters(vararg favoriteCharacterEntity: FavoriteCharacterEntity): LongArray =

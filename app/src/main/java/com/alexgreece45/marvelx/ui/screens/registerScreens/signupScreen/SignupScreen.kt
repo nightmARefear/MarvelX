@@ -30,7 +30,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.alexgreece45.marvelx.R
@@ -51,12 +50,13 @@ import com.alexgreece45.marvelx.util.extensions.popUpToTop
 import com.alexgreece45.marvelx.viewModels.SignupEffect
 import com.alexgreece45.marvelx.viewModels.SignupEvent
 import com.alexgreece45.marvelx.viewModels.SignupViewModel
+import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun SignUpScreen(
     navController: NavController,
-    viewModel: SignupViewModel = hiltViewModel()
+    viewModel: SignupViewModel = koinViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 

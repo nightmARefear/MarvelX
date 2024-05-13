@@ -8,7 +8,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
-import javax.inject.Inject
 
 interface SecurityController {
     /**
@@ -63,7 +62,7 @@ interface SecurityController {
     fun isApplicationSecure(): Flow<Boolean>
 }
 
-class SecurityControllerImpl @Inject constructor(
+class SecurityControllerImpl(
     private val configLogic: ConfigLogic,
     private val rootController: RootController,
     private val applicationPackageController: ApplicationPackageController
@@ -88,22 +87,25 @@ class SecurityControllerImpl @Inject constructor(
                 // Android SDK emulator
                 (Build.MANUFACTURER == "Google" && Build.BRAND == "google"
                         && (Build.FINGERPRINT.startsWith("google/sdk_gphone")
-                                && Build.PRODUCT.startsWith("sdk_gphone")
-                                && Build.MODEL.startsWith("sdk_gphone")
-                            )
-                    )
-                    || Build.FINGERPRINT.startsWith("generic")
-                    || Build.FINGERPRINT.startsWith("unknown")
-                    || Build.MODEL.startsWith("google_sdk")
-                    || Build.MODEL.startsWith("Emulator")
-                    || Build.MODEL.contains("Android SDK built for x86")
-                    // Bluestacks
-                    || Build.BOARD.equals("QC_Reference_Phone") && !Build.MANUFACTURER.equals("Xiaomi", ignoreCase = true)
-                    || Build.MANUFACTURER.contains("Genymotion")
-                    || Build.HOST.startsWith("Build")
-                    // MSI App Player
-                    || Build.BRAND.startsWith("generic") && Build.DEVICE.startsWith("generic")
-                    || Build.PRODUCT == "google_sdk"
+                        && Build.PRODUCT.startsWith("sdk_gphone")
+                        && Build.MODEL.startsWith("sdk_gphone")
+                        )
+                        )
+                        || Build.FINGERPRINT.startsWith("generic")
+                        || Build.FINGERPRINT.startsWith("unknown")
+                        || Build.MODEL.startsWith("google_sdk")
+                        || Build.MODEL.startsWith("Emulator")
+                        || Build.MODEL.contains("Android SDK built for x86")
+                        // Bluestacks
+                        || Build.BOARD.equals("QC_Reference_Phone") && !Build.MANUFACTURER.equals(
+                    "Xiaomi",
+                    ignoreCase = true
+                )
+                        || Build.MANUFACTURER.contains("Genymotion")
+                        || Build.HOST.startsWith("Build")
+                        // MSI App Player
+                        || Build.BRAND.startsWith("generic") && Build.DEVICE.startsWith("generic")
+                        || Build.PRODUCT == "google_sdk"
                 )
 
     override fun isDeviceRooted(): Boolean =

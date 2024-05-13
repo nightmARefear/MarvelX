@@ -6,7 +6,6 @@ import com.alexgreece45.marvelx.data.models.user.profileDetails.ResponseProfileD
 import com.alexgreece45.marvelx.util.helper.parseError
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import javax.inject.Inject
 
 interface UserRepository {
     /**
@@ -15,7 +14,7 @@ interface UserRepository {
     suspend fun getProfileDetails(userId: Int): Flow<GetProfileDetailsRepositoryResponse>
 }
 
-class UserRepositoryImpl @Inject constructor(
+class UserRepositoryImpl(
     private val apiClient: ApiClient
 ) : UserRepository {
     override suspend fun getProfileDetails(userId: Int): Flow<GetProfileDetailsRepositoryResponse> =

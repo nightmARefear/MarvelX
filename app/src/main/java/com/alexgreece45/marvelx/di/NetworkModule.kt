@@ -14,26 +14,27 @@ import com.alexgreece45.marvelx.util.interceptors.BaseUrlChangerAndAuthenticatio
 import com.chuckerteam.chucker.api.ChuckerInterceptor
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
-import dagger.Module
-import dagger.Provides
-import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
-import dagger.hilt.components.SingletonComponent
 import okhttp3.CertificatePinner
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
+import org.koin.dsl.module
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.time.OffsetDateTime
-import javax.inject.Singleton
 
-@Module
-@InstallIn(SingletonComponent::class)
 object NetworkModule {
 
-    @Provides
-    @Singleton
-    fun provideOkHttpClient(
+    private fun provideRetrofit(
+        okHttpClient: OkHttpClient,
+        converterFactory: GsonConverterFactory
+    ): Retrofit = Retrofit.Builder()
+        .baseUrl(BuildConfig.BASE_URL)
+        .addConverterFactory(converterFactory)
+        .client(okHttpClient)
+        .build()
+
+    private fun provideOkHttpClient(
         @ApplicationContext context: Context,
         interceptor: BaseUrlChangerAndAuthenticationInterceptor,
         configLogic: ConfigLogic,
@@ -71,25 +72,11 @@ object NetworkModule {
         return okHttpClient.build()
     }
 
-    @Provides
-    @Singleton
-    fun provideRetrofit(
-        okHttpClient: OkHttpClient,
-        converterFactory: GsonConverterFactory
-    ): Retrofit = Retrofit.Builder()
-        .baseUrl(BuildConfig.BASE_URL)
-        .addConverterFactory(converterFactory)
-        .client(okHttpClient)
-        .build()
 
-    @Provides
-    @Singleton
-    fun provideGsonConverterFactory(gson: Gson): GsonConverterFactory =
+    private fun provideGsonConverterFactory(gson: Gson): GsonConverterFactory =
         GsonConverterFactory.create(gson)
 
-    @Provides
-    @Singleton
-    fun provideGson(): Gson = GsonBuilder()
+    private fun provideGson(): Gson = GsonBuilder()
         .registerTypeAdapter(
             OffsetDateTime::class.java,
             OffsetDateTimeAdapter()
@@ -103,4 +90,11 @@ object NetworkModule {
             VerificationStepAdapter()
         )
         .create()
+
+    val koinModule = module {
+        single<Gson> { provideGson() }
+        single<GsonConverterFactory> { provideGsonConverterFactory(get()) }
+        single<OkHttpClient> { provideOkHttpClient(get(), get(), get(), get()) }
+        single<Retrofit> { provideRetrofit(get(), get()) }
+    }
 }

@@ -4,7 +4,6 @@ import java.util.Properties
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin)
-    alias(libs.plugins.google.dagger.hilt)
     alias(libs.plugins.google.mapsplatform.secrets)
     alias(libs.plugins.ksp)
     alias(libs.plugins.kotlin.parcelize)
@@ -112,13 +111,6 @@ dependencies {
     debugImplementation(libs.chucker)
     releaseImplementation(libs.chucker.no.op)
 
-    implementation(libs.androidx.hilt.work)
-    implementation(libs.google.dagger.hilt)
-    ksp(libs.google.dagger.hilt.compiler)
-    ksp(libs.androidx.hilt.compiler)
-    testImplementation(libs.google.dagger.hilt.android.testing)
-    kspTest(libs.google.dagger.hilt.compiler)
-
     implementation(libs.squareup.logcat)
     implementation(libs.bundles.coil)
 
@@ -139,4 +131,13 @@ dependencies {
     androidTestImplementation(libs.androidx.work.testing)
 
     implementation(libs.rootbeer)
+
+    // Koin.
+    implementation(platform(libs.koin.bom))
+    implementation(libs.koin.core)
+    implementation(libs.koin.androidx.compose)
+    implementation(libs.koin.androidx.navigation)
+    implementation(libs.koin.androidx.work.manager)
+    testImplementation(libs.koin.android.test)
+    testImplementation(libs.koin.test.junit4)
 }

@@ -10,13 +10,12 @@ import com.alexgreece45.marvelx.util.extensions.safeAsync
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import okio.IOException
-import javax.inject.Inject
 
 interface ComicInteractor {
     fun getComicById(comicId: Int): Flow<GetComicPartialState>
 }
 
-class ComicInteractorImpl @Inject constructor(
+class ComicInteractorImpl(
     private val api: ApiClient,
     private val resourceProvider: ResourceProvider,
     private val logger: AppLoggerController

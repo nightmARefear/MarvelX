@@ -6,8 +6,8 @@ import com.alexgreece45.marvelx.controllers.AuthController
 import com.alexgreece45.marvelx.controllers.PrefKeys
 import com.alexgreece45.marvelx.data.domains.user.profileDetails.ProfileDetailsDomain
 import com.alexgreece45.marvelx.interactors.GetProfileDetailsPartialState
-import com.alexgreece45.marvelx.interactors.LogoutPartialState
 import com.alexgreece45.marvelx.interactors.LoginInteractor
+import com.alexgreece45.marvelx.interactors.LogoutPartialState
 import com.alexgreece45.marvelx.interactors.UserInteractor
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
@@ -16,9 +16,7 @@ import com.alexgreece45.marvelx.mvi.BaseViewModel
 import com.alexgreece45.marvelx.ui.components.BottomBarItem
 import com.alexgreece45.marvelx.ui.components.IconData
 import com.alexgreece45.marvelx.ui.navigation.Screen
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 data class ProfileScreenErrorView(
     val errorMessage: String,
@@ -64,8 +62,7 @@ sealed class ProfileEffect : BaseEffect {
     data class ShowToast(val toastMessage: String) : ProfileEffect()
 }
 
-@HiltViewModel
-class ProfileViewModel @Inject constructor(
+class ProfileViewModel(
     private val loginInteractor: LoginInteractor,
     private val userInteractor: UserInteractor,
     private val prefKeys: PrefKeys,

@@ -12,9 +12,8 @@ import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
 import com.alexgreece45.marvelx.mvi.BaseViewModel
 import com.alexgreece45.marvelx.util.ResourceProvider
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
-import javax.inject.Inject
+import org.koin.core.component.inject
 
 data class MainActivityErrorDialog(
     val title: String,
@@ -48,14 +47,14 @@ sealed class ActivityEffect : BaseEffect {
     }
 }
 
-@HiltViewModel
-class ActivityViewModel @Inject constructor(
-    private val authController: AuthController,
-    private val prefKeys: PrefKeys,
-    private val logger: AppLoggerController,
-    private val loginInteractor: LoginInteractor,
-    private val resourceProvider: ResourceProvider
-) : BaseViewModel<ActivityEvent, ActivityState, ActivityEffect>() {
+class ActivityViewModel : BaseViewModel<ActivityEvent, ActivityState, ActivityEffect>() {
+
+    private val authController: AuthController by inject()
+    private val prefKeys: PrefKeys by inject()
+    private val logger: AppLoggerController by inject()
+    private val loginInteractor: LoginInteractor by inject()
+    private val resourceProvider: ResourceProvider by inject()
+
     override fun setInitialState(): ActivityState = ActivityState()
 
     override fun handleEvents(event: ActivityEvent) {

@@ -7,7 +7,6 @@ import logcat.LogPriority
 import logcat.LogcatLogger
 import logcat.asLog
 import logcat.logcat
-import javax.inject.Inject
 
 interface AppLoggerController {
     /**
@@ -27,7 +26,7 @@ interface AppLoggerController {
     fun e(tag: String, throwable: Throwable)
 }
 
-class AppLoggerControllerImpl @Inject constructor(
+class AppLoggerControllerImpl(
     private val configLogic: ConfigLogic
 ) : AppLoggerController {
     override fun installLogger() {

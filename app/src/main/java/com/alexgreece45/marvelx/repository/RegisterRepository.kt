@@ -13,7 +13,6 @@ import com.alexgreece45.marvelx.data.models.user.signup.UserSignupRequest
 import com.alexgreece45.marvelx.util.helper.parseError
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import javax.inject.Inject
 
 interface RegisterRepository {
     suspend fun postLogin(userLoginRequest: UserLoginRequest): Flow<PostLoginRepositoryResponse>
@@ -27,7 +26,7 @@ interface RegisterRepository {
     suspend fun getJwtForSensitiveUserData(requestJwtSensitiveUserData: RequestJwtSensitiveUserData): Flow<GetJwtForSensitiveUserDataRepositoryResponse>
 }
 
-class RegisterRepositoryImpl @Inject constructor(
+class RegisterRepositoryImpl(
     private val apiClient: ApiClient
 ) : RegisterRepository {
     override suspend fun postLogin(userLoginRequest: UserLoginRequest): Flow<PostLoginRepositoryResponse> =
