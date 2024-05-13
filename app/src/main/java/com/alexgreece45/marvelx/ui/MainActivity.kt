@@ -15,8 +15,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.res.stringResource
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import androidx.work.WorkManager
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.controllers.AppLoggerController
@@ -25,8 +23,7 @@ import com.alexgreece45.marvelx.ui.components.AlertDialogButton
 import com.alexgreece45.marvelx.ui.components.AlertDialogError
 import com.alexgreece45.marvelx.ui.components.ErrorButtonType
 import com.alexgreece45.marvelx.ui.components.effect.OneTimeLaunchedEffect
-import com.alexgreece45.marvelx.ui.navigation.Navigation
-import com.alexgreece45.marvelx.ui.navigation.Screen
+import com.alexgreece45.marvelx.ui.navigation.router.RouterHost
 import com.alexgreece45.marvelx.ui.theme.MarvelXTheme
 import com.alexgreece45.marvelx.util.constants.ConstantsWorker
 import com.alexgreece45.marvelx.viewModels.ActivityEffect
@@ -45,6 +42,9 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var prefKeys: PrefKeys
 
+    @Inject
+    lateinit var routerHost: RouterHost
+
     private val activityViewModel: ActivityViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -54,9 +54,8 @@ class MainActivity : ComponentActivity() {
             MarvelXTheme {
                 Surface(color = MaterialTheme.colors.background) {
                     val state by activityViewModel.uiState.collectAsStateWithLifecycle()
-                    val navController: NavController = rememberNavController()
 
-                    Navigation(navController = navController)
+                    routerHost.StartFlow()
                     ChuckerPermissions()
 
                     state.mainActivityErrorDialog?.let { mainActivityErrorDialog ->
@@ -80,11 +79,7 @@ class MainActivity : ComponentActivity() {
                         activityViewModel.uiEffect.collect { activityEffect ->
                             when (activityEffect) {
                                 ActivityEffect.Navigation.NavigateToHomeScreen -> {
-                                    navController.navigate(Screen.RegisterScreens.HomeScreen.route) {
-                                        popUpTo(Screen.BottomNavigationScreens.getNestedGraphRootRoute()) {
-                                            inclusive = true
-                                        }
-                                    }
+                                    routerHost.logout()
                                 }
                             }
                         }

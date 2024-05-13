@@ -23,7 +23,7 @@ data class AllFavoriteCharactersScreenErrorView(
 )
 
 sealed class AllFavoriteCharactersEvent : BaseEvent {
-    data object InitView : AllFavoriteCharactersEvent()
+    data object Init : AllFavoriteCharactersEvent()
 }
 
 data class AllFavoriteCharactersState(
@@ -51,7 +51,7 @@ class AllFavoriteCharactersViewModel @Inject constructor(
 
     override fun handleEvents(event: AllFavoriteCharactersEvent) {
         when (event) {
-            AllFavoriteCharactersEvent.InitView -> {
+            AllFavoriteCharactersEvent.Init -> {
                 initView()
             }
         }

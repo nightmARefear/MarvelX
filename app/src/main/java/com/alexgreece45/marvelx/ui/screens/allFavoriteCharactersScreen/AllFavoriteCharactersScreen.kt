@@ -47,8 +47,12 @@ fun AllFavoriteCharactersScreen(
 ) {
     val state by viewModel.uiState.collectAsState()
 
+    LaunchedEffect(Unit) {
+        viewModel.setEvent(AllFavoriteCharactersEvent.Init)
+    }
+
     ContentScreen(
-        isLoading = false,
+        isLoading = state.isLoading,
         showToolbar = true,
         toolbarTitle = stringResource(R.string.all_favorite_characters_screen_toolbar_title),
         bottomNavigationBarData = bottomNavigationBarData()
@@ -98,9 +102,5 @@ fun AllFavoriteCharactersScreen(
                 }
             }
         }
-    }
-
-    LaunchedEffect(Unit) {
-        viewModel.setEvent(AllFavoriteCharactersEvent.InitView)
     }
 }

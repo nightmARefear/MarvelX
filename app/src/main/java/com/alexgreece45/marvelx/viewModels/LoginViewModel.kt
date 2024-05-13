@@ -107,7 +107,7 @@ sealed class LoginEffect : BaseEffect {
             val shouldRememberUserSession: Boolean
         ) : Navigation()
 
-        data object PopUpToSignupScreen : Navigation()
+        data object NavigateToSignupScreen : Navigation()
     }
 
     /**
@@ -191,7 +191,7 @@ class LoginViewModel @Inject constructor(
 
             LoginEvent.OnSignupTextClicked -> {
                 setEffect {
-                    LoginEffect.Navigation.PopUpToSignupScreen
+                    LoginEffect.Navigation.NavigateToSignupScreen
                 }
             }
 
