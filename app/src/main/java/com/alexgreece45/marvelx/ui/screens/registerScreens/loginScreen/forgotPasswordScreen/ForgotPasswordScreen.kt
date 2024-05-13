@@ -19,7 +19,6 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.alexgreece45.marvelx.R
@@ -38,12 +37,13 @@ import com.alexgreece45.marvelx.viewModels.ForgotPasswordEvent
 import com.alexgreece45.marvelx.viewModels.ForgotPasswordState
 import com.alexgreece45.marvelx.viewModels.ForgotPasswordSubScreens
 import com.alexgreece45.marvelx.viewModels.ForgotPasswordViewModel
+import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun ForgotPasswordScreen(
     popUpToLoginScreen: () -> Unit,
     navController: NavController,
-    viewModel: ForgotPasswordViewModel = hiltViewModel()
+    viewModel: ForgotPasswordViewModel = koinViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current

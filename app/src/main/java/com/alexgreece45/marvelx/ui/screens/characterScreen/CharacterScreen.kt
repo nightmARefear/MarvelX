@@ -37,7 +37,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
@@ -57,11 +56,12 @@ import com.alexgreece45.marvelx.util.VSpacer
 import com.alexgreece45.marvelx.viewModels.CharacterEffect
 import com.alexgreece45.marvelx.viewModels.CharacterEvent
 import com.alexgreece45.marvelx.viewModels.CharacterViewModel
+import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun CharacterScreen(
     navController: NavController,
-    viewModel: CharacterViewModel = hiltViewModel(),
+    viewModel: CharacterViewModel = koinViewModel(),
     characterId: Int
 ) {
     val state by viewModel.uiState.collectAsState()

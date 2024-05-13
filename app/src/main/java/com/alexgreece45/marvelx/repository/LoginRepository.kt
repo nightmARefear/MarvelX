@@ -6,13 +6,11 @@ import com.alexgreece45.marvelx.data.models.sensitiveUserData.RequestSensitiveUs
 import com.alexgreece45.marvelx.data.models.sensitiveUserData.ResponseSensitiveUserData
 import com.alexgreece45.marvelx.data.models.token.TokenResponse
 import com.alexgreece45.marvelx.data.models.user.ResponseUserError
-import com.alexgreece45.marvelx.data.models.user.profileDetails.ResponseProfileDetails
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.helper.parseError
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import retrofit2.Response
-import javax.inject.Inject
 
 interface LoginRepository {
     /**
@@ -41,7 +39,7 @@ interface LoginRepository {
     suspend fun getSensitiveUserData(requestSensitiveUserData: RequestSensitiveUserData): Flow<GetSensitiveUserDataRepositoryResponse>
 }
 
-class LoginRepositoryImpl @Inject constructor(
+class LoginRepositoryImpl(
     private val apiClient: ApiClient,
     private val resourceProvider: ResourceProvider,
     private val logger: AppLoggerController

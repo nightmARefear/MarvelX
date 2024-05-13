@@ -8,9 +8,7 @@ import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
 import com.alexgreece45.marvelx.mvi.BaseViewModel
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 sealed interface ComicEvent : BaseEvent {
     data class InitView(val comicId: Int) : ComicEvent
@@ -28,8 +26,7 @@ data class ComicState(
 
 sealed interface ComicEffect : BaseEffect
 
-@HiltViewModel
-class ComicViewModel @Inject constructor(
+class ComicViewModel(
     private val interactor: ComicInteractor
 ) : BaseViewModel<ComicEvent, ComicState, ComicEffect>() {
     override fun setInitialState(): ComicState =
@@ -54,7 +51,7 @@ class ComicViewModel @Inject constructor(
     }
 
     private fun initView(comicId: Int) {
-       viewModelScope.launch {
+        viewModelScope.launch {
             interactor.getComicById(comicId).collect { getComicPartialState ->
                 when (getComicPartialState) {
                     is GetComicPartialState.Success -> {

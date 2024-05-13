@@ -28,7 +28,6 @@ import com.alexgreece45.marvelx.util.extensions.safeAsync
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import okio.IOException
-import javax.inject.Inject
 
 interface RegisterInteractor {
     suspend fun postSignup(userSignupRequest: UserSignupRequest): Flow<PostSignupPartialState>
@@ -43,7 +42,7 @@ interface RegisterInteractor {
     ): Flow<GetJwtForSensitiveUserDataPartialState>
 }
 
-class RegisterInteractorImpl @Inject constructor(
+class RegisterInteractorImpl(
     private val repository: RegisterRepository,
     private val resourceProvider: ResourceProvider,
     private val refreshTokenController: RefreshTokenController,

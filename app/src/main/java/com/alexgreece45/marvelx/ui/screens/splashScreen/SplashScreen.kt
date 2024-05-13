@@ -16,7 +16,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import coil.ImageLoader
@@ -31,11 +30,12 @@ import com.alexgreece45.marvelx.ui.navigation.Screen
 import com.alexgreece45.marvelx.viewModels.SplashEffect
 import com.alexgreece45.marvelx.viewModels.SplashEvent
 import com.alexgreece45.marvelx.viewModels.SplashViewModel
+import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun SplashScreen(
     navController: NavController,
-    viewModel: SplashViewModel = hiltViewModel()
+    viewModel: SplashViewModel = koinViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current

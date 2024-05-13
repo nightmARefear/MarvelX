@@ -2,7 +2,6 @@ package com.alexgreece45.marvelx.interactors
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import javax.inject.Inject
 
 interface ChangePasswordInteractor {
     suspend fun updateUserPassword(
@@ -13,9 +12,7 @@ interface ChangePasswordInteractor {
     ): Flow<ChangePasswordUpdateUserPasswordPartialState>
 }
 
-class ChangePasswordInteractorImpl @Inject constructor(
-
-) : ChangePasswordInteractor {
+class ChangePasswordInteractorImpl : ChangePasswordInteractor {
     override suspend fun updateUserPassword(
         requestIdEmail: String,
         requestIdPhoneNumber: String?,

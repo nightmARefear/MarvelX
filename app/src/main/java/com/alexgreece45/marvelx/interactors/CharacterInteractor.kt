@@ -18,7 +18,6 @@ import com.alexgreece45.marvelx.util.extensions.safeAsync
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import okio.IOException
-import javax.inject.Inject
 
 interface CharacterInteractor {
     suspend fun getAllCharacters(): Flow<GetAllCharactersPartialState>
@@ -38,7 +37,7 @@ interface CharacterInteractor {
     suspend fun isCharacterFavoriteById(characterId: Int): Flow<IsCharacterFavoriteByIdPartialState>
 }
 
-class CharacterInteractorImpl @Inject constructor(
+class CharacterInteractorImpl(
     private val characterRepository: CharacterRepository,
     private val favoriteCharactersRepository: FavoriteCharactersRepository,
     private val resourceProvider: ResourceProvider,

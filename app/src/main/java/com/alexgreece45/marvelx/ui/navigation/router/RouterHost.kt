@@ -6,7 +6,6 @@ import androidx.navigation.compose.rememberNavController
 import com.alexgreece45.marvelx.ui.navigation.NavGraph
 import com.alexgreece45.marvelx.ui.navigation.Screen
 import com.alexgreece45.marvelx.util.extensions.popUpToTop
-import javax.inject.Inject
 
 interface RouterHost {
     /**
@@ -28,7 +27,7 @@ interface RouterHost {
     fun StartFlow()
 }
 
-class RouterHostImpl @Inject constructor() : RouterHost {
+class RouterHostImpl : RouterHost {
 
     private lateinit var navController: NavHostController
     override fun getNavController(): NavHostController = navController

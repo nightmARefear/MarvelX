@@ -10,14 +10,13 @@ import com.alexgreece45.marvelx.data.models.resendOtp.ResponseResendOtpSuccess
 import com.google.gson.Gson
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import javax.inject.Inject
 
 interface OtpRepository {
     suspend fun validateOtp(otpRequest: OtpRequest): Flow<ValidateOtpRepositoryResponse>
     suspend fun resendOtp(requestResendOtp: RequestResendOtp): Flow<ResendOtpRepositoryResponse>
 }
 
-class OtpRepositoryImpl @Inject constructor(
+class OtpRepositoryImpl(
     private val apiClient: ApiClient,
     private val gson: Gson
 ) : OtpRepository {

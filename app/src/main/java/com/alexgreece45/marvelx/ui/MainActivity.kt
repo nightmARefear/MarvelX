@@ -30,20 +30,15 @@ import com.alexgreece45.marvelx.viewModels.ActivityEffect
 import com.alexgreece45.marvelx.viewModels.ActivityEvent
 import com.alexgreece45.marvelx.viewModels.ActivityViewModel
 import com.chuckerteam.chucker.api.Chucker
-import dagger.hilt.android.AndroidEntryPoint
-import javax.inject.Inject
+import org.koin.android.ext.android.inject
 
-@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
-    @Inject
-    lateinit var logger: AppLoggerController
+    private val logger: AppLoggerController by inject()
 
-    @Inject
-    lateinit var prefKeys: PrefKeys
+    private val prefKeys: PrefKeys by inject()
 
-    @Inject
-    lateinit var routerHost: RouterHost
+    private val routerHost: RouterHost by inject()
 
     private val activityViewModel: ActivityViewModel by viewModels()
 

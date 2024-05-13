@@ -11,13 +11,12 @@ import com.alexgreece45.marvelx.util.extensions.safeAsync
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import okio.IOException
-import javax.inject.Inject
 
 interface UserInteractor {
     suspend fun getProfileDetails(): Flow<GetProfileDetailsPartialState>
 }
 
-class UserInteractorImpl @Inject constructor(
+class UserInteractorImpl(
     private val repository: UserRepository,
     private val prefKeys: PrefKeys,
     private val resourceProvider: ResourceProvider,

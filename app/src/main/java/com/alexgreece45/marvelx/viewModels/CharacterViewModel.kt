@@ -16,9 +16,7 @@ import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
 import com.alexgreece45.marvelx.mvi.BaseViewModel
 import com.alexgreece45.marvelx.util.ResourceProvider
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 data class CharacterScreenErrorView(
     val errorMessage: String,
@@ -30,17 +28,17 @@ sealed class CharacterEvent : BaseEvent {
 
     data class LoadCharacter(val characterId: Int) : CharacterEvent()
 
-    object OnBackClick : CharacterEvent()
+    data object OnBackClick : CharacterEvent()
 
-    object OnFavoriteClick : CharacterEvent()
+    data object OnFavoriteClick : CharacterEvent()
 
     data class OnComicClick(val comicId: Int) : CharacterEvent()
 
-    object OnArrowRightClick : CharacterEvent()
+    data object OnArrowRightClick : CharacterEvent()
 }
 
 sealed class CharacterEffect : BaseEffect {
-    object PopBackStack : CharacterEffect()
+    data object PopBackStack : CharacterEffect()
     data class NavigateToComicScreen(val comicId: Int) : CharacterEffect()
 
     data class NavigateToAllComicsScreen(val characterId: Int, val toolbarTitlePrefix: String) :
@@ -73,8 +71,7 @@ data class CharacterState(
     }
 }
 
-@HiltViewModel
-class CharacterViewModel @Inject constructor(
+class CharacterViewModel(
     private val interactor: CharacterInteractor,
     private val resourceProvider: ResourceProvider
 ) : BaseViewModel<CharacterEvent, CharacterState, CharacterEffect>() {

@@ -33,32 +33,32 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.data.domains.comic.ComicDomain
-import com.alexgreece45.marvelx.viewModels.AllCharacterComicsEffect
-import com.alexgreece45.marvelx.viewModels.AllCharacterComicsEvent
-import com.alexgreece45.marvelx.viewModels.AllCharacterComicsViewModel
-import com.alexgreece45.marvelx.ui.navigation.Screen
-import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.ContentErrorScreen
+import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.ModalBottomSheet
 import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
 import com.alexgreece45.marvelx.ui.components.SortingModalBottomSheetContent
+import com.alexgreece45.marvelx.ui.navigation.Screen
 import com.alexgreece45.marvelx.util.DEFAULT_SCREEN_PADDING
 import com.alexgreece45.marvelx.util.HSpacer
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.VSpacer
+import com.alexgreece45.marvelx.viewModels.AllCharacterComicsEffect
+import com.alexgreece45.marvelx.viewModels.AllCharacterComicsEvent
+import com.alexgreece45.marvelx.viewModels.AllCharacterComicsViewModel
 import kotlinx.coroutines.coroutineScope
+import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun AllCharacterComicsScreen(
     navController: NavController,
-    viewModel: AllCharacterComicsViewModel = hiltViewModel(),
+    viewModel: AllCharacterComicsViewModel = koinViewModel(),
     characterId: Int,
     toolbarTitlePrefix: String
 ) {
@@ -71,7 +71,7 @@ fun AllCharacterComicsScreen(
         )
 
     LaunchedEffect(Unit) {
-        viewModel.setEvent(AllCharacterComicsEvent.InitView(characterId = characterId))
+        viewModel.setEvent(AllCharacterComicsEvent.Init(characterId = characterId))
 
         viewModel.uiEffect.collect { effect ->
             when (effect) {
@@ -126,7 +126,7 @@ fun AllCharacterComicsScreen(
         ContentScreen(
             isLoading = state.isLoading,
             navigableAction = ScreenNavigableAction.Backable {
-               navController.popBackStack()
+                navController.popBackStack()
             },
             showToolbar = true,
             toolbarTitle = stringResource(
@@ -149,7 +149,7 @@ fun AllCharacterComicsScreen(
                 if (!state.hasInternetConnection) {
                     item {
                         ContentErrorScreen(errorMessage = stringResource(R.string.no_internet_connection_error_message)) {
-                            viewModel.setEvent(AllCharacterComicsEvent.InitView(characterId = characterId))
+                            viewModel.setEvent(AllCharacterComicsEvent.Init(characterId = characterId))
                         }
                     }
                 }

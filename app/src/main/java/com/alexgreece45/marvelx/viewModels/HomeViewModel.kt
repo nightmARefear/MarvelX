@@ -6,21 +6,17 @@ import com.alexgreece45.marvelx.controllers.AuthController
 import com.alexgreece45.marvelx.controllers.PrefKeys
 import com.alexgreece45.marvelx.data.domains.otp.OtpFlowType
 import com.alexgreece45.marvelx.data.domains.user.VerificationStep
-import com.alexgreece45.marvelx.data.models.user.loginWithToken.UserLoginWithTokenRequest
+import com.alexgreece45.marvelx.interactors.LoginInteractor
 import com.alexgreece45.marvelx.interactors.LogoutPartialState
 import com.alexgreece45.marvelx.interactors.PostLoginWithTokenPartialState
 import com.alexgreece45.marvelx.interactors.RefreshAccessTokenPartialState
 import com.alexgreece45.marvelx.interactors.RegisterInteractor
-import com.alexgreece45.marvelx.interactors.LoginInteractor
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
 import com.alexgreece45.marvelx.mvi.BaseViewModel
-import com.alexgreece45.marvelx.util.DateUtil
 import com.alexgreece45.marvelx.util.ResourceProvider
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 sealed class HomeEvent : BaseEvent {
     data object InitView : HomeEvent()
@@ -70,8 +66,7 @@ sealed interface HomeEffect : BaseEffect {
     }
 }
 
-@HiltViewModel
-class HomeViewModel @Inject constructor(
+class HomeViewModel(
     private val prefKeys: PrefKeys,
     private val resourceProvider: ResourceProvider,
     private val loginInteractor: LoginInteractor,

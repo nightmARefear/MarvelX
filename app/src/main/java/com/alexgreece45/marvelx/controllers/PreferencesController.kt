@@ -5,7 +5,6 @@ import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKeys
 import com.alexgreece45.marvelx.BuildConfig
 import com.alexgreece45.marvelx.util.ResourceProvider
-import javax.inject.Inject
 
 interface PreferencesController {
     /**
@@ -38,7 +37,7 @@ interface PreferencesController {
     fun removeAll()
 }
 
-class PreferencesControllerImpl @Inject constructor(
+class PreferencesControllerImpl(
     private val resourceProvider: ResourceProvider
 ) : PreferencesController {
     private val sharedPreferences: SharedPreferences
@@ -142,7 +141,7 @@ interface PrefKeys {
     fun removeUserAuthData()
 }
 
-class PrefKeysImpl @Inject constructor(
+class PrefKeysImpl(
     private val preferencesController: PreferencesController,
     private val logger: AppLoggerController
 ) : PrefKeys {

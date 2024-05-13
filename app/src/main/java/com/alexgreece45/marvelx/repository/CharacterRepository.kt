@@ -5,7 +5,6 @@ import com.alexgreece45.marvelx.data.models.character.CharacterDataWrapper
 import com.alexgreece45.marvelx.data.models.character.comic.ComicDataWrapper
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import javax.inject.Inject
 
 interface CharacterRepository {
     suspend fun getAllCharacters(): Flow<GetAllCharactersRepositoryResponse>
@@ -13,7 +12,7 @@ interface CharacterRepository {
     suspend fun getCharacterComics(characterId: Int): Flow<GetCharacterComicsRepositoryResponse>
 }
 
-class CharacterRepositoryImpl @Inject constructor(
+class CharacterRepositoryImpl(
     private val apiClient: ApiClient
 ) : CharacterRepository {
     override suspend fun getAllCharacters(): Flow<GetAllCharactersRepositoryResponse> = flow {

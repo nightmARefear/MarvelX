@@ -28,15 +28,9 @@ import com.alexgreece45.marvelx.data.models.user.loginWithToken.UserLoginWithTok
 import com.alexgreece45.marvelx.data.models.user.profileDetails.ResponseProfileDetails
 import com.alexgreece45.marvelx.data.models.user.signup.SignupResponse
 import com.alexgreece45.marvelx.data.models.user.signup.UserSignupRequest
-import dagger.Module
-import dagger.hilt.InstallIn
-import dagger.hilt.components.SingletonComponent
 import retrofit2.Response
-import javax.inject.Inject
 
-@Module
-@InstallIn(SingletonComponent::class)
-class ApiClientImpl @Inject constructor(
+class ApiClientImpl(
     private val apiService: ApiService
 ) : ApiClient {
 

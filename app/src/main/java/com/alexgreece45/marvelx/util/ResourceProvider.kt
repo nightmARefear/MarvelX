@@ -4,8 +4,6 @@ import android.content.Context
 import androidx.annotation.StringRes
 import com.alexgreece45.marvelx.R
 import dagger.hilt.android.qualifiers.ApplicationContext
-import javax.inject.Inject
-import javax.inject.Singleton
 
 interface ResourceProvider {
     fun getContext(): Context
@@ -17,8 +15,7 @@ interface ResourceProvider {
     fun getNoInternetConnectionMessage(): String
 }
 
-@Singleton
-class ResourceProviderImpl @Inject constructor(
+class ResourceProviderImpl(
     @ApplicationContext private val context: Context
 ) : ResourceProvider {
     override fun getContext(): Context = context

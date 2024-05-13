@@ -46,7 +46,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
@@ -71,13 +70,14 @@ import com.alexgreece45.marvelx.viewModels.AllCharactersEffect
 import com.alexgreece45.marvelx.viewModels.AllCharactersEvent
 import com.alexgreece45.marvelx.viewModels.AllCharactersViewModel
 import kotlinx.coroutines.launch
+import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun AllCharactersScreen(
     navigateToCharacterScreen: (characterId: Int) -> Unit,
     bottomNavigationBarData: @Composable () -> BottomNavigationBarData,
-    viewModel: AllCharactersViewModel = hiltViewModel()
+    viewModel: AllCharactersViewModel = koinViewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
     val modalBottomSheetState = rememberModalBottomSheetState(

@@ -15,7 +15,6 @@ import com.alexgreece45.marvelx.util.extensions.safeAsync
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import okio.IOException
-import javax.inject.Inject
 
 interface ForgotPasswordInteractor {
     /**
@@ -59,7 +58,7 @@ interface ForgotPasswordInteractor {
     ): Flow<ForgotPasswordValidateOtpPartialState>
 }
 
-class ForgotPasswordInteractorImpl @Inject constructor(
+class ForgotPasswordInteractorImpl(
     private val repository: ForgotPasswordRepository,
     private val resourceProvider: ResourceProvider
 ) : ForgotPasswordInteractor {

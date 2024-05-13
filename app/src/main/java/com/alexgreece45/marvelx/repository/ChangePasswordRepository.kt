@@ -1,9 +1,7 @@
 package com.alexgreece45.marvelx.repository
 
 import com.alexgreece45.marvelx.data.api.ApiClient
-import com.alexgreece45.marvelx.interactors.ChangePasswordUpdateUserPasswordPartialState
 import kotlinx.coroutines.flow.Flow
-import javax.inject.Inject
 
 interface ChangePasswordRepository {
     suspend fun updateUserPassword(
@@ -14,7 +12,7 @@ interface ChangePasswordRepository {
     ): Flow<ChangePasswordRepositoryUpdateUserPasswordResponse>
 }
 
-class ChangePasswordRepositoryImpl @Inject constructor(
+class ChangePasswordRepositoryImpl(
     private val apiClient: ApiClient
 ) : ChangePasswordRepository {
     override suspend fun updateUserPassword(

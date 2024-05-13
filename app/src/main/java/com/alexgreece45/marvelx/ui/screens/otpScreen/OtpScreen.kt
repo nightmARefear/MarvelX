@@ -23,7 +23,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.alexgreece45.marvelx.R
@@ -41,6 +40,7 @@ import com.alexgreece45.marvelx.util.extensions.popUpToTop
 import com.alexgreece45.marvelx.viewModels.OtpEffect
 import com.alexgreece45.marvelx.viewModels.OtpEvent
 import com.alexgreece45.marvelx.viewModels.OtpViewModel
+import org.koin.androidx.compose.koinViewModel
 
 /**
  * The OTP (One Time Password) screen is used to double check the user's identity when signing up or
@@ -53,7 +53,7 @@ import com.alexgreece45.marvelx.viewModels.OtpViewModel
 @Composable
 fun OtpScreen(
     navController: NavController,
-    viewModel: OtpViewModel = hiltViewModel(),
+    viewModel: OtpViewModel = koinViewModel(),
     userId: Int?,
     otpFlowType: String?,
     verificationStep: String?,
@@ -97,7 +97,7 @@ fun OtpScreen(
 
                 OtpEffect.Navigation.NavigateToAllCharactersScreen -> {
                     navController.navigate(Screen.BottomNavigationScreens.AllCharactersScreen.route) {
-                       popUpToTop(navController)
+                        popUpToTop(navController)
                     }
                 }
 

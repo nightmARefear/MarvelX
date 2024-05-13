@@ -10,7 +10,6 @@ import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.constants.ConstantsWorker
 import com.alexgreece45.marvelx.worker.RefreshTokenWorker
 import java.util.concurrent.TimeUnit
-import javax.inject.Inject
 
 interface RefreshTokenController {
     fun startWorker()
@@ -18,7 +17,7 @@ interface RefreshTokenController {
     fun stopWorker()
 }
 
-class RefreshTokenControllerImpl @Inject constructor(
+class RefreshTokenControllerImpl(
     private val resourceProvider: ResourceProvider,
     private val configLogic: ConfigLogic,
     private val logger: AppLoggerController

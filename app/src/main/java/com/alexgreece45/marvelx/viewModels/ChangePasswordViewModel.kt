@@ -9,8 +9,6 @@ import com.alexgreece45.marvelx.mvi.BaseState
 import com.alexgreece45.marvelx.mvi.BaseViewModel
 import com.alexgreece45.marvelx.ui.components.models.ErrorButtonLayout
 import com.alexgreece45.marvelx.util.ResourceProvider
-import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
 
 /**
  * All the error codes of the `ChangePasswordScreen` for error reporting by the users.
@@ -54,8 +52,7 @@ interface ChangePasswordContract {
     }
 }
 
-@HiltViewModel
-class ChangePasswordViewModel @Inject constructor(
+class ChangePasswordViewModel(
     private val resourceProvider: ResourceProvider,
     private val changePasswordInteractor: ChangePasswordInteractor
 ) :
@@ -71,7 +68,7 @@ class ChangePasswordViewModel @Inject constructor(
                         showGenericErrorViewWithErrorCode(
                             errorCode = ChangePasswordScreenErrorCodes.InitChecks.InvalidOtpFlowType,
 
-                        )
+                            )
                     }
 
                     OtpFlowType.ForgotPassword.Email -> TODO()
@@ -122,7 +119,10 @@ class ChangePasswordViewModel @Inject constructor(
                     },
                     errorButtonLayout = ErrorButtonLayout.Single(
                         primaryButtonLabel = when (otpFlowType) {
-                            is OtpFlowType.Invalid, OtpFlowType.ForgotPassword.Email, OtpFlowType.ForgotPassword.PhoneNumber -> resourceProvider.getString(R.string.generic_go_to_previous_screen_button)
+                            is OtpFlowType.Invalid, OtpFlowType.ForgotPassword.Email, OtpFlowType.ForgotPassword.PhoneNumber -> resourceProvider.getString(
+                                R.string.generic_go_to_previous_screen_button
+                            )
+
                             OtpFlowType.Register -> resourceProvider.getString(R.string.otp_screen_back_to_login_button)
                         },
                         onPrimaryButtonClicked = {

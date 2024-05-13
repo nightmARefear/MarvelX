@@ -9,9 +9,7 @@ import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
 import com.alexgreece45.marvelx.mvi.BaseViewModel
 import com.alexgreece45.marvelx.ui.components.SortingType
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 data class AllCharacterComicsScreenErrorView(
     val errorMessage: String,
@@ -19,18 +17,18 @@ data class AllCharacterComicsScreenErrorView(
 )
 
 sealed class AllCharacterComicsEvent : BaseEvent {
-    data class InitView(val characterId: Int) : AllCharacterComicsEvent()
+    data class Init(val characterId: Int) : AllCharacterComicsEvent()
 
     data class OnComicClick(val comicId: Int) : AllCharacterComicsEvent()
 
-    object OnDropDownArrowClick : AllCharacterComicsEvent()
+    data object OnDropDownArrowClick : AllCharacterComicsEvent()
 
     sealed class Sorting : AllCharacterComicsEvent() {
         data class OnItemClick(val sortingType: SortingType) : Sorting()
-        object OnCloseClick : Sorting()
+        data object OnCloseClick : Sorting()
     }
 
-    object OnBackClick : AllCharacterComicsEvent()
+    data object OnBackClick : AllCharacterComicsEvent()
 }
 
 data class AllCharacterComicsState(
@@ -55,17 +53,16 @@ data class AllCharacterComicsState(
 }
 
 sealed class AllCharacterComicsEffect : BaseEffect {
-    object NavigateToCharacterScreen : AllCharacterComicsEffect()
+    data object NavigateToCharacterScreen : AllCharacterComicsEffect()
     data class NavigateToComicScreen(val comicId: Int) : AllCharacterComicsEffect()
 
     sealed class BottomSheet : AllCharacterComicsEffect() {
-        object Show : BottomSheet()
-        object Hide : BottomSheet()
+        data object Show : BottomSheet()
+        data object Hide : BottomSheet()
     }
 }
 
-@HiltViewModel
-class AllCharacterComicsViewModel @Inject constructor(
+class AllCharacterComicsViewModel(
     private val interactor: CharacterInteractor
 ) : BaseViewModel<AllCharacterComicsEvent, AllCharacterComicsState, AllCharacterComicsEffect>() {
     override fun setInitialState(): AllCharacterComicsState =
@@ -73,7 +70,7 @@ class AllCharacterComicsViewModel @Inject constructor(
 
     override fun handleEvents(event: AllCharacterComicsEvent) {
         when (event) {
-            is AllCharacterComicsEvent.InitView -> {
+            is AllCharacterComicsEvent.Init -> {
                 initView(characterId = event.characterId)
             }
 

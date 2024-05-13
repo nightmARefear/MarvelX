@@ -1,7 +1,6 @@
 package com.alexgreece45.marvelx.worker
 
 import android.content.Context
-import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.alexgreece45.marvelx.configuration.ConfigLogic
@@ -10,15 +9,12 @@ import com.alexgreece45.marvelx.controllers.AuthController
 import com.alexgreece45.marvelx.data.api.ApiClient
 import com.alexgreece45.marvelx.data.domains.userAuthData.UserAuthData
 import com.alexgreece45.marvelx.util.DateUtil
-import dagger.assisted.Assisted
-import dagger.assisted.AssistedInject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-@HiltWorker
-class RefreshTokenWorker @AssistedInject constructor(
-    @Assisted context: Context,
-    @Assisted workerParameters: WorkerParameters,
+class RefreshTokenWorker(
+    context: Context,
+    workerParameters: WorkerParameters,
     private val apiClient: ApiClient,
     private val authController: AuthController,
     private val configLogic: ConfigLogic,

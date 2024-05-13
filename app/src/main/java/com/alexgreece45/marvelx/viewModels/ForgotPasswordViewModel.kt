@@ -25,11 +25,9 @@ import com.alexgreece45.marvelx.util.Rule
 import com.alexgreece45.marvelx.util.constants.ConstantsInputField
 import com.alexgreece45.marvelx.viewModels.ForgotPasswordSubScreens.EnterEmail
 import com.alexgreece45.marvelx.viewModels.ForgotPasswordSubScreens.PasswordChanged
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 /**
  * Defines all the sub-screens needed for the `Forgot Password` flow. The string - related info
@@ -236,8 +234,7 @@ sealed class ForgotPasswordEffect : BaseEffect {
     }
 }
 
-@HiltViewModel
-class ForgotPasswordViewModel @Inject constructor(
+class ForgotPasswordViewModel(
     private val forgotPasswordInteractor: ForgotPasswordInteractor,
     private val resourceProvider: ResourceProvider,
     private val timerController: TimerController,

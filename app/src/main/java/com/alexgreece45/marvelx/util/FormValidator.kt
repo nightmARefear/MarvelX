@@ -4,14 +4,13 @@ import com.alexgreece45.marvelx.data.models.user.Gender
 import com.alexgreece45.marvelx.util.extensions.isEmail
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import javax.inject.Inject
 
 interface FormValidator {
     fun validateForm(form: Form): Flow<FormValidationResult>
     fun validateForms(forms: List<Form>): Flow<FormsValidationResult>
 }
 
-class FormValidatorImpl @Inject constructor() : FormValidator {
+class FormValidatorImpl : FormValidator {
     override fun validateForm(form: Form): Flow<FormValidationResult> = flow {
         form.inputs.forEach { (rules, value) ->
             rules.forEach { rule ->

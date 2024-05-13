@@ -2,8 +2,6 @@ package com.alexgreece45.marvelx.configuration
 
 import com.alexgreece45.marvelx.BuildConfig
 import com.alexgreece45.marvelx.util.constants.ConstantsSecurity
-import javax.inject.Inject
-import javax.inject.Singleton
 
 interface ConfigLogic {
     /**
@@ -68,8 +66,7 @@ sealed class AppBuildType(val key: String) {
     }
 }
 
-@Singleton
-class ConfigLogicImpl @Inject constructor() : ConfigLogic {
+class ConfigLogicImpl : ConfigLogic {
 
     override val clientId: String get() = ConstantsSecurity.OAuth.TOKEN_CLIENT_ID
     override val clientSecret: String get() = BuildConfig.TOKEN_CLIENT_SECRET

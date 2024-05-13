@@ -10,21 +10,20 @@ import com.alexgreece45.marvelx.configuration.ConfigLogic
 import com.alexgreece45.marvelx.controllers.AppLoggerController
 import com.alexgreece45.marvelx.controllers.AuthController
 import com.alexgreece45.marvelx.data.api.ApiClient
+import com.alexgreece45.marvelx.di.initKoin
 import com.alexgreece45.marvelx.worker.RefreshTokenWorker
-import dagger.hilt.android.HiltAndroidApp
-import javax.inject.Inject
+import org.koin.android.ext.android.inject
 
-@HiltAndroidApp
 class MarvelXApplication : Application(), Configuration.Provider {
 
-    @Inject
-    lateinit var refreshTokenWorkerFactory: RefreshTokenWorkerFactory
+    private val refreshTokenWorkerFactory: RefreshTokenWorkerFactory by inject()
 
-    @Inject
-    lateinit var appLoggerController: AppLoggerController
+    private val appLoggerController: AppLoggerController by inject()
 
     override fun onCreate() {
         super.onCreate()
+
+        initKoin(this@MarvelXApplication)
 
         appLoggerController.installLogger()
     }
@@ -35,7 +34,7 @@ class MarvelXApplication : Application(), Configuration.Provider {
             .build()
 }
 
-class RefreshTokenWorkerFactory @Inject constructor(
+class RefreshTokenWorkerFactory(
     private val apiClient: ApiClient,
     private val authController: AuthController,
     private val configLogic: ConfigLogic,

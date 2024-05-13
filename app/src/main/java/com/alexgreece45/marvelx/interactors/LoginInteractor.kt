@@ -21,7 +21,6 @@ import com.alexgreece45.marvelx.util.extensions.safeAsync
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import okio.IOException
-import javax.inject.Inject
 
 interface LoginInteractor {
     suspend fun logout(): Flow<LogoutPartialState>
@@ -33,7 +32,7 @@ interface LoginInteractor {
     suspend fun getSensitiveUserData(token: String): Flow<GetSensitiveUserDataPartialState>
 }
 
-class LoginInteractorImpl @Inject constructor(
+class LoginInteractorImpl(
     private val repository: LoginRepository,
     private val resourceProvider: ResourceProvider,
     private val configLogic: ConfigLogic,

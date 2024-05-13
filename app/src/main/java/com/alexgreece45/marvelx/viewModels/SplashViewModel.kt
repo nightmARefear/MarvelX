@@ -8,10 +8,8 @@ import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
 import com.alexgreece45.marvelx.mvi.BaseViewModel
 import com.alexgreece45.marvelx.util.ResourceProvider
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 data class SplashScreenError(
     val title: String,
@@ -39,8 +37,7 @@ sealed interface SplashEffect : BaseEffect {
     }
 }
 
-@HiltViewModel
-class SplashViewModel @Inject constructor(
+class SplashViewModel(
     private val resourceProvider: ResourceProvider,
     private val splashInteractor: SplashInteractor
 ) : BaseViewModel<SplashEvent, SplashState, SplashEffect>() {
