@@ -4,27 +4,100 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import androidx.navigation.NavGraphBuilder
-import androidx.navigation.navigation
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.ui.components.BottomBarItem
 import com.alexgreece45.marvelx.ui.components.BottomNavigationBarData
 import com.alexgreece45.marvelx.ui.components.IconData
 import com.alexgreece45.marvelx.ui.screens.allCharactersScreen.AllCharactersScreen
 import com.alexgreece45.marvelx.ui.screens.allFavoriteCharactersScreen.AllFavoriteCharactersScreen
+import com.alexgreece45.marvelx.ui.screens.changePassword.ChangePasswordScreen
 import com.alexgreece45.marvelx.ui.screens.characterScreen.CharacterScreen
 import com.alexgreece45.marvelx.ui.screens.characterScreen.allCharacterComicsScreen.AllCharacterComicsScreen
 import com.alexgreece45.marvelx.ui.screens.comicScreen.ComicScreen
+import com.alexgreece45.marvelx.ui.screens.otpScreen.OtpScreen
 import com.alexgreece45.marvelx.ui.screens.profileScreen.ProfileScreen
+import com.alexgreece45.marvelx.ui.screens.registerScreens.homeScreen.HomeScreen
+import com.alexgreece45.marvelx.ui.screens.registerScreens.loginScreen.LoginScreen
+import com.alexgreece45.marvelx.ui.screens.registerScreens.loginScreen.forgotPasswordScreen.ForgotPasswordScreen
+import com.alexgreece45.marvelx.ui.screens.registerScreens.loginScreen.forgotPasswordScreen.forgotPasswordValidateEmailScreen.ForgotPasswordValidateEmailScreen
+import com.alexgreece45.marvelx.ui.screens.registerScreens.signupScreen.SignUpScreen
+import com.alexgreece45.marvelx.ui.screens.splashScreen.SplashScreen
+import com.alexgreece45.marvelx.util.SPACING_MEDIUM
+import com.alexgreece45.marvelx.util.extensions.composable
+import com.alexgreece45.marvelx.util.extensions.popUpToTop
 
-@Suppress("FunctionName")
-fun NavGraphBuilder.MainNavGraph(
-    navController: NavController
-) =
-    navigation(
-        route = Screen.BottomNavigationScreens.getNestedGraphRootRoute(),
-        startDestination = Screen.BottomNavigationScreens.getStartDestination()
+@Composable
+fun NavGraph(navController: NavHostController) {
+    NavHost(
+        navController = navController,
+        startDestination = Screen.RegisterScreens.getStartDestination()
     ) {
+        // Register screens.
+        composable(Screen.RegisterScreens.SplashScreen) {
+            SplashScreen(navController = navController)
+        }
+
+        composable(Screen.RegisterScreens.HomeScreen) {
+            HomeScreen(
+                navController = navController
+            )
+        }
+
+        composable(Screen.RegisterScreens.LoginScreens.LoginScreen) {
+            LoginScreen(
+                navController = navController
+            )
+        }
+
+        composable(Screen.RegisterScreens.LoginScreens.ForgotPasswordScreens.ForgotPasswordScreen) {
+            ForgotPasswordScreen(
+                popUpToLoginScreen = { navController.popBackStack() },
+                navController = navController
+            )
+        }
+
+        composable(Screen.RegisterScreens.LoginScreens.ForgotPasswordScreens.ForgotPasswordValidateEmailScreen) { entry ->
+            ForgotPasswordValidateEmailScreen(
+                popBackStack = { navController.popBackStack() },
+                navigateToForgotPasswordEnterPhoneNumberScreen = { requestIdEmail ->
+                    navController.navigate(
+                        Screen.RegisterScreens.LoginScreens.ForgotPasswordScreens.ForgotPasswordEnterPhoneNumberScreen.createNavRoute(
+                            requestIdEmail = requestIdEmail
+                        )
+                    )
+                },
+                requestIdEmail = entry.arguments?.getString(NavItem.RequestIdEmail.key)
+            )
+        }
+
+        composable(Screen.RegisterScreens.ChangePasswordScreen) { entry ->
+            ChangePasswordScreen(
+                popBackStack = { navController.popBackStack() },
+                otpFlowType = entry.arguments?.getString(NavItem.OtpFlowType.key),
+                requestIdEmail = entry.arguments?.getString(NavItem.RequestIdEmail.key).orEmpty(),
+                requestIdPhoneNumber = entry.arguments?.getString(NavItem.RequestIdPhoneNumber.key)
+            )
+        }
+
+        composable(Screen.RegisterScreens.SignupScreen) {
+            SignUpScreen(navController = navController)
+        }
+
+        composable(Screen.OtpScreen) { navBackStackEntry ->
+            OtpScreen(
+                navController = navController,
+                userId = navBackStackEntry.arguments?.getInt(NavItem.UserId.key),
+                otpFlowType = navBackStackEntry.arguments?.getString(NavItem.OtpFlowType.key),
+                verificationStep = navBackStackEntry.arguments?.getString(NavItem.VerificationStep.key),
+                shouldRememberUserSession = navBackStackEntry.arguments?.getBoolean(NavItem.ShouldRememberUserSession.key),
+                requestIdEmail = navBackStackEntry.arguments?.getString(NavItem.RequestIdEmail.key),
+                requestIdPhoneNumber = navBackStackEntry.arguments?.getString(NavItem.RequestIdPhoneNumber.key)
+            )
+        }
+
+        // Main screens.
         composable(screen = Screen.BottomNavigationScreens.AllCharactersScreen) {
             AllCharactersScreen(
                 navigateToCharacterScreen = { characterId ->
@@ -80,15 +153,15 @@ fun NavGraphBuilder.MainNavGraph(
             ProfileScreen(
                 navigateToHomeScreen = {
                     navController.navigate(Screen.RegisterScreens.HomeScreen.route) {
-                        popUpTo(Screen.BottomNavigationScreens.getNestedGraphRootRoute()) {
-                            inclusive = true
-                        }
+                        popUpToTop(navController)
                     }
                 },
                 bottomNavigationBarData = { getBottomNavigationBarData(navController = navController) }
             )
         }
     }
+}
+
 
 /**
  * Returns the bottom navigation items.
@@ -133,5 +206,5 @@ private fun getBottomNavigationBarData(navController: NavController): BottomNavi
         backgroundColor = MaterialTheme.colors.background,
         topHorizontalColor = MaterialTheme.colors.onBackground.copy(alpha = 0.8f),
         selectedItemTopHorizontalColor = MaterialTheme.colors.primaryVariant.copy(alpha = 0.8f),
-        elevation = 16.dp
+        elevation = SPACING_MEDIUM.dp
     )

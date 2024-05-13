@@ -26,6 +26,7 @@ import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
 import com.alexgreece45.marvelx.ui.navigation.Screen
 import com.alexgreece45.marvelx.util.SPACING_SMALL
+import com.alexgreece45.marvelx.util.extensions.popUpToTop
 import com.alexgreece45.marvelx.viewModels.HomeEffect
 import com.alexgreece45.marvelx.viewModels.HomeEvent
 import com.alexgreece45.marvelx.viewModels.HomeViewModel
@@ -120,9 +121,7 @@ fun HomeScreen(
 
                 is HomeEffect.Navigation.NavigateToAllCharactersScreen -> {
                     navController.navigate(Screen.BottomNavigationScreens.AllCharactersScreen.route) {
-                        popUpTo(Screen.RegisterScreens.getNestedGraphRootRoute()) {
-                            inclusive = true
-                        }
+                        popUpToTop(navController)
                     }
                 }
 

@@ -37,6 +37,7 @@ import com.alexgreece45.marvelx.ui.navigation.Screen
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.SPACING_TINY
 import com.alexgreece45.marvelx.util.VSpacer
+import com.alexgreece45.marvelx.util.extensions.popUpToTop
 import com.alexgreece45.marvelx.viewModels.OtpEffect
 import com.alexgreece45.marvelx.viewModels.OtpEvent
 import com.alexgreece45.marvelx.viewModels.OtpViewModel
@@ -96,9 +97,7 @@ fun OtpScreen(
 
                 OtpEffect.Navigation.NavigateToAllCharactersScreen -> {
                     navController.navigate(Screen.BottomNavigationScreens.AllCharactersScreen.route) {
-                        popUpTo(Screen.RegisterScreens.getNestedGraphRootRoute()) {
-                            inclusive = true
-                        }
+                       popUpToTop(navController)
                     }
                 }
 

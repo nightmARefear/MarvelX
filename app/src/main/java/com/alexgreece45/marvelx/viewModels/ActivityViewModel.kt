@@ -5,8 +5,8 @@ import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.controllers.AppLoggerController
 import com.alexgreece45.marvelx.controllers.AuthController
 import com.alexgreece45.marvelx.controllers.PrefKeys
-import com.alexgreece45.marvelx.interactors.LogoutPartialState
 import com.alexgreece45.marvelx.interactors.LoginInteractor
+import com.alexgreece45.marvelx.interactors.LogoutPartialState
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState

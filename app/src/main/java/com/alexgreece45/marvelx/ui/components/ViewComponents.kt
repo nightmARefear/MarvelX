@@ -89,7 +89,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
@@ -392,7 +391,7 @@ fun BottomNavigationBar(
                                                 ),
                                                 end = Offset(
                                                     x = endPositionX.toDp()
-                                                        .toPx(),// Indent the end of the line by total length of the top horizontal line of the item minus the start indent.
+                                                        .toPx(), // Indent the end of the line by total length of the top horizontal line of the item minus the start indent.
                                                     y = selectedItemTopHorizontalVerticalOffset.toPx()
                                                 ),
                                                 strokeWidth = selectedItemTopHorizontalStrokeWidth.toPx(),

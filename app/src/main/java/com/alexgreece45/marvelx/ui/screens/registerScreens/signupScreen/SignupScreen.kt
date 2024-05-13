@@ -47,6 +47,7 @@ import com.alexgreece45.marvelx.ui.navigation.Screen
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.VSpacer
 import com.alexgreece45.marvelx.util.extensions.autofill
+import com.alexgreece45.marvelx.util.extensions.popUpToTop
 import com.alexgreece45.marvelx.viewModels.SignupEffect
 import com.alexgreece45.marvelx.viewModels.SignupEvent
 import com.alexgreece45.marvelx.viewModels.SignupViewModel
@@ -75,9 +76,7 @@ fun SignUpScreen(
 
                 SignupEffect.Navigation.NavigateToAllCharactersScreen -> {
                     navController.navigate(Screen.BottomNavigationScreens.AllCharactersScreen.route) {
-                        popUpTo(Screen.RegisterScreens.getNestedGraphRootRoute()) {
-                            inclusive = true
-                        }
+                        popUpToTop(navController)
                     }
                 }
 
