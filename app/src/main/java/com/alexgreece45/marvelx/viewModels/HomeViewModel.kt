@@ -119,6 +119,16 @@ class HomeViewModel(
     }
 
     private fun initView() {
+        // If the user isn't logged in, don't proceed any further.
+        if (prefKeys.isUserLoggedIn().not()) {
+            setState {
+                copy(
+                    isLoading = false
+                )
+            }
+            return
+        }
+
         // No stored user credentials; thus, do not proceed any further.
         if (!prefKeys.containsUserCredentials()) {
             setState {

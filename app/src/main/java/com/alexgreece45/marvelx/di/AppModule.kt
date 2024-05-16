@@ -187,6 +187,7 @@ private val interactorModule = module {
             get(),
             get(),
             get(),
+            get(),
             get()
         )
     }
@@ -194,7 +195,7 @@ private val interactorModule = module {
     factory<ForgotPasswordInteractor> { ForgotPasswordInteractorImpl(get(), get()) }
     factory<ChangePasswordInteractor> { ChangePasswordInteractorImpl() }
     factory<OtpInteractor> { OtpInteractorImpl(get(), get(), get()) }
-    factory<RegisterInteractor> { RegisterInteractorImpl(get(), get(), get(), get(), get()) }
+    factory<RegisterInteractor> { RegisterInteractorImpl(get(), get(), get(), get()) }
     factory<SplashInteractor> { SplashInteractorImpl(get()) }
 }
 

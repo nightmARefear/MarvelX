@@ -2,7 +2,6 @@ package com.alexgreece45.marvelx.interactors
 
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.controllers.AppLoggerController
-import com.alexgreece45.marvelx.controllers.PrefKeys
 import com.alexgreece45.marvelx.controllers.RefreshTokenController
 import com.alexgreece45.marvelx.data.domains.jwtSensitiveUserData.JwtSensitiveUserDataDomain
 import com.alexgreece45.marvelx.data.domains.user.VerificationStep
@@ -13,7 +12,6 @@ import com.alexgreece45.marvelx.data.models.jwtSensitiveUserData.RequestJwtSensi
 import com.alexgreece45.marvelx.data.models.jwtSensitiveUserData.toJwtSensitiveUserDataDomain
 import com.alexgreece45.marvelx.data.models.user.login.UserLoginRequest
 import com.alexgreece45.marvelx.data.models.user.login.toUserLoginResponseDomain
-import com.alexgreece45.marvelx.data.models.user.loginWithToken.UserLoginWithTokenRequest
 import com.alexgreece45.marvelx.data.models.user.loginWithToken.toUserLoginWithTokenResponseDomain
 import com.alexgreece45.marvelx.data.models.user.signup.UserSignupRequest
 import com.alexgreece45.marvelx.data.models.user.signup.toSignupResponseDomain
@@ -46,7 +44,6 @@ class RegisterInteractorImpl(
     private val repository: RegisterRepository,
     private val resourceProvider: ResourceProvider,
     private val refreshTokenController: RefreshTokenController,
-    private val prefKeys: PrefKeys,
     private val logger: AppLoggerController
 ) : RegisterInteractor {
     override suspend fun postSignup(userSignupRequest: UserSignupRequest): Flow<PostSignupPartialState> =
@@ -147,11 +144,7 @@ class RegisterInteractorImpl(
         flow {
             val genericErrorMessage = resourceProvider.getGenericErrorMessage()
 
-            val userLoginWithTokenRequest = UserLoginWithTokenRequest(
-                userId = prefKeys.getUserId(),
-                epoch = DateUtil.getSecondsFromEpoch()
-            )
-            repository.postLoginWithToken(userLoginWithTokenRequest).collect {
+            repository.postLoginWithToken().collect {
                 when (it) {
                     is PostLoginWithTokenRepositoryResponse.Failed -> {
                         // Propagate generic error to client.

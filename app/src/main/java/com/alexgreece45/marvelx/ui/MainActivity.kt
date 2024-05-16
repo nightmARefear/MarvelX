@@ -31,6 +31,7 @@ import com.alexgreece45.marvelx.viewModels.ActivityEvent
 import com.alexgreece45.marvelx.viewModels.ActivityViewModel
 import com.chuckerteam.chucker.api.Chucker
 import org.koin.android.ext.android.inject
+import org.koin.compose.KoinContext
 
 class MainActivity : ComponentActivity() {
 
@@ -46,35 +47,37 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
-            MarvelXTheme {
-                Surface(color = MaterialTheme.colors.background) {
-                    val state by activityViewModel.uiState.collectAsStateWithLifecycle()
+            KoinContext {
+                MarvelXTheme {
+                    Surface(color = MaterialTheme.colors.background) {
+                        val state by activityViewModel.uiState.collectAsStateWithLifecycle()
 
-                    routerHost.StartFlow()
-                    ChuckerPermissions()
+                        routerHost.StartFlow()
+                        ChuckerPermissions()
 
-                    state.mainActivityErrorDialog?.let { mainActivityErrorDialog ->
-                        AlertDialogError(
-                            isVisible = true,
-                            title = mainActivityErrorDialog.title,
-                            errorMessage = mainActivityErrorDialog.errorMessage,
-                            confirmButton = AlertDialogButton(
-                                value = stringResource(R.string.generic_ok_button),
-                                buttonType = ErrorButtonType.Text,
-                                onClick = { activityViewModel.setEvent(mainActivityErrorDialog.onOkClick) }
+                        state.mainActivityErrorDialog?.let { mainActivityErrorDialog ->
+                            AlertDialogError(
+                                isVisible = true,
+                                title = mainActivityErrorDialog.title,
+                                errorMessage = mainActivityErrorDialog.errorMessage,
+                                confirmButton = AlertDialogButton(
+                                    value = stringResource(R.string.generic_ok_button),
+                                    buttonType = ErrorButtonType.Text,
+                                    onClick = { activityViewModel.setEvent(mainActivityErrorDialog.onOkClick) }
+                                )
                             )
-                        )
-                    }
+                        }
 
-                    OneTimeLaunchedEffect {
-                        activityViewModel.setEvent(ActivityEvent.Init)
-                    }
+                        OneTimeLaunchedEffect {
+                            activityViewModel.setEvent(ActivityEvent.Init)
+                        }
 
-                    LaunchedEffect(Unit) {
-                        activityViewModel.uiEffect.collect { activityEffect ->
-                            when (activityEffect) {
-                                ActivityEffect.Navigation.NavigateToHomeScreen -> {
-                                    routerHost.logout()
+                        LaunchedEffect(Unit) {
+                            activityViewModel.uiEffect.collect { activityEffect ->
+                                when (activityEffect) {
+                                    ActivityEffect.Navigation.NavigateToHomeScreen -> {
+                                        routerHost.logout()
+                                    }
                                 }
                             }
                         }

@@ -2,6 +2,7 @@ package com.alexgreece45.marvelx.configuration
 
 import com.alexgreece45.marvelx.BuildConfig
 import com.alexgreece45.marvelx.util.constants.ConstantsSecurity
+import okhttp3.WebSocketListener
 
 interface ConfigLogic {
     /**
@@ -38,6 +39,11 @@ interface ConfigLogic {
      * Extracts and returns the port (i.e., `XXXXX`, where `X` integer) from the base URL.
      */
     val port: Int
+
+    /**
+     * The websocket URL.
+     */
+    val websocketUrl: String
 
     /**
      * The app's build type (i.e., debug, mock, or release).
@@ -79,8 +85,13 @@ class ConfigLogicImpl : ConfigLogic {
     override val port: Int
         get() =
             BuildConfig.MARVELX_BACKEND_BASE_URL.split(":").last().toInt()
+
     override val appBuildType: AppBuildType
         get() = AppBuildType.getType()
+
     override val packageSignature: String
         get() = "K9sqm8e3aPgpA8Vxmp/D+M4oJEU="
+
+    override val websocketUrl: String
+        get() = BuildConfig.MARVELX_BACKEND_WEBSOCKET_BASE_URL
 }

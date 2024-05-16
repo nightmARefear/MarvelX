@@ -24,7 +24,6 @@ import com.alexgreece45.marvelx.data.models.token.TokenResponse
 import com.alexgreece45.marvelx.data.models.user.login.LoginResponse
 import com.alexgreece45.marvelx.data.models.user.login.UserLoginRequest
 import com.alexgreece45.marvelx.data.models.user.loginWithToken.LoginWithTokenResponse
-import com.alexgreece45.marvelx.data.models.user.loginWithToken.UserLoginWithTokenRequest
 import com.alexgreece45.marvelx.data.models.user.profileDetails.ResponseProfileDetails
 import com.alexgreece45.marvelx.data.models.user.signup.SignupResponse
 import com.alexgreece45.marvelx.data.models.user.signup.UserSignupRequest
@@ -52,8 +51,8 @@ class ApiClientImpl(
     override suspend fun postLogin(userLoginRequest: UserLoginRequest): Response<LoginResponse> =
         apiService.postLogin(userLoginRequest)
 
-    override suspend fun postLoginWithToken(userLoginWithTokenRequest: UserLoginWithTokenRequest): Response<LoginWithTokenResponse> =
-        apiService.postLoginWithToken(userLoginWithTokenRequest)
+    override suspend fun postLoginWithToken(): Response<LoginWithTokenResponse> =
+        apiService.postLoginWithToken()
 
     override suspend fun grantNewAccessToken(
         clientId: String,
