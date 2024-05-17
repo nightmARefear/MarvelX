@@ -293,7 +293,7 @@ class OtpViewModel(
                             verificationStep = finalVerificationStep,
                             otpFlowType = finalOtpFlowType,
                             requestIdEmail = event.requestIdEmail.orEmpty(),
-                            requestIdPhoneNumber = event.requestIdPhoneNumber
+                            requestIdPhoneNumber = event.requestIdPhoneNumber.orEmpty()
                         )
                     }
 
@@ -383,28 +383,17 @@ class OtpViewModel(
 
     /**
      * The initial operations to be executed when the `Forgot Password` flow begins.
-     *
-     * [requestIdEmail] is mandatory, while [requestIdPhoneNumber] is **only** mandatory if
-     * [verificationStep] is [VerificationStep.OtpPhoneNumber].
      */
     private fun initForgotPasswordFlow(
         verificationStep: VerificationStep,
         otpFlowType: OtpFlowType,
         requestIdEmail: String,
-        requestIdPhoneNumber: String?
+        requestIdPhoneNumber: String
     ) {
-        if (verificationStep is VerificationStep.OtpPhoneNumber && requestIdPhoneNumber == null) {
-            showGenericErrorViewWithErrorCode(
-                errorCode = OtpScreenErrorCodes.InitViewChecks.InvalidVerificationStep,
-                otpFlowType = otpFlowType
-            )
-            return
-        }
-
         setState {
             copy(
                 requestIdEmail = requestIdEmail,
-                requestIdPhoneNumber = requestIdPhoneNumber.orEmpty(),
+                requestIdPhoneNumber = requestIdPhoneNumber,
                 verificationStep = verificationStep,
                 otpFlowType = otpFlowType
             )

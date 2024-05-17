@@ -21,23 +21,16 @@ import org.koin.core.component.inject
 data class MainActivityErrorDialog(
     val title: String,
     val errorMessage: String,
-    val onOkClick: ActivityEvent
+    val onOkClick: () -> Unit
 )
 
 sealed class ActivityEvent : BaseEvent {
     data object Init : ActivityEvent()
     data object LogoutUser : ActivityEvent()
-
-    sealed class ErrorDialog : ActivityEvent() {
-        data object OnOkClick : ErrorDialog()
-    }
-
-    data class SetUserId(val userId: Int) : ActivityEvent()
+    data object OnDestroy : ActivityEvent()
 }
 
 data class ActivityState(
-    val userId: Int = -1,
-
     /**
      * Controls whether the error dialog should appear.
      */
@@ -67,24 +60,12 @@ class ActivityViewModel : BaseViewModel<ActivityEvent, ActivityState, ActivityEf
                 init()
             }
 
-            is ActivityEvent.SetUserId -> {
-//                setState {
-//                    copy(
-//                        userId = event.userId
-//                    )
-//                }
-            }
-
             is ActivityEvent.LogoutUser -> {
                 onLogoutUser()
             }
 
-            ActivityEvent.ErrorDialog.OnOkClick -> {
-                setState {
-                    copy(
-                        mainActivityErrorDialog = null
-                    )
-                }
+            ActivityEvent.OnDestroy -> {
+                websocketController.close()
             }
         }
     }
@@ -113,7 +94,13 @@ class ActivityViewModel : BaseViewModel<ActivityEvent, ActivityState, ActivityEf
                                 mainActivityErrorDialog = MainActivityErrorDialog(
                                     title = resourceProvider.getString(R.string.session_status_session_has_expired_alert_dialog_title),
                                     errorMessage = resourceProvider.getString(R.string.session_status_session_has_expired_alert_dialog_error_message),
-                                    onOkClick = ActivityEvent.ErrorDialog.OnOkClick
+                                    onOkClick = {
+                                        setState {
+                                            copy(
+                                                mainActivityErrorDialog = null
+                                            )
+                                        }
+                                    }
                                 )
                             )
                         }
@@ -141,7 +128,10 @@ class ActivityViewModel : BaseViewModel<ActivityEvent, ActivityState, ActivityEf
             override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
                 super.onClosing(webSocket, code, reason)
                 appLoggerController.d("ActivityViewModel") { "(onClosing): The websocket server has decided to close the websocket connection.\tcode: $code" }
-                onLogoutUser()
+
+                if (prefKeys.isUserLoggedIn()) {
+                    onLogoutUser()
+                }
             }
 
             // Only executed when websocketController#close() is called.
@@ -150,7 +140,6 @@ class ActivityViewModel : BaseViewModel<ActivityEvent, ActivityState, ActivityEf
 
                 if (prefKeys.isUserLoggedIn()) {
                     appLoggerController.d("ActivityViewModel") { "(onClosed): isUserLoggedIn: true" }
-
                     onLogoutUser()
                 }
                 appLoggerController.d("ActivityViewModel") { "(onClosed): Both the websocket client and server have decided to end this websocket connection.\tcode: $code" }

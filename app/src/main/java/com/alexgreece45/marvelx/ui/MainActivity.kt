@@ -41,7 +41,7 @@ class MainActivity : ComponentActivity() {
 
     private val routerHost: RouterHost by inject()
 
-    private val activityViewModel: ActivityViewModel by viewModels()
+    private val viewModel: ActivityViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -50,7 +50,7 @@ class MainActivity : ComponentActivity() {
             KoinContext {
                 MarvelXTheme {
                     Surface(color = MaterialTheme.colors.background) {
-                        val state by activityViewModel.uiState.collectAsStateWithLifecycle()
+                        val state by viewModel.uiState.collectAsStateWithLifecycle()
 
                         routerHost.StartFlow()
                         ChuckerPermissions()
@@ -63,17 +63,17 @@ class MainActivity : ComponentActivity() {
                                 confirmButton = AlertDialogButton(
                                     value = stringResource(R.string.generic_ok_button),
                                     buttonType = ErrorButtonType.Text,
-                                    onClick = { activityViewModel.setEvent(mainActivityErrorDialog.onOkClick) }
+                                    onClick = mainActivityErrorDialog.onOkClick
                                 )
                             )
                         }
 
                         OneTimeLaunchedEffect {
-                            activityViewModel.setEvent(ActivityEvent.Init)
+                            viewModel.setEvent(ActivityEvent.Init)
                         }
 
                         LaunchedEffect(Unit) {
-                            activityViewModel.uiEffect.collect { activityEffect ->
+                            viewModel.uiEffect.collect { activityEffect ->
                                 when (activityEffect) {
                                     ActivityEffect.Navigation.NavigateToHomeScreen -> {
                                         routerHost.logout()
@@ -95,13 +95,16 @@ class MainActivity : ComponentActivity() {
         }
 
         if (!prefKeys.shouldRememberUserSession()) {
-            activityViewModel.setEvent(ActivityEvent.LogoutUser)
+            viewModel.setEvent(ActivityEvent.LogoutUser)
         }
     }
 
     override fun onDestroy() {
         super.onDestroy()
         logger.d { "MainActivity's onDestroy called." }
+
+        // Close websocket.
+        viewModel.setEvent(ActivityEvent.OnDestroy)
 
         // Cancel worker when the app closes.
         WorkManager.getInstance(this).cancelUniqueWork(ConstantsWorker.RefreshToken.WORKER_NAME)

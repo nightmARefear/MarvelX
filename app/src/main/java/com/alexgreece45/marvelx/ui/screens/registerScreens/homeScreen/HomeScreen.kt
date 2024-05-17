@@ -23,7 +23,11 @@ import com.alexgreece45.marvelx.ui.components.AlertDialogError
 import com.alexgreece45.marvelx.ui.components.ContainedButton
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
+import com.alexgreece45.marvelx.ui.components.effect.OneTimeLaunchedEffect
+import com.alexgreece45.marvelx.ui.navigation.NavArgHelper
+import com.alexgreece45.marvelx.ui.navigation.NavItem
 import com.alexgreece45.marvelx.ui.navigation.Screen
+import com.alexgreece45.marvelx.ui.navigation.models.NavArgStatus
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.extensions.popUpToTop
 import com.alexgreece45.marvelx.viewModels.HomeEffect
@@ -37,6 +41,57 @@ fun HomeScreen(
     viewModel: HomeViewModel = koinViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+
+    OneTimeLaunchedEffect {
+        when (val argument = NavArgHelper.getArgument(NavItem.ErrorMessage)) {
+            is NavArgStatus.Exists -> {
+                viewModel.setEvent(HomeEvent.Init(argument.value as String?))
+            }
+
+            NavArgStatus.NotExists -> {
+                viewModel.setEvent(HomeEvent.Init(null))
+            }
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.uiEffect.collect { homeEffect ->
+            when (homeEffect) {
+                HomeEffect.Navigation.NavigateToLoginScreen -> {
+                    navController.navigate(Screen.RegisterScreens.LoginScreens.LoginScreen.route) {
+                        launchSingleTop = true
+                    }
+                }
+
+                HomeEffect.Navigation.NavigateToSignupScreen -> {
+                    navController.navigate(Screen.RegisterScreens.SignupScreen.route) {
+                        launchSingleTop = true
+                    }
+                }
+
+                HomeEffect.Navigation.NavigateToAllCharactersScreen -> {
+                    navController.navigate(Screen.BottomNavigationScreens.AllCharactersScreen.route) {
+                        popUpToTop(navController)
+                    }
+                }
+
+                is HomeEffect.Navigation.NavigateToOtpScreen -> {
+                    navController.navigate(
+                        Screen.OtpScreen.createNavRoute(
+                            userId = homeEffect.userId,
+                            otpFlowType = homeEffect.otpFlowType,
+                            verificationStep = homeEffect.verificationStep,
+                            shouldRememberUserSession = homeEffect.shouldRememberUserSession
+                        )
+                    )
+                }
+
+                HomeEffect.Navigation.PopBackStack -> {
+                    navController.popBackStack()
+                }
+            }
+        }
+    }
 
     ContentScreen(
         isLoading = state.isLoading,
@@ -55,7 +110,7 @@ fun HomeScreen(
                     errorMessage = state.alertDialogErrorMessage,
                     confirmButton = AlertDialogButton(
                         value = stringResource(R.string.generic_ok_button),
-                        onClick = { viewModel.setEvent(HomeEvent.AlertDialog.OnOkClick) }
+                        onClick = state.alertDialogOnClick
                     )
                 )
             }
@@ -97,51 +152,6 @@ fun HomeScreen(
                             text = stringResource(R.string.home_screen_label_sign_up_button),
                         )
                     }
-                }
-            }
-        }
-    }
-
-    LaunchedEffect(Unit) {
-        viewModel.setEvent(HomeEvent.InitView)
-
-        viewModel.uiEffect.collect { homeEffect ->
-            when (homeEffect) {
-                HomeEffect.Navigation.NavigateToLoginScreen -> {
-                    navController.navigate(Screen.RegisterScreens.LoginScreens.LoginScreen.route) {
-                        launchSingleTop = true
-                    }
-                }
-
-                HomeEffect.Navigation.NavigateToSignupScreen -> {
-                    navController.navigate(Screen.RegisterScreens.SignupScreen.route) {
-                        launchSingleTop = true
-                    }
-                }
-
-                is HomeEffect.Navigation.NavigateToAllCharactersScreen -> {
-                    navController.navigate(Screen.BottomNavigationScreens.AllCharactersScreen.route) {
-                        popUpToTop(navController)
-                    }
-                }
-
-                is HomeEffect.Navigation.NavigateToOtpScreen -> {
-                    navController.navigate(
-                        Screen.OtpScreen.createNavRoute(
-                            userId = homeEffect.userId,
-                            otpFlowType = homeEffect.otpFlowType,
-                            verificationStep = homeEffect.verificationStep,
-                            shouldRememberUserSession = homeEffect.shouldRememberUserSession
-                        )
-                    )
-                }
-
-                HomeEffect.Navigation.PopBackStack -> {
-                    navController.popBackStack()
-                }
-
-                HomeEffect.LoginFlow.ProceedWithLogin -> {
-                    viewModel.setEvent(HomeEvent.OnProceedWithLogin)
                 }
             }
         }

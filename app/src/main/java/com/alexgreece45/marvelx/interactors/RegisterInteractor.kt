@@ -172,7 +172,7 @@ class RegisterInteractorImpl(
                 }
             }
         }.safeAsync {
-            logger.e { "(postLoginWithToken) error: ${it.message.orEmpty()}" }
+            logger.e("RegisterInteractor") { "(postLoginWithToken) error: ${it.message.orEmpty()}" }
             when (it) {
                 is IOException -> {
                     PostLoginWithTokenPartialState.Failed(

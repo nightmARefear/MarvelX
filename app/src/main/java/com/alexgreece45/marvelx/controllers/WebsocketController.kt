@@ -1,6 +1,7 @@
 package com.alexgreece45.marvelx.controllers
 
 import com.alexgreece45.marvelx.configuration.ConfigLogic
+import com.alexgreece45.marvelx.data.models.websocket.WebsocketTerminationCode
 import com.alexgreece45.marvelx.util.constants.ConstantsSecurity
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -55,7 +56,8 @@ class WebsocketControllerImpl(
             .build()
 
         webSocket = okHttpClient.newWebSocket(request, webSocketListener)
-        appLoggerController.d("WebsocketController"
+        appLoggerController.d(
+            "WebsocketController"
         ) { "The websocket connection has been opened." }
     }
 
@@ -64,9 +66,15 @@ class WebsocketControllerImpl(
     }
 
     override fun close() {
-        webSocket?.close(1000, null)
+        val didWebsocketCloseGracefully =
+            webSocket?.close(WebsocketTerminationCode.Client.code, null)
         webSocket = null
-        appLoggerController.d("WebsocketController") { "The websocket connection has been terminated." }
+
+        // This check is important so as to print the log only when the websocket close gracefully
+        // -- i.e., it wasn't already closed or in the process of closing.
+        if (didWebsocketCloseGracefully != null && didWebsocketCloseGracefully) {
+            appLoggerController.d("WebsocketController") { "The websocket connection has been terminated." }
+        }
     }
 
     /**

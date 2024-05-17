@@ -17,7 +17,8 @@ sealed class Screen(
             .joinToString("/")
 
     /**
-     * Converts a list of [NavItem]s to a list of [NamedNavArgument]s to be used by NavGraphBuilder#composable.
+     * Converts a list of [NavItem]s to a list of [NamedNavArgument]s to be used by
+     * NavGraphBuilder#composable.
      */
     val navigationArguments = navArgs.map { navItem ->
         navArgument(name = navItem.key) {
@@ -79,7 +80,11 @@ sealed class Screen(
             fun getStartDestination(): String = SplashScreen.route
         }
 
+        data object SplashScreen : Screen(baseRoute = "splashScreen")
+        data object IntroLoadingScreen : Screen(baseRoute = "introLoadingScreen")
+
         data object HomeScreen : Screen(baseRoute = "homeScreen")
+
         sealed class LoginScreens {
             data object LoginScreen : Screen(baseRoute = "loginScreen")
             sealed class ForgotPasswordScreens {
@@ -94,7 +99,10 @@ sealed class Screen(
                 }
 
                 data object ForgotPasswordEnterPhoneNumberScreen :
-                    Screen(baseRoute = "forgotPasswordEnterPhoneNumberScreen") {
+                    Screen(
+                        baseRoute = "forgotPasswordEnterPhoneNumberScreen",
+                        navArgs = listOf(NavItem.RequestIdEmail)
+                    ) {
                     fun createNavRoute(requestIdEmail: String): String =
                         "$baseRoute/$requestIdEmail"
                 }
@@ -112,7 +120,6 @@ sealed class Screen(
         }
 
         data object SignupScreen : Screen(baseRoute = "signupScreen")
-        data object SplashScreen : Screen(baseRoute = "splashScreen")
     }
 
     data object OtpScreen : Screen(
@@ -138,14 +145,21 @@ sealed class Screen(
     }
 }
 
+/**
+ * A single navigation item that acts as a navigation parameter.
+ *
+ * @param key           The name of this item.
+ * @param type          The type of this item.
+ */
 enum class NavItem(val key: String, val type: NavType<*>) {
-    CharacterId(key = "characterId", NavType.IntType),
+    CharacterId(key = "characterId", type = NavType.IntType),
     ComicId(key = "comicId", type = NavType.IntType),
-    ToolbarTitlePrefix(key = "toolbarTitlePrefix", NavType.StringType),
-    UserId(key = "userId", NavType.IntType),
-    OtpFlowType(key = "otpFlowType", NavType.StringType),
-    VerificationStep(key = "verificationStep", NavType.StringType),
-    ShouldRememberUserSession(key = "shouldRememberUserSession", NavType.BoolType),
-    RequestIdEmail(key = "requestIdEmail", NavType.StringType),
-    RequestIdPhoneNumber(key = "requestIdPhoneNumber", NavType.StringType),
+    ToolbarTitlePrefix(key = "toolbarTitlePrefix", type = NavType.StringType),
+    UserId(key = "userId", type = NavType.IntType),
+    OtpFlowType(key = "otpFlowType", type = NavType.StringType),
+    VerificationStep(key = "verificationStep", type = NavType.StringType),
+    ShouldRememberUserSession(key = "shouldRememberUserSession", type = NavType.BoolType),
+    RequestIdEmail(key = "requestIdEmail", type = NavType.StringType),
+    RequestIdPhoneNumber(key = "requestIdPhoneNumber", type = NavType.StringType),
+    ErrorMessage(key = "errorMessage", type = NavType.StringType)
 }
