@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.controllers.AuthController
 import com.alexgreece45.marvelx.controllers.PrefKeys
+import com.alexgreece45.marvelx.controllers.WebsocketController
 import com.alexgreece45.marvelx.data.domains.otp.OtpFlowType
 import com.alexgreece45.marvelx.data.domains.user.VerificationStep
 import com.alexgreece45.marvelx.interactors.LoginInteractor
@@ -65,7 +66,8 @@ class IntroLoadingViewModel(
     private val prefKeys: PrefKeys,
     private val registerInteractor: RegisterInteractor,
     private val loginInteractor: LoginInteractor,
-    private val authController: AuthController
+    private val authController: AuthController,
+    private val websocketController: WebsocketController
 ) :
     BaseViewModel<IntroLoadingContract.Event, IntroLoadingContract.State, IntroLoadingContract.Effect>() {
     override fun setInitialState(): IntroLoadingContract.State =
@@ -163,6 +165,9 @@ class IntroLoadingViewModel(
                                 // There is no need to generate a new token as it has already
                                 // been generated in the `loginFlow` function.
                                 VerificationStep.None -> {
+                                    // Initialize websocket connection.
+                                    websocketController.init()
+
                                     setEffect {
                                         IntroLoadingContract.Effect.Navigation.NavigateToAllCharactersScreen
                                     }

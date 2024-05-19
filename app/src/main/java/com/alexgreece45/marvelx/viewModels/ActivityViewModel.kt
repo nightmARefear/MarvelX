@@ -1,6 +1,7 @@
 package com.alexgreece45.marvelx.viewModels
 
 import androidx.lifecycle.viewModelScope
+import androidx.work.WorkManager
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.controllers.AppLoggerController
 import com.alexgreece45.marvelx.controllers.PrefKeys
@@ -12,6 +13,7 @@ import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
 import com.alexgreece45.marvelx.mvi.BaseViewModel
 import com.alexgreece45.marvelx.util.ResourceProvider
+import com.alexgreece45.marvelx.util.constants.ConstantsWorker
 import kotlinx.coroutines.launch
 import okhttp3.Response
 import okhttp3.WebSocket
@@ -65,6 +67,11 @@ class ActivityViewModel : BaseViewModel<ActivityEvent, ActivityState, ActivityEf
             }
 
             ActivityEvent.OnDestroy -> {
+                // Cancel refresh token worker.
+                WorkManager.getInstance(resourceProvider.getContext())
+                    .cancelUniqueWork(ConstantsWorker.RefreshToken.WORKER_NAME)
+
+                // Close websocket.
                 websocketController.close()
             }
         }
