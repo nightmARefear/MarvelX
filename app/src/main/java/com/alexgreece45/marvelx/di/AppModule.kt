@@ -86,6 +86,7 @@ import com.alexgreece45.marvelx.viewModels.OtpViewModel
 import com.alexgreece45.marvelx.viewModels.ProfileViewModel
 import com.alexgreece45.marvelx.viewModels.SignupViewModel
 import com.alexgreece45.marvelx.viewModels.SplashViewModel
+import com.alexgreece45.marvelx.viewModels.introLoading.IntroLoadingViewModel
 import com.alexgreece45.marvelx.worker.RefreshTokenWorker
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
@@ -187,6 +188,7 @@ private val interactorModule = module {
             get(),
             get(),
             get(),
+            get(),
             get()
         )
     }
@@ -194,7 +196,7 @@ private val interactorModule = module {
     factory<ForgotPasswordInteractor> { ForgotPasswordInteractorImpl(get(), get()) }
     factory<ChangePasswordInteractor> { ChangePasswordInteractorImpl() }
     factory<OtpInteractor> { OtpInteractorImpl(get(), get(), get()) }
-    factory<RegisterInteractor> { RegisterInteractorImpl(get(), get(), get(), get(), get()) }
+    factory<RegisterInteractor> { RegisterInteractorImpl(get(), get(), get(), get()) }
     factory<SplashInteractor> { SplashInteractorImpl(get()) }
 }
 
@@ -226,8 +228,9 @@ private val viewModelModule = module {
     viewModel { ActivityViewModel() }
 
     viewModel { SplashViewModel(get(), get()) }
-    viewModel { HomeViewModel(get(), get(), get(), get(), get()) }
+    viewModel { IntroLoadingViewModel(get(), get(), get(), get(), get(), get()) }
 
+    viewModel { HomeViewModel(get()) }
     viewModel { LoginViewModel(get(), get(), get(), get()) }
     viewModel { SignupViewModel(get(), get(), get(), get()) }
 

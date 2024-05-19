@@ -16,6 +16,7 @@ import com.alexgreece45.marvelx.ui.screens.changePassword.ChangePasswordScreen
 import com.alexgreece45.marvelx.ui.screens.characterScreen.CharacterScreen
 import com.alexgreece45.marvelx.ui.screens.characterScreen.allCharacterComicsScreen.AllCharacterComicsScreen
 import com.alexgreece45.marvelx.ui.screens.comicScreen.ComicScreen
+import com.alexgreece45.marvelx.ui.screens.introLoadingScreen.IntroLoadingScreen
 import com.alexgreece45.marvelx.ui.screens.otpScreen.OtpScreen
 import com.alexgreece45.marvelx.ui.screens.profileScreen.ProfileScreen
 import com.alexgreece45.marvelx.ui.screens.registerScreens.homeScreen.HomeScreen
@@ -39,10 +40,12 @@ fun NavGraph(navController: NavHostController) {
             SplashScreen(navController = navController)
         }
 
+        composable(Screen.RegisterScreens.IntroLoadingScreen) {
+            IntroLoadingScreen(navController = navController)
+        }
+
         composable(Screen.RegisterScreens.HomeScreen) {
-            HomeScreen(
-                navController = navController
-            )
+            HomeScreen(navController = navController)
         }
 
         composable(Screen.RegisterScreens.LoginScreens.LoginScreen) {
@@ -58,7 +61,7 @@ fun NavGraph(navController: NavHostController) {
             )
         }
 
-        composable(Screen.RegisterScreens.LoginScreens.ForgotPasswordScreens.ForgotPasswordValidateEmailScreen) { entry ->
+        composable(Screen.RegisterScreens.LoginScreens.ForgotPasswordScreens.ForgotPasswordValidateEmailScreen) { navBackStackEntry ->
             ForgotPasswordValidateEmailScreen(
                 popBackStack = { navController.popBackStack() },
                 navigateToForgotPasswordEnterPhoneNumberScreen = { requestIdEmail ->
@@ -68,7 +71,7 @@ fun NavGraph(navController: NavHostController) {
                         )
                     )
                 },
-                requestIdEmail = entry.arguments?.getString(NavItem.RequestIdEmail.key)
+                requestIdEmail = navBackStackEntry.arguments?.getString(NavItem.RequestIdEmail.key)
             )
         }
 

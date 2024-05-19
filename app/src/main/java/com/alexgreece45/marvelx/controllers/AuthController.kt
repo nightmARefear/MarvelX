@@ -53,7 +53,7 @@ class AuthControllerImpl(
                     UserAuthData::class.java
                 )
             } catch (e: Exception) {
-                logger.d("AuthController") { "User authentication data is null." }
+                logger.e("AuthController") { "User authentication data is null." }
                 null
             }
         }

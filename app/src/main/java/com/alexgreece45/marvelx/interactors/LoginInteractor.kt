@@ -6,6 +6,7 @@ import com.alexgreece45.marvelx.controllers.AppLoggerController
 import com.alexgreece45.marvelx.controllers.AuthController
 import com.alexgreece45.marvelx.controllers.PrefKeys
 import com.alexgreece45.marvelx.controllers.RefreshTokenController
+import com.alexgreece45.marvelx.controllers.WebsocketController
 import com.alexgreece45.marvelx.data.domains.sensitiveUserData.SensitiveUserDataDomain
 import com.alexgreece45.marvelx.data.domains.user.profileDetails.ProfileDetailsDomain
 import com.alexgreece45.marvelx.data.models.sensitiveUserData.RequestSensitiveUserData
@@ -39,12 +40,16 @@ class LoginInteractorImpl(
     private val authController: AuthController,
     private val refreshTokenController: RefreshTokenController,
     private val prefKeys: PrefKeys,
-    private val logger: AppLoggerController
+    private val logger: AppLoggerController,
+    private val websocketController: WebsocketController
 ) : LoginInteractor {
     override suspend fun logout(): Flow<LogoutPartialState> = flow {
         val genericErrorMessage = resourceProvider.getGenericErrorMessage()
         val clientId = configLogic.clientId
         val refreshToken = authController.getRefreshToken()
+
+        // Close websocket connection.
+        websocketController.close()
 
         // Disable user logged in flag.
         prefKeys.setUserLoggedIn(false)
@@ -80,7 +85,7 @@ class LoginInteractorImpl(
             }
         }
     }.safeAsync {
-        logger.e { "(logout) error: ${it.message.orEmpty()}" }
+        logger.e("LoginInteractor") { "(logout) error: ${it.message.orEmpty()}" }
         when (it) {
             is IOException -> {
                 LogoutPartialState.Failed(
@@ -119,8 +124,12 @@ class LoginInteractorImpl(
                             // Save token info in device.
                             authController.setData(response.toUserAuthData())
 
+                            // Initialize websocket connection.
+                            websocketController.init()
+
                             // Start refresh token worker since the access token was successfully retrieved.
                             refreshTokenController.startWorker()
+
                             emit(
                                 GrandNewAccessTokenPartialState.Success
                             )

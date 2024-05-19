@@ -11,78 +11,77 @@ import com.alexgreece45.marvelx.util.ResourceProvider
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-data class SplashScreenError(
-    val title: String,
-    val errorMessage: String,
-    val onCloseClick: SplashEvent
-)
+sealed interface SplashContract {
+    data class SplashScreenError(
+        val title: String,
+        val errorMessage: String,
+        val onCloseClick: Event
+    ) : SplashContract
 
-sealed interface SplashEvent : BaseEvent {
-    data object Init : SplashEvent
+    sealed interface Event : BaseEvent {
+        data object Init : Event
 
-    data object OnCloseClick : SplashEvent
-}
+        data object OnCloseClick : Event
+    }
 
-data class SplashState(
-    val isAnimationVisible: Boolean = true,
+    data class State(
+        val isAnimationVisible: Boolean = true,
 
-    val error: SplashScreenError? = null
-) : BaseState
+        val error: SplashScreenError? = null
+    ) : BaseState
 
-sealed interface SplashEffect : BaseEffect {
-    sealed interface Navigation : SplashEffect {
-        data object NavigateToHomeScreen : Navigation
+    sealed interface Effect : BaseEffect {
+        sealed interface Navigation : Effect {
+            data object NavigateToIntroLoadingScreen : Navigation
+            data object NavigateToHomeScreen : Navigation
 
-        data object CloseApplication : Navigation
+            data object CloseApplication : Navigation
+        }
     }
 }
+
 
 class SplashViewModel(
     private val resourceProvider: ResourceProvider,
     private val splashInteractor: SplashInteractor
-) : BaseViewModel<SplashEvent, SplashState, SplashEffect>() {
-    override fun setInitialState(): SplashState = SplashState()
+) : BaseViewModel<SplashContract.Event, SplashContract.State, SplashContract.Effect>() {
+    override fun setInitialState(): SplashContract.State = SplashContract.State()
 
-    override fun handleEvents(event: SplashEvent) {
+    override fun handleEvents(event: SplashContract.Event) {
         when (event) {
-            SplashEvent.Init -> {
+            SplashContract.Event.Init -> {
                 viewModelScope.launch {
-                    // Purposeful delay so that the GIF animation can be displayed.
+                    // Intentional delay for logo to appear for at least 3 seconds.
                     delay(3000L)
 
-                    // Check if the application is secure.
-                    performSecurityChecks()
+                    splashInteractor.isApplicationSecure().collect { isApplicationSecure ->
+                        when (isApplicationSecure) {
+                            true -> {
+                                setEffect {
+                                    SplashContract.Effect.Navigation.NavigateToIntroLoadingScreen
+                                }
+                            }
+
+                            false -> {
+                                setState {
+                                    copy(
+                                        isAnimationVisible = false,
+                                        error = SplashContract.SplashScreenError(
+                                            title = resourceProvider.getString(R.string.splash_screen_alert_dialog_title),
+                                            errorMessage = resourceProvider.getString(R.string.splash_screen_alert_dialog_error_message),
+                                            onCloseClick = SplashContract.Event.OnCloseClick
+                                        )
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
             }
 
-            SplashEvent.OnCloseClick -> {
+            SplashContract.Event.OnCloseClick -> {
                 setEffect {
-                    SplashEffect.Navigation.CloseApplication
-                }
-            }
-        }
-    }
-
-    private suspend fun performSecurityChecks() {
-        splashInteractor.isApplicationSecure().collect { isApplicationSecure ->
-            when (isApplicationSecure) {
-                true -> {
-                    setEffect {
-                        SplashEffect.Navigation.NavigateToHomeScreen
-                    }
-                }
-
-                false -> {
-                    setState {
-                        copy(
-                            isAnimationVisible = false,
-                            error = SplashScreenError(
-                                title = resourceProvider.getString(R.string.splash_screen_alert_dialog_title),
-                                errorMessage = resourceProvider.getString(R.string.splash_screen_alert_dialog_error_message),
-                                onCloseClick = SplashEvent.OnCloseClick
-                            )
-                        )
-                    }
+                    SplashContract.Effect.Navigation.CloseApplication
                 }
             }
         }

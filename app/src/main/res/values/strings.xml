@@ -37,7 +37,7 @@
 
     // Insecure application.
     <string name="splash_screen_alert_dialog_title">Insecure application</string>
-    <string name="splash_screen_alert_dialog_error_message">It has been detected that this device is either an emulator or rooted, or the application package has been tampered with.</string>
+    <string name="splash_screen_alert_dialog_error_message">It has been detected that the application is running in an insecure device.</string>
     <string name="splash_screen_alert_dialog_confirm_button">close</string>
 
     // Session status
@@ -103,6 +103,10 @@
     <string name="profile_screen_toolbar_title">Profile</string>
 
     <string name="profile_screen_button_label_logout">Logout</string>
+
+    // Intro Loading Screen
+    <string name="intro_loading_screen_label_loading_stage_refresh_access_token">Refreshing access token</string>
+    <string name="intro_loading_screen_label_loading_stage_post_login_with_token">Setting up the application</string>
 
     // Home Screen
     <string name="home_screen_toolbar_title">Home Screen</string>

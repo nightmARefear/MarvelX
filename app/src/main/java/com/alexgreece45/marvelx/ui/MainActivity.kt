@@ -15,7 +15,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.res.stringResource
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.work.WorkManager
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.controllers.AppLoggerController
 import com.alexgreece45.marvelx.controllers.PrefKeys
@@ -25,56 +24,55 @@ import com.alexgreece45.marvelx.ui.components.ErrorButtonType
 import com.alexgreece45.marvelx.ui.components.effect.OneTimeLaunchedEffect
 import com.alexgreece45.marvelx.ui.navigation.router.RouterHost
 import com.alexgreece45.marvelx.ui.theme.MarvelXTheme
-import com.alexgreece45.marvelx.util.constants.ConstantsWorker
 import com.alexgreece45.marvelx.viewModels.ActivityEffect
 import com.alexgreece45.marvelx.viewModels.ActivityEvent
 import com.alexgreece45.marvelx.viewModels.ActivityViewModel
 import com.chuckerteam.chucker.api.Chucker
 import org.koin.android.ext.android.inject
+import org.koin.compose.KoinContext
 
 class MainActivity : ComponentActivity() {
 
     private val logger: AppLoggerController by inject()
-
     private val prefKeys: PrefKeys by inject()
-
     private val routerHost: RouterHost by inject()
-
-    private val activityViewModel: ActivityViewModel by viewModels()
+    private val viewModel: ActivityViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         setContent {
-            MarvelXTheme {
-                Surface(color = MaterialTheme.colors.background) {
-                    val state by activityViewModel.uiState.collectAsStateWithLifecycle()
+            KoinContext {
+                MarvelXTheme {
+                    Surface(color = MaterialTheme.colors.background) {
+                        val state by viewModel.uiState.collectAsStateWithLifecycle()
 
-                    routerHost.StartFlow()
-                    ChuckerPermissions()
+                        routerHost.StartFlow()
+                        ChuckerPermissions()
 
-                    state.mainActivityErrorDialog?.let { mainActivityErrorDialog ->
-                        AlertDialogError(
-                            isVisible = true,
-                            title = mainActivityErrorDialog.title,
-                            errorMessage = mainActivityErrorDialog.errorMessage,
-                            confirmButton = AlertDialogButton(
-                                value = stringResource(R.string.generic_ok_button),
-                                buttonType = ErrorButtonType.Text,
-                                onClick = { activityViewModel.setEvent(mainActivityErrorDialog.onOkClick) }
+                        state.mainActivityErrorDialog?.let { mainActivityErrorDialog ->
+                            AlertDialogError(
+                                isVisible = true,
+                                title = mainActivityErrorDialog.title,
+                                errorMessage = mainActivityErrorDialog.errorMessage,
+                                confirmButton = AlertDialogButton(
+                                    value = stringResource(R.string.generic_ok_button),
+                                    buttonType = ErrorButtonType.Text,
+                                    onClick = mainActivityErrorDialog.onOkClick
+                                )
                             )
-                        )
-                    }
+                        }
 
-                    OneTimeLaunchedEffect {
-                        activityViewModel.setEvent(ActivityEvent.Init)
-                    }
+                        OneTimeLaunchedEffect {
+                            viewModel.setEvent(ActivityEvent.Init)
+                        }
 
-                    LaunchedEffect(Unit) {
-                        activityViewModel.uiEffect.collect { activityEffect ->
-                            when (activityEffect) {
-                                ActivityEffect.Navigation.NavigateToHomeScreen -> {
-                                    routerHost.logout()
+                        LaunchedEffect(Unit) {
+                            viewModel.uiEffect.collect { activityEffect ->
+                                when (activityEffect) {
+                                    ActivityEffect.Navigation.NavigateToHomeScreen -> {
+                                        routerHost.logout()
+                                    }
                                 }
                             }
                         }
@@ -87,21 +85,17 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
 
-        if (!prefKeys.isUserLoggedIn()) {
-            return
-        }
-
-        if (!prefKeys.shouldRememberUserSession()) {
-            activityViewModel.setEvent(ActivityEvent.LogoutUser)
+        logger.d("MainActivity") { "onResume called." }
+        if (prefKeys.isUserLoggedIn() && prefKeys.shouldRememberUserSession().not()) {
+            viewModel.setEvent(ActivityEvent.LogoutUser)
         }
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        logger.d { "MainActivity's onDestroy called." }
 
-        // Cancel worker when the app closes.
-        WorkManager.getInstance(this).cancelUniqueWork(ConstantsWorker.RefreshToken.WORKER_NAME)
+        logger.d("MainActivity") { "onDestroy called." }
+        viewModel.setEvent(ActivityEvent.OnDestroy)
     }
 
     /**

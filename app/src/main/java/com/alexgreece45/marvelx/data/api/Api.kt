@@ -22,7 +22,6 @@ import com.alexgreece45.marvelx.data.models.token.TokenResponse
 import com.alexgreece45.marvelx.data.models.user.login.LoginResponse
 import com.alexgreece45.marvelx.data.models.user.login.UserLoginRequest
 import com.alexgreece45.marvelx.data.models.user.loginWithToken.LoginWithTokenResponse
-import com.alexgreece45.marvelx.data.models.user.loginWithToken.UserLoginWithTokenRequest
 import com.alexgreece45.marvelx.data.models.user.profileDetails.ResponseProfileDetails
 import com.alexgreece45.marvelx.data.models.user.signup.SignupResponse
 import com.alexgreece45.marvelx.data.models.user.signup.UserSignupRequest
@@ -54,7 +53,7 @@ interface ApiService {
     suspend fun postLogin(@Body userLogInRequest: UserLoginRequest): Response<LoginResponse>
 
     @POST("/api/private/marvelx/user/login_with_token")
-    suspend fun postLoginWithToken(@Body userLoginWithTokenRequest: UserLoginWithTokenRequest): Response<LoginWithTokenResponse>
+    suspend fun postLoginWithToken(): Response<LoginWithTokenResponse>
 
     @POST("/api/private/marvelx/user/token")
     @FormUrlEncoded
@@ -122,7 +121,7 @@ interface ApiClient {
 
     suspend fun postLogin(userLoginRequest: UserLoginRequest): Response<LoginResponse>
 
-    suspend fun postLoginWithToken(userLoginWithTokenRequest: UserLoginWithTokenRequest): Response<LoginWithTokenResponse>
+    suspend fun postLoginWithToken(): Response<LoginWithTokenResponse>
 
     suspend fun grantNewAccessToken(
         clientId: String,

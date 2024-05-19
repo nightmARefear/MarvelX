@@ -7,7 +7,6 @@ import com.alexgreece45.marvelx.data.models.user.ResponseUserError
 import com.alexgreece45.marvelx.data.models.user.login.LoginResponse
 import com.alexgreece45.marvelx.data.models.user.login.UserLoginRequest
 import com.alexgreece45.marvelx.data.models.user.loginWithToken.LoginWithTokenResponse
-import com.alexgreece45.marvelx.data.models.user.loginWithToken.UserLoginWithTokenRequest
 import com.alexgreece45.marvelx.data.models.user.signup.SignupResponse
 import com.alexgreece45.marvelx.data.models.user.signup.UserSignupRequest
 import com.alexgreece45.marvelx.util.helper.parseError
@@ -16,7 +15,7 @@ import kotlinx.coroutines.flow.flow
 
 interface RegisterRepository {
     suspend fun postLogin(userLoginRequest: UserLoginRequest): Flow<PostLoginRepositoryResponse>
-    suspend fun postLoginWithToken(userLoginWithTokenRequest: UserLoginWithTokenRequest): Flow<PostLoginWithTokenRepositoryResponse>
+    suspend fun postLoginWithToken(): Flow<PostLoginWithTokenRepositoryResponse>
     suspend fun postSignup(userSignupRequest: UserSignupRequest): Flow<PostSignupRepositoryResponse>
 
     /**
@@ -48,9 +47,9 @@ class RegisterRepositoryImpl(
             }
         }
 
-    override suspend fun postLoginWithToken(userLoginWithTokenRequest: UserLoginWithTokenRequest): Flow<PostLoginWithTokenRepositoryResponse> =
+    override suspend fun postLoginWithToken(): Flow<PostLoginWithTokenRepositoryResponse> =
         flow {
-            apiClient.postLoginWithToken(userLoginWithTokenRequest).let { response ->
+            apiClient.postLoginWithToken().let { response ->
                 if (response.isSuccessful) {
                     emit(
                         PostLoginWithTokenRepositoryResponse.Success(

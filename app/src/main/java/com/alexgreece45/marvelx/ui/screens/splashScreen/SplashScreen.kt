@@ -27,8 +27,8 @@ import com.alexgreece45.marvelx.ui.components.AlertDialogButton
 import com.alexgreece45.marvelx.ui.components.AlertDialogError
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.navigation.Screen
-import com.alexgreece45.marvelx.viewModels.SplashEffect
-import com.alexgreece45.marvelx.viewModels.SplashEvent
+import com.alexgreece45.marvelx.util.extensions.popUpToTop
+import com.alexgreece45.marvelx.viewModels.SplashContract
 import com.alexgreece45.marvelx.viewModels.SplashViewModel
 import org.koin.androidx.compose.koinViewModel
 
@@ -41,20 +41,24 @@ fun SplashScreen(
     val context = LocalContext.current
 
     LaunchedEffect(Unit) {
-        viewModel.setEvent(SplashEvent.Init)
+        viewModel.setEvent(SplashContract.Event.Init)
 
         viewModel.uiEffect.collect { effect ->
             when (effect) {
-                SplashEffect.Navigation.NavigateToHomeScreen -> {
+                SplashContract.Effect.Navigation.NavigateToHomeScreen -> {
                     navController.navigate(Screen.RegisterScreens.HomeScreen.route) {
-                        popUpTo(Screen.RegisterScreens.SplashScreen.route) {
-                            inclusive = true
-                        }
+                        popUpToTop(navController)
                     }
                 }
 
-                SplashEffect.Navigation.CloseApplication -> {
+                SplashContract.Effect.Navigation.CloseApplication -> {
                     (context as Activity).finish()
+                }
+
+                SplashContract.Effect.Navigation.NavigateToIntroLoadingScreen -> {
+                    navController.navigate(Screen.RegisterScreens.IntroLoadingScreen.route) {
+                        popUpToTop(navController)
+                    }
                 }
             }
         }
