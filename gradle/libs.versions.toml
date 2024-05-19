@@ -25,7 +25,7 @@ androidx-test-espresso-core = "3.5.1"
 
 chucker = "4.0.0"
 
-coil = "2.5.0"
+coil = "2.6.0"
 
 google-accompanist = "0.32.0"
 google-code-gson = "2.10.1"
@@ -39,8 +39,8 @@ lambdapioneer-argon2kt = "1.4.0"
 rootbeer = "0.1.0"
 
 squareup-logcat = "0.1"
-squareup-okhttp3-logging-intereceptor = "4.11.0"
-squareup-retrofit2 = "2.9.0"
+squareup-okhttp3-logging-intereceptor = "4.12.0"
+squareup-retrofit2 = "2.11.0"
 squareup-leakcanary = "2.12"
 
 [libraries]
@@ -91,6 +91,8 @@ koin-androidx-work-manager = { module = "io.insert-koin:koin-androidx-workmanage
 koin-android-test = { module = "io.insert-koin:koin-android-test" }
 koin-test-junit4 = { module = "io.insert-koin:koin-test-junit4" }
 
+kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect" }
+
 lambdapioneer-argon2kt = { module = "com.lambdapioneer.argon2kt:argon2kt", version.ref = "lambdapioneer-argon2kt" }
 
 rootbeer = { module = "com.scottyab:rootbeer-lib", version.ref = "rootbeer" }
@@ -107,7 +109,7 @@ android-library = { id = "com.android.library", version.ref = "plugin-agp" }
 
 google-mapsplatform-secrets = { id = "com.google.android.libraries.mapsplatform.secrets-gradle-plugin", version.ref = "plugin-google-mapsplatform-secrets" }
 
-kotlin = { id = "org.jetbrains.kotlin.android", version.ref = "plugin-kotlin" }
+kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "plugin-kotlin" }
 kotlin-parcelize = { id = "org.jetbrains.kotlin.plugin.parcelize", version.ref = "plugin-kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "plugin-ksp" }
 
@@ -144,6 +146,18 @@ android-test-implementation = [
 coil = [
     "coil-compose",
     "coil-gif"
+]
+
+koin = [
+    "koin-core",
+    "koin-androidx-compose",
+    "koin-androidx-navigation",
+    "koin-androidx-work-manager"
+]
+
+koin-test-implementation = [
+    "koin-android-test",
+    "koin-test-junit4"
 ]
 
 networking = [

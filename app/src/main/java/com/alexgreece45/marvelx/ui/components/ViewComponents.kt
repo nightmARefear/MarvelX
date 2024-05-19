@@ -102,6 +102,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.zIndex
 import androidx.navigation.NavController
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
@@ -421,7 +422,7 @@ fun BottomNavigationBar(
                         if (currentRoute != item.route) {
                             navController.navigate(item.route) {
                                 // TODO: Make the start destination configurable either by the provided value if it's not null, otherwise by the first item's route.
-                                popUpTo(Screen.BottomNavigationScreens.getStartDestination()) {
+                                popUpTo(navController.graph.findStartDestination().id) {
                                     saveState = true
                                 }
                                 launchSingleTop = true
@@ -1288,7 +1289,7 @@ sealed class ErrorButtonType {
     data object Contained : ErrorButtonType()
 
     companion object {
-        val defaultType: ErrorButtonType = Contained
+        val defaultType: ErrorButtonType = Text
     }
 }
 

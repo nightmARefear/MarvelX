@@ -17,6 +17,7 @@ import com.alexgreece45.marvelx.repository.GrandNewAccessTokenRepositoryResponse
 import com.alexgreece45.marvelx.repository.LoginRepository
 import com.alexgreece45.marvelx.repository.LogoutRepositoryResponse
 import com.alexgreece45.marvelx.repository.RefreshAccessTokenRepositoryResponse
+import com.alexgreece45.marvelx.util.DateUtil
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.extensions.safeAsync
 import kotlinx.coroutines.flow.Flow
@@ -56,6 +57,9 @@ class LoginInteractorImpl(
 
         // Disable remember user session functionality.
         prefKeys.setRememberUserSession(false)
+
+        // Remove auto-logout timestamp.
+        prefKeys.autoLogoutTimestamp = null
 
         // Remove stored credentials.
         authController.removeUserCredentials()
@@ -124,11 +128,14 @@ class LoginInteractorImpl(
                             // Save token info in device.
                             authController.setData(response.toUserAuthData())
 
+                            // Start refresh token worker since the access token was successfully retrieved.
+                            refreshTokenController.startWorker()
+
                             // Initialize websocket connection.
                             websocketController.init()
 
-                            // Start refresh token worker since the access token was successfully retrieved.
-                            refreshTokenController.startWorker()
+                            // Save current timestamp.
+                            prefKeys.autoLogoutTimestamp = DateUtil.getUTCInstant()
 
                             emit(
                                 GrandNewAccessTokenPartialState.Success

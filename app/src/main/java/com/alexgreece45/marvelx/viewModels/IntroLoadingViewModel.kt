@@ -1,4 +1,4 @@
-package com.alexgreece45.marvelx.viewModels.introLoading
+package com.alexgreece45.marvelx.viewModels
 
 import androidx.annotation.StringRes
 import androidx.lifecycle.viewModelScope
@@ -47,7 +47,7 @@ sealed interface IntroLoadingContract {
 
     sealed interface Effect : BaseEffect {
         sealed interface Navigation : Effect {
-            data class NavigateToHomeScreen(val errorMessage: String? = null) : Navigation
+            data class NavigateToHomeScreenWithErrorMessage(val errorMessage: String? = null) : Navigation
 
             data class NavigateToOtpScreen(
                 val userId: Int,
@@ -93,14 +93,14 @@ class IntroLoadingViewModel(
 
         if (prefKeys.isUserLoggedIn().not()) {
             setEffect {
-                IntroLoadingContract.Effect.Navigation.NavigateToHomeScreen()
+                IntroLoadingContract.Effect.Navigation.NavigateToHomeScreenWithErrorMessage()
             }
             return
         }
 
         if (prefKeys.containsUserCredentials().not()) {
             setEffect {
-                IntroLoadingContract.Effect.Navigation.NavigateToHomeScreen()
+                IntroLoadingContract.Effect.Navigation.NavigateToHomeScreenWithErrorMessage()
             }
             // TODO: Show error.
             return
@@ -139,7 +139,7 @@ class IntroLoadingViewModel(
         fun errorActions(errorMessage: String) {
             authController.removeUserCredentials()
             setEffect {
-                IntroLoadingContract.Effect.Navigation.NavigateToHomeScreen(
+                IntroLoadingContract.Effect.Navigation.NavigateToHomeScreenWithErrorMessage(
                     errorMessage = errorMessage
                 )
             }
@@ -165,9 +165,6 @@ class IntroLoadingViewModel(
                                 // There is no need to generate a new token as it has already
                                 // been generated in the `loginFlow` function.
                                 VerificationStep.None -> {
-                                    // Initialize websocket connection.
-                                    websocketController.init()
-
                                     setEffect {
                                         IntroLoadingContract.Effect.Navigation.NavigateToAllCharactersScreen
                                     }
@@ -209,7 +206,7 @@ class IntroLoadingViewModel(
                 when (it) {
                     is LogoutPartialState.Failed, LogoutPartialState.Success -> {
                         setEffect {
-                            IntroLoadingContract.Effect.Navigation.NavigateToHomeScreen(
+                            IntroLoadingContract.Effect.Navigation.NavigateToHomeScreenWithErrorMessage(
                                 errorMessage = resourceProvider.getString(R.string.session_status_session_has_expired_alert_dialog_error_message)
                             )
                         }

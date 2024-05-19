@@ -28,6 +28,8 @@ class MarvelXApplication : Application(), Configuration.Provider {
         appLoggerController.installLogger()
     }
 
+
+
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder()
             .setWorkerFactory(refreshTokenWorkerFactory)

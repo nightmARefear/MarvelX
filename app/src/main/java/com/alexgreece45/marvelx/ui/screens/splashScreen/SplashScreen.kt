@@ -26,6 +26,7 @@ import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.ui.components.AlertDialogButton
 import com.alexgreece45.marvelx.ui.components.AlertDialogError
 import com.alexgreece45.marvelx.ui.components.ContentScreen
+import com.alexgreece45.marvelx.ui.components.effect.OneTimeLaunchedEffect
 import com.alexgreece45.marvelx.ui.navigation.Screen
 import com.alexgreece45.marvelx.util.extensions.popUpToTop
 import com.alexgreece45.marvelx.viewModels.SplashContract
@@ -40,13 +41,15 @@ fun SplashScreen(
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
-    LaunchedEffect(Unit) {
+    OneTimeLaunchedEffect {
         viewModel.setEvent(SplashContract.Event.Init)
+    }
 
+    LaunchedEffect(Unit) {
         viewModel.uiEffect.collect { effect ->
             when (effect) {
                 SplashContract.Effect.Navigation.NavigateToHomeScreen -> {
-                    navController.navigate(Screen.RegisterScreens.HomeScreen.route) {
+                    navController.navigate(Screen.HomeScreen.route) {
                         popUpToTop(navController)
                     }
                 }
@@ -56,7 +59,7 @@ fun SplashScreen(
                 }
 
                 SplashContract.Effect.Navigation.NavigateToIntroLoadingScreen -> {
-                    navController.navigate(Screen.RegisterScreens.IntroLoadingScreen.route) {
+                    navController.navigate(Screen.IntroLoadingScreen.route) {
                         popUpToTop(navController)
                     }
                 }

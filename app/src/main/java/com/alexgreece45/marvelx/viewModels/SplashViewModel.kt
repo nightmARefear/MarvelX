@@ -7,6 +7,9 @@ import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
 import com.alexgreece45.marvelx.mvi.BaseViewModel
+import com.alexgreece45.marvelx.ui.navigation.NavArgHelper
+import com.alexgreece45.marvelx.ui.navigation.NavItem
+import com.alexgreece45.marvelx.ui.navigation.models.NavArgStatus
 import com.alexgreece45.marvelx.util.ResourceProvider
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -50,6 +53,18 @@ class SplashViewModel(
     override fun handleEvents(event: SplashContract.Event) {
         when (event) {
             SplashContract.Event.Init -> {
+                when (val navArgStatus =
+                    NavArgHelper.getArgument<Boolean>(NavItem.IsApplicationInsecure)) {
+                    is NavArgStatus.Exists -> {
+                        if (navArgStatus.value) {
+                            showInsecureApplicationDialog()
+                        }
+                        return
+                    }
+
+                    NavArgStatus.NotExists -> {}
+                }
+
                 viewModelScope.launch {
                     // Intentional delay for logo to appear for at least 3 seconds.
                     delay(3000L)
@@ -63,16 +78,7 @@ class SplashViewModel(
                             }
 
                             false -> {
-                                setState {
-                                    copy(
-                                        isAnimationVisible = false,
-                                        error = SplashContract.SplashScreenError(
-                                            title = resourceProvider.getString(R.string.splash_screen_alert_dialog_title),
-                                            errorMessage = resourceProvider.getString(R.string.splash_screen_alert_dialog_error_message),
-                                            onCloseClick = SplashContract.Event.OnCloseClick
-                                        )
-                                    )
-                                }
+                                showInsecureApplicationDialog()
                             }
                         }
                     }
@@ -84,6 +90,22 @@ class SplashViewModel(
                     SplashContract.Effect.Navigation.CloseApplication
                 }
             }
+        }
+    }
+
+    /**
+     * Shows the insecure application dialog.
+     */
+    private fun showInsecureApplicationDialog() {
+        setState {
+            copy(
+                isAnimationVisible = false,
+                error = SplashContract.SplashScreenError(
+                    title = resourceProvider.getString(R.string.splash_screen_alert_dialog_title),
+                    errorMessage = resourceProvider.getString(R.string.splash_screen_alert_dialog_error_message),
+                    onCloseClick = SplashContract.Event.OnCloseClick
+                )
+            )
         }
     }
 }

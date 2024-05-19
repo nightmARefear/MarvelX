@@ -1,7 +1,6 @@
 package com.alexgreece45.marvelx.viewModels
 
 import androidx.lifecycle.viewModelScope
-import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.controllers.AuthController
 import com.alexgreece45.marvelx.controllers.PrefKeys
 import com.alexgreece45.marvelx.data.domains.user.profileDetails.ProfileDetailsDomain
@@ -13,9 +12,6 @@ import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
 import com.alexgreece45.marvelx.mvi.BaseViewModel
-import com.alexgreece45.marvelx.ui.components.BottomBarItem
-import com.alexgreece45.marvelx.ui.components.IconData
-import com.alexgreece45.marvelx.ui.navigation.Screen
 import kotlinx.coroutines.launch
 
 data class ProfileScreenErrorView(
@@ -34,8 +30,6 @@ sealed class ProfileEvent : BaseEvent {
 data class ProfileState(
     // Base states.
     val isLoading: Boolean = true,
-
-    val bottomNavigationItems: List<BottomBarItem> = emptyList(),
 
     /**
      * The user ID.
@@ -71,7 +65,6 @@ class ProfileViewModel(
     BaseViewModel<ProfileEvent, ProfileState, ProfileEffect>() {
     override fun setInitialState(): ProfileState = ProfileState(
         isLoading = true,
-        bottomNavigationItems = getBottomNavigationItems(),
         userId = -1,
         profileDetails = null,
         error = null
@@ -185,31 +178,4 @@ class ProfileViewModel(
             }
         }
     }
-
-    private fun getBottomNavigationItems(): List<BottomBarItem> = listOf(
-        BottomBarItem(
-            route = Screen.BottomNavigationScreens.AllCharactersScreen.route,
-            label = R.string.bottom_navigation_label_characters,
-            iconData = IconData(
-                iconResource = R.drawable.ic_superhero,
-                contentDescription = R.string.bottom_navigation_label_characters
-            )
-        ),
-        BottomBarItem(
-            route = Screen.BottomNavigationScreens.AllFavoriteCharactersScreen.route,
-            label = R.string.bottom_navigation_label_favorites,
-            iconData = IconData(
-                iconResource = R.drawable.ic_favorite_filled,
-                contentDescription = R.string.bottom_navigation_label_favorites
-            )
-        ),
-        BottomBarItem(
-            route = Screen.BottomNavigationScreens.ProfileScreen.route,
-            label = R.string.bottom_navigation_label_profile,
-            iconData = IconData(
-                iconResource = R.drawable.ic_person,
-                contentDescription = R.string.bottom_navigation_label_profile
-            )
-        )
-    )
 }

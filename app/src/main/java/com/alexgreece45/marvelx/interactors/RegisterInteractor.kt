@@ -2,7 +2,9 @@ package com.alexgreece45.marvelx.interactors
 
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.controllers.AppLoggerController
+import com.alexgreece45.marvelx.controllers.PrefKeys
 import com.alexgreece45.marvelx.controllers.RefreshTokenController
+import com.alexgreece45.marvelx.controllers.WebsocketController
 import com.alexgreece45.marvelx.data.domains.jwtSensitiveUserData.JwtSensitiveUserDataDomain
 import com.alexgreece45.marvelx.data.domains.user.VerificationStep
 import com.alexgreece45.marvelx.data.domains.user.login.LoginResponseDomain
@@ -41,10 +43,12 @@ interface RegisterInteractor {
 }
 
 class RegisterInteractorImpl(
+    private val logger: AppLoggerController,
     private val repository: RegisterRepository,
     private val resourceProvider: ResourceProvider,
     private val refreshTokenController: RefreshTokenController,
-    private val logger: AppLoggerController
+    private val websocketController: WebsocketController,
+    private val prefKeys: PrefKeys
 ) : RegisterInteractor {
     override suspend fun postSignup(userSignupRequest: UserSignupRequest): Flow<PostSignupPartialState> =
         flow {
@@ -156,9 +160,11 @@ class RegisterInteractorImpl(
                             val userLoginWithTokenResponseDomain =
                                 loginWithTokenResponse.toUserLoginWithTokenResponseDomain()
 
-                            // Start refresh token worker if there is no verification step pending (i.e., `VerificationStep.None`).
                             if (userLoginWithTokenResponseDomain.verificationStep is VerificationStep.None) {
                                 refreshTokenController.startWorker()
+                                websocketController.init()
+
+                                prefKeys.autoLogoutTimestamp = DateUtil.getUTCInstant()
                             }
 
                             emit(

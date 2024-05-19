@@ -4,7 +4,11 @@ import android.content.SharedPreferences
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKeys
 import com.alexgreece45.marvelx.BuildConfig
+import com.alexgreece45.marvelx.controllers.models.preferencesController.ConstantsPrefs
 import com.alexgreece45.marvelx.util.ResourceProvider
+import com.google.gson.Gson
+import com.google.gson.JsonSyntaxException
+import java.time.Instant
 
 interface PreferencesController {
     /**
@@ -139,6 +143,11 @@ interface PrefKeys {
      * ### Note: This operation is irreversible, and it MUST be used with caution.
      * */
     fun removeUserAuthData()
+
+    /**
+     * Auto logout timestamp.
+     */
+    var autoLogoutTimestamp: Instant?
 }
 
 class PrefKeysImpl(
@@ -188,4 +197,25 @@ class PrefKeysImpl(
 
     override fun removeUserAuthData() =
         preferencesController.remove("UserAuthData")
+
+    override var autoLogoutTimestamp: Instant?
+        get() = try {
+            Gson().fromJson(
+                preferencesController.getString(
+                    key = ConstantsPrefs.AUTO_LOGOUT_TIMESTAMP,
+                    defaultValue = null.toString()
+                ),
+                Instant::class.java
+            )
+        } catch (e: JsonSyntaxException) {
+            logger.d("PrefKeys") { "Auto logout timestamp is null." }
+            null
+        }
+        set(value) {
+            if (value == null) preferencesController.remove(ConstantsPrefs.AUTO_LOGOUT_TIMESTAMP)
+            else preferencesController.setString(
+                ConstantsPrefs.AUTO_LOGOUT_TIMESTAMP,
+                Gson().toJson(value)
+            )
+        }
 }

@@ -16,6 +16,7 @@ import com.alexgreece45.marvelx.data.models.otp.OtpRequest
 import com.alexgreece45.marvelx.data.models.otp.OtpResponseSuccess
 import com.alexgreece45.marvelx.data.models.resendOtp.RequestResendOtp
 import com.alexgreece45.marvelx.data.models.resendOtp.ResponseResendOtpSuccess
+import com.alexgreece45.marvelx.data.models.retrieve_timestamp.ResponseRetrieveTimestamp
 import com.alexgreece45.marvelx.data.models.sensitiveUserData.RequestSensitiveUserData
 import com.alexgreece45.marvelx.data.models.sensitiveUserData.ResponseSensitiveUserData
 import com.alexgreece45.marvelx.data.models.token.TokenResponse
@@ -80,6 +81,9 @@ interface ApiService {
         @Field("refresh_token") refreshToken: String
     ): Response<Void>
 
+    @GET("/api/private/marvelx/user/retrieve_timestamp")
+    suspend fun retrieveTimestamp(): Response<ResponseRetrieveTimestamp>
+
     @POST("/api/private/marvelx/user/validate_otp")
     suspend fun validateOtp(@Body otpRequest: OtpRequest): Response<OtpResponseSuccess>
 
@@ -133,6 +137,8 @@ interface ApiClient {
     suspend fun refreshAccessToken(clientId: String, refreshToken: String): Response<TokenResponse>
 
     suspend fun logout(clientId: String, refreshToken: String): Response<Void>
+
+    suspend fun retrieveTimestamp(): Response<ResponseRetrieveTimestamp>
 
     suspend fun validateOtp(otpRequest: OtpRequest): Response<OtpResponseSuccess>
 

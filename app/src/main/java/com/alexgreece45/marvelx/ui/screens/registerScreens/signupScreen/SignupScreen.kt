@@ -75,7 +75,7 @@ fun SignUpScreen(
                 }
 
                 SignupEffect.Navigation.NavigateToAllCharactersScreen -> {
-                    navController.navigate(Screen.BottomNavigationScreens.AllCharactersScreen.route) {
+                    navController.navigate(Screen.AllCharactersScreen.route) {
                         popUpToTop(navController)
                     }
                 }

@@ -18,6 +18,7 @@ import com.alexgreece45.marvelx.data.models.otp.OtpRequest
 import com.alexgreece45.marvelx.data.models.otp.OtpResponseSuccess
 import com.alexgreece45.marvelx.data.models.resendOtp.RequestResendOtp
 import com.alexgreece45.marvelx.data.models.resendOtp.ResponseResendOtpSuccess
+import com.alexgreece45.marvelx.data.models.retrieve_timestamp.ResponseRetrieveTimestamp
 import com.alexgreece45.marvelx.data.models.sensitiveUserData.RequestSensitiveUserData
 import com.alexgreece45.marvelx.data.models.sensitiveUserData.ResponseSensitiveUserData
 import com.alexgreece45.marvelx.data.models.token.TokenResponse
@@ -68,6 +69,9 @@ class ApiClientImpl(
 
     override suspend fun logout(clientId: String, refreshToken: String): Response<Void> =
         apiService.logout(clientId, refreshToken)
+
+    override suspend fun retrieveTimestamp(): Response<ResponseRetrieveTimestamp> =
+        apiService.retrieveTimestamp()
 
     override suspend fun validateOtp(otpRequest: OtpRequest): Response<OtpResponseSuccess> =
         apiService.validateOtp(otpRequest)

@@ -46,6 +46,21 @@ interface ConfigLogic {
     val websocketUrl: String
 
     /**
+     * Defines whether screen capturing is blocked. It has a default value of `false`.
+     */
+    val blockScreenCapture: Boolean get() = false
+
+    /**
+     * Defines whether overlay windows are hidden. It has a default value of `false`.
+     */
+    val hideOverlayWindows: Boolean get() = false
+
+    /**
+     * Defines whether auto logout is enabled.
+     */
+    val isAutoLogoutEnabled: Boolean
+
+    /**
      * The app's build type (i.e., debug, mock, or release).
      */
     val appBuildType: AppBuildType
@@ -86,12 +101,15 @@ class ConfigLogicImpl : ConfigLogic {
         get() =
             BuildConfig.MARVELX_BACKEND_BASE_URL.split(":").last().toInt()
 
+    override val websocketUrl: String
+        get() = BuildConfig.MARVELX_BACKEND_WEBSOCKET_BASE_URL
+
+    override val isAutoLogoutEnabled: Boolean
+        get() = false
+
     override val appBuildType: AppBuildType
         get() = AppBuildType.getType()
 
     override val packageSignature: String
         get() = "K9sqm8e3aPgpA8Vxmp/D+M4oJEU="
-
-    override val websocketUrl: String
-        get() = BuildConfig.MARVELX_BACKEND_WEBSOCKET_BASE_URL
 }

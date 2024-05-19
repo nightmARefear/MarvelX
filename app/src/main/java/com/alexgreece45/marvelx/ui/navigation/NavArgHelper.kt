@@ -20,20 +20,25 @@ object NavArgHelper {
     }
 
     /**
-     * Retrieves the value of the given argument key. If the argument doesn't exist, then
-     * [NavArgStatus.NotExists] is returned, otherwise [NavArgStatus.Exists] with the value within
-     * it.
+     * Retrieves the value of the given argument key and attempts to typecast it to the type [T].
+     * If the argument doesn't exist or the typecast failed, then [NavArgStatus.NotExists] is
+     * returned, otherwise [NavArgStatus.Exists] with the value within it.
      *
      * Also, the argument is immediately removed if it exists.
      */
-    fun getArgument(navItem: NavItem): NavArgStatus {
+    fun <T> getArgument(navItem: NavItem): NavArgStatus<out T> {
         return when {
             arguments.containsKey(navItem.key).not() -> {
                 NavArgStatus.NotExists
             }
 
-            else -> NavArgStatus.Exists(arguments[navItem.key])
-                .also { arguments.remove(navItem.key) }
+            else -> try {
+                @Suppress("UNCHECKED_CAST")
+                NavArgStatus.Exists(arguments[navItem.key] as T)
+                    .also { arguments.remove(navItem.key) }
+            } catch (e: ClassCastException) {
+                NavArgStatus.NotExists
+            }
         }
     }
 }

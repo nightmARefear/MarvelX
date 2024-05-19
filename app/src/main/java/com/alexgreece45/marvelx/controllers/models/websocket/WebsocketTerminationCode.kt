@@ -1,4 +1,4 @@
-package com.alexgreece45.marvelx.data.models.websocket
+package com.alexgreece45.marvelx.controllers.models.websocket
 
 
 /**

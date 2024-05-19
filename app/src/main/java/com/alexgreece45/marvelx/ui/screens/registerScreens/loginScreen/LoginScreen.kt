@@ -76,7 +76,7 @@ fun LoginScreen(
         viewModel.uiEffect.collect { effect ->
             when (effect) {
                 is LoginEffect.Navigation.NavigateToAllCharactersScreen -> {
-                    navController.navigate(Screen.BottomNavigationScreens.AllCharactersScreen.route) {
+                    navController.navigate(Screen.AllCharactersScreen.route) {
                         popUpToTop(navController)
                     }
                 }
@@ -93,7 +93,7 @@ fun LoginScreen(
                 }
 
                 LoginEffect.Navigation.NavigateToSignupScreen -> {
-                    navController.navigate(Screen.RegisterScreens.SignupScreen.route)
+                    navController.navigate(Screen.SignupScreen.route)
                 }
 
                 LoginEffect.CloseKeyboardAndClearFocus -> {
@@ -112,7 +112,7 @@ fun LoginScreen(
                 }
 
                 LoginEffect.Navigation.NavigateToForgotPasswordScreen -> {
-                    navController.navigate(Screen.RegisterScreens.LoginScreens.ForgotPasswordScreens.ForgotPasswordScreen.route)
+                    navController.navigate(Screen.ForgotPasswordScreen.route)
                 }
 
                 is LoginEffect.ExecuteEvent -> {

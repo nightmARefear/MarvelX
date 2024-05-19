@@ -24,10 +24,7 @@ import com.alexgreece45.marvelx.ui.components.ContainedButton
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
 import com.alexgreece45.marvelx.ui.components.effect.OneTimeLaunchedEffect
-import com.alexgreece45.marvelx.ui.navigation.NavArgHelper
-import com.alexgreece45.marvelx.ui.navigation.NavItem
 import com.alexgreece45.marvelx.ui.navigation.Screen
-import com.alexgreece45.marvelx.ui.navigation.models.NavArgStatus
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.extensions.popUpToTop
 import com.alexgreece45.marvelx.viewModels.HomeEffect
@@ -43,34 +40,26 @@ fun HomeScreen(
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
     OneTimeLaunchedEffect {
-        when (val argument = NavArgHelper.getArgument(NavItem.ErrorMessage)) {
-            is NavArgStatus.Exists -> {
-                viewModel.setEvent(HomeEvent.Init(argument.value as String?))
-            }
-
-            NavArgStatus.NotExists -> {
-                viewModel.setEvent(HomeEvent.Init(null))
-            }
-        }
+        viewModel.setEvent(HomeEvent.Init)
     }
 
     LaunchedEffect(Unit) {
         viewModel.uiEffect.collect { homeEffect ->
             when (homeEffect) {
                 HomeEffect.Navigation.NavigateToLoginScreen -> {
-                    navController.navigate(Screen.RegisterScreens.LoginScreens.LoginScreen.route) {
+                    navController.navigate(Screen.LoginScreen.route) {
                         launchSingleTop = true
                     }
                 }
 
                 HomeEffect.Navigation.NavigateToSignupScreen -> {
-                    navController.navigate(Screen.RegisterScreens.SignupScreen.route) {
+                    navController.navigate(Screen.SignupScreen.route) {
                         launchSingleTop = true
                     }
                 }
 
                 HomeEffect.Navigation.NavigateToAllCharactersScreen -> {
-                    navController.navigate(Screen.BottomNavigationScreens.AllCharactersScreen.route) {
+                    navController.navigate(Screen.AllCharactersScreen.route) {
                         popUpToTop(navController)
                     }
                 }
@@ -94,7 +83,7 @@ fun HomeScreen(
     }
 
     ContentScreen(
-        isLoading = state.isLoading,
+        isLoading = false,
         navigableAction = ScreenNavigableAction.Backable {
             viewModel.setEvent(HomeEvent.OnBack)
         },
@@ -104,15 +93,17 @@ fun HomeScreen(
             contentPadding = paddingValues,
         ) {
             item {
-                AlertDialogError(
-                    isVisible = state.isAlertDialogVisible,
-                    title = state.alertDialogTitle,
-                    errorMessage = state.alertDialogErrorMessage,
-                    confirmButton = AlertDialogButton(
-                        value = stringResource(R.string.generic_ok_button),
-                        onClick = state.alertDialogOnClick
+                state.alertDialogError?.let { homeAlertDialogErrorView ->
+                    AlertDialogError(
+                        isVisible = true,
+                        title = homeAlertDialogErrorView.title,
+                        errorMessage = homeAlertDialogErrorView.errorMessage,
+                        confirmButton = AlertDialogButton(
+                            value = homeAlertDialogErrorView.buttonLabel,
+                            onClick = homeAlertDialogErrorView.alertDialogOnClick
+                        )
                     )
-                )
+                }
             }
 
             item {

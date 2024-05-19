@@ -12,11 +12,22 @@ object ConstantsSecurity {
     }
 
     /**
+     * Auto-logout functionality - related constants.
+     */
+    object AutoLogout {
+        /**
+         * The timeout period in minutes of the auto-logout functionality.
+         */
+        const val TIMEOUT_PERIOD = 10
+    }
+
+    /**
      * Header names.
      */
     sealed class HeaderNames(val name: String) {
         data object UserAgent : HeaderNames(name = "User-Agent")
         data object Authorization : HeaderNames(name = "Authorization")
+        data object Signature : HeaderNames(name = "Signature")
     }
 
     /**

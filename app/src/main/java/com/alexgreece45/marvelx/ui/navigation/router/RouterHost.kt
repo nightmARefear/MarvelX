@@ -9,9 +9,10 @@ import com.alexgreece45.marvelx.util.extensions.popUpToTop
 
 interface RouterHost {
     /**
-     * Retrieves the root [NavHostController].
+     * Initializes the navigation graph.
      */
-    fun getNavController(): NavHostController
+    @Composable
+    fun StartFlow()
 
     /**
      * Navigates the user to the `Home Screen`, and pops all the screens from the backstack.
@@ -21,26 +22,55 @@ interface RouterHost {
     fun logout()
 
     /**
-     * Initializes the navigation graph.
+     * Returns the root [NavHostController].
      */
-    @Composable
-    fun StartFlow()
+    fun getNavController(): NavHostController
+
+    /**
+     * Returns `true` if the current route is included in the auto-logout mechanism, otherwise
+     * `false`.
+     */
+    fun isCurrentRouteIncludedInAutoLogout(): Boolean
+
+    /**
+     * Indicates whether the navigation flow has started. It has an initial value of `false`.
+     */
+    val flowStarted: Boolean
 }
 
 class RouterHostImpl : RouterHost {
 
+    /**
+     * Indicates whether the navigation flow has started. It has an initial value of `false`.
+     */
+    private var _flowStarted: Boolean = false
+
+    override val flowStarted: Boolean get() = _flowStarted
+
+    /**
+     * The root nav controller of this application.
+     */
     private lateinit var navController: NavHostController
-    override fun getNavController(): NavHostController = navController
+
+    @Composable
+    override fun StartFlow() {
+        // Ensures that the navigation graph is only set once.
+        if (_flowStarted.not()) {
+            navController = rememberNavController()
+            NavGraph(navController = navController)
+            _flowStarted = true
+        }
+    }
 
     override fun logout() {
-        navController.navigate(Screen.RegisterScreens.HomeScreen.route) {
+        navController.navigate(Screen.HomeScreen.route) {
             popUpToTop(navController)
         }
     }
 
-    @Composable
-    override fun StartFlow() {
-        navController = rememberNavController()
-        NavGraph(navController = navController)
-    }
+    override fun getNavController(): NavHostController = navController
+
+    override fun isCurrentRouteIncludedInAutoLogout(): Boolean =
+        Screen.fromRoute(navController.currentDestination?.route.orEmpty())?.isIncludedInAutoLogout
+            ?: false
 }

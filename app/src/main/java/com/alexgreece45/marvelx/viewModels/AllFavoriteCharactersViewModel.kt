@@ -90,7 +90,7 @@ class AllFavoriteCharactersViewModel(
 
     private fun getBottomNavigationItems(): List<BottomBarItem> = listOf(
         BottomBarItem(
-            route = Screen.BottomNavigationScreens.AllCharactersScreen.route,
+            route = Screen.AllCharactersScreen.route,
             label = R.string.bottom_navigation_label_characters,
             iconData = IconData(
                 iconResource = R.drawable.ic_superhero,
@@ -98,7 +98,7 @@ class AllFavoriteCharactersViewModel(
             )
         ),
         BottomBarItem(
-            route = Screen.BottomNavigationScreens.AllFavoriteCharactersScreen.route,
+            route = Screen.AllFavoriteCharactersScreen.route,
             label = R.string.bottom_navigation_label_favorites,
             iconData = IconData(
                 iconResource = R.drawable.ic_favorite_filled,
@@ -106,7 +106,7 @@ class AllFavoriteCharactersViewModel(
             )
         ),
         BottomBarItem(
-            route = Screen.BottomNavigationScreens.ProfileScreen.route,
+            route = Screen.ProfileScreen.route,
             label = R.string.bottom_navigation_label_profile,
             iconData = IconData(
                 iconResource = R.drawable.ic_person,

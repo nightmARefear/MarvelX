@@ -14,6 +14,8 @@ import com.alexgreece45.marvelx.controllers.ApplicationPackageController
 import com.alexgreece45.marvelx.controllers.ApplicationPackageControllerImpl
 import com.alexgreece45.marvelx.controllers.AuthController
 import com.alexgreece45.marvelx.controllers.AuthControllerImpl
+import com.alexgreece45.marvelx.controllers.CryptoController
+import com.alexgreece45.marvelx.controllers.CryptoControllerImpl
 import com.alexgreece45.marvelx.controllers.PrefKeys
 import com.alexgreece45.marvelx.controllers.PrefKeysImpl
 import com.alexgreece45.marvelx.controllers.PreferencesController
@@ -30,6 +32,8 @@ import com.alexgreece45.marvelx.data.api.ApiClient
 import com.alexgreece45.marvelx.data.api.ApiService
 import com.alexgreece45.marvelx.database.FavoriteCharactersDao
 import com.alexgreece45.marvelx.database.FavoriteCharactersDatabase
+import com.alexgreece45.marvelx.di.network.NetworkModule
+import com.alexgreece45.marvelx.di.network.interceptors.BaseUrlChangerAndAuthenticationInterceptor
 import com.alexgreece45.marvelx.interactors.ChangePasswordInteractor
 import com.alexgreece45.marvelx.interactors.ChangePasswordInteractorImpl
 import com.alexgreece45.marvelx.interactors.CharacterInteractor
@@ -70,7 +74,6 @@ import com.alexgreece45.marvelx.util.FormValidator
 import com.alexgreece45.marvelx.util.FormValidatorImpl
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.ResourceProviderImpl
-import com.alexgreece45.marvelx.util.interceptors.BaseUrlChangerAndAuthenticationInterceptor
 import com.alexgreece45.marvelx.viewModels.ActivityViewModel
 import com.alexgreece45.marvelx.viewModels.AllCharacterComicsViewModel
 import com.alexgreece45.marvelx.viewModels.AllCharactersViewModel
@@ -81,12 +84,12 @@ import com.alexgreece45.marvelx.viewModels.ComicViewModel
 import com.alexgreece45.marvelx.viewModels.ForgotPasswordValidateEmailViewModel
 import com.alexgreece45.marvelx.viewModels.ForgotPasswordViewModel
 import com.alexgreece45.marvelx.viewModels.HomeViewModel
+import com.alexgreece45.marvelx.viewModels.IntroLoadingViewModel
 import com.alexgreece45.marvelx.viewModels.LoginViewModel
 import com.alexgreece45.marvelx.viewModels.OtpViewModel
 import com.alexgreece45.marvelx.viewModels.ProfileViewModel
 import com.alexgreece45.marvelx.viewModels.SignupViewModel
 import com.alexgreece45.marvelx.viewModels.SplashViewModel
-import com.alexgreece45.marvelx.viewModels.introLoading.IntroLoadingViewModel
 import com.alexgreece45.marvelx.worker.RefreshTokenWorker
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
@@ -196,13 +199,14 @@ private val interactorModule = module {
     factory<ForgotPasswordInteractor> { ForgotPasswordInteractorImpl(get(), get()) }
     factory<ChangePasswordInteractor> { ChangePasswordInteractorImpl() }
     factory<OtpInteractor> { OtpInteractorImpl(get(), get(), get()) }
-    factory<RegisterInteractor> { RegisterInteractorImpl(get(), get(), get(), get()) }
+    factory<RegisterInteractor> { RegisterInteractorImpl(get(), get(), get(), get(), get(), get()) }
     factory<SplashInteractor> { SplashInteractorImpl(get()) }
 }
 
 private val controllerModule = module {
     single<PreferencesController> { PreferencesControllerImpl(get()) }
     single<PrefKeys> { PrefKeysImpl(get(), get()) }
+    single<CryptoController> { CryptoControllerImpl() }
     single<AuthController> { AuthControllerImpl(get(), get()) }
     single<RefreshTokenController> { RefreshTokenControllerImpl(get(), get(), get()) }
     single<TimerController> { TimerControllerImpl() }

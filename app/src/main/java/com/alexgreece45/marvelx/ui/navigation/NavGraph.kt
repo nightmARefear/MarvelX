@@ -33,40 +33,40 @@ import com.alexgreece45.marvelx.util.extensions.popUpToTop
 fun NavGraph(navController: NavHostController) {
     NavHost(
         navController = navController,
-        startDestination = Screen.RegisterScreens.getStartDestination()
+        startDestination = Screen.getStartDestination()
     ) {
         // Register screens.
-        composable(Screen.RegisterScreens.SplashScreen) {
+        composable(Screen.SplashScreen) {
             SplashScreen(navController = navController)
         }
 
-        composable(Screen.RegisterScreens.IntroLoadingScreen) {
+        composable(Screen.IntroLoadingScreen) {
             IntroLoadingScreen(navController = navController)
         }
 
-        composable(Screen.RegisterScreens.HomeScreen) {
+        composable(Screen.HomeScreen) {
             HomeScreen(navController = navController)
         }
 
-        composable(Screen.RegisterScreens.LoginScreens.LoginScreen) {
+        composable(Screen.LoginScreen) {
             LoginScreen(
                 navController = navController
             )
         }
 
-        composable(Screen.RegisterScreens.LoginScreens.ForgotPasswordScreens.ForgotPasswordScreen) {
+        composable(Screen.ForgotPasswordScreen) {
             ForgotPasswordScreen(
                 popUpToLoginScreen = { navController.popBackStack() },
                 navController = navController
             )
         }
 
-        composable(Screen.RegisterScreens.LoginScreens.ForgotPasswordScreens.ForgotPasswordValidateEmailScreen) { navBackStackEntry ->
+        composable(Screen.ForgotPasswordValidateEmailScreen) { navBackStackEntry ->
             ForgotPasswordValidateEmailScreen(
                 popBackStack = { navController.popBackStack() },
                 navigateToForgotPasswordEnterPhoneNumberScreen = { requestIdEmail ->
                     navController.navigate(
-                        Screen.RegisterScreens.LoginScreens.ForgotPasswordScreens.ForgotPasswordEnterPhoneNumberScreen.createNavRoute(
+                        Screen.ForgotPasswordEnterPhoneNumberScreen.createNavRoute(
                             requestIdEmail = requestIdEmail
                         )
                     )
@@ -75,7 +75,7 @@ fun NavGraph(navController: NavHostController) {
             )
         }
 
-        composable(Screen.RegisterScreens.ChangePasswordScreen) { entry ->
+        composable(Screen.ChangePasswordScreen) { entry ->
             ChangePasswordScreen(
                 popBackStack = { navController.popBackStack() },
                 otpFlowType = entry.arguments?.getString(NavItem.OtpFlowType.key),
@@ -84,7 +84,7 @@ fun NavGraph(navController: NavHostController) {
             )
         }
 
-        composable(Screen.RegisterScreens.SignupScreen) {
+        composable(Screen.SignupScreen) {
             SignUpScreen(navController = navController)
         }
 
@@ -101,7 +101,7 @@ fun NavGraph(navController: NavHostController) {
         }
 
         // Main screens.
-        composable(screen = Screen.BottomNavigationScreens.AllCharactersScreen) {
+        composable(screen = Screen.AllCharactersScreen) {
             AllCharactersScreen(
                 navigateToCharacterScreen = { characterId ->
                     navController.navigate(
@@ -146,16 +146,16 @@ fun NavGraph(navController: NavHostController) {
             )
         }
 
-        composable(Screen.BottomNavigationScreens.AllFavoriteCharactersScreen) {
+        composable(Screen.AllFavoriteCharactersScreen) {
             AllFavoriteCharactersScreen(
                 bottomNavigationBarData = { getBottomNavigationBarData(navController = navController) }
             )
         }
 
-        composable(Screen.BottomNavigationScreens.ProfileScreen) {
+        composable(Screen.ProfileScreen) {
             ProfileScreen(
                 navigateToHomeScreen = {
-                    navController.navigate(Screen.RegisterScreens.HomeScreen.route) {
+                    navController.navigate(Screen.HomeScreen.route) {
                         popUpToTop(navController)
                     }
                 },
@@ -165,13 +165,12 @@ fun NavGraph(navController: NavHostController) {
     }
 }
 
-
 /**
  * Returns the bottom navigation items.
  */
 private fun getBottomNavigationItems(): List<BottomBarItem> = listOf(
     BottomBarItem(
-        route = Screen.BottomNavigationScreens.AllCharactersScreen.route,
+        route = Screen.AllCharactersScreen.route,
         label = R.string.bottom_navigation_label_characters,
         iconData = IconData(
             iconResource = R.drawable.ic_superhero,
@@ -179,7 +178,7 @@ private fun getBottomNavigationItems(): List<BottomBarItem> = listOf(
         )
     ),
     BottomBarItem(
-        route = Screen.BottomNavigationScreens.AllFavoriteCharactersScreen.route,
+        route = Screen.AllFavoriteCharactersScreen.route,
         label = R.string.bottom_navigation_label_favorites,
         iconData = IconData(
             iconResource = R.drawable.ic_favorite_filled,
@@ -187,7 +186,7 @@ private fun getBottomNavigationItems(): List<BottomBarItem> = listOf(
         )
     ),
     BottomBarItem(
-        route = Screen.BottomNavigationScreens.ProfileScreen.route,
+        route = Screen.ProfileScreen.route,
         label = R.string.bottom_navigation_label_profile,
         iconData = IconData(
             iconResource = R.drawable.ic_person,

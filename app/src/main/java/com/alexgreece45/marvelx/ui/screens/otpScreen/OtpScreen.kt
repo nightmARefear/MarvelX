@@ -96,14 +96,14 @@ fun OtpScreen(
                 }
 
                 OtpEffect.Navigation.NavigateToAllCharactersScreen -> {
-                    navController.navigate(Screen.BottomNavigationScreens.AllCharactersScreen.route) {
+                    navController.navigate(Screen.AllCharactersScreen.route) {
                         popUpToTop(navController)
                     }
                 }
 
                 is OtpEffect.Navigation.NavigateToChangePasswordScreen -> {
                     navController.navigate(
-                        Screen.RegisterScreens.ChangePasswordScreen.createNavRoute(
+                        Screen.ChangePasswordScreen.createNavRoute(
                             requestIdEmail = effect.requestIdEmail,
                             requestIdPhoneNumber = effect.requestIdPhoneNumber
                         )

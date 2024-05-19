@@ -1,7 +1,7 @@
 package com.alexgreece45.marvelx.controllers
 
 import com.alexgreece45.marvelx.configuration.ConfigLogic
-import com.alexgreece45.marvelx.data.models.websocket.WebsocketTerminationCode
+import com.alexgreece45.marvelx.controllers.models.websocket.WebsocketTerminationCode
 import com.alexgreece45.marvelx.util.constants.ConstantsSecurity
 import okhttp3.OkHttpClient
 import okhttp3.Request

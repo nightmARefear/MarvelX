@@ -54,6 +54,27 @@ interface SecurityController {
     fun areRootCloakingAppsInstalled(): Boolean
 
     /**
+     * Defines whether screen capturing is blocked in this application.
+     */
+    fun isScreenCapturingBlocked(): Boolean
+
+    /**
+     * Defines whether overlay windows are hidden to display over this application.
+     */
+    fun areOverlayWindowsHidden(): Boolean
+
+    /**
+     * Defines whether this application should have the ability to draw itself as an overlay window
+     * over other applications.
+     */
+    fun shouldApplicationDrawOverlayWindows(): Boolean
+
+    /**
+     * Defines whether the auto logout functionality is enabled.
+     */
+    fun isAutoLogoutEnabled(): Boolean
+
+    /**
      * Checks whether this application is running on a secure device and/or if it has been tampered
      * with.
      *
@@ -109,12 +130,27 @@ class SecurityControllerImpl(
                 )
 
     override fun isDeviceRooted(): Boolean =
-        configLogic.appBuildType == AppBuildType.RELEASE
+        configLogic.appBuildType is AppBuildType.RELEASE
                 && rootController.isRooted()
 
     override fun areRootCloakingAppsInstalled(): Boolean =
-        configLogic.appBuildType == AppBuildType.RELEASE
+        configLogic.appBuildType is AppBuildType.RELEASE
                 && rootController.areRootCloakingAppsInstalled()
+
+    override fun isScreenCapturingBlocked(): Boolean =
+        configLogic.blockScreenCapture
+                && configLogic.appBuildType is AppBuildType.RELEASE
+
+    override fun areOverlayWindowsHidden(): Boolean =
+        configLogic.hideOverlayWindows
+                && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+                && configLogic.appBuildType is AppBuildType.RELEASE
+
+    override fun shouldApplicationDrawOverlayWindows(): Boolean = false
+    override fun isAutoLogoutEnabled(): Boolean =
+        configLogic.isAutoLogoutEnabled
+                && configLogic.appBuildType is AppBuildType.RELEASE
+
 
     override fun isApplicationSecure(): Flow<Boolean> = flow {
         emit(

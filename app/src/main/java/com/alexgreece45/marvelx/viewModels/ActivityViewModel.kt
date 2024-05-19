@@ -5,6 +5,7 @@ import androidx.work.WorkManager
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.controllers.AppLoggerController
 import com.alexgreece45.marvelx.controllers.PrefKeys
+import com.alexgreece45.marvelx.controllers.SecurityController
 import com.alexgreece45.marvelx.controllers.WebsocketController
 import com.alexgreece45.marvelx.interactors.LoginInteractor
 import com.alexgreece45.marvelx.interactors.LogoutPartialState
@@ -12,8 +13,13 @@ import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
 import com.alexgreece45.marvelx.mvi.BaseViewModel
+import com.alexgreece45.marvelx.ui.navigation.router.RouterHost
+import com.alexgreece45.marvelx.util.DateUtil
 import com.alexgreece45.marvelx.util.ResourceProvider
+import com.alexgreece45.marvelx.util.constants.ConstantsSecurity
 import com.alexgreece45.marvelx.util.constants.ConstantsWorker
+import com.alexgreece45.marvelx.util.extensions.differenceInMinutes
+import com.alexgreece45.marvelx.util.extensions.differenceInSeconds
 import kotlinx.coroutines.launch
 import okhttp3.Response
 import okhttp3.WebSocket
@@ -27,9 +33,24 @@ data class MainActivityErrorDialog(
 )
 
 sealed class ActivityEvent : BaseEvent {
-    data object Init : ActivityEvent()
-    data object LogoutUser : ActivityEvent()
-    data object OnDestroy : ActivityEvent()
+    sealed class LifecycleEvent : ActivityEvent() {
+        data object OnCreate : LifecycleEvent()
+        data object OnPause : LifecycleEvent()
+        data object OnResume : LifecycleEvent()
+        data object OnDestroy : LifecycleEvent()
+
+    }
+
+    /**
+     * This event is triggered when this application shouldn't have the ability to draw itself as an
+     * overlay window over other applications, but in fact it does.
+     */
+    data object ApplicationDrawOverlayWindowsViolation : ActivityEvent()
+
+    /**
+     * This event is triggered every time the user taps on the screen.
+     */
+    data object OnTapGestureDetected : ActivityEvent()
 }
 
 data class ActivityState(
@@ -41,7 +62,8 @@ data class ActivityState(
 
 sealed class ActivityEffect : BaseEffect {
     sealed class Navigation : ActivityEffect() {
-        data object NavigateToHomeScreen : Navigation()
+        data class NavigateToHomeScreenWithSessionExpired(val showErrorDialog: Boolean) : Navigation()
+        data object NavigateToSplashScreenWithApplicationInsecureError : Navigation()
     }
 }
 
@@ -53,26 +75,54 @@ class ActivityViewModel : BaseViewModel<ActivityEvent, ActivityState, ActivityEf
     private val resourceProvider: ResourceProvider by inject()
     private val appLoggerController: AppLoggerController by inject()
     private val websocketController: WebsocketController by inject()
+    private val securityController: SecurityController by inject()
+    private val routerHost: RouterHost by inject()
 
     override fun setInitialState(): ActivityState = ActivityState()
 
     override fun handleEvents(event: ActivityEvent) {
         when (event) {
-            ActivityEvent.Init -> {
+            ActivityEvent.LifecycleEvent.OnCreate -> {
                 init()
             }
 
-            is ActivityEvent.LogoutUser -> {
-                onLogoutUser()
+            ActivityEvent.LifecycleEvent.OnPause -> {
+                if (prefKeys.isUserLoggedIn() && securityController.isAutoLogoutEnabled()) {
+                    prefKeys.autoLogoutTimestamp = DateUtil.getUTCInstant()
+                }
             }
 
-            ActivityEvent.OnDestroy -> {
-                // Cancel refresh token worker.
-                WorkManager.getInstance(resourceProvider.getContext())
-                    .cancelUniqueWork(ConstantsWorker.RefreshToken.WORKER_NAME)
+            ActivityEvent.LifecycleEvent.OnResume -> {
+                if (prefKeys.isUserLoggedIn()) {
+                    when (prefKeys.shouldRememberUserSession()) {
+                        false -> onLogoutUser()
 
-                // Close websocket.
-                websocketController.close()
+                        true -> {
+                            if (routerHost.isCurrentRouteIncludedInAutoLogout()) {
+                                performAutoLogoutOperations()
+                            }
+                        }
+                    }
+                }
+            }
+
+            ActivityEvent.LifecycleEvent.OnDestroy -> {
+                onDestroy()
+            }
+
+            ActivityEvent.ApplicationDrawOverlayWindowsViolation -> {
+                onLogoutUser(showErrorDialog = false)
+                setEffect {
+                    ActivityEffect.Navigation.NavigateToSplashScreenWithApplicationInsecureError
+                }
+            }
+
+            ActivityEvent.OnTapGestureDetected -> {
+                if (routerHost.isCurrentRouteIncludedInAutoLogout()) {
+                    if (prefKeys.isUserLoggedIn() && prefKeys.shouldRememberUserSession()) {
+                        performAutoLogoutOperations()
+                    }
+                }
             }
         }
     }
@@ -86,33 +136,54 @@ class ActivityViewModel : BaseViewModel<ActivityEvent, ActivityState, ActivityEf
     }
 
     /**
-     * The actions to perform when [ActivityEvent.LogoutUser] is called.
+     * The actions to perform to logout the user. If you don't want to show the error dialog, then
+     * set [showErrorDialog] to `false`.
+     *
+     * @param showErrorDialog Defines whether the error dialog is shown. It has a default value of
+     * `true`.
      */
-    private fun onLogoutUser() {
+    private fun onLogoutUser(showErrorDialog: Boolean = true) {
         setEffect {
-            ActivityEffect.Navigation.NavigateToHomeScreen
+            ActivityEffect.Navigation.NavigateToHomeScreenWithSessionExpired(showErrorDialog = showErrorDialog)
         }
         viewModelScope.launch {
             loginInteractor.logout().collect {
                 when (it) {
-                    is LogoutPartialState.Failed, LogoutPartialState.Success -> {
-                        setState {
-                            copy(
-                                mainActivityErrorDialog = MainActivityErrorDialog(
-                                    title = resourceProvider.getString(R.string.session_status_session_has_expired_alert_dialog_title),
-                                    errorMessage = resourceProvider.getString(R.string.session_status_session_has_expired_alert_dialog_error_message),
-                                    onOkClick = {
-                                        setState {
-                                            copy(
-                                                mainActivityErrorDialog = null
-                                            )
-                                        }
-                                    }
-                                )
-                            )
-                        }
-                    }
+                    is LogoutPartialState.Failed, LogoutPartialState.Success -> {}
                 }
+            }
+        }
+    }
+
+    /**
+     * The actions to perform when main activity's onDestroy function is called.
+     */
+    private fun onDestroy() {
+        // Cancel refresh token worker.
+        WorkManager.getInstance(resourceProvider.getContext())
+            .cancelUniqueWork(ConstantsWorker.RefreshToken.WORKER_NAME)
+
+        // Close websocket.
+        websocketController.close()
+
+        // Remove auto-logout timestamp.
+        prefKeys.autoLogoutTimestamp = null
+    }
+
+    /**
+     * The actions to perform to auto-logout the user if the timeout period has been exceeded.
+     */
+    private fun performAutoLogoutOperations() {
+        if (securityController.isAutoLogoutEnabled()) {
+            prefKeys.autoLogoutTimestamp?.let {
+                if (DateUtil.getUTCInstant()
+                        .differenceInMinutes(it) >= ConstantsSecurity.AutoLogout.TIMEOUT_PERIOD
+                ) {
+                    onLogoutUser()
+                }
+            } ?: {
+                // Since the auto logout timestamp was null, set it to the current timestamp.
+                prefKeys.autoLogoutTimestamp = DateUtil.getUTCInstant()
             }
         }
     }

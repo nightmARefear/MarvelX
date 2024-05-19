@@ -1,4 +1,4 @@
-package com.alexgreece45.marvelx.di
+package com.alexgreece45.marvelx.di.network
 
 import android.content.Context
 import com.alexgreece45.marvelx.BuildConfig
@@ -12,7 +12,7 @@ import com.alexgreece45.marvelx.data.domains.user.VerificationStep
 import com.alexgreece45.marvelx.util.gson.ComicPriceTypeAdapter
 import com.alexgreece45.marvelx.util.gson.OffsetDateTimeAdapter
 import com.alexgreece45.marvelx.util.gson.VerificationStepAdapter
-import com.alexgreece45.marvelx.util.interceptors.BaseUrlChangerAndAuthenticationInterceptor
+import com.alexgreece45.marvelx.di.network.interceptors.BaseUrlChangerAndAuthenticationInterceptor
 import com.chuckerteam.chucker.api.ChuckerInterceptor
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder

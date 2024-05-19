@@ -1,4 +1,4 @@
-package com.alexgreece45.marvelx.util.interceptors
+package com.alexgreece45.marvelx.di.network.interceptors
 
 import com.alexgreece45.marvelx.BuildConfig
 import com.alexgreece45.marvelx.configuration.ConfigLogic
@@ -10,8 +10,8 @@ import okhttp3.Request
 import okhttp3.Response
 
 class BaseUrlChangerAndAuthenticationInterceptor(
-    private val authController: AuthController,
-    private val configLogic: ConfigLogic
+    private val configLogic: ConfigLogic,
+    private val authController: AuthController
 ) : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
         val originalRequest = chain.request()
@@ -26,9 +26,7 @@ class BaseUrlChangerAndAuthenticationInterceptor(
                 path.startsWith(BuildConfig.MARVELX_BACKEND_ENDPOINT_PREFIX) -> {
                     return applyMarvelXBackendTransformations(
                         path = path,
-                        chain = chain,
-                        authController = authController,
-                        configLogic = configLogic
+                        chain = chain
                     )
                 }
 
@@ -70,51 +68,33 @@ class BaseUrlChangerAndAuthenticationInterceptor(
      */
     private fun applyMarvelXBackendTransformations(
         path: String,
-        chain: Interceptor.Chain,
-        authController: AuthController,
-        configLogic: ConfigLogic
+        chain: Interceptor.Chain
     ): Response {
         // Get request from chain.
         val originalRequest = chain.request()
 
-        // Get scheme from MarvelX Backend's baseUrl.
-        val scheme = configLogic.scheme
-
-        // Get host from config.
-        val host = configLogic.host
-
-        // Get port from config.
-        val port = configLogic.port
-
         // Create modified URL based on the config.
         val modifiedUrl =
             originalRequest.url.newBuilder()
-                .scheme(scheme)
-                .host(host)
-                .port(port)
+                .scheme(configLogic.scheme)
+                .host(configLogic.host)
+                .port(configLogic.port)
                 .build()
 
         // Create modified request based on the modifiedUrl and the config.
-        var modifiedRequest = Request.Builder()
+        val modifiedRequest = Request.Builder()
             .url(modifiedUrl)
             .addHeader(
                 name = ConstantsSecurity.HeaderNames.UserAgent.name,
                 value = ConstantsSecurity.HeaderValues.APP_USER_AGENT
             )
+            .addHeader(
+                name = ConstantsSecurity.HeaderNames.Authorization.name,
+                value = if (path.endsWith("retrieve_timestamp")) authController.getRefreshToken()
+                    .orEmpty() else authController.getAccessToken().orEmpty()
+            )
             .method(originalRequest.method, originalRequest.body)
 
-        // Add headers where necessary.
-        when {
-            path.contains("login_with_token") || path.contains("profile_details") -> {
-                modifiedRequest = modifiedRequest
-                    .addHeader(
-                        name = ConstantsSecurity.HeaderNames.Authorization.name,
-                        value = "${authController.getAccessToken()}"
-                    )
-            }
-
-            else -> {}
-        }
         return chain.proceed(modifiedRequest.build())
     }
 }
