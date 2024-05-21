@@ -3,12 +3,12 @@ package com.alexgreece45.marvelx.viewModels
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.controllers.PrefKeys
-import com.alexgreece45.marvelx.data.domains.otp.OtpFlowType
-import com.alexgreece45.marvelx.data.domains.user.VerificationStep
-import com.alexgreece45.marvelx.data.models.user.Gender
-import com.alexgreece45.marvelx.data.models.user.signup.UserSignupRequest
-import com.alexgreece45.marvelx.interactors.PostSignupPartialState
-import com.alexgreece45.marvelx.interactors.RegisterInteractor
+import com.alexgreece45.marvelx.domain.models_api.otp.OtpFlowType
+import com.alexgreece45.marvelx.domain.models_api.user.VerificationStep
+import com.alexgreece45.marvelx.data.models_api.user.Gender
+import com.alexgreece45.marvelx.data.models_api.user.signup.UserSignupRequest
+import com.alexgreece45.marvelx.domain.interactors.PostSignupPartialState
+import com.alexgreece45.marvelx.domain.interactors.RegisterInteractor
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
@@ -35,7 +35,7 @@ sealed class SignupEvent : BaseEvent {
 
         data class LastName(val lastName: String) : FieldValueChange()
 
-        data class Gender(val gender: com.alexgreece45.marvelx.data.models.user.Gender) :
+        data class Gender(val gender: com.alexgreece45.marvelx.data.models_api.user.Gender) :
             FieldValueChange()
 
         data class Email(val email: String?) : FieldValueChange()

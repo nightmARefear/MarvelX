@@ -1,6 +1,6 @@
 package com.alexgreece45.marvelx.util
 
-import com.alexgreece45.marvelx.data.models.user.Gender
+import com.alexgreece45.marvelx.data.models_api.user.Gender
 import com.alexgreece45.marvelx.util.extensions.isEmail
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow

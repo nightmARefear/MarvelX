@@ -2,32 +2,31 @@ package com.alexgreece45.marvelx.di
 
 import com.alexgreece45.marvelx.data.api.ApiClient
 import com.alexgreece45.marvelx.data.api.ApiService
-import com.alexgreece45.marvelx.data.models.character.CharacterDataWrapper
-import com.alexgreece45.marvelx.data.models.character.comic.ComicDataWrapper
-import com.alexgreece45.marvelx.data.models.forgotPassword.email.RequestForgotPasswordOtpBlockedEmail
-import com.alexgreece45.marvelx.data.models.forgotPassword.email.RequestForgotPasswordSendOtp
-import com.alexgreece45.marvelx.data.models.forgotPassword.email.RequestForgotPasswordValidateOtp
-import com.alexgreece45.marvelx.data.models.forgotPassword.email.ResponseForgotPasswordOtpBlockedEmail
-import com.alexgreece45.marvelx.data.models.forgotPassword.email.ResponseForgotPasswordSendOtp
-import com.alexgreece45.marvelx.data.models.forgotPassword.email.ResponseForgotPasswordValidateOtp
-import com.alexgreece45.marvelx.data.models.forgotPassword.phoneNumber.RequestForgotPasswordOtpBlockedPhoneNumber
-import com.alexgreece45.marvelx.data.models.forgotPassword.phoneNumber.ResponseForgotPasswordOtpBlockedPhoneNumber
-import com.alexgreece45.marvelx.data.models.jwtSensitiveUserData.RequestJwtSensitiveUserData
-import com.alexgreece45.marvelx.data.models.jwtSensitiveUserData.ResponseJwtSensitiveUserData
-import com.alexgreece45.marvelx.data.models.otp.OtpRequest
-import com.alexgreece45.marvelx.data.models.otp.OtpResponseSuccess
-import com.alexgreece45.marvelx.data.models.resendOtp.RequestResendOtp
-import com.alexgreece45.marvelx.data.models.resendOtp.ResponseResendOtpSuccess
-import com.alexgreece45.marvelx.data.models.retrieve_timestamp.ResponseRetrieveTimestamp
-import com.alexgreece45.marvelx.data.models.sensitiveUserData.RequestSensitiveUserData
-import com.alexgreece45.marvelx.data.models.sensitiveUserData.ResponseSensitiveUserData
-import com.alexgreece45.marvelx.data.models.token.TokenResponse
-import com.alexgreece45.marvelx.data.models.user.login.LoginResponse
-import com.alexgreece45.marvelx.data.models.user.login.UserLoginRequest
-import com.alexgreece45.marvelx.data.models.user.loginWithToken.LoginWithTokenResponse
-import com.alexgreece45.marvelx.data.models.user.profileDetails.ResponseProfileDetails
-import com.alexgreece45.marvelx.data.models.user.signup.SignupResponse
-import com.alexgreece45.marvelx.data.models.user.signup.UserSignupRequest
+import com.alexgreece45.marvelx.data.models_api.character.CharacterDataWrapper
+import com.alexgreece45.marvelx.data.models_api.character.comic.ComicDataWrapper
+import com.alexgreece45.marvelx.data.models_api.forgotPassword.email.RequestForgotPasswordOtpBlockedEmail
+import com.alexgreece45.marvelx.data.models_api.forgotPassword.email.RequestForgotPasswordSendOtp
+import com.alexgreece45.marvelx.data.models_api.forgotPassword.email.RequestForgotPasswordValidateOtp
+import com.alexgreece45.marvelx.data.models_api.forgotPassword.email.ResponseForgotPasswordOtpBlockedEmail
+import com.alexgreece45.marvelx.data.models_api.forgotPassword.email.ResponseForgotPasswordSendOtp
+import com.alexgreece45.marvelx.data.models_api.forgotPassword.email.ResponseForgotPasswordValidateOtp
+import com.alexgreece45.marvelx.data.models_api.forgotPassword.phoneNumber.RequestForgotPasswordOtpBlockedPhoneNumber
+import com.alexgreece45.marvelx.data.models_api.forgotPassword.phoneNumber.ResponseForgotPasswordOtpBlockedPhoneNumber
+import com.alexgreece45.marvelx.data.models_api.jwtSensitiveUserData.RequestJwtSensitiveUserData
+import com.alexgreece45.marvelx.data.models_api.jwtSensitiveUserData.ResponseJwtSensitiveUserData
+import com.alexgreece45.marvelx.data.models_api.otp.OtpRequest
+import com.alexgreece45.marvelx.data.models_api.otp.OtpResponseSuccess
+import com.alexgreece45.marvelx.data.models_api.resendOtp.RequestResendOtp
+import com.alexgreece45.marvelx.data.models_api.resendOtp.ResponseResendOtpSuccess
+import com.alexgreece45.marvelx.data.models_api.sensitiveUserData.RequestSensitiveUserData
+import com.alexgreece45.marvelx.data.models_api.sensitiveUserData.ResponseSensitiveUserData
+import com.alexgreece45.marvelx.data.models_api.token.TokenResponse
+import com.alexgreece45.marvelx.data.models_api.user.login.LoginResponse
+import com.alexgreece45.marvelx.data.models_api.user.login.UserLoginRequest
+import com.alexgreece45.marvelx.data.models_api.user.loginWithToken.LoginWithTokenResponse
+import com.alexgreece45.marvelx.data.models_api.user.profileDetails.ResponseProfileDetails
+import com.alexgreece45.marvelx.data.models_api.user.signup.SignupResponse
+import com.alexgreece45.marvelx.data.models_api.user.signup.UserSignupRequest
 import retrofit2.Response
 
 class ApiClientImpl(
@@ -69,9 +68,6 @@ class ApiClientImpl(
 
     override suspend fun logout(clientId: String, refreshToken: String): Response<Void> =
         apiService.logout(clientId, refreshToken)
-
-    override suspend fun retrieveTimestamp(): Response<ResponseRetrieveTimestamp> =
-        apiService.retrieveTimestamp()
 
     override suspend fun validateOtp(otpRequest: OtpRequest): Response<OtpResponseSuccess> =
         apiService.validateOtp(otpRequest)

@@ -1,6 +1,6 @@
 package com.alexgreece45.marvelx.util.helper
 
-import com.alexgreece45.marvelx.data.models.user.ResponseUserError
+import com.alexgreece45.marvelx.data.models_api.user.ResponseUserError
 import com.google.gson.Gson
 import retrofit2.Response
 

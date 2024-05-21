@@ -7,8 +7,8 @@ import com.alexgreece45.marvelx.BuildConfig
 import com.alexgreece45.marvelx.controllers.models.preferencesController.ConstantsPrefs
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.google.gson.Gson
-import com.google.gson.JsonSyntaxException
 import java.time.Instant
+import java.time.format.DateTimeParseException
 
 interface PreferencesController {
     /**
@@ -200,14 +200,13 @@ class PrefKeysImpl(
 
     override var autoLogoutTimestamp: Instant?
         get() = try {
-            Gson().fromJson(
+            Instant.parse(
                 preferencesController.getString(
-                    key = ConstantsPrefs.AUTO_LOGOUT_TIMESTAMP,
-                    defaultValue = null.toString()
-                ),
-                Instant::class.java
+                    ConstantsPrefs.AUTO_LOGOUT_TIMESTAMP,
+                    null.toString()
+                )
             )
-        } catch (e: JsonSyntaxException) {
+        } catch (e: DateTimeParseException) {
             logger.d("PrefKeys") { "Auto logout timestamp is null." }
             null
         }
@@ -215,7 +214,7 @@ class PrefKeysImpl(
             if (value == null) preferencesController.remove(ConstantsPrefs.AUTO_LOGOUT_TIMESTAMP)
             else preferencesController.setString(
                 ConstantsPrefs.AUTO_LOGOUT_TIMESTAMP,
-                Gson().toJson(value)
+                Gson().toJson(value.toString()).replace("\"", "")
             )
         }
 }

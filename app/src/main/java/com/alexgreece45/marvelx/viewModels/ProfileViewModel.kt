@@ -3,11 +3,11 @@ package com.alexgreece45.marvelx.viewModels
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.controllers.AuthController
 import com.alexgreece45.marvelx.controllers.PrefKeys
-import com.alexgreece45.marvelx.data.domains.user.profileDetails.ProfileDetailsDomain
-import com.alexgreece45.marvelx.interactors.GetProfileDetailsPartialState
-import com.alexgreece45.marvelx.interactors.LoginInteractor
-import com.alexgreece45.marvelx.interactors.LogoutPartialState
-import com.alexgreece45.marvelx.interactors.UserInteractor
+import com.alexgreece45.marvelx.domain.models_api.user.profileDetails.ProfileDetailsDomain
+import com.alexgreece45.marvelx.domain.interactors.GetProfileDetailsPartialState
+import com.alexgreece45.marvelx.domain.interactors.LoginInteractor
+import com.alexgreece45.marvelx.domain.interactors.LogoutPartialState
+import com.alexgreece45.marvelx.domain.interactors.UserInteractor
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState

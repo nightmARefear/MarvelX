@@ -19,7 +19,7 @@ class OffsetDateTimeAdapter : TypeAdapter<OffsetDateTime>() {
         input.nextString().replace(
             oldValue = "-0001",
             newValue = "2001"
-        ), // Special handling since Marvel API incorrectly returns some OffsetDateTimes.
+        ), // Special handling since Marvel API incorrectly returns some [OffsetDateTime]s.
         DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssZ")
     )
 }

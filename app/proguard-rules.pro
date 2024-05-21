@@ -10,7 +10,7 @@
 -keep,allowobfuscation,allowshrinking class kotlin.coroutines.Continuation
 
 # API Models.
--keep class com.alexgreece45.marvelx.data.models.** {*;}
+-keep class com.alexgreece45.marvelx.data.models_api.** {*;}
 
 # Prevent R8 from leaving Data object members always null.
 -keepclassmembers,allowobfuscation class * {

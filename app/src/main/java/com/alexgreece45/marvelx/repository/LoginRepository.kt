@@ -2,10 +2,10 @@ package com.alexgreece45.marvelx.repository
 
 import com.alexgreece45.marvelx.controllers.AppLoggerController
 import com.alexgreece45.marvelx.data.api.ApiClient
-import com.alexgreece45.marvelx.data.models.sensitiveUserData.RequestSensitiveUserData
-import com.alexgreece45.marvelx.data.models.sensitiveUserData.ResponseSensitiveUserData
-import com.alexgreece45.marvelx.data.models.token.TokenResponse
-import com.alexgreece45.marvelx.data.models.user.ResponseUserError
+import com.alexgreece45.marvelx.data.models_api.sensitiveUserData.RequestSensitiveUserData
+import com.alexgreece45.marvelx.data.models_api.sensitiveUserData.ResponseSensitiveUserData
+import com.alexgreece45.marvelx.data.models_api.token.TokenResponse
+import com.alexgreece45.marvelx.data.models_api.user.ResponseUserError
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.helper.parseError
 import kotlinx.coroutines.flow.Flow

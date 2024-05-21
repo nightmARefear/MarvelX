@@ -7,12 +7,16 @@ import com.alexgreece45.marvelx.configuration.ConfigLogic
 import com.alexgreece45.marvelx.controllers.AppLoggerController
 import com.alexgreece45.marvelx.controllers.WebsocketController
 import com.alexgreece45.marvelx.controllers.WebsocketControllerImpl
-import com.alexgreece45.marvelx.data.domains.comic.ComicPriceType
-import com.alexgreece45.marvelx.data.domains.user.VerificationStep
+import com.alexgreece45.marvelx.controllers.models.websocket.WebsocketRequestType
+import com.alexgreece45.marvelx.di.network.interceptors.ApiInterceptor
+import com.alexgreece45.marvelx.di.network.interceptors.WebsocketInterceptor
+import com.alexgreece45.marvelx.domain.models_api.comic.ComicPriceType
+import com.alexgreece45.marvelx.domain.models_api.user.VerificationStep
 import com.alexgreece45.marvelx.util.gson.ComicPriceTypeAdapter
 import com.alexgreece45.marvelx.util.gson.OffsetDateTimeAdapter
+import com.alexgreece45.marvelx.util.gson.UUIDAdapter
 import com.alexgreece45.marvelx.util.gson.VerificationStepAdapter
-import com.alexgreece45.marvelx.di.network.interceptors.BaseUrlChangerAndAuthenticationInterceptor
+import com.alexgreece45.marvelx.util.gson.WebsocketRequestTypeAdapter
 import com.chuckerteam.chucker.api.ChuckerInterceptor
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
@@ -24,6 +28,7 @@ import org.koin.dsl.module
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.time.OffsetDateTime
+import java.util.UUID
 
 object NetworkModule {
 
@@ -52,7 +57,7 @@ object NetworkModule {
 
     private fun provideOkHttpClient(
         @ApplicationContext context: Context,
-        interceptor: BaseUrlChangerAndAuthenticationInterceptor,
+        apiInterceptor: ApiInterceptor,
         httpLoggingInterceptor: HttpLoggingInterceptor,
         configLogic: ConfigLogic
     ): OkHttpClient {
@@ -68,10 +73,10 @@ object NetworkModule {
         okHttpClient.certificatePinner(certificatePinner)
 
         // Add required interceptors.
-        okHttpClient.addInterceptor(interceptor)
+        okHttpClient.addInterceptor(apiInterceptor)
         okHttpClient.addInterceptor(httpLoggingInterceptor)
 
-        // Add "ChuckerInterceptor" only in non-release builds (debug, mock).
+        // Add "ChuckerInterceptor" only in non-release builds.
         if (configLogic.appBuildType != AppBuildType.RELEASE) {
             okHttpClient.addInterceptor(ChuckerInterceptor(context))
         }
@@ -79,9 +84,13 @@ object NetworkModule {
         return okHttpClient.build()
     }
 
+    /**
+     * Provides the [OkHttpClient] for the websocket client.
+     */
     private fun provideOkHttpClientForWebsocketClient(
         @ApplicationContext context: Context,
         httpLoggingInterceptor: HttpLoggingInterceptor,
+        websocketInterceptor: WebsocketInterceptor,
         configLogic: ConfigLogic
     ): OkHttpClient {
         val okHttpClient = OkHttpClient.Builder()
@@ -97,9 +106,10 @@ object NetworkModule {
 
         // Add interceptors.
         okHttpClient.addInterceptor(httpLoggingInterceptor)
+        okHttpClient.addInterceptor(websocketInterceptor)
 
-        // Add "ChuckerInterceptor" only in non-release builds (debug, mock).
-        if (configLogic.appBuildType != AppBuildType.RELEASE) {
+        // Add "ChuckerInterceptor" only in non-release builds.
+        if (configLogic.appBuildType !is AppBuildType.RELEASE) {
             okHttpClient.addInterceptor(ChuckerInterceptor(context))
         }
 
@@ -109,6 +119,14 @@ object NetworkModule {
     private fun provideGsonConverterFactory(gson: Gson): GsonConverterFactory =
         GsonConverterFactory.create(gson)
 
+    /**
+     * Provides a [Gson] instance with the type adapters for the following types:
+     *  - [OffsetDateTime]
+     *  - [ComicPriceType]
+     *  - [VerificationStep]
+     *  - [WebsocketRequestType]
+     *  - [UUID]
+     */
     private fun provideGson(): Gson = GsonBuilder()
         .registerTypeAdapter(
             OffsetDateTime::class.java,
@@ -121,6 +139,14 @@ object NetworkModule {
         .registerTypeAdapter(
             VerificationStep::class.java,
             VerificationStepAdapter()
+        )
+        .registerTypeAdapter(
+            WebsocketRequestType::class.java,
+            WebsocketRequestTypeAdapter()
+        )
+        .registerTypeAdapter(
+            UUID::class.java,
+            UUIDAdapter()
         )
         .create()
 
@@ -135,9 +161,10 @@ object NetworkModule {
         single<WebsocketController> {
             WebsocketControllerImpl(
                 get(),
-                provideOkHttpClientForWebsocketClient(get(), get(), get()),
+                provideOkHttpClientForWebsocketClient(get(), get(), get(), get()),
                 get(),
-                get()
+                get(),
+                provideGson()
             )
         }
     }

@@ -2,21 +2,21 @@ package com.alexgreece45.marvelx.viewModels
 
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.data.domains.character.toCharacterCardUiList
+import com.alexgreece45.marvelx.domain.models_api.character.toCharacterCardUiList
 import com.alexgreece45.marvelx.database.FavoriteCharacterEntity
-import com.alexgreece45.marvelx.interactors.CharacterInteractor
-import com.alexgreece45.marvelx.interactors.DeleteFavoriteCharacterByIdPartialState
-import com.alexgreece45.marvelx.interactors.GetAllCharactersPartialState
-import com.alexgreece45.marvelx.interactors.GetFavoriteCharacterIdsPartialState
-import com.alexgreece45.marvelx.interactors.GetFavoriteCharactersPartialState
-import com.alexgreece45.marvelx.interactors.InsertFavoriteCharactersPartialState
+import com.alexgreece45.marvelx.domain.interactors.CharacterInteractor
+import com.alexgreece45.marvelx.domain.interactors.DeleteFavoriteCharacterByIdPartialState
+import com.alexgreece45.marvelx.domain.interactors.GetAllCharactersPartialState
+import com.alexgreece45.marvelx.domain.interactors.GetFavoriteCharacterIdsPartialState
+import com.alexgreece45.marvelx.domain.interactors.GetFavoriteCharactersPartialState
+import com.alexgreece45.marvelx.domain.interactors.InsertFavoriteCharactersPartialState
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
 import com.alexgreece45.marvelx.mvi.BaseViewModel
 import com.alexgreece45.marvelx.ui.components.SortingType
-import com.alexgreece45.marvelx.ui.screens.allCharactersScreen.uiModels.CharacterCardUi
-import com.alexgreece45.marvelx.ui.screens.allCharactersScreen.uiModels.toFavoriteCharacterEntity
+import com.alexgreece45.marvelx.ui.screens.allCharacters.uiModels.CharacterCardUi
+import com.alexgreece45.marvelx.ui.screens.allCharacters.uiModels.toFavoriteCharacterEntity
 import com.alexgreece45.marvelx.util.ResourceProvider
 import kotlinx.coroutines.launch
 

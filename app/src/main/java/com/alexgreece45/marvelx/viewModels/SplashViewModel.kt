@@ -2,7 +2,7 @@ package com.alexgreece45.marvelx.viewModels
 
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.interactors.SplashInteractor
+import com.alexgreece45.marvelx.domain.interactors.SplashInteractor
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState

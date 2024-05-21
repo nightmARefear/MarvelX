@@ -111,5 +111,5 @@ class ConfigLogicImpl : ConfigLogic {
         get() = AppBuildType.getType()
 
     override val packageSignature: String
-        get() = "K9sqm8e3aPgpA8Vxmp/D+M4oJEU="
+        get() = "tPwQygNBC+Pl1e3T5qwNGCg/oy9wOM9p+c4oddwuGFE="
 }

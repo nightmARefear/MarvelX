@@ -1,6 +1,6 @@
 package com.alexgreece45.marvelx.controllers
 
-import com.alexgreece45.marvelx.data.domains.userAuthData.UserAuthData
+import com.alexgreece45.marvelx.domain.models_api.userAuthData.UserAuthData
 import com.alexgreece45.marvelx.util.DateUtil
 import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException

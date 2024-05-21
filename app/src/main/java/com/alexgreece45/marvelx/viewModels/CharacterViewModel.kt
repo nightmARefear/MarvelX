@@ -2,15 +2,15 @@ package com.alexgreece45.marvelx.viewModels
 
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.data.domains.character.CharacterDomain
-import com.alexgreece45.marvelx.data.domains.character.toFavoriteCharacterEntity
-import com.alexgreece45.marvelx.data.domains.comic.ComicDomain
-import com.alexgreece45.marvelx.interactors.CharacterInteractor
-import com.alexgreece45.marvelx.interactors.DeleteFavoriteCharacterByIdPartialState
-import com.alexgreece45.marvelx.interactors.GetCharacterComicsPartialState
-import com.alexgreece45.marvelx.interactors.GetCharacterPartialState
-import com.alexgreece45.marvelx.interactors.InsertFavoriteCharactersPartialState
-import com.alexgreece45.marvelx.interactors.IsCharacterFavoriteByIdPartialState
+import com.alexgreece45.marvelx.domain.models_api.character.CharacterDomain
+import com.alexgreece45.marvelx.domain.models_api.character.toFavoriteCharacterEntity
+import com.alexgreece45.marvelx.domain.models_api.comic.ComicDomain
+import com.alexgreece45.marvelx.domain.interactors.CharacterInteractor
+import com.alexgreece45.marvelx.domain.interactors.DeleteFavoriteCharacterByIdPartialState
+import com.alexgreece45.marvelx.domain.interactors.GetCharacterComicsPartialState
+import com.alexgreece45.marvelx.domain.interactors.GetCharacterPartialState
+import com.alexgreece45.marvelx.domain.interactors.InsertFavoriteCharactersPartialState
+import com.alexgreece45.marvelx.domain.interactors.IsCharacterFavoriteByIdPartialState
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState

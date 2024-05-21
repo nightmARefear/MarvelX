@@ -3,7 +3,7 @@ package com.alexgreece45.marvelx.database
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import com.alexgreece45.marvelx.ui.screens.allCharactersScreen.uiModels.CharacterCardUi
+import com.alexgreece45.marvelx.ui.screens.allCharacters.uiModels.CharacterCardUi
 
 @Entity(tableName = "favorite_character")
 data class FavoriteCharacterEntity(

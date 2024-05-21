@@ -28,17 +28,15 @@ object NavArgHelper {
      */
     fun <T> getArgument(navItem: NavItem): NavArgStatus<out T> {
         return when {
-            arguments.containsKey(navItem.key).not() -> {
-                NavArgStatus.NotExists
-            }
-
-            else -> try {
+            arguments.containsKey(navItem.key) -> try {
                 @Suppress("UNCHECKED_CAST")
                 NavArgStatus.Exists(arguments[navItem.key] as T)
                     .also { arguments.remove(navItem.key) }
             } catch (e: ClassCastException) {
                 NavArgStatus.NotExists
             }
+
+            else -> NavArgStatus.NotExists
         }
     }
 }

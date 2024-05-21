@@ -90,20 +90,21 @@ class SecurityControllerImpl(
 ) : SecurityController {
 
     override fun isPackageSignatureValid(): Boolean {
-        if (configLogic.appBuildType != AppBuildType.RELEASE) return true
-        return applicationPackageController.getSignature() == configLogic.packageSignature
+        if (configLogic.appBuildType !is AppBuildType.RELEASE) return true
+        return applicationPackageController.getApplicationSignatures()
+            .any { it == configLogic.packageSignature }
     }
 
     override fun isAppDebuggable(): Boolean =
-        configLogic.appBuildType == AppBuildType.RELEASE
+        configLogic.appBuildType is AppBuildType.RELEASE
                 && applicationPackageController.isAppDebuggable()
 
     override fun isDebuggerAttached(): Boolean =
-        configLogic.appBuildType == AppBuildType.RELEASE
+        configLogic.appBuildType is AppBuildType.RELEASE
                 && Debug.isDebuggerConnected()
 
     override fun isAppRunningOnEmulator(): Boolean =
-        configLogic.appBuildType == AppBuildType.RELEASE
+        configLogic.appBuildType is AppBuildType.RELEASE
                 && (
                 // Android SDK emulator
                 (Build.MANUFACTURER == "Google" && Build.BRAND == "google"
@@ -147,10 +148,10 @@ class SecurityControllerImpl(
                 && configLogic.appBuildType is AppBuildType.RELEASE
 
     override fun shouldApplicationDrawOverlayWindows(): Boolean = false
+
     override fun isAutoLogoutEnabled(): Boolean =
         configLogic.isAutoLogoutEnabled
                 && configLogic.appBuildType is AppBuildType.RELEASE
-
 
     override fun isApplicationSecure(): Flow<Boolean> = flow {
         emit(

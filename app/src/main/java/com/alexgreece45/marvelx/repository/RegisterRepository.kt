@@ -1,14 +1,14 @@
 package com.alexgreece45.marvelx.repository
 
 import com.alexgreece45.marvelx.data.api.ApiClient
-import com.alexgreece45.marvelx.data.models.jwtSensitiveUserData.RequestJwtSensitiveUserData
-import com.alexgreece45.marvelx.data.models.jwtSensitiveUserData.ResponseJwtSensitiveUserData
-import com.alexgreece45.marvelx.data.models.user.ResponseUserError
-import com.alexgreece45.marvelx.data.models.user.login.LoginResponse
-import com.alexgreece45.marvelx.data.models.user.login.UserLoginRequest
-import com.alexgreece45.marvelx.data.models.user.loginWithToken.LoginWithTokenResponse
-import com.alexgreece45.marvelx.data.models.user.signup.SignupResponse
-import com.alexgreece45.marvelx.data.models.user.signup.UserSignupRequest
+import com.alexgreece45.marvelx.data.models_api.jwtSensitiveUserData.RequestJwtSensitiveUserData
+import com.alexgreece45.marvelx.data.models_api.jwtSensitiveUserData.ResponseJwtSensitiveUserData
+import com.alexgreece45.marvelx.data.models_api.user.ResponseUserError
+import com.alexgreece45.marvelx.data.models_api.user.login.LoginResponse
+import com.alexgreece45.marvelx.data.models_api.user.login.UserLoginRequest
+import com.alexgreece45.marvelx.data.models_api.user.loginWithToken.LoginWithTokenResponse
+import com.alexgreece45.marvelx.data.models_api.user.signup.SignupResponse
+import com.alexgreece45.marvelx.data.models_api.user.signup.UserSignupRequest
 import com.alexgreece45.marvelx.util.helper.parseError
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow

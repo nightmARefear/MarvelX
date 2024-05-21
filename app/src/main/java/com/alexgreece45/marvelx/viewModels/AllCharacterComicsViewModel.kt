@@ -1,9 +1,9 @@
 package com.alexgreece45.marvelx.viewModels
 
 import androidx.lifecycle.viewModelScope
-import com.alexgreece45.marvelx.data.domains.comic.ComicDomain
-import com.alexgreece45.marvelx.interactors.CharacterInteractor
-import com.alexgreece45.marvelx.interactors.GetCharacterComicsPartialState
+import com.alexgreece45.marvelx.domain.models_api.comic.ComicDomain
+import com.alexgreece45.marvelx.domain.interactors.CharacterInteractor
+import com.alexgreece45.marvelx.domain.interactors.GetCharacterComicsPartialState
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
