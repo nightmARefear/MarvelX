@@ -5,6 +5,8 @@ import com.alexgreece45.marvelx.BuildConfig
 import com.alexgreece45.marvelx.configuration.AppBuildType
 import com.alexgreece45.marvelx.configuration.ConfigLogic
 import com.alexgreece45.marvelx.controllers.AppLoggerController
+import com.alexgreece45.marvelx.controllers.RequestController
+import com.alexgreece45.marvelx.controllers.RequestControllerImpl
 import com.alexgreece45.marvelx.controllers.WebsocketController
 import com.alexgreece45.marvelx.controllers.WebsocketControllerImpl
 import com.alexgreece45.marvelx.controllers.models.websocket.WebsocketRequestType
@@ -156,6 +158,7 @@ object NetworkModule {
         single<HttpLoggingInterceptor> { provideHttpLoggingInterceptor(get(), get()) }
         single<OkHttpClient> { provideOkHttpClient(get(), get(), get(), get()) }
         single<Retrofit> { provideRetrofit(get(), get()) }
+        single<RequestController> { RequestControllerImpl(get(), get(), get()) }
 
         // Websocket client.
         single<WebsocketController> {

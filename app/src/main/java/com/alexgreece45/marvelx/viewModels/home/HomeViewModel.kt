@@ -6,7 +6,7 @@ import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
 import com.alexgreece45.marvelx.mvi.BaseViewModel
 import com.alexgreece45.marvelx.ui.navigation.NavArgHelper
-import com.alexgreece45.marvelx.ui.navigation.NavItem
+import com.alexgreece45.marvelx.ui.navigation.models.NavArg
 import com.alexgreece45.marvelx.ui.navigation.models.NavArgStatus
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.viewModels.home.models.HomeAlertDialogErrorType
@@ -14,20 +14,15 @@ import com.alexgreece45.marvelx.viewModels.home.models.HomeAlertDialogErrorView
 
 sealed class HomeEvent : BaseEvent {
     data object Init : HomeEvent()
-
     data object OnBack : HomeEvent()
-
-    data object OnLogInButtonClick : HomeEvent()
-
-    data object OnSignUpButtonClick : HomeEvent()
+    data object OnLoginButtonClicked : HomeEvent()
+    data object OnSignupButtonClicked : HomeEvent()
 }
 
 data class HomeState(
-    // Base states.
     val hasInternetConnection: Boolean = true,
     val alertDialogError: HomeAlertDialogErrorView? = null,
-
-    ) : BaseState
+) : BaseState
 
 sealed interface HomeEffect : BaseEffect {
     sealed class Navigation : HomeEffect {
@@ -48,47 +43,18 @@ sealed interface HomeEffect : BaseEffect {
 class HomeViewModel(
     private val resourceProvider: ResourceProvider,
 ) : BaseViewModel<HomeEvent, HomeState, HomeEffect>() {
-    override fun setInitialState(): HomeState =
-        HomeState(
-
-        )
+    override fun setInitialState(): HomeState = HomeState()
 
     override fun handleEvents(event: HomeEvent) {
         when (event) {
             is HomeEvent.Init -> {
-                when (val hasSessionExpiredNavArg =
-                    NavArgHelper.getArgument<Boolean>(NavItem.HasSessionExpired)) {
+                when (val homeAlertDialogErrorTypeNavArg =
+                    NavArgHelper.getArgument<HomeAlertDialogErrorType>(NavArg.HomeAlertDialogErrorType)) {
                     is NavArgStatus.Exists -> {
-                        if (hasSessionExpiredNavArg.value) {
-                            when (val showErrorDialogNavArg =
-                                NavArgHelper.getArgument<Boolean>(NavItem.ShowErrorDialog)) {
-                                is NavArgStatus.Exists -> {
-                                    if (showErrorDialogNavArg.value) {
-                                        showAlertDialog(
-                                            HomeAlertDialogErrorType.SessionExpired
-                                        )
-                                    }
-                                }
-
-                                NavArgStatus.NotExists -> {}
-                            }
-                        }
+                        showAlertDialog(homeAlertDialogErrorTypeNavArg.value)
                     }
 
                     NavArgStatus.NotExists -> {}
-                }
-
-                when (val errorMessageNavArg =
-                    NavArgHelper.getArgument<String?>(NavItem.ErrorMessage)) {
-                    is NavArgStatus.Exists -> {
-                        errorMessageNavArg.value
-                    }
-
-                    NavArgStatus.NotExists -> {
-                        null
-                    }
-                }?.let { errorMessage ->
-                    showAlertDialog(HomeAlertDialogErrorType.HasError(errorMessage = errorMessage))
                 }
             }
 
@@ -98,13 +64,13 @@ class HomeViewModel(
                 }
             }
 
-            HomeEvent.OnLogInButtonClick -> {
+            HomeEvent.OnLoginButtonClicked -> {
                 setEffect {
                     HomeEffect.Navigation.NavigateToLoginScreen
                 }
             }
 
-            HomeEvent.OnSignUpButtonClick -> {
+            HomeEvent.OnSignupButtonClicked -> {
                 setEffect {
                     HomeEffect.Navigation.NavigateToSignupScreen
                 }
@@ -116,18 +82,22 @@ class HomeViewModel(
         setState {
             copy(
                 alertDialogError = when (homeAlertDialogErrorType) {
-                    is HomeAlertDialogErrorType.HasError -> HomeAlertDialogErrorView(
-                        title = resourceProvider.getString(R.string.login_screen_error_view_title),
-                        errorMessage = homeAlertDialogErrorType.errorMessage,
-                        buttonLabel = resourceProvider.getString(R.string.generic_ok_button),
-                        alertDialogOnClick = {
-                            setState {
-                                copy(
-                                    alertDialogError = null
-                                )
-                            }
+                    is HomeAlertDialogErrorType.HasError -> {
+                        homeAlertDialogErrorType.errorMessage?.let { errorMessage ->
+                            HomeAlertDialogErrorView(
+                                title = resourceProvider.getString(R.string.login_screen_error_view_title),
+                                errorMessage = errorMessage,
+                                buttonLabel = resourceProvider.getString(R.string.generic_ok_button),
+                                alertDialogOnClick = {
+                                    setState {
+                                        copy(
+                                            alertDialogError = null
+                                        )
+                                    }
+                                }
+                            )
                         }
-                    )
+                    }
 
                     HomeAlertDialogErrorType.SessionExpired -> HomeAlertDialogErrorView(
                         title = resourceProvider.getString(R.string.session_status_session_has_expired_alert_dialog_title),

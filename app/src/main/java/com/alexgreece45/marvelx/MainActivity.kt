@@ -24,11 +24,13 @@ import com.alexgreece45.marvelx.controllers.PrefKeys
 import com.alexgreece45.marvelx.controllers.SecurityController
 import com.alexgreece45.marvelx.ui.components.effect.OneTimeLaunchedEffect
 import com.alexgreece45.marvelx.ui.navigation.NavArgHelper
-import com.alexgreece45.marvelx.ui.navigation.NavItem
 import com.alexgreece45.marvelx.ui.navigation.Screen
+import com.alexgreece45.marvelx.ui.navigation.models.NavArg
 import com.alexgreece45.marvelx.ui.navigation.router.RouterHost
 import com.alexgreece45.marvelx.ui.theme.MarvelXTheme
 import com.alexgreece45.marvelx.util.extensions.popUpToTop
+import com.alexgreece45.marvelx.viewModels.SplashContract
+import com.alexgreece45.marvelx.viewModels.home.models.HomeAlertDialogErrorType
 import com.alexgreece45.marvelx.viewModels.mainActivity.ActivityEffect
 import com.alexgreece45.marvelx.viewModels.mainActivity.ActivityEvent
 import com.alexgreece45.marvelx.viewModels.mainActivity.ActivityViewModel
@@ -49,6 +51,7 @@ class MainActivity : ComponentActivity() {
     @OptIn(KoinExperimentalAPI::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        logger.d("MainActivity") { "onCreate called." }
 
         setWindowSecurityFlags()
         setContent {
@@ -69,17 +72,28 @@ class MainActivity : ComponentActivity() {
                                 when (activityEffect) {
                                     is ActivityEffect.Navigation.NavigateToHomeScreenWithSessionExpired -> {
                                         NavArgHelper.setArgument(
-                                            NavItem.HasSessionExpired,
-                                            true
+                                            NavArg.HomeAlertDialogErrorType,
+                                            HomeAlertDialogErrorType.SessionExpired
                                         )
-                                        NavArgHelper.setArgument(NavItem.ShowErrorDialog, true)
                                         routerHost.logout()
                                     }
 
                                     ActivityEffect.Navigation.NavigateToSplashScreenWithApplicationInsecureError -> {
                                         NavArgHelper.setArgument(
-                                            NavItem.IsApplicationInsecure,
-                                            true
+                                            NavArg.SplashAlertDialogErrorType,
+                                            SplashContract.AlertDialogErrorType.InsecureApplication
+                                        )
+                                        routerHost.getNavController().let { navController ->
+                                            navController.navigate(Screen.SplashScreen.route) {
+                                                popUpToTop(navController)
+                                            }
+                                        }
+                                    }
+
+                                    ActivityEffect.Navigation.NavigateToSplashScreenWithApplicationInMultiWindowModeViolation -> {
+                                        NavArgHelper.setArgument(
+                                            NavArg.SplashAlertDialogErrorType,
+                                            SplashContract.AlertDialogErrorType.ApplicationInMultiWindowMode
                                         )
                                         routerHost.getNavController().let { navController ->
                                             navController.navigate(Screen.SplashScreen.route) {
@@ -126,6 +140,17 @@ class MainActivity : ComponentActivity() {
         if (prefKeys.isUserLoggedIn() && prefKeys.shouldRememberUserSession()) {
             viewModel.setEvent(ActivityEvent.OnUserInteraction)
         }
+    }
+
+    override fun isInMultiWindowMode(): Boolean {
+        logger.d("MainActivity") { "isInMultiWindowMode called." }
+
+        val isInMultiWindowMode = super.isInMultiWindowMode()
+        if (isInMultiWindowMode && securityController.shouldApplicationBeInMultiWindowMode().not()) {
+            viewModel.setEvent(ActivityEvent.ApplicationInMultiWindowModeViolation)
+        }
+
+        return isInMultiWindowMode
     }
 
     /**

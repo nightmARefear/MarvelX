@@ -79,19 +79,16 @@ class WebsocketControllerImpl(
         val request = Request.Builder()
             .url(configLogic.websocketUrl)
             .addHeader(
-                name = ConstantsSecurity.HeaderNames.UserAgent.name,
-                value = ConstantsSecurity.HeaderValues.APP_USER_AGENT
+                name = ConstantsSecurity.HeaderName.UserAgent.name,
+                value = ConstantsSecurity.HeaderValue.APP_USER_AGENT
             )
             .addHeader(
-                name = ConstantsSecurity.HeaderNames.Authorization.name,
+                name = ConstantsSecurity.HeaderName.Authorization.name,
                 value = authController.getRefreshToken().orEmpty()
             )
             .build()
 
         webSocket = okHttpClient.newWebSocket(request, webSocketListener)
-        appLoggerController.d(
-            "WebsocketController"
-        ) { "The websocket connection has been opened." }
     }
 
     override fun setWebSocketListener(webSocketListener: WebSocketListener) {

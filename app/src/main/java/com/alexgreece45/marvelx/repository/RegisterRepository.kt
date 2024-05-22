@@ -4,19 +4,19 @@ import com.alexgreece45.marvelx.data.api.ApiClient
 import com.alexgreece45.marvelx.data.models_api.jwtSensitiveUserData.RequestJwtSensitiveUserData
 import com.alexgreece45.marvelx.data.models_api.jwtSensitiveUserData.ResponseJwtSensitiveUserData
 import com.alexgreece45.marvelx.data.models_api.user.ResponseUserError
-import com.alexgreece45.marvelx.data.models_api.user.login.LoginResponse
-import com.alexgreece45.marvelx.data.models_api.user.login.UserLoginRequest
-import com.alexgreece45.marvelx.data.models_api.user.loginWithToken.LoginWithTokenResponse
-import com.alexgreece45.marvelx.data.models_api.user.signup.SignupResponse
-import com.alexgreece45.marvelx.data.models_api.user.signup.UserSignupRequest
+import com.alexgreece45.marvelx.data.models_api.user.login.ResponseLogin
+import com.alexgreece45.marvelx.data.models_api.user.login.RequestUserLogin
+import com.alexgreece45.marvelx.data.models_api.user.loginWithToken.ResponseLoginWithToken
+import com.alexgreece45.marvelx.data.models_api.user.signup.ResponseSignup
+import com.alexgreece45.marvelx.data.models_api.user.signup.RequestUserSignup
 import com.alexgreece45.marvelx.util.helper.parseError
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
 interface RegisterRepository {
-    suspend fun postLogin(userLoginRequest: UserLoginRequest): Flow<PostLoginRepositoryResponse>
-    suspend fun postLoginWithToken(): Flow<PostLoginWithTokenRepositoryResponse>
-    suspend fun postSignup(userSignupRequest: UserSignupRequest): Flow<PostSignupRepositoryResponse>
+    suspend fun login(requestUserLogin: RequestUserLogin): Flow<LoginRepositoryResponse>
+    suspend fun loginWithToken(): Flow<PostLoginWithTokenRepositoryResponse>
+    suspend fun postSignup(requestUserSignup: RequestUserSignup): Flow<PostSignupRepositoryResponse>
 
     /**
      * Call that retrieves a JWT for accessing sensitive user data (i.e., email, or phone number).
@@ -28,18 +28,18 @@ interface RegisterRepository {
 class RegisterRepositoryImpl(
     private val apiClient: ApiClient
 ) : RegisterRepository {
-    override suspend fun postLogin(userLoginRequest: UserLoginRequest): Flow<PostLoginRepositoryResponse> =
+    override suspend fun login(requestUserLogin: RequestUserLogin): Flow<LoginRepositoryResponse> =
         flow {
-            apiClient.postLogin(userLoginRequest).let { response ->
+            apiClient.login(requestUserLogin).let { response ->
                 if (response.isSuccessful) {
                     emit(
-                        PostLoginRepositoryResponse.Success(
+                        LoginRepositoryResponse.Success(
                             response = response.body()
                         )
                     )
                 } else {
                     emit(
-                        PostLoginRepositoryResponse.Failed(
+                        LoginRepositoryResponse.Failed(
                             responseUserError = parseError(response)
                         )
                     )
@@ -47,9 +47,9 @@ class RegisterRepositoryImpl(
             }
         }
 
-    override suspend fun postLoginWithToken(): Flow<PostLoginWithTokenRepositoryResponse> =
+    override suspend fun loginWithToken(): Flow<PostLoginWithTokenRepositoryResponse> =
         flow {
-            apiClient.postLoginWithToken().let { response ->
+            apiClient.loginWithToken().let { response ->
                 if (response.isSuccessful) {
                     emit(
                         PostLoginWithTokenRepositoryResponse.Success(
@@ -68,9 +68,9 @@ class RegisterRepositoryImpl(
             }
         }
 
-    override suspend fun postSignup(userSignupRequest: UserSignupRequest): Flow<PostSignupRepositoryResponse> =
+    override suspend fun postSignup(requestUserSignup: RequestUserSignup): Flow<PostSignupRepositoryResponse> =
         flow {
-            apiClient.postSignup(userSignupRequest).let { response ->
+            apiClient.signup(requestUserSignup).let { response ->
                 if (response.isSuccessful) {
                     emit(
                         PostSignupRepositoryResponse.Success(
@@ -107,13 +107,13 @@ class RegisterRepositoryImpl(
         }
 }
 
-sealed class PostLoginRepositoryResponse {
-    data class Success(val response: LoginResponse?) : PostLoginRepositoryResponse()
-    data class Failed(val responseUserError: ResponseUserError) : PostLoginRepositoryResponse()
+sealed class LoginRepositoryResponse {
+    data class Success(val response: ResponseLogin?) : LoginRepositoryResponse()
+    data class Failed(val responseUserError: ResponseUserError) : LoginRepositoryResponse()
 }
 
 sealed class PostLoginWithTokenRepositoryResponse {
-    data class Success(val response: LoginWithTokenResponse?) :
+    data class Success(val response: ResponseLoginWithToken?) :
         PostLoginWithTokenRepositoryResponse()
 
     data class Failed(val responseUserError: ResponseUserError) :
@@ -121,7 +121,7 @@ sealed class PostLoginWithTokenRepositoryResponse {
 }
 
 sealed class PostSignupRepositoryResponse {
-    data class Success(val response: SignupResponse?) : PostSignupRepositoryResponse()
+    data class Success(val response: ResponseSignup?) : PostSignupRepositoryResponse()
     data class Failed(val responseUserError: ResponseUserError) : PostSignupRepositoryResponse()
 }
 

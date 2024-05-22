@@ -11,13 +11,15 @@ import com.alexgreece45.marvelx.data.models_api.sensitiveUserData.RequestSensiti
 import com.alexgreece45.marvelx.data.models_api.sensitiveUserData.toSensitiveUserDataDomain
 import com.alexgreece45.marvelx.data.models_api.token.toUserAuthData
 import com.alexgreece45.marvelx.domain.models_api.sensitiveUserData.SensitiveUserDataDomain
+import com.alexgreece45.marvelx.domain.models_api.user.postLogin.SignData
 import com.alexgreece45.marvelx.domain.models_api.user.profileDetails.ProfileDetailsDomain
+import com.alexgreece45.marvelx.domain.models_api.userAuthData.UserAuthData
 import com.alexgreece45.marvelx.repository.GetSensitiveUserDataRepositoryResponse
 import com.alexgreece45.marvelx.repository.GrandNewAccessTokenRepositoryResponse
 import com.alexgreece45.marvelx.repository.LoginRepository
 import com.alexgreece45.marvelx.repository.LogoutRepositoryResponse
+import com.alexgreece45.marvelx.repository.PostLoginRepositoryResponse
 import com.alexgreece45.marvelx.repository.RefreshAccessTokenRepositoryResponse
-import com.alexgreece45.marvelx.util.DateUtil
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.extensions.safeAsync
 import kotlinx.coroutines.flow.Flow
@@ -26,6 +28,11 @@ import okio.IOException
 
 interface LoginInteractor {
     suspend fun logout(): Flow<LogoutPartialState>
+
+    /**
+     * The post-login call. It retrieves all the necessary data for signing requests.
+     */
+    suspend fun postLogin(): Flow<PostLoginPartialState>
 
     suspend fun grandNewAccessToken(code: String): Flow<GrandNewAccessTokenPartialState>
 
@@ -105,6 +112,49 @@ class LoginInteractorImpl(
         }
     }
 
+    override suspend fun postLogin(): Flow<PostLoginPartialState> = flow {
+        val genericErrorMessage = resourceProvider.getGenericErrorMessage()
+
+        repository.postLogin().collect {
+            when (it) {
+                is PostLoginRepositoryResponse.Success -> {
+                    it.response?.sign?.let { sign ->
+                        if (sign.key == null || sign.algorithm == null) {
+                            return@collect emit(PostLoginPartialState.Failed(genericErrorMessage))
+                        }
+
+                        prefKeys.signData = SignData(
+                            key = sign.key,
+                            algorithm = sign.algorithm
+                        )
+                        emit(PostLoginPartialState.Success)
+                    } ?: run {
+                        emit(PostLoginPartialState.Failed(errorMessage = genericErrorMessage))
+                    }
+                }
+
+                is PostLoginRepositoryResponse.Failed -> {
+                    emit(PostLoginPartialState.Failed(errorMessage = genericErrorMessage))
+                }
+            }
+        }
+    }.safeAsync {
+        logger.e("LoginInteractor") { "(postLogin) error: ${it.message.orEmpty()}" }
+        when (it) {
+            is IOException -> {
+                PostLoginPartialState.Failed(
+                    errorMessage = resourceProvider.getNoInternetConnectionMessage()
+                )
+            }
+
+            else -> {
+                PostLoginPartialState.Failed(
+                    errorMessage = resourceProvider.getGenericErrorMessage()
+                )
+            }
+        }
+    }
+
     override suspend fun grandNewAccessToken(code: String): Flow<GrandNewAccessTokenPartialState> =
         flow {
             val genericErrorMessage = resourceProvider.getGenericErrorMessage()
@@ -125,19 +175,7 @@ class LoginInteractorImpl(
 
                     is GrandNewAccessTokenRepositoryResponse.Success -> {
                         it.response?.let { response ->
-                            // Save token info in device.
-                            authController.setData(response.toUserAuthData())
-
-                            // Start refresh token worker since the access token was successfully retrieved.
-                            refreshTokenController.startWorker()
-
-                            // Initialize websocket connection.
-                            websocketController.init()
-
-                            // Save current timestamp.
-                            prefKeys.autoLogoutTimestamp = DateUtil.getUTCInstant()
-
-                            emit(GrandNewAccessTokenPartialState.Success)
+                            emit(GrandNewAccessTokenPartialState.Success(response.toUserAuthData()))
                         } ?: emit(
                             GrandNewAccessTokenPartialState.Failed(
                                 errorMessage = genericErrorMessage
@@ -268,6 +306,12 @@ class LoginInteractorImpl(
         }
 }
 
+sealed interface PostLoginPartialState {
+    data object Success : PostLoginPartialState
+
+    data class Failed(val errorMessage: String) : PostLoginPartialState
+}
+
 sealed class GetProfileDetailsPartialState {
     data class Success(val profileDetailsDomain: ProfileDetailsDomain) :
         GetProfileDetailsPartialState()
@@ -278,7 +322,7 @@ sealed class GetProfileDetailsPartialState {
 }
 
 sealed class GrandNewAccessTokenPartialState {
-    data object Success : GrandNewAccessTokenPartialState()
+    data class Success(val userAuthData: UserAuthData) : GrandNewAccessTokenPartialState()
     data class Failed(val errorMessage: String) : GrandNewAccessTokenPartialState()
 }
 

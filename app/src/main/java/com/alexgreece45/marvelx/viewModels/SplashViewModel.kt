@@ -1,5 +1,6 @@
 package com.alexgreece45.marvelx.viewModels
 
+import androidx.annotation.StringRes
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.domain.interactors.SplashInteractor
@@ -8,13 +9,25 @@ import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
 import com.alexgreece45.marvelx.mvi.BaseViewModel
 import com.alexgreece45.marvelx.ui.navigation.NavArgHelper
-import com.alexgreece45.marvelx.ui.navigation.NavItem
+import com.alexgreece45.marvelx.ui.navigation.models.NavArg
 import com.alexgreece45.marvelx.ui.navigation.models.NavArgStatus
 import com.alexgreece45.marvelx.util.ResourceProvider
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 sealed interface SplashContract {
+    sealed class AlertDialogErrorType(@StringRes val title: Int, @StringRes val errorMessage: Int) {
+        data object InsecureApplication : AlertDialogErrorType(
+            title = R.string.splash_screen_alert_dialog_title_insecure_application,
+            errorMessage = R.string.splash_screen_alert_dialog_error_message_insecure_application
+        )
+
+        data object ApplicationInMultiWindowMode : AlertDialogErrorType(
+            title = R.string.splash_screen_alert_dialog_title_application_in_multi_window_mode,
+            errorMessage = R.string.splash_screen_alert_dialog_error_message_application_in_multi_window_mode
+        )
+    }
+
     data class SplashScreenError(
         val title: String,
         val errorMessage: String,
@@ -53,12 +66,10 @@ class SplashViewModel(
     override fun handleEvents(event: SplashContract.Event) {
         when (event) {
             SplashContract.Event.Init -> {
-                when (val navArgStatus =
-                    NavArgHelper.getArgument<Boolean>(NavItem.IsApplicationInsecure)) {
+                when (val splashAlertDialogErrorTypeNavArg =
+                    NavArgHelper.getArgument<SplashContract.AlertDialogErrorType>(NavArg.SplashAlertDialogErrorType)) {
                     is NavArgStatus.Exists -> {
-                        if (navArgStatus.value) {
-                            showInsecureApplicationDialog()
-                        }
+                        showAlertDialog(splashAlertDialogErrorTypeNavArg.value)
                         return
                     }
 
@@ -78,7 +89,7 @@ class SplashViewModel(
                             }
 
                             false -> {
-                                showInsecureApplicationDialog()
+                                showAlertDialog(SplashContract.AlertDialogErrorType.InsecureApplication)
                             }
                         }
                     }
@@ -94,15 +105,15 @@ class SplashViewModel(
     }
 
     /**
-     * Shows the insecure application dialog.
+     * Shows the given [alertDialogErrorType].
      */
-    private fun showInsecureApplicationDialog() {
+    private fun showAlertDialog(alertDialogErrorType: SplashContract.AlertDialogErrorType) {
         setState {
             copy(
                 isAnimationVisible = false,
                 error = SplashContract.SplashScreenError(
-                    title = resourceProvider.getString(R.string.splash_screen_alert_dialog_title),
-                    errorMessage = resourceProvider.getString(R.string.splash_screen_alert_dialog_error_message),
+                    title = resourceProvider.getString(alertDialogErrorType.title),
+                    errorMessage = resourceProvider.getString(alertDialogErrorType.errorMessage),
                     onCloseClick = SplashContract.Event.OnCloseClick
                 )
             )

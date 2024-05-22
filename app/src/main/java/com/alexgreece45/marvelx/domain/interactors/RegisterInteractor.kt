@@ -2,27 +2,23 @@ package com.alexgreece45.marvelx.domain.interactors
 
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.controllers.AppLoggerController
-import com.alexgreece45.marvelx.controllers.PrefKeys
-import com.alexgreece45.marvelx.controllers.RefreshTokenController
-import com.alexgreece45.marvelx.controllers.WebsocketController
+import com.alexgreece45.marvelx.data.models_api.jwtSensitiveUserData.RequestJwtSensitiveUserData
+import com.alexgreece45.marvelx.data.models_api.jwtSensitiveUserData.toJwtSensitiveUserDataDomain
+import com.alexgreece45.marvelx.data.models_api.user.login.RequestUserLogin
+import com.alexgreece45.marvelx.data.models_api.user.login.toUserLoginResponseDomain
+import com.alexgreece45.marvelx.data.models_api.user.loginWithToken.toUserLoginWithTokenResponseDomain
+import com.alexgreece45.marvelx.data.models_api.user.signup.RequestUserSignup
+import com.alexgreece45.marvelx.data.models_api.user.signup.toSignupResponseDomain
 import com.alexgreece45.marvelx.domain.models_api.jwtSensitiveUserData.JwtSensitiveUserDataDomain
 import com.alexgreece45.marvelx.domain.models_api.user.VerificationStep
 import com.alexgreece45.marvelx.domain.models_api.user.login.LoginResponseDomain
 import com.alexgreece45.marvelx.domain.models_api.user.loginWithToken.LoginWithTokenResponseDomain
 import com.alexgreece45.marvelx.domain.models_api.user.signup.SignupResponseDomain
-import com.alexgreece45.marvelx.data.models_api.jwtSensitiveUserData.RequestJwtSensitiveUserData
-import com.alexgreece45.marvelx.data.models_api.jwtSensitiveUserData.toJwtSensitiveUserDataDomain
-import com.alexgreece45.marvelx.data.models_api.user.login.UserLoginRequest
-import com.alexgreece45.marvelx.data.models_api.user.login.toUserLoginResponseDomain
-import com.alexgreece45.marvelx.data.models_api.user.loginWithToken.toUserLoginWithTokenResponseDomain
-import com.alexgreece45.marvelx.data.models_api.user.signup.UserSignupRequest
-import com.alexgreece45.marvelx.data.models_api.user.signup.toSignupResponseDomain
 import com.alexgreece45.marvelx.repository.GetJwtForSensitiveUserDataRepositoryResponse
-import com.alexgreece45.marvelx.repository.PostLoginRepositoryResponse
+import com.alexgreece45.marvelx.repository.LoginRepositoryResponse
 import com.alexgreece45.marvelx.repository.PostLoginWithTokenRepositoryResponse
 import com.alexgreece45.marvelx.repository.PostSignupRepositoryResponse
 import com.alexgreece45.marvelx.repository.RegisterRepository
-import com.alexgreece45.marvelx.util.DateUtil
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.extensions.safeAsync
 import kotlinx.coroutines.flow.Flow
@@ -30,11 +26,14 @@ import kotlinx.coroutines.flow.flow
 import okio.IOException
 
 interface RegisterInteractor {
-    suspend fun postSignup(userSignupRequest: UserSignupRequest): Flow<PostSignupPartialState>
+    suspend fun signup(requestUserSignup: RequestUserSignup): Flow<PostSignupPartialState>
 
-    suspend fun postLogin(email: String, password: String): Flow<PostLoginPartialState>
+    /**
+     * The login call. Attempts to login the user by sending the given [email] and [password].
+     */
+    suspend fun login(email: String, password: String): Flow<LoginPartialState>
 
-    suspend fun postLoginWithToken(): Flow<PostLoginWithTokenPartialState>
+    suspend fun loginWithToken(): Flow<LoginWithTokenPartialState>
 
     suspend fun getJwtForSensitiveUserData(
         userId: Int,
@@ -45,15 +44,12 @@ interface RegisterInteractor {
 class RegisterInteractorImpl(
     private val logger: AppLoggerController,
     private val repository: RegisterRepository,
-    private val resourceProvider: ResourceProvider,
-    private val refreshTokenController: RefreshTokenController,
-    private val websocketController: WebsocketController,
-    private val prefKeys: PrefKeys
+    private val resourceProvider: ResourceProvider
 ) : RegisterInteractor {
-    override suspend fun postSignup(userSignupRequest: UserSignupRequest): Flow<PostSignupPartialState> =
+    override suspend fun signup(requestUserSignup: RequestUserSignup): Flow<PostSignupPartialState> =
         flow {
             val genericErrorMessage = resourceProvider.getGenericErrorMessage()
-            repository.postSignup(userSignupRequest).collect {
+            repository.postSignup(requestUserSignup).collect {
                 when (it) {
                     is PostSignupRepositoryResponse.Failed -> {
                         emit(
@@ -95,64 +91,63 @@ class RegisterInteractorImpl(
             }
         }
 
-    override suspend fun postLogin(email: String, password: String): Flow<PostLoginPartialState> =
+    override suspend fun login(email: String, password: String): Flow<LoginPartialState> =
         flow {
             val genericErrorMessage = resourceProvider.getGenericErrorMessage()
-            val userLoginRequest = UserLoginRequest(
+            val requestUserLogin = RequestUserLogin(
                 email = email,
-                password = password,
-                epoch = DateUtil.getSecondsFromEpoch()
+                password = password
             )
-            repository.postLogin(userLoginRequest).collect {
+            repository.login(requestUserLogin).collect {
                 when (it) {
-                    is PostLoginRepositoryResponse.Failed -> {
-                        emit(PostLoginPartialState.Failed(errorMessage = it.responseUserError.errorMessage))
+                    is LoginRepositoryResponse.Failed -> {
+                        emit(LoginPartialState.Failed(errorMessage = it.responseUserError.errorMessage))
                     }
 
-                    is PostLoginRepositoryResponse.Success -> {
+                    is LoginRepositoryResponse.Success -> {
                         it.response?.let { loginResponse ->
                             val userLoginResponseDomain = loginResponse.toUserLoginResponseDomain()
                             if (userLoginResponseDomain.verificationStep is VerificationStep.None) {
-                                // Verification step cannot be null for `postLogin`. Propagate error to client.
-                                emit(PostLoginPartialState.Failed(errorMessage = genericErrorMessage))
+                                // Verification step cannot be null for `login`. Propagate error to client.
+                                emit(LoginPartialState.Failed(errorMessage = genericErrorMessage))
                                 return@collect
                             }
 
                             emit(
-                                PostLoginPartialState.Success(
+                                LoginPartialState.Success(
                                     loginResponseDomain = userLoginResponseDomain
                                 )
                             )
-                        } ?: emit(PostLoginPartialState.Failed(errorMessage = genericErrorMessage))
+                        } ?: emit(LoginPartialState.Failed(errorMessage = genericErrorMessage))
                     }
                 }
             }
         }.safeAsync {
-            logger.e { "(postLogin) error: ${it.message.orEmpty()}" }
+            logger.e { "(login) error: ${it.message.orEmpty()}" }
             when (it) {
                 is IOException -> {
-                    PostLoginPartialState.Failed(
-                        errorMessage = resourceProvider.getString(R.string.no_internet_connection_error_message)
+                    LoginPartialState.Failed(
+                        errorMessage = resourceProvider.getNoInternetConnectionMessage()
                     )
                 }
 
                 else -> {
-                    PostLoginPartialState.Failed(
+                    LoginPartialState.Failed(
                         errorMessage = resourceProvider.getGenericErrorMessage()
                     )
                 }
             }
         }
 
-    override suspend fun postLoginWithToken(): Flow<PostLoginWithTokenPartialState> =
+    override suspend fun loginWithToken(): Flow<LoginWithTokenPartialState> =
         flow {
             val genericErrorMessage = resourceProvider.getGenericErrorMessage()
 
-            repository.postLoginWithToken().collect {
+            repository.loginWithToken().collect {
                 when (it) {
                     is PostLoginWithTokenRepositoryResponse.Failed -> {
                         // Propagate generic error to client.
-                        emit(PostLoginWithTokenPartialState.Failed(errorMessage = genericErrorMessage))
+                        emit(LoginWithTokenPartialState.Failed(errorMessage = genericErrorMessage))
                     }
 
                     is PostLoginWithTokenRepositoryResponse.Success -> {
@@ -160,20 +155,13 @@ class RegisterInteractorImpl(
                             val userLoginWithTokenResponseDomain =
                                 loginWithTokenResponse.toUserLoginWithTokenResponseDomain()
 
-                            if (userLoginWithTokenResponseDomain.verificationStep is VerificationStep.None) {
-                                refreshTokenController.startWorker()
-                                websocketController.init()
-
-                                prefKeys.autoLogoutTimestamp = DateUtil.getUTCInstant()
-                            }
-
                             emit(
-                                PostLoginWithTokenPartialState.Success(
+                                LoginWithTokenPartialState.Success(
                                     loginWithTokenResponseDomain = userLoginWithTokenResponseDomain
                                 )
                             )
                         }
-                            ?: emit(PostLoginWithTokenPartialState.Failed(errorMessage = genericErrorMessage))
+                            ?: emit(LoginWithTokenPartialState.Failed(errorMessage = genericErrorMessage))
                     }
                 }
             }
@@ -181,13 +169,13 @@ class RegisterInteractorImpl(
             logger.e("RegisterInteractor") { "(postLoginWithToken) error: ${it.message.orEmpty()}" }
             when (it) {
                 is IOException -> {
-                    PostLoginWithTokenPartialState.Failed(
+                    LoginWithTokenPartialState.Failed(
                         errorMessage = resourceProvider.getNoInternetConnectionMessage()
                     )
                 }
 
                 else -> {
-                    PostLoginWithTokenPartialState.Failed(
+                    LoginWithTokenPartialState.Failed(
                         errorMessage = resourceProvider.getGenericErrorMessage()
                     )
                 }
@@ -254,18 +242,18 @@ sealed class PostSignupPartialState {
     data class Failed(val errorMessage: String) : PostSignupPartialState()
 }
 
-sealed class PostLoginPartialState {
+sealed class LoginPartialState {
     data class Success(val loginResponseDomain: LoginResponseDomain) :
-        PostLoginPartialState()
+        LoginPartialState()
 
-    data class Failed(val errorMessage: String) : PostLoginPartialState()
+    data class Failed(val errorMessage: String) : LoginPartialState()
 }
 
-sealed class PostLoginWithTokenPartialState {
+sealed class LoginWithTokenPartialState {
     data class Success(val loginWithTokenResponseDomain: LoginWithTokenResponseDomain) :
-        PostLoginWithTokenPartialState()
+        LoginWithTokenPartialState()
 
-    data class Failed(val errorMessage: String) : PostLoginWithTokenPartialState()
+    data class Failed(val errorMessage: String) : LoginWithTokenPartialState()
 }
 
 sealed class GetJwtForSensitiveUserDataPartialState {

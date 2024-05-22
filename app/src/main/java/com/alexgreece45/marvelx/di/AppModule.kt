@@ -75,7 +75,6 @@ import com.alexgreece45.marvelx.util.FormValidator
 import com.alexgreece45.marvelx.util.FormValidatorImpl
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.ResourceProviderImpl
-import com.alexgreece45.marvelx.viewModels.mainActivity.ActivityViewModel
 import com.alexgreece45.marvelx.viewModels.AllCharacterComicsViewModel
 import com.alexgreece45.marvelx.viewModels.AllCharactersViewModel
 import com.alexgreece45.marvelx.viewModels.AllFavoriteCharactersViewModel
@@ -84,13 +83,14 @@ import com.alexgreece45.marvelx.viewModels.CharacterViewModel
 import com.alexgreece45.marvelx.viewModels.ComicViewModel
 import com.alexgreece45.marvelx.viewModels.ForgotPasswordValidateEmailViewModel
 import com.alexgreece45.marvelx.viewModels.ForgotPasswordViewModel
-import com.alexgreece45.marvelx.viewModels.home.HomeViewModel
 import com.alexgreece45.marvelx.viewModels.IntroLoadingViewModel
 import com.alexgreece45.marvelx.viewModels.LoginViewModel
 import com.alexgreece45.marvelx.viewModels.OtpViewModel
 import com.alexgreece45.marvelx.viewModels.ProfileViewModel
 import com.alexgreece45.marvelx.viewModels.SignupViewModel
 import com.alexgreece45.marvelx.viewModels.SplashViewModel
+import com.alexgreece45.marvelx.viewModels.home.HomeViewModel
+import com.alexgreece45.marvelx.viewModels.mainActivity.ActivityViewModel
 import com.alexgreece45.marvelx.worker.RefreshTokenWorker
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
@@ -155,6 +155,7 @@ private val interceptorModule = module {
         ApiInterceptor(
             get(),
             get(),
+            get(),
             get()
         )
     }
@@ -205,14 +206,14 @@ private val interactorModule = module {
     factory<ForgotPasswordInteractor> { ForgotPasswordInteractorImpl(get(), get()) }
     factory<ChangePasswordInteractor> { ChangePasswordInteractorImpl() }
     factory<OtpInteractor> { OtpInteractorImpl(get(), get(), get()) }
-    factory<RegisterInteractor> { RegisterInteractorImpl(get(), get(), get(), get(), get(), get()) }
+    factory<RegisterInteractor> { RegisterInteractorImpl(get(), get(), get()) }
     factory<SplashInteractor> { SplashInteractorImpl(get()) }
 }
 
 private val controllerModule = module {
     single<PreferencesController> { PreferencesControllerImpl(get()) }
     single<PrefKeys> { PrefKeysImpl(get(), get()) }
-    single<CryptoController> { CryptoControllerImpl() }
+    single<CryptoController> { CryptoControllerImpl(get()) }
     single<AuthController> { AuthControllerImpl(get(), get()) }
     single<RefreshTokenController> { RefreshTokenControllerImpl(get(), get(), get()) }
     single<TimerController> { TimerControllerImpl() }
@@ -238,13 +239,13 @@ private val viewModelModule = module {
     viewModel { ActivityViewModel() }
 
     viewModel { SplashViewModel(get(), get()) }
-    viewModel { IntroLoadingViewModel(get(), get(), get(), get(), get(), get()) }
+    viewModel { IntroLoadingViewModel(get(), get(), get(), get(), get(), get(), get()) }
 
     viewModel { HomeViewModel(get()) }
     viewModel { LoginViewModel(get(), get(), get(), get()) }
-    viewModel { SignupViewModel(get(), get(), get(), get()) }
+    viewModel { SignupViewModel(get(), get(), get(), get(), get(), get(), get()) }
 
-    viewModel { OtpViewModel(get(), get(), get(), get(), get(), get(), get()) }
+    viewModel { OtpViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
 
     viewModel { ForgotPasswordValidateEmailViewModel(get()) }
     viewModel { ForgotPasswordViewModel(get(), get(), get(), get()) }

@@ -18,13 +18,14 @@ import com.alexgreece45.marvelx.data.models_api.resendOtp.RequestResendOtp
 import com.alexgreece45.marvelx.data.models_api.resendOtp.ResponseResendOtpSuccess
 import com.alexgreece45.marvelx.data.models_api.sensitiveUserData.RequestSensitiveUserData
 import com.alexgreece45.marvelx.data.models_api.sensitiveUserData.ResponseSensitiveUserData
-import com.alexgreece45.marvelx.data.models_api.token.TokenResponse
-import com.alexgreece45.marvelx.data.models_api.user.login.LoginResponse
-import com.alexgreece45.marvelx.data.models_api.user.login.UserLoginRequest
-import com.alexgreece45.marvelx.data.models_api.user.loginWithToken.LoginWithTokenResponse
+import com.alexgreece45.marvelx.data.models_api.token.ResponseToken
+import com.alexgreece45.marvelx.data.models_api.user.login.RequestUserLogin
+import com.alexgreece45.marvelx.data.models_api.user.login.ResponseLogin
+import com.alexgreece45.marvelx.data.models_api.user.loginWithToken.ResponseLoginWithToken
+import com.alexgreece45.marvelx.data.models_api.user.postLogin.ResponsePostLogin
 import com.alexgreece45.marvelx.data.models_api.user.profileDetails.ResponseProfileDetails
-import com.alexgreece45.marvelx.data.models_api.user.signup.SignupResponse
-import com.alexgreece45.marvelx.data.models_api.user.signup.UserSignupRequest
+import com.alexgreece45.marvelx.data.models_api.user.signup.RequestUserSignup
+import com.alexgreece45.marvelx.data.models_api.user.signup.ResponseSignup
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.Field
@@ -47,13 +48,16 @@ interface ApiService {
     suspend fun getComicById(@Path("comicId") comicId: Int): Response<ComicDataWrapper>
 
     @POST("/api/private/marvelx/user/signup")
-    suspend fun postSignup(@Body userSignUpRequest: UserSignupRequest): Response<SignupResponse>
+    suspend fun signup(@Body requestUserSignup: RequestUserSignup): Response<ResponseSignup>
 
     @POST("/api/private/marvelx/user/login")
-    suspend fun postLogin(@Body userLogInRequest: UserLoginRequest): Response<LoginResponse>
+    suspend fun login(@Body requestUserLogin: RequestUserLogin): Response<ResponseLogin>
 
     @POST("/api/private/marvelx/user/login_with_token")
-    suspend fun postLoginWithToken(): Response<LoginWithTokenResponse>
+    suspend fun loginWithToken(): Response<ResponseLoginWithToken>
+
+    @GET("/api/private/marvelx/user/post_login")
+    suspend fun postLogin(): Response<ResponsePostLogin>
 
     @POST("/api/private/marvelx/user/token")
     @FormUrlEncoded
@@ -63,7 +67,7 @@ interface ApiService {
         @Field("code") code: String,
         @Field("redirect_uri") redirectUri: String,
         @Field("grant_type") grantType: String = "authorization_code"
-    ): Response<TokenResponse>
+    ): Response<ResponseToken>
 
     @POST("/api/private/marvelx/user/token")
     @FormUrlEncoded
@@ -71,7 +75,7 @@ interface ApiService {
         @Field("client_id") clientId: String,
         @Field("refresh_token") refreshToken: String,
         @Field("grant_type") grantType: String = "refresh_token"
-    ): Response<TokenResponse>
+    ): Response<ResponseToken>
 
     @POST("/api/private/marvelx/user/logout")
     @FormUrlEncoded
@@ -117,20 +121,22 @@ interface ApiClient {
 
     suspend fun getComicById(comicId: Int): Response<ComicDataWrapper>
 
-    suspend fun postSignup(userSignupRequest: UserSignupRequest): Response<SignupResponse>
+    suspend fun signup(requestUserSignup: RequestUserSignup): Response<ResponseSignup>
 
-    suspend fun postLogin(userLoginRequest: UserLoginRequest): Response<LoginResponse>
+    suspend fun login(requestUserLogin: RequestUserLogin): Response<ResponseLogin>
 
-    suspend fun postLoginWithToken(): Response<LoginWithTokenResponse>
+    suspend fun loginWithToken(): Response<ResponseLoginWithToken>
+
+    suspend fun postLogin(): Response<ResponsePostLogin>
 
     suspend fun grantNewAccessToken(
         clientId: String,
         clientSecret: String,
         code: String,
         uri: String
-    ): Response<TokenResponse>
+    ): Response<ResponseToken>
 
-    suspend fun refreshAccessToken(clientId: String, refreshToken: String): Response<TokenResponse>
+    suspend fun refreshAccessToken(clientId: String, refreshToken: String): Response<ResponseToken>
 
     suspend fun logout(clientId: String, refreshToken: String): Response<Void>
 

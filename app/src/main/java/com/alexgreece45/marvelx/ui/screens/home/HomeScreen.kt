@@ -127,7 +127,7 @@ fun HomeScreen(
                     // Login button.
                     ContainedButton(
                         modifier = Modifier.fillMaxWidth(),
-                        onClick = { viewModel.setEvent(HomeEvent.OnLogInButtonClick) }
+                        onClick = { viewModel.setEvent(HomeEvent.OnLoginButtonClicked) }
                     ) {
                         Text(
                             text = stringResource(R.string.home_screen_label_log_in_button),
@@ -137,7 +137,7 @@ fun HomeScreen(
                     // Signup button.
                     ContainedButton(
                         modifier = Modifier.fillMaxWidth(),
-                        onClick = { viewModel.setEvent(HomeEvent.OnSignUpButtonClick) }
+                        onClick = { viewModel.setEvent(HomeEvent.OnSignupButtonClicked) }
                     ) {
                         Text(
                             text = stringResource(R.string.home_screen_label_sign_up_button),

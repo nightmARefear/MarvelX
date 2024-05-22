@@ -36,13 +36,20 @@ import java.time.Instant
 import java.time.format.DateTimeParseException
 
 sealed class ActivityEvent : BaseEvent {
+    /**
+     * Events triggered by the application lifecycle.
+     */
     sealed class LifecycleEvent : ActivityEvent() {
         data object OnCreate : LifecycleEvent()
         data object OnPause : LifecycleEvent()
         data object OnResume : LifecycleEvent()
         data object OnDestroy : LifecycleEvent()
-
     }
+
+    /**
+     * This event is triggered every time the user interacts within the application view.
+     */
+    data object OnUserInteraction : ActivityEvent()
 
     /**
      * This event is triggered when this application shouldn't have the ability to draw itself as an
@@ -51,9 +58,10 @@ sealed class ActivityEvent : BaseEvent {
     data object ApplicationDrawOverlayWindowsViolation : ActivityEvent()
 
     /**
-     * This event is triggered every time the user interacts within the application view.
+     * This event is triggered when this application shouldn't have the ability to be in multi
+     * window mode, but in fact it is.
      */
-    data object OnUserInteraction : ActivityEvent()
+    data object ApplicationInMultiWindowModeViolation : ActivityEvent()
 }
 
 data class ActivityState(val flowStarted: Boolean = false) : BaseState
@@ -64,6 +72,7 @@ sealed class ActivityEffect : BaseEffect {
             Navigation()
 
         data object NavigateToSplashScreenWithApplicationInsecureError : Navigation()
+        data object NavigateToSplashScreenWithApplicationInMultiWindowModeViolation : Navigation()
     }
 }
 
@@ -107,6 +116,10 @@ class ActivityViewModel : BaseViewModel<ActivityEvent, ActivityState, ActivityEf
                 onDestroy()
             }
 
+            ActivityEvent.OnUserInteraction -> {
+                performAutoLogoutOperations()
+            }
+
             ActivityEvent.ApplicationDrawOverlayWindowsViolation -> {
                 onLogoutUser(showErrorDialog = false)
                 setEffect {
@@ -114,8 +127,11 @@ class ActivityViewModel : BaseViewModel<ActivityEvent, ActivityState, ActivityEf
                 }
             }
 
-            ActivityEvent.OnUserInteraction -> {
-                performAutoLogoutOperations()
+            ActivityEvent.ApplicationInMultiWindowModeViolation -> {
+                onLogoutUser(showErrorDialog = false)
+                setEffect {
+                    ActivityEffect.Navigation.NavigateToSplashScreenWithApplicationInMultiWindowModeViolation
+                }
             }
         }
     }

@@ -70,6 +70,11 @@ interface SecurityController {
     fun shouldApplicationDrawOverlayWindows(): Boolean
 
     /**
+     * Defines whether this application should have the ability to be in multi window mode.
+     */
+    fun shouldApplicationBeInMultiWindowMode(): Boolean
+
+    /**
      * Defines whether the auto logout functionality is enabled.
      */
     fun isAutoLogoutEnabled(): Boolean
@@ -147,7 +152,13 @@ class SecurityControllerImpl(
                 && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
                 && configLogic.appBuildType is AppBuildType.RELEASE
 
-    override fun shouldApplicationDrawOverlayWindows(): Boolean = false
+    override fun shouldApplicationDrawOverlayWindows(): Boolean =
+        configLogic.applicationDrawOverlayWindows
+                && configLogic.appBuildType is AppBuildType.RELEASE
+
+    override fun shouldApplicationBeInMultiWindowMode(): Boolean =
+        configLogic.applicationMultiWindowMode
+                && configLogic.appBuildType is AppBuildType.RELEASE
 
     override fun isAutoLogoutEnabled(): Boolean =
         configLogic.isAutoLogoutEnabled

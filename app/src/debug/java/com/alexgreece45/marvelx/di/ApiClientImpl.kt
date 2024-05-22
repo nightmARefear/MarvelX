@@ -20,13 +20,14 @@ import com.alexgreece45.marvelx.data.models_api.resendOtp.RequestResendOtp
 import com.alexgreece45.marvelx.data.models_api.resendOtp.ResponseResendOtpSuccess
 import com.alexgreece45.marvelx.data.models_api.sensitiveUserData.RequestSensitiveUserData
 import com.alexgreece45.marvelx.data.models_api.sensitiveUserData.ResponseSensitiveUserData
-import com.alexgreece45.marvelx.data.models_api.token.TokenResponse
-import com.alexgreece45.marvelx.data.models_api.user.login.LoginResponse
-import com.alexgreece45.marvelx.data.models_api.user.login.UserLoginRequest
-import com.alexgreece45.marvelx.data.models_api.user.loginWithToken.LoginWithTokenResponse
+import com.alexgreece45.marvelx.data.models_api.token.ResponseToken
+import com.alexgreece45.marvelx.data.models_api.user.login.ResponseLogin
+import com.alexgreece45.marvelx.data.models_api.user.login.RequestUserLogin
+import com.alexgreece45.marvelx.data.models_api.user.loginWithToken.ResponseLoginWithToken
+import com.alexgreece45.marvelx.data.models_api.user.postLogin.ResponsePostLogin
 import com.alexgreece45.marvelx.data.models_api.user.profileDetails.ResponseProfileDetails
-import com.alexgreece45.marvelx.data.models_api.user.signup.SignupResponse
-import com.alexgreece45.marvelx.data.models_api.user.signup.UserSignupRequest
+import com.alexgreece45.marvelx.data.models_api.user.signup.ResponseSignup
+import com.alexgreece45.marvelx.data.models_api.user.signup.RequestUserSignup
 import retrofit2.Response
 
 class ApiClientImpl(
@@ -45,26 +46,29 @@ class ApiClientImpl(
     override suspend fun getComicById(comicId: Int): Response<ComicDataWrapper> =
         apiService.getComicById(comicId)
 
-    override suspend fun postSignup(userSignupRequest: UserSignupRequest): Response<SignupResponse> =
-        apiService.postSignup(userSignupRequest)
+    override suspend fun signup(requestUserSignup: RequestUserSignup): Response<ResponseSignup> =
+        apiService.signup(requestUserSignup)
 
-    override suspend fun postLogin(userLoginRequest: UserLoginRequest): Response<LoginResponse> =
-        apiService.postLogin(userLoginRequest)
+    override suspend fun login(requestUserLogin: RequestUserLogin): Response<ResponseLogin> =
+        apiService.login(requestUserLogin)
 
-    override suspend fun postLoginWithToken(): Response<LoginWithTokenResponse> =
-        apiService.postLoginWithToken()
+    override suspend fun loginWithToken(): Response<ResponseLoginWithToken> =
+        apiService.loginWithToken()
+
+    override suspend fun postLogin(): Response<ResponsePostLogin> =
+        apiService.postLogin()
 
     override suspend fun grantNewAccessToken(
         clientId: String,
         clientSecret: String,
         code: String,
         uri: String
-    ): Response<TokenResponse> = apiService.grantNewAccessToken(clientId, clientSecret, code, uri)
+    ): Response<ResponseToken> = apiService.grantNewAccessToken(clientId, clientSecret, code, uri)
 
     override suspend fun refreshAccessToken(
         clientId: String,
         refreshToken: String
-    ): Response<TokenResponse> = apiService.refreshAccessToken(clientId, refreshToken)
+    ): Response<ResponseToken> = apiService.refreshAccessToken(clientId, refreshToken)
 
     override suspend fun logout(clientId: String, refreshToken: String): Response<Void> =
         apiService.logout(clientId, refreshToken)

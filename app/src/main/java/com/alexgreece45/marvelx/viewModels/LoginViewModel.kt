@@ -5,7 +5,7 @@ import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.controllers.PrefKeys
 import com.alexgreece45.marvelx.domain.models_api.otp.OtpFlowType
 import com.alexgreece45.marvelx.domain.models_api.user.VerificationStep
-import com.alexgreece45.marvelx.domain.interactors.PostLoginPartialState
+import com.alexgreece45.marvelx.domain.interactors.LoginPartialState
 import com.alexgreece45.marvelx.domain.interactors.RegisterInteractor
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
@@ -310,12 +310,12 @@ class LoginViewModel(
 
         // All fields are valid.
         viewModelScope.launch {
-            registerInteractor.postLogin(
+            registerInteractor.login(
                 email = currentState.email,
                 password = SecurityUtil.getHashedPasswordFromString(currentState.password).single()
             ).collect { userPartialStatePostLogIn ->
                 when (userPartialStatePostLogIn) {
-                    is PostLoginPartialState.Failed -> {
+                    is LoginPartialState.Failed -> {
                         showErrorView(
                             errorMessage = userPartialStatePostLogIn.errorMessage,
                             onClose = {
@@ -334,7 +334,7 @@ class LoginViewModel(
                         )
                     }
 
-                    is PostLoginPartialState.Success -> {
+                    is LoginPartialState.Success -> {
                         // Act accordingly based on the verification step.
                         userPartialStatePostLogIn.loginResponseDomain.let { loginResponseDomain ->
                             when (loginResponseDomain.verificationStep) {

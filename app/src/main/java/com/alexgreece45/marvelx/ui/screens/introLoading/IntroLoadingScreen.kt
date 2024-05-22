@@ -15,11 +15,12 @@ import androidx.navigation.NavController
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.effect.OneTimeLaunchedEffect
 import com.alexgreece45.marvelx.ui.navigation.NavArgHelper
-import com.alexgreece45.marvelx.ui.navigation.NavItem
 import com.alexgreece45.marvelx.ui.navigation.Screen
+import com.alexgreece45.marvelx.ui.navigation.models.NavArg
 import com.alexgreece45.marvelx.util.extensions.popUpToTop
 import com.alexgreece45.marvelx.viewModels.IntroLoadingContract
 import com.alexgreece45.marvelx.viewModels.IntroLoadingViewModel
+import com.alexgreece45.marvelx.viewModels.home.models.HomeAlertDialogErrorType
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -37,7 +38,10 @@ fun IntroLoadingScreen(
         viewModel.uiEffect.collect { effect ->
             when (effect) {
                 is IntroLoadingContract.Effect.Navigation.NavigateToHomeScreenWithErrorMessage -> {
-                    NavArgHelper.setArgument(NavItem.ErrorMessage, effect.errorMessage)
+                    NavArgHelper.setArgument(
+                        NavArg.HomeAlertDialogErrorType,
+                        HomeAlertDialogErrorType.HasError(effect.errorMessage)
+                    )
                     navController.navigate(Screen.HomeScreen.route) {
                         popUpToTop(navController)
                     }

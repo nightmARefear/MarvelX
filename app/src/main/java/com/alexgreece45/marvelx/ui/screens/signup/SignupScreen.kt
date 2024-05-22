@@ -38,7 +38,7 @@ import com.alexgreece45.marvelx.ui.components.AlertDialogButton
 import com.alexgreece45.marvelx.ui.components.AlertDialogError
 import com.alexgreece45.marvelx.ui.components.ContainedButton
 import com.alexgreece45.marvelx.ui.components.ContentScreen
-import com.alexgreece45.marvelx.ui.components.ErrorButtonType
+import com.alexgreece45.marvelx.ui.components.models.ErrorButtonType
 import com.alexgreece45.marvelx.ui.components.ExposedDropdownMenu
 import com.alexgreece45.marvelx.ui.components.OutlinedTextFieldValidation
 import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction

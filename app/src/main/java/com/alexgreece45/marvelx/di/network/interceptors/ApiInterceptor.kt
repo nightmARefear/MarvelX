@@ -3,6 +3,7 @@ package com.alexgreece45.marvelx.di.network.interceptors
 import com.alexgreece45.marvelx.BuildConfig
 import com.alexgreece45.marvelx.configuration.ConfigLogic
 import com.alexgreece45.marvelx.controllers.AuthController
+import com.alexgreece45.marvelx.controllers.RequestController
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.constants.ConstantsSecurity
 import com.alexgreece45.marvelx.util.extensions.hasInternetConnectivity
@@ -20,7 +21,8 @@ import okio.IOException
 class ApiInterceptor(
     private val configLogic: ConfigLogic,
     private val authController: AuthController,
-    private val resourceProvider: ResourceProvider
+    private val resourceProvider: ResourceProvider,
+    private val requestController: RequestController
 ) : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
         if (resourceProvider.getContext().hasInternetConnectivity().not()) {
@@ -98,15 +100,17 @@ class ApiInterceptor(
         val modifiedRequest = Request.Builder()
             .url(modifiedUrl)
             .addHeader(
-                name = ConstantsSecurity.HeaderNames.UserAgent.name,
-                value = ConstantsSecurity.HeaderValues.APP_USER_AGENT
+                name = ConstantsSecurity.HeaderName.UserAgent.name,
+                value = ConstantsSecurity.HeaderValue.APP_USER_AGENT
             )
             .addHeader(
-                name = ConstantsSecurity.HeaderNames.Authorization.name,
+                name = ConstantsSecurity.HeaderName.Authorization.name,
                 value = if (path.endsWith("retrieve_timestamp")) authController.getRefreshToken()
                     .orEmpty() else authController.getAccessToken().orEmpty()
             )
             .method(originalRequest.method, originalRequest.body)
+
+        requestController.addAuthenticationHeaders(modifiedRequest)
 
         return chain.proceed(modifiedRequest.build())
     }

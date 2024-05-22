@@ -3,9 +3,13 @@ package com.alexgreece45.marvelx.viewModels
 import androidx.core.text.isDigitsOnly
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.controllers.AuthController
 import com.alexgreece45.marvelx.controllers.PrefKeys
+import com.alexgreece45.marvelx.controllers.RefreshTokenController
 import com.alexgreece45.marvelx.controllers.TimerController
 import com.alexgreece45.marvelx.controllers.TimerStatus
+import com.alexgreece45.marvelx.controllers.WebsocketController
+import com.alexgreece45.marvelx.data.models_api.token.toUserAuthData
 import com.alexgreece45.marvelx.domain.models_api.otp.OtpErrorCause
 import com.alexgreece45.marvelx.domain.models_api.otp.OtpFlowType
 import com.alexgreece45.marvelx.domain.models_api.resendOtp.ResendOtpErrorCause
@@ -18,6 +22,7 @@ import com.alexgreece45.marvelx.domain.interactors.GetSensitiveUserDataPartialSt
 import com.alexgreece45.marvelx.domain.interactors.GrandNewAccessTokenPartialState
 import com.alexgreece45.marvelx.domain.interactors.LoginInteractor
 import com.alexgreece45.marvelx.domain.interactors.OtpInteractor
+import com.alexgreece45.marvelx.domain.interactors.PostLoginPartialState
 import com.alexgreece45.marvelx.domain.interactors.RegisterInteractor
 import com.alexgreece45.marvelx.domain.interactors.ResendOtpPartialState
 import com.alexgreece45.marvelx.domain.interactors.ValidateOtpPartialState
@@ -26,6 +31,7 @@ import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
 import com.alexgreece45.marvelx.mvi.BaseViewModel
 import com.alexgreece45.marvelx.ui.components.models.ErrorButtonLayout
+import com.alexgreece45.marvelx.util.DateUtil
 import com.alexgreece45.marvelx.util.FormsValidationResult
 import com.alexgreece45.marvelx.util.ResourceProvider
 import kotlinx.coroutines.CoroutineScope
@@ -56,10 +62,14 @@ private sealed class OtpScreenErrorCodes(val code: String) {
         data object GenericError : GrandNewAccessToken("OTP_1007")
     }
 
+    sealed class PostLogin(code: String) : OtpScreenErrorCodes(code) {
+        data object GenericError : PostLogin("OTP_1008")
+    }
+
     sealed class ForgotPasswordValidateOtp(code: String) : OtpScreenErrorCodes(code) {
-        data object GenericError : ForgotPasswordValidateOtp("OTP_1008")
-        data object Email : ForgotPasswordValidateOtp("OTP_1009")
-        data object PhoneNumber : ForgotPasswordValidateOtp("OTP_1010")
+        data object GenericError : ForgotPasswordValidateOtp("OTP_1009")
+        data object Email : ForgotPasswordValidateOtp("OTP_1010")
+        data object PhoneNumber : ForgotPasswordValidateOtp("OTP_1011")
     }
 }
 
@@ -178,7 +188,10 @@ class OtpViewModel(
     private val forgotPasswordInteractor: ForgotPasswordInteractor,
     private val resourceProvider: ResourceProvider,
     private val prefKeys: PrefKeys,
-    private val timerController: TimerController
+    private val timerController: TimerController,
+    private val websocketController: WebsocketController,
+    private val authController: AuthController,
+    private val refreshTokenController: RefreshTokenController
 ) : BaseViewModel<OtpEvent, OtpState, OtpEffect>() {
 
     /**
@@ -684,18 +697,43 @@ class OtpViewModel(
                     is GrandNewAccessTokenPartialState.Success -> {
                         // Token was successfully generated (in the server) and retrieved (in the client).
 
-                        // Save userId in device.
-                        prefKeys.setUserId(currentState.userId)
+                        // Retrieve signing data.
+                        loginInteractor.postLogin().collect { postLoginPartialState ->
+                            when (postLoginPartialState) {
+                                PostLoginPartialState.Success -> {
+                                    // Save token info in device.
+                                    authController.setData(accessTokenPartialState.userAuthData)
 
-                        // User is now logged in. Save the flag.
-                        prefKeys.setUserLoggedIn(isLoggedIn = true)
+                                    // User is now logged in. Save the flag.
+                                    prefKeys.setUserLoggedIn(isLoggedIn = true)
 
-                        // Save remember user session flag.
-                        prefKeys.setRememberUserSession(currentState.shouldRememberUserSession)
+                                    // Start refresh token worker since the access token was successfully retrieved.
+                                    refreshTokenController.startWorker()
 
-                        // Navigate the client to AllCharactersScreen
-                        setEffect {
-                            OtpEffect.Navigation.NavigateToAllCharactersScreen
+                                    // Initialize websocket connection.
+                                    websocketController.init()
+
+                                    // Save current timestamp.
+                                    prefKeys.autoLogoutTimestamp = DateUtil.getUTCInstant()
+
+                                    // Save userId in device.
+                                    prefKeys.setUserId(currentState.userId)
+
+                                    // Save remember user session flag.
+                                    prefKeys.setRememberUserSession(currentState.shouldRememberUserSession)
+
+                                    setEffect {
+                                        OtpEffect.Navigation.NavigateToAllCharactersScreen
+                                    }
+                                }
+
+                                is PostLoginPartialState.Failed -> {
+                                    showGenericErrorViewWithErrorCode(
+                                        errorCode = OtpScreenErrorCodes.PostLogin.GenericError,
+                                        otpFlowType = OtpFlowType.Register
+                                    )
+                                }
+                            }
                         }
                     }
                 }

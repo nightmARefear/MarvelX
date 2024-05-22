@@ -89,6 +89,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
@@ -110,7 +111,7 @@ import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.ui.navigation.Screen
+import com.alexgreece45.marvelx.ui.components.models.ErrorButtonType
 import com.alexgreece45.marvelx.util.BOTTOM_NAVIGATION_BAR_ITEM_LABEL_MAX_LENGTH
 import com.alexgreece45.marvelx.util.BOTTOM_NAVIGATION_BAR_MAX_ITEMS
 import com.alexgreece45.marvelx.util.BOTTOM_NAVIGATION_BAR_MIN_ITEMS
@@ -135,8 +136,9 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 // ==========================
 
 /**
- * A custom implementation of [IconButton] providing throttled clickable functionality to ensure that
- * this ThrottledIconButton is clicked only once per second.
+ * A custom implementation of [IconButton] providing throttled clickable functionality to ensure
+ * that this ThrottledIconButton is clicked only once per second, and also, protection is provided
+ * against tap-jacking attacks from other applications.
  *
  * This component is typically used inside an App Bar for navigation icon / actions. It is strongly advised
  * to explicitly use this component as the App Bar's back IconButton, if it exists.
@@ -189,6 +191,7 @@ private fun ThrottledIconButton(
         modifier = modifier
             .throttledClickableIcon(
                 onClick = onClick,
+                view = LocalView.current,
                 enabled = enabled,
                 interactionSource = interactionSource
             ),
@@ -1235,7 +1238,7 @@ fun ContainedButton(
 ) {
     Button(
         onClick = onClick,
-        modifier = modifier.throttledClickable(delay = 1500L, onClick = onClick),
+        modifier = modifier.throttledClickable(view = LocalView.current, onClick = onClick),
         enabled = enabled,
         contentPadding = PaddingValues(vertical = 12.dp, horizontal = 32.dp),
         content = content
@@ -1255,7 +1258,7 @@ fun WrapOutlinedButton(
 ) {
     OutlinedButton(
         onClick = onClick,
-        modifier = modifier.throttledClickable(delay = 1500L, onClick = onClick),
+        modifier = modifier.throttledClickable(view = LocalView.current, onClick = onClick),
         enabled = enabled,
         contentPadding = PaddingValues(vertical = 12.dp, horizontal = 32.dp),
         content = content
@@ -1275,29 +1278,17 @@ fun WrapTextButton(
 ) {
     TextButton(
         onClick = onClick,
-        modifier = modifier.throttledClickable(delay = 1500L, onClick = onClick),
+        modifier = modifier.throttledClickable(view = LocalView.current, onClick = onClick),
         enabled = enabled,
         content = content
     )
-}
-
-sealed class ErrorButtonType {
-    data object Text : ErrorButtonType()
-
-    data object Outlined : ErrorButtonType()
-
-    data object Contained : ErrorButtonType()
-
-    companion object {
-        val defaultType: ErrorButtonType = Text
-    }
 }
 
 
 /**
  * @param buttonType The button type. For the dismiss button, the type is
  * always [ErrorButtonType.Text].
- * */
+ */
 data class AlertDialogButton(
     val value: String,
     val buttonType: ErrorButtonType = ErrorButtonType.defaultType,

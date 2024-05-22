@@ -41,6 +41,11 @@ interface ConfigLogic {
     val port: Int
 
     /**
+     * The MarvelX backend URL.
+     */
+    val serverUrl: String
+
+    /**
      * The websocket URL.
      */
     val websocketUrl: String
@@ -54,6 +59,17 @@ interface ConfigLogic {
      * Defines whether overlay windows are hidden. It has a default value of `false`.
      */
     val hideOverlayWindows: Boolean get() = false
+
+    /**
+     * Defines whether this application should have the ability to draw overlay windows over other
+     * applications.
+     */
+    val applicationDrawOverlayWindows: Boolean get() = false
+
+    /**
+     * Defines whether this application should have the ability to be in multi window mode.
+     */
+    val applicationMultiWindowMode: Boolean get() = false
 
     /**
      * Defines whether auto logout is enabled.
@@ -100,6 +116,8 @@ class ConfigLogicImpl : ConfigLogic {
     override val port: Int
         get() =
             BuildConfig.MARVELX_BACKEND_BASE_URL.split(":").last().toInt()
+    override val serverUrl: String
+        get() = BuildConfig.MARVELX_BACKEND_BASE_URL
 
     override val websocketUrl: String
         get() = BuildConfig.MARVELX_BACKEND_WEBSOCKET_BASE_URL

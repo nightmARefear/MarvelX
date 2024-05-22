@@ -1,5 +1,6 @@
 package com.alexgreece45.marvelx.util.extensions
 
+import android.view.View
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -18,6 +19,7 @@ import androidx.compose.ui.autofill.AutofillNode
 import androidx.compose.ui.autofill.AutofillType
 import androidx.compose.ui.composed
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalAutofill
@@ -27,7 +29,9 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import com.alexgreece45.marvelx.util.THROTTLE_CLICKABLE_DEFAULT_DELAY
 import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.launch
 
 data class ClickState(
     val event: () -> Unit,
@@ -35,9 +39,12 @@ data class ClickState(
 )
 
 /**
- * Provides protection against clicking a UI element multiple times within a short period of time.
- * This [Modifier] allows this UI element to be clicked at the most `1` time per the given [delay].
+ * Provides protection against clicking a UI element multiple times within a short period of time,
+ * and against UI overlay attacks from other applications.
  *
+ * This [Modifier] allows this UI element to be clicked at the most once per the given [delay].
+ *
+ * @param view          The parent [View] of this UI element.
  * @param delay         The delay between click events.
  * @param enabled       Controls the enabled state. When `false`, [onClick], and this modifier will
  * appear disabled for accessibility services.
@@ -47,6 +54,7 @@ data class ClickState(
  * @param onClick       The action(s) to be invoked when a UI element is clicked.
  */
 fun Modifier.throttledClickable(
+    view: View,
     delay: Long = THROTTLE_CLICKABLE_DEFAULT_DELAY,
     enabled: Boolean = true,
     role: Role? = null,
@@ -82,18 +90,21 @@ fun Modifier.throttledClickable(
             }
     }
 
-    Modifier.clickable(
-        interactionSource = remember { MutableInteractionSource() },
-        indication = LocalIndication.current,
-        enabled = enabled,
-        onClickLabel = onClickLabel,
-        role = role,
-        onClick = { debounceState.tryEmit(ClickState(onClick, System.currentTimeMillis())) }
-    )
+    Modifier
+        .filterTouchesWhenObscured(view)
+        .clickable(
+            interactionSource = remember { MutableInteractionSource() },
+            indication = LocalIndication.current,
+            enabled = enabled,
+            onClickLabel = onClickLabel,
+            role = role,
+            onClick = { debounceState.tryEmit(ClickState(onClick, System.currentTimeMillis())) }
+        )
 }
 
 fun Modifier.throttledClickableIcon(
     onClick: () -> Unit,
+    view: View,
     delay: Long = THROTTLE_CLICKABLE_DEFAULT_DELAY,
     enabled: Boolean = true,
     onClickLabel: String? = null,
@@ -133,6 +144,7 @@ fun Modifier.throttledClickableIcon(
     val RippleRadius = 24.dp
     Modifier
         .minimumInteractiveComponentSize()
+        .filterTouchesWhenObscured(view)
         .clickable(
             enabled = enabled,
             onClickLabel = onClickLabel,
@@ -191,3 +203,21 @@ fun Modifier.clickableNoRipple(
             onClick = onClick
         )
     }
+
+/**
+ * Provides protection against UI overlay attacks from other applications.
+ */
+fun Modifier.filterTouchesWhenObscured(view: View): Modifier = pointerInput(Unit) {
+    coroutineScope {
+        launch {
+            awaitPointerEventScope {
+                while (true) {
+                    val event = awaitPointerEvent()
+                    if (view.isObscured()) {
+                        event.changes.forEach { it.consume() }
+                    }
+                }
+            }
+        }
+    }
+}

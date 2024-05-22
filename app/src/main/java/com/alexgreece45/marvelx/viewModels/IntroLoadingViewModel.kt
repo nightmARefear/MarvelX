@@ -5,18 +5,21 @@ import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.controllers.AuthController
 import com.alexgreece45.marvelx.controllers.PrefKeys
+import com.alexgreece45.marvelx.controllers.RefreshTokenController
 import com.alexgreece45.marvelx.controllers.WebsocketController
-import com.alexgreece45.marvelx.domain.models_api.otp.OtpFlowType
-import com.alexgreece45.marvelx.domain.models_api.user.VerificationStep
 import com.alexgreece45.marvelx.domain.interactors.LoginInteractor
+import com.alexgreece45.marvelx.domain.interactors.LoginWithTokenPartialState
 import com.alexgreece45.marvelx.domain.interactors.LogoutPartialState
-import com.alexgreece45.marvelx.domain.interactors.PostLoginWithTokenPartialState
+import com.alexgreece45.marvelx.domain.interactors.PostLoginPartialState
 import com.alexgreece45.marvelx.domain.interactors.RefreshAccessTokenPartialState
 import com.alexgreece45.marvelx.domain.interactors.RegisterInteractor
+import com.alexgreece45.marvelx.domain.models_api.otp.OtpFlowType
+import com.alexgreece45.marvelx.domain.models_api.user.VerificationStep
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
 import com.alexgreece45.marvelx.mvi.BaseViewModel
+import com.alexgreece45.marvelx.util.DateUtil
 import com.alexgreece45.marvelx.util.ResourceProvider
 import kotlinx.coroutines.launch
 
@@ -32,7 +35,7 @@ sealed interface IntroLoadingContract {
         data object RefreshAccessToken :
             LoadingStage(label = R.string.intro_loading_screen_label_loading_stage_refresh_access_token)
 
-        data object PostLoginWithToken :
+        data object LoginWithToken :
             LoadingStage(label = R.string.intro_loading_screen_label_loading_stage_post_login_with_token)
     }
 
@@ -47,7 +50,8 @@ sealed interface IntroLoadingContract {
 
     sealed interface Effect : BaseEffect {
         sealed interface Navigation : Effect {
-            data class NavigateToHomeScreenWithErrorMessage(val errorMessage: String? = null) : Navigation
+            data class NavigateToHomeScreenWithErrorMessage(val errorMessage: String? = null) :
+                Navigation
 
             data class NavigateToOtpScreen(
                 val userId: Int,
@@ -67,7 +71,8 @@ class IntroLoadingViewModel(
     private val registerInteractor: RegisterInteractor,
     private val loginInteractor: LoginInteractor,
     private val authController: AuthController,
-    private val websocketController: WebsocketController
+    private val websocketController: WebsocketController,
+    private val refreshTokenController: RefreshTokenController
 ) :
     BaseViewModel<IntroLoadingContract.Event, IntroLoadingContract.State, IntroLoadingContract.Effect>() {
     override fun setInitialState(): IntroLoadingContract.State =
@@ -82,7 +87,9 @@ class IntroLoadingViewModel(
     }
 
     /**
-     * Login actions.
+     * The login flow. It starts by checking if the user is eligible for requesting to be logged in,
+     * and once that has been verified, their tokens are renewed. By using the newly generated
+     * tokens, an attempt is made to login.
      */
     private fun loginFlow() {
         setState {
@@ -121,7 +128,7 @@ class IntroLoadingViewModel(
 
                     is RefreshAccessTokenPartialState.Success -> {
                         // Proceed with login.
-                        postLogin()
+                        loginWithToken()
                     }
                 }
             }
@@ -129,11 +136,11 @@ class IntroLoadingViewModel(
     }
 
     /**
-     * Post-login actions.
+     * Logins the user with their token.
      */
-    private fun postLogin() {
+    private fun loginWithToken() {
         /**
-         * The erroneous actions to perform when [RegisterInteractor.postLoginWithToken] has failed,
+         * The erroneous actions to perform when [RegisterInteractor.loginWithToken] has failed,
          * or [VerificationStep.Invalid] was returned.
          */
         fun errorActions(errorMessage: String) {
@@ -147,26 +154,42 @@ class IntroLoadingViewModel(
 
         setState {
             copy(
-                loadingStage = IntroLoadingContract.LoadingStage.PostLoginWithToken
+                loadingStage = IntroLoadingContract.LoadingStage.LoginWithToken
             )
         }
         viewModelScope.launch {
-            registerInteractor.postLoginWithToken().collect {
+            registerInteractor.loginWithToken().collect {
                 when (it) {
                     // An error occurred either due to an invalid token, or userId.
-                    is PostLoginWithTokenPartialState.Failed -> {
+                    is LoginWithTokenPartialState.Failed -> {
                         errorActions(it.errorMessage)
                     }
 
-                    is PostLoginWithTokenPartialState.Success -> {
+                    is LoginWithTokenPartialState.Success -> {
                         it.loginWithTokenResponseDomain.verificationStep.let { verificationStep ->
                             when (verificationStep) {
                                 // No verification step, so navigate to `AllCharactersScreen`.
                                 // There is no need to generate a new token as it has already
                                 // been generated in the `loginFlow` function.
                                 VerificationStep.None -> {
-                                    setEffect {
-                                        IntroLoadingContract.Effect.Navigation.NavigateToAllCharactersScreen
+                                    // Retrieve sign data.
+                                    loginInteractor.postLogin().collect { postLoginPartialState ->
+                                        when (postLoginPartialState) {
+                                            PostLoginPartialState.Success -> {
+                                                refreshTokenController.startWorker()
+                                                websocketController.init()
+                                                prefKeys.autoLogoutTimestamp =
+                                                    DateUtil.getUTCInstant()
+
+                                                setEffect {
+                                                    IntroLoadingContract.Effect.Navigation.NavigateToAllCharactersScreen
+                                                }
+                                            }
+
+                                            is PostLoginPartialState.Failed -> {
+                                                errorActions(postLoginPartialState.errorMessage)
+                                            }
+                                        }
                                     }
                                 }
 

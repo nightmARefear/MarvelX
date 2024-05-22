@@ -5,8 +5,10 @@ import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKeys
 import com.alexgreece45.marvelx.BuildConfig
 import com.alexgreece45.marvelx.controllers.models.preferencesController.ConstantsPrefs
+import com.alexgreece45.marvelx.domain.models_api.user.postLogin.SignData
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.google.gson.Gson
+import com.google.gson.JsonSyntaxException
 import java.time.Instant
 import java.time.format.DateTimeParseException
 
@@ -148,6 +150,11 @@ interface PrefKeys {
      * Auto logout timestamp.
      */
     var autoLogoutTimestamp: Instant?
+
+    /**
+     * Signing data for requests.
+     */
+    var signData: SignData?
 }
 
 class PrefKeysImpl(
@@ -207,7 +214,7 @@ class PrefKeysImpl(
                 )
             )
         } catch (e: DateTimeParseException) {
-            logger.d("PrefKeys") { "Auto logout timestamp is null." }
+            logger.e("PrefKeys") { "Auto logout timestamp is null." }
             null
         }
         set(value) {
@@ -215,6 +222,24 @@ class PrefKeysImpl(
             else preferencesController.setString(
                 ConstantsPrefs.AUTO_LOGOUT_TIMESTAMP,
                 Gson().toJson(value.toString()).replace("\"", "")
+            )
+        }
+
+    override var signData: SignData?
+        get() = try {
+            Gson().fromJson(
+                preferencesController.getString(ConstantsPrefs.SIGN_DATA, null.toString()),
+                SignData::class.java
+            )
+        } catch (e: JsonSyntaxException) {
+            logger.e("PreferencesController") { "Sign data is null." }
+            null
+        }
+        set(value) {
+            if (value == null) preferencesController.remove(ConstantsPrefs.SIGN_DATA)
+            else preferencesController.setString(
+                ConstantsPrefs.SIGN_DATA,
+                Gson().toJson(value)
             )
         }
 }

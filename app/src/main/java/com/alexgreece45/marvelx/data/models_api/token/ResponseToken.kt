@@ -3,7 +3,7 @@ package com.alexgreece45.marvelx.data.models_api.token
 import com.alexgreece45.marvelx.domain.models_api.userAuthData.UserAuthData
 import com.google.gson.annotations.SerializedName
 
-data class TokenResponse(
+data class ResponseToken(
     @SerializedName("access_token") val accessToken: String,
     @SerializedName("expires_in") val accessExpiresIn: Int,
     @SerializedName("refresh_token") val refreshToken: String,
@@ -11,7 +11,7 @@ data class TokenResponse(
     @SerializedName("token_type") val tokenType: String
 )
 
-fun TokenResponse.toUserAuthData(): UserAuthData =
+fun ResponseToken.toUserAuthData(): UserAuthData =
     UserAuthData(
         accessToken = this.accessToken,
         accessExpiresIn = this.accessExpiresIn.toLong(),

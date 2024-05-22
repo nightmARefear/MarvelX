@@ -4,8 +4,9 @@ import com.alexgreece45.marvelx.controllers.AppLoggerController
 import com.alexgreece45.marvelx.data.api.ApiClient
 import com.alexgreece45.marvelx.data.models_api.sensitiveUserData.RequestSensitiveUserData
 import com.alexgreece45.marvelx.data.models_api.sensitiveUserData.ResponseSensitiveUserData
-import com.alexgreece45.marvelx.data.models_api.token.TokenResponse
+import com.alexgreece45.marvelx.data.models_api.token.ResponseToken
 import com.alexgreece45.marvelx.data.models_api.user.ResponseUserError
+import com.alexgreece45.marvelx.data.models_api.user.postLogin.ResponsePostLogin
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.helper.parseError
 import kotlinx.coroutines.flow.Flow
@@ -35,6 +36,12 @@ interface LoginRepository {
      * Logouts the user.
      */
     suspend fun logout(clientId: String, refreshToken: String): Flow<LogoutRepositoryResponse>
+
+    /**
+     * Post-login call. More specifically, signing data is retrieved which will be later used for
+     * signing requests.
+     */
+    suspend fun postLogin(): Flow<PostLoginRepositoryResponse>
 
     suspend fun getSensitiveUserData(requestSensitiveUserData: RequestSensitiveUserData): Flow<GetSensitiveUserDataRepositoryResponse>
 }
@@ -108,6 +115,16 @@ class LoginRepositoryImpl(
         }
     }
 
+    override suspend fun postLogin(): Flow<PostLoginRepositoryResponse> = flow {
+        apiClient.postLogin().let { response ->
+            if (response.isSuccessful) {
+                emit(PostLoginRepositoryResponse.Success(response.body()))
+            } else {
+                emit(PostLoginRepositoryResponse.Failed(errorMessage = resourceProvider.getGenericErrorMessage()))
+            }
+        }
+    }
+
     override suspend fun getSensitiveUserData(requestSensitiveUserData: RequestSensitiveUserData): Flow<GetSensitiveUserDataRepositoryResponse> =
         flow {
             apiClient.getSensitiveUserData(requestSensitiveUserData).let { response ->
@@ -128,13 +145,18 @@ class LoginRepositoryImpl(
         }
 }
 
+sealed interface PostLoginRepositoryResponse {
+    data class Success(val response: ResponsePostLogin?) : PostLoginRepositoryResponse
+    data class Failed(val errorMessage: String) : PostLoginRepositoryResponse
+}
+
 sealed class GrandNewAccessTokenRepositoryResponse {
-    data class Success(val response: TokenResponse?) : GrandNewAccessTokenRepositoryResponse()
+    data class Success(val response: ResponseToken?) : GrandNewAccessTokenRepositoryResponse()
     data class Failed(val errorMessage: String) : GrandNewAccessTokenRepositoryResponse()
 }
 
 sealed class RefreshAccessTokenRepositoryResponse {
-    data class Success(val response: TokenResponse?) : RefreshAccessTokenRepositoryResponse()
+    data class Success(val response: ResponseToken?) : RefreshAccessTokenRepositoryResponse()
     data class Failed(val errorMessage: String?) : RefreshAccessTokenRepositoryResponse()
 }
 

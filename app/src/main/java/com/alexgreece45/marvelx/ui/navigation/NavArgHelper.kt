@@ -1,5 +1,6 @@
 package com.alexgreece45.marvelx.ui.navigation
 
+import com.alexgreece45.marvelx.ui.navigation.models.NavArg
 import com.alexgreece45.marvelx.ui.navigation.models.NavArgStatus
 
 /**
@@ -13,10 +14,10 @@ object NavArgHelper {
     private val arguments: MutableMap<String, Any?> = mutableMapOf()
 
     /**
-     * Sets an argument with the given [navItem] as its key and [value] as its value.
+     * Sets an argument with the given [navArg] as its key and [value] as its value.
      */
-    fun setArgument(navItem: NavItem, value: Any?) {
-        arguments[navItem.key] = value
+    fun setArgument(navArg: NavArg, value: Any?) {
+        arguments[navArg.key] = value
     }
 
     /**
@@ -26,12 +27,12 @@ object NavArgHelper {
      *
      * Also, the argument is immediately removed if it exists.
      */
-    fun <T> getArgument(navItem: NavItem): NavArgStatus<out T> {
+    fun <T> getArgument(navArg: NavArg): NavArgStatus<out T> {
         return when {
-            arguments.containsKey(navItem.key) -> try {
+            arguments.containsKey(navArg.key) -> try {
                 @Suppress("UNCHECKED_CAST")
-                NavArgStatus.Exists(arguments[navItem.key] as T)
-                    .also { arguments.remove(navItem.key) }
+                NavArgStatus.Exists(arguments[navArg.key] as T)
+                    .also { arguments.remove(navArg.key) }
             } catch (e: ClassCastException) {
                 NavArgStatus.NotExists
             }

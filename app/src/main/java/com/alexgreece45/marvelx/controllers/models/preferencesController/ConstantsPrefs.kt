@@ -5,4 +5,5 @@ package com.alexgreece45.marvelx.controllers.models.preferencesController
  */
 object ConstantsPrefs {
     const val AUTO_LOGOUT_TIMESTAMP = "auto_logout_timestamp"
+    const val SIGN_DATA = "sign_data"
 }

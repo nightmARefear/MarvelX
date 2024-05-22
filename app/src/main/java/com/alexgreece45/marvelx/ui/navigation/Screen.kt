@@ -169,8 +169,5 @@ enum class NavItem(val key: String, val type: NavType<*>) {
     ShouldRememberUserSession(key = "shouldRememberUserSession", type = NavType.BoolType),
     RequestIdEmail(key = "requestIdEmail", type = NavType.StringType),
     RequestIdPhoneNumber(key = "requestIdPhoneNumber", type = NavType.StringType),
-    ErrorMessage(key = "errorMessage", type = NavType.StringType),
     IsApplicationInsecure(key = "isApplicationInsecure", type = NavType.BoolType),
-    HasSessionExpired(key = "hasSessionExpired", type = NavType.BoolType),
-    ShowErrorDialog(key = "showErrorDialog", type = NavType.BoolType)
 }

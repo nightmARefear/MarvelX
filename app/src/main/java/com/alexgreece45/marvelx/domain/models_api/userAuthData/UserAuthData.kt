@@ -7,7 +7,7 @@ package com.alexgreece45.marvelx.domain.models_api.userAuthData
  * @param accessExpiresIn   UNIX timestamp that [accessToken] expires at.
  * @param refreshToken      Auth refresh token used for refreshing the [accessToken].
  * @param refreshExpiresIn  UNIX timestamp that [refreshToken] expires at.
- * @param tokenType         Type of [accessToken] (i.e. 'Bearer', etc.).
+ * @param tokenType         Type of [accessToken] (i.e., 'Bearer', etc.).
  * */
 data class UserAuthData(
     val accessToken: String,
