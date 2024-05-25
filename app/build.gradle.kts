@@ -3,7 +3,7 @@ import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin)
+    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.google.mapsplatform.secrets)
     alias(libs.plugins.ksp)
     alias(libs.plugins.kotlin.parcelize)
@@ -94,10 +94,16 @@ android {
         resources.excludes.add(
             "/META-INF/{AL2.0,LGPL2.1}"
         )
+
+        dex {
+            useLegacyPackaging = false
+        }
     }
 }
 
 dependencies {
+    implementation(libs.kotlin.reflect)
+
     implementation(libs.bundles.app.ui.release)
     implementation(project.dependencies.platform(libs.androidx.compose.bom))
     debugImplementation(libs.bundles.app.ui.debug)
@@ -134,10 +140,6 @@ dependencies {
 
     // Koin.
     implementation(platform(libs.koin.bom))
-    implementation(libs.koin.core)
-    implementation(libs.koin.androidx.compose)
-    implementation(libs.koin.androidx.navigation)
-    implementation(libs.koin.androidx.work.manager)
-    testImplementation(libs.koin.android.test)
-    testImplementation(libs.koin.test.junit4)
+    implementation(libs.bundles.koin.implementation)
+    testImplementation(libs.bundles.koin.test.implementation)
 }

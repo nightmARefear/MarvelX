@@ -16,17 +16,17 @@ import org.koin.android.ext.android.inject
 
 class MarvelXApplication : Application(), Configuration.Provider {
 
-    private val refreshTokenWorkerFactory: RefreshTokenWorkerFactory by inject()
-
     private val appLoggerController: AppLoggerController by inject()
+    private val refreshTokenWorkerFactory: RefreshTokenWorkerFactory by inject()
 
     override fun onCreate() {
         super.onCreate()
 
-        initKoin(this@MarvelXApplication)
+        initKoin(this)
 
         appLoggerController.installLogger()
     }
+
 
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder()

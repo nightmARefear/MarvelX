@@ -36,8 +36,10 @@
     <string name="generic_go_to_previous_screen_button">Go To Previous Screen</string>
 
     // Insecure application.
-    <string name="splash_screen_alert_dialog_title">Insecure application</string>
-    <string name="splash_screen_alert_dialog_error_message">It has been detected that the application is running in an insecure device.</string>
+    <string name="splash_screen_alert_dialog_title_insecure_application">Insecure application</string>
+    <string name="splash_screen_alert_dialog_title_application_in_multi_window_mode">Illegal Application State</string>
+    <string name="splash_screen_alert_dialog_error_message_insecure_application">It has been detected that the application is running in an insecure device.</string>
+    <string name="splash_screen_alert_dialog_error_message_application_in_multi_window_mode">It has been detected that the application is running in multi-window mode which is forbidden.</string>
     <string name="splash_screen_alert_dialog_confirm_button">close</string>
 
     // Session status

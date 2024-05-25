@@ -1,15 +1,15 @@
 package com.alexgreece45.marvelx.repository
 
 import com.alexgreece45.marvelx.data.api.ApiClient
-import com.alexgreece45.marvelx.data.models.forgotPassword.email.RequestForgotPasswordOtpBlockedEmail
-import com.alexgreece45.marvelx.data.models.forgotPassword.email.RequestForgotPasswordSendOtp
-import com.alexgreece45.marvelx.data.models.forgotPassword.email.RequestForgotPasswordValidateOtp
-import com.alexgreece45.marvelx.data.models.forgotPassword.email.ResponseForgotPasswordOtpBlockedEmail
-import com.alexgreece45.marvelx.data.models.forgotPassword.email.ResponseForgotPasswordSendOtp
-import com.alexgreece45.marvelx.data.models.forgotPassword.email.ResponseForgotPasswordValidateOtp
-import com.alexgreece45.marvelx.data.models.forgotPassword.phoneNumber.RequestForgotPasswordOtpBlockedPhoneNumber
-import com.alexgreece45.marvelx.data.models.forgotPassword.phoneNumber.ResponseForgotPasswordOtpBlockedPhoneNumber
-import com.alexgreece45.marvelx.data.models.otp.OtpResponseError
+import com.alexgreece45.marvelx.data.models_api.forgotPassword.email.RequestForgotPasswordOtpBlockedEmail
+import com.alexgreece45.marvelx.data.models_api.forgotPassword.email.RequestForgotPasswordSendOtp
+import com.alexgreece45.marvelx.data.models_api.forgotPassword.email.RequestForgotPasswordValidateOtp
+import com.alexgreece45.marvelx.data.models_api.forgotPassword.email.ResponseForgotPasswordOtpBlockedEmail
+import com.alexgreece45.marvelx.data.models_api.forgotPassword.email.ResponseForgotPasswordSendOtp
+import com.alexgreece45.marvelx.data.models_api.forgotPassword.email.ResponseForgotPasswordValidateOtp
+import com.alexgreece45.marvelx.data.models_api.forgotPassword.phoneNumber.RequestForgotPasswordOtpBlockedPhoneNumber
+import com.alexgreece45.marvelx.data.models_api.forgotPassword.phoneNumber.ResponseForgotPasswordOtpBlockedPhoneNumber
+import com.alexgreece45.marvelx.data.models_api.otp.OtpResponseError
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.google.gson.Gson
 import kotlinx.coroutines.flow.Flow

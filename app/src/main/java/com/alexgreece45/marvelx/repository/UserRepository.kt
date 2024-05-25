@@ -1,8 +1,8 @@
 package com.alexgreece45.marvelx.repository
 
 import com.alexgreece45.marvelx.data.api.ApiClient
-import com.alexgreece45.marvelx.data.models.user.ResponseUserError
-import com.alexgreece45.marvelx.data.models.user.profileDetails.ResponseProfileDetails
+import com.alexgreece45.marvelx.data.models_api.user.ResponseUserError
+import com.alexgreece45.marvelx.data.models_api.user.profileDetails.ResponseProfileDetails
 import com.alexgreece45.marvelx.util.helper.parseError
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow

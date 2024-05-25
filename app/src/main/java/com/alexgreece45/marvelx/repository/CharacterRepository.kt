@@ -1,8 +1,8 @@
 package com.alexgreece45.marvelx.repository
 
 import com.alexgreece45.marvelx.data.api.ApiClient
-import com.alexgreece45.marvelx.data.models.character.CharacterDataWrapper
-import com.alexgreece45.marvelx.data.models.character.comic.ComicDataWrapper
+import com.alexgreece45.marvelx.data.models_api.character.CharacterDataWrapper
+import com.alexgreece45.marvelx.data.models_api.character.comic.ComicDataWrapper
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 

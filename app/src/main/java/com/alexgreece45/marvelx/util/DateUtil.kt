@@ -4,13 +4,17 @@ import com.alexgreece45.marvelx.util.extensions.pad
 import java.time.Instant
 
 object DateUtil {
+    /**
+     * Returns the current UTC [Instant].
+     */
+    fun getUTCInstant(): Instant = Instant.now()
 
     /**
-     * Gets the number of seconds from the Java epoch of 1970-01-01T00:00:00Z.
+     * Returns the number of seconds from the Java epoch of 1970-01-01T00:00:00Z.
      *
      * @return the seconds from the epoch of 1970-01-01T00:00:00Z
      * */
-    fun getSecondsFromEpoch(): Long = Instant.now().epochSecond
+    fun getSecondsFromEpoch(): Long = getUTCInstant().epochSecond
 
     /**
      * Converts the given [minutes] and [seconds] into a human readable format.

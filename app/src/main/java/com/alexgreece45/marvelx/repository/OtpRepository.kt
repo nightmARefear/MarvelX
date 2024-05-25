@@ -1,12 +1,12 @@
 package com.alexgreece45.marvelx.repository
 
 import com.alexgreece45.marvelx.data.api.ApiClient
-import com.alexgreece45.marvelx.data.models.otp.OtpRequest
-import com.alexgreece45.marvelx.data.models.otp.OtpResponseError
-import com.alexgreece45.marvelx.data.models.otp.OtpResponseSuccess
-import com.alexgreece45.marvelx.data.models.resendOtp.RequestResendOtp
-import com.alexgreece45.marvelx.data.models.resendOtp.ResponseResendOtpFailed
-import com.alexgreece45.marvelx.data.models.resendOtp.ResponseResendOtpSuccess
+import com.alexgreece45.marvelx.data.models_api.otp.OtpRequest
+import com.alexgreece45.marvelx.data.models_api.otp.OtpResponseError
+import com.alexgreece45.marvelx.data.models_api.otp.OtpResponseSuccess
+import com.alexgreece45.marvelx.data.models_api.resendOtp.RequestResendOtp
+import com.alexgreece45.marvelx.data.models_api.resendOtp.ResponseResendOtpFailed
+import com.alexgreece45.marvelx.data.models_api.resendOtp.ResponseResendOtpSuccess
 import com.google.gson.Gson
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow

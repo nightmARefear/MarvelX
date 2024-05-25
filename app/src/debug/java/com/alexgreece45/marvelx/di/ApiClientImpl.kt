@@ -2,31 +2,32 @@ package com.alexgreece45.marvelx.di
 
 import com.alexgreece45.marvelx.data.api.ApiClient
 import com.alexgreece45.marvelx.data.api.ApiService
-import com.alexgreece45.marvelx.data.models.character.CharacterDataWrapper
-import com.alexgreece45.marvelx.data.models.character.comic.ComicDataWrapper
-import com.alexgreece45.marvelx.data.models.forgotPassword.email.RequestForgotPasswordOtpBlockedEmail
-import com.alexgreece45.marvelx.data.models.forgotPassword.email.RequestForgotPasswordSendOtp
-import com.alexgreece45.marvelx.data.models.forgotPassword.email.RequestForgotPasswordValidateOtp
-import com.alexgreece45.marvelx.data.models.forgotPassword.email.ResponseForgotPasswordOtpBlockedEmail
-import com.alexgreece45.marvelx.data.models.forgotPassword.email.ResponseForgotPasswordSendOtp
-import com.alexgreece45.marvelx.data.models.forgotPassword.email.ResponseForgotPasswordValidateOtp
-import com.alexgreece45.marvelx.data.models.forgotPassword.phoneNumber.RequestForgotPasswordOtpBlockedPhoneNumber
-import com.alexgreece45.marvelx.data.models.forgotPassword.phoneNumber.ResponseForgotPasswordOtpBlockedPhoneNumber
-import com.alexgreece45.marvelx.data.models.jwtSensitiveUserData.RequestJwtSensitiveUserData
-import com.alexgreece45.marvelx.data.models.jwtSensitiveUserData.ResponseJwtSensitiveUserData
-import com.alexgreece45.marvelx.data.models.otp.OtpRequest
-import com.alexgreece45.marvelx.data.models.otp.OtpResponseSuccess
-import com.alexgreece45.marvelx.data.models.resendOtp.RequestResendOtp
-import com.alexgreece45.marvelx.data.models.resendOtp.ResponseResendOtpSuccess
-import com.alexgreece45.marvelx.data.models.sensitiveUserData.RequestSensitiveUserData
-import com.alexgreece45.marvelx.data.models.sensitiveUserData.ResponseSensitiveUserData
-import com.alexgreece45.marvelx.data.models.token.TokenResponse
-import com.alexgreece45.marvelx.data.models.user.login.LoginResponse
-import com.alexgreece45.marvelx.data.models.user.login.UserLoginRequest
-import com.alexgreece45.marvelx.data.models.user.loginWithToken.LoginWithTokenResponse
-import com.alexgreece45.marvelx.data.models.user.profileDetails.ResponseProfileDetails
-import com.alexgreece45.marvelx.data.models.user.signup.SignupResponse
-import com.alexgreece45.marvelx.data.models.user.signup.UserSignupRequest
+import com.alexgreece45.marvelx.data.models_api.character.CharacterDataWrapper
+import com.alexgreece45.marvelx.data.models_api.character.comic.ComicDataWrapper
+import com.alexgreece45.marvelx.data.models_api.forgotPassword.email.RequestForgotPasswordOtpBlockedEmail
+import com.alexgreece45.marvelx.data.models_api.forgotPassword.email.RequestForgotPasswordSendOtp
+import com.alexgreece45.marvelx.data.models_api.forgotPassword.email.RequestForgotPasswordValidateOtp
+import com.alexgreece45.marvelx.data.models_api.forgotPassword.email.ResponseForgotPasswordOtpBlockedEmail
+import com.alexgreece45.marvelx.data.models_api.forgotPassword.email.ResponseForgotPasswordSendOtp
+import com.alexgreece45.marvelx.data.models_api.forgotPassword.email.ResponseForgotPasswordValidateOtp
+import com.alexgreece45.marvelx.data.models_api.forgotPassword.phoneNumber.RequestForgotPasswordOtpBlockedPhoneNumber
+import com.alexgreece45.marvelx.data.models_api.forgotPassword.phoneNumber.ResponseForgotPasswordOtpBlockedPhoneNumber
+import com.alexgreece45.marvelx.data.models_api.jwtSensitiveUserData.RequestJwtSensitiveUserData
+import com.alexgreece45.marvelx.data.models_api.jwtSensitiveUserData.ResponseJwtSensitiveUserData
+import com.alexgreece45.marvelx.data.models_api.otp.OtpRequest
+import com.alexgreece45.marvelx.data.models_api.otp.OtpResponseSuccess
+import com.alexgreece45.marvelx.data.models_api.resendOtp.RequestResendOtp
+import com.alexgreece45.marvelx.data.models_api.resendOtp.ResponseResendOtpSuccess
+import com.alexgreece45.marvelx.data.models_api.sensitiveUserData.RequestSensitiveUserData
+import com.alexgreece45.marvelx.data.models_api.sensitiveUserData.ResponseSensitiveUserData
+import com.alexgreece45.marvelx.data.models_api.token.ResponseToken
+import com.alexgreece45.marvelx.data.models_api.user.login.ResponseLogin
+import com.alexgreece45.marvelx.data.models_api.user.login.RequestUserLogin
+import com.alexgreece45.marvelx.data.models_api.user.loginWithToken.ResponseLoginWithToken
+import com.alexgreece45.marvelx.data.models_api.user.postLogin.ResponsePostLogin
+import com.alexgreece45.marvelx.data.models_api.user.profileDetails.ResponseProfileDetails
+import com.alexgreece45.marvelx.data.models_api.user.signup.ResponseSignup
+import com.alexgreece45.marvelx.data.models_api.user.signup.RequestUserSignup
 import retrofit2.Response
 
 class ApiClientImpl(
@@ -45,26 +46,29 @@ class ApiClientImpl(
     override suspend fun getComicById(comicId: Int): Response<ComicDataWrapper> =
         apiService.getComicById(comicId)
 
-    override suspend fun postSignup(userSignupRequest: UserSignupRequest): Response<SignupResponse> =
-        apiService.postSignup(userSignupRequest)
+    override suspend fun signup(requestUserSignup: RequestUserSignup): Response<ResponseSignup> =
+        apiService.signup(requestUserSignup)
 
-    override suspend fun postLogin(userLoginRequest: UserLoginRequest): Response<LoginResponse> =
-        apiService.postLogin(userLoginRequest)
+    override suspend fun login(requestUserLogin: RequestUserLogin): Response<ResponseLogin> =
+        apiService.login(requestUserLogin)
 
-    override suspend fun postLoginWithToken(): Response<LoginWithTokenResponse> =
-        apiService.postLoginWithToken()
+    override suspend fun loginWithToken(): Response<ResponseLoginWithToken> =
+        apiService.loginWithToken()
+
+    override suspend fun postLogin(): Response<ResponsePostLogin> =
+        apiService.postLogin()
 
     override suspend fun grantNewAccessToken(
         clientId: String,
         clientSecret: String,
         code: String,
         uri: String
-    ): Response<TokenResponse> = apiService.grantNewAccessToken(clientId, clientSecret, code, uri)
+    ): Response<ResponseToken> = apiService.grantNewAccessToken(clientId, clientSecret, code, uri)
 
     override suspend fun refreshAccessToken(
         clientId: String,
         refreshToken: String
-    ): Response<TokenResponse> = apiService.refreshAccessToken(clientId, refreshToken)
+    ): Response<ResponseToken> = apiService.refreshAccessToken(clientId, refreshToken)
 
     override suspend fun logout(clientId: String, refreshToken: String): Response<Void> =
         apiService.logout(clientId, refreshToken)

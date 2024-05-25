@@ -11,10 +11,10 @@ import java.security.MessageDigest
 
 interface ApplicationPackageController {
     /**
-     * Returns all the application package signatures concatenated with no spaces between as a [String].
+     * Returns all the application package signatures as a [List].
      * If no signatures were found, or an error occurred, an empty [String] is returned.
      */
-    fun getSignature(): String
+    fun getApplicationSignatures(): List<String>
 
     /**
      * Checks whether the application allows debugging of its code , even when installed on a
@@ -30,7 +30,7 @@ class ApplicationPackageControllerImpl(
     private val resourceProvider: ResourceProvider,
     private val logger: AppLoggerController
 ) : ApplicationPackageController {
-    override fun getSignature(): String {
+    override fun getApplicationSignatures(): List<String> {
         try {
             val packageInfo: PackageInfo
             val signatures: List<String>
@@ -40,7 +40,7 @@ class ApplicationPackageControllerImpl(
                     PackageManager.GET_SIGNATURES
                 )
                 signatures = packageInfo.signatures.map {
-                    val messageDigest = MessageDigest.getInstance("SHA").apply {
+                    val messageDigest = MessageDigest.getInstance("SHA-256").apply {
                         update(it.toByteArray())
                     }
                     Base64.encodeToString(messageDigest.digest(), Base64.DEFAULT).trim()
@@ -52,25 +52,25 @@ class ApplicationPackageControllerImpl(
                 )
                 signatures = if (packageInfo.signingInfo.hasMultipleSigners()) {
                     packageInfo.signingInfo.apkContentsSigners.map {
-                        val messageDigest = MessageDigest.getInstance("SHA").apply {
+                        val messageDigest = MessageDigest.getInstance("SHA-256").apply {
                             update(it.toByteArray())
                         }
                         Base64.encodeToString(messageDigest.digest(), Base64.DEFAULT).trim()
                     }
                 } else {
                     packageInfo.signingInfo.signingCertificateHistory.map {
-                        val messageDigest = MessageDigest.getInstance("SHA").apply {
+                        val messageDigest = MessageDigest.getInstance("SHA-256").apply {
                             update(it.toByteArray())
                         }
                         Base64.encodeToString(messageDigest.digest(), Base64.DEFAULT).trim()
                     }
                 }
             }
-            return signatures.joinToString("")
+            return signatures
         } catch (e: Exception) {
-            logger.e { "${javaClass.simpleName}: e" }
+            logger.e(javaClass.simpleName) { "e: $e" }
         }
-        return ""
+        return emptyList()
     }
 
     override fun isAppDebuggable(): Boolean =

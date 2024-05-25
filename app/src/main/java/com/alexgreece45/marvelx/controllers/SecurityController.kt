@@ -54,6 +54,32 @@ interface SecurityController {
     fun areRootCloakingAppsInstalled(): Boolean
 
     /**
+     * Defines whether screen capturing is blocked in this application.
+     */
+    fun isScreenCapturingBlocked(): Boolean
+
+    /**
+     * Defines whether overlay windows are hidden to display over this application.
+     */
+    fun areOverlayWindowsHidden(): Boolean
+
+    /**
+     * Defines whether this application should have the ability to draw itself as an overlay window
+     * over other applications.
+     */
+    fun shouldApplicationDrawOverlayWindows(): Boolean
+
+    /**
+     * Defines whether this application should have the ability to be in multi window mode.
+     */
+    fun shouldApplicationBeInMultiWindowMode(): Boolean
+
+    /**
+     * Defines whether the auto logout functionality is enabled.
+     */
+    fun isAutoLogoutEnabled(): Boolean
+
+    /**
      * Checks whether this application is running on a secure device and/or if it has been tampered
      * with.
      *
@@ -69,20 +95,21 @@ class SecurityControllerImpl(
 ) : SecurityController {
 
     override fun isPackageSignatureValid(): Boolean {
-        if (configLogic.appBuildType != AppBuildType.RELEASE) return true
-        return applicationPackageController.getSignature() == configLogic.packageSignature
+        if (configLogic.appBuildType !is AppBuildType.RELEASE) return true
+        return applicationPackageController.getApplicationSignatures()
+            .any { it == configLogic.packageSignature }
     }
 
     override fun isAppDebuggable(): Boolean =
-        configLogic.appBuildType == AppBuildType.RELEASE
+        configLogic.appBuildType is AppBuildType.RELEASE
                 && applicationPackageController.isAppDebuggable()
 
     override fun isDebuggerAttached(): Boolean =
-        configLogic.appBuildType == AppBuildType.RELEASE
+        configLogic.appBuildType is AppBuildType.RELEASE
                 && Debug.isDebuggerConnected()
 
     override fun isAppRunningOnEmulator(): Boolean =
-        configLogic.appBuildType == AppBuildType.RELEASE
+        configLogic.appBuildType is AppBuildType.RELEASE
                 && (
                 // Android SDK emulator
                 (Build.MANUFACTURER == "Google" && Build.BRAND == "google"
@@ -109,12 +136,33 @@ class SecurityControllerImpl(
                 )
 
     override fun isDeviceRooted(): Boolean =
-        configLogic.appBuildType == AppBuildType.RELEASE
+        configLogic.appBuildType is AppBuildType.RELEASE
                 && rootController.isRooted()
 
     override fun areRootCloakingAppsInstalled(): Boolean =
-        configLogic.appBuildType == AppBuildType.RELEASE
+        configLogic.appBuildType is AppBuildType.RELEASE
                 && rootController.areRootCloakingAppsInstalled()
+
+    override fun isScreenCapturingBlocked(): Boolean =
+        configLogic.blockScreenCapture
+                && configLogic.appBuildType is AppBuildType.RELEASE
+
+    override fun areOverlayWindowsHidden(): Boolean =
+        configLogic.hideOverlayWindows
+                && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+                && configLogic.appBuildType is AppBuildType.RELEASE
+
+    override fun shouldApplicationDrawOverlayWindows(): Boolean =
+        configLogic.applicationDrawOverlayWindows
+                && configLogic.appBuildType is AppBuildType.RELEASE
+
+    override fun shouldApplicationBeInMultiWindowMode(): Boolean =
+        configLogic.applicationMultiWindowMode
+                && configLogic.appBuildType is AppBuildType.RELEASE
+
+    override fun isAutoLogoutEnabled(): Boolean =
+        configLogic.isAutoLogoutEnabled
+                && configLogic.appBuildType is AppBuildType.RELEASE
 
     override fun isApplicationSecure(): Flow<Boolean> = flow {
         emit(

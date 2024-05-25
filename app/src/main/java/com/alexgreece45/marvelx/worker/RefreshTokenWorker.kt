@@ -7,7 +7,7 @@ import com.alexgreece45.marvelx.configuration.ConfigLogic
 import com.alexgreece45.marvelx.controllers.AppLoggerController
 import com.alexgreece45.marvelx.controllers.AuthController
 import com.alexgreece45.marvelx.data.api.ApiClient
-import com.alexgreece45.marvelx.data.domains.userAuthData.UserAuthData
+import com.alexgreece45.marvelx.domain.models_api.userAuthData.UserAuthData
 import com.alexgreece45.marvelx.util.DateUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext

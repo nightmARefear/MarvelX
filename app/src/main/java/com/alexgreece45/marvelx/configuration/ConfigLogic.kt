@@ -41,9 +41,40 @@ interface ConfigLogic {
     val port: Int
 
     /**
+     * The MarvelX backend URL.
+     */
+    val serverUrl: String
+
+    /**
      * The websocket URL.
      */
     val websocketUrl: String
+
+    /**
+     * Defines whether screen capturing is blocked. It has a default value of `false`.
+     */
+    val blockScreenCapture: Boolean get() = false
+
+    /**
+     * Defines whether overlay windows are hidden. It has a default value of `false`.
+     */
+    val hideOverlayWindows: Boolean get() = false
+
+    /**
+     * Defines whether this application should have the ability to draw overlay windows over other
+     * applications.
+     */
+    val applicationDrawOverlayWindows: Boolean get() = false
+
+    /**
+     * Defines whether this application should have the ability to be in multi window mode.
+     */
+    val applicationMultiWindowMode: Boolean get() = false
+
+    /**
+     * Defines whether auto logout is enabled.
+     */
+    val isAutoLogoutEnabled: Boolean
 
     /**
      * The app's build type (i.e., debug, mock, or release).
@@ -85,13 +116,18 @@ class ConfigLogicImpl : ConfigLogic {
     override val port: Int
         get() =
             BuildConfig.MARVELX_BACKEND_BASE_URL.split(":").last().toInt()
+    override val serverUrl: String
+        get() = BuildConfig.MARVELX_BACKEND_BASE_URL
+
+    override val websocketUrl: String
+        get() = BuildConfig.MARVELX_BACKEND_WEBSOCKET_BASE_URL
+
+    override val isAutoLogoutEnabled: Boolean
+        get() = false
 
     override val appBuildType: AppBuildType
         get() = AppBuildType.getType()
 
     override val packageSignature: String
-        get() = "K9sqm8e3aPgpA8Vxmp/D+M4oJEU="
-
-    override val websocketUrl: String
-        get() = BuildConfig.MARVELX_BACKEND_WEBSOCKET_BASE_URL
+        get() = "tPwQygNBC+Pl1e3T5qwNGCg/oy9wOM9p+c4oddwuGFE="
 }

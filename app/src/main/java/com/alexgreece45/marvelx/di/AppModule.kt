@@ -8,12 +8,16 @@ import com.alexgreece45.marvelx.RefreshTokenWorkerFactory
 import com.alexgreece45.marvelx.configuration.AppBuildType
 import com.alexgreece45.marvelx.configuration.ConfigLogic
 import com.alexgreece45.marvelx.configuration.ConfigLogicImpl
+import com.alexgreece45.marvelx.configuration.ConfigSecurityLogic
+import com.alexgreece45.marvelx.configuration.ConfigSecurityLogicImpl
 import com.alexgreece45.marvelx.controllers.AppLoggerController
 import com.alexgreece45.marvelx.controllers.AppLoggerControllerImpl
 import com.alexgreece45.marvelx.controllers.ApplicationPackageController
 import com.alexgreece45.marvelx.controllers.ApplicationPackageControllerImpl
 import com.alexgreece45.marvelx.controllers.AuthController
 import com.alexgreece45.marvelx.controllers.AuthControllerImpl
+import com.alexgreece45.marvelx.controllers.CryptoController
+import com.alexgreece45.marvelx.controllers.CryptoControllerImpl
 import com.alexgreece45.marvelx.controllers.PrefKeys
 import com.alexgreece45.marvelx.controllers.PrefKeysImpl
 import com.alexgreece45.marvelx.controllers.PreferencesController
@@ -30,24 +34,27 @@ import com.alexgreece45.marvelx.data.api.ApiClient
 import com.alexgreece45.marvelx.data.api.ApiService
 import com.alexgreece45.marvelx.database.FavoriteCharactersDao
 import com.alexgreece45.marvelx.database.FavoriteCharactersDatabase
-import com.alexgreece45.marvelx.interactors.ChangePasswordInteractor
-import com.alexgreece45.marvelx.interactors.ChangePasswordInteractorImpl
-import com.alexgreece45.marvelx.interactors.CharacterInteractor
-import com.alexgreece45.marvelx.interactors.CharacterInteractorImpl
-import com.alexgreece45.marvelx.interactors.ComicInteractor
-import com.alexgreece45.marvelx.interactors.ComicInteractorImpl
-import com.alexgreece45.marvelx.interactors.ForgotPasswordInteractor
-import com.alexgreece45.marvelx.interactors.ForgotPasswordInteractorImpl
-import com.alexgreece45.marvelx.interactors.LoginInteractor
-import com.alexgreece45.marvelx.interactors.LoginInteractorImpl
-import com.alexgreece45.marvelx.interactors.OtpInteractor
-import com.alexgreece45.marvelx.interactors.OtpInteractorImpl
-import com.alexgreece45.marvelx.interactors.RegisterInteractor
-import com.alexgreece45.marvelx.interactors.RegisterInteractorImpl
-import com.alexgreece45.marvelx.interactors.SplashInteractor
-import com.alexgreece45.marvelx.interactors.SplashInteractorImpl
-import com.alexgreece45.marvelx.interactors.UserInteractor
-import com.alexgreece45.marvelx.interactors.UserInteractorImpl
+import com.alexgreece45.marvelx.di.network.NetworkModule
+import com.alexgreece45.marvelx.di.network.interceptors.ApiInterceptor
+import com.alexgreece45.marvelx.di.network.interceptors.WebsocketInterceptor
+import com.alexgreece45.marvelx.domain.interactors.ChangePasswordInteractor
+import com.alexgreece45.marvelx.domain.interactors.ChangePasswordInteractorImpl
+import com.alexgreece45.marvelx.domain.interactors.CharacterInteractor
+import com.alexgreece45.marvelx.domain.interactors.CharacterInteractorImpl
+import com.alexgreece45.marvelx.domain.interactors.ComicInteractor
+import com.alexgreece45.marvelx.domain.interactors.ComicInteractorImpl
+import com.alexgreece45.marvelx.domain.interactors.ForgotPasswordInteractor
+import com.alexgreece45.marvelx.domain.interactors.ForgotPasswordInteractorImpl
+import com.alexgreece45.marvelx.domain.interactors.LoginInteractor
+import com.alexgreece45.marvelx.domain.interactors.LoginInteractorImpl
+import com.alexgreece45.marvelx.domain.interactors.OtpInteractor
+import com.alexgreece45.marvelx.domain.interactors.OtpInteractorImpl
+import com.alexgreece45.marvelx.domain.interactors.RegisterInteractor
+import com.alexgreece45.marvelx.domain.interactors.RegisterInteractorImpl
+import com.alexgreece45.marvelx.domain.interactors.SplashInteractor
+import com.alexgreece45.marvelx.domain.interactors.SplashInteractorImpl
+import com.alexgreece45.marvelx.domain.interactors.UserInteractor
+import com.alexgreece45.marvelx.domain.interactors.UserInteractorImpl
 import com.alexgreece45.marvelx.repository.ChangePasswordRepository
 import com.alexgreece45.marvelx.repository.ChangePasswordRepositoryImpl
 import com.alexgreece45.marvelx.repository.CharacterRepository
@@ -70,23 +77,22 @@ import com.alexgreece45.marvelx.util.FormValidator
 import com.alexgreece45.marvelx.util.FormValidatorImpl
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.ResourceProviderImpl
-import com.alexgreece45.marvelx.util.interceptors.BaseUrlChangerAndAuthenticationInterceptor
-import com.alexgreece45.marvelx.viewModels.ActivityViewModel
-import com.alexgreece45.marvelx.viewModels.AllCharacterComicsViewModel
-import com.alexgreece45.marvelx.viewModels.AllCharactersViewModel
-import com.alexgreece45.marvelx.viewModels.AllFavoriteCharactersViewModel
-import com.alexgreece45.marvelx.viewModels.ChangePasswordViewModel
-import com.alexgreece45.marvelx.viewModels.CharacterViewModel
-import com.alexgreece45.marvelx.viewModels.ComicViewModel
-import com.alexgreece45.marvelx.viewModels.ForgotPasswordValidateEmailViewModel
-import com.alexgreece45.marvelx.viewModels.ForgotPasswordViewModel
-import com.alexgreece45.marvelx.viewModels.HomeViewModel
-import com.alexgreece45.marvelx.viewModels.LoginViewModel
-import com.alexgreece45.marvelx.viewModels.OtpViewModel
-import com.alexgreece45.marvelx.viewModels.ProfileViewModel
-import com.alexgreece45.marvelx.viewModels.SignupViewModel
-import com.alexgreece45.marvelx.viewModels.SplashViewModel
-import com.alexgreece45.marvelx.viewModels.introLoading.IntroLoadingViewModel
+import com.alexgreece45.marvelx.ui.screens.character.CharacterViewModel
+import com.alexgreece45.marvelx.ui.screens.forgotPasswordScreen.forgotPasswordValidateEmailScreen.ForgotPasswordValidateEmailViewModel
+import com.alexgreece45.marvelx.ui.screens.forgotPasswordScreen.ForgotPasswordViewModel
+import com.alexgreece45.marvelx.ui.screens.introLoading.IntroLoadingViewModel
+import com.alexgreece45.marvelx.ui.screens.login.LoginViewModel
+import com.alexgreece45.marvelx.ui.screens.otp.OtpViewModel
+import com.alexgreece45.marvelx.ui.screens.profile.ProfileViewModel
+import com.alexgreece45.marvelx.ui.screens.signup.SignupViewModel
+import com.alexgreece45.marvelx.ui.screens.splash.SplashViewModel
+import com.alexgreece45.marvelx.ui.screens.character.allCharacterComicsScreen.AllCharacterComicsViewModel
+import com.alexgreece45.marvelx.ui.screens.allCharacters.AllCharactersViewModel
+import com.alexgreece45.marvelx.ui.screens.allFavoriteCharacters.AllFavoriteCharactersViewModel
+import com.alexgreece45.marvelx.ui.screens.changePassword.ChangePasswordViewModel
+import com.alexgreece45.marvelx.ui.screens.comic.ComicViewModel
+import com.alexgreece45.marvelx.ui.screens.home.HomeViewModel
+import com.alexgreece45.marvelx.ui.screens.mainActivity.ActivityViewModel
 import com.alexgreece45.marvelx.worker.RefreshTokenWorker
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
@@ -100,7 +106,7 @@ import retrofit2.Retrofit
 
 /**
  * Initializes a Koin application with the given [marvelXApplication] as the Android Context used
- * for injection purposes, and all the necessary [Module]s.
+ * for injection purposes, and also provides all the necessary [Module]s.
  */
 fun initKoin(marvelXApplication: MarvelXApplication) {
     startKoin {
@@ -147,11 +153,17 @@ private val databaseModule = module {
 }
 
 private val interceptorModule = module {
-    single<BaseUrlChangerAndAuthenticationInterceptor> {
-        BaseUrlChangerAndAuthenticationInterceptor(
+    single<ApiInterceptor> {
+        ApiInterceptor(
+            get(),
+            get(),
             get(),
             get()
         )
+    }
+
+    single<WebsocketInterceptor> {
+        WebsocketInterceptor(get())
     }
 }
 
@@ -196,13 +208,14 @@ private val interactorModule = module {
     factory<ForgotPasswordInteractor> { ForgotPasswordInteractorImpl(get(), get()) }
     factory<ChangePasswordInteractor> { ChangePasswordInteractorImpl() }
     factory<OtpInteractor> { OtpInteractorImpl(get(), get(), get()) }
-    factory<RegisterInteractor> { RegisterInteractorImpl(get(), get(), get(), get()) }
+    factory<RegisterInteractor> { RegisterInteractorImpl(get(), get(), get()) }
     factory<SplashInteractor> { SplashInteractorImpl(get()) }
 }
 
 private val controllerModule = module {
     single<PreferencesController> { PreferencesControllerImpl(get()) }
     single<PrefKeys> { PrefKeysImpl(get(), get()) }
+    single<CryptoController> { CryptoControllerImpl(get(), get(), get()) }
     single<AuthController> { AuthControllerImpl(get(), get()) }
     single<RefreshTokenController> { RefreshTokenControllerImpl(get(), get(), get()) }
     single<TimerController> { TimerControllerImpl() }
@@ -222,19 +235,20 @@ private val resourceProviderModule = module {
 
 private val configModule = module {
     single<ConfigLogic> { ConfigLogicImpl() }
+    single<ConfigSecurityLogic> { ConfigSecurityLogicImpl() }
 }
 
 private val viewModelModule = module {
     viewModel { ActivityViewModel() }
 
     viewModel { SplashViewModel(get(), get()) }
-    viewModel { IntroLoadingViewModel(get(), get(), get(), get(), get(), get()) }
+    viewModel { IntroLoadingViewModel(get(), get(), get(), get(), get(), get(), get()) }
 
     viewModel { HomeViewModel(get()) }
     viewModel { LoginViewModel(get(), get(), get(), get()) }
-    viewModel { SignupViewModel(get(), get(), get(), get()) }
+    viewModel { SignupViewModel(get(), get(), get(), get(), get(), get(), get()) }
 
-    viewModel { OtpViewModel(get(), get(), get(), get(), get(), get(), get()) }
+    viewModel { OtpViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
 
     viewModel { ForgotPasswordValidateEmailViewModel(get()) }
     viewModel { ForgotPasswordViewModel(get(), get(), get(), get()) }

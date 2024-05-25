@@ -4,7 +4,13 @@ import android.content.SharedPreferences
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKeys
 import com.alexgreece45.marvelx.BuildConfig
+import com.alexgreece45.marvelx.util.constants.ConstantsPrefs
+import com.alexgreece45.marvelx.domain.models_api.user.postLogin.SignData
 import com.alexgreece45.marvelx.util.ResourceProvider
+import com.google.gson.Gson
+import com.google.gson.JsonSyntaxException
+import java.time.Instant
+import java.time.format.DateTimeParseException
 
 interface PreferencesController {
     /**
@@ -139,6 +145,16 @@ interface PrefKeys {
      * ### Note: This operation is irreversible, and it MUST be used with caution.
      * */
     fun removeUserAuthData()
+
+    /**
+     * Auto logout timestamp.
+     */
+    var autoLogoutTimestamp: Instant?
+
+    /**
+     * Signing data for requests.
+     */
+    var signData: SignData?
 }
 
 class PrefKeysImpl(
@@ -188,4 +204,42 @@ class PrefKeysImpl(
 
     override fun removeUserAuthData() =
         preferencesController.remove("UserAuthData")
+
+    override var autoLogoutTimestamp: Instant?
+        get() = try {
+            Instant.parse(
+                preferencesController.getString(
+                    ConstantsPrefs.AUTO_LOGOUT_TIMESTAMP,
+                    null.toString()
+                )
+            )
+        } catch (e: DateTimeParseException) {
+            logger.e("PrefKeys") { "Auto logout timestamp is null." }
+            null
+        }
+        set(value) {
+            if (value == null) preferencesController.remove(ConstantsPrefs.AUTO_LOGOUT_TIMESTAMP)
+            else preferencesController.setString(
+                ConstantsPrefs.AUTO_LOGOUT_TIMESTAMP,
+                Gson().toJson(value.toString()).replace("\"", "")
+            )
+        }
+
+    override var signData: SignData?
+        get() = try {
+            Gson().fromJson(
+                preferencesController.getString(ConstantsPrefs.SIGN_DATA, null.toString()),
+                SignData::class.java
+            )
+        } catch (e: JsonSyntaxException) {
+            logger.e("PreferencesController") { "Sign data is null." }
+            null
+        }
+        set(value) {
+            if (value == null) preferencesController.remove(ConstantsPrefs.SIGN_DATA)
+            else preferencesController.setString(
+                ConstantsPrefs.SIGN_DATA,
+                Gson().toJson(value)
+            )
+        }
 }

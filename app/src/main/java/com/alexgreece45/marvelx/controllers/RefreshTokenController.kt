@@ -12,8 +12,14 @@ import com.alexgreece45.marvelx.worker.RefreshTokenWorker
 import java.util.concurrent.TimeUnit
 
 interface RefreshTokenController {
+    /**
+     * Starts the refresh token worker.
+     */
     fun startWorker()
 
+    /**
+     * Stops the refresh token worker.
+     */
     fun stopWorker()
 }
 
