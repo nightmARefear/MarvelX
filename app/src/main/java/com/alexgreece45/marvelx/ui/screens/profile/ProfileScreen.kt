@@ -29,9 +29,6 @@ import com.alexgreece45.marvelx.ui.components.ContentErrorScreen
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.VSpacer
-import com.alexgreece45.marvelx.viewModels.ProfileEffect
-import com.alexgreece45.marvelx.viewModels.ProfileEvent
-import com.alexgreece45.marvelx.viewModels.ProfileViewModel
 import org.koin.androidx.compose.koinViewModel
 
 @Composable

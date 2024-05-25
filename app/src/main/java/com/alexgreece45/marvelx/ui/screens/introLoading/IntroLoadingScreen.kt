@@ -18,9 +18,7 @@ import com.alexgreece45.marvelx.ui.navigation.NavArgHelper
 import com.alexgreece45.marvelx.ui.navigation.Screen
 import com.alexgreece45.marvelx.ui.navigation.models.NavArg
 import com.alexgreece45.marvelx.util.extensions.popUpToTop
-import com.alexgreece45.marvelx.viewModels.IntroLoadingContract
-import com.alexgreece45.marvelx.viewModels.IntroLoadingViewModel
-import com.alexgreece45.marvelx.viewModels.home.models.HomeAlertDialogErrorType
+import com.alexgreece45.marvelx.ui.screens.home.models.HomeAlertDialogErrorType
 import org.koin.androidx.compose.koinViewModel
 
 @Composable

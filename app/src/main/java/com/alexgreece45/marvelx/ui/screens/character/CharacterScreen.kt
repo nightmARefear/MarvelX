@@ -53,9 +53,6 @@ import com.alexgreece45.marvelx.ui.navigation.Screen
 import com.alexgreece45.marvelx.util.IMAGE_BORDER_WIDTH
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.VSpacer
-import com.alexgreece45.marvelx.viewModels.CharacterEffect
-import com.alexgreece45.marvelx.viewModels.CharacterEvent
-import com.alexgreece45.marvelx.viewModels.CharacterViewModel
 import org.koin.androidx.compose.koinViewModel
 
 @Composable

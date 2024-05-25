@@ -16,19 +16,24 @@ import com.alexgreece45.marvelx.ui.screens.changePassword.ChangePasswordScreen
 import com.alexgreece45.marvelx.ui.screens.character.CharacterScreen
 import com.alexgreece45.marvelx.ui.screens.character.allCharacterComicsScreen.AllCharacterComicsScreen
 import com.alexgreece45.marvelx.ui.screens.comic.ComicScreen
+import com.alexgreece45.marvelx.ui.screens.home.HomeScreen
 import com.alexgreece45.marvelx.ui.screens.introLoading.IntroLoadingScreen
+import com.alexgreece45.marvelx.ui.screens.login.LoginScreen
+import com.alexgreece45.marvelx.ui.screens.forgotPasswordScreen.ForgotPasswordScreen
+import com.alexgreece45.marvelx.ui.screens.forgotPasswordScreen.forgotPasswordValidateEmailScreen.ForgotPasswordValidateEmailScreen
 import com.alexgreece45.marvelx.ui.screens.otp.OtpScreen
 import com.alexgreece45.marvelx.ui.screens.profile.ProfileScreen
-import com.alexgreece45.marvelx.ui.screens.home.HomeScreen
-import com.alexgreece45.marvelx.ui.screens.login.LoginScreen
-import com.alexgreece45.marvelx.ui.screens.login.forgotPasswordScreen.ForgotPasswordScreen
-import com.alexgreece45.marvelx.ui.screens.login.forgotPasswordScreen.forgotPasswordValidateEmailScreen.ForgotPasswordValidateEmailScreen
 import com.alexgreece45.marvelx.ui.screens.signup.SignUpScreen
 import com.alexgreece45.marvelx.ui.screens.splash.SplashScreen
 import com.alexgreece45.marvelx.util.SPACING_MEDIUM
 import com.alexgreece45.marvelx.util.extensions.composable
 import com.alexgreece45.marvelx.util.extensions.popUpToTop
 
+/**
+ * Generates the `NavHost` of this application by providing all the necessary routes / screens.
+ *
+ * @param navController The root [NavHostController] to be used by the `NavHost`.
+ */
 @Composable
 fun NavGraph(navController: NavHostController) {
     NavHost(
@@ -37,7 +42,18 @@ fun NavGraph(navController: NavHostController) {
     ) {
         // Register screens.
         composable(Screen.SplashScreen) {
-            SplashScreen(navController = navController)
+            SplashScreen(
+                popUpToHomeScreen = {
+                    navController.navigate(Screen.HomeScreen.route) {
+                        popUpToTop(navController)
+                    }
+                },
+                popUpToIntroLoadingScreen = {
+                    navController.navigate(Screen.IntroLoadingScreen.route) {
+                        popUpToTop(navController)
+                    }
+                }
+            )
         }
 
         composable(Screen.IntroLoadingScreen) {

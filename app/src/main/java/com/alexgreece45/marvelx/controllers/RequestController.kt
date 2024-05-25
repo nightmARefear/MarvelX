@@ -26,19 +26,17 @@ class RequestControllerImpl(
         val nonce = UUID.randomUUID()
         val timestamp = DateUtil.getSecondsFromEpoch()
 
-        var xAuthSignature = ""
-        prefKeys.signData?.let { signData ->
-            xAuthSignature = cryptoController.createSessionSignature(
+        val xAuthSignature = prefKeys.signData?.let { signData ->
+            cryptoController.createSessionSignature(
                 requestMethod = request.method,
                 requestUrl = request.url.host,
                 requestBody = request.body.toJsonString(),
                 requestHeaders = request.headers,
                 nonce = nonce,
                 timestamp = timestamp,
-                key = signData.key,
-                algorithm = signData.algorithm
+                signData = signData
             )
-        }
+        }.orEmpty()
 
         logger.d("RequestController") { "(createSessionSignature) xAuthSignature: $xAuthSignature" }
 

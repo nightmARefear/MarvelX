@@ -66,9 +66,6 @@ import com.alexgreece45.marvelx.ui.screens.allCharacters.uiModels.CharacterCardU
 import com.alexgreece45.marvelx.util.DEFAULT_SCREEN_PADDING
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.SPACING_TINY
-import com.alexgreece45.marvelx.viewModels.AllCharactersEffect
-import com.alexgreece45.marvelx.viewModels.AllCharactersEvent
-import com.alexgreece45.marvelx.viewModels.AllCharactersViewModel
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 

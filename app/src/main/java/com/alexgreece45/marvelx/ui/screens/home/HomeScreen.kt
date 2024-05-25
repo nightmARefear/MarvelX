@@ -27,9 +27,6 @@ import com.alexgreece45.marvelx.ui.components.effect.OneTimeLaunchedEffect
 import com.alexgreece45.marvelx.ui.navigation.Screen
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.extensions.popUpToTop
-import com.alexgreece45.marvelx.viewModels.home.HomeEffect
-import com.alexgreece45.marvelx.viewModels.home.HomeEvent
-import com.alexgreece45.marvelx.viewModels.home.HomeViewModel
 import org.koin.androidx.compose.koinViewModel
 
 @Composable

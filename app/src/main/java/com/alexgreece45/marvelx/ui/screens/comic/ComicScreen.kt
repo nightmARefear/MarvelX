@@ -29,8 +29,6 @@ import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
 import com.alexgreece45.marvelx.util.HSpacer
 import com.alexgreece45.marvelx.util.SPACING_TINY
 import com.alexgreece45.marvelx.util.VSpacer
-import com.alexgreece45.marvelx.viewModels.ComicEvent
-import com.alexgreece45.marvelx.viewModels.ComicViewModel
 import org.koin.androidx.compose.koinViewModel
 
 @Composable

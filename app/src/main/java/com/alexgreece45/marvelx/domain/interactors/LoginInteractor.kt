@@ -27,6 +27,10 @@ import kotlinx.coroutines.flow.flow
 import okio.IOException
 
 interface LoginInteractor {
+    /**
+     * The logout call. It performs all the necessary operations to wipe the local data, and to
+     * close the websocket connection, and much more.
+     */
     suspend fun logout(): Flow<LogoutPartialState>
 
     /**
@@ -64,6 +68,9 @@ class LoginInteractorImpl(
 
         // Disable remember user session functionality.
         prefKeys.setRememberUserSession(false)
+
+        // Remove signing data.
+        prefKeys.signData = null
 
         // Remove auto-logout timestamp.
         prefKeys.autoLogoutTimestamp = null
@@ -120,7 +127,8 @@ class LoginInteractorImpl(
                 is PostLoginRepositoryResponse.Success -> {
                     it.response?.sign?.let { sign ->
                         if (sign.key == null || sign.algorithm == null) {
-                            return@collect emit(PostLoginPartialState.Failed(genericErrorMessage))
+                            emit(PostLoginPartialState.Failed(genericErrorMessage))
+                            return@collect
                         }
 
                         prefKeys.signData = SignData(

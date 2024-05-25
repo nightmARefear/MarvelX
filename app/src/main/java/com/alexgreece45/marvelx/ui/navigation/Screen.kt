@@ -17,7 +17,7 @@ sealed class Screen(
 ) {
     /**
      * The route of the screen with the navigation arguments included.
-     * */
+     */
     val route: String
         get() = listOf(baseRoute)
             .plus(navArgs.map { "{${it.key}}" })
@@ -34,6 +34,9 @@ sealed class Screen(
     }
 
     companion object {
+        /**
+         * Returns the start destination of the root nav graph.
+         */
         fun getStartDestination(): String = SplashScreen.route
 
         /**
@@ -156,8 +159,8 @@ sealed class Screen(
 /**
  * A single navigation item that acts as a navigation parameter.
  *
- * @param key           The name of this item.
- * @param type          The type of this item.
+ * @param key   The name of this item.
+ * @param type  The type of this item.
  */
 enum class NavItem(val key: String, val type: NavType<*>) {
     CharacterId(key = "characterId", type = NavType.IntType),
@@ -169,5 +172,4 @@ enum class NavItem(val key: String, val type: NavType<*>) {
     ShouldRememberUserSession(key = "shouldRememberUserSession", type = NavType.BoolType),
     RequestIdEmail(key = "requestIdEmail", type = NavType.StringType),
     RequestIdPhoneNumber(key = "requestIdPhoneNumber", type = NavType.StringType),
-    IsApplicationInsecure(key = "isApplicationInsecure", type = NavType.BoolType),
 }

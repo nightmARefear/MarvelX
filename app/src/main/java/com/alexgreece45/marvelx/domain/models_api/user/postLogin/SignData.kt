@@ -5,8 +5,9 @@ import com.alexgreece45.marvelx.data.models_api.user.postLogin.Sign
 /**
  * The signing data domain.
  *
- * @param key       The signing key. It is a X.509 Certificate.
- * @param algorithm The signing algorithm (e.g., `HmacSHA256`).
+ * @param key       The signing key. The [String] representation of a `X.509` certificate.
+ * @param algorithm The signing algorithm. The [String] representation of a hashing algorithm such
+ * as `HmacSHA256`.
  */
 data class SignData(
     val key: String,

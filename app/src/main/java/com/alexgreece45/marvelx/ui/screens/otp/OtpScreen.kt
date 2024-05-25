@@ -37,9 +37,6 @@ import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.SPACING_TINY
 import com.alexgreece45.marvelx.util.VSpacer
 import com.alexgreece45.marvelx.util.extensions.popUpToTop
-import com.alexgreece45.marvelx.viewModels.OtpEffect
-import com.alexgreece45.marvelx.viewModels.OtpEvent
-import com.alexgreece45.marvelx.viewModels.OtpViewModel
 import org.koin.androidx.compose.koinViewModel
 
 /**

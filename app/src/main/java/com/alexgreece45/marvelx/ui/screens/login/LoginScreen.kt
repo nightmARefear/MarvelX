@@ -54,9 +54,6 @@ import com.alexgreece45.marvelx.util.VSpacer
 import com.alexgreece45.marvelx.util.extensions.autofill
 import com.alexgreece45.marvelx.util.extensions.clickableNoRipple
 import com.alexgreece45.marvelx.util.extensions.popUpToTop
-import com.alexgreece45.marvelx.viewModels.LoginEffect
-import com.alexgreece45.marvelx.viewModels.LoginEvent
-import com.alexgreece45.marvelx.viewModels.LoginViewModel
 import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalComposeUiApi::class)

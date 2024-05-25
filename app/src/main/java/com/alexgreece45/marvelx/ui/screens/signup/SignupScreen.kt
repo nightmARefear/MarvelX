@@ -47,9 +47,6 @@ import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.VSpacer
 import com.alexgreece45.marvelx.util.extensions.autofill
 import com.alexgreece45.marvelx.util.extensions.popUpToTop
-import com.alexgreece45.marvelx.viewModels.SignupEffect
-import com.alexgreece45.marvelx.viewModels.SignupEvent
-import com.alexgreece45.marvelx.viewModels.SignupViewModel
 import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalComposeUiApi::class)

@@ -48,9 +48,6 @@ import com.alexgreece45.marvelx.util.DEFAULT_SCREEN_PADDING
 import com.alexgreece45.marvelx.util.HSpacer
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.VSpacer
-import com.alexgreece45.marvelx.viewModels.AllCharacterComicsEffect
-import com.alexgreece45.marvelx.viewModels.AllCharacterComicsEvent
-import com.alexgreece45.marvelx.viewModels.AllCharacterComicsViewModel
 import kotlinx.coroutines.coroutineScope
 import org.koin.androidx.compose.koinViewModel
 

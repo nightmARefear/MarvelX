@@ -140,6 +140,6 @@ dependencies {
 
     // Koin.
     implementation(platform(libs.koin.bom))
-    implementation(libs.bundles.koin)
+    implementation(libs.bundles.koin.implementation)
     testImplementation(libs.bundles.koin.test.implementation)
 }

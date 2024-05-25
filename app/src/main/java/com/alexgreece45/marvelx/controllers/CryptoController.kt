@@ -1,7 +1,8 @@
 package com.alexgreece45.marvelx.controllers
 
 import com.alexgreece45.marvelx.configuration.ConfigLogic
-import com.alexgreece45.marvelx.util.constants.ConstantsSecurity
+import com.alexgreece45.marvelx.configuration.ConfigSecurityLogic
+import com.alexgreece45.marvelx.domain.models_api.user.postLogin.SignData
 import okhttp3.Headers
 import java.nio.charset.StandardCharsets
 import java.util.UUID
@@ -14,7 +15,20 @@ import javax.crypto.spec.SecretKeySpec
  */
 interface CryptoController {
     /**
-     * Creates a session signature.
+     * Creates the session signature for API calls. The given parameters correspond to a single
+     * request.
+     *
+     * @param requestMethod     The method of this request.
+     * @param requestUrl        The URL of this request as a [String].
+     * @param requestBody       The body of this request.
+     * @param requestHeaders    The headers of this request as [Headers].
+     * @param nonce             The nonce to be used. It's a [UUID] that has been randomly generated.
+     * @param timestamp         The timestamp to be used. It's a [Long] that represents the current
+     * timestamp.
+     * @param signData          The signing data to be used. It contains the key and the signature.
+     *
+     * @return                  The generated session signature, or an empty [String] if its
+     * generation was unsuccessful.
      */
     fun createSessionSignature(
         requestMethod: String,
@@ -23,13 +37,14 @@ interface CryptoController {
         requestHeaders: Headers,
         nonce: UUID,
         timestamp: Long,
-        key: String,
-        algorithm: String
+        signData: SignData
     ): String
 }
 
 class CryptoControllerImpl(
-    private val configLogic: ConfigLogic
+    private val appLogger: AppLoggerController,
+    private val configLogic: ConfigLogic,
+    private val configSecurityLogic: ConfigSecurityLogic
 ) : CryptoController {
     override fun createSessionSignature(
         requestMethod: String,
@@ -38,8 +53,7 @@ class CryptoControllerImpl(
         requestHeaders: Headers,
         nonce: UUID,
         timestamp: Long,
-        key: String,
-        algorithm: String
+        signData: SignData
     ): String {
         val pathAndParameters = requestUrl.replace(configLogic.serverUrl, "").replace("/", ":")
         if (pathAndParameters.startsWith(":")) {
@@ -49,7 +63,7 @@ class CryptoControllerImpl(
         val headerSeparator = "\n"
         var headers = requestHeaders.toMultimap().toList()
             .joinToString(separator = headerSeparator) { header ->
-                if (header.first in listOf(ConstantsSecurity.HeaderName.UserAgent.name.lowercase())) {
+                if (header.first in configSecurityLogic.sessionSignatureHeaders) {
                     header.first + ":" + header.second.first()
                 } else {
                     ""
@@ -68,13 +82,12 @@ class CryptoControllerImpl(
             headers,
             nonce,
             timestamp
-        ).joinToString {
-            payloadSeparator
-        }
+        ).joinToString(payloadSeparator)
 
         return try {
-            val mac = Mac.getInstance(algorithm)
-            val keySpec = SecretKeySpec(key.toByteArray(StandardCharsets.UTF_8), algorithm)
+            val mac = Mac.getInstance(signData.algorithm)
+            val keySpec =
+                SecretKeySpec(signData.key.toByteArray(StandardCharsets.UTF_8), signData.algorithm)
             mac.init(keySpec)
             val signature = android.util.Base64.encodeToString(
                 mac.doFinal(payload.toByteArray(StandardCharsets.UTF_8)),
@@ -83,8 +96,8 @@ class CryptoControllerImpl(
 //		  keySpec.destroy()
             signature
         } catch (e: Exception) {
+            appLogger.e("CryptoController") { "(createSessionSignature) e: $e" }
             ""
         }
     }
-
 }

@@ -17,7 +17,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavController
 import coil.ImageLoader
 import coil.compose.rememberAsyncImagePainter
 import coil.decode.GifDecoder
@@ -27,15 +26,12 @@ import com.alexgreece45.marvelx.ui.components.AlertDialogButton
 import com.alexgreece45.marvelx.ui.components.AlertDialogError
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.effect.OneTimeLaunchedEffect
-import com.alexgreece45.marvelx.ui.navigation.Screen
-import com.alexgreece45.marvelx.util.extensions.popUpToTop
-import com.alexgreece45.marvelx.viewModels.SplashContract
-import com.alexgreece45.marvelx.viewModels.SplashViewModel
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun SplashScreen(
-    navController: NavController,
+    popUpToHomeScreen: () -> Unit,
+    popUpToIntroLoadingScreen: () -> Unit,
     viewModel: SplashViewModel = koinViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -49,9 +45,7 @@ fun SplashScreen(
         viewModel.uiEffect.collect { effect ->
             when (effect) {
                 SplashContract.Effect.Navigation.NavigateToHomeScreen -> {
-                    navController.navigate(Screen.HomeScreen.route) {
-                        popUpToTop(navController)
-                    }
+                    popUpToHomeScreen()
                 }
 
                 SplashContract.Effect.Navigation.CloseApplication -> {
@@ -59,9 +53,7 @@ fun SplashScreen(
                 }
 
                 SplashContract.Effect.Navigation.NavigateToIntroLoadingScreen -> {
-                    navController.navigate(Screen.IntroLoadingScreen.route) {
-                        popUpToTop(navController)
-                    }
+                    popUpToIntroLoadingScreen()
                 }
             }
         }

@@ -48,7 +48,7 @@ class RouterHostImpl : RouterHost {
     override val flowStarted: Boolean get() = _flowStarted
 
     /**
-     * The root nav controller of this application.
+     * The root [NavHostController] of this application.
      */
     private lateinit var navController: NavHostController
 

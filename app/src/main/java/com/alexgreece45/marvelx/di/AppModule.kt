@@ -8,6 +8,8 @@ import com.alexgreece45.marvelx.RefreshTokenWorkerFactory
 import com.alexgreece45.marvelx.configuration.AppBuildType
 import com.alexgreece45.marvelx.configuration.ConfigLogic
 import com.alexgreece45.marvelx.configuration.ConfigLogicImpl
+import com.alexgreece45.marvelx.configuration.ConfigSecurityLogic
+import com.alexgreece45.marvelx.configuration.ConfigSecurityLogicImpl
 import com.alexgreece45.marvelx.controllers.AppLoggerController
 import com.alexgreece45.marvelx.controllers.AppLoggerControllerImpl
 import com.alexgreece45.marvelx.controllers.ApplicationPackageController
@@ -75,22 +77,22 @@ import com.alexgreece45.marvelx.util.FormValidator
 import com.alexgreece45.marvelx.util.FormValidatorImpl
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.ResourceProviderImpl
-import com.alexgreece45.marvelx.viewModels.AllCharacterComicsViewModel
-import com.alexgreece45.marvelx.viewModels.AllCharactersViewModel
-import com.alexgreece45.marvelx.viewModels.AllFavoriteCharactersViewModel
-import com.alexgreece45.marvelx.viewModels.ChangePasswordViewModel
-import com.alexgreece45.marvelx.viewModels.CharacterViewModel
-import com.alexgreece45.marvelx.viewModels.ComicViewModel
-import com.alexgreece45.marvelx.viewModels.ForgotPasswordValidateEmailViewModel
-import com.alexgreece45.marvelx.viewModels.ForgotPasswordViewModel
-import com.alexgreece45.marvelx.viewModels.IntroLoadingViewModel
-import com.alexgreece45.marvelx.viewModels.LoginViewModel
-import com.alexgreece45.marvelx.viewModels.OtpViewModel
-import com.alexgreece45.marvelx.viewModels.ProfileViewModel
-import com.alexgreece45.marvelx.viewModels.SignupViewModel
-import com.alexgreece45.marvelx.viewModels.SplashViewModel
-import com.alexgreece45.marvelx.viewModels.home.HomeViewModel
-import com.alexgreece45.marvelx.viewModels.mainActivity.ActivityViewModel
+import com.alexgreece45.marvelx.ui.screens.character.CharacterViewModel
+import com.alexgreece45.marvelx.ui.screens.forgotPasswordScreen.forgotPasswordValidateEmailScreen.ForgotPasswordValidateEmailViewModel
+import com.alexgreece45.marvelx.ui.screens.forgotPasswordScreen.ForgotPasswordViewModel
+import com.alexgreece45.marvelx.ui.screens.introLoading.IntroLoadingViewModel
+import com.alexgreece45.marvelx.ui.screens.login.LoginViewModel
+import com.alexgreece45.marvelx.ui.screens.otp.OtpViewModel
+import com.alexgreece45.marvelx.ui.screens.profile.ProfileViewModel
+import com.alexgreece45.marvelx.ui.screens.signup.SignupViewModel
+import com.alexgreece45.marvelx.ui.screens.splash.SplashViewModel
+import com.alexgreece45.marvelx.ui.screens.character.allCharacterComicsScreen.AllCharacterComicsViewModel
+import com.alexgreece45.marvelx.ui.screens.allCharacters.AllCharactersViewModel
+import com.alexgreece45.marvelx.ui.screens.allFavoriteCharacters.AllFavoriteCharactersViewModel
+import com.alexgreece45.marvelx.ui.screens.changePassword.ChangePasswordViewModel
+import com.alexgreece45.marvelx.ui.screens.comic.ComicViewModel
+import com.alexgreece45.marvelx.ui.screens.home.HomeViewModel
+import com.alexgreece45.marvelx.ui.screens.mainActivity.ActivityViewModel
 import com.alexgreece45.marvelx.worker.RefreshTokenWorker
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
@@ -104,7 +106,7 @@ import retrofit2.Retrofit
 
 /**
  * Initializes a Koin application with the given [marvelXApplication] as the Android Context used
- * for injection purposes, and all the necessary [Module]s.
+ * for injection purposes, and also provides all the necessary [Module]s.
  */
 fun initKoin(marvelXApplication: MarvelXApplication) {
     startKoin {
@@ -213,7 +215,7 @@ private val interactorModule = module {
 private val controllerModule = module {
     single<PreferencesController> { PreferencesControllerImpl(get()) }
     single<PrefKeys> { PrefKeysImpl(get(), get()) }
-    single<CryptoController> { CryptoControllerImpl(get()) }
+    single<CryptoController> { CryptoControllerImpl(get(), get(), get()) }
     single<AuthController> { AuthControllerImpl(get(), get()) }
     single<RefreshTokenController> { RefreshTokenControllerImpl(get(), get(), get()) }
     single<TimerController> { TimerControllerImpl() }
@@ -233,6 +235,7 @@ private val resourceProviderModule = module {
 
 private val configModule = module {
     single<ConfigLogic> { ConfigLogicImpl() }
+    single<ConfigSecurityLogic> { ConfigSecurityLogicImpl() }
 }
 
 private val viewModelModule = module {

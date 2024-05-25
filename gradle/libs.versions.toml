@@ -148,7 +148,7 @@ coil = [
     "coil-gif"
 ]
 
-koin = [
+koin-implementation = [
     "koin-core",
     "koin-androidx-compose",
     "koin-androidx-navigation",
