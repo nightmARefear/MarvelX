@@ -104,7 +104,11 @@ class ActivityViewModel : BaseViewModel<ActivityEvent, ActivityState, ActivityEf
             ActivityEvent.LifecycleEvent.OnResume -> {
                 if (prefKeys.isUserLoggedIn()) {
                     when (prefKeys.shouldRememberUserSession()) {
-                        false -> onLogoutUser()
+                        false -> {
+                            if (securityController.isAutoLogoutEnabled()) {
+                                onLogoutUser()
+                            }
+                        }
 
                         true -> performAutoLogoutOperations()
                     }

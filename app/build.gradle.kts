@@ -91,13 +91,20 @@ android {
     }
 
     packaging {
-        resources.excludes.add(
-            "/META-INF/{AL2.0,LGPL2.1}"
+        resources.excludes.addAll(
+            listOf(
+                "/META-INF/{AL2.0,LGPL2.1}",
+                "DebugProbes.kt"
+            )
         )
 
         dex {
             useLegacyPackaging = false
         }
+    }
+
+    sourceSets.all {
+        kotlin.srcDir("build/generated/ksp/$name/kotlin")
     }
 }
 
@@ -141,5 +148,6 @@ dependencies {
     // Koin.
     implementation(platform(libs.koin.bom))
     implementation(libs.bundles.koin.implementation)
+    ksp(libs.koin.ksp.compiler)
     testImplementation(libs.bundles.koin.test.implementation)
 }

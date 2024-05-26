@@ -52,7 +52,7 @@ class RefreshTokenWorker(
                                         )
                                     )
 
-                                    logger.i { "Access token was successfully refreshed." }
+                                    logger.d("RefreshTokenWorker") { "Access token was successfully refreshed." }
                                     Result.success()
                                 } ?: failure("Refresh access token body is null.")
                             } else {
@@ -72,7 +72,7 @@ class RefreshTokenWorker(
     }
 
     private fun failure(errorMessage: String): Result {
-        logger.e { "(RefreshTokenWorker#doWork) error message: $errorMessage" }
+        logger.e("RefreshTokenWorker") { "(RefreshTokenWorker#doWork) error message: $errorMessage" }
         return Result.failure()
     }
 }

@@ -2,7 +2,7 @@ package com.alexgreece45.marvelx.ui.screens.allCharacters
 
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.database.FavoriteCharacterEntity
+import com.alexgreece45.marvelx.data.database.FavoriteCharacterEntity
 import com.alexgreece45.marvelx.domain.interactors.CharacterInteractor
 import com.alexgreece45.marvelx.domain.interactors.DeleteFavoriteCharacterByIdPartialState
 import com.alexgreece45.marvelx.domain.interactors.GetAllCharactersPartialState

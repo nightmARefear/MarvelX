@@ -1,8 +1,10 @@
 package com.alexgreece45.marvelx.configuration
 
 import com.alexgreece45.marvelx.BuildConfig
+import com.alexgreece45.marvelx.configuration.models.MarvelApiConfig
 import com.alexgreece45.marvelx.util.constants.ConstantsSecurity
-import okhttp3.WebSocketListener
+import com.alexgreece45.marvelx.util.extensions.getPortFromUrl
+import com.alexgreece45.marvelx.util.extensions.getSchemeFromUrl
 
 interface ConfigLogic {
     /**
@@ -49,6 +51,11 @@ interface ConfigLogic {
      * The websocket URL.
      */
     val websocketUrl: String
+
+    /**
+     * The network config for the Marvel API.
+     */
+    val marvelApiConfig: MarvelApiConfig
 
     /**
      * Defines whether screen capturing is blocked. It has a default value of `false`.
@@ -110,17 +117,23 @@ class ConfigLogicImpl : ConfigLogic {
     override val refreshTokenInterval: Long get() = 15L
     override val uri: String get() = ConstantsSecurity.OAuth.TOKEN_REDIRECT_URI
     override val scheme: String
-        get() =
-            if (BuildConfig.MARVELX_BACKEND_BASE_URL.startsWith("https")) "https" else "http"
+        get() = BuildConfig.MARVELX_BACKEND_BASE_URL.getSchemeFromUrl()
     override val host: String get() = BuildConfig.MARVELX_BACKEND_DOMAIN
     override val port: Int
-        get() =
-            BuildConfig.MARVELX_BACKEND_BASE_URL.split(":").last().toInt()
+        get() = BuildConfig.MARVELX_BACKEND_BASE_URL.getPortFromUrl()
+
     override val serverUrl: String
         get() = BuildConfig.MARVELX_BACKEND_BASE_URL
 
     override val websocketUrl: String
         get() = BuildConfig.MARVELX_BACKEND_WEBSOCKET_BASE_URL
+
+    override val marvelApiConfig: MarvelApiConfig
+        get() = MarvelApiConfig(
+            scheme = BuildConfig.MARVEL_API_BASE_URL.getSchemeFromUrl(),
+            host = BuildConfig.MARVEL_API_DOMAIN,
+            endpointPrefix = BuildConfig.MARVEL_API_ENDPOINT_PREFIX
+        )
 
     override val isAutoLogoutEnabled: Boolean
         get() = false

@@ -5,11 +5,17 @@ import com.alexgreece45.marvelx.BuildConfig
 import com.alexgreece45.marvelx.configuration.AppBuildType
 import com.alexgreece45.marvelx.configuration.ConfigLogic
 import com.alexgreece45.marvelx.controllers.AppLoggerController
+import com.alexgreece45.marvelx.controllers.AuthController
+import com.alexgreece45.marvelx.controllers.CryptoController
+import com.alexgreece45.marvelx.controllers.PrefKeys
 import com.alexgreece45.marvelx.controllers.RequestController
 import com.alexgreece45.marvelx.controllers.RequestControllerImpl
 import com.alexgreece45.marvelx.controllers.WebsocketController
 import com.alexgreece45.marvelx.controllers.WebsocketControllerImpl
 import com.alexgreece45.marvelx.controllers.models.websocket.WebsocketRequestType
+import com.alexgreece45.marvelx.data.api.ApiClient
+import com.alexgreece45.marvelx.data.api.ApiService
+import com.alexgreece45.marvelx.di.ApiClientImpl
 import com.alexgreece45.marvelx.di.network.interceptors.ApiInterceptor
 import com.alexgreece45.marvelx.di.network.interceptors.WebsocketInterceptor
 import com.alexgreece45.marvelx.domain.models_api.comic.ComicPriceType
@@ -26,149 +32,190 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import okhttp3.CertificatePinner
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
+import org.koin.core.annotation.ComponentScan
+import org.koin.core.annotation.Factory
+import org.koin.core.annotation.Single
 import org.koin.dsl.module
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.time.OffsetDateTime
 import java.util.UUID
 
-object NetworkModule {
+@Single
+@ComponentScan("com.alexgreece45.marvelx")
+class NetworkModule
 
-    private fun provideRetrofit(
-        okHttpClient: OkHttpClient,
-        converterFactory: GsonConverterFactory
-    ): Retrofit = Retrofit.Builder()
-        .baseUrl(BuildConfig.BASE_URL)
-        .addConverterFactory(converterFactory)
-        .client(okHttpClient)
+/**
+ * Provides a [Gson] instance with the type adapters for the following types:
+ *  - [OffsetDateTime]
+ *  - [ComicPriceType]
+ *  - [VerificationStep]
+ *  - [WebsocketRequestType]
+ *  - [UUID]
+ */
+@Single
+fun provideGson(): Gson = GsonBuilder()
+    .registerTypeAdapter(
+        OffsetDateTime::class.java,
+        OffsetDateTimeAdapter()
+    )
+    .registerTypeAdapter(
+        ComicPriceType::class.java,
+        ComicPriceTypeAdapter()
+    )
+    .registerTypeAdapter(
+        VerificationStep::class.java,
+        VerificationStepAdapter()
+    )
+    .registerTypeAdapter(
+        WebsocketRequestType::class.java,
+        WebsocketRequestTypeAdapter()
+    )
+    .registerTypeAdapter(
+        UUID::class.java,
+        UUIDAdapter()
+    )
+    .create()
+
+@Factory
+fun provideHttpLoggingInterceptor(
+    appLoggerController: AppLoggerController,
+    configLogic: ConfigLogic
+): HttpLoggingInterceptor {
+    return HttpLoggingInterceptor { message ->
+        appLoggerController.d { message }
+    }.apply {
+        level = when (configLogic.appBuildType) {
+            AppBuildType.RELEASE -> HttpLoggingInterceptor.Level.NONE
+            else -> HttpLoggingInterceptor.Level.BODY
+        }
+    }
+}
+
+fun provideOkHttpClient(
+    @ApplicationContext context: Context,
+    apiInterceptor: ApiInterceptor,
+    httpLoggingInterceptor: HttpLoggingInterceptor,
+    configLogic: ConfigLogic
+): OkHttpClient {
+    val okHttpClient = OkHttpClient.Builder()
+
+    // Adds certificate pins.
+    val certificatePinner = CertificatePinner.Builder()
+        .add(
+            pattern = BuildConfig.MARVELX_BACKEND_DOMAIN,
+            pins = arrayOf("sha256/${BuildConfig.MARVELX_BACKEND_DOMAIN_PIN}")
+        )
         .build()
+    okHttpClient.certificatePinner(certificatePinner)
 
-    private fun provideHttpLoggingInterceptor(
-        appLoggerController: AppLoggerController,
-        configLogic: ConfigLogic
-    ): HttpLoggingInterceptor {
-        return HttpLoggingInterceptor { message ->
-            appLoggerController.d { message }
-        }.apply {
-            level = when (configLogic.appBuildType) {
-                AppBuildType.RELEASE -> HttpLoggingInterceptor.Level.NONE
-                else -> HttpLoggingInterceptor.Level.BODY
-            }
-        }
+    // Adds required interceptors.
+    okHttpClient.addInterceptor(apiInterceptor)
+    okHttpClient.addInterceptor(httpLoggingInterceptor)
+
+    // Adds "ChuckerInterceptor" only in non-release builds.
+    if (configLogic.appBuildType != AppBuildType.RELEASE) {
+        okHttpClient.addInterceptor(ChuckerInterceptor(context))
     }
 
-    private fun provideOkHttpClient(
-        @ApplicationContext context: Context,
-        apiInterceptor: ApiInterceptor,
-        httpLoggingInterceptor: HttpLoggingInterceptor,
-        configLogic: ConfigLogic
-    ): OkHttpClient {
-        val okHttpClient = OkHttpClient.Builder()
+    // Disables response caching for security reasons.
+    okHttpClient.cache(null)
 
-        // Add certificate pins.
-        val certificatePinner = CertificatePinner.Builder()
-            .add(
-                pattern = BuildConfig.MARVELX_BACKEND_DOMAIN,
-                pins = arrayOf("sha256/${BuildConfig.MARVELX_BACKEND_DOMAIN_PIN}")
-            )
-            .build()
-        okHttpClient.certificatePinner(certificatePinner)
+    return okHttpClient.build()
+}
 
-        // Add required interceptors.
-        okHttpClient.addInterceptor(apiInterceptor)
-        okHttpClient.addInterceptor(httpLoggingInterceptor)
+/**
+ * Provides the [OkHttpClient] for the websocket client.
+ */
+@Single(binds = [WebsocketControllerImpl::class])
+fun provideOkHttpClientForWebsocketClient(
+    @ApplicationContext context: Context,
+    httpLoggingInterceptor: HttpLoggingInterceptor,
+    websocketInterceptor: WebsocketInterceptor,
+    configLogic: ConfigLogic
+): OkHttpClient {
+    val okHttpClient = OkHttpClient.Builder()
 
-        // Add "ChuckerInterceptor" only in non-release builds.
-        if (configLogic.appBuildType != AppBuildType.RELEASE) {
-            okHttpClient.addInterceptor(ChuckerInterceptor(context))
-        }
+    // Add certificate pins.
+    val certificatePinner = CertificatePinner.Builder()
+        .add(
+            pattern = BuildConfig.MARVELX_BACKEND_WEBSOCKET_DOMAIN,
+            pins = arrayOf("sha256/${BuildConfig.MARVELX_BACKEND_WEBSOCKET_DOMAIN_PIN}")
+        )
+        .build()
+    okHttpClient.certificatePinner(certificatePinner)
 
-        return okHttpClient.build()
+    // Add interceptors.
+    okHttpClient.addInterceptor(httpLoggingInterceptor)
+    okHttpClient.addInterceptor(websocketInterceptor)
+
+    // Add "ChuckerInterceptor" only in non-release builds.
+    if (configLogic.appBuildType !is AppBuildType.RELEASE) {
+        okHttpClient.addInterceptor(ChuckerInterceptor(context))
     }
 
-    /**
-     * Provides the [OkHttpClient] for the websocket client.
-     */
-    private fun provideOkHttpClientForWebsocketClient(
-        @ApplicationContext context: Context,
-        httpLoggingInterceptor: HttpLoggingInterceptor,
-        websocketInterceptor: WebsocketInterceptor,
-        configLogic: ConfigLogic
-    ): OkHttpClient {
-        val okHttpClient = OkHttpClient.Builder()
+    return okHttpClient.build()
+}
 
-        // Add certificate pins.
-        val certificatePinner = CertificatePinner.Builder()
-            .add(
-                pattern = BuildConfig.MARVELX_BACKEND_WEBSOCKET_DOMAIN,
-                pins = arrayOf("sha256/${BuildConfig.MARVELX_BACKEND_WEBSOCKET_DOMAIN_PIN}")
-            )
-            .build()
-        okHttpClient.certificatePinner(certificatePinner)
+@Single
+fun provideGsonConverterFactory(gson: Gson): GsonConverterFactory =
+    GsonConverterFactory.create(gson)
 
-        // Add interceptors.
-        okHttpClient.addInterceptor(httpLoggingInterceptor)
-        okHttpClient.addInterceptor(websocketInterceptor)
+@Single
+fun provideRetrofit(
+    okHttpClient: OkHttpClient,
+    converterFactory: GsonConverterFactory,
+    configLogic: ConfigLogic
+): Retrofit = Retrofit.Builder()
+    .baseUrl(configLogic.serverUrl)
+    .addConverterFactory(converterFactory)
+    .client(okHttpClient)
+    .build()
 
-        // Add "ChuckerInterceptor" only in non-release builds.
-        if (configLogic.appBuildType !is AppBuildType.RELEASE) {
-            okHttpClient.addInterceptor(ChuckerInterceptor(context))
-        }
+@Single(binds = [ApiClientImpl::class])
+fun provideApiService(retrofit: Retrofit): ApiService =
+    retrofit.create(ApiService::class.java)
 
-        return okHttpClient.build()
-    }
+@Single
+fun provideApiClient(apiService: ApiService): ApiClient = ApiClientImpl(apiService)
 
-    private fun provideGsonConverterFactory(gson: Gson): GsonConverterFactory =
-        GsonConverterFactory.create(gson)
+@Single
+fun provideRequestController(
+    appLoggerController: AppLoggerController,
+    cryptoController: CryptoController,
+    prefKeys: PrefKeys
+): RequestController = RequestControllerImpl(appLoggerController, cryptoController, prefKeys)
 
-    /**
-     * Provides a [Gson] instance with the type adapters for the following types:
-     *  - [OffsetDateTime]
-     *  - [ComicPriceType]
-     *  - [VerificationStep]
-     *  - [WebsocketRequestType]
-     *  - [UUID]
-     */
-    private fun provideGson(): Gson = GsonBuilder()
-        .registerTypeAdapter(
-            OffsetDateTime::class.java,
-            OffsetDateTimeAdapter()
+@Single
+fun provideWebsocketController(
+    configLogic: ConfigLogic,
+    okHttpClient: OkHttpClient,
+    authController: AuthController,
+    appLoggerController: AppLoggerController,
+    gson: Gson
+): WebsocketController =
+    WebsocketControllerImpl(configLogic, okHttpClient, authController, appLoggerController, gson)
+
+val networkKoinModule = module {
+    single<Gson> { provideGson() }
+    single<GsonConverterFactory> { provideGsonConverterFactory(get()) }
+    single<HttpLoggingInterceptor> { provideHttpLoggingInterceptor(get(), get()) }
+    single<OkHttpClient> { provideOkHttpClient(get(), get(), get(), get()) }
+    single<Retrofit> { provideRetrofit(get(), get(), get()) }
+    single<RequestController> { RequestControllerImpl(get(), get(), get()) }
+
+    single<ApiService> { provideApiService(get()) }
+
+    single<ApiClient> { provideApiClient(get()) }
+
+    // Websocket client.
+    single<WebsocketController> {
+        WebsocketControllerImpl(
+            get(),
+            provideOkHttpClientForWebsocketClient(get(), get(), get(), get()),
+            get(),
+            get(),
+            provideGson()
         )
-        .registerTypeAdapter(
-            ComicPriceType::class.java,
-            ComicPriceTypeAdapter()
-        )
-        .registerTypeAdapter(
-            VerificationStep::class.java,
-            VerificationStepAdapter()
-        )
-        .registerTypeAdapter(
-            WebsocketRequestType::class.java,
-            WebsocketRequestTypeAdapter()
-        )
-        .registerTypeAdapter(
-            UUID::class.java,
-            UUIDAdapter()
-        )
-        .create()
-
-    val koinModule = module {
-        single<Gson> { provideGson() }
-        single<GsonConverterFactory> { provideGsonConverterFactory(get()) }
-        single<HttpLoggingInterceptor> { provideHttpLoggingInterceptor(get(), get()) }
-        single<OkHttpClient> { provideOkHttpClient(get(), get(), get(), get()) }
-        single<Retrofit> { provideRetrofit(get(), get()) }
-        single<RequestController> { RequestControllerImpl(get(), get(), get()) }
-
-        // Websocket client.
-        single<WebsocketController> {
-            WebsocketControllerImpl(
-                get(),
-                provideOkHttpClientForWebsocketClient(get(), get(), get(), get()),
-                get(),
-                get(),
-                provideGson()
-            )
-        }
     }
 }

@@ -1,7 +1,7 @@
 package com.alexgreece45.marvelx.repository
 
-import com.alexgreece45.marvelx.database.FavoriteCharacterEntity
-import com.alexgreece45.marvelx.database.FavoriteCharactersDao
+import com.alexgreece45.marvelx.data.database.FavoriteCharacterEntity
+import com.alexgreece45.marvelx.data.database.FavoriteCharactersDao
 
 interface FavoriteCharactersRepository {
     suspend fun insertCharacters(vararg favoriteCharacterEntity: FavoriteCharacterEntity): LongArray

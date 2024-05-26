@@ -1,4 +1,4 @@
-package com.alexgreece45.marvelx.database
+package com.alexgreece45.marvelx.data.database
 
 import androidx.room.Dao
 import androidx.room.Delete

@@ -2,7 +2,7 @@ package com.alexgreece45.marvelx.ui.screens.allFavoriteCharacters
 
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.database.toCharacterCardUiList
+import com.alexgreece45.marvelx.data.database.toCharacterCardUiList
 import com.alexgreece45.marvelx.domain.interactors.CharacterInteractor
 import com.alexgreece45.marvelx.domain.interactors.GetFavoriteCharactersPartialState
 import com.alexgreece45.marvelx.mvi.BaseEffect

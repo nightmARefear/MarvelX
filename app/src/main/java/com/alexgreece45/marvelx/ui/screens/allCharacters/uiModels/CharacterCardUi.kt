@@ -1,6 +1,6 @@
 package com.alexgreece45.marvelx.ui.screens.allCharacters.uiModels
 
-import com.alexgreece45.marvelx.database.FavoriteCharacterEntity
+import com.alexgreece45.marvelx.data.database.FavoriteCharacterEntity
 
 data class CharacterCardUi(
     val id: Int,

@@ -117,3 +117,24 @@ fun String.maskGreekPhoneNumber(): String {
     if (this.length < 10) return this
     return this.maskCharactersWith(3, 7)
 }
+
+/**
+ * Returns the scheme (either `http` or `https`) for this [String] if it begins with it, otherwise
+ * an empty [String].
+ */
+fun String.getSchemeFromUrl(): String =
+    when {
+        this.startsWith("https") -> "https"
+        this.startsWith("http") -> "http"
+        else -> ""
+    }
+
+/**
+ * Returns the port for this [String] if it could be located, otherwise `-1`. The returned value is
+ * of type [Int].
+ */
+fun String.getPortFromUrl(): Int {
+    val parts = this.split(":")
+    if (parts.isEmpty()) return -1
+    return parts.last().toInt()
+}

@@ -33,11 +33,11 @@ class ApiInterceptor(
         originalRequest.url.toUri().path.let { path ->
             when {
                 // Marvel API.
-                path.startsWith("/v1/public/") -> {
+                path.startsWith(configLogic.marvelApiConfig.endpointPrefix) -> {
                     return applyMarvelApiTransformations(chain)
                 }
 
-                // MarvelX Backend API.
+                // MarvelX Backend.
                 path.startsWith(BuildConfig.MARVELX_BACKEND_ENDPOINT_PREFIX) -> {
                     return applyMarvelXBackendTransformations(
                         path = path,
@@ -61,21 +61,32 @@ class ApiInterceptor(
         val hash =
             "$timestamp${BuildConfig.API_PRIVATE_KEY}${BuildConfig.API_PUBLIC_KEY}".toMd5()
 
-        val finalUrl = chain
-            .request()
-            .url
-            .newBuilder()
+        val originalRequest = chain.request()
+
+        // Add new URL, and retrieve method and body from the original request and add them.
+        val finalRequest = Request.Builder()
+            .url(configLogic.marvelApiConfig.url)
+            .method(originalRequest.method, originalRequest.body)
+            .build()
+
+        val finalUrlBuilder = finalRequest.url.newBuilder()
+
+        // Add path segments from original request.
+        originalRequest.url.pathSegments.forEach { pathSegment ->
+            finalUrlBuilder.addPathSegment(pathSegment)
+        }
+
+        // Add query parameters for authentication & authorization.
+        finalUrlBuilder
             .addQueryParameter("ts", timestamp)
             .addQueryParameter("apikey", BuildConfig.API_PUBLIC_KEY)
             .addQueryParameter("hash", hash)
-            .build()
-        return chain.proceed(
-            chain
-                .request()
-                .newBuilder()
-                .url(finalUrl)
-                .build()
-        )
+
+        // Rebuild request that includes "finalUrl".
+        val actualRequest = finalRequest.newBuilder().url(finalUrlBuilder.build()).build()
+
+        // Proceed with the new request.
+        return chain.proceed(actualRequest)
     }
 
     /**
@@ -88,17 +99,9 @@ class ApiInterceptor(
         // Get request from chain.
         val originalRequest = chain.request()
 
-        // Create modified URL based on the config.
-        val modifiedUrl =
-            originalRequest.url.newBuilder()
-                .scheme(configLogic.scheme)
-                .host(configLogic.host)
-                .port(configLogic.port)
-                .build()
-
         // Create modified request based on the modifiedUrl and the config.
         val modifiedRequest = Request.Builder()
-            .url(modifiedUrl)
+            .url(originalRequest.url)
             .addHeader(
                 name = ConstantsSecurity.HeaderName.UserAgent.name,
                 value = ConstantsSecurity.HeaderValue.APP_USER_AGENT

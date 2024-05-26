@@ -1,4 +1,4 @@
-package com.alexgreece45.marvelx.database
+package com.alexgreece45.marvelx.data.database
 
 import androidx.room.Database
 import androidx.room.RoomDatabase

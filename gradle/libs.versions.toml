@@ -2,13 +2,13 @@
 compose-bom = "2024.05.00"
 koin-bom = "3.5.6"
 
-compose-compiler = "1.5.10"
+compose-compiler = "1.5.13"
 compose-navigation = "2.7.7"
 
-plugin-agp = "8.4.0"
-plugin-kotlin = "1.9.22"
+plugin-agp = "8.4.1"
+plugin-kotlin = "1.9.23"
 plugin-google-mapsplatform-secrets = "2.0.1"
-plugin-ksp = "1.9.22-1.0.17"
+plugin-ksp = "1.9.23-1.0.20"
 
 airbnb-lottie-compose = "6.1.0"
 
@@ -33,6 +33,8 @@ google-code-gson = "2.10.1"
 hilt-navigation = "1.2.0"
 
 junit = "4.13.2"
+
+koin-annotations = "1.3.0"
 
 lambdapioneer-argon2kt = "1.4.0"
 
@@ -85,9 +87,12 @@ junit = { module = "junit:junit", version.ref = "junit" }
 
 koin-bom = { module = "io.insert-koin:koin-bom", version.ref = "koin-bom" }
 koin-core = { module = "io.insert-koin:koin-core" }
+koin-android = { module = "io.insert-koin:koin-android" }
 koin-androidx-compose = { module = "io.insert-koin:koin-androidx-compose" }
 koin-androidx-navigation = { module = "io.insert-koin:koin-androidx-navigation" }
 koin-androidx-work-manager = { module = "io.insert-koin:koin-androidx-workmanager" }
+koin-annotations = { module = "io.insert-koin:koin-annotations", version.ref = "koin-annotations" }
+koin-ksp-compiler = { module = "io.insert-koin:koin-ksp-compiler", version.ref = "koin-annotations" }
 koin-android-test = { module = "io.insert-koin:koin-android-test" }
 koin-test-junit4 = { module = "io.insert-koin:koin-test-junit4" }
 
@@ -111,6 +116,7 @@ google-mapsplatform-secrets = { id = "com.google.android.libraries.mapsplatform.
 
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "plugin-kotlin" }
 kotlin-parcelize = { id = "org.jetbrains.kotlin.plugin.parcelize", version.ref = "plugin-kotlin" }
+
 ksp = { id = "com.google.devtools.ksp", version.ref = "plugin-ksp" }
 
 [bundles]
@@ -150,9 +156,11 @@ coil = [
 
 koin-implementation = [
     "koin-core",
+    "koin-android",
     "koin-androidx-compose",
     "koin-androidx-navigation",
-    "koin-androidx-work-manager"
+    "koin-androidx-work-manager",
+    "koin-annotations"
 ]
 
 koin-test-implementation = [

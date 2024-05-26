@@ -30,13 +30,12 @@ import com.alexgreece45.marvelx.controllers.SecurityController
 import com.alexgreece45.marvelx.controllers.SecurityControllerImpl
 import com.alexgreece45.marvelx.controllers.TimerController
 import com.alexgreece45.marvelx.controllers.TimerControllerImpl
-import com.alexgreece45.marvelx.data.api.ApiClient
-import com.alexgreece45.marvelx.data.api.ApiService
-import com.alexgreece45.marvelx.database.FavoriteCharactersDao
-import com.alexgreece45.marvelx.database.FavoriteCharactersDatabase
+import com.alexgreece45.marvelx.data.database.FavoriteCharactersDao
+import com.alexgreece45.marvelx.data.database.FavoriteCharactersDatabase
 import com.alexgreece45.marvelx.di.network.NetworkModule
 import com.alexgreece45.marvelx.di.network.interceptors.ApiInterceptor
 import com.alexgreece45.marvelx.di.network.interceptors.WebsocketInterceptor
+import com.alexgreece45.marvelx.di.network.networkKoinModule
 import com.alexgreece45.marvelx.domain.interactors.ChangePasswordInteractor
 import com.alexgreece45.marvelx.domain.interactors.ChangePasswordInteractorImpl
 import com.alexgreece45.marvelx.domain.interactors.CharacterInteractor
@@ -73,36 +72,37 @@ import com.alexgreece45.marvelx.repository.UserRepository
 import com.alexgreece45.marvelx.repository.UserRepositoryImpl
 import com.alexgreece45.marvelx.ui.navigation.router.RouterHost
 import com.alexgreece45.marvelx.ui.navigation.router.RouterHostImpl
-import com.alexgreece45.marvelx.util.FormValidator
-import com.alexgreece45.marvelx.util.FormValidatorImpl
-import com.alexgreece45.marvelx.util.ResourceProvider
-import com.alexgreece45.marvelx.util.ResourceProviderImpl
+import com.alexgreece45.marvelx.ui.screens.allCharacters.AllCharactersViewModel
+import com.alexgreece45.marvelx.ui.screens.allFavoriteCharacters.AllFavoriteCharactersViewModel
+import com.alexgreece45.marvelx.ui.screens.changePassword.ChangePasswordViewModel
 import com.alexgreece45.marvelx.ui.screens.character.CharacterViewModel
-import com.alexgreece45.marvelx.ui.screens.forgotPasswordScreen.forgotPasswordValidateEmailScreen.ForgotPasswordValidateEmailViewModel
+import com.alexgreece45.marvelx.ui.screens.character.allCharacterComicsScreen.AllCharacterComicsViewModel
+import com.alexgreece45.marvelx.ui.screens.comic.ComicViewModel
 import com.alexgreece45.marvelx.ui.screens.forgotPasswordScreen.ForgotPasswordViewModel
+import com.alexgreece45.marvelx.ui.screens.forgotPasswordScreen.forgotPasswordValidateEmailScreen.ForgotPasswordValidateEmailViewModel
+import com.alexgreece45.marvelx.ui.screens.home.HomeViewModel
 import com.alexgreece45.marvelx.ui.screens.introLoading.IntroLoadingViewModel
 import com.alexgreece45.marvelx.ui.screens.login.LoginViewModel
+import com.alexgreece45.marvelx.ui.screens.mainActivity.ActivityViewModel
 import com.alexgreece45.marvelx.ui.screens.otp.OtpViewModel
 import com.alexgreece45.marvelx.ui.screens.profile.ProfileViewModel
 import com.alexgreece45.marvelx.ui.screens.signup.SignupViewModel
 import com.alexgreece45.marvelx.ui.screens.splash.SplashViewModel
-import com.alexgreece45.marvelx.ui.screens.character.allCharacterComicsScreen.AllCharacterComicsViewModel
-import com.alexgreece45.marvelx.ui.screens.allCharacters.AllCharactersViewModel
-import com.alexgreece45.marvelx.ui.screens.allFavoriteCharacters.AllFavoriteCharactersViewModel
-import com.alexgreece45.marvelx.ui.screens.changePassword.ChangePasswordViewModel
-import com.alexgreece45.marvelx.ui.screens.comic.ComicViewModel
-import com.alexgreece45.marvelx.ui.screens.home.HomeViewModel
-import com.alexgreece45.marvelx.ui.screens.mainActivity.ActivityViewModel
+import com.alexgreece45.marvelx.util.FormValidator
+import com.alexgreece45.marvelx.util.FormValidatorImpl
+import com.alexgreece45.marvelx.util.ResourceProvider
+import com.alexgreece45.marvelx.util.ResourceProviderImpl
 import com.alexgreece45.marvelx.worker.RefreshTokenWorker
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.androidx.viewmodel.dsl.viewModel
+import org.koin.androidx.workmanager.dsl.worker
 import org.koin.androidx.workmanager.koin.workManagerFactory
 import org.koin.core.context.startKoin
 import org.koin.core.logger.Level
 import org.koin.core.module.Module
 import org.koin.dsl.module
-import retrofit2.Retrofit
+import org.koin.ksp.generated.defaultModule
 
 /**
  * Initializes a Koin application with the given [marvelXApplication] as the Android Context used
@@ -120,7 +120,6 @@ fun initKoin(marvelXApplication: MarvelXApplication) {
             databaseModule,
             interceptorModule,
             networkModule,
-            apiModule,
             repositoryModule,
             interactorModule,
             controllerModule,
@@ -167,16 +166,8 @@ private val interceptorModule = module {
     }
 }
 
-private val networkModule = NetworkModule.koinModule
-
-private val apiModule = module {
-    single<ApiService> {
-        val retrofit: Retrofit = get()
-        retrofit.create(ApiService::class.java)
-    }
-
-    single<ApiClient> { ApiClientImpl(get()) }
-}
+//private val networkModule: Module = defaultModule
+private val networkModule: Module = networkKoinModule
 
 private val repositoryModule = module {
     single<CharacterRepository> { CharacterRepositoryImpl(get()) }
@@ -263,6 +254,6 @@ private val viewModelModule = module {
 }
 
 private val workerModule = module {
-    single<RefreshTokenWorker> { RefreshTokenWorker(get(), get(), get(), get(), get(), get()) }
+    worker<RefreshTokenWorker> { RefreshTokenWorker(get(), get(), get(), get(), get(), get()) }
     factory<WorkerFactory> { RefreshTokenWorkerFactory(get(), get(), get(), get()) }
 }

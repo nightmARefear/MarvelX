@@ -7,7 +7,7 @@ import com.alexgreece45.marvelx.domain.models_api.comic.ComicDomain
 import com.alexgreece45.marvelx.data.models_api.character.comic.toComicDomainList
 import com.alexgreece45.marvelx.data.models_api.character.toCharacterDomain
 import com.alexgreece45.marvelx.data.models_api.character.toCharacterDomainList
-import com.alexgreece45.marvelx.database.FavoriteCharacterEntity
+import com.alexgreece45.marvelx.data.database.FavoriteCharacterEntity
 import com.alexgreece45.marvelx.repository.CharacterRepository
 import com.alexgreece45.marvelx.repository.FavoriteCharactersRepository
 import com.alexgreece45.marvelx.repository.GetAllCharactersRepositoryResponse
