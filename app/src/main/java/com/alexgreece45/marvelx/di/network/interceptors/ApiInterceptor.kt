@@ -2,8 +2,10 @@ package com.alexgreece45.marvelx.di.network.interceptors
 
 import com.alexgreece45.marvelx.BuildConfig
 import com.alexgreece45.marvelx.configuration.ConfigLogic
+import com.alexgreece45.marvelx.configuration.ConfigSecurityLogic
 import com.alexgreece45.marvelx.controllers.AuthController
 import com.alexgreece45.marvelx.controllers.RequestController
+import com.alexgreece45.marvelx.util.DateUtil
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.constants.ConstantsSecurity
 import com.alexgreece45.marvelx.util.extensions.hasInternetConnectivity
@@ -20,6 +22,7 @@ import okio.IOException
  */
 class ApiInterceptor(
     private val configLogic: ConfigLogic,
+    private val configSecurityLogic: ConfigSecurityLogic,
     private val authController: AuthController,
     private val resourceProvider: ResourceProvider,
     private val requestController: RequestController
@@ -57,7 +60,7 @@ class ApiInterceptor(
      * Applies the necessary transformations for the Marvel API.
      */
     private fun applyMarvelApiTransformations(chain: Interceptor.Chain): Response {
-        val timestamp = (System.currentTimeMillis() / 1000).toString()
+        val timestamp = DateUtil.getSecondsFromEpoch().toString()
         val hash =
             "$timestamp${BuildConfig.API_PRIVATE_KEY}${BuildConfig.API_PUBLIC_KEY}".toMd5()
 
@@ -106,14 +109,17 @@ class ApiInterceptor(
                 name = ConstantsSecurity.HeaderName.UserAgent.name,
                 value = ConstantsSecurity.HeaderValue.APP_USER_AGENT
             )
-            .addHeader(
-                name = ConstantsSecurity.HeaderName.Authorization.name,
-                value = if (path.endsWith("retrieve_timestamp")) authController.getRefreshToken()
-                    .orEmpty() else authController.getAccessToken()
-            )
             .method(originalRequest.method, originalRequest.body)
 
-        requestController.addAuthenticationHeaders(modifiedRequest)
+        // Add authorization headers only if the path of this request isn't in the excluded paths list.
+        if (configSecurityLogic.excludedRequestPathsFromAuthorization.all { it != path }) {
+            modifiedRequest.addHeader(
+                name = ConstantsSecurity.HeaderName.Authorization.name,
+                value = authController.getAccessToken()
+            )
+
+            requestController.addAuthenticationHeaders(modifiedRequest)
+        }
 
         return chain.proceed(modifiedRequest.build())
     }

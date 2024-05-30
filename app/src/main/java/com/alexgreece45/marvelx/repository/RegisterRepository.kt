@@ -9,7 +9,7 @@ import com.alexgreece45.marvelx.data.models_api.user.login.RequestUserLogin
 import com.alexgreece45.marvelx.data.models_api.user.loginWithToken.ResponseLoginWithToken
 import com.alexgreece45.marvelx.data.models_api.user.signup.ResponseSignup
 import com.alexgreece45.marvelx.data.models_api.user.signup.RequestUserSignup
-import com.alexgreece45.marvelx.util.helper.parseError
+import com.alexgreece45.marvelx.repository.helper.parseError
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 

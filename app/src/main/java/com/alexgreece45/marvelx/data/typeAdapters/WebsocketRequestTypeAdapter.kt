@@ -1,4 +1,4 @@
-package com.alexgreece45.marvelx.util.gson
+package com.alexgreece45.marvelx.data.typeAdapters
 
 import com.alexgreece45.marvelx.controllers.models.websocket.WebsocketRequestType
 import com.google.gson.TypeAdapter

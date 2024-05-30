@@ -155,6 +155,7 @@ private val interceptorModule = module {
             get(),
             get(),
             get(),
+            get(),
             get()
         )
     }

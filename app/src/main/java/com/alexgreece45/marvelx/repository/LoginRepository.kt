@@ -8,7 +8,7 @@ import com.alexgreece45.marvelx.data.models_api.token.ResponseToken
 import com.alexgreece45.marvelx.data.models_api.user.ResponseUserError
 import com.alexgreece45.marvelx.data.models_api.user.postLogin.ResponsePostLogin
 import com.alexgreece45.marvelx.util.ResourceProvider
-import com.alexgreece45.marvelx.util.helper.parseError
+import com.alexgreece45.marvelx.repository.helper.parseError
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import retrofit2.Response

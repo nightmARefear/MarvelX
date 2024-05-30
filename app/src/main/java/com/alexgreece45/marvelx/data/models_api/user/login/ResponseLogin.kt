@@ -5,8 +5,8 @@ import com.alexgreece45.marvelx.domain.models_api.user.login.LoginResponseDomain
 import com.google.gson.annotations.SerializedName
 
 data class ResponseLogin(
-    @SerializedName("verification_step") val verificationStep: String,
-    @SerializedName("user_id") val userId: String
+    @SerializedName("verificationStep") val verificationStep: String,
+    @SerializedName("userId") val userId: String
 )
 
 fun ResponseLogin.toUserLoginResponseDomain(): LoginResponseDomain =

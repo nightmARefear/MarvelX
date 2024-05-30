@@ -21,11 +21,11 @@ import com.alexgreece45.marvelx.di.network.interceptors.ApiInterceptor
 import com.alexgreece45.marvelx.di.network.interceptors.WebsocketInterceptor
 import com.alexgreece45.marvelx.domain.models_api.comic.ComicPriceType
 import com.alexgreece45.marvelx.domain.models_api.user.VerificationStep
-import com.alexgreece45.marvelx.util.gson.ComicPriceTypeAdapter
-import com.alexgreece45.marvelx.util.gson.OffsetDateTimeAdapter
-import com.alexgreece45.marvelx.util.gson.UUIDAdapter
-import com.alexgreece45.marvelx.util.gson.VerificationStepAdapter
-import com.alexgreece45.marvelx.util.gson.WebsocketRequestTypeAdapter
+import com.alexgreece45.marvelx.data.typeAdapters.ComicPriceTypeAdapter
+import com.alexgreece45.marvelx.data.typeAdapters.OffsetDateTimeAdapter
+import com.alexgreece45.marvelx.data.typeAdapters.UUIDAdapter
+import com.alexgreece45.marvelx.data.typeAdapters.VerificationStepAdapter
+import com.alexgreece45.marvelx.data.typeAdapters.WebsocketRequestTypeAdapter
 import com.chuckerteam.chucker.api.ChuckerInterceptor
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
@@ -81,8 +81,8 @@ fun provideGson(): Gson = GsonBuilder()
 fun provideHttpLoggingInterceptor(
     appLoggerController: AppLoggerController,
     configSecurityLogic: ConfigSecurityLogic
-): HttpLoggingInterceptor {
-    return HttpLoggingInterceptor { message ->
+): HttpLoggingInterceptor =
+    HttpLoggingInterceptor { message ->
         appLoggerController.d { message }
     }.apply {
         level = when (configSecurityLogic.appBuildType) {
@@ -90,7 +90,6 @@ fun provideHttpLoggingInterceptor(
             else -> HttpLoggingInterceptor.Level.BODY
         }
     }
-}
 
 fun provideOkHttpClient(
     context: Context,
@@ -111,10 +110,12 @@ fun provideOkHttpClient(
 
     // Adds required interceptors.
     okHttpClient.addInterceptor(apiInterceptor)
-    okHttpClient.addInterceptor(httpLoggingInterceptor)
+    if (configSecurityLogic.useNetworkLogger) {
+        okHttpClient.addInterceptor(httpLoggingInterceptor)
+    }
 
     // Adds "ChuckerInterceptor" only in non-release builds.
-    if (configSecurityLogic.appBuildType != AppBuildType.RELEASE) {
+    if (configSecurityLogic.appBuildType !is AppBuildType.RELEASE) {
         okHttpClient.addInterceptor(ChuckerInterceptor(context))
     }
 
@@ -146,7 +147,9 @@ fun provideOkHttpClientForWebsocketClient(
     okHttpClient.certificatePinner(certificatePinner)
 
     // Add interceptors.
-    okHttpClient.addInterceptor(httpLoggingInterceptor)
+    if (configSecurityLogic.useNetworkLogger) {
+        okHttpClient.addInterceptor(httpLoggingInterceptor)
+    }
     okHttpClient.addInterceptor(websocketInterceptor)
 
     // Add "ChuckerInterceptor" only in non-release builds.

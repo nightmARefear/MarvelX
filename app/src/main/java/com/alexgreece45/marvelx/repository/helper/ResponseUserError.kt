@@ -1,4 +1,4 @@
-package com.alexgreece45.marvelx.util.helper
+package com.alexgreece45.marvelx.repository.helper
 
 import com.alexgreece45.marvelx.data.models_api.user.ResponseUserError
 import com.google.gson.Gson

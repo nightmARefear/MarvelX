@@ -1,4 +1,4 @@
-package com.alexgreece45.marvelx.util.gson
+package com.alexgreece45.marvelx.data.typeAdapters
 
 import com.alexgreece45.marvelx.domain.models_api.comic.ComicPriceType
 import com.google.gson.TypeAdapter
