@@ -36,7 +36,7 @@ interface LoginInteractor {
     /**
      * The post-login call. It retrieves all the necessary data for signing requests.
      */
-    suspend fun postLogin(): Flow<PostLoginPartialState>
+    suspend fun postLogin(accessToken: String): Flow<PostLoginPartialState>
 
     suspend fun grandNewAccessToken(code: String): Flow<GrandNewAccessTokenPartialState>
 
@@ -119,26 +119,24 @@ class LoginInteractorImpl(
         }
     }
 
-    override suspend fun postLogin(): Flow<PostLoginPartialState> = flow {
+    override suspend fun postLogin(accessToken: String): Flow<PostLoginPartialState> = flow {
         val genericErrorMessage = resourceProvider.getGenericErrorMessage()
 
-        repository.postLogin().collect {
+        repository.postLogin(accessToken).collect {
             when (it) {
                 is PostLoginRepositoryResponse.Success -> {
-                    it.response?.sign?.let { sign ->
-                        if (sign.key == null || sign.algorithm == null) {
-                            emit(PostLoginPartialState.Failed(genericErrorMessage))
-                            return@collect
-                        }
-
-                        prefKeys.signData = SignData(
-                            key = sign.key,
-                            algorithm = sign.algorithm
-                        )
-                        emit(PostLoginPartialState.Success)
-                    } ?: run {
-                        emit(PostLoginPartialState.Failed(errorMessage = genericErrorMessage))
+                    val sign = it.response?.sign
+                    if (sign == null) {
+                        emit(PostLoginPartialState.Failed(genericErrorMessage))
+                        return@collect
                     }
+                    if (sign.key.isNullOrBlank() || sign.algorithm.isNullOrBlank()) {
+                        emit(PostLoginPartialState.Failed(genericErrorMessage))
+                        return@collect
+                    }
+
+                    prefKeys.signData = SignData(key = sign.key, algorithm = sign.algorithm)
+                    emit(PostLoginPartialState.Success)
                 }
 
                 is PostLoginRepositoryResponse.Failed -> {

@@ -1,4 +1,4 @@
-package com.alexgreece45.marvelx.util.gson
+package com.alexgreece45.marvelx.data.typeAdapters
 
 import com.google.gson.TypeAdapter
 import com.google.gson.stream.JsonReader

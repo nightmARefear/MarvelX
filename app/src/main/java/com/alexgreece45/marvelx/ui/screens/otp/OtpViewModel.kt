@@ -697,7 +697,7 @@ class OtpViewModel(
                         // Token was successfully generated (in the server) and retrieved (in the client).
 
                         // Retrieve signing data.
-                        loginInteractor.postLogin().collect { postLoginPartialState ->
+                        loginInteractor.postLogin(accessTokenPartialState.userAuthData.accessToken).collect { postLoginPartialState ->
                             when (postLoginPartialState) {
                                 PostLoginPartialState.Success -> {
                                     // Save token info in device.

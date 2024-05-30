@@ -32,7 +32,6 @@ import com.alexgreece45.marvelx.controllers.TimerController
 import com.alexgreece45.marvelx.controllers.TimerControllerImpl
 import com.alexgreece45.marvelx.data.database.FavoriteCharactersDao
 import com.alexgreece45.marvelx.data.database.FavoriteCharactersDatabase
-import com.alexgreece45.marvelx.di.network.NetworkModule
 import com.alexgreece45.marvelx.di.network.interceptors.ApiInterceptor
 import com.alexgreece45.marvelx.di.network.interceptors.WebsocketInterceptor
 import com.alexgreece45.marvelx.di.network.networkKoinModule
@@ -102,7 +101,6 @@ import org.koin.core.context.startKoin
 import org.koin.core.logger.Level
 import org.koin.core.module.Module
 import org.koin.dsl.module
-import org.koin.ksp.generated.defaultModule
 
 /**
  * Initializes a Koin application with the given [marvelXApplication] as the Android Context used
@@ -154,6 +152,7 @@ private val databaseModule = module {
 private val interceptorModule = module {
     single<ApiInterceptor> {
         ApiInterceptor(
+            get(),
             get(),
             get(),
             get(),
@@ -237,7 +236,7 @@ private val viewModelModule = module {
 
     viewModel { HomeViewModel(get()) }
     viewModel { LoginViewModel(get(), get(), get(), get()) }
-    viewModel { SignupViewModel(get(), get(), get(), get(), get(), get(), get()) }
+    viewModel { SignupViewModel(get(), get(), get(), get(), get(), get(), get(), get()) }
 
     viewModel { OtpViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
 

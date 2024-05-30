@@ -56,42 +56,6 @@ interface ConfigLogic {
      * The network config for the Marvel API.
      */
     val marvelApiConfig: MarvelApiConfig
-
-    /**
-     * Defines whether screen capturing is blocked. It has a default value of `false`.
-     */
-    val blockScreenCapture: Boolean get() = false
-
-    /**
-     * Defines whether overlay windows are hidden. It has a default value of `false`.
-     */
-    val hideOverlayWindows: Boolean get() = false
-
-    /**
-     * Defines whether this application should have the ability to draw overlay windows over other
-     * applications.
-     */
-    val applicationDrawOverlayWindows: Boolean get() = false
-
-    /**
-     * Defines whether this application should have the ability to be in multi window mode.
-     */
-    val applicationMultiWindowMode: Boolean get() = false
-
-    /**
-     * Defines whether auto logout is enabled.
-     */
-    val isAutoLogoutEnabled: Boolean
-
-    /**
-     * The app's build type (i.e., debug, mock, or release).
-     */
-    val appBuildType: AppBuildType
-
-    /**
-     * The package signature of this application.
-     */
-    val packageSignature: String
 }
 
 sealed class AppBuildType(val key: String) {
@@ -134,13 +98,4 @@ class ConfigLogicImpl : ConfigLogic {
             host = BuildConfig.MARVEL_API_DOMAIN,
             endpointPrefix = BuildConfig.MARVEL_API_ENDPOINT_PREFIX
         )
-
-    override val isAutoLogoutEnabled: Boolean
-        get() = false
-
-    override val appBuildType: AppBuildType
-        get() = AppBuildType.getType()
-
-    override val packageSignature: String
-        get() = "tPwQygNBC+Pl1e3T5qwNGCg/oy9wOM9p+c4oddwuGFE="
 }

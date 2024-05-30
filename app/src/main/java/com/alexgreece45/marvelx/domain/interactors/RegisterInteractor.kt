@@ -8,17 +8,17 @@ import com.alexgreece45.marvelx.data.models_api.user.login.RequestUserLogin
 import com.alexgreece45.marvelx.data.models_api.user.login.toUserLoginResponseDomain
 import com.alexgreece45.marvelx.data.models_api.user.loginWithToken.toUserLoginWithTokenResponseDomain
 import com.alexgreece45.marvelx.data.models_api.user.signup.RequestUserSignup
-import com.alexgreece45.marvelx.data.models_api.user.signup.toSignupResponseDomain
 import com.alexgreece45.marvelx.domain.models_api.jwtSensitiveUserData.JwtSensitiveUserDataDomain
 import com.alexgreece45.marvelx.domain.models_api.user.VerificationStep
 import com.alexgreece45.marvelx.domain.models_api.user.login.LoginResponseDomain
 import com.alexgreece45.marvelx.domain.models_api.user.loginWithToken.LoginWithTokenResponseDomain
-import com.alexgreece45.marvelx.domain.models_api.user.signup.SignupResponseDomain
+import com.alexgreece45.marvelx.domain.models_api.user.signup.SignupDomain
+import com.alexgreece45.marvelx.domain.models_api.user.signup.toSignupDomain
 import com.alexgreece45.marvelx.repository.GetJwtForSensitiveUserDataRepositoryResponse
 import com.alexgreece45.marvelx.repository.LoginRepositoryResponse
 import com.alexgreece45.marvelx.repository.PostLoginWithTokenRepositoryResponse
-import com.alexgreece45.marvelx.repository.PostSignupRepositoryResponse
 import com.alexgreece45.marvelx.repository.RegisterRepository
+import com.alexgreece45.marvelx.repository.SignupRepositoryPartialState
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.extensions.safeAsync
 import kotlinx.coroutines.flow.Flow
@@ -26,7 +26,7 @@ import kotlinx.coroutines.flow.flow
 import okio.IOException
 
 interface RegisterInteractor {
-    suspend fun signup(requestUserSignup: RequestUserSignup): Flow<PostSignupPartialState>
+    suspend fun signup(requestUserSignup: RequestUserSignup): Flow<SignupPartialState>
 
     /**
      * The login call. Attempts to login the user by sending the given [email] and [password].
@@ -46,29 +46,45 @@ class RegisterInteractorImpl(
     private val repository: RegisterRepository,
     private val resourceProvider: ResourceProvider
 ) : RegisterInteractor {
-    override suspend fun signup(requestUserSignup: RequestUserSignup): Flow<PostSignupPartialState> =
+    override suspend fun signup(requestUserSignup: RequestUserSignup): Flow<SignupPartialState> =
         flow {
             val genericErrorMessage = resourceProvider.getGenericErrorMessage()
             repository.postSignup(requestUserSignup).collect {
                 when (it) {
-                    is PostSignupRepositoryResponse.Failed -> {
+                    is SignupRepositoryPartialState.Failed -> {
                         emit(
-                            PostSignupPartialState.Failed(
+                            SignupPartialState.Failed(
                                 errorMessage = it.responseUserError.errorMessage
                             )
                         )
                     }
 
-                    is PostSignupRepositoryResponse.Success -> {
-                        it.response?.let { signupResponse ->
+                    is SignupRepositoryPartialState.Success -> {
+                        val signupResponse = it.response
+                        if (signupResponse == null) {
                             emit(
-                                PostSignupPartialState.Success(
-                                    signupResponseDomain = signupResponse.toSignupResponseDomain()
+                                SignupPartialState.Failed(
+                                    errorMessage = genericErrorMessage
                                 )
                             )
-                        } ?: emit(
-                            PostSignupPartialState.Failed(
-                                errorMessage = genericErrorMessage
+                            return@collect
+                        }
+
+                        val signupDomain = signupResponse.toSignupDomain()
+                        if (signupDomain.verificationStep is VerificationStep.None
+                            && signupDomain.authCode.isBlank()
+                        ) {
+                            emit(
+                                SignupPartialState.Failed(
+                                    errorMessage = genericErrorMessage
+                                )
+                            )
+                            return@collect
+                        }
+
+                        emit(
+                            SignupPartialState.Success(
+                                signupDomain = signupDomain
                             )
                         )
                     }
@@ -78,13 +94,13 @@ class RegisterInteractorImpl(
             logger.e { "(postSignup) error: ${it.message.orEmpty()}" }
             when (it) {
                 is IOException -> {
-                    PostSignupPartialState.Failed(
+                    SignupPartialState.Failed(
                         errorMessage = resourceProvider.getString(R.string.no_internet_connection_error_message)
                     )
                 }
 
                 else -> {
-                    PostSignupPartialState.Failed(
+                    SignupPartialState.Failed(
                         errorMessage = resourceProvider.getGenericErrorMessage()
                     )
                 }
@@ -236,10 +252,10 @@ class RegisterInteractorImpl(
     }
 }
 
-sealed class PostSignupPartialState {
-    data class Success(val signupResponseDomain: SignupResponseDomain) : PostSignupPartialState()
+sealed class SignupPartialState {
+    data class Success(val signupDomain: SignupDomain) : SignupPartialState()
 
-    data class Failed(val errorMessage: String) : PostSignupPartialState()
+    data class Failed(val errorMessage: String) : SignupPartialState()
 }
 
 sealed class LoginPartialState {

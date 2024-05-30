@@ -4,6 +4,7 @@ import android.content.Context
 import com.alexgreece45.marvelx.BuildConfig
 import com.alexgreece45.marvelx.configuration.AppBuildType
 import com.alexgreece45.marvelx.configuration.ConfigLogic
+import com.alexgreece45.marvelx.configuration.ConfigSecurityLogic
 import com.alexgreece45.marvelx.controllers.AppLoggerController
 import com.alexgreece45.marvelx.controllers.AuthController
 import com.alexgreece45.marvelx.controllers.CryptoController
@@ -20,15 +21,14 @@ import com.alexgreece45.marvelx.di.network.interceptors.ApiInterceptor
 import com.alexgreece45.marvelx.di.network.interceptors.WebsocketInterceptor
 import com.alexgreece45.marvelx.domain.models_api.comic.ComicPriceType
 import com.alexgreece45.marvelx.domain.models_api.user.VerificationStep
-import com.alexgreece45.marvelx.util.gson.ComicPriceTypeAdapter
-import com.alexgreece45.marvelx.util.gson.OffsetDateTimeAdapter
-import com.alexgreece45.marvelx.util.gson.UUIDAdapter
-import com.alexgreece45.marvelx.util.gson.VerificationStepAdapter
-import com.alexgreece45.marvelx.util.gson.WebsocketRequestTypeAdapter
+import com.alexgreece45.marvelx.data.typeAdapters.ComicPriceTypeAdapter
+import com.alexgreece45.marvelx.data.typeAdapters.OffsetDateTimeAdapter
+import com.alexgreece45.marvelx.data.typeAdapters.UUIDAdapter
+import com.alexgreece45.marvelx.data.typeAdapters.VerificationStepAdapter
+import com.alexgreece45.marvelx.data.typeAdapters.WebsocketRequestTypeAdapter
 import com.chuckerteam.chucker.api.ChuckerInterceptor
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
-import dagger.hilt.android.qualifiers.ApplicationContext
 import okhttp3.CertificatePinner
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -42,7 +42,7 @@ import java.time.OffsetDateTime
 import java.util.UUID
 
 @Single
-@ComponentScan("com.alexgreece45.marvelx")
+@ComponentScan("com.alexgreece45.marvelx.di.network")
 class NetworkModule
 
 /**
@@ -80,23 +80,22 @@ fun provideGson(): Gson = GsonBuilder()
 @Factory
 fun provideHttpLoggingInterceptor(
     appLoggerController: AppLoggerController,
-    configLogic: ConfigLogic
-): HttpLoggingInterceptor {
-    return HttpLoggingInterceptor { message ->
+    configSecurityLogic: ConfigSecurityLogic
+): HttpLoggingInterceptor =
+    HttpLoggingInterceptor { message ->
         appLoggerController.d { message }
     }.apply {
-        level = when (configLogic.appBuildType) {
+        level = when (configSecurityLogic.appBuildType) {
             AppBuildType.RELEASE -> HttpLoggingInterceptor.Level.NONE
             else -> HttpLoggingInterceptor.Level.BODY
         }
     }
-}
 
 fun provideOkHttpClient(
-    @ApplicationContext context: Context,
+    context: Context,
     apiInterceptor: ApiInterceptor,
     httpLoggingInterceptor: HttpLoggingInterceptor,
-    configLogic: ConfigLogic
+    configSecurityLogic: ConfigSecurityLogic
 ): OkHttpClient {
     val okHttpClient = OkHttpClient.Builder()
 
@@ -111,10 +110,12 @@ fun provideOkHttpClient(
 
     // Adds required interceptors.
     okHttpClient.addInterceptor(apiInterceptor)
-    okHttpClient.addInterceptor(httpLoggingInterceptor)
+    if (configSecurityLogic.useNetworkLogger) {
+        okHttpClient.addInterceptor(httpLoggingInterceptor)
+    }
 
     // Adds "ChuckerInterceptor" only in non-release builds.
-    if (configLogic.appBuildType != AppBuildType.RELEASE) {
+    if (configSecurityLogic.appBuildType !is AppBuildType.RELEASE) {
         okHttpClient.addInterceptor(ChuckerInterceptor(context))
     }
 
@@ -129,10 +130,10 @@ fun provideOkHttpClient(
  */
 @Single(binds = [WebsocketControllerImpl::class])
 fun provideOkHttpClientForWebsocketClient(
-    @ApplicationContext context: Context,
+    context: Context,
     httpLoggingInterceptor: HttpLoggingInterceptor,
     websocketInterceptor: WebsocketInterceptor,
-    configLogic: ConfigLogic
+    configSecurityLogic: ConfigSecurityLogic
 ): OkHttpClient {
     val okHttpClient = OkHttpClient.Builder()
 
@@ -146,11 +147,13 @@ fun provideOkHttpClientForWebsocketClient(
     okHttpClient.certificatePinner(certificatePinner)
 
     // Add interceptors.
-    okHttpClient.addInterceptor(httpLoggingInterceptor)
+    if (configSecurityLogic.useNetworkLogger) {
+        okHttpClient.addInterceptor(httpLoggingInterceptor)
+    }
     okHttpClient.addInterceptor(websocketInterceptor)
 
     // Add "ChuckerInterceptor" only in non-release builds.
-    if (configLogic.appBuildType !is AppBuildType.RELEASE) {
+    if (configSecurityLogic.appBuildType !is AppBuildType.RELEASE) {
         okHttpClient.addInterceptor(ChuckerInterceptor(context))
     }
 

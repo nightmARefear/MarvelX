@@ -3,7 +3,6 @@ package com.alexgreece45.marvelx.util
 import android.content.Context
 import androidx.annotation.StringRes
 import com.alexgreece45.marvelx.R
-import dagger.hilt.android.qualifiers.ApplicationContext
 
 interface ResourceProvider {
     fun getContext(): Context
@@ -16,7 +15,7 @@ interface ResourceProvider {
 }
 
 class ResourceProviderImpl(
-    @ApplicationContext private val context: Context
+    private val context: Context
 ) : ResourceProvider {
     override fun getContext(): Context = context
 
