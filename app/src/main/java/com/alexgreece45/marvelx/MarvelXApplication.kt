@@ -2,11 +2,13 @@ package com.alexgreece45.marvelx
 
 import android.app.Application
 import android.content.Context
+import android.os.StrictMode
 import androidx.work.Configuration
 import androidx.work.ListenableWorker
 import androidx.work.WorkerFactory
 import androidx.work.WorkerParameters
 import com.alexgreece45.marvelx.configuration.ConfigLogic
+import com.alexgreece45.marvelx.configuration.ConfigSecurityLogic
 import com.alexgreece45.marvelx.controllers.AppLoggerController
 import com.alexgreece45.marvelx.controllers.AuthController
 import com.alexgreece45.marvelx.data.api.ApiClient
@@ -18,6 +20,7 @@ class MarvelXApplication : Application(), Configuration.Provider {
 
     private val appLoggerController: AppLoggerController by inject()
     private val refreshTokenWorkerFactory: RefreshTokenWorkerFactory by inject()
+    private val configSecurityLogic: ConfigSecurityLogic by inject()
 
     override fun onCreate() {
         super.onCreate()
@@ -25,12 +28,36 @@ class MarvelXApplication : Application(), Configuration.Provider {
         initKoin(this)
 
         appLoggerController.installLogger()
+
+        handleStrictMode()
     }
 
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder()
             .setWorkerFactory(refreshTokenWorkerFactory)
             .build()
+
+    /**
+     * Handles strict mode if it has been enabled in the security config.
+     */
+    private fun handleStrictMode() {
+        if (configSecurityLogic.enableStrictMode) {
+            StrictMode.setThreadPolicy(
+                StrictMode.ThreadPolicy.Builder()
+                    .detectDiskReads()
+                    .detectDiskWrites()
+                    .detectNetwork()
+                    .penaltyLog()
+                    .build()
+            )
+            StrictMode.setVmPolicy(
+                StrictMode.VmPolicy.Builder()
+                    .detectAll()
+                    .penaltyLog()
+                    .build()
+            )
+        }
+    }
 }
 
 class RefreshTokenWorkerFactory(

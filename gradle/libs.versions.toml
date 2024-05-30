@@ -120,7 +120,7 @@ kotlin-parcelize = { id = "org.jetbrains.kotlin.plugin.parcelize", version.ref =
 ksp = { id = "com.google.devtools.ksp", version.ref = "plugin-ksp" }
 
 [bundles]
-app-ui-release = [
+app-ui = [
     "androidx-core",
     "androidx-lifecycle-runtime-ktx",
     "androidx-lifecycle-runtime-compose",

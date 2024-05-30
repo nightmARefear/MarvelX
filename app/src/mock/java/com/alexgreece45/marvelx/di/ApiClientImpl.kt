@@ -9,7 +9,6 @@ import com.alexgreece45.marvelx.data.models.character.comic.ComicDataWrapper
 import com.google.gson.Gson
 import dagger.Module
 import dagger.hilt.InstallIn
-import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import okhttp3.ResponseBody
 import okhttp3.ResponseBody.Companion.toResponseBody
@@ -20,7 +19,7 @@ import javax.inject.Inject
 @Module
 @InstallIn(SingletonComponent::class)
 class ApiClientImpl @Inject constructor(
-    @ApplicationContext private val context: Context,
+    private val context: Context,
     private val gson: Gson
 ) : ApiClient {
 

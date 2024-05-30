@@ -173,7 +173,7 @@ class IntroLoadingViewModel(
                                 // been generated in the `loginFlow` function.
                                 VerificationStep.None -> {
                                     // Retrieve sign data.
-                                    loginInteractor.postLogin().collect { postLoginPartialState ->
+                                    loginInteractor.postLogin(authController.getAccessToken()).collect { postLoginPartialState ->
                                         when (postLoginPartialState) {
                                             PostLoginPartialState.Success -> {
                                                 refreshTokenController.startWorker()

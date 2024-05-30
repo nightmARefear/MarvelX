@@ -16,7 +16,7 @@ import kotlinx.coroutines.flow.flow
 interface RegisterRepository {
     suspend fun login(requestUserLogin: RequestUserLogin): Flow<LoginRepositoryResponse>
     suspend fun loginWithToken(): Flow<PostLoginWithTokenRepositoryResponse>
-    suspend fun postSignup(requestUserSignup: RequestUserSignup): Flow<PostSignupRepositoryResponse>
+    suspend fun postSignup(requestUserSignup: RequestUserSignup): Flow<SignupRepositoryPartialState>
 
     /**
      * Call that retrieves a JWT for accessing sensitive user data (i.e., email, or phone number).
@@ -68,18 +68,18 @@ class RegisterRepositoryImpl(
             }
         }
 
-    override suspend fun postSignup(requestUserSignup: RequestUserSignup): Flow<PostSignupRepositoryResponse> =
+    override suspend fun postSignup(requestUserSignup: RequestUserSignup): Flow<SignupRepositoryPartialState> =
         flow {
             apiClient.signup(requestUserSignup).let { response ->
                 if (response.isSuccessful) {
                     emit(
-                        PostSignupRepositoryResponse.Success(
+                        SignupRepositoryPartialState.Success(
                             response = response.body()
                         )
                     )
                 } else {
                     emit(
-                        PostSignupRepositoryResponse.Failed(
+                        SignupRepositoryPartialState.Failed(
                             responseUserError = parseError(response)
                         )
                     )
@@ -120,9 +120,9 @@ sealed class PostLoginWithTokenRepositoryResponse {
         PostLoginWithTokenRepositoryResponse()
 }
 
-sealed class PostSignupRepositoryResponse {
-    data class Success(val response: ResponseSignup?) : PostSignupRepositoryResponse()
-    data class Failed(val responseUserError: ResponseUserError) : PostSignupRepositoryResponse()
+sealed class SignupRepositoryPartialState {
+    data class Success(val response: ResponseSignup?) : SignupRepositoryPartialState()
+    data class Failed(val responseUserError: ResponseUserError) : SignupRepositoryPartialState()
 }
 
 sealed class GetJwtForSensitiveUserDataRepositoryResponse {

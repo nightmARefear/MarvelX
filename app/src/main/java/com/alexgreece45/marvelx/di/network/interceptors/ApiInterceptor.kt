@@ -109,7 +109,7 @@ class ApiInterceptor(
             .addHeader(
                 name = ConstantsSecurity.HeaderName.Authorization.name,
                 value = if (path.endsWith("retrieve_timestamp")) authController.getRefreshToken()
-                    .orEmpty() else authController.getAccessToken().orEmpty()
+                    .orEmpty() else authController.getAccessToken()
             )
             .method(originalRequest.method, originalRequest.body)
 

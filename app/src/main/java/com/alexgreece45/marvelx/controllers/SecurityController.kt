@@ -3,7 +3,7 @@ package com.alexgreece45.marvelx.controllers
 import android.os.Build
 import android.os.Debug
 import com.alexgreece45.marvelx.configuration.AppBuildType
-import com.alexgreece45.marvelx.configuration.ConfigLogic
+import com.alexgreece45.marvelx.configuration.ConfigSecurityLogic
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -89,27 +89,27 @@ interface SecurityController {
 }
 
 class SecurityControllerImpl(
-    private val configLogic: ConfigLogic,
+    private val configSecurityLogic: ConfigSecurityLogic,
     private val rootController: RootController,
     private val applicationPackageController: ApplicationPackageController
 ) : SecurityController {
 
     override fun isPackageSignatureValid(): Boolean {
-        if (configLogic.appBuildType !is AppBuildType.RELEASE) return true
+        if (configSecurityLogic.appBuildType !is AppBuildType.RELEASE) return true
         return applicationPackageController.getApplicationSignatures()
-            .any { it == configLogic.packageSignature }
+            .any { it == configSecurityLogic.packageSignature }
     }
 
     override fun isAppDebuggable(): Boolean =
-        configLogic.appBuildType is AppBuildType.RELEASE
+        configSecurityLogic.appBuildType is AppBuildType.RELEASE
                 && applicationPackageController.isAppDebuggable()
 
     override fun isDebuggerAttached(): Boolean =
-        configLogic.appBuildType is AppBuildType.RELEASE
+        configSecurityLogic.appBuildType is AppBuildType.RELEASE
                 && Debug.isDebuggerConnected()
 
     override fun isAppRunningOnEmulator(): Boolean =
-        configLogic.appBuildType is AppBuildType.RELEASE
+        configSecurityLogic.appBuildType is AppBuildType.RELEASE
                 && (
                 // Android SDK emulator
                 (Build.MANUFACTURER == "Google" && Build.BRAND == "google"
@@ -136,33 +136,33 @@ class SecurityControllerImpl(
                 )
 
     override fun isDeviceRooted(): Boolean =
-        configLogic.appBuildType is AppBuildType.RELEASE
+        configSecurityLogic.appBuildType is AppBuildType.RELEASE
                 && rootController.isRooted()
 
     override fun areRootCloakingAppsInstalled(): Boolean =
-        configLogic.appBuildType is AppBuildType.RELEASE
+        configSecurityLogic.appBuildType is AppBuildType.RELEASE
                 && rootController.areRootCloakingAppsInstalled()
 
     override fun isScreenCapturingBlocked(): Boolean =
-        configLogic.blockScreenCapture
-                && configLogic.appBuildType is AppBuildType.RELEASE
+        configSecurityLogic.blockScreenCapture
+                && configSecurityLogic.appBuildType is AppBuildType.RELEASE
 
     override fun areOverlayWindowsHidden(): Boolean =
-        configLogic.hideOverlayWindows
+        configSecurityLogic.hideOverlayWindows
                 && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
-                && configLogic.appBuildType is AppBuildType.RELEASE
+                && configSecurityLogic.appBuildType is AppBuildType.RELEASE
 
     override fun shouldApplicationDrawOverlayWindows(): Boolean =
-        configLogic.applicationDrawOverlayWindows
-                && configLogic.appBuildType is AppBuildType.RELEASE
+        configSecurityLogic.applicationDrawOverlayWindows
+                && configSecurityLogic.appBuildType is AppBuildType.RELEASE
 
     override fun shouldApplicationBeInMultiWindowMode(): Boolean =
-        configLogic.applicationMultiWindowMode
-                && configLogic.appBuildType is AppBuildType.RELEASE
+        configSecurityLogic.applicationMultiWindowMode
+                && configSecurityLogic.appBuildType is AppBuildType.RELEASE
 
     override fun isAutoLogoutEnabled(): Boolean =
-        configLogic.isAutoLogoutEnabled
-                && configLogic.appBuildType is AppBuildType.RELEASE
+        configSecurityLogic.isAutoLogoutEnabled
+                && configSecurityLogic.appBuildType is AppBuildType.RELEASE
 
     override fun isApplicationSecure(): Flow<Boolean> = flow {
         emit(

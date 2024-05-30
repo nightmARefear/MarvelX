@@ -106,13 +106,17 @@ android {
     sourceSets.all {
         kotlin.srcDir("build/generated/ksp/$name/kotlin")
     }
+
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_17.toString()
+    }
 }
 
 dependencies {
     implementation(libs.kotlin.reflect)
 
-    implementation(libs.bundles.app.ui.release)
     implementation(project.dependencies.platform(libs.androidx.compose.bom))
+    implementation(libs.bundles.app.ui)
     debugImplementation(libs.bundles.app.ui.debug)
 
     testImplementation(libs.bundles.test.implementation)

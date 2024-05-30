@@ -9,7 +9,7 @@ interface AuthController {
     /**
      * Returns the access token with its type.
      * */
-    fun getAccessToken(): String?
+    fun getAccessToken(): String
 
     /**
      * Returns the expiration UNIX of the access token.
@@ -60,10 +60,10 @@ class AuthControllerImpl(
             }
         }
 
-    override fun getAccessToken(): String? =
+    override fun getAccessToken(): String =
         userAuthData?.let { userAuthData ->
             "${userAuthData.tokenType} ${userAuthData.accessToken}"
-        }
+        }.orEmpty()
 
     override fun getAccessTokenExpiration(): Long =
         userAuthData?.accessExpiresIn ?: 0L

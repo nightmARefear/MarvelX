@@ -21,13 +21,14 @@ import com.alexgreece45.marvelx.data.models_api.resendOtp.ResponseResendOtpSucce
 import com.alexgreece45.marvelx.data.models_api.sensitiveUserData.RequestSensitiveUserData
 import com.alexgreece45.marvelx.data.models_api.sensitiveUserData.ResponseSensitiveUserData
 import com.alexgreece45.marvelx.data.models_api.token.ResponseToken
-import com.alexgreece45.marvelx.data.models_api.user.login.ResponseLogin
 import com.alexgreece45.marvelx.data.models_api.user.login.RequestUserLogin
+import com.alexgreece45.marvelx.data.models_api.user.login.ResponseLogin
 import com.alexgreece45.marvelx.data.models_api.user.loginWithToken.ResponseLoginWithToken
+import com.alexgreece45.marvelx.data.models_api.user.postLogin.RequestPostLogin
 import com.alexgreece45.marvelx.data.models_api.user.postLogin.ResponsePostLogin
 import com.alexgreece45.marvelx.data.models_api.user.profileDetails.ResponseProfileDetails
-import com.alexgreece45.marvelx.data.models_api.user.signup.ResponseSignup
 import com.alexgreece45.marvelx.data.models_api.user.signup.RequestUserSignup
+import com.alexgreece45.marvelx.data.models_api.user.signup.ResponseSignup
 import retrofit2.Response
 
 class ApiClientImpl(
@@ -55,8 +56,8 @@ class ApiClientImpl(
     override suspend fun loginWithToken(): Response<ResponseLoginWithToken> =
         apiService.loginWithToken()
 
-    override suspend fun postLogin(): Response<ResponsePostLogin> =
-        apiService.postLogin()
+    override suspend fun postLogin(accessToken: String): Response<ResponsePostLogin> =
+        apiService.postLogin(RequestPostLogin(accessToken))
 
     override suspend fun grantNewAccessToken(
         clientId: String,

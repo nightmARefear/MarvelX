@@ -1,7 +1,7 @@
 package com.alexgreece45.marvelx.controllers
 
 import com.alexgreece45.marvelx.configuration.AppBuildType
-import com.alexgreece45.marvelx.configuration.ConfigLogic
+import com.alexgreece45.marvelx.configuration.ConfigSecurityLogic
 import logcat.AndroidLogcatLogger
 import logcat.LogPriority
 import logcat.LogcatLogger
@@ -27,16 +27,16 @@ interface AppLoggerController {
 }
 
 class AppLoggerControllerImpl(
-    private val configLogic: ConfigLogic
+    private val configSecurityLogic: ConfigSecurityLogic
 ) : AppLoggerController {
     override fun installLogger() {
-        if (LogcatLogger.isInstalled.not() && configLogic.appBuildType != AppBuildType.RELEASE) {
+        if (LogcatLogger.isInstalled.not() && configSecurityLogic.appBuildType != AppBuildType.RELEASE) {
             LogcatLogger.install(AndroidLogcatLogger(LogPriority.VERBOSE))
         }
     }
 
     override fun d(message: () -> String) {
-        d(tag = configLogic.appBuildType.key, message = message)
+        d(tag = configSecurityLogic.appBuildType.key, message = message)
     }
 
     override fun d(tag: String, message: () -> String) {
@@ -44,7 +44,7 @@ class AppLoggerControllerImpl(
     }
 
     override fun i(message: () -> String) {
-        i(tag = configLogic.appBuildType.key, message = message)
+        i(tag = configSecurityLogic.appBuildType.key, message = message)
     }
 
     override fun i(tag: String, message: () -> String) {
@@ -52,7 +52,7 @@ class AppLoggerControllerImpl(
     }
 
     override fun e(message: () -> String) {
-        e(tag = configLogic.appBuildType.key, message = message)
+        e(tag = configSecurityLogic.appBuildType.key, message = message)
     }
 
     override fun e(tag: String, message: () -> String) {
