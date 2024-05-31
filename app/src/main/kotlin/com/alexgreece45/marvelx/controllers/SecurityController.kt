@@ -4,61 +4,75 @@ import android.os.Build
 import android.os.Debug
 import com.alexgreece45.marvelx.configuration.AppBuildType
 import com.alexgreece45.marvelx.configuration.ConfigSecurityLogic
-import com.alexgreece45.marvelx.controllers.crc.DexCrcController
+import com.alexgreece45.marvelx.controllers.model.security.ApplicationSecurity
+import com.alexgreece45.marvelx.controllers.model.security.SecurityCheck
+import com.alexgreece45.marvelx.controllers.model.security.SecurityViolation
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
+import java.io.File
 
 interface SecurityController {
     /**
-     * Checks whether the package signature is valid, and returns `true` if it, otherwise `false`.
+     * Checks whether the package signature is valid, and returns [SecurityCheck.Passed] if it is,
+     * otherwise [SecurityCheck.Failed] with [SecurityViolation.PackageSignatureInvalid].
      */
-    fun isPackageSignatureValid(): Boolean
+    fun isPackageSignatureValid(): SecurityCheck
 
     /**
-     * Checks whether the application allows debugging of its code , even when installed on a
+     * Checks whether the application allows debugging of its code, even when installed on a
      * non-development system. Comes from `android:debuggable` of the `<application>` tag in
      * `AndroidManifest`.
      *
-     * @return Returns `true` if the application allows debugging of its code, otherwise `false`.
+     * @return Returns [SecurityCheck.Passed] if debugging is disabled, otherwise
+     * [SecurityCheck.Failed] with [SecurityViolation.DebuggableApp].
      */
-    fun isAppDebuggable(): Boolean
+    fun isAppDebuggable(): SecurityCheck
 
     /**
-     * Checks whether a debugger has been attached to the application, and returns `true` if it has,
-     * otherwise `false`.
+     * Checks whether a debugger has been attached to the application, and returns
+     * [SecurityCheck.Failed] with [SecurityViolation.DebuggerAttached], otherwise
+     * [SecurityCheck.Passed].
      */
-    fun isDebuggerAttached(): Boolean
+    fun isDebuggerAttached(): SecurityCheck
 
     /**
-     * Checks whether the app is running on an emulator, and returns `true` if it is otherwise
-     * `false`.
+     * Checks whether the app is running on an emulator, and returns [SecurityCheck.Failed] with
+     * [SecurityViolation.RunningOnEmulator], otherwise [SecurityCheck.Passed].
      *
      * ### Note: This condition doesn't guarantee that it can always be detected if the app is running on an emulator.
      */
-    fun isAppRunningOnEmulator(): Boolean
+    fun isAppRunningOnEmulator(): SecurityCheck
 
     /**
-     * Checks whether the device is rooted, and returns `true` if it is otherwise `false`.
+     * Checks whether the device is rooted, and returns [SecurityCheck.Failed] with
+     * [SecurityViolation.DeviceRooted] if it is, otherwise [SecurityCheck.Passed].
      *
      * ### Note: This condition doesn't guarantee that a rooted device can always be detected.
      */
-    fun isDeviceRooted(): Boolean
+    fun isDeviceRooted(): SecurityCheck
 
     /**
-     * Checks whether the device has root cloaking apps installed, and returns `true` if it has
-     * otherwise `false`.
+     * Checks whether the device has root cloaking apps installed, and returns [SecurityCheck.Failed]
+     * with [SecurityViolation.RootCloakingAppsInstalled] if it has, otherwise [SecurityCheck.Passed].
      *
      * ### Note: This condition doesn't guarantee that installed root cloaking apps can always be detected.
      */
-    fun areRootCloakingAppsInstalled(): Boolean
+    fun areRootCloakingAppsInstalled(): SecurityCheck
+
+    /**
+     * Checks whether an external process has been attached and returns [SecurityCheck.Failed] with
+     * [SecurityViolation.ExternalProcessAttached] if it has, otherwise [SecurityCheck.Passed].
+     */
+    fun isExternalProcessAttached(): SecurityCheck
 
     /**
      * Defines whether the CRC signature of the generated DEX files of this application is valid.
-     * If it is, `true` is returned, otherwise `false`.
+     * If the signature is valid then [SecurityCheck.Passed] is returned, otherwise
+     * [SecurityCheck.Failed] with [SecurityViolation.AppDexCrcInvalid].
      */
-    fun isApplicationDEXCRCValid(): Boolean
+    fun isApplicationDexCrcValid(): SecurityCheck
 
     /**
      * Defines whether screen capturing is blocked in this application.
@@ -88,72 +102,104 @@ interface SecurityController {
 
     /**
      * Checks whether this application is running on a secure device and/or if it has been tampered
-     * with.
+     * with. It returns [ApplicationSecurity.Secure] if the application is secure, otherwise
+     * [ApplicationSecurity.Insecure] with the first [SecurityViolation] that was detected.
      *
      * ### Note: This condition doesn't guarantee that the device is secure, or that the application hasn't been tampered with.
      */
-    fun isApplicationSecure(): Flow<Boolean>
+    fun isApplicationSecure(): Flow<ApplicationSecurity>
 }
 
 class SecurityControllerImpl(
     private val configSecurityLogic: ConfigSecurityLogic,
     private val rootController: RootController,
     private val applicationPackageController: ApplicationPackageController,
-    private val dexCrcController: DexCrcController
+    private val antiReverseEngineeringController: AntiReverseEngineeringController,
+    private val antiHookController: AntiHookController
 ) : SecurityController {
+    /**
+     * All the security checks to perform.
+     */
+    private fun securityChecks() = listOf(
+        isPackageSignatureValid(),
+        isDebuggerAttached(),
+        isAppDebuggable(),
+        isAppRunningOnEmulator(),
+        isDeviceRooted(),
+        areRootCloakingAppsInstalled(),
+        isExternalProcessAttached(),
+        isApplicationDexCrcValid()
+    )
 
-    override fun isPackageSignatureValid(): Boolean {
-        if (configSecurityLogic.appBuildType !is AppBuildType.RELEASE) return true
-        return applicationPackageController.getApplicationSignatures()
-            .any { it == configSecurityLogic.packageSignature }
-    }
+    override fun isPackageSignatureValid(): SecurityCheck =
+        when (
+            applicationPackageController.getApplicationSignatures()
+                .any { it == configSecurityLogic.packageSignature }
+        ) {
+            true -> SecurityCheck.Passed
+            false -> SecurityCheck.Failed(SecurityViolation.PackageSignatureInvalid)
+        }
 
-    override fun isAppDebuggable(): Boolean =
-        configSecurityLogic.appBuildType is AppBuildType.RELEASE
-                && applicationPackageController.isAppDebuggable()
+    override fun isAppDebuggable(): SecurityCheck =
+        when (applicationPackageController.isAppDebuggable()) {
+            true -> SecurityCheck.Passed
+            else -> SecurityCheck.Failed(SecurityViolation.DebuggableApp)
+        }
 
-    override fun isDebuggerAttached(): Boolean =
-        configSecurityLogic.appBuildType is AppBuildType.RELEASE
-                && Debug.isDebuggerConnected()
+    override fun isDebuggerAttached(): SecurityCheck =
+        when (Debug.isDebuggerConnected()) {
+            false -> SecurityCheck.Passed
+            true -> SecurityCheck.Failed(SecurityViolation.DebuggableApp)
+        }
 
-    override fun isAppRunningOnEmulator(): Boolean =
-        configSecurityLogic.appBuildType is AppBuildType.RELEASE
-                && (
-                // Android SDK emulator
-                (Build.MANUFACTURER == "Google" && Build.BRAND == "google"
-                        && (Build.FINGERPRINT.startsWith("google/sdk_gphone")
-                        && Build.PRODUCT.startsWith("sdk_gphone")
-                        && Build.MODEL.startsWith("sdk_gphone")
-                        )
-                        )
-                        || Build.FINGERPRINT.startsWith("generic")
-                        || Build.FINGERPRINT.startsWith("unknown")
-                        || Build.MODEL.startsWith("google_sdk")
-                        || Build.MODEL.startsWith("Emulator")
-                        || Build.MODEL.contains("Android SDK built for x86")
-                        // Bluestacks
-                        || Build.BOARD.equals("QC_Reference_Phone") && !Build.MANUFACTURER.equals(
-                    "Xiaomi",
-                    ignoreCase = true
-                )
-                        || Build.MANUFACTURER.contains("Genymotion")
-                        || Build.HOST.startsWith("Build")
-                        // MSI App Player
-                        || Build.BRAND.startsWith("generic") && Build.DEVICE.startsWith("generic")
-                        || Build.PRODUCT == "google_sdk"
-                )
+    override fun isAppRunningOnEmulator(): SecurityCheck =
+        if ( // Android SDK emulator
+            (Build.MANUFACTURER == "Google" && Build.BRAND == "google"
+                    && (Build.FINGERPRINT.startsWith("google/sdk_gphone")
+                    && Build.PRODUCT.startsWith("sdk_gphone")
+                    && Build.MODEL.startsWith("sdk_gphone")
+                    )
+                    )
+            || Build.FINGERPRINT.startsWith("generic")
+            || Build.FINGERPRINT.startsWith("unknown")
+            || Build.MODEL.startsWith("google_sdk")
+            || Build.MODEL.startsWith("Emulator")
+            || Build.MODEL.contains("Android SDK built for x86")
+            // BlueStacks
+            || Build.BOARD.equals("QC_Reference_Phone") && !Build.MANUFACTURER.equals(
+                "Xiaomi",
+                ignoreCase = true
+            )
+            || Build.MANUFACTURER.contains("Genymotion")
+            || Build.HOST.startsWith("Build")
+            // MSI App Player
+            || Build.BRAND.startsWith("generic") && Build.DEVICE.startsWith("generic")
+            || Build.PRODUCT == "google_sdk"
+        ) SecurityCheck.Failed(SecurityViolation.RunningOnEmulator) else SecurityCheck.Passed
 
-    override fun isDeviceRooted(): Boolean =
-        configSecurityLogic.appBuildType is AppBuildType.RELEASE
-                && rootController.isRooted()
+    override fun isDeviceRooted(): SecurityCheck =
+        when (rootController.isRooted()) {
+            true -> SecurityCheck.Passed
+            else -> SecurityCheck.Failed(SecurityViolation.DeviceRooted)
+        }
 
-    override fun areRootCloakingAppsInstalled(): Boolean =
-        configSecurityLogic.appBuildType is AppBuildType.RELEASE
-                && rootController.areRootCloakingAppsInstalled()
+    override fun areRootCloakingAppsInstalled(): SecurityCheck =
+        when (rootController.areRootCloakingAppsInstalled()) {
+            true -> SecurityCheck.Passed
+            else -> SecurityCheck.Failed(SecurityViolation.RootCloakingAppsInstalled)
+        }
 
-    override fun isApplicationDEXCRCValid(): Boolean =
-        configSecurityLogic.appBuildType is AppBuildType.RELEASE
-                && dexCrcController.validateApplicationDEXCRC()
+    override fun isExternalProcessAttached(): SecurityCheck =
+        when (antiHookController.isExternalProcessAttached()) {
+            false -> SecurityCheck.Passed
+            true -> SecurityCheck.Failed(SecurityViolation.ExternalProcessAttached)
+        }
+
+    override fun isApplicationDexCrcValid(): SecurityCheck =
+        when (antiReverseEngineeringController.validateApplicationDexCRC()) {
+            true -> SecurityCheck.Passed
+            else -> SecurityCheck.Failed(SecurityViolation.AppDexCrcInvalid)
+        }
 
     override fun isScreenCapturingBlocked(): Boolean =
         configSecurityLogic.blockScreenCapture
@@ -176,15 +222,18 @@ class SecurityControllerImpl(
         configSecurityLogic.isAutoLogoutEnabled
                 && configSecurityLogic.appBuildType is AppBuildType.RELEASE
 
-    override fun isApplicationSecure(): Flow<Boolean> = flow {
+    override fun isApplicationSecure(): Flow<ApplicationSecurity> = flow {
+        if (configSecurityLogic.appBuildType !is AppBuildType.RELEASE) {
+            emit(ApplicationSecurity.Secure)
+            return@flow
+        }
+
+        val failedSecurityCheck = securityChecks().firstOrNull { it is SecurityCheck.Failed }
         emit(
-            isPackageSignatureValid()
-                    && !isDebuggerAttached()
-                    && !isAppDebuggable()
-                    && !isAppRunningOnEmulator()
-                    && !isDeviceRooted()
-                    && !areRootCloakingAppsInstalled()
-                    && !isApplicationDEXCRCValid()
+            when (failedSecurityCheck) {
+                null -> ApplicationSecurity.Secure
+                else -> ApplicationSecurity.Insecure((failedSecurityCheck as SecurityCheck.Failed).securityViolation)
+            }
         )
     }.flowOn(Dispatchers.IO)
 }

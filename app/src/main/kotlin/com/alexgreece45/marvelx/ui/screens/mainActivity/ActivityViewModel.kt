@@ -6,10 +6,10 @@ import com.alexgreece45.marvelx.controllers.AppLoggerController
 import com.alexgreece45.marvelx.controllers.PrefKeys
 import com.alexgreece45.marvelx.controllers.SecurityController
 import com.alexgreece45.marvelx.controllers.WebsocketController
+import com.alexgreece45.marvelx.controllers.model.security.SecurityViolation
 import com.alexgreece45.marvelx.controllers.model.websocket.WebsocketOnMessageReceivedPartialState
 import com.alexgreece45.marvelx.controllers.model.websocket.WebsocketRequestType
 import com.alexgreece45.marvelx.controllers.model.websocket.WebsocketSendRequestPartialState
-import com.alexgreece45.marvelx.network_logic.models_websocket.ResponseWebsocket
 import com.alexgreece45.marvelx.domain.interactors.LoginInteractor
 import com.alexgreece45.marvelx.domain.interactors.LogoutPartialState
 import com.alexgreece45.marvelx.domain.models_websocket.toWebsocketDomain
@@ -17,14 +17,15 @@ import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
 import com.alexgreece45.marvelx.mvi.BaseViewModel
+import com.alexgreece45.marvelx.network_logic.models_websocket.ResponseWebsocket
 import com.alexgreece45.marvelx.ui.navigation.router.RouterHost
+import com.alexgreece45.marvelx.ui.screens.mainActivity.models.CoroutineWebSocketListener
+import com.alexgreece45.marvelx.ui.screens.mainActivity.models.WebSocketEvent
 import com.alexgreece45.marvelx.util.DateUtil
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.constants.ConstantsSecurity
 import com.alexgreece45.marvelx.util.constants.ConstantsWorker
 import com.alexgreece45.marvelx.util.extensions.differenceInMinutes
-import com.alexgreece45.marvelx.ui.screens.mainActivity.models.CoroutineWebSocketListener
-import com.alexgreece45.marvelx.ui.screens.mainActivity.models.WebSocketEvent
 import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.consumeEach
@@ -70,8 +71,8 @@ sealed class ActivityEffect : BaseEffect {
         data class NavigateToHomeScreenWithSessionExpired(val showErrorDialog: Boolean) :
             Navigation()
 
-        data object NavigateToSplashScreenWithApplicationInsecureError : Navigation()
-        data object NavigateToSplashScreenWithApplicationInMultiWindowModeViolation : Navigation()
+        data class NavigateToSplashScreenWithSecurityViolation(val securityViolation: SecurityViolation) :
+            Navigation()
     }
 }
 
@@ -126,14 +127,18 @@ class ActivityViewModel : BaseViewModel<ActivityEvent, ActivityState, ActivityEf
             ActivityEvent.ApplicationDrawOverlayWindowsViolation -> {
                 onLogoutUser(showErrorDialog = false)
                 setEffect {
-                    ActivityEffect.Navigation.NavigateToSplashScreenWithApplicationInsecureError
+                    ActivityEffect.Navigation.NavigateToSplashScreenWithSecurityViolation(
+                        SecurityViolation.ApplicationDrawOverlayWindows
+                    )
                 }
             }
 
             ActivityEvent.ApplicationInMultiWindowModeViolation -> {
                 onLogoutUser(showErrorDialog = false)
                 setEffect {
-                    ActivityEffect.Navigation.NavigateToSplashScreenWithApplicationInMultiWindowModeViolation
+                    ActivityEffect.Navigation.NavigateToSplashScreenWithSecurityViolation(
+                        SecurityViolation.ApplicationInMultiWindowMode
+                    )
                 }
             }
         }

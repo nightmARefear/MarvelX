@@ -1,4 +1,4 @@
-package com.alexgreece45.marvelx.controllers.crc.model
+package com.alexgreece45.marvelx.controllers.model.antiReverseEngineering
 
 import java.util.zip.ZipEntry
 

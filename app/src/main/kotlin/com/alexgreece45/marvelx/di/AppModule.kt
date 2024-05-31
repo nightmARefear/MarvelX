@@ -10,6 +10,10 @@ import com.alexgreece45.marvelx.configuration.ConfigLogic
 import com.alexgreece45.marvelx.configuration.ConfigLogicImpl
 import com.alexgreece45.marvelx.configuration.ConfigSecurityLogic
 import com.alexgreece45.marvelx.configuration.ConfigSecurityLogicImpl
+import com.alexgreece45.marvelx.controllers.AntiHookController
+import com.alexgreece45.marvelx.controllers.AntiHookControllerImpl
+import com.alexgreece45.marvelx.controllers.AntiReverseEngineeringController
+import com.alexgreece45.marvelx.controllers.AntiReverseEngineeringControllerImpl
 import com.alexgreece45.marvelx.controllers.AppLoggerController
 import com.alexgreece45.marvelx.controllers.AppLoggerControllerImpl
 import com.alexgreece45.marvelx.controllers.ApplicationPackageController
@@ -30,8 +34,6 @@ import com.alexgreece45.marvelx.controllers.SecurityController
 import com.alexgreece45.marvelx.controllers.SecurityControllerImpl
 import com.alexgreece45.marvelx.controllers.TimerController
 import com.alexgreece45.marvelx.controllers.TimerControllerImpl
-import com.alexgreece45.marvelx.controllers.crc.DexCrcController
-import com.alexgreece45.marvelx.controllers.crc.DexCrcControllerImpl
 import com.alexgreece45.marvelx.data.repository.ChangePasswordRepository
 import com.alexgreece45.marvelx.data.repository.ChangePasswordRepositoryImpl
 import com.alexgreece45.marvelx.data.repository.CharacterRepository
@@ -212,10 +214,11 @@ private val controllerModule = module {
     single<RefreshTokenController> { RefreshTokenControllerImpl(get(), get(), get()) }
     single<TimerController> { TimerControllerImpl() }
     single<RootController> { RootControllerImpl(get()) }
-    single<SecurityController> { SecurityControllerImpl(get(), get(), get(), get()) }
+    single<SecurityController> { SecurityControllerImpl(get(), get(), get(), get(), get()) }
     single<ApplicationPackageController> { ApplicationPackageControllerImpl(get(), get()) }
     single<AppLoggerController> { AppLoggerControllerImpl(get()) }
-    single<DexCrcController> { DexCrcControllerImpl(get()) }
+    single<AntiReverseEngineeringController> { AntiReverseEngineeringControllerImpl(get()) }
+    single<AntiHookController> { AntiHookControllerImpl() }
 }
 
 private val formValidatorModule = module {

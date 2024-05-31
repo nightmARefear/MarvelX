@@ -3,6 +3,8 @@ package com.alexgreece45.marvelx.ui.screens.splash
 import androidx.annotation.StringRes
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.controllers.model.security.ApplicationSecurity
+import com.alexgreece45.marvelx.controllers.model.security.SecurityViolation
 import com.alexgreece45.marvelx.domain.interactors.SplashInteractor
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
@@ -16,28 +18,33 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 sealed interface SplashContract {
-    sealed class AlertDialogErrorType(@StringRes val title: Int, @StringRes val errorMessage: Int) {
-        data object InsecureApplication : AlertDialogErrorType(
-            title = R.string.splash_screen_alert_dialog_title_insecure_application,
-            errorMessage = R.string.splash_screen_alert_dialog_error_message_insecure_application
-        )
+    sealed class AlertDialogErrorType(
+        @StringRes val title: Int,
+        @StringRes val errorMessage: Int,
+        open val securityViolation: SecurityViolation
+    ) {
+        data class InsecureApplication(override val securityViolation: SecurityViolation) :
+            AlertDialogErrorType(
+                title = R.string.splash_screen_alert_dialog_title_insecure_application,
+                errorMessage = R.string.splash_screen_alert_dialog_error_message_insecure_application,
+                securityViolation = securityViolation
+            )
 
         data object ApplicationInMultiWindowMode : AlertDialogErrorType(
             title = R.string.splash_screen_alert_dialog_title_application_in_multi_window_mode,
-            errorMessage = R.string.splash_screen_alert_dialog_error_message_application_in_multi_window_mode
+            errorMessage = R.string.splash_screen_alert_dialog_error_message_application_in_multi_window_mode,
+            securityViolation = SecurityViolation.ApplicationInMultiWindowMode
         )
     }
 
     data class SplashScreenError(
         val title: String,
         val errorMessage: String,
-        val onCloseClick: Event
+        val onCloseClick: () -> Unit
     ) : SplashContract
 
     sealed interface Event : BaseEvent {
         data object Init : Event
-
-        data object OnCloseClick : Event
     }
 
     data class State(
@@ -56,19 +63,24 @@ sealed interface SplashContract {
     }
 }
 
-
 class SplashViewModel(
     private val resourceProvider: ResourceProvider,
     private val splashInteractor: SplashInteractor
 ) : BaseViewModel<SplashContract.Event, SplashContract.State, SplashContract.Effect>() {
     override fun setInitialState(): SplashContract.State = SplashContract.State()
-
     override fun handleEvents(event: SplashContract.Event) {
         when (event) {
             SplashContract.Event.Init -> {
                 when (val splashAlertDialogErrorTypeNavArg =
                     NavArgHelper.getArgument<SplashContract.AlertDialogErrorType>(NavArg.SplashAlertDialogErrorType)) {
                     is NavArgStatus.Exists -> {
+                        when (splashAlertDialogErrorTypeNavArg.value.securityViolation) {
+                            is SecurityViolation.ApplicationInMultiWindowMode -> showAlertDialog(
+                                SplashContract.AlertDialogErrorType.ApplicationInMultiWindowMode
+                            )
+
+                            else -> showAlertDialog(splashAlertDialogErrorTypeNavArg.value)
+                        }
                         showAlertDialog(splashAlertDialogErrorTypeNavArg.value)
                         return
                     }
@@ -80,25 +92,23 @@ class SplashViewModel(
                     // Intentional delay for logo to appear for at least 3 seconds.
                     delay(3000L)
 
-                    splashInteractor.isApplicationSecure().collect { isApplicationSecure ->
-                        when (isApplicationSecure) {
-                            true -> {
+                    splashInteractor.isApplicationSecure().collect { applicationSecurity ->
+                        when (applicationSecurity) {
+                            ApplicationSecurity.Secure -> {
                                 setEffect {
                                     SplashContract.Effect.Navigation.NavigateToIntroLoadingScreen
                                 }
                             }
 
-                            false -> {
-                                showAlertDialog(SplashContract.AlertDialogErrorType.InsecureApplication)
+                            is ApplicationSecurity.Insecure -> {
+                                showAlertDialog(
+                                    SplashContract.AlertDialogErrorType.InsecureApplication(
+                                        applicationSecurity.securityViolation
+                                    )
+                                )
                             }
                         }
                     }
-                }
-            }
-
-            SplashContract.Event.OnCloseClick -> {
-                setEffect {
-                    SplashContract.Effect.Navigation.CloseApplication
                 }
             }
         }
@@ -113,8 +123,13 @@ class SplashViewModel(
                 isAnimationVisible = false,
                 error = SplashContract.SplashScreenError(
                     title = resourceProvider.getString(alertDialogErrorType.title),
-                    errorMessage = resourceProvider.getString(alertDialogErrorType.errorMessage),
-                    onCloseClick = SplashContract.Event.OnCloseClick
+                    errorMessage = resourceProvider.getString(alertDialogErrorType.errorMessage)
+                        .plus("\n\nError Code: ${alertDialogErrorType.securityViolation.errorCode}"),
+                    onCloseClick = {
+                        setEffect {
+                            SplashContract.Effect.Navigation.CloseApplication
+                        }
+                    }
                 )
             )
         }

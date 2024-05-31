@@ -83,7 +83,7 @@ fun SplashScreen(
                     errorMessage = splashScreenError.errorMessage,
                     confirmButton = AlertDialogButton(
                         value = stringResource(R.string.splash_screen_alert_dialog_confirm_button),
-                        onClick = { viewModel.setEvent(splashScreenError.onCloseClick) }
+                        onClick = splashScreenError.onCloseClick
                     )
                 )
             }
