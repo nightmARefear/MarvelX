@@ -154,4 +154,7 @@ dependencies {
     implementation(libs.bundles.koin.implementation)
     ksp(libs.koin.ksp.compiler)
     testImplementation(libs.bundles.koin.test.implementation)
+
+    // Bouncycastle. Contains Blake2 algorithm.
+    implementation(libs.bouncycastle.bcprov)
 }

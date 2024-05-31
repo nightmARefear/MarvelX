@@ -1,10 +1,10 @@
 package com.alexgreece45.marvelx.controllers
 
 import com.alexgreece45.marvelx.configuration.ConfigLogic
-import com.alexgreece45.marvelx.controllers.models.websocket.WebsocketOnMessageReceivedPartialState
-import com.alexgreece45.marvelx.controllers.models.websocket.WebsocketRequestType
-import com.alexgreece45.marvelx.controllers.models.websocket.WebsocketSendRequestPartialState
-import com.alexgreece45.marvelx.controllers.models.websocket.WebsocketTerminationCode
+import com.alexgreece45.marvelx.controllers.model.websocket.WebsocketOnMessageReceivedPartialState
+import com.alexgreece45.marvelx.controllers.model.websocket.WebsocketRequestType
+import com.alexgreece45.marvelx.controllers.model.websocket.WebsocketSendRequestPartialState
+import com.alexgreece45.marvelx.controllers.model.websocket.WebsocketTerminationCode
 import com.alexgreece45.marvelx.network_logic.models_websocket.RequestWebsocket
 import com.alexgreece45.marvelx.util.constants.ConstantsSecurity
 import com.google.gson.Gson

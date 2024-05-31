@@ -6,9 +6,9 @@ import com.alexgreece45.marvelx.controllers.AppLoggerController
 import com.alexgreece45.marvelx.controllers.PrefKeys
 import com.alexgreece45.marvelx.controllers.SecurityController
 import com.alexgreece45.marvelx.controllers.WebsocketController
-import com.alexgreece45.marvelx.controllers.models.websocket.WebsocketOnMessageReceivedPartialState
-import com.alexgreece45.marvelx.controllers.models.websocket.WebsocketRequestType
-import com.alexgreece45.marvelx.controllers.models.websocket.WebsocketSendRequestPartialState
+import com.alexgreece45.marvelx.controllers.model.websocket.WebsocketOnMessageReceivedPartialState
+import com.alexgreece45.marvelx.controllers.model.websocket.WebsocketRequestType
+import com.alexgreece45.marvelx.controllers.model.websocket.WebsocketSendRequestPartialState
 import com.alexgreece45.marvelx.network_logic.models_websocket.ResponseWebsocket
 import com.alexgreece45.marvelx.domain.interactors.LoginInteractor
 import com.alexgreece45.marvelx.domain.interactors.LogoutPartialState

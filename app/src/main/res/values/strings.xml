@@ -1,4 +1,7 @@
 <resources>
+    // DEX CRC
+    <string name="dex_crc">F5CDaispuQfYSYVV5M4cVc7ratyB7wXpzvap7km3KcE=</string>
+
     // Generic
     <string name="error">error</string>
     <string name="male">male</string>

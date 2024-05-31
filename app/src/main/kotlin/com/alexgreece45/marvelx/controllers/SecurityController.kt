@@ -4,6 +4,7 @@ import android.os.Build
 import android.os.Debug
 import com.alexgreece45.marvelx.configuration.AppBuildType
 import com.alexgreece45.marvelx.configuration.ConfigSecurityLogic
+import com.alexgreece45.marvelx.controllers.crc.DexCrcController
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -54,6 +55,12 @@ interface SecurityController {
     fun areRootCloakingAppsInstalled(): Boolean
 
     /**
+     * Defines whether the CRC signature of the generated DEX files of this application is valid.
+     * If it is, `true` is returned, otherwise `false`.
+     */
+    fun isApplicationDEXCRCValid(): Boolean
+
+    /**
      * Defines whether screen capturing is blocked in this application.
      */
     fun isScreenCapturingBlocked(): Boolean
@@ -91,7 +98,8 @@ interface SecurityController {
 class SecurityControllerImpl(
     private val configSecurityLogic: ConfigSecurityLogic,
     private val rootController: RootController,
-    private val applicationPackageController: ApplicationPackageController
+    private val applicationPackageController: ApplicationPackageController,
+    private val dexCrcController: DexCrcController
 ) : SecurityController {
 
     override fun isPackageSignatureValid(): Boolean {
@@ -143,6 +151,10 @@ class SecurityControllerImpl(
         configSecurityLogic.appBuildType is AppBuildType.RELEASE
                 && rootController.areRootCloakingAppsInstalled()
 
+    override fun isApplicationDEXCRCValid(): Boolean =
+        configSecurityLogic.appBuildType is AppBuildType.RELEASE
+                && dexCrcController.validateApplicationDEXCRC()
+
     override fun isScreenCapturingBlocked(): Boolean =
         configSecurityLogic.blockScreenCapture
                 && configSecurityLogic.appBuildType is AppBuildType.RELEASE
@@ -172,6 +184,7 @@ class SecurityControllerImpl(
                     && !isAppRunningOnEmulator()
                     && !isDeviceRooted()
                     && !areRootCloakingAppsInstalled()
+                    && !isApplicationDEXCRCValid()
         )
     }.flowOn(Dispatchers.IO)
 }

@@ -1,4 +1,4 @@
-package com.alexgreece45.marvelx.controllers.models.websocket
+package com.alexgreece45.marvelx.controllers.model.websocket
 
 /**
  * Contains all the possible websocket request types that can be made by the client -- i.e., the

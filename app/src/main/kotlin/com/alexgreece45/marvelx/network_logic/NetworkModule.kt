@@ -13,7 +13,7 @@ import com.alexgreece45.marvelx.controllers.RequestController
 import com.alexgreece45.marvelx.controllers.RequestControllerImpl
 import com.alexgreece45.marvelx.controllers.WebsocketController
 import com.alexgreece45.marvelx.controllers.WebsocketControllerImpl
-import com.alexgreece45.marvelx.controllers.models.websocket.WebsocketRequestType
+import com.alexgreece45.marvelx.controllers.model.websocket.WebsocketRequestType
 import com.alexgreece45.marvelx.network_logic.api.ApiClient
 import com.alexgreece45.marvelx.network_logic.api.ApiService
 import com.alexgreece45.marvelx.di.ApiClientImpl

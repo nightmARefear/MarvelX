@@ -1,4 +1,4 @@
-package com.alexgreece45.marvelx.controllers.models.websocket
+package com.alexgreece45.marvelx.controllers.model.websocket
 
 /**
  * Defines a websocket server response; either [Success] if the requested data was successfully
