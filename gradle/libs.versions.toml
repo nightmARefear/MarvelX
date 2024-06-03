@@ -10,6 +10,8 @@ plugin-kotlin = "1.9.23"
 plugin-google-mapsplatform-secrets = "2.0.1"
 plugin-ksp = "1.9.23-1.0.20"
 
+application-name = "com.alexgreece45.marvelx"
+
 airbnb-lottie-compose = "6.1.0"
 
 androidx-core = "1.13.1"
@@ -33,6 +35,8 @@ google-accompanist = "0.32.0"
 google-code-gson = "2.10.1"
 
 hilt-navigation = "1.2.0"
+
+java-version = "17"
 
 junit = "4.13.2"
 
@@ -132,6 +136,7 @@ app-ui = [
     "androidx-compose-ui",
     "androidx-compose-material",
     "androidx-compose-material-icons-extended",
+    "androidx-compose-ui-tooling-preview",
     "androidx-navigation",
     "androidx-navigation-compose",
     "google-accompanist-systemuicontroller",
@@ -139,7 +144,6 @@ app-ui = [
 ]
 
 app-ui-debug = [
-    "androidx-compose-ui-tooling-preview",
     "androidx-compose-ui-tooling"
 ]
 

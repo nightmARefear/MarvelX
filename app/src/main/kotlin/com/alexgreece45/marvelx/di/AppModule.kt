@@ -217,7 +217,7 @@ private val controllerModule = module {
     single<SecurityController> { SecurityControllerImpl(get(), get(), get(), get(), get()) }
     single<ApplicationPackageController> { ApplicationPackageControllerImpl(get(), get()) }
     single<AppLoggerController> { AppLoggerControllerImpl(get()) }
-    single<AntiReverseEngineeringController> { AntiReverseEngineeringControllerImpl(get()) }
+    single<AntiReverseEngineeringController> { AntiReverseEngineeringControllerImpl(get(), get()) }
     single<AntiHookController> { AntiHookControllerImpl() }
 }
 

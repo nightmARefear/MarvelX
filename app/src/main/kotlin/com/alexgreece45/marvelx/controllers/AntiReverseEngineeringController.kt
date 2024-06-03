@@ -1,8 +1,6 @@
 package com.alexgreece45.marvelx.controllers
 
-import android.util.Base64
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.controllers.model.antiReverseEngineering.MyZipEntry
 import com.alexgreece45.marvelx.util.ResourceProvider
 import org.bouncycastle.jcajce.provider.digest.Blake2b
 import org.bouncycastle.jce.provider.BouncyCastleProvider
@@ -17,9 +15,8 @@ import java.util.zip.ZipFile
 interface AntiReverseEngineeringController {
     /**
      * Validates the overall CRC of the generated DEX files of this application. This is achieved by
-     * retrieving all the [ZipEntry]s of the [ZipFile] of the application's code path, filtering
-     * them by name ("`dex`"), ordering them based on their names in ascending order (firstly we
-     * have replaced "classes" with "0" and ".dex" with ""), and then by calculating the signature.
+     * retrieving all the [ZipEntry]s of the [ZipFile] of the application's code that contain `dex`
+     * in their name path, and then by calculating the signature.
      *
      * The signature is calculated by concatenating all the CRCs of the DEX files, and then applying
      * the `Blake2b` algorithm with the setting of `256` which indicates a 256-bit hash output.
@@ -29,44 +26,34 @@ interface AntiReverseEngineeringController {
      *
      * @return `true` if the DEX CRC was successfully validated, otherwise `false`.
      */
-    fun validateApplicationDexCRC(): Boolean
+    fun isApplicationDexCrcValid(): Boolean
 }
 
 internal class AntiReverseEngineeringControllerImpl(
-    private val resourceProvider: ResourceProvider
+    private val resourceProvider: ResourceProvider,
+    private val appLoggerController: AppLoggerController
 ) : AntiReverseEngineeringController {
-    override fun validateApplicationDexCRC(): Boolean {
-        val zipFile = ZipFile(resourceProvider.getContext().packageCodePath)
-        val zipEntries = zipFile.stream().iterator().asSequence().toList().filter {
-            it.name.contains("dex")
-        }
-
-        val myZipEntries = zipEntries
-            .map {
-                MyZipEntry(
-                    name = it.name
-                        .replace("classes", "0")
-                        .replace(".dex", ""),
-                    crc = it.crc
-                )
-            }
-            .sortedBy {
-                it.name.toInt()
-            }
-
-        val concatenatedCrcs = buildString {
-            myZipEntries.forEach {
-                append(it.crc)
-            }
-        }
-
+    override fun isApplicationDexCrcValid(): Boolean {
         return try {
+            val zipFile = ZipFile(resourceProvider.getContext().packageCodePath)
+            val zipEntries = zipFile.stream().iterator().asSequence().toList().filter {
+                it.name.contains("dex")
+            }
+
+            val concatenatedCrcs = buildString {
+                append(zipFile.getEntry("classes.dex").crc)
+                for (i in 2..zipEntries.size) {
+                    append(zipFile.getEntry("classes$i.dex").crc)
+                }
+            }
+
             Security.addProvider(BouncyCastleProvider())
             val digest = Blake2b.Blake2b256()
             val blake2Hash = digest.digest(concatenatedCrcs.toByteArray(Charsets.UTF_8))
-            val signature = Base64.encodeToString(blake2Hash, Base64.NO_WRAP)
+            val signature = java.util.Base64.getEncoder().encodeToString(blake2Hash)
             signature == resourceProvider.getString(R.string.dex_crc)
         } catch (e: Exception) {
+            appLoggerController.e("AntiReverseEngineeringController") { "e: $e" }
             false
         }
     }

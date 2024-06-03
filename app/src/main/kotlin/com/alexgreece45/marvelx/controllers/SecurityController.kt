@@ -11,7 +11,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
-import java.io.File
 
 interface SecurityController {
     /**
@@ -121,14 +120,14 @@ class SecurityControllerImpl(
      * All the security checks to perform.
      */
     private fun securityChecks() = listOf(
+        isApplicationDexCrcValid(),
         isPackageSignatureValid(),
         isDebuggerAttached(),
         isAppDebuggable(),
         isAppRunningOnEmulator(),
         isDeviceRooted(),
         areRootCloakingAppsInstalled(),
-        isExternalProcessAttached(),
-        isApplicationDexCrcValid()
+        isExternalProcessAttached()
     )
 
     override fun isPackageSignatureValid(): SecurityCheck =
@@ -196,7 +195,7 @@ class SecurityControllerImpl(
         }
 
     override fun isApplicationDexCrcValid(): SecurityCheck =
-        when (antiReverseEngineeringController.validateApplicationDexCRC()) {
+        when (antiReverseEngineeringController.isApplicationDexCrcValid()) {
             true -> SecurityCheck.Passed
             else -> SecurityCheck.Failed(SecurityViolation.AppDexCrcInvalid)
         }
