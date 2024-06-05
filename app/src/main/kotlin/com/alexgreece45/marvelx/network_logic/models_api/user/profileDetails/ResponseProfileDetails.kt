@@ -1,6 +1,6 @@
 package com.alexgreece45.marvelx.network_logic.models_api.user.profileDetails
 
-import com.alexgreece45.marvelx.domain.models_api.user.profileDetails.ProfileDetailsDomain
+import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.ProfileDetailsDomain
 import com.alexgreece45.marvelx.network_logic.models_api.user.Gender
 import com.google.gson.annotations.SerializedName
 

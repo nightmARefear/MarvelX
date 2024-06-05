@@ -1,7 +1,7 @@
 package com.alexgreece45.marvelx.network_logic.models_api.sensitiveUserData
 
-import com.alexgreece45.marvelx.domain.models_api.sensitiveUserData.OtpPreferredCommunicationType
-import com.alexgreece45.marvelx.domain.models_api.sensitiveUserData.SensitiveUserDataDomain
+import com.alexgreece45.marvelx.domain.model_api.sensitiveUserData.OtpPreferredCommunicationType
+import com.alexgreece45.marvelx.domain.model_api.sensitiveUserData.SensitiveUserDataDomain
 import com.alexgreece45.marvelx.util.extensions.maskEmail
 import com.alexgreece45.marvelx.util.extensions.maskGreekPhoneNumber
 import com.google.gson.annotations.SerializedName

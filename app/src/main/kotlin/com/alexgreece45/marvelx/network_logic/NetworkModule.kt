@@ -19,8 +19,8 @@ import com.alexgreece45.marvelx.network_logic.api.ApiService
 import com.alexgreece45.marvelx.di.ApiClientImpl
 import com.alexgreece45.marvelx.network_logic.interceptors.ApiInterceptor
 import com.alexgreece45.marvelx.network_logic.interceptors.WebsocketInterceptor
-import com.alexgreece45.marvelx.domain.models_api.comic.ComicPriceType
-import com.alexgreece45.marvelx.domain.models_api.user.VerificationStep
+import com.alexgreece45.marvelx.domain.model_api.comic.ComicPriceType
+import com.alexgreece45.marvelx.domain.model_api.user.VerificationStep
 import com.alexgreece45.marvelx.network_logic.typeAdapters.ComicPriceTypeAdapter
 import com.alexgreece45.marvelx.network_logic.typeAdapters.OffsetDateTimeAdapter
 import com.alexgreece45.marvelx.network_logic.typeAdapters.UUIDAdapter

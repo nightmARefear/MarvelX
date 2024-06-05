@@ -1,7 +1,7 @@
 package com.alexgreece45.marvelx.network_logic.models_api.resendOtp
 
-import com.alexgreece45.marvelx.domain.models_api.resendOtp.ResendOtpErrorCause
-import com.alexgreece45.marvelx.domain.models_api.resendOtp.ResponseResendOtpFailedDomain
+import com.alexgreece45.marvelx.domain.model_api.resendOtp.ResendOtpErrorCause
+import com.alexgreece45.marvelx.domain.model_api.resendOtp.ResponseResendOtpFailedDomain
 import com.google.gson.annotations.SerializedName
 
 data class ResponseResendOtpFailed(

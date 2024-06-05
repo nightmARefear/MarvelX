@@ -2,9 +2,9 @@ package com.alexgreece45.marvelx.ui.screens.character
 
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.domain.models_api.character.CharacterDomain
-import com.alexgreece45.marvelx.domain.models_api.character.toFavoriteCharacterEntity
-import com.alexgreece45.marvelx.domain.models_api.comic.ComicDomain
+import com.alexgreece45.marvelx.domain.model_api.character.CharacterDomain
+import com.alexgreece45.marvelx.domain.model_api.character.toFavoriteCharacterEntity
+import com.alexgreece45.marvelx.domain.model_api.comic.ComicDomain
 import com.alexgreece45.marvelx.domain.interactors.CharacterInteractor
 import com.alexgreece45.marvelx.domain.interactors.DeleteFavoriteCharacterByIdPartialState
 import com.alexgreece45.marvelx.domain.interactors.GetCharacterComicsPartialState

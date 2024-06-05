@@ -1,6 +1,6 @@
 package com.alexgreece45.marvelx.network_logic.models_api.token
 
-import com.alexgreece45.marvelx.domain.models_api.userAuthData.UserAuthData
+import com.alexgreece45.marvelx.domain.model_api.userAuthData.UserAuthData
 import com.google.gson.annotations.SerializedName
 
 data class ResponseToken(

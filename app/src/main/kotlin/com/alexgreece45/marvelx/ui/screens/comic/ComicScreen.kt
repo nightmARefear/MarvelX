@@ -22,7 +22,7 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.domain.models_api.comic.ComicDomain
+import com.alexgreece45.marvelx.domain.model_api.comic.ComicDomain
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.ItemDescription
 import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction

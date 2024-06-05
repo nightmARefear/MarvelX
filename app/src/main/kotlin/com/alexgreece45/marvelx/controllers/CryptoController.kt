@@ -2,8 +2,9 @@ package com.alexgreece45.marvelx.controllers
 
 import com.alexgreece45.marvelx.configuration.ConfigLogic
 import com.alexgreece45.marvelx.configuration.ConfigSecurityLogic
-import com.alexgreece45.marvelx.domain.models_api.user.postLogin.SignData
+import com.alexgreece45.marvelx.domain.model_api.user.postLogin.SignData
 import okhttp3.Headers
+import okhttp3.HttpUrl
 import java.nio.charset.StandardCharsets
 import java.util.UUID
 import javax.crypto.Mac
@@ -32,7 +33,7 @@ interface CryptoController {
      */
     fun createSessionSignature(
         requestMethod: String,
-        requestUrl: String,
+        requestUrl: HttpUrl,
         requestBody: String,
         requestHeaders: Headers,
         nonce: UUID,
@@ -48,16 +49,16 @@ class CryptoControllerImpl(
 ) : CryptoController {
     override fun createSessionSignature(
         requestMethod: String,
-        requestUrl: String,
+        requestUrl: HttpUrl,
         requestBody: String,
         requestHeaders: Headers,
         nonce: UUID,
         timestamp: Long,
         signData: SignData
     ): String {
-        val pathAndParameters = requestUrl.replace(configLogic.serverUrl, "").replace("/", ":")
+        var pathAndParameters = requestUrl.pathSegments.joinToString(separator = ":")
         if (pathAndParameters.startsWith(":")) {
-            pathAndParameters.replaceFirst(":", "")
+            pathAndParameters = pathAndParameters.replaceFirst(":", "")
         }
 
         val headerSeparator = "\n"
@@ -83,6 +84,7 @@ class CryptoControllerImpl(
             nonce,
             timestamp
         ).joinToString(payloadSeparator)
+        appLogger.d("CryptoController") { "payload: $payload" }
 
         return try {
             val mac = Mac.getInstance(signData.algorithm)

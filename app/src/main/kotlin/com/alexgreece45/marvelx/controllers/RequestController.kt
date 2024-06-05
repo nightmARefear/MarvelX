@@ -29,7 +29,7 @@ class RequestControllerImpl(
         val xAuthSignature = prefKeys.signData?.let { signData ->
             cryptoController.createSessionSignature(
                 requestMethod = request.method,
-                requestUrl = request.url.host,
+                requestUrl = request.url,
                 requestBody = request.body.toJsonString(),
                 requestHeaders = request.headers,
                 nonce = nonce,

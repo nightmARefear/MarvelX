@@ -12,7 +12,6 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -23,8 +22,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavController
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.ui.components.ContainedButton
 import com.alexgreece45.marvelx.ui.components.ContentScreen
@@ -32,12 +29,10 @@ import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
 import com.alexgreece45.marvelx.ui.components.effect.OneTimeLaunchedEffect
 import com.alexgreece45.marvelx.ui.components.error.ContentErrorScreen
 import com.alexgreece45.marvelx.ui.components.otpTextField.OtpTextField
-import com.alexgreece45.marvelx.ui.navigation.Screen
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.SPACING_TINY
 import com.alexgreece45.marvelx.util.VSpacer
-import com.alexgreece45.marvelx.util.extensions.popUpToTop
-import org.koin.androidx.compose.koinViewModel
+import kotlinx.coroutines.flow.Flow
 
 /**
  * The OTP (One Time Password) screen is used to double check the user's identity when signing up or
@@ -49,8 +44,12 @@ import org.koin.androidx.compose.koinViewModel
  */
 @Composable
 fun OtpScreen(
-    navController: NavController,
-    viewModel: OtpViewModel = koinViewModel(),
+    state: OtpState,
+    onEventSent: (event: OtpEvent) -> Unit,
+    effect: Flow<OtpEffect>,
+    popBackStack: () -> Unit,
+    navigateToAllCharactersScreen: () -> Unit,
+    navigateToChangePasswordScreen: (String, String?) -> Unit,
     userId: Int?,
     otpFlowType: String?,
     verificationStep: String?,
@@ -58,13 +57,11 @@ fun OtpScreen(
     requestIdEmail: String?,
     requestIdPhoneNumber: String?
 ) {
-    val state by viewModel.uiState.collectAsStateWithLifecycle()
-
     val focusRequester = remember { FocusRequester() }
     val keyboardController = LocalSoftwareKeyboardController.current
 
     OneTimeLaunchedEffect {
-        viewModel.setEvent(
+        onEventSent(
             OtpEvent.Init(
                 userId = userId,
                 otpFlowType = otpFlowType,
@@ -77,10 +74,10 @@ fun OtpScreen(
     }
 
     LaunchedEffect(Unit) {
-        viewModel.uiEffect.collect { effect ->
+        effect.collect { effect ->
             when (effect) {
                 OtpEffect.Navigation.PopBackStack -> {
-                    navController.popBackStack()
+                    popBackStack()
                 }
 
                 OtpEffect.OnUserSensitiveDataReceived -> {
@@ -93,18 +90,11 @@ fun OtpScreen(
                 }
 
                 OtpEffect.Navigation.NavigateToAllCharactersScreen -> {
-                    navController.navigate(Screen.AllCharactersScreen.route) {
-                        popUpToTop(navController)
-                    }
+                    navigateToAllCharactersScreen()
                 }
 
                 is OtpEffect.Navigation.NavigateToChangePasswordScreen -> {
-                    navController.navigate(
-                        Screen.ChangePasswordScreen.createNavRoute(
-                            requestIdEmail = effect.requestIdEmail,
-                            requestIdPhoneNumber = effect.requestIdPhoneNumber
-                        )
-                    )
+                    navigateToChangePasswordScreen(effect.requestIdEmail, requestIdPhoneNumber)
                 }
 
                 OtpEffect.CloseKeyboardAndRemoveFocus -> {
@@ -118,7 +108,7 @@ fun OtpScreen(
     ContentScreen(
         isLoading = state.isLoading,
         navigableAction = ScreenNavigableAction.Backable {
-            viewModel.setEvent(OtpEvent.OnBackClick)
+            onEventSent(OtpEvent.OnBackClick)
         },
         showToolbar = true
     ) { paddingValues ->
@@ -166,13 +156,13 @@ fun OtpScreen(
                     enabled = state.otpFieldEnabled,
                     otp = state.otp,
                     onValueChange = { value, otpInputFilled ->
-                        viewModel.setEvent(
+                        onEventSent(
                             OtpEvent.OnOtpFieldValueChange(
                                 otp = value
                             )
                         )
                     },
-                    onDoneClick = { viewModel.setEvent(OtpEvent.OnDoneClick) }
+                    onDoneClick = { onEventSent(OtpEvent.OnDoneClick) }
                 )
 
                 Column(
@@ -203,7 +193,7 @@ fun OtpScreen(
 
                     // Resend OTP button.
                     Button(
-                        onClick = { viewModel.setEvent(OtpEvent.OnResendOtpButtonClick) },
+                        onClick = { onEventSent(OtpEvent.OnResendOtpButtonClick) },
                         enabled = state.isResendOtpButtonEnabled
                     ) {
                         Text(
@@ -222,7 +212,7 @@ fun OtpScreen(
 
             // "Verify" button.
             ContainedButton(
-                onClick = { viewModel.setEvent(OtpEvent.OnVerifyButtonClicked) },
+                onClick = { onEventSent(OtpEvent.OnVerifyButtonClicked) },
                 modifier = Modifier.fillMaxWidth(),
                 enabled = state.isVerifyButtonEnabled
             ) {

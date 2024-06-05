@@ -3,6 +3,7 @@ package com.alexgreece45.marvelx.ui.navigation
 import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -14,20 +15,27 @@ import com.alexgreece45.marvelx.ui.screens.allCharacters.AllCharactersScreen
 import com.alexgreece45.marvelx.ui.screens.allFavoriteCharacters.AllFavoriteCharactersScreen
 import com.alexgreece45.marvelx.ui.screens.changePassword.ChangePasswordScreen
 import com.alexgreece45.marvelx.ui.screens.character.CharacterScreen
+import com.alexgreece45.marvelx.ui.screens.character.CharacterViewModel
 import com.alexgreece45.marvelx.ui.screens.character.allCharacterComicsScreen.AllCharacterComicsScreen
 import com.alexgreece45.marvelx.ui.screens.comic.ComicScreen
-import com.alexgreece45.marvelx.ui.screens.home.HomeScreen
-import com.alexgreece45.marvelx.ui.screens.introLoading.IntroLoadingScreen
-import com.alexgreece45.marvelx.ui.screens.login.LoginScreen
 import com.alexgreece45.marvelx.ui.screens.forgotPasswordScreen.ForgotPasswordScreen
 import com.alexgreece45.marvelx.ui.screens.forgotPasswordScreen.forgotPasswordValidateEmailScreen.ForgotPasswordValidateEmailScreen
+import com.alexgreece45.marvelx.ui.screens.home.HomeScreen
+import com.alexgreece45.marvelx.ui.screens.home.HomeViewModel
+import com.alexgreece45.marvelx.ui.screens.introLoading.IntroLoadingScreen
+import com.alexgreece45.marvelx.ui.screens.login.LoginScreen
+import com.alexgreece45.marvelx.ui.screens.login.LoginViewModel
 import com.alexgreece45.marvelx.ui.screens.otp.OtpScreen
+import com.alexgreece45.marvelx.ui.screens.otp.OtpViewModel
 import com.alexgreece45.marvelx.ui.screens.profile.ProfileScreen
+import com.alexgreece45.marvelx.ui.screens.profile.ProfileViewModel
 import com.alexgreece45.marvelx.ui.screens.signup.SignUpScreen
+import com.alexgreece45.marvelx.ui.screens.signup.SignupViewModel
 import com.alexgreece45.marvelx.ui.screens.splash.SplashScreen
 import com.alexgreece45.marvelx.util.SPACING_MEDIUM
 import com.alexgreece45.marvelx.util.extensions.composable
 import com.alexgreece45.marvelx.util.extensions.popUpToTop
+import org.koin.androidx.compose.koinViewModel
 
 /**
  * Generates the `NavHost` of this application by providing all the necessary routes / screens.
@@ -61,25 +69,83 @@ fun NavGraph(navController: NavHostController) {
         }
 
         composable(Screen.HomeScreen) {
-            HomeScreen(navController = navController)
+            val viewModel = koinViewModel<HomeViewModel>()
+            HomeScreen(
+                state = viewModel.uiState.collectAsStateWithLifecycle().value,
+                onEventSent = { event -> viewModel.setEvent(event) },
+                effect = viewModel.uiEffect,
+                navigateToLoginScreen = {
+                    navController.navigate(Screen.LoginScreen.route) {
+                        launchSingleTop = true
+                    }
+                },
+                navigateToSignupScreen = {
+                    navController.navigate(Screen.SignupScreen.route) {
+                        launchSingleTop = true
+                    }
+                },
+                navigateToAllCharactersScreen = {
+                    navController.navigate(Screen.AllCharactersScreen.route) {
+                        popUpToTop(navController)
+                    }
+                },
+                navigateToOtpScreen = { userId, otpFlowType, verificationStep, shouldRememberUserSession ->
+                    navController.navigate(
+                        Screen.OtpScreen.createNavRoute(
+                            userId = userId,
+                            otpFlowType = otpFlowType,
+                            verificationStep = verificationStep,
+                            shouldRememberUserSession = shouldRememberUserSession
+                        )
+                    )
+                },
+                popBackStack = navController::popBackStack
+            )
         }
 
         composable(Screen.LoginScreen) {
+            val viewModel = koinViewModel<LoginViewModel>()
             LoginScreen(
-                navController = navController
+                state = viewModel.uiState.collectAsStateWithLifecycle().value,
+                onEventSent = { event -> viewModel.setEvent(event) },
+                effect = viewModel.uiEffect,
+                navigateToSignupScreen = {
+                    navController.navigate(Screen.SignupScreen.route) {
+                        launchSingleTop = true
+                    }
+                },
+                navigateToAllCharactersScreen = {
+                    navController.navigate(Screen.AllCharactersScreen.route) {
+                        popUpToTop(navController)
+                    }
+                },
+                navigateToOtpScreen = { userId, otpFlowType, verificationStep, shouldRememberUserSession ->
+                    navController.navigate(
+                        Screen.OtpScreen.createNavRoute(
+                            userId = userId,
+                            otpFlowType = otpFlowType,
+                            verificationStep = verificationStep,
+                            shouldRememberUserSession = shouldRememberUserSession
+                        )
+                    )
+                },
+                navigateToForgotPasswordScreen = {
+                    navController.navigate(Screen.ForgotPasswordScreen.route)
+                },
+                popBackStack = navController::popBackStack
             )
         }
 
         composable(Screen.ForgotPasswordScreen) {
             ForgotPasswordScreen(
-                popUpToLoginScreen = { navController.popBackStack() },
+                popUpToLoginScreen = navController::popBackStack,
                 navController = navController
             )
         }
 
         composable(Screen.ForgotPasswordValidateEmailScreen) { navBackStackEntry ->
             ForgotPasswordValidateEmailScreen(
-                popBackStack = { navController.popBackStack() },
+                popBackStack = navController::popBackStack,
                 navigateToForgotPasswordEnterPhoneNumberScreen = { requestIdEmail ->
                     navController.navigate(
                         Screen.ForgotPasswordEnterPhoneNumberScreen.createNavRoute(
@@ -93,7 +159,7 @@ fun NavGraph(navController: NavHostController) {
 
         composable(Screen.ChangePasswordScreen) { entry ->
             ChangePasswordScreen(
-                popBackStack = { navController.popBackStack() },
+                popBackStack = navController::popBackStack,
                 otpFlowType = entry.arguments?.getString(NavItem.OtpFlowType.key),
                 requestIdEmail = entry.arguments?.getString(NavItem.RequestIdEmail.key).orEmpty(),
                 requestIdPhoneNumber = entry.arguments?.getString(NavItem.RequestIdPhoneNumber.key)
@@ -101,12 +167,50 @@ fun NavGraph(navController: NavHostController) {
         }
 
         composable(Screen.SignupScreen) {
-            SignUpScreen(navController = navController)
+            val viewModel = koinViewModel<SignupViewModel>()
+            SignUpScreen(
+                state = viewModel.uiState.collectAsStateWithLifecycle().value,
+                onEventSent = { event -> viewModel.setEvent(event) },
+                effect = viewModel.uiEffect,
+                navigateToAllCharactersScreen = {
+                    navController.navigate(Screen.AllCharactersScreen.route) {
+                        popUpToTop(navController)
+                    }
+                },
+                navigateToOtpScreen = { userId, otpFlowType, verificationStep, shouldRememberUserSession ->
+                    navController.navigate(
+                        Screen.OtpScreen.createNavRoute(
+                            userId = userId,
+                            otpFlowType = otpFlowType,
+                            verificationStep = verificationStep,
+                            shouldRememberUserSession = shouldRememberUserSession
+                        )
+                    )
+                },
+                popBackStack = navController::popBackStack
+            )
         }
 
         composable(Screen.OtpScreen) { navBackStackEntry ->
+            val viewModel = koinViewModel<OtpViewModel>()
             OtpScreen(
-                navController = navController,
+                state = viewModel.uiState.collectAsStateWithLifecycle().value,
+                onEventSent = { event -> viewModel.setEvent(event) },
+                effect = viewModel.uiEffect,
+                popBackStack = navController::popBackStack,
+                navigateToAllCharactersScreen = {
+                    navController.navigate(Screen.AllCharactersScreen.route) {
+                        popUpToTop(navController)
+                    }
+                },
+                navigateToChangePasswordScreen = { requestIdEmail, requestIdPhoneNumber ->
+                    navController.navigate(
+                        Screen.ChangePasswordScreen.createNavRoute(
+                            requestIdEmail = requestIdEmail,
+                            requestIdPhoneNumber = requestIdPhoneNumber
+                        )
+                    )
+                },
                 userId = navBackStackEntry.arguments?.getInt(NavItem.UserId.key),
                 otpFlowType = navBackStackEntry.arguments?.getString(NavItem.OtpFlowType.key),
                 verificationStep = navBackStackEntry.arguments?.getString(NavItem.VerificationStep.key),
@@ -135,10 +239,31 @@ fun NavGraph(navController: NavHostController) {
         composable(
             screen = Screen.CharacterScreen
         ) { navBackStackEntry ->
+            val viewModel = koinViewModel<CharacterViewModel>()
             CharacterScreen(
-                navController = navController,
+                state = viewModel.uiState.collectAsStateWithLifecycle().value,
+                onEventSent = { event -> viewModel.setEvent(event) },
+                effect = viewModel.uiEffect,
                 characterId = navBackStackEntry.arguments?.getInt(NavItem.CharacterId.key)
-                    ?: -1
+                    ?: -1,
+                popBackStack = navController::popBackStack,
+                navigateToComicsScreen = { comicId ->
+                    navController.navigate(
+                        Screen.ComicScreen.createNavRoute(
+                            comicId = comicId
+                        )
+                    ) {
+                        launchSingleTop = true
+                    }
+                },
+                navigateToAllComicsScreen = { characterId, toolbarTitlePrefix ->
+                    navController.navigate(
+                        Screen.AllCharacterComicsScreen.createNavRoute(
+                            characterId = characterId,
+                            toolbarTitlePrefix = toolbarTitlePrefix
+                        )
+                    )
+                }
             )
         }
 
@@ -169,7 +294,11 @@ fun NavGraph(navController: NavHostController) {
         }
 
         composable(Screen.ProfileScreen) {
+            val viewModel = koinViewModel<ProfileViewModel>()
             ProfileScreen(
+                state = viewModel.uiState.collectAsStateWithLifecycle().value,
+                onEventSent = { event -> viewModel.setEvent(event) },
+                effect = viewModel.uiEffect,
                 navigateToHomeScreen = {
                     navController.navigate(Screen.HomeScreen.route) {
                         popUpToTop(navController)

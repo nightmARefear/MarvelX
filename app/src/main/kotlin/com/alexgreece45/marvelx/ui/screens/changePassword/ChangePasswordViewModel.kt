@@ -2,7 +2,7 @@ package com.alexgreece45.marvelx.ui.screens.changePassword
 
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.domain.interactors.ChangePasswordInteractor
-import com.alexgreece45.marvelx.domain.models_api.otp.OtpFlowType
+import com.alexgreece45.marvelx.domain.model_api.otp.OtpFlowType
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState

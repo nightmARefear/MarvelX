@@ -17,7 +17,6 @@ import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.autofill.AutofillType
@@ -30,41 +29,39 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavController
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.network_logic.models_api.user.Gender
 import com.alexgreece45.marvelx.ui.components.AlertDialogButton
 import com.alexgreece45.marvelx.ui.components.AlertDialogError
 import com.alexgreece45.marvelx.ui.components.ContainedButton
 import com.alexgreece45.marvelx.ui.components.ContentScreen
-import com.alexgreece45.marvelx.ui.components.models.ErrorButtonType
 import com.alexgreece45.marvelx.ui.components.ExposedDropdownMenu
 import com.alexgreece45.marvelx.ui.components.OutlinedTextFieldValidation
 import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
-import com.alexgreece45.marvelx.ui.navigation.Screen
+import com.alexgreece45.marvelx.ui.components.models.ErrorButtonType
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.VSpacer
 import com.alexgreece45.marvelx.util.extensions.autofill
-import com.alexgreece45.marvelx.util.extensions.popUpToTop
-import org.koin.androidx.compose.koinViewModel
+import kotlinx.coroutines.flow.Flow
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun SignUpScreen(
-    navController: NavController,
-    viewModel: SignupViewModel = koinViewModel()
+    state: SignupState,
+    onEventSent: (SignupEvent) -> Unit,
+    effect: Flow<SignupEffect>,
+    navigateToAllCharactersScreen: () -> Unit,
+    navigateToOtpScreen: (Int, String, String, Boolean) -> Unit,
+    popBackStack: () -> Unit,
 ) {
-    val state by viewModel.uiState.collectAsStateWithLifecycle()
-
     val focusManager = LocalFocusManager.current
     val keyboard = LocalSoftwareKeyboardController.current
 
     LaunchedEffect(Unit) {
-        viewModel.uiEffect.collect { effect ->
+        effect.collect { effect ->
             when (effect) {
                 is SignupEffect.ShowAlertDialogError -> {
-                    viewModel.setEvent(
+                    onEventSent(
                         SignupEvent.AlertDialogError.OnShow(
                             errorMessage = effect.errorMessage
                         )
@@ -72,19 +69,15 @@ fun SignUpScreen(
                 }
 
                 SignupEffect.Navigation.NavigateToAllCharactersScreen -> {
-                    navController.navigate(Screen.AllCharactersScreen.route) {
-                        popUpToTop(navController)
-                    }
+                    navigateToAllCharactersScreen()
                 }
 
                 is SignupEffect.Navigation.NavigateToOtpScreen -> {
-                    navController.navigate(
-                        Screen.OtpScreen.createNavRoute(
-                            userId = effect.userId,
-                            otpFlowType = effect.otpFlowType,
-                            verificationStep = effect.verificationStep,
-                            shouldRememberUserSession = effect.shouldRememberUserSession
-                        )
+                    navigateToOtpScreen(
+                        effect.userId,
+                        effect.otpFlowType,
+                        effect.verificationStep,
+                        effect.shouldRememberUserSession
                     )
                 }
 
@@ -94,7 +87,7 @@ fun SignUpScreen(
                 }
 
                 SignupEffect.OnDoneClick -> {
-                    viewModel.setEvent(SignupEvent.OnSignupButtonClick)
+                    onEventSent(SignupEvent.OnSignupButtonClick)
                 }
             }
         }
@@ -102,9 +95,7 @@ fun SignUpScreen(
 
     ContentScreen(
         isLoading = state.isLoading,
-        navigableAction = ScreenNavigableAction.Backable {
-            navController.popBackStack()
-        },
+        navigableAction = ScreenNavigableAction.Backable(popBackStack),
         showToolbar = true,
         toolbarTitle = stringResource(R.string.sign_up_screen_toolbar_title)
     ) { paddingValues ->
@@ -122,7 +113,7 @@ fun SignUpScreen(
                     confirmButton = AlertDialogButton(
                         value = stringResource(R.string.generic_ok_button),
                         buttonType = ErrorButtonType.Text,
-                        onClick = { viewModel.setEvent(SignupEvent.AlertDialogError.OnOkClick) }
+                        onClick = { onEventSent(SignupEvent.AlertDialogError.OnOkClick) }
                     )
                 )
             }
@@ -139,7 +130,7 @@ fun SignUpScreen(
                         value = state.firstName,
                         label = stringResource(R.string.sign_up_screen_input_field_label_first_name),
                         onValueChange = { newValue ->
-                            viewModel.setEvent(SignupEvent.FieldValueChange.FirstName(firstName = newValue))
+                            onEventSent(SignupEvent.FieldValueChange.FirstName(firstName = newValue))
                         },
                         errorMessage = state.firstNameValidationResult.messages.firstOrNull()
                             .orEmpty(),
@@ -161,7 +152,7 @@ fun SignUpScreen(
                         value = state.lastName,
                         label = stringResource(R.string.sign_up_screen_input_field_label_last_name),
                         onValueChange = { newValue ->
-                            viewModel.setEvent(SignupEvent.FieldValueChange.LastName(lastName = newValue))
+                            onEventSent(SignupEvent.FieldValueChange.LastName(lastName = newValue))
                         },
                         errorMessage = state.lastNameValidationResult.messages.firstOrNull()
                             .orEmpty(),
@@ -186,14 +177,14 @@ fun SignUpScreen(
                     expanded = state.isGenderDropdownMenuVisible,
                     value = state.gender?.label?.let { stringResource(it) },
                     label = stringResource(R.string.sign_up_screen_input_field_label_gender),
-                    onDismissRequest = { viewModel.setEvent(SignupEvent.GenderDropdownMenu.OnDismiss) },
-                    onExpandedChange = { viewModel.setEvent(SignupEvent.GenderDropdownMenu.OnClick) }
+                    onDismissRequest = { onEventSent(SignupEvent.GenderDropdownMenu.OnDismiss) },
+                    onExpandedChange = { onEventSent(SignupEvent.GenderDropdownMenu.OnClick) }
                 ) {
                     Gender.asList().forEach { gender ->
                         DropdownMenuItem(
                             modifier = Modifier.fillMaxWidth(),
                             onClick = {
-                                viewModel.setEvent(
+                                onEventSent(
                                     SignupEvent.FieldValueChange.Gender(
                                         gender = gender
                                     )
@@ -217,13 +208,13 @@ fun SignUpScreen(
                         .autofill(
                             autofillTypes = listOf(AutofillType.EmailAddress),
                             onFill = { suggestionValue ->
-                                viewModel.setEvent(SignupEvent.FieldValueChange.Email(email = suggestionValue))
+                                onEventSent(SignupEvent.FieldValueChange.Email(email = suggestionValue))
                             }
                         ),
                     value = state.email,
                     label = stringResource(R.string.sign_up_screen_input_field_label_email),
                     onValueChange = { newEmail ->
-                        viewModel.setEvent(
+                        onEventSent(
                             SignupEvent.FieldValueChange.Email(
                                 email = newEmail
                             )
@@ -252,20 +243,20 @@ fun SignUpScreen(
                         .autofill(
                             autofillTypes = listOf(AutofillType.Password),
                             onFill = { suggestionValue ->
-                                viewModel.setEvent(SignupEvent.FieldValueChange.Password(password = suggestionValue))
+                                onEventSent(SignupEvent.FieldValueChange.Password(password = suggestionValue))
                             }
                         ),
                     value = state.password,
                     label = stringResource(R.string.sign_up_screen_input_field_label_password),
                     onValueChange = { newPassword ->
-                        viewModel.setEvent(
+                        onEventSent(
                             SignupEvent.FieldValueChange.Password(
                                 password = newPassword
                             )
                         )
                     },
                     trailingIcon = {
-                        IconButton(onClick = { viewModel.setEvent(SignupEvent.OnPasswordVisibilityIconClick) }) {
+                        IconButton(onClick = { onEventSent(SignupEvent.OnPasswordVisibilityIconClick) }) {
                             if (state.isPasswordVisible) {
                                 Icon(
                                     imageVector = Icons.Filled.VisibilityOff,
@@ -289,7 +280,7 @@ fun SignUpScreen(
                         imeAction = ImeAction.Done
                     ),
                     keyboardActions = KeyboardActions(
-                        onDone = { viewModel.setEvent(SignupEvent.OnDoneClick) }
+                        onDone = { onEventSent(SignupEvent.OnDoneClick) }
                     )
                 )
             }
@@ -303,7 +294,7 @@ fun SignUpScreen(
                 ContainedButton(
                     modifier = Modifier.fillMaxWidth(),
                     enabled = state.signupButton,
-                    onClick = { viewModel.setEvent(SignupEvent.OnSignupButtonClick) }
+                    onClick = { onEventSent(SignupEvent.OnSignupButtonClick) }
                 ) {
                     Text(
                         text = stringResource(R.string.sign_up_screen_signup_button)

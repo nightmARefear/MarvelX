@@ -6,8 +6,8 @@ import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.controllers.TimerController
 import com.alexgreece45.marvelx.controllers.TimerStatus
-import com.alexgreece45.marvelx.domain.models_api.otp.OtpErrorCause
-import com.alexgreece45.marvelx.domain.models_api.user.VerificationStep
+import com.alexgreece45.marvelx.domain.model_api.otp.OtpErrorCause
+import com.alexgreece45.marvelx.domain.model_api.user.VerificationStep
 import com.alexgreece45.marvelx.domain.interactors.ForgotPasswordInteractor
 import com.alexgreece45.marvelx.domain.interactors.ForgotPasswordIsOtpBlockedEmailPartialState
 import com.alexgreece45.marvelx.domain.interactors.ForgotPasswordSendOtpPartialState

@@ -6,8 +6,8 @@ import com.alexgreece45.marvelx.controllers.AuthController
 import com.alexgreece45.marvelx.controllers.PrefKeys
 import com.alexgreece45.marvelx.controllers.RefreshTokenController
 import com.alexgreece45.marvelx.controllers.WebsocketController
-import com.alexgreece45.marvelx.domain.models_api.otp.OtpFlowType
-import com.alexgreece45.marvelx.domain.models_api.user.VerificationStep
+import com.alexgreece45.marvelx.domain.model_api.otp.OtpFlowType
+import com.alexgreece45.marvelx.domain.model_api.user.VerificationStep
 import com.alexgreece45.marvelx.network_logic.models_api.user.Gender
 import com.alexgreece45.marvelx.network_logic.models_api.user.signup.RequestUserSignup
 import com.alexgreece45.marvelx.domain.interactors.GrandNewAccessTokenPartialState
@@ -15,7 +15,7 @@ import com.alexgreece45.marvelx.domain.interactors.LoginInteractor
 import com.alexgreece45.marvelx.domain.interactors.PostLoginPartialState
 import com.alexgreece45.marvelx.domain.interactors.SignupPartialState
 import com.alexgreece45.marvelx.domain.interactors.RegisterInteractor
-import com.alexgreece45.marvelx.domain.models_api.user.signup.SignupDomain
+import com.alexgreece45.marvelx.domain.model_api.user.signup.SignupDomain
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState

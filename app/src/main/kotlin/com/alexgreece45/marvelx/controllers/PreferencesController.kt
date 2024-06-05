@@ -5,7 +5,7 @@ import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKeys
 import com.alexgreece45.marvelx.BuildConfig
 import com.alexgreece45.marvelx.util.constants.ConstantsPrefs
-import com.alexgreece45.marvelx.domain.models_api.user.postLogin.SignData
+import com.alexgreece45.marvelx.domain.model_api.user.postLogin.SignData
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException

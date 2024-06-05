@@ -1,6 +1,6 @@
 package com.alexgreece45.marvelx.network_logic.typeAdapters
 
-import com.alexgreece45.marvelx.domain.models_api.comic.ComicPriceType
+import com.alexgreece45.marvelx.domain.model_api.comic.ComicPriceType
 import com.google.gson.TypeAdapter
 import com.google.gson.stream.JsonReader
 import com.google.gson.stream.JsonWriter

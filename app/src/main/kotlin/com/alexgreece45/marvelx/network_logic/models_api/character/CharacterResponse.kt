@@ -1,6 +1,6 @@
 package com.alexgreece45.marvelx.network_logic.models_api.character
 
-import com.alexgreece45.marvelx.domain.models_api.character.CharacterDomain
+import com.alexgreece45.marvelx.domain.model_api.character.CharacterDomain
 import com.alexgreece45.marvelx.util.extensions.toSystemLocalDateTime
 import com.google.gson.annotations.SerializedName
 import java.time.OffsetDateTime

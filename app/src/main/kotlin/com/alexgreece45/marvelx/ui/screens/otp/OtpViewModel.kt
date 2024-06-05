@@ -9,11 +9,11 @@ import com.alexgreece45.marvelx.controllers.RefreshTokenController
 import com.alexgreece45.marvelx.controllers.TimerController
 import com.alexgreece45.marvelx.controllers.TimerStatus
 import com.alexgreece45.marvelx.controllers.WebsocketController
-import com.alexgreece45.marvelx.domain.models_api.otp.OtpErrorCause
-import com.alexgreece45.marvelx.domain.models_api.otp.OtpFlowType
-import com.alexgreece45.marvelx.domain.models_api.resendOtp.ResendOtpErrorCause
-import com.alexgreece45.marvelx.domain.models_api.sensitiveUserData.SensitiveUserDataDomain
-import com.alexgreece45.marvelx.domain.models_api.user.VerificationStep
+import com.alexgreece45.marvelx.domain.model_api.otp.OtpErrorCause
+import com.alexgreece45.marvelx.domain.model_api.otp.OtpFlowType
+import com.alexgreece45.marvelx.domain.model_api.resendOtp.ResendOtpErrorCause
+import com.alexgreece45.marvelx.domain.model_api.sensitiveUserData.SensitiveUserDataDomain
+import com.alexgreece45.marvelx.domain.model_api.user.VerificationStep
 import com.alexgreece45.marvelx.domain.interactors.ForgotPasswordInteractor
 import com.alexgreece45.marvelx.domain.interactors.ForgotPasswordValidateOtpPartialState
 import com.alexgreece45.marvelx.domain.interactors.GetJwtForSensitiveUserDataPartialState
@@ -697,7 +697,8 @@ class OtpViewModel(
                         // Token was successfully generated (in the server) and retrieved (in the client).
 
                         // Retrieve signing data.
-                        loginInteractor.postLogin(accessTokenPartialState.userAuthData.accessToken).collect { postLoginPartialState ->
+                        val accessTokenWithType = accessTokenPartialState.userAuthData.tokenType + " " + accessTokenPartialState.userAuthData.accessToken
+                        loginInteractor.postLogin(accessTokenWithType).collect { postLoginPartialState ->
                             when (postLoginPartialState) {
                                 PostLoginPartialState.Success -> {
                                     // Save token info in device.
