@@ -1,7 +1,7 @@
 package com.alexgreece45.marvelx.network_logic.models_api.user.loginWithToken
 
-import com.alexgreece45.marvelx.domain.models_api.user.VerificationStep
-import com.alexgreece45.marvelx.domain.models_api.user.loginWithToken.LoginWithTokenResponseDomain
+import com.alexgreece45.marvelx.domain.model_api.user.VerificationStep
+import com.alexgreece45.marvelx.domain.model_api.user.loginWithToken.LoginWithTokenResponseDomain
 import com.google.gson.annotations.SerializedName
 
 data class ResponseLoginWithToken(

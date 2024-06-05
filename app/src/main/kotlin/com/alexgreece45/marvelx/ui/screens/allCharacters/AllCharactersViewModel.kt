@@ -9,7 +9,7 @@ import com.alexgreece45.marvelx.domain.interactors.GetAllCharactersPartialState
 import com.alexgreece45.marvelx.domain.interactors.GetFavoriteCharacterIdsPartialState
 import com.alexgreece45.marvelx.domain.interactors.GetFavoriteCharactersPartialState
 import com.alexgreece45.marvelx.domain.interactors.InsertFavoriteCharactersPartialState
-import com.alexgreece45.marvelx.domain.models_api.character.toCharacterCardUiList
+import com.alexgreece45.marvelx.domain.model_api.character.toCharacterCardUiList
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState

@@ -34,3 +34,9 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# pinning certificates
+.pem
+
+# network security config
+network_security_config.xml

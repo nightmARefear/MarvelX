@@ -77,13 +77,17 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
+        sourceCompatibility = JavaVersion.toVersion(libs.versions.java.version.get())
+        targetCompatibility = JavaVersion.toVersion(libs.versions.java.version.get())
     }
 
     buildFeatures {
         buildConfig = true
         compose = true
+    }
+
+    kotlinOptions {
+        jvmTarget = JavaVersion.toVersion(libs.versions.java.version.get()).toString()
     }
 
     composeOptions {
@@ -106,11 +110,28 @@ android {
     sourceSets.all {
         kotlin.srcDir("build/generated/ksp/$name/kotlin")
     }
+}
 
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_17.toString()
+// TODO: TO BE FIXED
+
+/*// Enforce the "updateDexCrcInStringsXmlTask" task to run before obfuscation and minification.
+tasks.whenTaskAdded {
+    if (this.name == "minifyReleaseWithR8" || this.name == "minifyReleaseWithProguard") {
+        this.dependsOn("updateDexCrcInStringsXmlTask")
     }
 }
+
+// Ensure the task runs for debug builds
+tasks.whenTaskAdded {
+    if (this.name == "assembleDebug") {
+        this.finalizedBy("updateDexCrcInStringsXmlTask")
+    }
+}
+
+// Build debug APK
+tasks.register("buildDebugApk") {
+    dependsOn("assembleDebug")
+}*/
 
 dependencies {
     implementation(libs.kotlin.reflect)
@@ -154,4 +175,7 @@ dependencies {
     implementation(libs.bundles.koin.implementation)
     ksp(libs.koin.ksp.compiler)
     testImplementation(libs.bundles.koin.test.implementation)
+
+    // Bouncycastle. Contains Blake2 algorithm.
+    implementation(libs.bouncycastle.bcprov)
 }

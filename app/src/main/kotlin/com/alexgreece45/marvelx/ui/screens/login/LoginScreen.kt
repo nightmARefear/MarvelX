@@ -22,7 +22,6 @@ import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -39,8 +38,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavController
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.ui.components.ContainedButton
 import com.alexgreece45.marvelx.ui.components.ContentScreen
@@ -49,48 +46,46 @@ import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
 import com.alexgreece45.marvelx.ui.components.error.ContentErrorScreen
 import com.alexgreece45.marvelx.ui.components.hightlightedText.WrapClickableText
 import com.alexgreece45.marvelx.ui.components.models.ClickableString
-import com.alexgreece45.marvelx.ui.navigation.Screen
 import com.alexgreece45.marvelx.util.VSpacer
 import com.alexgreece45.marvelx.util.extensions.autofill
 import com.alexgreece45.marvelx.util.extensions.clickableNoRipple
-import com.alexgreece45.marvelx.util.extensions.popUpToTop
-import org.koin.androidx.compose.koinViewModel
+import kotlinx.coroutines.flow.Flow
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun LoginScreen(
-    navController: NavController,
-    viewModel: LoginViewModel = koinViewModel()
+    state: LoginState,
+    onEventSent: (event: LoginEvent) -> Unit,
+    effect: Flow<LoginEffect>,
+    navigateToSignupScreen: () -> Unit,
+    navigateToAllCharactersScreen: () -> Unit,
+    navigateToOtpScreen: (Int, String, String, Boolean) -> Unit,
+    navigateToForgotPasswordScreen: () -> Unit,
+    popBackStack: () -> Boolean,
 ) {
-    val state by viewModel.uiState.collectAsStateWithLifecycle()
-
     val keyboard = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
 
     LaunchedEffect(Unit) {
-        viewModel.setEvent(LoginEvent.Init)
+        onEventSent(LoginEvent.Init)
 
-        viewModel.uiEffect.collect { effect ->
+        effect.collect { effect ->
             when (effect) {
                 is LoginEffect.Navigation.NavigateToAllCharactersScreen -> {
-                    navController.navigate(Screen.AllCharactersScreen.route) {
-                        popUpToTop(navController)
-                    }
+                    navigateToAllCharactersScreen()
                 }
 
                 is LoginEffect.Navigation.NavigateToOtpScreen -> {
-                    navController.navigate(
-                        Screen.OtpScreen.createNavRoute(
-                            userId = effect.userId,
-                            otpFlowType = effect.otpFlowType,
-                            verificationStep = effect.verificationStep,
-                            shouldRememberUserSession = effect.shouldRememberUserSession
-                        )
+                    navigateToOtpScreen(
+                        effect.userId,
+                        effect.otpFlowType,
+                        effect.verificationStep,
+                        effect.shouldRememberUserSession
                     )
                 }
 
                 LoginEffect.Navigation.NavigateToSignupScreen -> {
-                    navController.navigate(Screen.SignupScreen.route)
+                    navigateToSignupScreen()
                 }
 
                 LoginEffect.CloseKeyboardAndClearFocus -> {
@@ -101,19 +96,19 @@ fun LoginScreen(
                 }
 
                 LoginEffect.Navigation.PopBackStack -> {
-                    navController.popBackStack()
+                    popBackStack()
                 }
 
                 LoginEffect.OnDoneClick -> {
-                    viewModel.setEvent(LoginEvent.OnLoginButtonClick)
+                    onEventSent(LoginEvent.OnLoginButtonClick)
                 }
 
                 LoginEffect.Navigation.NavigateToForgotPasswordScreen -> {
-                    navController.navigate(Screen.ForgotPasswordScreen.route)
+                    navigateToForgotPasswordScreen()
                 }
 
                 is LoginEffect.ExecuteEvent -> {
-                    viewModel.setEvent(effect.event)
+                    onEventSent(effect.event)
                 }
             }
         }
@@ -122,10 +117,10 @@ fun LoginScreen(
     ContentScreen(
         isLoading = state.isLoading,
         navigableAction = ScreenNavigableAction.Backable {
-            viewModel.setEvent(LoginEvent.OnBack)
+            onEventSent(LoginEvent.OnBack)
         },
         onBack = {
-            viewModel.setEvent(LoginEvent.OnBack)
+            onEventSent(LoginEvent.OnBack)
         },
         showToolbar = true,
         toolbarTitle = stringResource(R.string.login_screen_toolbar_title)
@@ -142,7 +137,7 @@ fun LoginScreen(
                     .autofill(
                         autofillTypes = listOf(AutofillType.EmailAddress),
                         onFill = { suggestionValue ->
-                            viewModel.setEvent(LoginEvent.FieldValueChange.Email(email = suggestionValue))
+                            onEventSent(LoginEvent.FieldValueChange.Email(email = suggestionValue))
                         }
                     ),
                 value = state.email,
@@ -154,7 +149,7 @@ fun LoginScreen(
                     )
                 },
                 onValueChange = { newEmail ->
-                    viewModel.setEvent(LoginEvent.FieldValueChange.Email(email = newEmail))
+                    onEventSent(LoginEvent.FieldValueChange.Email(email = newEmail))
                 },
                 errorMessage = state.emailValidationResult.messages.firstOrNull()
                     .orEmpty(),
@@ -178,13 +173,13 @@ fun LoginScreen(
                     .autofill(
                         autofillTypes = listOf(AutofillType.Password),
                         onFill = { suggestionValue ->
-                            viewModel.setEvent(LoginEvent.FieldValueChange.Password(password = suggestionValue))
+                            onEventSent(LoginEvent.FieldValueChange.Password(password = suggestionValue))
                         }
                     ),
                 value = state.password,
                 label = stringResource(R.string.login_screen_input_field_label_password),
                 onValueChange = { newPassword ->
-                    viewModel.setEvent(LoginEvent.FieldValueChange.Password(password = newPassword))
+                    onEventSent(LoginEvent.FieldValueChange.Password(password = newPassword))
                 },
                 leadingIcon = {
                     Icon(
@@ -193,7 +188,7 @@ fun LoginScreen(
                     )
                 },
                 trailingIcon = {
-                    IconButton(onClick = { viewModel.setEvent(LoginEvent.OnPasswordVisibilityIconClick) }) {
+                    IconButton(onClick = { onEventSent(LoginEvent.OnPasswordVisibilityIconClick) }) {
                         if (state.isPasswordVisible) {
                             Icon(
                                 imageVector = Icons.Filled.VisibilityOff,
@@ -217,7 +212,7 @@ fun LoginScreen(
                 ),
                 keyboardActions = KeyboardActions(
                     onDone = {
-                        viewModel.setEvent(LoginEvent.OnDoneClick)
+                        onEventSent(LoginEvent.OnDoneClick)
                     }
                 )
             )
@@ -231,12 +226,12 @@ fun LoginScreen(
             ) {
                 Row(
                     modifier = Modifier
-                        .clickableNoRipple { viewModel.setEvent(LoginEvent.OnRememberMeCheckboxClick) },
+                        .clickableNoRipple { onEventSent(LoginEvent.OnRememberMeCheckboxClick) },
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Checkbox(
                         checked = state.isRememberMeCheckboxChecked,
-                        onCheckedChange = { viewModel.setEvent(LoginEvent.OnRememberMeCheckboxClick) }
+                        onCheckedChange = { onEventSent(LoginEvent.OnRememberMeCheckboxClick) }
                     )
 
                     Text(
@@ -246,7 +241,7 @@ fun LoginScreen(
                 }
 
                 TextButton(
-                    onClick = { viewModel.setEvent(LoginEvent.OnForgotPasswordButtonClick) }
+                    onClick = { onEventSent(LoginEvent.OnForgotPasswordButtonClick) }
                 ) {
                     Text(
                         text = stringResource(R.string.login_screen_forgot_password_button),
@@ -260,7 +255,7 @@ fun LoginScreen(
             ContainedButton(
                 modifier = Modifier.fillMaxWidth(),
                 enabled = state.isLoginButtonEnabled,
-                onClick = { viewModel.setEvent(LoginEvent.OnLoginButtonClick) }
+                onClick = { onEventSent(LoginEvent.OnLoginButtonClick) }
             ) {
                 Text(
                     text = stringResource(R.string.login_screen_login_button)
@@ -289,7 +284,7 @@ fun LoginScreen(
                         ClickableString(
                             text = stringResource(R.string.login_screen_signup_text_button),
                             onClick = {
-                                viewModel.setEvent(LoginEvent.OnSignupTextClicked)
+                                onEventSent(LoginEvent.OnSignupTextClicked)
                             }
                         )
                     )

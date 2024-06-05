@@ -1,6 +1,6 @@
 package com.alexgreece45.marvelx.network_logic.typeAdapters
 
-import com.alexgreece45.marvelx.controllers.models.websocket.WebsocketRequestType
+import com.alexgreece45.marvelx.controllers.model.websocket.WebsocketRequestType
 import com.google.gson.TypeAdapter
 import com.google.gson.stream.JsonReader
 import com.google.gson.stream.JsonWriter

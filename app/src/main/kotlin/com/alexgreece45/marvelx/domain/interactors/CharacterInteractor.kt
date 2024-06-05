@@ -2,8 +2,8 @@ package com.alexgreece45.marvelx.domain.interactors
 
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.controllers.AppLoggerController
-import com.alexgreece45.marvelx.domain.models_api.character.CharacterDomain
-import com.alexgreece45.marvelx.domain.models_api.comic.ComicDomain
+import com.alexgreece45.marvelx.domain.model_api.character.CharacterDomain
+import com.alexgreece45.marvelx.domain.model_api.comic.ComicDomain
 import com.alexgreece45.marvelx.network_logic.models_api.character.comic.toComicDomainList
 import com.alexgreece45.marvelx.network_logic.models_api.character.toCharacterDomain
 import com.alexgreece45.marvelx.network_logic.models_api.character.toCharacterDomainList

@@ -1,6 +1,6 @@
 package com.alexgreece45.marvelx.network_logic.models_api.character
 
-import com.alexgreece45.marvelx.domain.models_api.image.ImageDomain
+import com.alexgreece45.marvelx.domain.model_api.image.ImageDomain
 import com.google.gson.annotations.SerializedName
 import kotlin.reflect.KClass
 

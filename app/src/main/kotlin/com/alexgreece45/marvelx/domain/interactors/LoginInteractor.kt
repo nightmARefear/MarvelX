@@ -10,10 +10,10 @@ import com.alexgreece45.marvelx.controllers.WebsocketController
 import com.alexgreece45.marvelx.network_logic.models_api.sensitiveUserData.RequestSensitiveUserData
 import com.alexgreece45.marvelx.network_logic.models_api.sensitiveUserData.toSensitiveUserDataDomain
 import com.alexgreece45.marvelx.network_logic.models_api.token.toUserAuthData
-import com.alexgreece45.marvelx.domain.models_api.sensitiveUserData.SensitiveUserDataDomain
-import com.alexgreece45.marvelx.domain.models_api.user.postLogin.SignData
-import com.alexgreece45.marvelx.domain.models_api.user.profileDetails.ProfileDetailsDomain
-import com.alexgreece45.marvelx.domain.models_api.userAuthData.UserAuthData
+import com.alexgreece45.marvelx.domain.model_api.sensitiveUserData.SensitiveUserDataDomain
+import com.alexgreece45.marvelx.domain.model_api.user.postLogin.SignData
+import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.ProfileDetailsDomain
+import com.alexgreece45.marvelx.domain.model_api.userAuthData.UserAuthData
 import com.alexgreece45.marvelx.data.repository.GetSensitiveUserDataRepositoryResponse
 import com.alexgreece45.marvelx.data.repository.GrandNewAccessTokenRepositoryResponse
 import com.alexgreece45.marvelx.data.repository.LoginRepository

@@ -10,6 +10,10 @@ import com.alexgreece45.marvelx.configuration.ConfigLogic
 import com.alexgreece45.marvelx.configuration.ConfigLogicImpl
 import com.alexgreece45.marvelx.configuration.ConfigSecurityLogic
 import com.alexgreece45.marvelx.configuration.ConfigSecurityLogicImpl
+import com.alexgreece45.marvelx.controllers.AntiHookController
+import com.alexgreece45.marvelx.controllers.AntiHookControllerImpl
+import com.alexgreece45.marvelx.controllers.AntiReverseEngineeringController
+import com.alexgreece45.marvelx.controllers.AntiReverseEngineeringControllerImpl
 import com.alexgreece45.marvelx.controllers.AppLoggerController
 import com.alexgreece45.marvelx.controllers.AppLoggerControllerImpl
 import com.alexgreece45.marvelx.controllers.ApplicationPackageController
@@ -30,11 +34,24 @@ import com.alexgreece45.marvelx.controllers.SecurityController
 import com.alexgreece45.marvelx.controllers.SecurityControllerImpl
 import com.alexgreece45.marvelx.controllers.TimerController
 import com.alexgreece45.marvelx.controllers.TimerControllerImpl
+import com.alexgreece45.marvelx.data.repository.ChangePasswordRepository
+import com.alexgreece45.marvelx.data.repository.ChangePasswordRepositoryImpl
+import com.alexgreece45.marvelx.data.repository.CharacterRepository
+import com.alexgreece45.marvelx.data.repository.CharacterRepositoryImpl
+import com.alexgreece45.marvelx.data.repository.FavoriteCharactersRepository
+import com.alexgreece45.marvelx.data.repository.FavoriteCharactersRepositoryImpl
+import com.alexgreece45.marvelx.data.repository.ForgotPasswordRepository
+import com.alexgreece45.marvelx.data.repository.ForgotPasswordRepositoryImpl
+import com.alexgreece45.marvelx.data.repository.LoginRepository
+import com.alexgreece45.marvelx.data.repository.LoginRepositoryImpl
+import com.alexgreece45.marvelx.data.repository.OtpRepository
+import com.alexgreece45.marvelx.data.repository.OtpRepositoryImpl
+import com.alexgreece45.marvelx.data.repository.RegisterRepository
+import com.alexgreece45.marvelx.data.repository.RegisterRepositoryImpl
+import com.alexgreece45.marvelx.data.repository.UserRepository
+import com.alexgreece45.marvelx.data.repository.UserRepositoryImpl
 import com.alexgreece45.marvelx.database.FavoriteCharactersDao
 import com.alexgreece45.marvelx.database.FavoriteCharactersDatabase
-import com.alexgreece45.marvelx.network_logic.interceptors.ApiInterceptor
-import com.alexgreece45.marvelx.network_logic.interceptors.WebsocketInterceptor
-import com.alexgreece45.marvelx.network_logic.networkKoinModule
 import com.alexgreece45.marvelx.domain.interactors.ChangePasswordInteractor
 import com.alexgreece45.marvelx.domain.interactors.ChangePasswordInteractorImpl
 import com.alexgreece45.marvelx.domain.interactors.CharacterInteractor
@@ -53,22 +70,10 @@ import com.alexgreece45.marvelx.domain.interactors.SplashInteractor
 import com.alexgreece45.marvelx.domain.interactors.SplashInteractorImpl
 import com.alexgreece45.marvelx.domain.interactors.UserInteractor
 import com.alexgreece45.marvelx.domain.interactors.UserInteractorImpl
-import com.alexgreece45.marvelx.data.repository.ChangePasswordRepository
-import com.alexgreece45.marvelx.data.repository.ChangePasswordRepositoryImpl
-import com.alexgreece45.marvelx.data.repository.CharacterRepository
-import com.alexgreece45.marvelx.data.repository.CharacterRepositoryImpl
-import com.alexgreece45.marvelx.data.repository.FavoriteCharactersRepository
-import com.alexgreece45.marvelx.data.repository.FavoriteCharactersRepositoryImpl
-import com.alexgreece45.marvelx.data.repository.ForgotPasswordRepository
-import com.alexgreece45.marvelx.data.repository.ForgotPasswordRepositoryImpl
-import com.alexgreece45.marvelx.data.repository.LoginRepository
-import com.alexgreece45.marvelx.data.repository.LoginRepositoryImpl
-import com.alexgreece45.marvelx.data.repository.OtpRepository
-import com.alexgreece45.marvelx.data.repository.OtpRepositoryImpl
-import com.alexgreece45.marvelx.data.repository.RegisterRepository
-import com.alexgreece45.marvelx.data.repository.RegisterRepositoryImpl
-import com.alexgreece45.marvelx.data.repository.UserRepository
-import com.alexgreece45.marvelx.data.repository.UserRepositoryImpl
+import com.alexgreece45.marvelx.domain.worker.RefreshTokenWorker
+import com.alexgreece45.marvelx.network_logic.interceptors.ApiInterceptor
+import com.alexgreece45.marvelx.network_logic.interceptors.WebsocketInterceptor
+import com.alexgreece45.marvelx.network_logic.networkKoinModule
 import com.alexgreece45.marvelx.ui.navigation.router.RouterHost
 import com.alexgreece45.marvelx.ui.navigation.router.RouterHostImpl
 import com.alexgreece45.marvelx.ui.screens.allCharacters.AllCharactersViewModel
@@ -91,7 +96,6 @@ import com.alexgreece45.marvelx.util.FormValidator
 import com.alexgreece45.marvelx.util.FormValidatorImpl
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.ResourceProviderImpl
-import com.alexgreece45.marvelx.domain.worker.RefreshTokenWorker
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.androidx.viewmodel.dsl.viewModel
@@ -210,9 +214,11 @@ private val controllerModule = module {
     single<RefreshTokenController> { RefreshTokenControllerImpl(get(), get(), get()) }
     single<TimerController> { TimerControllerImpl() }
     single<RootController> { RootControllerImpl(get()) }
-    single<SecurityController> { SecurityControllerImpl(get(), get(), get()) }
+    single<SecurityController> { SecurityControllerImpl(get(), get(), get(), get(), get()) }
     single<ApplicationPackageController> { ApplicationPackageControllerImpl(get(), get()) }
     single<AppLoggerController> { AppLoggerControllerImpl(get()) }
+    single<AntiReverseEngineeringController> { AntiReverseEngineeringControllerImpl(get(), get()) }
+    single<AntiHookController> { AntiHookControllerImpl() }
 }
 
 private val formValidatorModule = module {

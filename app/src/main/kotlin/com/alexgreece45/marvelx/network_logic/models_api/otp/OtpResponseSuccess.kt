@@ -1,6 +1,6 @@
 package com.alexgreece45.marvelx.network_logic.models_api.otp
 
-import com.alexgreece45.marvelx.domain.models_api.otp.OtpDomain
+import com.alexgreece45.marvelx.domain.model_api.otp.OtpDomain
 import com.google.gson.annotations.SerializedName
 
 data class OtpResponseSuccess(

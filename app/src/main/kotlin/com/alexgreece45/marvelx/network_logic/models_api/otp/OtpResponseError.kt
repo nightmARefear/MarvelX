@@ -1,7 +1,7 @@
 package com.alexgreece45.marvelx.network_logic.models_api.otp
 
-import com.alexgreece45.marvelx.domain.models_api.otp.OtpErrorCause
-import com.alexgreece45.marvelx.domain.models_api.otp.OtpResponseErrorDomain
+import com.alexgreece45.marvelx.domain.model_api.otp.OtpErrorCause
+import com.alexgreece45.marvelx.domain.model_api.otp.OtpResponseErrorDomain
 import com.google.gson.annotations.SerializedName
 
 /**

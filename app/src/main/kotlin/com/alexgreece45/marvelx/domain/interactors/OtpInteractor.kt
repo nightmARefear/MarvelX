@@ -2,11 +2,11 @@ package com.alexgreece45.marvelx.domain.interactors
 
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.controllers.AppLoggerController
-import com.alexgreece45.marvelx.domain.models_api.otp.OtpDomain
-import com.alexgreece45.marvelx.domain.models_api.otp.OtpErrorCause
-import com.alexgreece45.marvelx.domain.models_api.otp.OtpResponseErrorDomain
-import com.alexgreece45.marvelx.domain.models_api.resendOtp.ResponseResendOtpFailedDomain
-import com.alexgreece45.marvelx.domain.models_api.user.VerificationStep
+import com.alexgreece45.marvelx.domain.model_api.otp.OtpDomain
+import com.alexgreece45.marvelx.domain.model_api.otp.OtpErrorCause
+import com.alexgreece45.marvelx.domain.model_api.otp.OtpResponseErrorDomain
+import com.alexgreece45.marvelx.domain.model_api.resendOtp.ResponseResendOtpFailedDomain
+import com.alexgreece45.marvelx.domain.model_api.user.VerificationStep
 import com.alexgreece45.marvelx.network_logic.models_api.otp.OtpRequest
 import com.alexgreece45.marvelx.network_logic.models_api.otp.toOtpDomain
 import com.alexgreece45.marvelx.network_logic.models_api.otp.toOtpResponseErrorDomain

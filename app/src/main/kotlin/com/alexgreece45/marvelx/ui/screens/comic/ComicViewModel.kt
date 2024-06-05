@@ -1,7 +1,7 @@
 package com.alexgreece45.marvelx.ui.screens.comic
 
 import androidx.lifecycle.viewModelScope
-import com.alexgreece45.marvelx.domain.models_api.comic.ComicDomain
+import com.alexgreece45.marvelx.domain.model_api.comic.ComicDomain
 import com.alexgreece45.marvelx.domain.interactors.ComicInteractor
 import com.alexgreece45.marvelx.domain.interactors.GetComicPartialState
 import com.alexgreece45.marvelx.mvi.BaseEffect

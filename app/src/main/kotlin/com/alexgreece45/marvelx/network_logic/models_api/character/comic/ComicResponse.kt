@@ -1,8 +1,8 @@
 package com.alexgreece45.marvelx.network_logic.models_api.character.comic
 
-import com.alexgreece45.marvelx.domain.models_api.comic.ComicDomain
-import com.alexgreece45.marvelx.domain.models_api.comic.ComicPriceDomain
-import com.alexgreece45.marvelx.domain.models_api.comic.ComicPriceType
+import com.alexgreece45.marvelx.domain.model_api.comic.ComicDomain
+import com.alexgreece45.marvelx.domain.model_api.comic.ComicPriceDomain
+import com.alexgreece45.marvelx.domain.model_api.comic.ComicPriceType
 import com.alexgreece45.marvelx.network_logic.models_api.character.ComicSummary
 import com.alexgreece45.marvelx.network_logic.models_api.character.EventList
 import com.alexgreece45.marvelx.network_logic.models_api.character.ImageResponse

@@ -27,10 +27,10 @@ import com.alexgreece45.marvelx.ui.navigation.NavArgHelper
 import com.alexgreece45.marvelx.ui.navigation.Screen
 import com.alexgreece45.marvelx.ui.navigation.models.NavArg
 import com.alexgreece45.marvelx.ui.navigation.router.RouterHost
+import com.alexgreece45.marvelx.ui.screens.home.models.HomeAlertDialogErrorType
+import com.alexgreece45.marvelx.ui.screens.splash.SplashContract
 import com.alexgreece45.marvelx.ui.theme.MarvelXTheme
 import com.alexgreece45.marvelx.util.extensions.popUpToTop
-import com.alexgreece45.marvelx.ui.screens.splash.SplashContract
-import com.alexgreece45.marvelx.ui.screens.home.models.HomeAlertDialogErrorType
 import com.chuckerteam.chucker.api.Chucker
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
@@ -75,22 +75,12 @@ class MainActivity : ComponentActivity() {
                                         routerHost.logout()
                                     }
 
-                                    ActivityEffect.Navigation.NavigateToSplashScreenWithApplicationInsecureError -> {
+                                    is ActivityEffect.Navigation.NavigateToSplashScreenWithSecurityViolation -> {
                                         NavArgHelper.setArgument(
                                             NavArg.SplashAlertDialogErrorType,
-                                            SplashContract.AlertDialogErrorType.InsecureApplication
-                                        )
-                                        routerHost.getNavController().let { navController ->
-                                            navController.navigate(Screen.SplashScreen.route) {
-                                                popUpToTop(navController)
-                                            }
-                                        }
-                                    }
-
-                                    ActivityEffect.Navigation.NavigateToSplashScreenWithApplicationInMultiWindowModeViolation -> {
-                                        NavArgHelper.setArgument(
-                                            NavArg.SplashAlertDialogErrorType,
-                                            SplashContract.AlertDialogErrorType.ApplicationInMultiWindowMode
+                                            SplashContract.AlertDialogErrorType.InsecureApplication(
+                                                securityViolation = activityEffect.securityViolation
+                                            )
                                         )
                                         routerHost.getNavController().let { navController ->
                                             navController.navigate(Screen.SplashScreen.route) {
@@ -143,7 +133,7 @@ class MainActivity : ComponentActivity() {
         logger.d("MainActivity") { "isInMultiWindowMode called." }
 
         val isInMultiWindowMode = super.isInMultiWindowMode()
-        if (isInMultiWindowMode && securityController.shouldApplicationBeInMultiWindowMode().not()) {
+        if (isInMultiWindowMode && !securityController.shouldApplicationBeInMultiWindowMode()) {
             viewModel.setEvent(ActivityEvent.ApplicationInMultiWindowModeViolation)
         }
 

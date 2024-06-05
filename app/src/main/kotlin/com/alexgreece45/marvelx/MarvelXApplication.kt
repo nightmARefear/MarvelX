@@ -11,9 +11,9 @@ import com.alexgreece45.marvelx.configuration.ConfigLogic
 import com.alexgreece45.marvelx.configuration.ConfigSecurityLogic
 import com.alexgreece45.marvelx.controllers.AppLoggerController
 import com.alexgreece45.marvelx.controllers.AuthController
-import com.alexgreece45.marvelx.network_logic.api.ApiClient
 import com.alexgreece45.marvelx.di.initKoin
 import com.alexgreece45.marvelx.domain.worker.RefreshTokenWorker
+import com.alexgreece45.marvelx.network_logic.api.ApiClient
 import org.koin.android.ext.android.inject
 
 class MarvelXApplication : Application(), Configuration.Provider {
