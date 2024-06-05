@@ -45,9 +45,9 @@ import com.alexgreece45.marvelx.ui.components.OutlinedTextFieldValidation
 import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
 import com.alexgreece45.marvelx.ui.components.error.ContentErrorScreen
 import com.alexgreece45.marvelx.ui.components.hightlightedText.WrapClickableText
-import com.alexgreece45.marvelx.ui.components.models.ClickableString
+import com.alexgreece45.marvelx.ui.components.model.AutofillData
+import com.alexgreece45.marvelx.ui.components.model.ClickableString
 import com.alexgreece45.marvelx.util.VSpacer
-import com.alexgreece45.marvelx.util.extensions.autofill
 import com.alexgreece45.marvelx.util.extensions.clickableNoRipple
 import kotlinx.coroutines.flow.Flow
 
@@ -132,24 +132,23 @@ fun LoginScreen(
         ) {
             // Email
             OutlinedTextFieldValidation(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .autofill(
-                        autofillTypes = listOf(AutofillType.EmailAddress),
-                        onFill = { suggestionValue ->
-                            onEventSent(LoginEvent.FieldValueChange.Email(email = suggestionValue))
-                        }
-                    ),
                 value = state.email,
+                onValueChange = { newEmail ->
+                    onEventSent(LoginEvent.FieldValueChange.Email(email = newEmail))
+                },
+                modifier = Modifier.fillMaxWidth(),
+                autofillData = AutofillData(
+                    autofillTypes = listOf(AutofillType.EmailAddress),
+                    onFill = { suggestionValue ->
+                        onEventSent(LoginEvent.FieldValueChange.Email(email = suggestionValue))
+                    }
+                ),
                 label = stringResource(R.string.login_screen_input_field_label_email),
                 leadingIcon = {
                     Icon(
                         painter = painterResource(R.drawable.ic_person),
                         contentDescription = stringResource(R.string.content_description_person)
                     )
-                },
-                onValueChange = { newEmail ->
-                    onEventSent(LoginEvent.FieldValueChange.Email(email = newEmail))
                 },
                 errorMessage = state.emailValidationResult.messages.firstOrNull()
                     .orEmpty(),
@@ -164,23 +163,22 @@ fun LoginScreen(
                     }
                 )
             )
-            VSpacer.Custom(12)
+            VSpacer.Tiny()
 
             // Password
             OutlinedTextFieldValidation(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .autofill(
-                        autofillTypes = listOf(AutofillType.Password),
-                        onFill = { suggestionValue ->
-                            onEventSent(LoginEvent.FieldValueChange.Password(password = suggestionValue))
-                        }
-                    ),
                 value = state.password,
-                label = stringResource(R.string.login_screen_input_field_label_password),
                 onValueChange = { newPassword ->
                     onEventSent(LoginEvent.FieldValueChange.Password(password = newPassword))
                 },
+                modifier = Modifier.fillMaxWidth(),
+                autofillData = AutofillData(
+                    autofillTypes = listOf(AutofillType.Password),
+                    onFill = { suggestionValue ->
+                        onEventSent(LoginEvent.FieldValueChange.Password(password = suggestionValue))
+                    }
+                ),
+                label = stringResource(R.string.login_screen_input_field_label_password),
                 leadingIcon = {
                     Icon(
                         painter = painterResource(R.drawable.ic_lock),
@@ -202,8 +200,7 @@ fun LoginScreen(
                         }
                     }
                 },
-                errorMessage = state.passwordValidationResult.messages.firstOrNull()
-                    .orEmpty(),
+                errorMessage = state.passwordValidationResult.messages.firstOrNull().orEmpty(),
                 isError = !state.passwordValidationResult.isValid && state.passwordValidationResult.messages.firstOrNull() != null,
                 visualTransformation = if (state.isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(
@@ -216,7 +213,6 @@ fun LoginScreen(
                     }
                 )
             )
-            VSpacer.Custom(4)
 
             // Remember Me Checkbox & Forgot Password Button
             Row(
@@ -225,8 +221,7 @@ fun LoginScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Row(
-                    modifier = Modifier
-                        .clickableNoRipple { onEventSent(LoginEvent.OnRememberMeCheckboxClick) },
+                    modifier = Modifier.clickableNoRipple { onEventSent(LoginEvent.OnRememberMeCheckboxClick) },
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Checkbox(
@@ -249,7 +244,7 @@ fun LoginScreen(
                     )
                 }
             }
-            VSpacer.Custom(12)
+            VSpacer.Small()
 
             // Login button.
             ContainedButton(
@@ -262,7 +257,7 @@ fun LoginScreen(
                 )
             }
 
-            // No account - Signup
+            // "Don't have an account? Signup" clickable label
             Spacer(modifier = Modifier.weight(1f))
 
             Box(

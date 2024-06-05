@@ -1,4 +1,4 @@
-package com.alexgreece45.marvelx.ui.components.models
+package com.alexgreece45.marvelx.ui.components.model
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight

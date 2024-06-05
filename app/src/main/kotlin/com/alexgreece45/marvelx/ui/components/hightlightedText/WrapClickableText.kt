@@ -12,7 +12,7 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.TextUnit
-import com.alexgreece45.marvelx.ui.components.models.ClickableString
+import com.alexgreece45.marvelx.ui.components.model.ClickableString
 
 /**
  * A wrapper for [ClickableText] providing an easier way to locate [String]s and provide styling and

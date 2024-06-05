@@ -146,6 +146,10 @@ fun ForgotPasswordScreenContent(
 
     // Email.
     OutlinedTextFieldValidation(
+        value = state.email,
+        onValueChange = { newEmail ->
+            onEventSent(ForgotPasswordEvent.OnEmailValueChange(email = newEmail))
+        },
         modifier = Modifier
             .fillMaxWidth()
             .autofill(
@@ -154,11 +158,7 @@ fun ForgotPasswordScreenContent(
                     onEventSent(ForgotPasswordEvent.OnEmailValueChange(email = suggestionValue))
                 }
             ),
-        value = state.email,
         label = stringResource(R.string.forgot_password_screen_input_field_label_email),
-        onValueChange = { newEmail ->
-            onEventSent(ForgotPasswordEvent.OnEmailValueChange(email = newEmail))
-        },
         errorMessage = state.emailValidationResult.message,
         isError = state.emailValidationResult.isValid.not() && state.emailValidationResult.message.isNotBlank(),
         keyboardOptions = KeyboardOptions(

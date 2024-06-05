@@ -4,8 +4,6 @@ import androidx.activity.compose.BackHandler
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -111,7 +109,8 @@ import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.ui.components.models.ErrorButtonType
+import com.alexgreece45.marvelx.ui.components.model.AutofillData
+import com.alexgreece45.marvelx.ui.components.model.ErrorButtonType
 import com.alexgreece45.marvelx.util.BOTTOM_NAVIGATION_BAR_ITEM_LABEL_MAX_LENGTH
 import com.alexgreece45.marvelx.util.BOTTOM_NAVIGATION_BAR_MAX_ITEMS
 import com.alexgreece45.marvelx.util.BOTTOM_NAVIGATION_BAR_MIN_ITEMS
@@ -120,11 +119,13 @@ import com.alexgreece45.marvelx.util.HSpacer
 import com.alexgreece45.marvelx.util.SPACING_LARGE
 import com.alexgreece45.marvelx.util.SPACING_MEDIUM
 import com.alexgreece45.marvelx.util.SPACING_SMALL
+import com.alexgreece45.marvelx.util.SPACING_TINY
 import com.alexgreece45.marvelx.util.STICKY_BOTTOM_Z_INDEX
 import com.alexgreece45.marvelx.util.THROTTLE_CLICKABLE_DEFAULT_DELAY
 import com.alexgreece45.marvelx.util.VSpacer
 import com.alexgreece45.marvelx.util.extensions.ClickState
 import com.alexgreece45.marvelx.util.extensions.applyPadding
+import com.alexgreece45.marvelx.util.extensions.autofill
 import com.alexgreece45.marvelx.util.extensions.screenPaddingsNone
 import com.alexgreece45.marvelx.util.extensions.throttledClickable
 import com.alexgreece45.marvelx.util.extensions.throttledClickableIcon
@@ -619,7 +620,6 @@ fun ContentScreen(
  * A wrapper [Composable] for native [TopAppBar]. It offers additional functionality and custom
  * styling options.
  */
-@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 private fun Toolbar(
     navigableAction: ScreenNavigableAction,
@@ -1089,13 +1089,15 @@ fun ItemDescription(
     }
 }
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun OutlinedTextFieldValidation(
-    modifier: Modifier = Modifier,
     value: String,
     onValueChange: (String) -> Unit,
+    modifier: Modifier = Modifier,
     label: String = "",
     placeholder: String? = null,
+    autofillData: AutofillData? = null,
     leadingIcon: @Composable (() -> Unit)? = null,
     trailingIcon: @Composable (() -> Unit)? = null,
     errorMessage: String = "",
@@ -1108,11 +1110,17 @@ fun OutlinedTextFieldValidation(
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     shape: Shape = MaterialTheme.shapes.medium
 ) {
-    Box(
-        modifier = modifier
-    ) {
+    Column(modifier = modifier) {
         OutlinedTextField(
-            modifier = modifier,
+            modifier = when (autofillData) {
+                null -> modifier
+                else -> modifier.then(
+                    Modifier.autofill(
+                        autofillTypes = autofillData.autofillTypes,
+                        onFill = autofillData.onFill
+                    )
+                )
+            },
             value = value,
             onValueChange = { newValue ->
                 if (newValue != value) {
@@ -1146,20 +1154,13 @@ fun OutlinedTextFieldValidation(
             shape = shape
         )
 
-        AnimatedVisibility(
-            modifier = Modifier.align(Alignment.BottomStart),
-            visible = isError && errorMessage.isNotBlank(),
-            enter = fadeIn(),
-            exit = fadeOut()
-        ) {
-            Text(
-                modifier = Modifier
-                    .padding(start = 10.dp, top = 66.dp),
-                text = errorMessage,
-                color = MaterialTheme.colors.error,
-                style = MaterialTheme.typography.body2
-            )
-        }
+        // Error.
+        Text(
+            text = errorMessage,
+            modifier = Modifier.padding(start = 10.dp, top = SPACING_TINY.dp),
+            color = MaterialTheme.colors.error,
+            style = MaterialTheme.typography.body2
+        )
     }
 }
 

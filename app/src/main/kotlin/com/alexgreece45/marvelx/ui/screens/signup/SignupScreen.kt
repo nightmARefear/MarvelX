@@ -38,7 +38,7 @@ import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.ExposedDropdownMenu
 import com.alexgreece45.marvelx.ui.components.OutlinedTextFieldValidation
 import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
-import com.alexgreece45.marvelx.ui.components.models.ErrorButtonType
+import com.alexgreece45.marvelx.ui.components.model.ErrorButtonType
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.VSpacer
 import com.alexgreece45.marvelx.util.extensions.autofill
@@ -126,12 +126,12 @@ fun SignUpScreen(
                 ) {
                     // First Name.
                     OutlinedTextFieldValidation(
-                        modifier = Modifier.weight(1f),
                         value = state.firstName,
-                        label = stringResource(R.string.sign_up_screen_input_field_label_first_name),
                         onValueChange = { newValue ->
                             onEventSent(SignupEvent.FieldValueChange.FirstName(firstName = newValue))
                         },
+                        modifier = Modifier.weight(1f),
+                        label = stringResource(R.string.sign_up_screen_input_field_label_first_name),
                         errorMessage = state.firstNameValidationResult.messages.firstOrNull()
                             .orEmpty(),
                         isError = state.firstNameValidationResult.isValid.not() &&
@@ -148,12 +148,12 @@ fun SignUpScreen(
 
                     // Last Name.
                     OutlinedTextFieldValidation(
-                        modifier = Modifier.weight(1f),
                         value = state.lastName,
-                        label = stringResource(R.string.sign_up_screen_input_field_label_last_name),
                         onValueChange = { newValue ->
                             onEventSent(SignupEvent.FieldValueChange.LastName(lastName = newValue))
                         },
+                        modifier = Modifier.weight(1f),
+                        label = stringResource(R.string.sign_up_screen_input_field_label_last_name),
                         errorMessage = state.lastNameValidationResult.messages.firstOrNull()
                             .orEmpty(),
                         isError = state.lastNameValidationResult.isValid.not() &&
@@ -203,6 +203,14 @@ fun SignUpScreen(
             // Email
             item {
                 OutlinedTextFieldValidation(
+                    value = state.email,
+                    onValueChange = { newEmail ->
+                        onEventSent(
+                            SignupEvent.FieldValueChange.Email(
+                                email = newEmail
+                            )
+                        )
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .autofill(
@@ -211,15 +219,7 @@ fun SignUpScreen(
                                 onEventSent(SignupEvent.FieldValueChange.Email(email = suggestionValue))
                             }
                         ),
-                    value = state.email,
                     label = stringResource(R.string.sign_up_screen_input_field_label_email),
-                    onValueChange = { newEmail ->
-                        onEventSent(
-                            SignupEvent.FieldValueChange.Email(
-                                email = newEmail
-                            )
-                        )
-                    },
                     errorMessage = state.emailValidationResult.messages.firstOrNull().orEmpty(),
                     isError = state.emailValidationResult.isValid.not() &&
                             state.emailValidationResult.messages.firstOrNull() != null,
@@ -238,6 +238,14 @@ fun SignUpScreen(
             // Password
             item {
                 OutlinedTextFieldValidation(
+                    value = state.password,
+                    onValueChange = { newPassword ->
+                        onEventSent(
+                            SignupEvent.FieldValueChange.Password(
+                                password = newPassword
+                            )
+                        )
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .autofill(
@@ -246,15 +254,7 @@ fun SignUpScreen(
                                 onEventSent(SignupEvent.FieldValueChange.Password(password = suggestionValue))
                             }
                         ),
-                    value = state.password,
                     label = stringResource(R.string.sign_up_screen_input_field_label_password),
-                    onValueChange = { newPassword ->
-                        onEventSent(
-                            SignupEvent.FieldValueChange.Password(
-                                password = newPassword
-                            )
-                        )
-                    },
                     trailingIcon = {
                         IconButton(onClick = { onEventSent(SignupEvent.OnPasswordVisibilityIconClick) }) {
                             if (state.isPasswordVisible) {

@@ -28,7 +28,7 @@ import com.alexgreece45.marvelx.ui.components.ContainedButton
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
 import com.alexgreece45.marvelx.ui.components.WrapOutlinedButton
-import com.alexgreece45.marvelx.ui.components.models.ErrorButtonLayout
+import com.alexgreece45.marvelx.ui.components.model.ErrorButtonLayout
 import com.alexgreece45.marvelx.util.SPACING_MEDIUM
 import com.alexgreece45.marvelx.util.VSpacer
 
@@ -71,15 +71,12 @@ fun ContentErrorScreen(
         } ?: ScreenNavigableAction.None,
         showToolbar = true,
         stickyBottom = {
-            Column(
-                verticalArrangement = Arrangement.spacedBy(SPACING_MEDIUM.dp)
-            ) {
+            Column(verticalArrangement = Arrangement.spacedBy(SPACING_MEDIUM.dp)) {
                 when (errorButtonLayout) {
                     is ErrorButtonLayout.Single -> {
                         ContainedButton(
                             onClick = errorButtonLayout.onPrimaryButtonClicked,
-                            modifier = Modifier
-                                .fillMaxWidth(),
+                            modifier = Modifier.fillMaxWidth(),
                             enabled = true
                         ) {
                             Text(
@@ -93,8 +90,7 @@ fun ContentErrorScreen(
                     is ErrorButtonLayout.Double -> {
                         ContainedButton(
                             onClick = errorButtonLayout.onPrimaryButtonClicked,
-                            modifier = Modifier
-                                .fillMaxWidth(),
+                            modifier = Modifier.fillMaxWidth(),
                             enabled = true
                         ) {
                             Text(

@@ -1,11 +1,11 @@
-package com.alexgreece45.marvelx.ui.components.models
+package com.alexgreece45.marvelx.ui.components.model
 
 import androidx.compose.foundation.layout.Column
 import com.alexgreece45.marvelx.ui.components.ContainedButton
 import com.alexgreece45.marvelx.ui.components.WrapOutlinedButton
 import com.alexgreece45.marvelx.ui.components.error.ContentErrorScreen
-import com.alexgreece45.marvelx.ui.components.models.ErrorButtonLayout.Double
-import com.alexgreece45.marvelx.ui.components.models.ErrorButtonLayout.Single
+import com.alexgreece45.marvelx.ui.components.model.ErrorButtonLayout.Double
+import com.alexgreece45.marvelx.ui.components.model.ErrorButtonLayout.Single
 
 /**
  * Defines the layout of the error buttons in [ContentErrorScreen]. Both layouts have the primary

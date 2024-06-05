@@ -1,4 +1,4 @@
-package com.alexgreece45.marvelx.ui.components.models
+package com.alexgreece45.marvelx.ui.components.model
 
 import com.alexgreece45.marvelx.ui.components.AlertDialogError
 

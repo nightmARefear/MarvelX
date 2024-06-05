@@ -1,6 +1,6 @@
 package com.alexgreece45.marvelx.ui.screens.changePassword
 
-import com.alexgreece45.marvelx.ui.components.models.ErrorButtonLayout
+import com.alexgreece45.marvelx.ui.components.model.ErrorButtonLayout
 
 data class ChangePasswordScreenErrorView(
     val errorTitle: String,
