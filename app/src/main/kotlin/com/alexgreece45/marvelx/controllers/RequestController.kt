@@ -15,7 +15,7 @@ interface RequestController {
 }
 
 class RequestControllerImpl(
-    private val logger: AppLoggerController,
+    private val logger: AppLogger,
     private val cryptoController: CryptoController,
     private val prefKeys: PrefKeys
 ) : RequestController {

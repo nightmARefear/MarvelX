@@ -28,7 +28,7 @@ interface ApplicationPackageController {
 
 class ApplicationPackageControllerImpl(
     private val resourceProvider: ResourceProvider,
-    private val logger: AppLoggerController
+    private val logger: AppLogger
 ) : ApplicationPackageController {
     override fun getApplicationSignatures(): List<String> {
         try {

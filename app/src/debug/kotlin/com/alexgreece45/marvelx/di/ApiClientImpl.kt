@@ -2,6 +2,7 @@ package com.alexgreece45.marvelx.di
 
 import com.alexgreece45.marvelx.network_logic.api.ApiClient
 import com.alexgreece45.marvelx.network_logic.api.ApiService
+import com.alexgreece45.marvelx.network_logic.models_api.ResponseAuthorize
 import com.alexgreece45.marvelx.network_logic.models_api.character.CharacterDataWrapper
 import com.alexgreece45.marvelx.network_logic.models_api.character.comic.ComicDataWrapper
 import com.alexgreece45.marvelx.network_logic.models_api.forgotPassword.email.RequestForgotPasswordOtpBlockedEmail
@@ -59,12 +60,19 @@ class ApiClientImpl(
     override suspend fun postLogin(accessToken: String): Response<ResponsePostLogin> =
         apiService.postLogin(RequestPostLogin(accessToken))
 
-    override suspend fun grantNewAccessToken(
+    override suspend fun authorize(
         clientId: String,
-        clientSecret: String,
+        codeChallenge: String,
+        codeChallengeMethod: String
+    ): Response<ResponseAuthorize> =
+        apiService.authorize(clientId, codeChallenge, codeChallengeMethod)
+
+    override suspend fun grandNewAccessToken(
+        clientId: String,
+        codeVerifier: String,
         code: String,
         uri: String
-    ): Response<ResponseToken> = apiService.grantNewAccessToken(clientId, clientSecret, code, uri)
+    ): Response<ResponseToken> = apiService.grandNewAccessToken(clientId, codeVerifier, code, uri)
 
     override suspend fun refreshAccessToken(
         clientId: String,

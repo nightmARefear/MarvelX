@@ -2,7 +2,7 @@ package com.alexgreece45.marvelx.ui.screens.mainActivity
 
 import androidx.lifecycle.viewModelScope
 import androidx.work.WorkManager
-import com.alexgreece45.marvelx.controllers.AppLoggerController
+import com.alexgreece45.marvelx.controllers.AppLogger
 import com.alexgreece45.marvelx.controllers.PrefKeys
 import com.alexgreece45.marvelx.controllers.SecurityController
 import com.alexgreece45.marvelx.controllers.WebsocketController
@@ -79,10 +79,10 @@ sealed class ActivityEffect : BaseEffect {
 class ActivityViewModel : BaseViewModel<ActivityEvent, ActivityState, ActivityEffect>() {
 
     private val prefKeys: PrefKeys by inject()
-    private val logger: AppLoggerController by inject()
+    private val logger: AppLogger by inject()
     private val loginInteractor: LoginInteractor by inject()
     private val resourceProvider: ResourceProvider by inject()
-    private val appLoggerController: AppLoggerController by inject()
+    private val appLogger: AppLogger by inject()
     private val websocketController: WebsocketController by inject()
     private val securityController: SecurityController by inject()
     private val routerHost: RouterHost by inject()
@@ -244,11 +244,11 @@ class ActivityViewModel : BaseViewModel<ActivityEvent, ActivityState, ActivityEf
             listener.eventChannel.consumeEach { webSocketEvent ->
                 when (webSocketEvent) {
                     is WebSocketEvent.OnOpen -> {
-                        appLoggerController.d("ActivityViewModel") { "The websocket connection has been opened." }
+                        appLogger.d("ActivityViewModel") { "The websocket connection has been opened." }
                     }
 
                     is WebSocketEvent.OnMessage -> {
-                        appLoggerController.d("ActivityViewModel") { "Received message: ${webSocketEvent.text}" }
+                        appLogger.d("ActivityViewModel") { "Received message: ${webSocketEvent.text}" }
 
                         try {
                             val websocketDomain =
@@ -257,9 +257,9 @@ class ActivityViewModel : BaseViewModel<ActivityEvent, ActivityState, ActivityEf
                             websocketController.onMessageReceived(
                                 WebsocketOnMessageReceivedPartialState.Success(websocketDomain)
                             )
-                            appLoggerController.d("ActivityViewModel") { "(onMessage) websocketDomain: $websocketDomain" }
+                            appLogger.d("ActivityViewModel") { "(onMessage) websocketDomain: $websocketDomain" }
                         } catch (e: Exception) {
-                            appLoggerController.e("ActivityViewModel") { "(onMessage) Error parsing websocket response: $e" }
+                            appLogger.e("ActivityViewModel") { "(onMessage) Error parsing websocket response: $e" }
                             websocketController.onMessageReceived(
                                 WebsocketOnMessageReceivedPartialState.Failed(e.message.orEmpty())
                             )
@@ -267,7 +267,7 @@ class ActivityViewModel : BaseViewModel<ActivityEvent, ActivityState, ActivityEf
                     }
 
                     is WebSocketEvent.OnClosing -> {
-                        appLoggerController.d("ActivityViewModel") { "(onClosing): The websocket server has decided to close the websocket connection.\tcode: ${webSocketEvent.code}" }
+                        appLogger.d("ActivityViewModel") { "(onClosing): The websocket server has decided to close the websocket connection.\tcode: ${webSocketEvent.code}" }
 
                         if (prefKeys.isUserLoggedIn()) {
                             onLogoutUser()
@@ -276,14 +276,14 @@ class ActivityViewModel : BaseViewModel<ActivityEvent, ActivityState, ActivityEf
 
                     is WebSocketEvent.OnClosed -> {
                         if (prefKeys.isUserLoggedIn()) {
-                            appLoggerController.d("ActivityViewModel") { "(onClosed): isUserLoggedIn: true" }
+                            appLogger.d("ActivityViewModel") { "(onClosed): isUserLoggedIn: true" }
                             onLogoutUser()
                         }
-                        appLoggerController.d("ActivityViewModel") { "(onClosed): Both the websocket client and server have decided to end this websocket connection.\tcode: ${webSocketEvent.code}" }
+                        appLogger.d("ActivityViewModel") { "(onClosed): Both the websocket client and server have decided to end this websocket connection.\tcode: ${webSocketEvent.code}" }
                     }
 
                     is WebSocketEvent.OnFailure -> {
-                        appLoggerController.d("ActivityViewModel") { "(onFailure): The websocket server has decided to close this websocket connection." }
+                        appLogger.d("ActivityViewModel") { "(onFailure): The websocket server has decided to close this websocket connection." }
                         onLogoutUser()
                     }
                 }

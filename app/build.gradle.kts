@@ -14,7 +14,7 @@ val keystoreProperties = Properties()
 keystoreProperties.load(FileInputStream(rootProject.file("keystore.properties")))
 
 android {
-    namespace = "com.alexgreece45.marvelx"
+    namespace = libs.versions.application.name.get()
     compileSdk = 34
 
     signingConfigs {
@@ -29,7 +29,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.alexgreece45.marvelx"
+        applicationId = libs.versions.application.name.get()
         minSdk = 26
         targetSdk = 34
         versionCode = 1
@@ -43,8 +43,8 @@ android {
 
     buildTypes {
         getByName("release") {
-            enableUnitTestCoverage = false
             enableAndroidTestCoverage = false
+            enableUnitTestCoverage = false
             isJniDebuggable = false
             isMinifyEnabled = true
             isShrinkResources = true

@@ -72,7 +72,7 @@ fun NavGraph(navController: NavHostController) {
             val viewModel = koinViewModel<HomeViewModel>()
             HomeScreen(
                 state = viewModel.uiState.collectAsStateWithLifecycle().value,
-                onEventSent = { event -> viewModel.setEvent(event) },
+                onEventSent = viewModel::setEvent,
                 effect = viewModel.uiEffect,
                 navigateToLoginScreen = {
                     navController.navigate(Screen.LoginScreen.route) {
@@ -107,7 +107,7 @@ fun NavGraph(navController: NavHostController) {
             val viewModel = koinViewModel<LoginViewModel>()
             LoginScreen(
                 state = viewModel.uiState.collectAsStateWithLifecycle().value,
-                onEventSent = { event -> viewModel.setEvent(event) },
+                onEventSent = viewModel::setEvent,
                 effect = viewModel.uiEffect,
                 navigateToSignupScreen = {
                     navController.navigate(Screen.SignupScreen.route) {
@@ -170,7 +170,7 @@ fun NavGraph(navController: NavHostController) {
             val viewModel = koinViewModel<SignupViewModel>()
             SignUpScreen(
                 state = viewModel.uiState.collectAsStateWithLifecycle().value,
-                onEventSent = { event -> viewModel.setEvent(event) },
+                onEventSent = viewModel::setEvent,
                 effect = viewModel.uiEffect,
                 navigateToAllCharactersScreen = {
                     navController.navigate(Screen.AllCharactersScreen.route) {
@@ -195,7 +195,7 @@ fun NavGraph(navController: NavHostController) {
             val viewModel = koinViewModel<OtpViewModel>()
             OtpScreen(
                 state = viewModel.uiState.collectAsStateWithLifecycle().value,
-                onEventSent = { event -> viewModel.setEvent(event) },
+                onEventSent = viewModel::setEvent,
                 effect = viewModel.uiEffect,
                 popBackStack = navController::popBackStack,
                 navigateToAllCharactersScreen = {
@@ -242,7 +242,7 @@ fun NavGraph(navController: NavHostController) {
             val viewModel = koinViewModel<CharacterViewModel>()
             CharacterScreen(
                 state = viewModel.uiState.collectAsStateWithLifecycle().value,
-                onEventSent = { event -> viewModel.setEvent(event) },
+                onEventSent = viewModel::setEvent,
                 effect = viewModel.uiEffect,
                 characterId = navBackStackEntry.arguments?.getInt(NavItem.CharacterId.key)
                     ?: -1,
@@ -297,7 +297,7 @@ fun NavGraph(navController: NavHostController) {
             val viewModel = koinViewModel<ProfileViewModel>()
             ProfileScreen(
                 state = viewModel.uiState.collectAsStateWithLifecycle().value,
-                onEventSent = { event -> viewModel.setEvent(event) },
+                onEventSent = viewModel::setEvent,
                 effect = viewModel.uiEffect,
                 navigateToHomeScreen = {
                     navController.navigate(Screen.HomeScreen.route) {

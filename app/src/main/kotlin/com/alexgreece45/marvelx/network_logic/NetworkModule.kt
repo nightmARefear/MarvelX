@@ -5,7 +5,7 @@ import com.alexgreece45.marvelx.BuildConfig
 import com.alexgreece45.marvelx.configuration.AppBuildType
 import com.alexgreece45.marvelx.configuration.ConfigLogic
 import com.alexgreece45.marvelx.configuration.ConfigSecurityLogic
-import com.alexgreece45.marvelx.controllers.AppLoggerController
+import com.alexgreece45.marvelx.controllers.AppLogger
 import com.alexgreece45.marvelx.controllers.AuthController
 import com.alexgreece45.marvelx.controllers.CryptoController
 import com.alexgreece45.marvelx.controllers.PrefKeys
@@ -79,11 +79,11 @@ fun provideGson(): Gson = GsonBuilder()
 
 @Factory
 fun provideHttpLoggingInterceptor(
-    appLoggerController: AppLoggerController,
+    appLogger: AppLogger,
     configSecurityLogic: ConfigSecurityLogic
 ): HttpLoggingInterceptor =
     HttpLoggingInterceptor { message ->
-        appLoggerController.d { message }
+        appLogger.d { message }
     }.apply {
         level = when (configSecurityLogic.appBuildType) {
             AppBuildType.RELEASE -> HttpLoggingInterceptor.Level.NONE
@@ -184,20 +184,20 @@ fun provideApiClient(apiService: ApiService): ApiClient = ApiClientImpl(apiServi
 
 @Single
 fun provideRequestController(
-    appLoggerController: AppLoggerController,
+    appLogger: AppLogger,
     cryptoController: CryptoController,
     prefKeys: PrefKeys
-): RequestController = RequestControllerImpl(appLoggerController, cryptoController, prefKeys)
+): RequestController = RequestControllerImpl(appLogger, cryptoController, prefKeys)
 
 @Single
 fun provideWebsocketController(
     configLogic: ConfigLogic,
     okHttpClient: OkHttpClient,
     authController: AuthController,
-    appLoggerController: AppLoggerController,
+    appLogger: AppLogger,
     gson: Gson
 ): WebsocketController =
-    WebsocketControllerImpl(configLogic, okHttpClient, authController, appLoggerController, gson)
+    WebsocketControllerImpl(configLogic, okHttpClient, authController, appLogger, gson)
 
 val networkKoinModule = module {
     single<Gson> { provideGson() }

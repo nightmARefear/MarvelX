@@ -19,7 +19,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import com.alexgreece45.marvelx.controllers.AppLoggerController
+import com.alexgreece45.marvelx.controllers.AppLogger
 import com.alexgreece45.marvelx.controllers.PrefKeys
 import com.alexgreece45.marvelx.controllers.SecurityController
 import com.alexgreece45.marvelx.ui.components.effect.OneTimeLaunchedEffect
@@ -39,7 +39,7 @@ import org.koin.core.annotation.KoinExperimentalAPI
 
 class MainActivity : ComponentActivity() {
 
-    private val logger: AppLoggerController by inject()
+    private val logger: AppLogger by inject()
     private val routerHost: RouterHost by inject()
     private val securityController: SecurityController by inject()
     private val viewModel: ActivityViewModel by viewModels()

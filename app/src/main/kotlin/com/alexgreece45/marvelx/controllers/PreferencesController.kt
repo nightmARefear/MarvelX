@@ -4,9 +4,9 @@ import android.content.SharedPreferences
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKeys
 import com.alexgreece45.marvelx.BuildConfig
-import com.alexgreece45.marvelx.util.constants.ConstantsPrefs
 import com.alexgreece45.marvelx.domain.model_api.user.postLogin.SignData
 import com.alexgreece45.marvelx.util.ResourceProvider
+import com.alexgreece45.marvelx.util.constants.ConstantsPrefs
 import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException
 import java.time.Instant
@@ -155,11 +155,16 @@ interface PrefKeys {
      * Signing data for requests.
      */
     var signData: SignData?
+
+    /**
+     * The KeyStore alias for the oauth key.
+     */
+    var oauthAlias: String?
 }
 
 class PrefKeysImpl(
     private val preferencesController: PreferencesController,
-    private val logger: AppLoggerController
+    private val logger: AppLogger
 ) : PrefKeys {
 
     override fun containsUserId(): Boolean =
@@ -240,6 +245,18 @@ class PrefKeysImpl(
             else preferencesController.setString(
                 ConstantsPrefs.SIGN_DATA,
                 Gson().toJson(value)
+            )
+        }
+    override var oauthAlias: String?
+        get() = preferencesController.getString(
+            ConstantsPrefs.OAUTH_KEYSTORE_ALIAS,
+            ""
+        )
+        set(value) {
+            if (value == null) preferencesController.remove(ConstantsPrefs.OAUTH_KEYSTORE_ALIAS)
+            else preferencesController.getString(
+                ConstantsPrefs.OAUTH_KEYSTORE_ALIAS,
+                ""
             )
         }
 }

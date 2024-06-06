@@ -1,26 +1,35 @@
 package com.alexgreece45.marvelx.data.repository
 
-import com.alexgreece45.marvelx.controllers.AppLoggerController
+import com.alexgreece45.marvelx.controllers.AppLogger
+import com.alexgreece45.marvelx.data.repository.helper.parseError
 import com.alexgreece45.marvelx.network_logic.api.ApiClient
+import com.alexgreece45.marvelx.network_logic.models_api.ResponseAuthorize
 import com.alexgreece45.marvelx.network_logic.models_api.sensitiveUserData.RequestSensitiveUserData
 import com.alexgreece45.marvelx.network_logic.models_api.sensitiveUserData.ResponseSensitiveUserData
 import com.alexgreece45.marvelx.network_logic.models_api.token.ResponseToken
 import com.alexgreece45.marvelx.network_logic.models_api.user.ResponseUserError
 import com.alexgreece45.marvelx.network_logic.models_api.user.postLogin.ResponsePostLogin
 import com.alexgreece45.marvelx.util.ResourceProvider
-import com.alexgreece45.marvelx.data.repository.helper.parseError
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import retrofit2.Response
 
 interface LoginRepository {
+    suspend fun authorize(
+        clientId: String,
+        codeChallenge: String,
+        codeChallengeMethod: String
+    ): Flow<AuthorizeRepositoryPartialState>
+
     /**
-     * Grands a new access token upon login or signup.
+     * Grands an access token based on the given [code] that has been retrieved by the server to
+     * uniquely identify this user, and [codeVerifier] that is the plain text version of the `code
+     * challenge`.
      */
     suspend fun grandNewAccessToken(
         clientId: String,
-        clientSecret: String,
         code: String,
+        codeVerifier: String,
         uri: String
     ): Flow<GrandNewAccessTokenRepositoryResponse>
 
@@ -49,18 +58,32 @@ interface LoginRepository {
 class LoginRepositoryImpl(
     private val apiClient: ApiClient,
     private val resourceProvider: ResourceProvider,
-    private val logger: AppLoggerController
+    private val logger: AppLogger
 ) : LoginRepository {
+    override suspend fun authorize(
+        clientId: String,
+        codeChallenge: String,
+        codeChallengeMethod: String
+    ): Flow<AuthorizeRepositoryPartialState> = flow {
+        apiClient.authorize(clientId, codeChallenge, codeChallengeMethod).let { response ->
+            if (response.isSuccessful) {
+                emit(AuthorizeRepositoryPartialState.Success(response.body()))
+            } else {
+                emit(AuthorizeRepositoryPartialState.Failed(resourceProvider.getGenericErrorMessage()))
+            }
+        }
+    }
+
     override suspend fun grandNewAccessToken(
         clientId: String,
-        clientSecret: String,
         code: String,
+        codeVerifier: String,
         uri: String
     ): Flow<GrandNewAccessTokenRepositoryResponse> =
         flow {
-            apiClient.grantNewAccessToken(
+            apiClient.grandNewAccessToken(
                 clientId = clientId,
-                clientSecret = clientSecret,
+                codeVerifier = codeVerifier,
                 code = code,
                 uri = uri
             ).let { response ->
@@ -88,11 +111,7 @@ class LoginRepositoryImpl(
         )
 
         if (response.isSuccessful) {
-            emit(
-                RefreshAccessTokenRepositoryResponse.Success(
-                    response = response.body()
-                )
-            )
+            emit(RefreshAccessTokenRepositoryResponse.Success(response = response.body()))
         } else {
             emit(
                 RefreshAccessTokenRepositoryResponse.Failed(
@@ -143,6 +162,11 @@ class LoginRepositoryImpl(
                 }
             }
         }
+}
+
+sealed interface AuthorizeRepositoryPartialState {
+    data class Success(val response: ResponseAuthorize?) : AuthorizeRepositoryPartialState
+    data class Failed(val errorMessage: String) : AuthorizeRepositoryPartialState
 }
 
 sealed interface PostLoginRepositoryResponse {

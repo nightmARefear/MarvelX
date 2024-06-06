@@ -1,7 +1,7 @@
 package com.alexgreece45.marvelx.domain.interactors
 
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.controllers.AppLoggerController
+import com.alexgreece45.marvelx.controllers.AppLogger
 import com.alexgreece45.marvelx.controllers.PrefKeys
 import com.alexgreece45.marvelx.network_logic.models_api.user.profileDetails.toProfileDetailsDomain
 import com.alexgreece45.marvelx.data.repository.GetProfileDetailsRepositoryResponse
@@ -20,7 +20,7 @@ class UserInteractorImpl(
     private val repository: UserRepository,
     private val prefKeys: PrefKeys,
     private val resourceProvider: ResourceProvider,
-    private val logger: AppLoggerController
+    private val logger: AppLogger
 ) : UserInteractor {
 
     override suspend fun getProfileDetails(): Flow<GetProfileDetailsPartialState> =

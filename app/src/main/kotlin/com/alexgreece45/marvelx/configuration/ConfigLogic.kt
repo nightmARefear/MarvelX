@@ -2,30 +2,14 @@ package com.alexgreece45.marvelx.configuration
 
 import com.alexgreece45.marvelx.BuildConfig
 import com.alexgreece45.marvelx.configuration.models.MarvelApiConfig
-import com.alexgreece45.marvelx.util.constants.ConstantsSecurity
 import com.alexgreece45.marvelx.util.extensions.getPortFromUrl
 import com.alexgreece45.marvelx.util.extensions.getSchemeFromUrl
 
 interface ConfigLogic {
     /**
-     * The client ID.
-     */
-    val clientId: String
-
-    /**
-     * The client secret.
-     */
-    val clientSecret: String
-
-    /**
      * The refresh interval, in minutes, for refreshing the `access` token. Its value is set to `15` by default.
      */
     val refreshTokenInterval: Long
-
-    /**
-     * Returns the URI.
-     */
-    val uri: String
 
     /**
      * Extracts and returns the scheme (i.e., `https`, `http`) from the base URL.
@@ -76,10 +60,7 @@ sealed class AppBuildType(val key: String) {
 
 class ConfigLogicImpl : ConfigLogic {
 
-    override val clientId: String get() = ConstantsSecurity.OAuth.TOKEN_CLIENT_ID
-    override val clientSecret: String get() = BuildConfig.TOKEN_CLIENT_SECRET
     override val refreshTokenInterval: Long get() = 15L
-    override val uri: String get() = ConstantsSecurity.OAuth.TOKEN_REDIRECT_URI
     override val scheme: String
         get() = BuildConfig.MARVELX_BACKEND_BASE_URL.getSchemeFromUrl()
     override val host: String get() = BuildConfig.MARVELX_BACKEND_DOMAIN

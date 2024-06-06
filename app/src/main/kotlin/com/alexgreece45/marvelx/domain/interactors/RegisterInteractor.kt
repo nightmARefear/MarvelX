@@ -1,7 +1,7 @@
 package com.alexgreece45.marvelx.domain.interactors
 
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.controllers.AppLoggerController
+import com.alexgreece45.marvelx.controllers.AppLogger
 import com.alexgreece45.marvelx.network_logic.models_api.jwtSensitiveUserData.RequestJwtSensitiveUserData
 import com.alexgreece45.marvelx.network_logic.models_api.jwtSensitiveUserData.toJwtSensitiveUserDataDomain
 import com.alexgreece45.marvelx.network_logic.models_api.user.login.RequestUserLogin
@@ -42,7 +42,7 @@ interface RegisterInteractor {
 }
 
 class RegisterInteractorImpl(
-    private val logger: AppLoggerController,
+    private val logger: AppLogger,
     private val repository: RegisterRepository,
     private val resourceProvider: ResourceProvider
 ) : RegisterInteractor {

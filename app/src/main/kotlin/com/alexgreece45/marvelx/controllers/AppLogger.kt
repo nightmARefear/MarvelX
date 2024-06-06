@@ -8,7 +8,7 @@ import logcat.LogcatLogger
 import logcat.asLog
 import logcat.logcat
 
-interface AppLoggerController {
+interface AppLogger {
     /**
      * Installs [AndroidLogcatLogger] if it hasn't already been installed, and if the [AppBuildType]
      * isn't [AppBuildType.RELEASE].
@@ -26,9 +26,9 @@ interface AppLoggerController {
     fun e(tag: String, throwable: Throwable)
 }
 
-class AppLoggerControllerImpl(
+class AppLoggerImpl(
     private val configSecurityLogic: ConfigSecurityLogic
-) : AppLoggerController {
+) : AppLogger {
     override fun installLogger() {
         if (LogcatLogger.isInstalled.not() && configSecurityLogic.appBuildType != AppBuildType.RELEASE) {
             LogcatLogger.install(AndroidLogcatLogger(LogPriority.VERBOSE))

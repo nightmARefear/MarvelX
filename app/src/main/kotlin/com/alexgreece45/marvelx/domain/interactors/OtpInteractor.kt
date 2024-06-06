@@ -1,7 +1,7 @@
 package com.alexgreece45.marvelx.domain.interactors
 
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.controllers.AppLoggerController
+import com.alexgreece45.marvelx.controllers.AppLogger
 import com.alexgreece45.marvelx.domain.model_api.otp.OtpDomain
 import com.alexgreece45.marvelx.domain.model_api.otp.OtpErrorCause
 import com.alexgreece45.marvelx.domain.model_api.otp.OtpResponseErrorDomain
@@ -32,7 +32,7 @@ interface OtpInteractor {
 class OtpInteractorImpl(
     private val repository: OtpRepository,
     private val resourceProvider: ResourceProvider,
-    private val logger: AppLoggerController
+    private val logger: AppLogger
 ) : OtpInteractor {
     override suspend fun validateOtp(otp: String, userId: Int): Flow<ValidateOtpPartialState> =
         flow {

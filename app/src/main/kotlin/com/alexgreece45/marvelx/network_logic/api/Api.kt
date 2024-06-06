@@ -1,5 +1,6 @@
 package com.alexgreece45.marvelx.network_logic.api
 
+import com.alexgreece45.marvelx.network_logic.models_api.ResponseAuthorize
 import com.alexgreece45.marvelx.network_logic.models_api.character.CharacterDataWrapper
 import com.alexgreece45.marvelx.network_logic.models_api.character.comic.ComicDataWrapper
 import com.alexgreece45.marvelx.network_logic.models_api.forgotPassword.email.RequestForgotPasswordOtpBlockedEmail
@@ -34,13 +35,14 @@ import retrofit2.http.FormUrlEncoded
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Path
+import retrofit2.http.Query
 
 interface ApiService {
     @GET("/v1/public/characters")
-    suspend fun getCharacters(): Response<com.alexgreece45.marvelx.network_logic.models_api.character.CharacterDataWrapper>
+    suspend fun getCharacters(): Response<CharacterDataWrapper>
 
     @GET("/v1/public/characters/{characterId}")
-    suspend fun getCharacter(@Path("characterId") characterId: Int): Response<com.alexgreece45.marvelx.network_logic.models_api.character.CharacterDataWrapper>
+    suspend fun getCharacter(@Path("characterId") characterId: Int): Response<CharacterDataWrapper>
 
     @GET("/v1/public/characters/{characterId}/comics")
     suspend fun getCharacterComics(@Path("characterId") characterId: Int): Response<ComicDataWrapper>
@@ -60,11 +62,18 @@ interface ApiService {
     @POST("/api/private/marvelx/user/post_login")
     suspend fun postLogin(@Body requestPostLogin: RequestPostLogin): Response<ResponsePostLogin>
 
+    @POST("/api/private/marvelx/authorize")
+    suspend fun authorize(
+        @Query("client_id") clientId: String,
+        @Query("code_challenge") codeChallenge: String,
+        @Query("code_challenge_method") codeChallengeMethod: String,
+    ): Response<ResponseAuthorize>
+
     @POST("/api/private/marvelx/user/token")
     @FormUrlEncoded
-    suspend fun grantNewAccessToken(
+    suspend fun grandNewAccessToken(
         @Field("client_id") clientId: String,
-        @Field("client_secret") clientSecret: String,
+        @Field("code_verifier") codeVerifier: String,
         @Field("code") code: String,
         @Field("redirect_uri") redirectUri: String,
         @Field("grant_type") grantType: String = "authorization_code"
@@ -114,9 +123,9 @@ interface ApiService {
 }
 
 interface ApiClient {
-    suspend fun getCharacters(): Response<com.alexgreece45.marvelx.network_logic.models_api.character.CharacterDataWrapper>
+    suspend fun getCharacters(): Response<CharacterDataWrapper>
 
-    suspend fun getCharacterById(characterId: Int): Response<com.alexgreece45.marvelx.network_logic.models_api.character.CharacterDataWrapper>
+    suspend fun getCharacterById(characterId: Int): Response<CharacterDataWrapper>
 
     suspend fun getCharacterComics(characterId: Int): Response<ComicDataWrapper>
 
@@ -130,9 +139,15 @@ interface ApiClient {
 
     suspend fun postLogin(accessToken: String): Response<ResponsePostLogin>
 
-    suspend fun grantNewAccessToken(
+    suspend fun authorize(
         clientId: String,
-        clientSecret: String,
+        codeChallenge: String,
+        codeChallengeMethod: String
+    ): Response<ResponseAuthorize>
+
+    suspend fun grandNewAccessToken(
+        clientId: String,
+        codeVerifier: String,
         code: String,
         uri: String
     ): Response<ResponseToken>

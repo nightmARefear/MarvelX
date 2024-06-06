@@ -6,4 +6,5 @@ package com.alexgreece45.marvelx.util.constants
 object ConstantsPrefs {
     const val AUTO_LOGOUT_TIMESTAMP = "auto_logout_timestamp"
     const val SIGN_DATA = "sign_data"
+    const val OAUTH_KEYSTORE_ALIAS = "oauth_keystore_alias"
 }

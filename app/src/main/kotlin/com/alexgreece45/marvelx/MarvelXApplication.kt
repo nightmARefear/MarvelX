@@ -7,9 +7,9 @@ import androidx.work.Configuration
 import androidx.work.ListenableWorker
 import androidx.work.WorkerFactory
 import androidx.work.WorkerParameters
-import com.alexgreece45.marvelx.configuration.ConfigLogic
+import com.alexgreece45.marvelx.configuration.ConfigOauth
 import com.alexgreece45.marvelx.configuration.ConfigSecurityLogic
-import com.alexgreece45.marvelx.controllers.AppLoggerController
+import com.alexgreece45.marvelx.controllers.AppLogger
 import com.alexgreece45.marvelx.controllers.AuthController
 import com.alexgreece45.marvelx.di.initKoin
 import com.alexgreece45.marvelx.domain.worker.RefreshTokenWorker
@@ -18,7 +18,7 @@ import org.koin.android.ext.android.inject
 
 class MarvelXApplication : Application(), Configuration.Provider {
 
-    private val appLoggerController: AppLoggerController by inject()
+    private val appLogger: AppLogger by inject()
     private val refreshTokenWorkerFactory: RefreshTokenWorkerFactory by inject()
     private val configSecurityLogic: ConfigSecurityLogic by inject()
 
@@ -27,7 +27,7 @@ class MarvelXApplication : Application(), Configuration.Provider {
 
         initKoin(this)
 
-        appLoggerController.installLogger()
+        appLogger.installLogger()
 
         handleStrictMode()
     }
@@ -63,8 +63,8 @@ class MarvelXApplication : Application(), Configuration.Provider {
 class RefreshTokenWorkerFactory(
     private val apiClient: ApiClient,
     private val authController: AuthController,
-    private val configLogic: ConfigLogic,
-    private val logger: AppLoggerController
+    private val configOauth: ConfigOauth,
+    private val logger: AppLogger
 ) : WorkerFactory() {
     override fun createWorker(
         appContext: Context,
@@ -75,7 +75,7 @@ class RefreshTokenWorkerFactory(
         workerParameters = workerParameters,
         apiClient = apiClient,
         authController = authController,
-        configLogic = configLogic,
+        configOauth = configOauth,
         logger = logger
     )
 }

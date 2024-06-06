@@ -1,14 +1,15 @@
 package com.alexgreece45.marvelx.controllers
 
-import com.alexgreece45.marvelx.configuration.ConfigLogic
+import android.util.Base64
 import com.alexgreece45.marvelx.configuration.ConfigSecurityLogic
+import com.alexgreece45.marvelx.controllers.model.crypto.SecureSecretKeySpec
 import com.alexgreece45.marvelx.domain.model_api.user.postLogin.SignData
 import okhttp3.Headers
 import okhttp3.HttpUrl
-import java.nio.charset.StandardCharsets
+import java.security.MessageDigest
+import java.security.SecureRandom
 import java.util.UUID
 import javax.crypto.Mac
-import javax.crypto.spec.SecretKeySpec
 
 /**
  * Provides various functions for cryptography-related operations such as creating a session
@@ -40,11 +41,21 @@ interface CryptoController {
         timestamp: Long,
         signData: SignData
     ): String
+
+    /**
+     * Creates and returns the code verifier used for the OAuth 2.0 Grant flow.
+     */
+    fun createCodeVerifier(): String
+
+    /**
+     * Creates and returns the code challenge with the given [verifier]. The hashing algorithm that
+     * is used is `SHA-256`.
+     */
+    fun createCodeChallenge(verifier: String): String
 }
 
 class CryptoControllerImpl(
-    private val appLogger: AppLoggerController,
-    private val configLogic: ConfigLogic,
+    private val appLogger: AppLogger,
     private val configSecurityLogic: ConfigSecurityLogic
 ) : CryptoController {
     override fun createSessionSignature(
@@ -89,17 +100,35 @@ class CryptoControllerImpl(
         return try {
             val mac = Mac.getInstance(signData.algorithm)
             val keySpec =
-                SecretKeySpec(signData.key.toByteArray(StandardCharsets.UTF_8), signData.algorithm)
+                SecureSecretKeySpec(signData.key.toByteArray(Charsets.UTF_8), signData.algorithm)
             mac.init(keySpec)
-            val signature = android.util.Base64.encodeToString(
-                mac.doFinal(payload.toByteArray(StandardCharsets.UTF_8)),
-                android.util.Base64.NO_WRAP
+            val signature = Base64.encodeToString(
+                mac.doFinal(payload.toByteArray(Charsets.UTF_8)),
+                Base64.NO_WRAP
             )
-//		  keySpec.destroy()
+            keySpec.destroy()
             signature
         } catch (e: Exception) {
             appLogger.e("CryptoController") { "(createSessionSignature) e: $e" }
             ""
         }
+    }
+
+    override fun createCodeVerifier(): String {
+        val code = ByteArray(32)
+        SecureRandom().apply {
+            nextBytes(code)
+        }
+        return Base64.encodeToString(code, Base64.URL_SAFE or Base64.NO_WRAP or Base64.NO_PADDING)
+    }
+
+    override fun createCodeChallenge(verifier: String): String {
+        val bytes = verifier.toByteArray(Charsets.UTF_8)
+        val messageDigest = MessageDigest.getInstance("SHA-256")
+        messageDigest.update(bytes, 0, bytes.size)
+        return Base64.encodeToString(
+            messageDigest.digest(),
+            Base64.URL_SAFE or Base64.NO_WRAP or Base64.NO_PADDING
+        )
     }
 }

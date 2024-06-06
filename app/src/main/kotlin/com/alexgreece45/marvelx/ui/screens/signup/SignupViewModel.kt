@@ -6,20 +6,20 @@ import com.alexgreece45.marvelx.controllers.AuthController
 import com.alexgreece45.marvelx.controllers.PrefKeys
 import com.alexgreece45.marvelx.controllers.RefreshTokenController
 import com.alexgreece45.marvelx.controllers.WebsocketController
-import com.alexgreece45.marvelx.domain.model_api.otp.OtpFlowType
-import com.alexgreece45.marvelx.domain.model_api.user.VerificationStep
-import com.alexgreece45.marvelx.network_logic.models_api.user.Gender
-import com.alexgreece45.marvelx.network_logic.models_api.user.signup.RequestUserSignup
+import com.alexgreece45.marvelx.domain.interactors.AuthorizePartialState
 import com.alexgreece45.marvelx.domain.interactors.GrandNewAccessTokenPartialState
 import com.alexgreece45.marvelx.domain.interactors.LoginInteractor
 import com.alexgreece45.marvelx.domain.interactors.PostLoginPartialState
-import com.alexgreece45.marvelx.domain.interactors.SignupPartialState
 import com.alexgreece45.marvelx.domain.interactors.RegisterInteractor
-import com.alexgreece45.marvelx.domain.model_api.user.signup.SignupDomain
+import com.alexgreece45.marvelx.domain.interactors.SignupPartialState
+import com.alexgreece45.marvelx.domain.model_api.otp.OtpFlowType
+import com.alexgreece45.marvelx.domain.model_api.user.VerificationStep
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
 import com.alexgreece45.marvelx.mvi.BaseViewModel
+import com.alexgreece45.marvelx.network_logic.models_api.user.Gender
+import com.alexgreece45.marvelx.network_logic.models_api.user.signup.RequestUserSignup
 import com.alexgreece45.marvelx.util.Form
 import com.alexgreece45.marvelx.util.FormValidator
 import com.alexgreece45.marvelx.util.FormsValidationResult
@@ -393,7 +393,7 @@ class SignupViewModel(
                                         }
 
                                         VerificationStep.None -> {
-                                            postSuccessfulSignup(signupResponseDomain)
+                                            postSuccessfulSignup()
                                         }
 
                                         VerificationStep.OtpEmail -> {
@@ -429,6 +429,83 @@ class SignupViewModel(
                 SignupEffect.ShowAlertDialogError(
                     errorMessage = resourceProvider.getGenericErrorMessage()
                 )
+            }
+        }
+    }
+
+    /**
+     * The operations to perform after successful signup, and when the [VerificationStep] is
+     * [VerificationStep.None].
+     *
+     * It retrieves the user tokens, signing data, and logins the user.
+     */
+    private fun postSuccessfulSignup() {
+        viewModelScope.launch {
+            // Retrieve authorization code.
+            loginInteractor.authorize().collect {
+                when (it) {
+                    is AuthorizePartialState.Failed -> {
+                        setEffect {
+                            SignupEffect.ShowAlertDialogError(
+                                errorMessage = it.errorMessage
+                            )
+                        }
+                    }
+
+                    is AuthorizePartialState.Success -> {
+                        getAccessToken(it.code)
+                    }
+                }
+            }
+        }
+    }
+
+    private fun getAccessToken(code: String) {
+        viewModelScope.launch {
+            loginInteractor.grandNewAccessToken(code).collect {
+                when (it) {
+                    is GrandNewAccessTokenPartialState.Failed -> {
+                        setEffect {
+                            SignupEffect.ShowAlertDialogError(
+                                errorMessage = resourceProvider.getGenericErrorMessage()
+                            )
+                        }
+                    }
+
+                    is GrandNewAccessTokenPartialState.Success -> {
+                        // Retrieve sign data.
+                        loginInteractor.postLogin(authController.getAccessToken())
+                            .collect { postLoginPartialState ->
+                                when (postLoginPartialState) {
+                                    PostLoginPartialState.Success -> {
+                                        // User is logged in.
+                                        prefKeys.setUserLoggedIn(isLoggedIn = true)
+
+                                        // ONLY for signup, set the remember user session to `true` by default.
+                                        prefKeys.setRememberUserSession(shouldRemember = true)
+
+                                        // Start token worker.
+                                        refreshTokenController.startWorker()
+
+                                        // Initiate websocket connection.
+                                        websocketController.init()
+
+                                        setEffect {
+                                            SignupEffect.Navigation.NavigateToAllCharactersScreen
+                                        }
+                                    }
+
+                                    is PostLoginPartialState.Failed -> {
+                                        setEffect {
+                                            SignupEffect.ShowAlertDialogError(
+                                                errorMessage = resourceProvider.getGenericErrorMessage()
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                    }
+                }
             }
         }
     }
@@ -547,63 +624,6 @@ class SignupViewModel(
                 )
             )
         )
-    }
-
-    /**
-     * The operations to perform after successful signup, and when the [VerificationStep] is
-     * [VerificationStep.None].
-     *
-     * It retrieves the user tokens, signing data, and logins the user.
-     */
-    private fun postSuccessfulSignup(signupDomain: SignupDomain) {
-        viewModelScope.launch {
-            // Retrieve tokens.
-            loginInteractor.grandNewAccessToken(signupDomain.authCode).collect {
-                when (it) {
-                    is GrandNewAccessTokenPartialState.Failed -> {
-                        setEffect {
-                            SignupEffect.ShowAlertDialogError(
-                                errorMessage = resourceProvider.getGenericErrorMessage()
-                            )
-                        }
-                    }
-
-                    is GrandNewAccessTokenPartialState.Success -> {
-                        // Retrieve sign data.
-                        loginInteractor.postLogin(authController.getAccessToken())
-                            .collect{ postLoginPartialState ->
-                                when (postLoginPartialState) {
-                                    PostLoginPartialState.Success -> {
-                                        // User is logged in.
-                                        prefKeys.setUserLoggedIn(isLoggedIn = true)
-
-                                        // ONLY for signup, set the remember user session to `true` by default.
-                                        prefKeys.setRememberUserSession(shouldRemember = true)
-
-                                        // Start token worker.
-                                        refreshTokenController.startWorker()
-
-                                        // Initiate websocket connection.
-                                        websocketController.init()
-
-                                        setEffect {
-                                            SignupEffect.Navigation.NavigateToAllCharactersScreen
-                                        }
-                                    }
-
-                                    is PostLoginPartialState.Failed -> {
-                                        setEffect {
-                                            SignupEffect.ShowAlertDialogError(
-                                                errorMessage = resourceProvider.getGenericErrorMessage()
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-                    }
-                }
-            }
-        }
     }
 
     private suspend fun getUserSignupRequest(): RequestUserSignup =

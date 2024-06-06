@@ -56,7 +56,7 @@ class WebsocketControllerImpl(
     private val configLogic: ConfigLogic,
     private val okHttpClient: OkHttpClient,
     private val authController: AuthController,
-    private val appLoggerController: AppLoggerController,
+    private val appLogger: AppLogger,
     private val gson: Gson
 ) : WebsocketController {
     /**
@@ -103,7 +103,7 @@ class WebsocketControllerImpl(
         // This check is important so as to print the log only when the websocket close gracefully
         // -- i.e., it wasn't already closed or in the process of closing.
         if (didWebsocketCloseGracefully != null && didWebsocketCloseGracefully) {
-            appLoggerController.d("WebsocketController") { "The websocket connection has been terminated." }
+            appLogger.d("WebsocketController") { "The websocket connection has been terminated." }
         }
     }
 

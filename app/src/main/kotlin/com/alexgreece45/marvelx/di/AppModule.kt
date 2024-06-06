@@ -8,14 +8,16 @@ import com.alexgreece45.marvelx.RefreshTokenWorkerFactory
 import com.alexgreece45.marvelx.configuration.AppBuildType
 import com.alexgreece45.marvelx.configuration.ConfigLogic
 import com.alexgreece45.marvelx.configuration.ConfigLogicImpl
+import com.alexgreece45.marvelx.configuration.ConfigOauth
+import com.alexgreece45.marvelx.configuration.ConfigOauthImpl
 import com.alexgreece45.marvelx.configuration.ConfigSecurityLogic
 import com.alexgreece45.marvelx.configuration.ConfigSecurityLogicImpl
 import com.alexgreece45.marvelx.controllers.AntiHookController
 import com.alexgreece45.marvelx.controllers.AntiHookControllerImpl
 import com.alexgreece45.marvelx.controllers.AntiReverseEngineeringController
 import com.alexgreece45.marvelx.controllers.AntiReverseEngineeringControllerImpl
-import com.alexgreece45.marvelx.controllers.AppLoggerController
-import com.alexgreece45.marvelx.controllers.AppLoggerControllerImpl
+import com.alexgreece45.marvelx.controllers.AppLogger
+import com.alexgreece45.marvelx.controllers.AppLoggerImpl
 import com.alexgreece45.marvelx.controllers.ApplicationPackageController
 import com.alexgreece45.marvelx.controllers.ApplicationPackageControllerImpl
 import com.alexgreece45.marvelx.controllers.AuthController
@@ -195,6 +197,7 @@ private val interactorModule = module {
             get(),
             get(),
             get(),
+            get(),
             get()
         )
     }
@@ -209,14 +212,14 @@ private val interactorModule = module {
 private val controllerModule = module {
     single<PreferencesController> { PreferencesControllerImpl(get()) }
     single<PrefKeys> { PrefKeysImpl(get(), get()) }
-    single<CryptoController> { CryptoControllerImpl(get(), get(), get()) }
+    single<CryptoController> { CryptoControllerImpl(get(), get()) }
     single<AuthController> { AuthControllerImpl(get(), get()) }
     single<RefreshTokenController> { RefreshTokenControllerImpl(get(), get(), get()) }
     single<TimerController> { TimerControllerImpl() }
     single<RootController> { RootControllerImpl(get()) }
     single<SecurityController> { SecurityControllerImpl(get(), get(), get(), get(), get()) }
     single<ApplicationPackageController> { ApplicationPackageControllerImpl(get(), get()) }
-    single<AppLoggerController> { AppLoggerControllerImpl(get()) }
+    single<AppLogger> { AppLoggerImpl(get()) }
     single<AntiReverseEngineeringController> { AntiReverseEngineeringControllerImpl(get(), get()) }
     single<AntiHookController> { AntiHookControllerImpl() }
 }
@@ -232,6 +235,7 @@ private val resourceProviderModule = module {
 private val configModule = module {
     single<ConfigLogic> { ConfigLogicImpl() }
     single<ConfigSecurityLogic> { ConfigSecurityLogicImpl() }
+    single<ConfigOauth> { ConfigOauthImpl() }
 }
 
 private val viewModelModule = module {

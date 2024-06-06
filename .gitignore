@@ -33,7 +33,7 @@
 /captures
 .externalNativeBuild
 .cxx
-local.properties
+*.properties
 
 # pinning certificates
 .pem

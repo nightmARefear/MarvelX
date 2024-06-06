@@ -45,7 +45,7 @@ interface AuthController {
 
 class AuthControllerImpl(
     private val prefKeys: PrefKeys,
-    private val logger: AppLoggerController
+    private val logger: AppLogger
 ) : AuthController {
     private val userAuthData: UserAuthData?
         get() {

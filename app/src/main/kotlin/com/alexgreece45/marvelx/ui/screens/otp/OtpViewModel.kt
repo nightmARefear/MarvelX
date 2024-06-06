@@ -9,11 +9,7 @@ import com.alexgreece45.marvelx.controllers.RefreshTokenController
 import com.alexgreece45.marvelx.controllers.TimerController
 import com.alexgreece45.marvelx.controllers.TimerStatus
 import com.alexgreece45.marvelx.controllers.WebsocketController
-import com.alexgreece45.marvelx.domain.model_api.otp.OtpErrorCause
-import com.alexgreece45.marvelx.domain.model_api.otp.OtpFlowType
-import com.alexgreece45.marvelx.domain.model_api.resendOtp.ResendOtpErrorCause
-import com.alexgreece45.marvelx.domain.model_api.sensitiveUserData.SensitiveUserDataDomain
-import com.alexgreece45.marvelx.domain.model_api.user.VerificationStep
+import com.alexgreece45.marvelx.domain.interactors.AuthorizePartialState
 import com.alexgreece45.marvelx.domain.interactors.ForgotPasswordInteractor
 import com.alexgreece45.marvelx.domain.interactors.ForgotPasswordValidateOtpPartialState
 import com.alexgreece45.marvelx.domain.interactors.GetJwtForSensitiveUserDataPartialState
@@ -25,6 +21,11 @@ import com.alexgreece45.marvelx.domain.interactors.PostLoginPartialState
 import com.alexgreece45.marvelx.domain.interactors.RegisterInteractor
 import com.alexgreece45.marvelx.domain.interactors.ResendOtpPartialState
 import com.alexgreece45.marvelx.domain.interactors.ValidateOtpPartialState
+import com.alexgreece45.marvelx.domain.model_api.otp.OtpErrorCause
+import com.alexgreece45.marvelx.domain.model_api.otp.OtpFlowType
+import com.alexgreece45.marvelx.domain.model_api.resendOtp.ResendOtpErrorCause
+import com.alexgreece45.marvelx.domain.model_api.sensitiveUserData.SensitiveUserDataDomain
+import com.alexgreece45.marvelx.domain.model_api.user.VerificationStep
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
@@ -621,10 +622,8 @@ class OtpViewModel(
                 .collect { validateOtpPartialState ->
                     when (validateOtpPartialState) {
                         is ValidateOtpPartialState.Success -> {
-                            // User entered OTP was correct, thus, proceed to retrieve the Access & Refresh tokens.
-                            grandNewAccessToken(
-                                code = validateOtpPartialState.otpDomain.authenticationCode
-                            )
+                            // Retrieve authorization code.
+                            getAuthorizationCode()
                         }
 
                         is ValidateOtpPartialState.Failed -> {
@@ -682,62 +681,90 @@ class OtpViewModel(
         }
     }
 
-    private fun grandNewAccessToken(code: String) {
+    /**
+     * Retrieves the authorization code.
+     */
+    private fun getAuthorizationCode() {
         viewModelScope.launch {
-            loginInteractor.grandNewAccessToken(code = code).collect { accessTokenPartialState ->
-                when (accessTokenPartialState) {
-                    is GrandNewAccessTokenPartialState.Failed -> {
-                        showGenericErrorViewWithErrorCode(
-                            errorCode = OtpScreenErrorCodes.GrandNewAccessToken.GenericError,
+            loginInteractor.authorize().collect {
+                when (it) {
+                    is AuthorizePartialState.Failed -> {
+                        showGenericErrorViewWithErrorMessage(
+                            errorMessage = it.errorMessage,
                             otpFlowType = OtpFlowType.Register
                         )
                     }
-
-                    is GrandNewAccessTokenPartialState.Success -> {
-                        // Token was successfully generated (in the server) and retrieved (in the client).
-
-                        // Retrieve signing data.
-                        val accessTokenWithType = accessTokenPartialState.userAuthData.tokenType + " " + accessTokenPartialState.userAuthData.accessToken
-                        loginInteractor.postLogin(accessTokenWithType).collect { postLoginPartialState ->
-                            when (postLoginPartialState) {
-                                PostLoginPartialState.Success -> {
-                                    // Save token info in device.
-                                    authController.setData(accessTokenPartialState.userAuthData)
-
-                                    // User is now logged in. Save the flag.
-                                    prefKeys.setUserLoggedIn(isLoggedIn = true)
-
-                                    // Start refresh token worker since the access token was successfully retrieved.
-                                    refreshTokenController.startWorker()
-
-                                    // Initialize websocket connection.
-                                    websocketController.init()
-
-                                    // Save current timestamp.
-                                    prefKeys.autoLogoutTimestamp = DateUtil.getUTCInstant()
-
-                                    // Save userId in device.
-                                    prefKeys.setUserId(currentState.userId)
-
-                                    // Save remember user session flag.
-                                    prefKeys.setRememberUserSession(currentState.shouldRememberUserSession)
-
-                                    setEffect {
-                                        OtpEffect.Navigation.NavigateToAllCharactersScreen
-                                    }
-                                }
-
-                                is PostLoginPartialState.Failed -> {
-                                    showGenericErrorViewWithErrorCode(
-                                        errorCode = OtpScreenErrorCodes.PostLogin.GenericError,
-                                        otpFlowType = OtpFlowType.Register
-                                    )
-                                }
-                            }
-                        }
+                    is AuthorizePartialState.Success -> {
+                        // Proceed to retrieve access token.
+                        grandNewAccessToken(code = it.code)
                     }
                 }
             }
+        }
+    }
+
+    /**
+     * Retrieves the access token.
+     */
+    private fun grandNewAccessToken(code: String) {
+        viewModelScope.launch {
+            loginInteractor.grandNewAccessToken(code = code)
+                .collect { accessTokenPartialState ->
+                    when (accessTokenPartialState) {
+                        is GrandNewAccessTokenPartialState.Failed -> {
+                            showGenericErrorViewWithErrorCode(
+                                errorCode = OtpScreenErrorCodes.GrandNewAccessToken.GenericError,
+                                otpFlowType = OtpFlowType.Register
+                            )
+                        }
+
+                        is GrandNewAccessTokenPartialState.Success -> {
+                            // Token was successfully generated (in the server) and retrieved (in the client).
+
+                            // Retrieve signing data.
+                            val accessTokenWithType =
+                                accessTokenPartialState.userAuthData.tokenType + " " + accessTokenPartialState.userAuthData.accessToken
+                            loginInteractor.postLogin(accessTokenWithType)
+                                .collect { postLoginPartialState ->
+                                    when (postLoginPartialState) {
+                                        PostLoginPartialState.Success -> {
+                                            // Save token info in device.
+                                            authController.setData(accessTokenPartialState.userAuthData)
+
+                                            // User is now logged in. Save the flag.
+                                            prefKeys.setUserLoggedIn(isLoggedIn = true)
+
+                                            // Start refresh token worker since the access token was successfully retrieved.
+                                            refreshTokenController.startWorker()
+
+                                            // Initialize websocket connection.
+                                            websocketController.init()
+
+                                            // Save current timestamp.
+                                            prefKeys.autoLogoutTimestamp = DateUtil.getUTCInstant()
+
+                                            // Save userId in device.
+                                            prefKeys.setUserId(currentState.userId)
+
+                                            // Save remember user session flag.
+                                            prefKeys.setRememberUserSession(currentState.shouldRememberUserSession)
+
+                                            setEffect {
+                                                OtpEffect.Navigation.NavigateToAllCharactersScreen
+                                            }
+                                        }
+
+                                        is PostLoginPartialState.Failed -> {
+                                            showGenericErrorViewWithErrorCode(
+                                                errorCode = OtpScreenErrorCodes.PostLogin.GenericError,
+                                                otpFlowType = OtpFlowType.Register
+                                            )
+                                        }
+                                    }
+                                }
+                        }
+                    }
+                }
         }
     }
 
