@@ -10,15 +10,12 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.alexgreece45.marvelx.R
@@ -26,29 +23,26 @@ import com.alexgreece45.marvelx.domain.model_api.comic.ComicDomain
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.ItemDescription
 import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
+import com.alexgreece45.marvelx.ui.screens.comic.model.ComicContract
 import com.alexgreece45.marvelx.util.HSpacer
 import com.alexgreece45.marvelx.util.SPACING_TINY
 import com.alexgreece45.marvelx.util.VSpacer
-import org.koin.androidx.compose.koinViewModel
+import kotlinx.coroutines.flow.Flow
 
 @Composable
 fun ComicScreen(
-    navController: NavController,
-    viewModel: ComicViewModel = koinViewModel(),
+    state: ComicContract.State,
+    onEventSent: (event: ComicContract.Event) -> Unit,
+    effect: Flow<ComicContract.Effect>,
+    popBackStack: () -> Unit,
     comicId: Int
 ) {
-    val state by viewModel.uiState.collectAsState()
-
     LaunchedEffect(Unit) {
-        viewModel.setEvent(
-            ComicEvent.InitView(
-                comicId = comicId
-            )
-        )
+        onEventSent(ComicContract.Event.Init(comicId))
 
-        viewModel.uiEffect.collect { comicEffect ->
+        effect.collect { comicEffect ->
             when (comicEffect) {
-                else -> TODO("to be implemented")
+                ComicContract.Effect.PopBackStack -> popBackStack()
             }
         }
     }
@@ -56,7 +50,7 @@ fun ComicScreen(
     ContentScreen(
         isLoading = state.isLoading,
         navigableAction = ScreenNavigableAction.Backable {
-            navController.popBackStack()
+            ComicContract.Event.OnBackClicked
         },
         showToolbar = true,
         toolbarTitle = state.comic?.title.orEmpty(),

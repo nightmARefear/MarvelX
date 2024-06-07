@@ -34,7 +34,8 @@ class SecureSecretKeySpec(key: ByteArray?, algorithm: String) : KeySpec, SecretK
     }
 
     /**
-     * Overwrites the [key] with dummy data to ensure this copy is no longer present in memory.
+     * Overwrites the [key] with dummy data, flushes the output stream, and explicitly calls the
+     * garbage collector to ensure this copy is no longer present in memory.
      */
     override fun destroy() {
         if (isDestroyed) return

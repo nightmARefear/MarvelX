@@ -14,7 +14,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
 interface RegisterRepository {
-    suspend fun login(requestUserLogin: RequestUserLogin): Flow<LoginRepositoryResponse>
+    suspend fun login(email: String, password: String, isLoggedInWithFirebase: Boolean): Flow<LoginRepositoryResponse>
     suspend fun loginWithToken(): Flow<PostLoginWithTokenRepositoryResponse>
     suspend fun postSignup(requestUserSignup: RequestUserSignup): Flow<SignupRepositoryPartialState>
 
@@ -28,8 +28,13 @@ interface RegisterRepository {
 class RegisterRepositoryImpl(
     private val apiClient: ApiClient
 ) : RegisterRepository {
-    override suspend fun login(requestUserLogin: RequestUserLogin): Flow<LoginRepositoryResponse> =
+    override suspend fun login(email: String, password: String, isLoggedInWithFirebase: Boolean): Flow<LoginRepositoryResponse> =
         flow {
+            val requestUserLogin = RequestUserLogin(
+                email = email,
+                password = password,
+                isLoggedInWithFirebase = isLoggedInWithFirebase
+            )
             apiClient.login(requestUserLogin).let { response ->
                 if (response.isSuccessful) {
                     emit(

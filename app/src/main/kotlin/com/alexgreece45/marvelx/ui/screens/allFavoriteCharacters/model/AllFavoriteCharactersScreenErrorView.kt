@@ -1,4 +1,4 @@
-package com.alexgreece45.marvelx.ui.screens.allFavoriteCharacters.models
+package com.alexgreece45.marvelx.ui.screens.allFavoriteCharacters.model
 
 data class AllFavoriteCharactersScreenErrorView(
     val errorMessage: String,

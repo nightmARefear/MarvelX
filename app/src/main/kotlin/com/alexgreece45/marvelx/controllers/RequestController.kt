@@ -1,6 +1,7 @@
 package com.alexgreece45.marvelx.controllers
 
 import com.alexgreece45.marvelx.util.DateUtil
+import com.alexgreece45.marvelx.util.SecurityUtil
 import com.alexgreece45.marvelx.util.constants.ConstantsSecurity
 import com.alexgreece45.marvelx.util.extensions.toJsonString
 import okhttp3.Request
@@ -23,7 +24,7 @@ class RequestControllerImpl(
         requestBuilder: Request.Builder
     ): Request.Builder {
         val request = requestBuilder.build()
-        val nonce = UUID.randomUUID()
+        val nonce = SecurityUtil.createNonce()
         val timestamp = DateUtil.getSecondsFromEpoch()
 
         val xAuthSignature = prefKeys.signData?.let { signData ->

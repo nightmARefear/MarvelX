@@ -14,6 +14,7 @@ import com.alexgreece45.marvelx.controllers.AuthController
 import com.alexgreece45.marvelx.di.initKoin
 import com.alexgreece45.marvelx.domain.worker.RefreshTokenWorker
 import com.alexgreece45.marvelx.network_logic.api.ApiClient
+import com.google.firebase.FirebaseApp
 import org.koin.android.ext.android.inject
 
 class MarvelXApplication : Application(), Configuration.Provider {
@@ -25,10 +26,16 @@ class MarvelXApplication : Application(), Configuration.Provider {
     override fun onCreate() {
         super.onCreate()
 
+        // Initialize firebase.
+        FirebaseApp.initializeApp(this)
+
+        // Initialize dependencies.
         initKoin(this)
 
+        // Install logger.
         appLogger.installLogger()
 
+        // Handle strict mode.
         handleStrictMode()
     }
 

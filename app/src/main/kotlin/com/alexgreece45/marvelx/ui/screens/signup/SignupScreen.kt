@@ -33,7 +33,7 @@ import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.network_logic.models_api.user.Gender
 import com.alexgreece45.marvelx.ui.components.AlertDialogButton
 import com.alexgreece45.marvelx.ui.components.AlertDialogError
-import com.alexgreece45.marvelx.ui.components.ContainedButton
+import com.alexgreece45.marvelx.ui.components.WrapButton
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.ExposedDropdownMenu
 import com.alexgreece45.marvelx.ui.components.OutlinedTextFieldValidation
@@ -291,7 +291,7 @@ fun SignUpScreen(
 
             // Signup button
             item {
-                ContainedButton(
+                WrapButton(
                     modifier = Modifier.fillMaxWidth(),
                     enabled = state.signupButton,
                     onClick = { onEventSent(SignupEvent.OnSignupButtonClick) }

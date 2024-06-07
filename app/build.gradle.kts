@@ -7,6 +7,8 @@ plugins {
     alias(libs.plugins.google.mapsplatform.secrets)
     alias(libs.plugins.ksp)
     alias(libs.plugins.kotlin.parcelize)
+    alias(libs.plugins.google.gms.google.services)
+    alias(libs.plugins.google.firebase.crashlytics)
 }
 
 // Load keystore credentials.
@@ -178,4 +180,15 @@ dependencies {
 
     // Bouncycastle. Contains Blake2 algorithm.
     implementation(libs.bouncycastle.bcprov)
+
+    // Firebase.
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.play.services.auth)
+    implementation(platform(libs.google.firebase.bom))
+    implementation(libs.google.android.libraries.identity)
+    implementation(libs.google.firebase.analytics)
+    implementation(libs.google.firebase.crashlytics)
+    implementation(libs.google.play.services.auth)
+    implementation(libs.google.firebase.auth)
+    implementation(libs.google.firebase.firestore)
 }

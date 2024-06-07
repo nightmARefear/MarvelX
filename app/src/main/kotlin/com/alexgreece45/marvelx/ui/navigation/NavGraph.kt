@@ -17,7 +17,9 @@ import com.alexgreece45.marvelx.ui.screens.changePassword.ChangePasswordScreen
 import com.alexgreece45.marvelx.ui.screens.character.CharacterScreen
 import com.alexgreece45.marvelx.ui.screens.character.CharacterViewModel
 import com.alexgreece45.marvelx.ui.screens.character.allCharacterComicsScreen.AllCharacterComicsScreen
+import com.alexgreece45.marvelx.ui.screens.character.allCharacterComicsScreen.AllCharacterComicsViewModel
 import com.alexgreece45.marvelx.ui.screens.comic.ComicScreen
+import com.alexgreece45.marvelx.ui.screens.comic.ComicViewModel
 import com.alexgreece45.marvelx.ui.screens.forgotPasswordScreen.ForgotPasswordScreen
 import com.alexgreece45.marvelx.ui.screens.forgotPasswordScreen.forgotPasswordValidateEmailScreen.ForgotPasswordValidateEmailScreen
 import com.alexgreece45.marvelx.ui.screens.home.HomeScreen
@@ -270,8 +272,12 @@ fun NavGraph(navController: NavHostController) {
         composable(
             screen = Screen.ComicScreen
         ) { navBackStackEntry ->
+            val viewModel = koinViewModel<ComicViewModel>()
             ComicScreen(
-                navController = navController,
+                state = viewModel.uiState.collectAsStateWithLifecycle().value,
+                onEventSent = viewModel::setEvent,
+                effect = viewModel.uiEffect,
+                popBackStack = navController::popBackStack,
                 comicId = navBackStackEntry.arguments?.getInt(NavItem.ComicId.key) ?: -1
             )
         }
@@ -279,8 +285,21 @@ fun NavGraph(navController: NavHostController) {
         composable(
             screen = Screen.AllCharacterComicsScreen
         ) { navBackStackEntry ->
+            val viewModel = koinViewModel<AllCharacterComicsViewModel>()
             AllCharacterComicsScreen(
-                navController = navController,
+                state = viewModel.uiState.collectAsStateWithLifecycle().value,
+                onEventSent = viewModel::setEvent,
+                effect = viewModel.uiEffect,
+                popBackStack = navController::popBackStack,
+                navigateToComicScreen = { comicId ->
+                    navController.navigate(
+                        Screen.ComicScreen.createNavRoute(
+                            comicId = comicId
+                        )
+                    ) {
+                        launchSingleTop = true
+                    }
+                },
                 characterId = navBackStackEntry.arguments?.getInt(NavItem.CharacterId.key) ?: -1,
                 toolbarTitlePrefix = navBackStackEntry.arguments?.getString(NavItem.ToolbarTitlePrefix.key)
                     .orEmpty()

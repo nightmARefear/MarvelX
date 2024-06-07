@@ -29,3 +29,9 @@
   public static java.lang.String getStackTraceString(java.lang.Throwable);
   public static int println(int, java.lang.String, java.lang.String);
 }
+
+# Login with Google; Credential Manager.
+-if class androidx.credentials.CredentialManager
+-keep class androidx.credentials.playservices.** {
+  *;
+}

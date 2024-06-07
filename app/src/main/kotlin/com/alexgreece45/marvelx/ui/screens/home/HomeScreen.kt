@@ -17,7 +17,7 @@ import androidx.compose.ui.unit.dp
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.ui.components.AlertDialogButton
 import com.alexgreece45.marvelx.ui.components.AlertDialogError
-import com.alexgreece45.marvelx.ui.components.ContainedButton
+import com.alexgreece45.marvelx.ui.components.WrapButton
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
 import com.alexgreece45.marvelx.ui.components.effect.OneTimeLaunchedEffect
@@ -113,7 +113,7 @@ fun HomeScreen(
                     verticalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp)
                 ) {
                     // Login button.
-                    ContainedButton(
+                    WrapButton(
                         modifier = Modifier.fillMaxWidth(),
                         onClick = { onEventSent(HomeEvent.OnLoginButtonClicked) }
                     ) {
@@ -123,7 +123,7 @@ fun HomeScreen(
                     }
 
                     // Signup button.
-                    ContainedButton(
+                    WrapButton(
                         modifier = Modifier.fillMaxWidth(),
                         onClick = { onEventSent(HomeEvent.OnSignupButtonClicked) }
                     ) {

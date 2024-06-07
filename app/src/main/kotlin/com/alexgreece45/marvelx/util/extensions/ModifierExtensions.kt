@@ -1,7 +1,6 @@
 package com.alexgreece45.marvelx.util.extensions
 
 import android.view.View
-import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.material.IconButton
@@ -39,7 +38,7 @@ data class ClickState(
 )
 
 /**
- * Provides protection against clicking a UI element multiple times within a short period of time,
+ * Provides protection against clicking an Icon multiple times within a short period of time,
  * and against UI overlay attacks from other applications.
  *
  * This [Modifier] allows this UI element to be clicked at the most once per the given [delay].
@@ -53,55 +52,6 @@ data class ClickState(
  * @param onClickLabel  Semantic / accessibility label for the [onClick] action.
  * @param onClick       The action(s) to be invoked when a UI element is clicked.
  */
-fun Modifier.throttledClickable(
-    view: View,
-    delay: Long = THROTTLE_CLICKABLE_DEFAULT_DELAY,
-    enabled: Boolean = true,
-    role: Role? = null,
-    onClickLabel: String? = null,
-    onClick: () -> Unit
-) = composed(
-    inspectorInfo = debugInspectorInfo {
-        name = "clickable"
-        properties["enabled"] = enabled
-        properties["onClickLabel"] = onClickLabel
-        properties["role"] = role
-        properties["onClick"] = onClick
-    }
-) {
-
-    var lastClicked: Long by remember { mutableLongStateOf(0) }
-
-    val debounceState = remember {
-        MutableSharedFlow<ClickState>(
-            replay = 0,
-            extraBufferCapacity = 1,
-            onBufferOverflow = BufferOverflow.DROP_OLDEST
-        )
-    }
-
-    LaunchedEffect(Unit) {
-        debounceState
-            .collect {
-                if (lastClicked <= 0 || (it.currentTimeInMillis - lastClicked) >= delay) {
-                    it.event()
-                    lastClicked = it.currentTimeInMillis
-                }
-            }
-    }
-
-    Modifier
-        .filterTouchesWhenObscured(view)
-        .clickable(
-            interactionSource = remember { MutableInteractionSource() },
-            indication = LocalIndication.current,
-            enabled = enabled,
-            onClickLabel = onClickLabel,
-            role = role,
-            onClick = { debounceState.tryEmit(ClickState(onClick, System.currentTimeMillis())) }
-        )
-}
-
 fun Modifier.throttledClickableIcon(
     onClick: () -> Unit,
     view: View,

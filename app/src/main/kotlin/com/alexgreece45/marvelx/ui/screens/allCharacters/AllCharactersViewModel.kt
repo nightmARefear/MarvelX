@@ -15,10 +15,10 @@ import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
 import com.alexgreece45.marvelx.mvi.BaseViewModel
 import com.alexgreece45.marvelx.ui.components.SortingType
-import com.alexgreece45.marvelx.ui.screens.allCharacters.uiModels.CharacterCardUi
-import com.alexgreece45.marvelx.ui.screens.allCharacters.uiModels.toFavoriteCharacterEntity
+import com.alexgreece45.marvelx.ui.screens.allCharacters.uiModel.CharacterCardUi
+import com.alexgreece45.marvelx.ui.screens.allCharacters.uiModel.toFavoriteCharacterEntity
 import com.alexgreece45.marvelx.util.ResourceProvider
-import com.alexgreece45.marvelx.ui.screens.allCharacters.models.AllCharactersScreenErrorView
+import com.alexgreece45.marvelx.ui.screens.allCharacters.model.AllCharactersScreenErrorView
 import kotlinx.coroutines.launch
 
 sealed interface AllCharactersEvent : BaseEvent {

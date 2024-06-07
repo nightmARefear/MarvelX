@@ -155,11 +155,6 @@ interface PrefKeys {
      * Signing data for requests.
      */
     var signData: SignData?
-
-    /**
-     * The KeyStore alias for the oauth key.
-     */
-    var oauthAlias: String?
 }
 
 class PrefKeysImpl(
@@ -245,18 +240,6 @@ class PrefKeysImpl(
             else preferencesController.setString(
                 ConstantsPrefs.SIGN_DATA,
                 Gson().toJson(value)
-            )
-        }
-    override var oauthAlias: String?
-        get() = preferencesController.getString(
-            ConstantsPrefs.OAUTH_KEYSTORE_ALIAS,
-            ""
-        )
-        set(value) {
-            if (value == null) preferencesController.remove(ConstantsPrefs.OAUTH_KEYSTORE_ALIAS)
-            else preferencesController.getString(
-                ConstantsPrefs.OAUTH_KEYSTORE_ALIAS,
-                ""
             )
         }
 }

@@ -24,8 +24,6 @@ import androidx.compose.material.rememberModalBottomSheetState
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -33,7 +31,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.alexgreece45.marvelx.R
@@ -43,23 +40,24 @@ import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.ModalBottomSheet
 import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
 import com.alexgreece45.marvelx.ui.components.SortingModalBottomSheetContent
-import com.alexgreece45.marvelx.ui.navigation.Screen
 import com.alexgreece45.marvelx.util.DEFAULT_SCREEN_PADDING
 import com.alexgreece45.marvelx.util.HSpacer
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.VSpacer
 import kotlinx.coroutines.coroutineScope
-import org.koin.androidx.compose.koinViewModel
+import kotlinx.coroutines.flow.Flow
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun AllCharacterComicsScreen(
-    navController: NavController,
-    viewModel: AllCharacterComicsViewModel = koinViewModel(),
+    state: AllCharacterComicsState,
+    onEventSent: (AllCharacterComicsEvent) -> Unit,
+    effect: Flow<AllCharacterComicsEffect>,
+    popBackStack: () -> Unit,
+    navigateToComicScreen: (Int) -> Unit,
     characterId: Int,
-    toolbarTitlePrefix: String
+    toolbarTitlePrefix: String,
 ) {
-    val state by viewModel.uiState.collectAsState()
     val modalBottomSheetState =
         rememberModalBottomSheetState(
             initialValue = ModalBottomSheetValue.Hidden,
@@ -68,22 +66,16 @@ fun AllCharacterComicsScreen(
         )
 
     LaunchedEffect(Unit) {
-        viewModel.setEvent(AllCharacterComicsEvent.Init(characterId = characterId))
+        onEventSent(AllCharacterComicsEvent.Init(characterId = characterId))
 
-        viewModel.uiEffect.collect { effect ->
+        effect.collect { effect ->
             when (effect) {
                 AllCharacterComicsEffect.NavigateToCharacterScreen -> {
-                    navController.popBackStack()
+                    popBackStack()
                 }
 
                 is AllCharacterComicsEffect.NavigateToComicScreen -> {
-                    navController.navigate(
-                        Screen.ComicScreen.createNavRoute(
-                            comicId = effect.comicId
-                        )
-                    ) {
-                        launchSingleTop = true
-                    }
+                    navigateToComicScreen(effect.comicId)
                 }
 
                 AllCharacterComicsEffect.BottomSheet.Hide -> {
@@ -112,10 +104,10 @@ fun AllCharacterComicsScreen(
                 contentPadding = DEFAULT_SCREEN_PADDING,
                 selectedItem = state.sortingType,
                 onItemClick = { sortingType ->
-                    viewModel.setEvent(AllCharacterComicsEvent.Sorting.OnItemClick(sortingType))
+                    onEventSent(AllCharacterComicsEvent.Sorting.OnItemClick(sortingType))
                 },
                 onCloseClick = {
-                    viewModel.setEvent(AllCharacterComicsEvent.Sorting.OnCloseClick)
+                    onEventSent(AllCharacterComicsEvent.Sorting.OnCloseClick)
                 }
             )
         }
@@ -123,7 +115,9 @@ fun AllCharacterComicsScreen(
         ContentScreen(
             isLoading = state.isLoading,
             navigableAction = ScreenNavigableAction.Backable {
-                navController.popBackStack()
+                onEventSent(
+                    AllCharacterComicsEvent.OnBackClick
+                )
             },
             showToolbar = true,
             toolbarTitle = stringResource(
@@ -146,7 +140,7 @@ fun AllCharacterComicsScreen(
                 if (!state.hasInternetConnection) {
                     item {
                         ContentErrorScreen(errorMessage = stringResource(R.string.no_internet_connection_error_message)) {
-                            viewModel.setEvent(AllCharacterComicsEvent.Init(characterId = characterId))
+                            onEventSent(AllCharacterComicsEvent.Init(characterId = characterId))
                         }
                     }
                 }
@@ -166,7 +160,7 @@ fun AllCharacterComicsScreen(
                                 interactionSource = remember { MutableInteractionSource() },
                                 indication = rememberRipple(radius = 0.dp)
                             ) {
-                                viewModel.setEvent(AllCharacterComicsEvent.OnDropDownArrowClick)
+                                onEventSent(AllCharacterComicsEvent.OnDropDownArrowClick)
                             },
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -192,7 +186,7 @@ fun AllCharacterComicsScreen(
                     }
                 ) { index, comicDomain ->
                     ComicItem(comic = comicDomain) {
-                        viewModel.setEvent(AllCharacterComicsEvent.OnComicClick(comicId = comicDomain.id))
+                        onEventSent(AllCharacterComicsEvent.OnComicClick(comicId = comicDomain.id))
                     }
 
                     // Adds vertical padding at the bottom of each item (except for the last item).

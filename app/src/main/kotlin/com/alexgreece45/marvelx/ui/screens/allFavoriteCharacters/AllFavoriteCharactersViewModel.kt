@@ -12,8 +12,8 @@ import com.alexgreece45.marvelx.mvi.BaseViewModel
 import com.alexgreece45.marvelx.ui.components.BottomBarItem
 import com.alexgreece45.marvelx.ui.components.IconData
 import com.alexgreece45.marvelx.ui.navigation.Screen
-import com.alexgreece45.marvelx.ui.screens.allCharacters.uiModels.CharacterCardUi
-import com.alexgreece45.marvelx.ui.screens.allFavoriteCharacters.models.AllFavoriteCharactersScreenErrorView
+import com.alexgreece45.marvelx.ui.screens.allCharacters.uiModel.CharacterCardUi
+import com.alexgreece45.marvelx.ui.screens.allFavoriteCharacters.model.AllFavoriteCharactersScreenErrorView
 import kotlinx.coroutines.launch
 
 sealed class AllFavoriteCharactersEvent : BaseEvent {

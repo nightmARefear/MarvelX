@@ -2,16 +2,18 @@ package com.alexgreece45.marvelx.ui.screens.login
 
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.configuration.ConfigLogic
 import com.alexgreece45.marvelx.controllers.PrefKeys
-import com.alexgreece45.marvelx.domain.model_api.otp.OtpFlowType
-import com.alexgreece45.marvelx.domain.model_api.user.VerificationStep
 import com.alexgreece45.marvelx.domain.interactors.LoginPartialState
 import com.alexgreece45.marvelx.domain.interactors.RegisterInteractor
+import com.alexgreece45.marvelx.domain.model_api.otp.OtpFlowType
+import com.alexgreece45.marvelx.domain.model_api.user.VerificationStep
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
 import com.alexgreece45.marvelx.mvi.BaseViewModel
 import com.alexgreece45.marvelx.ui.components.model.ErrorButtonLayout
+import com.alexgreece45.marvelx.ui.screens.login.model.LoginWithIntentWithGoogleResult
 import com.alexgreece45.marvelx.util.Form
 import com.alexgreece45.marvelx.util.FormValidator
 import com.alexgreece45.marvelx.util.FormsValidationResult
@@ -48,6 +50,9 @@ sealed class LoginEvent : BaseEvent {
     data object OnDoneClick : LoginEvent()
 
     data object OnLoginButtonClick : LoginEvent()
+
+    data class OnLoginWithGoogleResult(val loginWithIntentWithGoogleResult: LoginWithIntentWithGoogleResult) :
+        LoginEvent()
 
     data object OnSignupTextClicked : LoginEvent()
 
@@ -129,13 +134,16 @@ sealed class LoginEffect : BaseEffect {
     data class ExecuteEvent(val event: LoginEvent) : LoginEffect()
 
     data object OnDoneClick : LoginEffect()
+
+    data class ShowToast(val text: String) : LoginEffect()
 }
 
 class LoginViewModel(
     private val resourceProvider: ResourceProvider,
     private val formValidator: FormValidator,
     private val registerInteractor: RegisterInteractor,
-    private val prefKeys: PrefKeys
+    private val prefKeys: PrefKeys,
+    private val configLogic: ConfigLogic
 ) : BaseViewModel<LoginEvent, LoginState, LoginEffect>() {
 
     override fun setInitialState(): LoginState = LoginState()
@@ -216,6 +224,10 @@ class LoginViewModel(
 
             is LoginEvent.ErrorView.Hide -> {
                 hideErrorView()
+            }
+
+            is LoginEvent.OnLoginWithGoogleResult -> {
+                onLoginWithGoogleResult(event.loginWithIntentWithGoogleResult)
             }
         }
     }
@@ -308,11 +320,19 @@ class LoginViewModel(
             return
         }
 
-        // All fields are valid.
+        // All fields are valid. Proceed with user login.
+       loginUser(isLoggedInWithFirebase = false)
+    }
+
+    /**
+     * Logins the user.
+     */
+    private fun loginUser(isLoggedInWithFirebase: Boolean) {
         viewModelScope.launch {
             registerInteractor.login(
                 email = currentState.email,
-                password = SecurityUtil.getHashedPasswordFromString(currentState.password).single()
+                password = if (isLoggedInWithFirebase) "firebase" else SecurityUtil.getHashedPasswordFromString(currentState.password).single(),
+                isLoggedInWithFirebase = isLoggedInWithFirebase
             ).collect { userPartialStatePostLogIn ->
                 when (userPartialStatePostLogIn) {
                     is LoginPartialState.Failed -> {
@@ -388,6 +408,54 @@ class LoginViewModel(
         }
     }
 
+    /**
+     * Login with google account flow.
+     */
+    private fun onLoginWithGoogleResult(loginWithIntentWithGoogleResult: LoginWithIntentWithGoogleResult) {
+        when (loginWithIntentWithGoogleResult) {
+            is LoginWithIntentWithGoogleResult.Failed -> {
+                val errorMessage =
+                    if (loginWithIntentWithGoogleResult.errorMessage.contains("Caller has been temporarily blocked due to too many canceled sign-in prompts.")) {
+                        resourceProvider.getString(R.string.login_screen_error_login_with_google_result_too_many_requests)
+                    } else {
+                        resourceProvider.getString(R.string.generic_error)
+                    }
+                setEffect {
+                    LoginEffect.ShowToast(errorMessage)
+                }
+            }
+
+            is LoginWithIntentWithGoogleResult.Success -> {
+                if (loginWithIntentWithGoogleResult.googleUserDomain?.email == null) {
+                    setEffect {
+                        LoginEffect.ShowToast(resourceProvider.getString(R.string.generic_error))
+                    }
+                    return
+                }
+
+                // Proceed to login the user.
+                setState {
+                    copy(
+                        email = loginWithIntentWithGoogleResult.googleUserDomain.email
+                    )
+                }
+                loginUser(isLoggedInWithFirebase = true)
+            }
+
+            LoginWithIntentWithGoogleResult.UnknownError -> {
+                setEffect {
+                    LoginEffect.ShowToast(resourceProvider.getString(R.string.generic_error))
+                }
+            }
+
+            LoginWithIntentWithGoogleResult.Cancelled -> {
+                setEffect {
+                    LoginEffect.ShowToast("cancelled")
+                }
+            }
+        }
+    }
+
     private fun areAllFieldsValid(): Boolean {
         if (currentState.email.isBlank()) return false
         if (currentState.password.isBlank()) return false
@@ -444,13 +512,6 @@ class LoginViewModel(
     }
 
     /**
-     * The title of the error view of `LoginScreen`.
-     */
-    private val errorViewTitle: String
-        get() =
-            resourceProvider.getString(R.string.login_screen_error_view_title)
-
-    /**
      * Displays the error view. It has a default title so there's no need to set it.
      *
      * @param errorMessage              The error message to be displayed as the subtitle of the
@@ -471,7 +532,7 @@ class LoginViewModel(
         setState {
             copy(
                 error = LoginScreenErrorView(
-                    errorTitle = errorViewTitle,
+                    errorTitle = resourceProvider.getString(R.string.login_screen_error_view_title),
                     errorSubtitle = errorMessage,
                     onCloseClicked = onClose,
                     errorButtonLayout = ErrorButtonLayout.Single(

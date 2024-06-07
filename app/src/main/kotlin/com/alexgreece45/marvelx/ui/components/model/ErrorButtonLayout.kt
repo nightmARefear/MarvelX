@@ -1,7 +1,7 @@
 package com.alexgreece45.marvelx.ui.components.model
 
 import androidx.compose.foundation.layout.Column
-import com.alexgreece45.marvelx.ui.components.ContainedButton
+import com.alexgreece45.marvelx.ui.components.WrapButton
 import com.alexgreece45.marvelx.ui.components.WrapOutlinedButton
 import com.alexgreece45.marvelx.ui.components.error.ContentErrorScreen
 import com.alexgreece45.marvelx.ui.components.model.ErrorButtonLayout.Double
@@ -24,7 +24,7 @@ sealed class ErrorButtonLayout(
     open val onPrimaryButtonClicked: () -> Unit
 ) {
     /**
-     * This layout represents a single button (primary) which of type [ContainedButton]. This
+     * This layout represents a single button (primary) which of type [WrapButton]. This
      * represents an important action such as `Re-trying` an operation.
      *
      * @param primaryButtonLabel        The label of the primary button. It has a default value of
@@ -40,7 +40,7 @@ sealed class ErrorButtonLayout(
 
     /**
      * This layout represents two buttons in a [Column] layout. The first button (primary) is of
-     * type [ContainedButton] and represents the most important action. The second button (secondary)
+     * type [WrapButton] and represents the most important action. The second button (secondary)
      * is of type [WrapOutlinedButton] represents a less important action.
      *
      * @param primaryButtonLabel        The label of the primary button. It has a default value of

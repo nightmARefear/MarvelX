@@ -1,5 +1,6 @@
 package com.alexgreece45.marvelx.util
 
+import android.util.Base64
 import com.alexgreece45.marvelx.BuildConfig
 import com.lambdapioneer.argon2kt.Argon2Kt
 import com.lambdapioneer.argon2kt.Argon2KtResult
@@ -9,6 +10,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import logcat.logcat
+import java.security.MessageDigest
+import java.util.UUID
 
 object SecurityUtil {
     suspend fun getHashedPasswordFromString(password: String): Flow<String> = flow {
@@ -31,4 +34,14 @@ object SecurityUtil {
         emit(hashResult.encodedOutputAsByteArray().toString(Charsets.UTF_8)
             .also { logcat { "(getHashedPasswordFromString) finalPassword: $it" } })
     }.flowOn(Dispatchers.Default)
+
+    /**
+     * Creates a secure nonce using [UUID.randomUUID], hashes it with `SHA-256` and returns the
+     * result as a [String].
+     */
+    fun createNonce(): String {
+        return Base64.encodeToString(MessageDigest.getInstance("SHA-256").apply {
+            update(UUID.randomUUID().toString().toByteArray(Charsets.UTF_8))
+        }.digest(), Base64.NO_WRAP)
+    }
 }

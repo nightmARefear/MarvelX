@@ -14,10 +14,11 @@ application-name = "com.alexgreece45.marvelx"
 
 airbnb-lottie-compose = "6.1.0"
 
-androidx-core = "1.13.1"
-androidx-lifecycle = "2.7.0"
 androidx-activity-compose = "1.9.0"
 androidx-appcompat = "1.6.1"
+androidx-core = "1.13.1"
+androidx-credentials = "1.2.2"
+androidx-lifecycle = "2.7.0"
 androidx-room = "2.6.1"
 androidx-security-crypto = "1.0.0"
 androidx-work = "2.9.0"
@@ -32,7 +33,12 @@ chucker = "4.0.0"
 coil = "2.6.0"
 
 google-accompanist = "0.32.0"
+google-android-libraries-identity = "1.1.0"
 google-code-gson = "2.10.1"
+google-firebase-bom = "33.1.0"
+google-firebase-crashlytics = "3.0.1"
+google-play-services-auth = "21.2.0"
+google-gms-google-services = "4.4.2"
 
 hilt-navigation = "1.2.0"
 
@@ -54,30 +60,30 @@ squareup-leakcanary = "2.12"
 [libraries]
 airbnb-lottie-compose = { module = "com.airbnb.android:lottie-compose", version.ref = "airbnb-lottie-compose" }
 
-androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activity-compose" }
 androidx-compose-bom = { module = "androidx.compose:compose-bom", version.ref = "compose-bom" }
+androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activity-compose" }
 androidx-core = { module = "androidx.core:core-ktx", version.ref = "androidx-core" }
-androidx-lifecycle-runtime-ktx = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version.ref = "androidx-lifecycle" }
-androidx-lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "androidx-lifecycle" }
 androidx-compat = { module = "androidx.appcompat:appcompat", version.ref = "androidx-appcompat" }
 androidx-compose-material = { module = "androidx.compose.material:material" }
 androidx-compose-material-icons-extended = { module = "androidx.compose.material:material-icons-extended" } # Extra icons
-androidx-navigation = { module = "androidx.navigation:navigation-compose", version.ref = "compose-navigation" }
-androidx-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "hilt-navigation" }
+androidx-compose-ui = { module = "androidx.compose.ui:ui" }
+androidx-compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling" }
+androidx-compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview" }
+androidx-credentials = { module = "androidx.credentials:credentials", version.ref = "androidx-credentials" }
+androidx-credentials-play-services-auth = { module = "androidx.credentials:credentials-play-services-auth", version.ref = "androidx-credentials" }
+androidx-lifecycle-runtime-ktx = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version.ref = "androidx-lifecycle" }
+androidx-lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "androidx-lifecycle" }
 androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "androidx-room" }
 androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "androidx-room" }
 androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "androidx-room" }
 androidx-room-paging = { module = "androidx.room:room-paging", version.ref = "androidx-room" } # Paging 3 Integration
 androidx-security-crypto = { module = "androidx.security:security-crypto", version.ref = "androidx-security-crypto" }
-androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "androidx-work" }
-
-androidx-compose-ui = { module = "androidx.compose.ui:ui" }
-androidx-compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling" }
-androidx-compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview" }
-androidx-work-testing = { module = "androidx.work:work-testing", version.ref = "androidx-work" }
-
 androidx-test-ext-junit = { module = "androidx.test.ext:junit", version.ref = "androidx-test-ext-junit" }
 androidx-test-espresso-core = { module = "androidx.test.espresso:espresso-core", version.ref = "androidx-test-espresso-core" }
+androidx-navigation = { module = "androidx.navigation:navigation-compose", version.ref = "compose-navigation" }
+androidx-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "hilt-navigation" }
+androidx-work-testing = { module = "androidx.work:work-testing", version.ref = "androidx-work" }
+androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "androidx-work" }
 
 bouncycastle-bcprov = { module = "org.bouncycastle:bcprov-jdk15to18", version.ref = "bouncycastle-bcprov" }
 chucker = { module = "com.github.chuckerteam.chucker:library", version.ref = "chucker" }
@@ -88,17 +94,24 @@ coil-gif = { module = "io.coil-kt:coil-gif", version.ref = "coil" }
 
 google-accompanist-systemuicontroller = { module = "com.google.accompanist:accompanist-systemuicontroller", version.ref = "google-accompanist" }
 google-accompanist-placeholder = { module = "com.google.accompanist:accompanist-systemuicontroller", version.ref = "google-accompanist" }
+google-android-libraries-identity = { module = "com.google.android.libraries.identity.googleid:googleid", version.ref = "google-android-libraries-identity" }
 google-code-gson = { module = "com.google.code.gson:gson", version.ref = "google-code-gson" }
+google-firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "google-firebase-bom" }
+google-firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
+google-firebase-auth = { group = "com.google.firebase", name = "firebase-auth" }
+google-firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics" }
+google-firebase-firestore = { group = "com.google.firebase", name = "firebase-firestore" }
+google-play-services-auth = { group = "com.google.android.gms", name = "play-services-auth", version.ref = "google-play-services-auth" }
 
 junit = { module = "junit:junit", version.ref = "junit" }
 
 koin-bom = { module = "io.insert-koin:koin-bom", version.ref = "koin-bom" }
-koin-core = { module = "io.insert-koin:koin-core" }
 koin-android = { module = "io.insert-koin:koin-android" }
 koin-androidx-compose = { module = "io.insert-koin:koin-androidx-compose" }
 koin-androidx-navigation = { module = "io.insert-koin:koin-androidx-navigation" }
 koin-androidx-work-manager = { module = "io.insert-koin:koin-androidx-workmanager" }
 koin-annotations = { module = "io.insert-koin:koin-annotations", version.ref = "koin-annotations" }
+koin-core = { module = "io.insert-koin:koin-core" }
 koin-ksp-compiler = { module = "io.insert-koin:koin-ksp-compiler", version.ref = "koin-annotations" }
 koin-android-test = { module = "io.insert-koin:koin-android-test" }
 koin-test-junit4 = { module = "io.insert-koin:koin-test-junit4" }
@@ -119,6 +132,8 @@ squareup-leakcanary = { module = "com.squareup.leakcanary:leakcanary-android", v
 android-application = { id = "com.android.application", version.ref = "plugin-agp" }
 android-library = { id = "com.android.library", version.ref = "plugin-agp" }
 
+google-gms-google-services = { id = "com.google.gms.google-services", version.ref = "google-gms-google-services" }
+google-firebase-crashlytics = { id = "com.google.firebase.crashlytics", version.ref = "google-firebase-crashlytics" }
 google-mapsplatform-secrets = { id = "com.google.android.libraries.mapsplatform.secrets-gradle-plugin", version.ref = "plugin-google-mapsplatform-secrets" }
 
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "plugin-kotlin" }

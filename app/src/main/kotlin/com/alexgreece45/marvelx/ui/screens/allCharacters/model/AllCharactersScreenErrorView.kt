@@ -1,4 +1,4 @@
-package com.alexgreece45.marvelx.ui.screens.allCharacters.models
+package com.alexgreece45.marvelx.ui.screens.allCharacters.model
 
 data class AllCharactersScreenErrorView(
     val errorMessage: String,

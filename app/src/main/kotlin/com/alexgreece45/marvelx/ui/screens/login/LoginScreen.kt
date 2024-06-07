@@ -1,14 +1,21 @@
 package com.alexgreece45.marvelx.ui.screens.login
 
-import androidx.compose.foundation.background
+import android.app.Activity.RESULT_CANCELED
+import android.app.Activity.RESULT_OK
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.IntentSenderRequest
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.Checkbox
@@ -22,13 +29,16 @@ import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.autofill.AutofillType
 import androidx.compose.ui.focus.FocusDirection
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -38,18 +48,29 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.coroutineScope
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.ui.components.ContainedButton
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.OutlinedTextFieldValidation
 import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
+import com.alexgreece45.marvelx.ui.components.WrapButton
+import com.alexgreece45.marvelx.ui.components.WrapOutlinedButton
 import com.alexgreece45.marvelx.ui.components.error.ContentErrorScreen
 import com.alexgreece45.marvelx.ui.components.hightlightedText.WrapClickableText
+import com.alexgreece45.marvelx.ui.components.line.HorizontalLine
 import com.alexgreece45.marvelx.ui.components.model.AutofillData
 import com.alexgreece45.marvelx.ui.components.model.ClickableString
+import com.alexgreece45.marvelx.ui.screens.login.model.LoginWithGoogleResult
+import com.alexgreece45.marvelx.ui.screens.login.model.LoginWithIntentWithGoogleResult
+import com.alexgreece45.marvelx.util.HSpacer
+import com.alexgreece45.marvelx.util.SPACING_MEDIUM
 import com.alexgreece45.marvelx.util.VSpacer
+import com.alexgreece45.marvelx.util.constants.ConstantsUi
 import com.alexgreece45.marvelx.util.extensions.clickableNoRipple
+import com.google.android.gms.auth.api.identity.Identity
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -61,8 +82,9 @@ fun LoginScreen(
     navigateToAllCharactersScreen: () -> Unit,
     navigateToOtpScreen: (Int, String, String, Boolean) -> Unit,
     navigateToForgotPasswordScreen: () -> Unit,
-    popBackStack: () -> Boolean,
+    popBackStack: () -> Unit
 ) {
+    val context = LocalContext.current
     val keyboard = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
 
@@ -110,6 +132,10 @@ fun LoginScreen(
                 is LoginEffect.ExecuteEvent -> {
                     onEventSent(effect.event)
                 }
+
+                is LoginEffect.ShowToast -> {
+                    Toast.makeText(context, effect.text, Toast.LENGTH_SHORT).show()
+                }
             }
         }
     }
@@ -123,7 +149,33 @@ fun LoginScreen(
             onEventSent(LoginEvent.OnBack)
         },
         showToolbar = true,
-        toolbarTitle = stringResource(R.string.login_screen_toolbar_title)
+        toolbarTitle = stringResource(R.string.login_screen_toolbar_title),
+        stickyBottom = {
+            // "Don't have an account? Signup" clickable label
+            Box(
+                modifier = Modifier.padding(bottom = ConstantsUi.LoginScreen.STICKY_BOTTOM_BOTTOM_PADDING.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                WrapClickableText(
+                    modifier = Modifier.fillMaxWidth(),
+                    text = stringResource(R.string.login_screen_do_not_have_an_account),
+                    textStyle = TextStyle(
+                        fontSize = MaterialTheme.typography.subtitle1.fontSize,
+                        fontWeight = MaterialTheme.typography.subtitle1.fontWeight,
+                        color = MaterialTheme.colors.onBackground,
+                        textAlign = TextAlign.Center
+                    ),
+                    clickableStrings = listOf(
+                        ClickableString(
+                            text = stringResource(R.string.login_screen_signup_text_button),
+                            onClick = {
+                                onEventSent(LoginEvent.OnSignupTextClicked)
+                            }
+                        )
+                    )
+                )
+            }
+        }
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -247,7 +299,7 @@ fun LoginScreen(
             VSpacer.Small()
 
             // Login button.
-            ContainedButton(
+            WrapButton(
                 modifier = Modifier.fillMaxWidth(),
                 enabled = state.isLoginButtonEnabled,
                 onClick = { onEventSent(LoginEvent.OnLoginButtonClick) }
@@ -257,33 +309,11 @@ fun LoginScreen(
                 )
             }
 
-            // "Don't have an account? Signup" clickable label
-            Spacer(modifier = Modifier.weight(1f))
+            VSpacer.Medium()
 
-            Box(
-                modifier = Modifier
-                    .weight(0.3f)
-                    .background(Color.Transparent),
-                contentAlignment = Alignment.Center
-            ) {
-                WrapClickableText(
-                    modifier = Modifier.fillMaxWidth(),
-                    text = stringResource(R.string.login_screen_do_not_have_an_account),
-                    textStyle = TextStyle(
-                        fontSize = MaterialTheme.typography.subtitle1.fontSize,
-                        fontWeight = MaterialTheme.typography.subtitle1.fontWeight,
-                        color = MaterialTheme.colors.onBackground,
-                        textAlign = TextAlign.Center
-                    ),
-                    clickableStrings = listOf(
-                        ClickableString(
-                            text = stringResource(R.string.login_screen_signup_text_button),
-                            onClick = {
-                                onEventSent(LoginEvent.OnSignupTextClicked)
-                            }
-                        )
-                    )
-                )
+            // Login with google.
+            LoginWithGoogle {
+                onEventSent(LoginEvent.OnLoginWithGoogleResult(it))
             }
         }
     }
@@ -295,5 +325,101 @@ fun LoginScreen(
             onClose = error.onCloseClicked,
             errorButtonLayout = error.errorButtonLayout
         )
+    }
+}
+
+@Composable
+private fun LoginWithGoogle(onLoginWithGoogleResult: (LoginWithIntentWithGoogleResult) -> Unit) {
+    val context = LocalContext.current
+    val googleAuthUiClient = remember { GoogleAuthUiClient(Identity.getSignInClient(context)) }
+
+    val linePaddingSpace = remember { mutableStateOf(16.dp) }
+    val lineWidth = remember { mutableStateOf(1.25.dp) }
+
+    val lifecycleScope = LocalLifecycleOwner.current.lifecycle.coroutineScope
+
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartIntentSenderForResult(),
+        onResult = { result ->
+            when (result.resultCode) {
+                RESULT_OK -> {
+                    lifecycleScope.launch {
+                        result.data?.let { intent ->
+                            val loginWithIntentResult = googleAuthUiClient.loginWithIntent(intent)
+                            onLoginWithGoogleResult(loginWithIntentResult)
+                        } ?: run {
+                            onLoginWithGoogleResult(LoginWithIntentWithGoogleResult.UnknownError)
+                        }
+                    }
+                }
+
+                RESULT_CANCELED -> {
+                    onLoginWithGoogleResult(LoginWithIntentWithGoogleResult.Cancelled)
+                }
+
+                else -> {
+                    onLoginWithGoogleResult(LoginWithIntentWithGoogleResult.UnknownError)
+                }
+            }
+        }
+    )
+
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(SPACING_MEDIUM.dp)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            HorizontalLine(
+                color = MaterialTheme.colors.primary,
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(end = linePaddingSpace.value),
+                strokeWidth = lineWidth.value
+            )
+            Text(text = stringResource(id = R.string.login_screen_or_login_with))
+            HorizontalLine(
+                color = MaterialTheme.colors.primary,
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(start = linePaddingSpace.value),
+                strokeWidth = lineWidth.value
+            )
+        }
+
+        WrapOutlinedButton(
+            onClick = {
+                lifecycleScope.launch {
+                    when (val loginWithGoogleResult = googleAuthUiClient.login()) {
+                        is LoginWithGoogleResult.Success -> {
+                            launcher.launch(
+                                input = IntentSenderRequest.Builder(
+                                    loginWithGoogleResult.intentSender
+                                ).build()
+                            )
+                        }
+
+                        is LoginWithGoogleResult.Failed -> {
+                            onLoginWithGoogleResult(
+                                LoginWithIntentWithGoogleResult.Failed(loginWithGoogleResult.errorMessage)
+                            )
+                        }
+                    }
+                }
+            },
+            modifier = Modifier.align(Alignment.CenterHorizontally),
+            shape = RoundedCornerShape(25.dp),
+            border = BorderStroke(lineWidth.value, MaterialTheme.colors.primary)
+        ) {
+            Image(
+                painter = painterResource(R.drawable.ic_google_logo),
+                contentDescription = stringResource(
+                    id = R.string.content_description_ic_google_logo
+                )
+            )
+
+            HSpacer.Small()
+
+            Text(stringResource(R.string.login_screen_google_button))
+        }
     }
 }

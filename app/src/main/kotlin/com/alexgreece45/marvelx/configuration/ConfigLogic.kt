@@ -40,6 +40,8 @@ interface ConfigLogic {
      * The network config for the Marvel API.
      */
     val marvelApiConfig: MarvelApiConfig
+
+    val googleServerClientId: String
 }
 
 sealed class AppBuildType(val key: String) {
@@ -79,4 +81,6 @@ class ConfigLogicImpl : ConfigLogic {
             host = BuildConfig.MARVEL_API_DOMAIN,
             endpointPrefix = BuildConfig.MARVEL_API_ENDPOINT_PREFIX
         )
+    override val googleServerClientId: String
+        get() = BuildConfig.FIREBASE_SERVER_CLIENT_ID
 }

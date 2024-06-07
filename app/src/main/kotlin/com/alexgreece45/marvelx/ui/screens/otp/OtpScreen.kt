@@ -23,7 +23,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.ui.components.ContainedButton
+import com.alexgreece45.marvelx.ui.components.WrapButton
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
 import com.alexgreece45.marvelx.ui.components.effect.OneTimeLaunchedEffect
@@ -211,7 +211,7 @@ fun OtpScreen(
             Spacer(modifier = Modifier.weight(1f))
 
             // "Verify" button.
-            ContainedButton(
+            WrapButton(
                 onClick = { onEventSent(OtpEvent.OnVerifyButtonClicked) },
                 modifier = Modifier.fillMaxWidth(),
                 enabled = state.isVerifyButtonEnabled

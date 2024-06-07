@@ -24,7 +24,7 @@ import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.ui.components.ContainedButton
+import com.alexgreece45.marvelx.ui.components.WrapButton
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
 import com.alexgreece45.marvelx.ui.components.WrapOutlinedButton
@@ -74,7 +74,7 @@ fun ContentErrorScreen(
             Column(verticalArrangement = Arrangement.spacedBy(SPACING_MEDIUM.dp)) {
                 when (errorButtonLayout) {
                     is ErrorButtonLayout.Single -> {
-                        ContainedButton(
+                        WrapButton(
                             onClick = errorButtonLayout.onPrimaryButtonClicked,
                             modifier = Modifier.fillMaxWidth(),
                             enabled = true
@@ -88,7 +88,7 @@ fun ContentErrorScreen(
                     }
 
                     is ErrorButtonLayout.Double -> {
-                        ContainedButton(
+                        WrapButton(
                             onClick = errorButtonLayout.onPrimaryButtonClicked,
                             modifier = Modifier.fillMaxWidth(),
                             enabled = true

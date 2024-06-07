@@ -24,7 +24,7 @@ import androidx.navigation.NavController
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.domain.model_api.otp.OtpFlowType
 import com.alexgreece45.marvelx.domain.model_api.user.VerificationStep
-import com.alexgreece45.marvelx.ui.components.ContainedButton
+import com.alexgreece45.marvelx.ui.components.WrapButton
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.ContentScreenHeader
 import com.alexgreece45.marvelx.ui.components.OutlinedTextFieldValidation
@@ -87,7 +87,7 @@ fun ForgotPasswordScreen(
         },
         showToolbar = true,
         stickyBottom = {
-            ContainedButton(
+            WrapButton(
                 onClick = { viewModel.setEvent(ForgotPasswordEvent.OnContinueButtonClicked) },
                 modifier = Modifier.fillMaxWidth(),
                 enabled = state.isContinueButtonEnabled

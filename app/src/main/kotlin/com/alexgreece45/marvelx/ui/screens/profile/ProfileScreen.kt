@@ -22,7 +22,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.ui.components.BottomNavigationBarData
-import com.alexgreece45.marvelx.ui.components.ContainedButton
+import com.alexgreece45.marvelx.ui.components.WrapButton
 import com.alexgreece45.marvelx.ui.components.ContentErrorScreen
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.util.SPACING_SMALL
@@ -134,7 +134,7 @@ fun ProfileScreen(
                             .background(Color.Red),
                         contentAlignment = Alignment.BottomCenter
                     ) {
-                        ContainedButton(
+                        WrapButton(
                             modifier = Modifier.fillMaxWidth(),
                             onClick = { onEventSent(ProfileEvent.OnLogoutButtonPressed) }
                         ) {

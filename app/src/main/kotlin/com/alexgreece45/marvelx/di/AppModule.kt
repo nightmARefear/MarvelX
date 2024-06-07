@@ -245,7 +245,7 @@ private val viewModelModule = module {
     viewModel { IntroLoadingViewModel(get(), get(), get(), get(), get(), get(), get()) }
 
     viewModel { HomeViewModel(get()) }
-    viewModel { LoginViewModel(get(), get(), get(), get()) }
+    viewModel { LoginViewModel(get(), get(), get(), get(), get()) }
     viewModel { SignupViewModel(get(), get(), get(), get(), get(), get(), get(), get()) }
 
     viewModel { OtpViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }

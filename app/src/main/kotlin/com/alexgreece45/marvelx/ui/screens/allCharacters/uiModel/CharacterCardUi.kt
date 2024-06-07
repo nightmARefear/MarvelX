@@ -1,4 +1,4 @@
-package com.alexgreece45.marvelx.ui.screens.allCharacters.uiModels
+package com.alexgreece45.marvelx.ui.screens.allCharacters.uiModel
 
 import com.alexgreece45.marvelx.database.FavoriteCharacterEntity
 

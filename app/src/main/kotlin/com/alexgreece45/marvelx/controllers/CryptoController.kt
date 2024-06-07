@@ -24,7 +24,8 @@ interface CryptoController {
      * @param requestUrl        The URL of this request as a [String].
      * @param requestBody       The body of this request.
      * @param requestHeaders    The headers of this request as [Headers].
-     * @param nonce             The nonce to be used. It's a [UUID] that has been randomly generated.
+     * @param nonce             The nonce to be used. A randomly generated [String] that's SHA-256
+     * hashed and encoded in Base64.
      * @param timestamp         The timestamp to be used. It's a [Long] that represents the current
      * timestamp.
      * @param signData          The signing data to be used. It contains the key and the signature.
@@ -37,7 +38,7 @@ interface CryptoController {
         requestUrl: HttpUrl,
         requestBody: String,
         requestHeaders: Headers,
-        nonce: UUID,
+        nonce: String,
         timestamp: Long,
         signData: SignData
     ): String
@@ -63,7 +64,7 @@ class CryptoControllerImpl(
         requestUrl: HttpUrl,
         requestBody: String,
         requestHeaders: Headers,
-        nonce: UUID,
+        nonce: String,
         timestamp: Long,
         signData: SignData
     ): String {

@@ -4,6 +4,7 @@ import androidx.activity.compose.BackHandler
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -35,6 +36,9 @@ import androidx.compose.material.BottomSheetScaffold
 import androidx.compose.material.BottomSheetScaffoldDefaults
 import androidx.compose.material.BottomSheetScaffoldState
 import androidx.compose.material.Button
+import androidx.compose.material.ButtonColors
+import androidx.compose.material.ButtonDefaults
+import androidx.compose.material.ButtonElevation
 import androidx.compose.material.ContentAlpha
 import androidx.compose.material.DropdownMenu
 import androidx.compose.material.ExperimentalMaterialApi
@@ -60,6 +64,7 @@ import androidx.compose.material.TextFieldDefaults
 import androidx.compose.material.TopAppBar
 import androidx.compose.material.contentColorFor
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
@@ -76,6 +81,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -126,11 +132,12 @@ import com.alexgreece45.marvelx.util.VSpacer
 import com.alexgreece45.marvelx.util.extensions.ClickState
 import com.alexgreece45.marvelx.util.extensions.applyPadding
 import com.alexgreece45.marvelx.util.extensions.autofill
+import com.alexgreece45.marvelx.util.extensions.filterTouchesWhenObscured
 import com.alexgreece45.marvelx.util.extensions.screenPaddingsNone
-import com.alexgreece45.marvelx.util.extensions.throttledClickable
 import com.alexgreece45.marvelx.util.extensions.throttledClickableIcon
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.launch
 
 // ======== START OF ========
 //     PRIVATE COMPOSABLES
@@ -650,7 +657,7 @@ private fun Toolbar(
                     Icon(
                         imageVector = when (navigableAction) {
                             is ScreenNavigableAction.Closeable -> Icons.Filled.Close
-                            else -> Icons.Filled.ArrowBack
+                            else -> Icons.AutoMirrored.Filled.ArrowBack
                         },
                         contentDescription = when (navigableAction) {
                             is ScreenNavigableAction.Closeable -> stringResource(R.string.content_description_close)
@@ -1227,21 +1234,62 @@ fun ExposedDropdownMenu(
 }
 
 /**
- * A simple composable button. Avoid using the native [Button]. Use this wrapper instead
- * as it provides custom padding and multiple clicks protection.
+ * A simple composable button. Avoid using the native [Button]. Use this wrapper instead as it
+ * provides custom padding if none has been specified, multiple-clicks protection, and UI overlay
+ * attack protection.
  */
 @Composable
-fun ContainedButton(
+fun WrapButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    throttleClicks: Boolean = true,
+    throttleDuration: Long = THROTTLE_CLICKABLE_DEFAULT_DELAY,
     enabled: Boolean = true,
+    interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
+    elevation: ButtonElevation? = ButtonDefaults.elevation(),
+    shape: Shape = MaterialTheme.shapes.small,
+    border: BorderStroke? = null,
+    colors: ButtonColors = ButtonDefaults.buttonColors(),
+    contentPadding: PaddingValues? = null,
     content: @Composable RowScope.() -> Unit
 ) {
+    var lastClicked by remember { mutableLongStateOf(0L) }
+    val coroutineScope = rememberCoroutineScope()
+    val debounceState = remember {
+        MutableSharedFlow<Long>(
+            replay = 0,
+            extraBufferCapacity = 1,
+            onBufferOverflow = BufferOverflow.DROP_OLDEST
+        )
+    }
+
+    LaunchedEffect(Unit) {
+        debounceState.collect { currentTime ->
+            if (currentTime - lastClicked >= throttleDuration) {
+                onClick()
+                lastClicked = currentTime
+            }
+        }
+    }
+
     Button(
-        onClick = onClick,
-        modifier = modifier.throttledClickable(view = LocalView.current, onClick = onClick),
+        onClick = {
+            if (throttleClicks) {
+                coroutineScope.launch {
+                    debounceState.emit(System.currentTimeMillis())
+                }
+            } else {
+                onClick()
+            }
+        },
+        modifier = modifier.filterTouchesWhenObscured(LocalView.current),
         enabled = enabled,
-        contentPadding = PaddingValues(vertical = 12.dp, horizontal = 32.dp),
+        interactionSource = interactionSource,
+        elevation = elevation,
+        shape = shape,
+        border = border,
+        colors = colors,
+        contentPadding = contentPadding ?: PaddingValues(vertical = 12.dp, horizontal = 32.dp),
         content = content
     )
 }
@@ -1254,14 +1302,27 @@ fun ContainedButton(
 fun WrapOutlinedButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    throttleClicks: Boolean = true,
+    throttleDuration: Long = THROTTLE_CLICKABLE_DEFAULT_DELAY,
     enabled: Boolean = true,
+    elevation: ButtonElevation? = null,
+    shape: Shape = MaterialTheme.shapes.small,
+    border: BorderStroke? = ButtonDefaults.outlinedBorder,
+    colors: ButtonColors = ButtonDefaults.outlinedButtonColors(),
+    contentPadding: PaddingValues? = null,
     content: @Composable RowScope.() -> Unit
 ) {
-    OutlinedButton(
+    WrapButton(
         onClick = onClick,
-        modifier = modifier.throttledClickable(view = LocalView.current, onClick = onClick),
+        modifier = modifier,
+        throttleClicks = throttleClicks,
+        throttleDuration = throttleDuration,
         enabled = enabled,
-        contentPadding = PaddingValues(vertical = 12.dp, horizontal = 32.dp),
+        elevation = elevation,
+        shape = shape,
+        border = border,
+        colors = colors,
+        contentPadding = contentPadding,
         content = content
     )
 }
@@ -1274,13 +1335,27 @@ fun WrapOutlinedButton(
 fun WrapTextButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    throttleClicks: Boolean = true,
+    throttleDuration: Long = THROTTLE_CLICKABLE_DEFAULT_DELAY,
     enabled: Boolean = true,
+    elevation: ButtonElevation? = null,
+    shape: Shape = MaterialTheme.shapes.small,
+    border: BorderStroke? = null,
+    colors: ButtonColors = ButtonDefaults.textButtonColors(),
+    contentPadding: PaddingValues = ButtonDefaults.TextButtonContentPadding,
     content: @Composable RowScope.() -> Unit
 ) {
-    TextButton(
+    WrapButton(
         onClick = onClick,
-        modifier = modifier.throttledClickable(view = LocalView.current, onClick = onClick),
+        modifier = modifier,
+        throttleClicks = throttleClicks,
+        throttleDuration = throttleDuration,
         enabled = enabled,
+        elevation = elevation,
+        shape = shape,
+        border = border,
+        colors = colors,
+        contentPadding = contentPadding,
         content = content
     )
 }
@@ -1363,7 +1438,7 @@ fun AlertDialogError(
             confirmButton.let { button ->
                 when (button.buttonType) {
                     ErrorButtonType.Contained -> {
-                        ContainedButton(onClick = button.onClick) {
+                        WrapButton(onClick = button.onClick) {
                             Text(
                                 text = button.value
                             )
