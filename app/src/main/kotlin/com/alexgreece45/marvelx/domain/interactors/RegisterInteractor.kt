@@ -76,7 +76,7 @@ class RegisterInteractorImpl(
 
                         val signupDomain = signupResponse.toSignupDomain()
                         if (signupDomain.verificationStep is VerificationStep.None
-                            && signupDomain.authCode.isBlank()
+                            && signupDomain.tempAuthCode.isBlank()
                         ) {
                             emit(
                                 SignupPartialState.Failed(

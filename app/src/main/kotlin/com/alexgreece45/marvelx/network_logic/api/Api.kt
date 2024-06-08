@@ -62,8 +62,9 @@ interface ApiService {
     @POST("/api/private/marvelx/user/post_login")
     suspend fun postLogin(@Body requestPostLogin: RequestPostLogin): Response<ResponsePostLogin>
 
-    @POST("/api/private/marvelx/authorize")
+    @POST("/api/private/marvelx/user/authorize")
     suspend fun authorize(
+        @Query("temp_auth_code") tempAuthCode: String,
         @Query("client_id") clientId: String,
         @Query("code_challenge") codeChallenge: String,
         @Query("code_challenge_method") codeChallengeMethod: String,
@@ -140,6 +141,7 @@ interface ApiClient {
     suspend fun postLogin(accessToken: String): Response<ResponsePostLogin>
 
     suspend fun authorize(
+        tempAuthCode: String,
         clientId: String,
         codeChallenge: String,
         codeChallengeMethod: String

@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import logcat.logcat
 import java.security.MessageDigest
-import java.util.UUID
+import java.security.SecureRandom
 
 object SecurityUtil {
     suspend fun getHashedPasswordFromString(password: String): Flow<String> = flow {
@@ -36,12 +36,19 @@ object SecurityUtil {
     }.flowOn(Dispatchers.Default)
 
     /**
-     * Creates a secure nonce using [UUID.randomUUID], hashes it with `SHA-256` and returns the
-     * result as a [String].
+     * Creates a secure nonce using [SecureRandom], hashes it with `SHA-256` and returns the result
+     * as a [String] in `Base64` encoding, suitable for HTTP requests.
      */
     fun createNonce(): String {
-        return Base64.encodeToString(MessageDigest.getInstance("SHA-256").apply {
-            update(UUID.randomUUID().toString().toByteArray(Charsets.UTF_8))
-        }.digest(), Base64.NO_WRAP)
+        val bytes = ByteArray(64)
+        SecureRandom().apply {
+            nextBytes(bytes)
+        }
+        val messageDigest = MessageDigest.getInstance("SHA-256")
+        messageDigest.update(bytes, 0, bytes.size)
+        return Base64.encodeToString(
+            messageDigest.digest(),
+            Base64.URL_SAFE or Base64.NO_WRAP or Base64.NO_PADDING
+        )
     }
 }

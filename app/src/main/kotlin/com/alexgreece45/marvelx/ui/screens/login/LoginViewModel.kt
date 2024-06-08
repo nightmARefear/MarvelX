@@ -321,7 +321,7 @@ class LoginViewModel(
         }
 
         // All fields are valid. Proceed with user login.
-       loginUser(isLoggedInWithFirebase = false)
+        loginUser(isLoggedInWithFirebase = false)
     }
 
     /**
@@ -331,7 +331,9 @@ class LoginViewModel(
         viewModelScope.launch {
             registerInteractor.login(
                 email = currentState.email,
-                password = if (isLoggedInWithFirebase) "firebase" else SecurityUtil.getHashedPasswordFromString(currentState.password).single(),
+                password = if (isLoggedInWithFirebase) "firebase" else SecurityUtil.getHashedPasswordFromString(
+                    currentState.password
+                ).single(),
                 isLoggedInWithFirebase = isLoggedInWithFirebase
             ).collect { userPartialStatePostLogIn ->
                 when (userPartialStatePostLogIn) {
@@ -450,7 +452,7 @@ class LoginViewModel(
 
             LoginWithIntentWithGoogleResult.Cancelled -> {
                 setEffect {
-                    LoginEffect.ShowToast("cancelled")
+                    LoginEffect.ShowToast(resourceProvider.getString(R.string.login_screen_error_login_with_google_result_cancelled))
                 }
             }
         }

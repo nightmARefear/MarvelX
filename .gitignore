@@ -42,4 +42,4 @@
 network_security_config.xml
 
 # google services json
-app/google-services.json
+/app/google-services.json

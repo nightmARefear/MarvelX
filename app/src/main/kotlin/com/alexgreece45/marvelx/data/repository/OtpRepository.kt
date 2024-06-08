@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
 interface OtpRepository {
-    suspend fun validateOtp(otpRequest: OtpRequest): Flow<ValidateOtpRepositoryResponse>
+    suspend fun validateOtp(userId: String, otp: String): Flow<ValidateOtpRepositoryResponse>
     suspend fun resendOtp(requestResendOtp: RequestResendOtp): Flow<ResendOtpRepositoryResponse>
 }
 
@@ -20,8 +20,15 @@ class OtpRepositoryImpl(
     private val apiClient: ApiClient,
     private val gson: Gson
 ) : OtpRepository {
-    override suspend fun validateOtp(otpRequest: OtpRequest): Flow<ValidateOtpRepositoryResponse> =
+    override suspend fun validateOtp(
+        userId: String,
+        otp: String
+    ): Flow<ValidateOtpRepositoryResponse> =
         flow {
+            val otpRequest = OtpRequest(
+                userId = userId,
+                otp = otp
+            )
             apiClient.validateOtp(otpRequest).let { response ->
                 if (response.isSuccessful) {
                     emit(

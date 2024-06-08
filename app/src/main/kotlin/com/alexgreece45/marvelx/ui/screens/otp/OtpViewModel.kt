@@ -623,7 +623,7 @@ class OtpViewModel(
                     when (validateOtpPartialState) {
                         is ValidateOtpPartialState.Success -> {
                             // Retrieve authorization code.
-                            getAuthorizationCode()
+                            getAuthorizationCode(validateOtpPartialState.otpDomain.tempAuthCode)
                         }
 
                         is ValidateOtpPartialState.Failed -> {
@@ -684,9 +684,9 @@ class OtpViewModel(
     /**
      * Retrieves the authorization code.
      */
-    private fun getAuthorizationCode() {
+    private fun getAuthorizationCode(tempAuthCode: String) {
         viewModelScope.launch {
-            loginInteractor.authorize().collect {
+            loginInteractor.authorize(tempAuthCode).collect {
                 when (it) {
                     is AuthorizePartialState.Failed -> {
                         showGenericErrorViewWithErrorMessage(
@@ -696,7 +696,7 @@ class OtpViewModel(
                     }
                     is AuthorizePartialState.Success -> {
                         // Proceed to retrieve access token.
-                        grandNewAccessToken(code = it.code)
+                        grandNewAccessToken(authCode = it.authCode)
                     }
                 }
             }
@@ -706,9 +706,9 @@ class OtpViewModel(
     /**
      * Retrieves the access token.
      */
-    private fun grandNewAccessToken(code: String) {
+    private fun grandNewAccessToken(authCode: String) {
         viewModelScope.launch {
-            loginInteractor.grandNewAccessToken(code = code)
+            loginInteractor.grandNewAccessToken(authCode = authCode)
                 .collect { accessTokenPartialState ->
                     when (accessTokenPartialState) {
                         is GrandNewAccessTokenPartialState.Failed -> {

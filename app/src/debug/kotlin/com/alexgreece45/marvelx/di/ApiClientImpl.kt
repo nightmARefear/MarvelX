@@ -61,11 +61,12 @@ class ApiClientImpl(
         apiService.postLogin(RequestPostLogin(accessToken))
 
     override suspend fun authorize(
+        tempAuthCode: String,
         clientId: String,
         codeChallenge: String,
         codeChallengeMethod: String
     ): Response<ResponseAuthorize> =
-        apiService.authorize(clientId, codeChallenge, codeChallengeMethod)
+        apiService.authorize(tempAuthCode, clientId, codeChallenge, codeChallengeMethod)
 
     override suspend fun grandNewAccessToken(
         clientId: String,

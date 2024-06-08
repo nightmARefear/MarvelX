@@ -116,7 +116,7 @@ class CryptoControllerImpl(
     }
 
     override fun createCodeVerifier(): String {
-        val code = ByteArray(32)
+        val code = ByteArray(64)
         SecureRandom().apply {
             nextBytes(code)
         }

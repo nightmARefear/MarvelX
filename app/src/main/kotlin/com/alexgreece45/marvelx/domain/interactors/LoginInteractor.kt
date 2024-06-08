@@ -31,10 +31,13 @@ import okio.IOException
 interface LoginInteractor {
     /**
      * Authorization call for the OAuth 2.0 Grant flow. It sends the code challenge and challenge
-     * method and receives a `code` that is used to correlate the code challenge to this device.
+     * method and receives a `code` that is used to correlate the code challenge to this device. The
+     * [tempAuthCode] is the temporary code received by the server to protect attacks against
+     * generating tokens for any user.
+     *
      * The received `code` is later used to obtain the access token.
      */
-    suspend fun authorize(): Flow<AuthorizePartialState>
+    suspend fun authorize(tempAuthCode: String): Flow<AuthorizePartialState>
 
     /**
      * The logout call. It performs all the necessary operations to wipe the local data, and to
@@ -52,7 +55,7 @@ interface LoginInteractor {
      * was received earlier. If the response is successful, then that means that the access token
      * was successfully retrieved.
      */
-    suspend fun grandNewAccessToken(code: String): Flow<GrandNewAccessTokenPartialState>
+    suspend fun grandNewAccessToken(authCode: String): Flow<GrandNewAccessTokenPartialState>
 
     suspend fun refreshAccessToken(): Flow<RefreshAccessTokenPartialState>
 
@@ -79,19 +82,19 @@ class LoginInteractorImpl(
         cryptoController.createCodeChallenge(codeVerifier)
     }
 
-    override suspend fun authorize(): Flow<AuthorizePartialState> = flow {
+    override suspend fun authorize(tempAuthCode: String): Flow<AuthorizePartialState> = flow {
         val genericErrorMessage = resourceProvider.getGenericErrorMessage()
-        repository.authorize(configOauth.clientId, codeChallenge, configOauth.codeChallengeMethod)
+        repository.authorize(tempAuthCode, configOauth.clientId, codeChallenge, configOauth.codeChallengeMethod)
             .collect {
                 when (it) {
                     is AuthorizeRepositoryPartialState.Success -> {
                         when (val body = it.response) {
                             null -> emit(AuthorizePartialState.Failed(genericErrorMessage))
                             else -> {
-                                if (body.code.isBlank()) {
+                                if (body.authCode.isBlank()) {
                                     emit(AuthorizePartialState.Failed(genericErrorMessage))
                                 } else {
-                                    emit(AuthorizePartialState.Success(body.code))
+                                    emit(AuthorizePartialState.Success(body.authCode))
                                 }
                             }
                         }
@@ -219,12 +222,12 @@ class LoginInteractorImpl(
         }
     }
 
-    override suspend fun grandNewAccessToken(code: String): Flow<GrandNewAccessTokenPartialState> =
+    override suspend fun grandNewAccessToken(authCode: String): Flow<GrandNewAccessTokenPartialState> =
         flow {
             val genericErrorMessage = resourceProvider.getGenericErrorMessage()
             repository.grandNewAccessToken(
                 clientId = configOauth.clientId,
-                code = code,
+                code = authCode,
                 codeVerifier = codeVerifier,
                 uri = configOauth.redirectUri
             ).collect {
@@ -371,7 +374,7 @@ class LoginInteractorImpl(
 }
 
 sealed interface AuthorizePartialState {
-    data class Success(val code: String) : AuthorizePartialState
+    data class Success(val authCode: String) : AuthorizePartialState
     data class Failed(val errorMessage: String) : AuthorizePartialState
 }
 

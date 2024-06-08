@@ -16,6 +16,7 @@ import retrofit2.Response
 
 interface LoginRepository {
     suspend fun authorize(
+        tempAuthCode: String,
         clientId: String,
         codeChallenge: String,
         codeChallengeMethod: String
@@ -61,17 +62,19 @@ class LoginRepositoryImpl(
     private val logger: AppLogger
 ) : LoginRepository {
     override suspend fun authorize(
+        tempAuthCode: String,
         clientId: String,
         codeChallenge: String,
         codeChallengeMethod: String
     ): Flow<AuthorizeRepositoryPartialState> = flow {
-        apiClient.authorize(clientId, codeChallenge, codeChallengeMethod).let { response ->
-            if (response.isSuccessful) {
-                emit(AuthorizeRepositoryPartialState.Success(response.body()))
-            } else {
-                emit(AuthorizeRepositoryPartialState.Failed(resourceProvider.getGenericErrorMessage()))
+        apiClient.authorize(tempAuthCode, clientId, codeChallenge, codeChallengeMethod)
+            .let { response ->
+                if (response.isSuccessful) {
+                    emit(AuthorizeRepositoryPartialState.Success(response.body()))
+                } else {
+                    emit(AuthorizeRepositoryPartialState.Failed(resourceProvider.getGenericErrorMessage()))
+                }
             }
-        }
     }
 
     override suspend fun grandNewAccessToken(

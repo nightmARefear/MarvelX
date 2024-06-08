@@ -393,7 +393,7 @@ class SignupViewModel(
                                         }
 
                                         VerificationStep.None -> {
-                                            postSuccessfulSignup()
+                                            postSuccessfulSignup(signupResponseDomain.tempAuthCode)
                                         }
 
                                         VerificationStep.OtpEmail -> {
@@ -439,10 +439,10 @@ class SignupViewModel(
      *
      * It retrieves the user tokens, signing data, and logins the user.
      */
-    private fun postSuccessfulSignup() {
+    private fun postSuccessfulSignup(tempAuthCode: String) {
         viewModelScope.launch {
             // Retrieve authorization code.
-            loginInteractor.authorize().collect {
+            loginInteractor.authorize(tempAuthCode).collect {
                 when (it) {
                     is AuthorizePartialState.Failed -> {
                         setEffect {
@@ -453,16 +453,16 @@ class SignupViewModel(
                     }
 
                     is AuthorizePartialState.Success -> {
-                        getAccessToken(it.code)
+                        getAccessToken(it.authCode)
                     }
                 }
             }
         }
     }
 
-    private fun getAccessToken(code: String) {
+    private fun getAccessToken(authCode: String) {
         viewModelScope.launch {
-            loginInteractor.grandNewAccessToken(code).collect {
+            loginInteractor.grandNewAccessToken(authCode).collect {
                 when (it) {
                     is GrandNewAccessTokenPartialState.Failed -> {
                         setEffect {
