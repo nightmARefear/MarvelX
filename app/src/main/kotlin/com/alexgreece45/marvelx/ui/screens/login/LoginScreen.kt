@@ -195,7 +195,7 @@ fun LoginScreen(
                         onEventSent(LoginEvent.FieldValueChange.Email(email = suggestionValue))
                     }
                 ),
-                label = stringResource(R.string.login_screen_input_field_label_email),
+                label = stringResource(R.string.generic_label_email),
                 leadingIcon = {
                     Icon(
                         painter = painterResource(R.drawable.ic_person),
@@ -230,7 +230,7 @@ fun LoginScreen(
                         onEventSent(LoginEvent.FieldValueChange.Password(password = suggestionValue))
                     }
                 ),
-                label = stringResource(R.string.login_screen_input_field_label_password),
+                label = stringResource(R.string.generic_label_password),
                 leadingIcon = {
                     Icon(
                         painter = painterResource(R.drawable.ic_lock),

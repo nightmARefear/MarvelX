@@ -11,6 +11,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
@@ -57,6 +58,7 @@ import androidx.compose.material.ModalBottomSheetState
 import androidx.compose.material.OutlinedButton
 import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Scaffold
+import androidx.compose.material.SnackbarDuration
 import androidx.compose.material.Text
 import androidx.compose.material.TextButton
 import androidx.compose.material.TextField
@@ -72,6 +74,7 @@ import androidx.compose.material.primarySurface
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
+import androidx.compose.material.rememberScaffoldState
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -188,7 +191,7 @@ import kotlinx.coroutines.launch
  * [Icon].
  * */
 @Composable
-private fun ThrottledIconButton(
+fun ThrottledIconButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
@@ -503,6 +506,10 @@ data class ExtendedFabData(
 // ======== START OF ========
 //        Generic Screens
 // ==========================
+data class SnackbarState(
+    val message: String,
+    val duration: SnackbarDuration = SnackbarDuration.Short
+)
 
 @Composable
 fun ContentScreen(
@@ -514,11 +521,24 @@ fun ContentScreen(
     toolbarActions: List<ToolbarAction>? = null,
     bottomBarData: BottomBarData? = null,
     bottomNavigationBarData: BottomNavigationBarData? = null,
+    snackbarState: SnackbarState? = null,
     fabData: FabData? = null,
     stickyBottom: @Composable (() -> Unit)? = null,
     content: @Composable (PaddingValues) -> Unit
 ) {
+    val scaffoldState = rememberScaffoldState()
+
+    LaunchedEffect(snackbarState) {
+        snackbarState?.let {
+            scaffoldState.snackbarHostState.showSnackbar(
+                message = snackbarState.message,
+                duration = snackbarState.duration
+            )
+        }
+    }
+
     Scaffold(
+        scaffoldState = scaffoldState,
         topBar = {
             if (showToolbar) {
                 Toolbar(
@@ -648,8 +668,8 @@ private fun Toolbar(
                     onClick = {
                         keyboard?.hide()
                         when (navigableAction) {
-                            is ScreenNavigableAction.Closeable -> navigableAction.onClose.invoke()
-                            is ScreenNavigableAction.Backable -> navigableAction.onBack.invoke()
+                            is ScreenNavigableAction.Closeable -> navigableAction.onClose()
+                            is ScreenNavigableAction.Backable -> navigableAction.onBack()
                             else -> {}
                         }
                     }
@@ -674,8 +694,8 @@ private fun Toolbar(
                 }
 
                 Text(
-                    modifier = Modifier.weight(1f),
                     text = toolbarTitle,
+                    modifier = Modifier.weight(1f),
                     maxLines = 1,
                     style = MaterialTheme.typography.h5
                 )
@@ -733,12 +753,12 @@ fun StickyBottom(
  * [ContentScreen].
  *
  * @param title        The title of the header.
- * @param subtitle     The subtitle of the header.
+ * @param subtitle     The subtitle of the header. It is optional.
  */
 @Composable
 fun ContentScreenHeader(
     title: String,
-    subtitle: String,
+    subtitle: String? = null,
 ) {
     Column(
         modifier = Modifier.fillMaxWidth()
@@ -751,10 +771,12 @@ fun ContentScreenHeader(
         VSpacer.Large()
 
         // Subtitle.
-        Text(
-            text = subtitle,
-            style = MaterialTheme.typography.h6.copy(fontSize = 18.sp)
-        )
+        subtitle?.let {
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.h6.copy(fontSize = 18.sp)
+            )
+        }
     }
 }
 
@@ -1102,6 +1124,8 @@ fun OutlinedTextFieldValidation(
     value: String,
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    readOnly: Boolean = false,
     label: String = "",
     placeholder: String? = null,
     autofillData: AutofillData? = null,
@@ -1117,8 +1141,14 @@ fun OutlinedTextFieldValidation(
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     shape: Shape = MaterialTheme.shapes.medium
 ) {
-    Column(modifier = modifier) {
+    Column {
         OutlinedTextField(
+            value = value,
+            onValueChange = { newValue ->
+                if (newValue != value) {
+                    onValueChange(newValue)
+                }
+            },
             modifier = when (autofillData) {
                 null -> modifier
                 else -> modifier.then(
@@ -1128,12 +1158,8 @@ fun OutlinedTextFieldValidation(
                     )
                 )
             },
-            value = value,
-            onValueChange = { newValue ->
-                if (newValue != value) {
-                    onValueChange(newValue)
-                }
-            },
+            enabled = enabled,
+            readOnly = readOnly,
             label = {
                 Text(
                     text = label,
@@ -1164,7 +1190,7 @@ fun OutlinedTextFieldValidation(
         // Error.
         Text(
             text = errorMessage,
-            modifier = Modifier.padding(start = 10.dp, top = SPACING_TINY.dp),
+            modifier = modifier.padding(start = 10.dp, top = SPACING_TINY.dp),
             color = MaterialTheme.colors.error,
             style = MaterialTheme.typography.body2
         )
@@ -1177,10 +1203,10 @@ fun OutlinedTextFieldValidation(
  * since the native [ExposedDropdownMenuBox] does not provide an implementation for the
  * [OutlinedTextField], nor the [ExposedDropdownMenu].
  *
- * @param modifier          The modifier to be applied.
- * @param expanded          Indicates if the dropdown menu is visible.
- * @param value             The currently selected value.
  * @param label             A placeholder text when no item has been selected.
+ * @param expanded          Indicates if the dropdown menu is visible.
+ * @param modifier          The modifier to be applied.
+ * @param value             The currently selected value.
  * @param maxLines          The maximum number of lines that [value] can be displayed to; set to `1`
  * by default.
  * @param onDismissRequest  The action(s) to invoke when the dropdown menu is expanded, and the user
@@ -1191,14 +1217,14 @@ fun OutlinedTextFieldValidation(
 @OptIn(ExperimentalMaterialApi::class, ExperimentalMaterialApi::class)
 @Composable
 fun ExposedDropdownMenu(
-    modifier: Modifier = Modifier,
-    expanded: Boolean,
-    value: String? = "",
     label: String,
+    expanded: Boolean,
+    modifier: Modifier = Modifier,
+    value: String? = "",
     maxLines: Int = 1,
     onDismissRequest: (() -> Unit)? = null,
     onExpandedChange: (() -> Unit)? = null,
-    content: @Composable () -> Unit
+    content: @Composable ColumnScope.() -> Unit
 ) {
     ExposedDropdownMenuBox(
         modifier = modifier,
@@ -1224,12 +1250,10 @@ fun ExposedDropdownMenu(
             maxLines = maxLines
         )
         ExposedDropdownMenu(
-            modifier = Modifier.fillMaxWidth(),
             expanded = expanded,
-            onDismissRequest = { onDismissRequest?.invoke() }
-        ) {
-            content()
-        }
+            onDismissRequest = { onDismissRequest?.invoke() },
+            content = content
+        )
     }
 }
 

@@ -495,7 +495,7 @@ class LoginViewModel(
 
     private fun getPasswordValidationRules(): List<Rule> {
         return listOf(
-            Rule.ValidateNotBlank(errorMessage = resourceProvider.getString(R.string.sign_up_screen_input_field_error_blank_password)),
+            Rule.ValidateNotBlank(errorMessage = resourceProvider.getString(R.string.validation_rule_error_blank_password)),
             Rule.ValidateStringMinLength(
                 length = ConstantsInputField.Password.minLength,
                 errorMessage = resourceProvider.getString(

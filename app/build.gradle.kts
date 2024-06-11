@@ -191,4 +191,7 @@ dependencies {
     implementation(libs.google.play.services.auth)
     implementation(libs.google.firebase.auth)
     implementation(libs.google.firebase.firestore)
+
+    // Shimmer.
+    implementation(libs.valentinilk.shimmer)
 }

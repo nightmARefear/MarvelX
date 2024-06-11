@@ -73,7 +73,7 @@ class WebsocketControllerImpl(
         MutableSharedFlow()
 
     override fun init() {
-        // Ensures that the websocket doesn't get re-initialized.
+        // Ensures that the websocket client doesn't get re-initialized.
         if (webSocket != null) return
 
         val request = Request.Builder()

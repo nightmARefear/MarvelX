@@ -384,15 +384,6 @@ sealed interface PostLoginPartialState {
     data class Failed(val errorMessage: String) : PostLoginPartialState
 }
 
-sealed class GetProfileDetailsPartialState {
-    data class Success(val profileDetailsDomain: ProfileDetailsDomain) :
-        GetProfileDetailsPartialState()
-
-    data class Failed(val errorMessage: String) : GetProfileDetailsPartialState()
-
-    data class NoInternetConnection(val errorMessage: String) : GetProfileDetailsPartialState()
-}
-
 sealed class GrandNewAccessTokenPartialState {
     data class Success(val userAuthData: UserAuthData) : GrandNewAccessTokenPartialState()
     data class Failed(val errorMessage: String) : GrandNewAccessTokenPartialState()

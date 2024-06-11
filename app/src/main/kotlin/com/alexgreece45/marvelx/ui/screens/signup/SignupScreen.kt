@@ -131,7 +131,7 @@ fun SignUpScreen(
                             onEventSent(SignupEvent.FieldValueChange.FirstName(firstName = newValue))
                         },
                         modifier = Modifier.weight(1f),
-                        label = stringResource(R.string.sign_up_screen_input_field_label_first_name),
+                        label = stringResource(R.string.generic_label_first_name),
                         errorMessage = state.firstNameValidationResult.messages.firstOrNull()
                             .orEmpty(),
                         isError = state.firstNameValidationResult.isValid.not() &&
@@ -153,7 +153,7 @@ fun SignUpScreen(
                             onEventSent(SignupEvent.FieldValueChange.LastName(lastName = newValue))
                         },
                         modifier = Modifier.weight(1f),
-                        label = stringResource(R.string.sign_up_screen_input_field_label_last_name),
+                        label = stringResource(R.string.generic_label_last_name),
                         errorMessage = state.lastNameValidationResult.messages.firstOrNull()
                             .orEmpty(),
                         isError = state.lastNameValidationResult.isValid.not() &&
@@ -173,10 +173,10 @@ fun SignUpScreen(
             // Gender
             item {
                 ExposedDropdownMenu(
-                    modifier = Modifier.fillMaxWidth(),
+                    label = stringResource(R.string.generic_label_gender),
                     expanded = state.isGenderDropdownMenuVisible,
+                    modifier = Modifier.fillMaxWidth(),
                     value = state.gender?.label?.let { stringResource(it) },
-                    label = stringResource(R.string.sign_up_screen_input_field_label_gender),
                     onDismissRequest = { onEventSent(SignupEvent.GenderDropdownMenu.OnDismiss) },
                     onExpandedChange = { onEventSent(SignupEvent.GenderDropdownMenu.OnClick) }
                 ) {
@@ -185,7 +185,7 @@ fun SignUpScreen(
                             modifier = Modifier.fillMaxWidth(),
                             onClick = {
                                 onEventSent(
-                                    SignupEvent.FieldValueChange.Gender(
+                                    SignupEvent.FieldValueChange.GenderDropDown(
                                         gender = gender
                                     )
                                 )
@@ -219,7 +219,7 @@ fun SignUpScreen(
                                 onEventSent(SignupEvent.FieldValueChange.Email(email = suggestionValue))
                             }
                         ),
-                    label = stringResource(R.string.sign_up_screen_input_field_label_email),
+                    label = stringResource(R.string.generic_label_email),
                     errorMessage = state.emailValidationResult.messages.firstOrNull().orEmpty(),
                     isError = state.emailValidationResult.isValid.not() &&
                             state.emailValidationResult.messages.firstOrNull() != null,
@@ -254,7 +254,7 @@ fun SignUpScreen(
                                 onEventSent(SignupEvent.FieldValueChange.Password(password = suggestionValue))
                             }
                         ),
-                    label = stringResource(R.string.sign_up_screen_input_field_label_password),
+                    label = stringResource(R.string.generic_label_password),
                     trailingIcon = {
                         IconButton(onClick = { onEventSent(SignupEvent.OnPasswordVisibilityIconClick) }) {
                             if (state.isPasswordVisible) {

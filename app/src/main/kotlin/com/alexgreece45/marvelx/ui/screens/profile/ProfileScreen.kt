@@ -1,13 +1,14 @@
 package com.alexgreece45.marvelx.ui.screens.profile
 
 import android.widget.Toast
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
@@ -15,18 +16,20 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.ui.components.BottomNavigationBarData
-import com.alexgreece45.marvelx.ui.components.WrapButton
 import com.alexgreece45.marvelx.ui.components.ContentErrorScreen
 import com.alexgreece45.marvelx.ui.components.ContentScreen
+import com.alexgreece45.marvelx.ui.components.IconData
+import com.alexgreece45.marvelx.ui.components.WrapButton
+import com.alexgreece45.marvelx.util.SPACING_MEDIUM
 import com.alexgreece45.marvelx.util.SPACING_SMALL
-import com.alexgreece45.marvelx.util.VSpacer
+import com.alexgreece45.marvelx.util.extensions.throttledClickable
 import kotlinx.coroutines.flow.Flow
 
 @Composable
@@ -35,12 +38,13 @@ fun ProfileScreen(
     onEventSent: (event: ProfileEvent) -> Unit,
     effect: Flow<ProfileEffect>,
     navigateToHomeScreen: () -> Unit,
-    bottomNavigationBarData: @Composable () -> BottomNavigationBarData
+    bottomNavigationBarData: @Composable () -> BottomNavigationBarData,
+    navigateToProfileDetailsScreen: () -> Unit
 ) {
     val context = LocalContext.current
 
     LaunchedEffect(Unit) {
-        onEventSent(ProfileEvent.InitView)
+        onEventSent(ProfileEvent.Init)
 
         effect.collect { effect ->
             when (effect) {
@@ -51,20 +55,32 @@ fun ProfileScreen(
                 is ProfileEffect.ShowToast -> {
                     Toast.makeText(context, effect.toastMessage, Toast.LENGTH_LONG).show()
                 }
+
+                ProfileEffect.Navigation.NavigateToPersonalDetailsScreen -> {
+                    navigateToProfileDetailsScreen()
+                }
             }
         }
     }
 
     ContentScreen(
-        isLoading = state.isLoading,
+        isLoading = false,
         showToolbar = true,
         toolbarTitle = stringResource(R.string.profile_screen_toolbar_title),
-        bottomNavigationBarData = bottomNavigationBarData()
+        bottomNavigationBarData = bottomNavigationBarData(),
+        stickyBottom = {
+            WrapButton(
+                onClick = { onEventSent(ProfileEvent.OnLogoutButtonPressed) },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = stringResource(R.string.profile_screen_button_label_logout)
+                )
+            }
+        }
     ) { paddingValues ->
         LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.Blue),
+            modifier = Modifier.fillMaxSize(),
             contentPadding = paddingValues
         ) {
             state.error?.let { error ->
@@ -78,123 +94,50 @@ fun ProfileScreen(
                 }
             }
 
-            // Profile details (under construction).
-            state.profileDetails?.let { profileDetails ->
-                val N = 1
-                // Profile details (times N).
-                (1..N).forEach { _ ->
-                    item {
-                        // TODO: TO BE REMOVED!
-                        // userId
-                        Text(
-                            text = "userId: ".plus(state.userId),
-                            style = MaterialTheme.typography.h4
-                        )
-
-                        // user's token
-                        Text(
-                            text = "token: ".plus(state.accessToken.take(10).plus("...")),
-                            style = MaterialTheme.typography.h4
-                        )
-
-                        // Profile picture.
-                        // todo: add call to retrieve profile picture
-
-                        Section(title = "Personal Information", shimmer = state.isLoading) {
-                            Item(
-                                label = "Full Name",
-                                value = profileDetails.fullName,
-                                shimmer = state.isLoading
-                            )
-
-                            VSpacer.Large()
-
-                            Item(
-                                label = "Email",
-                                value = profileDetails.email,
-                                shimmer = state.isLoading
-                            )
-
-                            VSpacer.Large()
-
-                            Item(
-                                label = "Gender",
-                                value = stringResource(profileDetails.gender.label),
-                                shimmer = state.isLoading
-                            )
-                        }
-                    }
-                }
-
-                // Logout button.
-                item {
-                    Box(
-                        modifier = Modifier
-//                                .fillMaxSize()
-                            .background(Color.Red),
-                        contentAlignment = Alignment.BottomCenter
-                    ) {
-                        WrapButton(
-                            modifier = Modifier.fillMaxWidth(),
-                            onClick = { onEventSent(ProfileEvent.OnLogoutButtonPressed) }
-                        ) {
-                            Text(
-                                text = stringResource(R.string.profile_screen_button_label_logout)
-                            )
-                        }
-                    }
+            item {
+                Column(verticalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp)) {
+                    Section(
+                        title = stringResource(R.string.profile_screen_section_label_personal_information),
+                        iconData = IconData(
+                            iconResource = R.drawable.ic_person,
+                            contentDescription = R.string.content_description_person
+                        ),
+                        onClick = { onEventSent(ProfileEvent.Section.OnPersonalInformationClicked) }
+                    )
                 }
             }
         }
     }
 }
 
+/**
+ * Defines a single section. Each section's [onClick] must be correlated to the navigation to a
+ * different screen.
+ */
 @Composable
-private fun Section(
-    title: String,
-    shimmer: Boolean,
-    content: @Composable () -> Unit
-) {
+private fun Section(title: String, iconData: IconData, onClick: () -> Unit) {
     Surface(
         modifier = Modifier
-            .fillMaxWidth(),
+            .fillMaxWidth()
+            .throttledClickable(view = LocalView.current, onClick = onClick),
         shape = MaterialTheme.shapes.medium
     ) {
-        Column(
+        Row(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(SPACING_SMALL.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .fillMaxWidth()
+                .padding(all = SPACING_MEDIUM.dp),
+            horizontalArrangement = Arrangement.spacedBy(SPACING_MEDIUM.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
+            Icon(
+                painter = painterResource(iconData.iconResource),
+                contentDescription = stringResource(iconData.contentDescription),
+            )
+
             Text(
-//                modifier = Modifier.shimmer(shimmer),
                 text = title,
-                textAlign = TextAlign.Center,
                 style = MaterialTheme.typography.h5
             )
-            VSpacer.Medium()
-            content()
         }
-    }
-}
-
-@Composable
-private fun Item(
-    label: String,
-    value: String,
-    shimmer: Boolean
-) {
-    Column {
-        // Label.
-        Text(
-//            modifier = Modifier.shimmer(shimmer),
-            text = label,
-            style = MaterialTheme.typography.h6
-        )
-        Text(
-//            modifier = Modifier.shimmer(shimmer),
-            text = value,
-            style = MaterialTheme.typography.subtitle1
-        )
     }
 }

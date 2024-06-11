@@ -76,6 +76,8 @@ import com.alexgreece45.marvelx.domain.worker.RefreshTokenWorker
 import com.alexgreece45.marvelx.network_logic.interceptors.ApiInterceptor
 import com.alexgreece45.marvelx.network_logic.interceptors.WebsocketInterceptor
 import com.alexgreece45.marvelx.network_logic.networkKoinModule
+import com.alexgreece45.marvelx.ui.helper.FieldValidationRules
+import com.alexgreece45.marvelx.ui.helper.FieldValidationRulesImpl
 import com.alexgreece45.marvelx.ui.navigation.router.RouterHost
 import com.alexgreece45.marvelx.ui.navigation.router.RouterHostImpl
 import com.alexgreece45.marvelx.ui.screens.allCharacters.AllCharactersViewModel
@@ -92,6 +94,7 @@ import com.alexgreece45.marvelx.ui.screens.login.LoginViewModel
 import com.alexgreece45.marvelx.ui.screens.mainActivity.ActivityViewModel
 import com.alexgreece45.marvelx.ui.screens.otp.OtpViewModel
 import com.alexgreece45.marvelx.ui.screens.profile.ProfileViewModel
+import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.ProfileDetailsViewModel
 import com.alexgreece45.marvelx.ui.screens.signup.SignupViewModel
 import com.alexgreece45.marvelx.ui.screens.splash.SplashViewModel
 import com.alexgreece45.marvelx.util.FormValidator
@@ -201,7 +204,7 @@ private val interactorModule = module {
             get()
         )
     }
-    factory<UserInteractor> { UserInteractorImpl(get(), get(), get(), get()) }
+    factory<UserInteractor> { UserInteractorImpl(get(), get(), get()) }
     factory<ForgotPasswordInteractor> { ForgotPasswordInteractorImpl(get(), get()) }
     factory<ChangePasswordInteractor> { ChangePasswordInteractorImpl() }
     factory<OtpInteractor> { OtpInteractorImpl(get(), get(), get()) }
@@ -225,6 +228,7 @@ private val controllerModule = module {
 }
 
 private val formValidatorModule = module {
+    single<FieldValidationRules> { FieldValidationRulesImpl(get()) }
     factory<FormValidator> { FormValidatorImpl() }
 }
 
@@ -246,7 +250,7 @@ private val viewModelModule = module {
 
     viewModel { HomeViewModel(get()) }
     viewModel { LoginViewModel(get(), get(), get(), get(), get()) }
-    viewModel { SignupViewModel(get(), get(), get(), get(), get(), get(), get(), get()) }
+    viewModel { SignupViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get()) }
 
     viewModel { OtpViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
 
@@ -259,7 +263,8 @@ private val viewModelModule = module {
     viewModel { AllFavoriteCharactersViewModel(get()) }
     viewModel { CharacterViewModel(get(), get()) }
     viewModel { ComicViewModel(get()) }
-    viewModel { ProfileViewModel(get(), get(), get(), get()) }
+    viewModel { ProfileViewModel(get()) }
+    viewModel { ProfileDetailsViewModel(get(), get(), get(), get()) }
 }
 
 private val workerModule = module {

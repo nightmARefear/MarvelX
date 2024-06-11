@@ -1,6 +1,8 @@
 package com.alexgreece45.marvelx.util.extensions
 
 import android.view.View
+import androidx.compose.foundation.Indication
+import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.material.IconButton
@@ -53,17 +55,56 @@ data class ClickState(
  * @param onClick       The action(s) to be invoked when a UI element is clicked.
  */
 fun Modifier.throttledClickableIcon(
-    onClick: () -> Unit,
     view: View,
-    delay: Long = THROTTLE_CLICKABLE_DEFAULT_DELAY,
+    interactionSource: MutableInteractionSource = MutableInteractionSource(),
     enabled: Boolean = true,
     onClickLabel: String? = null,
-    interactionSource: MutableInteractionSource = MutableInteractionSource()
+    delay: Long = THROTTLE_CLICKABLE_DEFAULT_DELAY,
+    onClick: () -> Unit
+) = throttledClickable(
+    view = view,
+    interactionSource = interactionSource,
+    indication = null,
+    enabled = enabled,
+    role = Role.Button,
+    onClickLabel = onClickLabel,
+    delay = delay,
+    isIcon = true,
+    onClick = onClick,
+    )
+
+/**
+ * Provides protection against clicking a UI element multiple times within a short period of time,
+ * and against UI overlay attacks from other applications.
+ *
+ * This [Modifier] allows this UI element to be clicked at the most once per the given [delay].
+ *
+ * @param view          The parent [View] of this UI element.
+ * @param delay         The delay between click events.
+ * @param enabled       Controls the enabled state. When `false`, [onClick], and this modifier will
+ * appear disabled for accessibility services.
+ * @param role          The type of user interface element. This is used by the accessibility
+ * services.
+ * @param onClickLabel  Semantic / accessibility label for the [onClick] action.
+ * @param isIcon        Whether this [Modifier] will be applied on an [Icon].
+ * @param onClick       The action(s) to be invoked when a UI element is clicked.
+ */
+fun Modifier.throttledClickable(
+    view: View,
+    interactionSource: MutableInteractionSource = MutableInteractionSource(),
+    indication: Indication? = null,
+    enabled: Boolean = true,
+    role: Role? = null,
+    onClickLabel: String? = null,
+    delay: Long = THROTTLE_CLICKABLE_DEFAULT_DELAY,
+    isIcon: Boolean = false,
+    onClick: () -> Unit
 ) = composed(
     inspectorInfo = debugInspectorInfo {
         name = "clickable"
         properties["enabled"] = enabled
         properties["onClickLabel"] = onClickLabel
+        properties["role"] = role
         properties["onClick"] = onClick
     }
 ) {
@@ -88,20 +129,27 @@ fun Modifier.throttledClickableIcon(
             }
     }
 
+    var modifier: Modifier = Modifier
+    if (isIcon) {
+        modifier = Modifier.minimumInteractiveComponentSize()
+    }
+
     /**
      * Default radius of an unbounded ripple of an [IconButton] as defined in [IconButton].
-     * */
+     */
     val RippleRadius = 24.dp
-    Modifier
-        .minimumInteractiveComponentSize()
+    modifier
         .filterTouchesWhenObscured(view)
         .clickable(
+            interactionSource = remember { interactionSource },
+            indication = when (isIcon) {
+                true -> rememberRipple(bounded = false, radius = RippleRadius)
+                false -> indication ?: LocalIndication.current
+            },
             enabled = enabled,
             onClickLabel = onClickLabel,
-            onClick = { debounceState.tryEmit(ClickState(onClick, System.currentTimeMillis())) },
-            role = Role.Button,
-            indication = rememberRipple(bounded = false, radius = RippleRadius),
-            interactionSource = remember { interactionSource }
+            role = if (isIcon) role ?: Role.Button else role,
+            onClick = { debounceState.tryEmit(ClickState(onClick, System.currentTimeMillis())) }
         )
 }
 

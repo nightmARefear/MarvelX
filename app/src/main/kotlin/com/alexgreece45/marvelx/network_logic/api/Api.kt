@@ -25,6 +25,7 @@ import com.alexgreece45.marvelx.network_logic.models_api.user.login.ResponseLogi
 import com.alexgreece45.marvelx.network_logic.models_api.user.loginWithToken.ResponseLoginWithToken
 import com.alexgreece45.marvelx.network_logic.models_api.user.postLogin.RequestPostLogin
 import com.alexgreece45.marvelx.network_logic.models_api.user.postLogin.ResponsePostLogin
+import com.alexgreece45.marvelx.network_logic.models_api.user.profileDetails.RequestProfileDetailsUpdate
 import com.alexgreece45.marvelx.network_logic.models_api.user.profileDetails.ResponseProfileDetails
 import com.alexgreece45.marvelx.network_logic.models_api.user.signup.RequestUserSignup
 import com.alexgreece45.marvelx.network_logic.models_api.user.signup.ResponseSignup
@@ -34,6 +35,7 @@ import retrofit2.http.Field
 import retrofit2.http.FormUrlEncoded
 import retrofit2.http.GET
 import retrofit2.http.POST
+import retrofit2.http.PUT
 import retrofit2.http.Path
 import retrofit2.http.Query
 
@@ -113,6 +115,21 @@ interface ApiService {
     @POST("/api/private/marvelx/user/forgot_password/validate_otp")
     suspend fun forgotPasswordValidateOtp(@Body body: RequestForgotPasswordValidateOtp): Response<ResponseForgotPasswordValidateOtp>
 
+    /**
+     * Retrieves the profile details of the current user.
+     */
+    @GET("/api/private/marvelx/user/me")
+    suspend fun getUserMe(): Response<ResponseProfileDetails>
+
+    /**
+     * Updates the profile details of the current user.
+     */
+    @PUT("/api/private/marvelx/user/me")
+    suspend fun updateUserMe(@Body requestProfileDetailsUpdate: RequestProfileDetailsUpdate): Response<Void>
+
+    /**
+     * Retrieves the __public__ profile details of another user with the ID of [userId].
+     */
     @GET("/api/private/marvelx/user/profile_details/{userId}")
     suspend fun getUserProfileDetails(@Path("userId") userId: Int): Response<ResponseProfileDetails>
 
@@ -125,19 +142,12 @@ interface ApiService {
 
 interface ApiClient {
     suspend fun getCharacters(): Response<CharacterDataWrapper>
-
     suspend fun getCharacterById(characterId: Int): Response<CharacterDataWrapper>
-
     suspend fun getCharacterComics(characterId: Int): Response<ComicDataWrapper>
-
     suspend fun getComicById(comicId: Int): Response<ComicDataWrapper>
-
     suspend fun signup(requestUserSignup: RequestUserSignup): Response<ResponseSignup>
-
     suspend fun login(requestUserLogin: RequestUserLogin): Response<ResponseLogin>
-
     suspend fun loginWithToken(): Response<ResponseLoginWithToken>
-
     suspend fun postLogin(accessToken: String): Response<ResponsePostLogin>
 
     suspend fun authorize(
@@ -155,24 +165,16 @@ interface ApiClient {
     ): Response<ResponseToken>
 
     suspend fun refreshAccessToken(clientId: String, refreshToken: String): Response<ResponseToken>
-
     suspend fun logout(clientId: String, refreshToken: String): Response<Void>
-
     suspend fun validateOtp(otpRequest: OtpRequest): Response<OtpResponseSuccess>
-
     suspend fun resendOtp(requestResendOtp: RequestResendOtp): Response<ResponseResendOtpSuccess>
-
     suspend fun forgotPasswordSendOtp(body: RequestForgotPasswordSendOtp): Response<ResponseForgotPasswordSendOtp>
-
     suspend fun forgotPasswordIsOtpBlockedEmail(body: RequestForgotPasswordOtpBlockedEmail): Response<ResponseForgotPasswordOtpBlockedEmail>
-
     suspend fun forgotPasswordIsOtpBlockedPhoneNumber(body: RequestForgotPasswordOtpBlockedPhoneNumber): Response<ResponseForgotPasswordOtpBlockedPhoneNumber>
-
     suspend fun forgotPasswordValidateOtp(body: RequestForgotPasswordValidateOtp): Response<ResponseForgotPasswordValidateOtp>
-
+    suspend fun getUserMe(): Response<ResponseProfileDetails>
+    suspend fun updateUserMe(requestProfileDetailsUpdate: RequestProfileDetailsUpdate): Response<Void>
     suspend fun getUserProfileDetails(userId: Int): Response<ResponseProfileDetails>
-
     suspend fun getJwtForSensitiveUserData(requestJwtSensitiveUserData: RequestJwtSensitiveUserData): Response<ResponseJwtSensitiveUserData>
-
     suspend fun getSensitiveUserData(requestSensitiveUserData: RequestSensitiveUserData): Response<ResponseSensitiveUserData>
 }

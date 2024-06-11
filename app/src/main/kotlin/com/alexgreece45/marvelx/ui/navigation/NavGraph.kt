@@ -31,6 +31,8 @@ import com.alexgreece45.marvelx.ui.screens.otp.OtpScreen
 import com.alexgreece45.marvelx.ui.screens.otp.OtpViewModel
 import com.alexgreece45.marvelx.ui.screens.profile.ProfileScreen
 import com.alexgreece45.marvelx.ui.screens.profile.ProfileViewModel
+import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.ProfileDetailsScreen
+import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.ProfileDetailsViewModel
 import com.alexgreece45.marvelx.ui.screens.signup.SignUpScreen
 import com.alexgreece45.marvelx.ui.screens.signup.SignupViewModel
 import com.alexgreece45.marvelx.ui.screens.splash.SplashScreen
@@ -318,16 +320,47 @@ fun NavGraph(navController: NavHostController) {
                 state = viewModel.uiState.collectAsStateWithLifecycle().value,
                 onEventSent = viewModel::setEvent,
                 effect = viewModel.uiEffect,
+                bottomNavigationBarData = { getBottomNavigationBarData(navController = navController) },
                 navigateToHomeScreen = {
                     navController.navigate(Screen.HomeScreen.route) {
                         popUpToTop(navController)
                     }
                 },
-                bottomNavigationBarData = { getBottomNavigationBarData(navController = navController) }
+                navigateToProfileDetailsScreen = {
+                    navController.navigate(Screen.ProfileDetailsScreen.route) {
+                        launchSingleTop = true
+                    }
+                }
+            )
+        }
+
+        composable(Screen.ProfileDetailsScreen) {
+            val viewModel = koinViewModel<ProfileDetailsViewModel>()
+            ProfileDetailsScreen(
+                state = viewModel.uiState.collectAsStateWithLifecycle().value,
+                onEventSent = viewModel::setEvent,
+                effect = viewModel.uiEffect,
+                popBackStack = navController::popBackStack,
             )
         }
     }
 }
+
+/**
+ * Returns the [BottomNavigationBarData] required for the bottom navigation bar in the main screens.
+ *
+ * @param navController The associated [NavController] of the graph.
+ */
+@Composable
+fun getBottomNavigationBarData(navController: NavController): BottomNavigationBarData =
+    BottomNavigationBarData(
+        navController = navController,
+        items = getBottomNavigationItems(),
+        backgroundColor = MaterialTheme.colors.background,
+        topHorizontalColor = MaterialTheme.colors.onBackground.copy(alpha = 0.8f),
+        selectedItemTopHorizontalColor = MaterialTheme.colors.primaryVariant.copy(alpha = 0.8f),
+        elevation = SPACING_MEDIUM.dp
+    )
 
 /**
  * Returns the bottom navigation items.
@@ -358,19 +391,3 @@ private fun getBottomNavigationItems(): List<BottomBarItem> = listOf(
         )
     )
 )
-
-/**
- * Returns the [BottomNavigationBarData] required for the bottom navigation bar in the main screens.
- *
- * @param navController The associated [NavController] of the graph.
- */
-@Composable
-private fun getBottomNavigationBarData(navController: NavController): BottomNavigationBarData =
-    BottomNavigationBarData(
-        navController = navController,
-        items = getBottomNavigationItems(),
-        backgroundColor = MaterialTheme.colors.background,
-        topHorizontalColor = MaterialTheme.colors.onBackground.copy(alpha = 0.8f),
-        selectedItemTopHorizontalColor = MaterialTheme.colors.primaryVariant.copy(alpha = 0.8f),
-        elevation = SPACING_MEDIUM.dp
-    )

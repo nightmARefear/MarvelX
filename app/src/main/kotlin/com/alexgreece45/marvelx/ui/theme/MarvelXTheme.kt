@@ -3,7 +3,10 @@ package com.alexgreece45.marvelx.ui.theme
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
+import com.valentinilk.shimmer.LocalShimmerTheme
+import com.valentinilk.shimmer.defaultShimmerTheme
 
 @Composable
 fun MarvelXTheme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composable () -> Unit) {
@@ -32,10 +35,16 @@ fun MarvelXTheme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composabl
         darkIcons = !darkTheme
     )
 
-    MaterialTheme(
-        colors = colors,
-        typography = typo,
-        shapes = shapes,
-        content = content
-    )
+    val shimmerTheme = defaultShimmerTheme.copy()
+
+    CompositionLocalProvider(
+        LocalShimmerTheme provides shimmerTheme
+    ) {
+        MaterialTheme(
+            colors = colors,
+            typography = typo,
+            shapes = shapes,
+            content = content
+        )
+    }
 }

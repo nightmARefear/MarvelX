@@ -130,6 +130,11 @@ sealed class Screen(
     data object AllFavoriteCharactersScreen : Screen(baseRoute = "allFavoriteCharactersScreen")
     data object ProfileScreen : Screen(baseRoute = "profileScreen")
 
+    /**
+     * Profile Screen --> Profile Details
+     */
+    data object ProfileDetailsScreen : Screen(baseRoute = "profileDetailsScreen")
+
     // Main screens --> Other screens
     data object CharacterScreen : Screen(
         baseRoute = "characterScreen",
