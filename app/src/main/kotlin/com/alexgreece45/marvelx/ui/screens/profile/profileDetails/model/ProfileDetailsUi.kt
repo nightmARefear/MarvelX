@@ -1,4 +1,4 @@
-package com.alexgreece45.marvelx.ui.screens.profile.model
+package com.alexgreece45.marvelx.ui.screens.profile.profileDetails.model
 
 import androidx.annotation.StringRes
 import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.ProfileDetailsDomain

@@ -5,12 +5,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.DropdownMenuItem
 import androidx.compose.material.Icon
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -29,7 +26,7 @@ import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
 import com.alexgreece45.marvelx.ui.components.ThrottledIconButton
 import com.alexgreece45.marvelx.ui.components.WrapButton
 import com.alexgreece45.marvelx.ui.components.error.ContentErrorScreen
-import com.alexgreece45.marvelx.ui.screens.profile.model.ProfileDetailsItemUi
+import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.model.ProfileDetailsItemUi
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.SPACING_TINY
 import com.alexgreece45.marvelx.util.VSpacer
@@ -111,61 +108,56 @@ fun ProfileDetailsScreen(
             item { ContentScreenHeader(title = stringResource(R.string.profile_details_screen_header_title)) }
 
             item {
-                Surface(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = MaterialTheme.shapes.medium
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = SPACING_SMALL.dp),
+                    verticalArrangement = Arrangement.spacedBy(SPACING_TINY.dp)
                 ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(SPACING_SMALL.dp),
-                        verticalArrangement = Arrangement.spacedBy(SPACING_TINY.dp)
-                    ) {
-                        state.profileDetailsUi?.let { profileDetailsUi ->
-                            ProfileDetailsItem(
-                                profileDetailsItemUi = profileDetailsUi.firstName,
-                                onEventSent = onEventSent,
-                                shimmer = state.isLoading
-                            )
+                    state.profileDetailsUi?.let { profileDetailsUi ->
+                        ProfileDetailsItem(
+                            profileDetailsItemUi = profileDetailsUi.firstName,
+                            onEventSent = onEventSent,
+                            shimmer = state.isLoading
+                        )
 
-                            ProfileDetailsItem(
-                                profileDetailsItemUi = profileDetailsUi.lastName,
-                                onEventSent = onEventSent,
-                                shimmer = state.isLoading
-                            )
+                        ProfileDetailsItem(
+                            profileDetailsItemUi = profileDetailsUi.lastName,
+                            onEventSent = onEventSent,
+                            shimmer = state.isLoading
+                        )
 
-                            ExposedDropdownMenu(
-                                label = stringResource(R.string.generic_label_gender),
-                                expanded = state.isGenderDropDownExpanded,
+                        ExposedDropdownMenu(
+                            label = stringResource(R.string.generic_label_gender),
+                            expanded = state.isGenderDropDownExpanded,
 //                                modifier = Modifier.fillMaxWidth(),
-                                value = stringResource(profileDetailsUi.gender.currentValue.label),
-                                onDismissRequest = { onEventSent(ProfileDetailsContract.Event.GenderField.OnDismiss) },
-                                onExpandedChange = { onEventSent(ProfileDetailsContract.Event.GenderField.OnClick) },
-                            ) {
-                                Gender.asList().forEach { gender ->
-                                    DropdownMenuItem(
-                                        onClick = {
-                                            onEventSent(
-                                                ProfileDetailsContract.Event.GenderField.OnValueChanged(
-                                                    gender
-                                                )
+                            value = stringResource(profileDetailsUi.gender.currentValue.label),
+                            onDismissRequest = { onEventSent(ProfileDetailsContract.Event.GenderField.OnDismiss) },
+                            onExpandedChange = { onEventSent(ProfileDetailsContract.Event.GenderField.OnClick) },
+                        ) {
+                            Gender.asList().forEach { gender ->
+                                DropdownMenuItem(
+                                    onClick = {
+                                        onEventSent(
+                                            ProfileDetailsContract.Event.GenderField.OnValueChanged(
+                                                gender
                                             )
-                                        }
-                                    ) {
-                                        Text(
-                                            text = stringResource(gender.label)
                                         )
                                     }
+                                ) {
+                                    Text(
+                                        text = stringResource(gender.label)
+                                    )
                                 }
                             }
-                            VSpacer.Small()
-
-                            ProfileDetailsItem(
-                                profileDetailsItemUi = profileDetailsUi.email,
-                                onEventSent = onEventSent,
-                                shimmer = state.isLoading
-                            )
                         }
+                        VSpacer.Small()
+
+                        ProfileDetailsItem(
+                            profileDetailsItemUi = profileDetailsUi.email,
+                            onEventSent = onEventSent,
+                            shimmer = state.isLoading
+                        )
                     }
                 }
             }
@@ -180,6 +172,7 @@ fun ProfileDetailsScreen(
  * @param onEventSent           Executes the given event.
  * @param shimmer               Whether the shimmering effect is enabled.
  */
+@Suppress("UNCHECKED_CAST")
 @Composable
 private fun <T : Any> ProfileDetailsItem(
     profileDetailsItemUi: ProfileDetailsItemUi<T>,

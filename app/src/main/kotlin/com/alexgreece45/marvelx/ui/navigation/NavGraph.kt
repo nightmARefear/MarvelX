@@ -31,6 +31,8 @@ import com.alexgreece45.marvelx.ui.screens.otp.OtpScreen
 import com.alexgreece45.marvelx.ui.screens.otp.OtpViewModel
 import com.alexgreece45.marvelx.ui.screens.profile.ProfileScreen
 import com.alexgreece45.marvelx.ui.screens.profile.ProfileViewModel
+import com.alexgreece45.marvelx.ui.screens.profile.faq.FaqScreen
+import com.alexgreece45.marvelx.ui.screens.profile.faq.FaqViewModel
 import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.ProfileDetailsScreen
 import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.ProfileDetailsViewModel
 import com.alexgreece45.marvelx.ui.screens.signup.SignUpScreen
@@ -317,8 +319,8 @@ fun NavGraph(navController: NavHostController) {
         composable(Screen.ProfileScreen) {
             val viewModel = koinViewModel<ProfileViewModel>()
             ProfileScreen(
-                state = viewModel.uiState.collectAsStateWithLifecycle().value,
                 onEventSent = viewModel::setEvent,
+                state = viewModel.uiState.collectAsStateWithLifecycle().value,
                 effect = viewModel.uiEffect,
                 bottomNavigationBarData = { getBottomNavigationBarData(navController = navController) },
                 navigateToHomeScreen = {
@@ -326,11 +328,8 @@ fun NavGraph(navController: NavHostController) {
                         popUpToTop(navController)
                     }
                 },
-                navigateToProfileDetailsScreen = {
-                    navController.navigate(Screen.ProfileDetailsScreen.route) {
-                        launchSingleTop = true
-                    }
-                }
+                navigateToProfileDetailsScreen = { navController.navigate(Screen.ProfileDetailsScreen.route) },
+                navigateToFaqScreen = { navController.navigate(Screen.FaqScreen.route) }
             )
         }
 
@@ -339,6 +338,16 @@ fun NavGraph(navController: NavHostController) {
             ProfileDetailsScreen(
                 state = viewModel.uiState.collectAsStateWithLifecycle().value,
                 onEventSent = viewModel::setEvent,
+                effect = viewModel.uiEffect,
+                popBackStack = navController::popBackStack,
+            )
+        }
+
+        composable(Screen.FaqScreen) {
+            val viewModel = koinViewModel<FaqViewModel>()
+            FaqScreen(
+                onEventSent = viewModel::setEvent,
+                state = viewModel.uiState.collectAsStateWithLifecycle().value,
                 effect = viewModel.uiEffect,
                 popBackStack = navController::popBackStack,
             )

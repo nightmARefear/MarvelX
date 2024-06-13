@@ -3,7 +3,7 @@ package com.alexgreece45.marvelx.ui.components.model
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.TextUnit
-import com.alexgreece45.marvelx.ui.components.hightlightedText.WrapClickableText
+import com.alexgreece45.marvelx.ui.components.WrapClickableText
 
 /**
  * Defines a single clickable text to be found in a [String]. This data class is used exclusively in

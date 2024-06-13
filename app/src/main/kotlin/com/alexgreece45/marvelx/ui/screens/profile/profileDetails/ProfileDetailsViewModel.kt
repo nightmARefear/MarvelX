@@ -15,9 +15,9 @@ import com.alexgreece45.marvelx.ui.components.SnackbarState
 import com.alexgreece45.marvelx.ui.components.model.ErrorButtonLayout
 import com.alexgreece45.marvelx.ui.components.model.ErrorButtonType
 import com.alexgreece45.marvelx.ui.helper.FieldValidationRules
-import com.alexgreece45.marvelx.ui.screens.profile.model.ProfileDetailsItemUi
-import com.alexgreece45.marvelx.ui.screens.profile.model.ProfileDetailsUi
-import com.alexgreece45.marvelx.ui.screens.profile.model.toProfileDetailsDomain
+import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.model.ProfileDetailsItemUi
+import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.model.ProfileDetailsUi
+import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.model.toProfileDetailsDomain
 import com.alexgreece45.marvelx.util.Form
 import com.alexgreece45.marvelx.util.FormValidationResult
 import com.alexgreece45.marvelx.util.FormValidator
@@ -402,6 +402,7 @@ class ProfileDetailsViewModel(
                 userInteractor.updateCurrentUserProfileDetails(profileDetailsDomain).collect {
                     when (it) {
                         UpdateProfileDetailsPartialState.Success -> {
+                            // TODO: Review snackbar handling.
                             setState {
                                 copy(
                                     snackbarState = SnackbarState(
@@ -409,7 +410,6 @@ class ProfileDetailsViewModel(
                                     )
                                 )
                             }
-                            delay(1000L) // TODO: TO BE CHANGED
                             setEffect {
                                 ProfileDetailsContract.Effect.Navigation.PopBackStack
                             }

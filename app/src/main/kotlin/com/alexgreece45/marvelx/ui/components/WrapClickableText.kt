@@ -1,4 +1,4 @@
-package com.alexgreece45.marvelx.ui.components.hightlightedText
+package com.alexgreece45.marvelx.ui.components
 
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material.MaterialTheme

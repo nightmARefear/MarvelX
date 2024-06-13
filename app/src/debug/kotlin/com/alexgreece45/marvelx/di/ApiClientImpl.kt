@@ -2,9 +2,10 @@ package com.alexgreece45.marvelx.di
 
 import com.alexgreece45.marvelx.network_logic.api.ApiClient
 import com.alexgreece45.marvelx.network_logic.api.ApiService
-import com.alexgreece45.marvelx.network_logic.models_api.ResponseAuthorize
+import com.alexgreece45.marvelx.network_logic.models_api.authorize.ResponseAuthorize
 import com.alexgreece45.marvelx.network_logic.models_api.character.CharacterDataWrapper
 import com.alexgreece45.marvelx.network_logic.models_api.character.comic.ComicDataWrapper
+import com.alexgreece45.marvelx.network_logic.models_api.faq.ResponseFaq
 import com.alexgreece45.marvelx.network_logic.models_api.forgotPassword.email.RequestForgotPasswordOtpBlockedEmail
 import com.alexgreece45.marvelx.network_logic.models_api.forgotPassword.email.RequestForgotPasswordSendOtp
 import com.alexgreece45.marvelx.network_logic.models_api.forgotPassword.email.RequestForgotPasswordValidateOtp
@@ -102,14 +103,15 @@ class ApiClientImpl(
     override suspend fun forgotPasswordValidateOtp(body: RequestForgotPasswordValidateOtp): Response<ResponseForgotPasswordValidateOtp> =
         apiService.forgotPasswordValidateOtp(body)
 
-    override suspend fun getUserMe(): Response<ResponseProfileDetails> =
-        apiService.getUserMe()
+    override suspend fun getUserMe(): Response<ResponseProfileDetails> = apiService.getUserMe()
 
     override suspend fun updateUserMe(requestProfileDetailsUpdate: RequestProfileDetailsUpdate): Response<Void> =
         apiService.updateUserMe(requestProfileDetailsUpdate)
 
     override suspend fun getUserProfileDetails(userId: Int): Response<ResponseProfileDetails> =
         apiService.getUserProfileDetails(userId = userId)
+
+    override suspend fun getFaqs(): Response<ResponseFaq> = apiService.getFaqs()
 
     override suspend fun getJwtForSensitiveUserData(requestJwtSensitiveUserData: RequestJwtSensitiveUserData): Response<ResponseJwtSensitiveUserData> =
         apiService.getJwtForSensitiveUserData(requestJwtSensitiveUserData)

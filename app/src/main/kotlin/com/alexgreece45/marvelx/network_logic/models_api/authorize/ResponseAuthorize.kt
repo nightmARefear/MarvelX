@@ -1,4 +1,4 @@
-package com.alexgreece45.marvelx.network_logic.models_api
+package com.alexgreece45.marvelx.network_logic.models_api.authorize
 
 import com.google.gson.annotations.SerializedName
 

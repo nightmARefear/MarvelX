@@ -40,6 +40,8 @@ import com.alexgreece45.marvelx.data.repository.ChangePasswordRepository
 import com.alexgreece45.marvelx.data.repository.ChangePasswordRepositoryImpl
 import com.alexgreece45.marvelx.data.repository.CharacterRepository
 import com.alexgreece45.marvelx.data.repository.CharacterRepositoryImpl
+import com.alexgreece45.marvelx.data.repository.ConfigRepository
+import com.alexgreece45.marvelx.data.repository.ConfigRepositoryImpl
 import com.alexgreece45.marvelx.data.repository.FavoriteCharactersRepository
 import com.alexgreece45.marvelx.data.repository.FavoriteCharactersRepositoryImpl
 import com.alexgreece45.marvelx.data.repository.ForgotPasswordRepository
@@ -60,6 +62,8 @@ import com.alexgreece45.marvelx.domain.interactors.CharacterInteractor
 import com.alexgreece45.marvelx.domain.interactors.CharacterInteractorImpl
 import com.alexgreece45.marvelx.domain.interactors.ComicInteractor
 import com.alexgreece45.marvelx.domain.interactors.ComicInteractorImpl
+import com.alexgreece45.marvelx.domain.interactors.ConfigInteractor
+import com.alexgreece45.marvelx.domain.interactors.ConfigInteractorImpl
 import com.alexgreece45.marvelx.domain.interactors.ForgotPasswordInteractor
 import com.alexgreece45.marvelx.domain.interactors.ForgotPasswordInteractorImpl
 import com.alexgreece45.marvelx.domain.interactors.LoginInteractor
@@ -94,6 +98,7 @@ import com.alexgreece45.marvelx.ui.screens.login.LoginViewModel
 import com.alexgreece45.marvelx.ui.screens.mainActivity.ActivityViewModel
 import com.alexgreece45.marvelx.ui.screens.otp.OtpViewModel
 import com.alexgreece45.marvelx.ui.screens.profile.ProfileViewModel
+import com.alexgreece45.marvelx.ui.screens.profile.faq.FaqViewModel
 import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.ProfileDetailsViewModel
 import com.alexgreece45.marvelx.ui.screens.signup.SignupViewModel
 import com.alexgreece45.marvelx.ui.screens.splash.SplashViewModel
@@ -182,6 +187,7 @@ private val repositoryModule = module {
     single<FavoriteCharactersRepository> { FavoriteCharactersRepositoryImpl(get()) }
     single<LoginRepository> { LoginRepositoryImpl(get(), get(), get()) }
     single<UserRepository> { UserRepositoryImpl(get()) }
+    single<ConfigRepository> { ConfigRepositoryImpl(get()) }
     single<ForgotPasswordRepository> { ForgotPasswordRepositoryImpl(get(), get()) }
     single<ChangePasswordRepository> { ChangePasswordRepositoryImpl(get()) }
     single<OtpRepository> { OtpRepositoryImpl(get(), get()) }
@@ -190,6 +196,7 @@ private val repositoryModule = module {
 
 private val interactorModule = module {
     factory<CharacterInteractor> { CharacterInteractorImpl(get(), get(), get(), get()) }
+    factory<ConfigInteractor> { ConfigInteractorImpl(get(), get()) }
     factory<ComicInteractor> { ComicInteractorImpl(get(), get(), get()) }
     factory<LoginInteractor> {
         LoginInteractorImpl(
@@ -263,8 +270,9 @@ private val viewModelModule = module {
     viewModel { AllFavoriteCharactersViewModel(get()) }
     viewModel { CharacterViewModel(get(), get()) }
     viewModel { ComicViewModel(get()) }
-    viewModel { ProfileViewModel(get()) }
+    viewModel { ProfileViewModel(get(), get()) }
     viewModel { ProfileDetailsViewModel(get(), get(), get(), get()) }
+    viewModel { FaqViewModel(get(), get()) }
 }
 
 private val workerModule = module {

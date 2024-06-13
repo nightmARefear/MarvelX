@@ -1,8 +1,9 @@
 package com.alexgreece45.marvelx.network_logic.api
 
-import com.alexgreece45.marvelx.network_logic.models_api.ResponseAuthorize
+import com.alexgreece45.marvelx.network_logic.models_api.authorize.ResponseAuthorize
 import com.alexgreece45.marvelx.network_logic.models_api.character.CharacterDataWrapper
 import com.alexgreece45.marvelx.network_logic.models_api.character.comic.ComicDataWrapper
+import com.alexgreece45.marvelx.network_logic.models_api.faq.ResponseFaq
 import com.alexgreece45.marvelx.network_logic.models_api.forgotPassword.email.RequestForgotPasswordOtpBlockedEmail
 import com.alexgreece45.marvelx.network_logic.models_api.forgotPassword.email.RequestForgotPasswordSendOtp
 import com.alexgreece45.marvelx.network_logic.models_api.forgotPassword.email.RequestForgotPasswordValidateOtp
@@ -133,6 +134,12 @@ interface ApiService {
     @GET("/api/private/marvelx/user/profile_details/{userId}")
     suspend fun getUserProfileDetails(@Path("userId") userId: Int): Response<ResponseProfileDetails>
 
+    /**
+     * Retrieves the FAQs.
+     */
+    @GET("/api/private/marvelx/faqs")
+    suspend fun getFaqs(): Response<ResponseFaq>
+
     @POST("/api/private/marvelx/user/jwt_sensitive_data")
     suspend fun getJwtForSensitiveUserData(@Body requestJwtSensitiveUserData: RequestJwtSensitiveUserData): Response<ResponseJwtSensitiveUserData>
 
@@ -175,6 +182,7 @@ interface ApiClient {
     suspend fun getUserMe(): Response<ResponseProfileDetails>
     suspend fun updateUserMe(requestProfileDetailsUpdate: RequestProfileDetailsUpdate): Response<Void>
     suspend fun getUserProfileDetails(userId: Int): Response<ResponseProfileDetails>
+    suspend fun getFaqs(): Response<ResponseFaq>
     suspend fun getJwtForSensitiveUserData(requestJwtSensitiveUserData: RequestJwtSensitiveUserData): Response<ResponseJwtSensitiveUserData>
     suspend fun getSensitiveUserData(requestSensitiveUserData: RequestSensitiveUserData): Response<ResponseSensitiveUserData>
 }

@@ -57,7 +57,7 @@ import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
 import com.alexgreece45.marvelx.ui.components.WrapButton
 import com.alexgreece45.marvelx.ui.components.WrapOutlinedButton
 import com.alexgreece45.marvelx.ui.components.error.ContentErrorScreen
-import com.alexgreece45.marvelx.ui.components.hightlightedText.WrapClickableText
+import com.alexgreece45.marvelx.ui.components.WrapClickableText
 import com.alexgreece45.marvelx.ui.components.line.HorizontalLine
 import com.alexgreece45.marvelx.ui.components.model.AutofillData
 import com.alexgreece45.marvelx.ui.components.model.ClickableString

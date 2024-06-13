@@ -71,7 +71,7 @@ fun Modifier.throttledClickableIcon(
     delay = delay,
     isIcon = true,
     onClick = onClick,
-    )
+)
 
 /**
  * Provides protection against clicking a UI element multiple times within a short period of time,
@@ -86,7 +86,9 @@ fun Modifier.throttledClickableIcon(
  * @param role          The type of user interface element. This is used by the accessibility
  * services.
  * @param onClickLabel  Semantic / accessibility label for the [onClick] action.
- * @param isIcon        Whether this [Modifier] will be applied on an [Icon].
+ * @param isIcon        Whether this [Modifier] will be applied to an [Icon].
+ * @param showRipple    Whether the ripple effect should be visible. It has the default value of
+ * `true`.
  * @param onClick       The action(s) to be invoked when a UI element is clicked.
  */
 fun Modifier.throttledClickable(
@@ -98,6 +100,7 @@ fun Modifier.throttledClickable(
     onClickLabel: String? = null,
     delay: Long = THROTTLE_CLICKABLE_DEFAULT_DELAY,
     isIcon: Boolean = false,
+    showRipple: Boolean = true,
     onClick: () -> Unit
 ) = composed(
     inspectorInfo = debugInspectorInfo {
@@ -142,10 +145,10 @@ fun Modifier.throttledClickable(
         .filterTouchesWhenObscured(view)
         .clickable(
             interactionSource = remember { interactionSource },
-            indication = when (isIcon) {
+            indication = if (showRipple) when (isIcon) {
                 true -> rememberRipple(bounded = false, radius = RippleRadius)
                 false -> indication ?: LocalIndication.current
-            },
+            } else null,
             enabled = enabled,
             onClickLabel = onClickLabel,
             role = if (isIcon) role ?: Role.Button else role,
