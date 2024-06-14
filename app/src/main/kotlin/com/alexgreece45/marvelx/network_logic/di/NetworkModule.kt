@@ -1,4 +1,4 @@
-package com.alexgreece45.marvelx.network_logic
+package com.alexgreece45.marvelx.network_logic.di
 
 import android.content.Context
 import com.alexgreece45.marvelx.BuildConfig

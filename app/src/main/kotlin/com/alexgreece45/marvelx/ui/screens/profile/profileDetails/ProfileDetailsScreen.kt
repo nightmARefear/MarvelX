@@ -19,7 +19,6 @@ import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.network_logic.models_api.user.Gender
 import com.alexgreece45.marvelx.ui.components.AlertDialogError
 import com.alexgreece45.marvelx.ui.components.ContentScreen
-import com.alexgreece45.marvelx.ui.components.ContentScreenHeader
 import com.alexgreece45.marvelx.ui.components.ExposedDropdownMenu
 import com.alexgreece45.marvelx.ui.components.OutlinedTextFieldValidation
 import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
@@ -36,8 +35,8 @@ import kotlinx.coroutines.flow.Flow
 
 @Composable
 fun ProfileDetailsScreen(
-    state: ProfileDetailsContract.State,
     onEventSent: (ProfileDetailsContract.Event) -> Unit,
+    state: ProfileDetailsContract.State,
     effect: Flow<ProfileDetailsContract.Effect>,
     popBackStack: () -> Unit
 ) {
@@ -76,6 +75,7 @@ fun ProfileDetailsScreen(
             )
         },
         showToolbar = true,
+        toolbarTitle = stringResource(R.string.profile_details_screen_header_title),
         snackbarState = state.snackbarState,
         stickyBottom = {
             WrapButton(
@@ -104,8 +104,6 @@ fun ProfileDetailsScreen(
                     )
                 }
             }
-
-            item { ContentScreenHeader(title = stringResource(R.string.profile_details_screen_header_title)) }
 
             item {
                 Column(

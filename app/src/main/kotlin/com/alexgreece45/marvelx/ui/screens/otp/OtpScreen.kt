@@ -44,8 +44,8 @@ import kotlinx.coroutines.flow.Flow
  */
 @Composable
 fun OtpScreen(
-    state: OtpState,
     onEventSent: (event: OtpEvent) -> Unit,
+    state: OtpState,
     effect: Flow<OtpEffect>,
     popBackStack: () -> Unit,
     navigateToAllCharactersScreen: () -> Unit,

@@ -26,10 +26,13 @@ import com.alexgreece45.marvelx.network_logic.models_api.user.login.ResponseLogi
 import com.alexgreece45.marvelx.network_logic.models_api.user.loginWithToken.ResponseLoginWithToken
 import com.alexgreece45.marvelx.network_logic.models_api.user.postLogin.RequestPostLogin
 import com.alexgreece45.marvelx.network_logic.models_api.user.postLogin.ResponsePostLogin
+import com.alexgreece45.marvelx.network_logic.models_api.user.privacySettings.RequestPrivacySettings
+import com.alexgreece45.marvelx.network_logic.models_api.user.privacySettings.ResponsePrivacySettings
 import com.alexgreece45.marvelx.network_logic.models_api.user.profileDetails.RequestProfileDetailsUpdate
 import com.alexgreece45.marvelx.network_logic.models_api.user.profileDetails.ResponseProfileDetails
 import com.alexgreece45.marvelx.network_logic.models_api.user.signup.RequestUserSignup
 import com.alexgreece45.marvelx.network_logic.models_api.user.signup.ResponseSignup
+import com.alexgreece45.marvelx.network_logic.models_generic.ApiResult
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.Field
@@ -135,6 +138,18 @@ interface ApiService {
     suspend fun getUserProfileDetails(@Path("userId") userId: Int): Response<ResponseProfileDetails>
 
     /**
+     * Retrieves the privacy settings of the current user.
+     */
+    @GET("/api/private/marvelx/user/me/privacy_settings")
+    suspend fun getUserPrivacySettings(): Response<ResponsePrivacySettings>
+
+    /**
+     * Updates the privacy settings of the current user.
+     */
+    @PUT("/api/private/marvelx/user/me/privacy_settings")
+    suspend fun updateUserPrivacySettings(@Body requestPrivacySettings: RequestPrivacySettings): Response<Void>
+
+    /**
      * Retrieves the FAQs.
      */
     @GET("/api/private/marvelx/faqs")
@@ -180,9 +195,11 @@ interface ApiClient {
     suspend fun forgotPasswordIsOtpBlockedPhoneNumber(body: RequestForgotPasswordOtpBlockedPhoneNumber): Response<ResponseForgotPasswordOtpBlockedPhoneNumber>
     suspend fun forgotPasswordValidateOtp(body: RequestForgotPasswordValidateOtp): Response<ResponseForgotPasswordValidateOtp>
     suspend fun getUserMe(): Response<ResponseProfileDetails>
-    suspend fun updateUserMe(requestProfileDetailsUpdate: RequestProfileDetailsUpdate): Response<Void>
+    suspend fun updateUserMe(requestProfileDetailsUpdate: RequestProfileDetailsUpdate): ApiResult<String>
     suspend fun getUserProfileDetails(userId: Int): Response<ResponseProfileDetails>
-    suspend fun getFaqs(): Response<ResponseFaq>
+    suspend fun getUserPrivacySettings(): ApiResult<ResponsePrivacySettings>
+    suspend fun updateUserPrivacySettings(requestPrivacySettings: RequestPrivacySettings): ApiResult<String>
+    suspend fun getFaqs(): ApiResult<ResponseFaq>
     suspend fun getJwtForSensitiveUserData(requestJwtSensitiveUserData: RequestJwtSensitiveUserData): Response<ResponseJwtSensitiveUserData>
     suspend fun getSensitiveUserData(requestSensitiveUserData: RequestSensitiveUserData): Response<ResponseSensitiveUserData>
 }

@@ -26,8 +26,8 @@ import kotlinx.coroutines.flow.Flow
 
 @Composable
 fun HomeScreen(
-    state: HomeState,
     onEventSent: (event: HomeEvent) -> Unit,
+    state: HomeState,
     effect: Flow<HomeEffect>,
     navigateToLoginScreen: () -> Unit,
     navigateToSignupScreen: () -> Unit,

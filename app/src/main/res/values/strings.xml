@@ -140,11 +140,12 @@
     <string name="profile_screen_toolbar_title">Profile</string>
 
     <string name="profile_screen_section_label_personal_information">Personal Information</string>
+    <string name="profile_screen_section_label_privacy_settings">Privacy Settings</string>
     <string name="profile_screen_section_label_faq">Frequently Asked Questions (FAQ)</string>
 
     <string name="profile_screen_button_label_logout">Logout</string>
 
-    // Profile Details Screen
+    // Profile --> Profile Details Screen
     <string name="profile_details_screen_header_title">Personal Information</string>
 
     <string name="profile_details_screen_button_label_save_changes">Save changes</string>
@@ -156,8 +157,17 @@
     <string name="profile_details_screen_error_loading_profile_details">Error loading profile details</string>
     <string name="profile_details_screen_error_updating_profile_details">Error updating profile details</string>
 
-    // FAQ Screen
+    // Profile --> Privacy Settings Screen
+    <string name="privacy_settings_screen_toolbar_title">Privacy Settings</string>
+
+    <string name="privacy_settings_screen_header_label_visible_to_everyone">Visible to everyone</string>
+
+    // Profile --> FAQ Screen
     <string name="faq_screen_toolbar_title">Frequently Asked Questions (FAQ)</string>
+
+    <string name="faq_screen_button_label_save_changes">Save changes</string>
+
+    <string name="faq_screen_no_faqs_message">No FAQs were found.</string>
 
     // Intro Loading Screen
     <string name="intro_loading_screen_label_loading_stage_refresh_access_token">Refreshing access token</string>
@@ -278,6 +288,7 @@
     <string name="content_description_splash_loading_animation">Loading animation</string>
     <string name="content_description_lock">lock</string>
     <string name="content_description_person">person</string>
+    <string name="content_description_privacy">privacy</string>
     <string name="content_description_faq">frequently asked questions</string>
     <string name="content_description_expand">expand</string>
     <string name="content_description_collapse">collapse</string>

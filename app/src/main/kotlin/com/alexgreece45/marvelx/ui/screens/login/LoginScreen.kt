@@ -75,8 +75,8 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun LoginScreen(
-    state: LoginState,
     onEventSent: (event: LoginEvent) -> Unit,
+    state: LoginState,
     effect: Flow<LoginEffect>,
     navigateToSignupScreen: () -> Unit,
     navigateToAllCharactersScreen: () -> Unit,

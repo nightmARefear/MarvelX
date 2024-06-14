@@ -2,8 +2,8 @@ package com.alexgreece45.marvelx.ui.screens.profile.profileDetails
 
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.domain.helper.InteractorPartialState
 import com.alexgreece45.marvelx.domain.interactors.GetProfileDetailsPartialState
-import com.alexgreece45.marvelx.domain.interactors.UpdateProfileDetailsPartialState
 import com.alexgreece45.marvelx.domain.interactors.UserInteractor
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
@@ -23,7 +23,6 @@ import com.alexgreece45.marvelx.util.FormValidationResult
 import com.alexgreece45.marvelx.util.FormValidator
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.Rule
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
@@ -399,9 +398,9 @@ class ProfileDetailsViewModel(
         }
         currentState.profileDetailsUi?.toProfileDetailsDomain()?.let { profileDetailsDomain ->
             viewModelScope.launch {
-                userInteractor.updateCurrentUserProfileDetails(profileDetailsDomain).collect {
+                userInteractor.updateUserProfileDetails(profileDetailsDomain).collect {
                     when (it) {
-                        UpdateProfileDetailsPartialState.Success -> {
+                        is InteractorPartialState.Success -> {
                             // TODO: Review snackbar handling.
                             setState {
                                 copy(
@@ -415,7 +414,7 @@ class ProfileDetailsViewModel(
                             }
                         }
 
-                        UpdateProfileDetailsPartialState.Failed -> {
+                        is InteractorPartialState.Failed, is InteractorPartialState.Error -> {
                             setState {
                                 copy(
                                     isLoading = false,
@@ -432,7 +431,7 @@ class ProfileDetailsViewModel(
                             }
                         }
 
-                        UpdateProfileDetailsPartialState.NoInternetConnection -> {
+                        is InteractorPartialState.NoInternetConnection -> {
                             setState {
                                 copy(
                                     isLoading = false,

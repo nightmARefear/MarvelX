@@ -53,8 +53,8 @@ import kotlinx.coroutines.flow.Flow
 
 @Composable
 fun CharacterScreen(
-    state: CharacterState,
     onEventSent: (event: CharacterEvent) -> Unit,
+    state: CharacterState,
     effect: Flow<CharacterEffect>,
     characterId: Int,
     popBackStack: () -> Unit,

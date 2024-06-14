@@ -29,10 +29,13 @@ import com.alexgreece45.marvelx.ui.screens.login.LoginScreen
 import com.alexgreece45.marvelx.ui.screens.login.LoginViewModel
 import com.alexgreece45.marvelx.ui.screens.otp.OtpScreen
 import com.alexgreece45.marvelx.ui.screens.otp.OtpViewModel
+import com.alexgreece45.marvelx.ui.screens.profile.ProfileContract
 import com.alexgreece45.marvelx.ui.screens.profile.ProfileScreen
 import com.alexgreece45.marvelx.ui.screens.profile.ProfileViewModel
 import com.alexgreece45.marvelx.ui.screens.profile.faq.FaqScreen
 import com.alexgreece45.marvelx.ui.screens.profile.faq.FaqViewModel
+import com.alexgreece45.marvelx.ui.screens.profile.privacySettings.PrivacySettingsScreen
+import com.alexgreece45.marvelx.ui.screens.profile.privacySettings.PrivacySettingsViewModel
 import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.ProfileDetailsScreen
 import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.ProfileDetailsViewModel
 import com.alexgreece45.marvelx.ui.screens.signup.SignUpScreen
@@ -77,8 +80,8 @@ fun NavGraph(navController: NavHostController) {
         composable(Screen.HomeScreen) {
             val viewModel = koinViewModel<HomeViewModel>()
             HomeScreen(
-                state = viewModel.uiState.collectAsStateWithLifecycle().value,
                 onEventSent = viewModel::setEvent,
+                state = viewModel.uiState.collectAsStateWithLifecycle().value,
                 effect = viewModel.uiEffect,
                 navigateToLoginScreen = {
                     navController.navigate(Screen.LoginScreen.route) {
@@ -112,8 +115,8 @@ fun NavGraph(navController: NavHostController) {
         composable(Screen.LoginScreen) {
             val viewModel = koinViewModel<LoginViewModel>()
             LoginScreen(
-                state = viewModel.uiState.collectAsStateWithLifecycle().value,
                 onEventSent = viewModel::setEvent,
+                state = viewModel.uiState.collectAsStateWithLifecycle().value,
                 effect = viewModel.uiEffect,
                 navigateToSignupScreen = {
                     navController.navigate(Screen.SignupScreen.route) {
@@ -175,8 +178,8 @@ fun NavGraph(navController: NavHostController) {
         composable(Screen.SignupScreen) {
             val viewModel = koinViewModel<SignupViewModel>()
             SignUpScreen(
-                state = viewModel.uiState.collectAsStateWithLifecycle().value,
                 onEventSent = viewModel::setEvent,
+                state = viewModel.uiState.collectAsStateWithLifecycle().value,
                 effect = viewModel.uiEffect,
                 navigateToAllCharactersScreen = {
                     navController.navigate(Screen.AllCharactersScreen.route) {
@@ -200,8 +203,8 @@ fun NavGraph(navController: NavHostController) {
         composable(Screen.OtpScreen) { navBackStackEntry ->
             val viewModel = koinViewModel<OtpViewModel>()
             OtpScreen(
-                state = viewModel.uiState.collectAsStateWithLifecycle().value,
                 onEventSent = viewModel::setEvent,
+                state = viewModel.uiState.collectAsStateWithLifecycle().value,
                 effect = viewModel.uiEffect,
                 popBackStack = navController::popBackStack,
                 navigateToAllCharactersScreen = {
@@ -247,8 +250,8 @@ fun NavGraph(navController: NavHostController) {
         ) { navBackStackEntry ->
             val viewModel = koinViewModel<CharacterViewModel>()
             CharacterScreen(
-                state = viewModel.uiState.collectAsStateWithLifecycle().value,
                 onEventSent = viewModel::setEvent,
+                state = viewModel.uiState.collectAsStateWithLifecycle().value,
                 effect = viewModel.uiEffect,
                 characterId = navBackStackEntry.arguments?.getInt(NavItem.CharacterId.key)
                     ?: -1,
@@ -278,8 +281,8 @@ fun NavGraph(navController: NavHostController) {
         ) { navBackStackEntry ->
             val viewModel = koinViewModel<ComicViewModel>()
             ComicScreen(
-                state = viewModel.uiState.collectAsStateWithLifecycle().value,
                 onEventSent = viewModel::setEvent,
+                state = viewModel.uiState.collectAsStateWithLifecycle().value,
                 effect = viewModel.uiEffect,
                 popBackStack = navController::popBackStack,
                 comicId = navBackStackEntry.arguments?.getInt(NavItem.ComicId.key) ?: -1
@@ -291,8 +294,8 @@ fun NavGraph(navController: NavHostController) {
         ) { navBackStackEntry ->
             val viewModel = koinViewModel<AllCharacterComicsViewModel>()
             AllCharacterComicsScreen(
-                state = viewModel.uiState.collectAsStateWithLifecycle().value,
                 onEventSent = viewModel::setEvent,
+                state = viewModel.uiState.collectAsStateWithLifecycle().value,
                 effect = viewModel.uiEffect,
                 popBackStack = navController::popBackStack,
                 navigateToComicScreen = { comicId ->
@@ -323,21 +326,45 @@ fun NavGraph(navController: NavHostController) {
                 state = viewModel.uiState.collectAsStateWithLifecycle().value,
                 effect = viewModel.uiEffect,
                 bottomNavigationBarData = { getBottomNavigationBarData(navController = navController) },
-                navigateToHomeScreen = {
-                    navController.navigate(Screen.HomeScreen.route) {
-                        popUpToTop(navController)
+                onNavigation = { navigationEffect ->
+                    when (navigationEffect) {
+                        ProfileContract.Effect.Navigation.NavigateToHomeScreen -> {
+                            navController.navigate(Screen.HomeScreen.route) {
+                                popUpToTop(navController)
+                            }
+                        }
+
+                        ProfileContract.Effect.Navigation.NavigateToProfileDetailsScreen -> {
+                            navController.navigate(Screen.ProfileDetailsScreen.route)
+                        }
+
+                        ProfileContract.Effect.Navigation.NavigateToFaqScreen -> {
+                            navController.navigate(Screen.FaqScreen.route)
+                        }
+
+                        ProfileContract.Effect.Navigation.NavigateToPrivacySettingsScreen -> {
+                            navController.navigate(Screen.PrivacySettingsScreen.route)
+                        }
                     }
-                },
-                navigateToProfileDetailsScreen = { navController.navigate(Screen.ProfileDetailsScreen.route) },
-                navigateToFaqScreen = { navController.navigate(Screen.FaqScreen.route) }
+                }
             )
         }
 
         composable(Screen.ProfileDetailsScreen) {
             val viewModel = koinViewModel<ProfileDetailsViewModel>()
             ProfileDetailsScreen(
-                state = viewModel.uiState.collectAsStateWithLifecycle().value,
                 onEventSent = viewModel::setEvent,
+                state = viewModel.uiState.collectAsStateWithLifecycle().value,
+                effect = viewModel.uiEffect,
+                popBackStack = navController::popBackStack,
+            )
+        }
+
+        composable(Screen.PrivacySettingsScreen) {
+            val viewModel = koinViewModel<PrivacySettingsViewModel>()
+            PrivacySettingsScreen(
+                onEventSent = viewModel::setEvent,
+                state = viewModel.uiState.collectAsStateWithLifecycle().value,
                 effect = viewModel.uiEffect,
                 popBackStack = navController::popBackStack,
             )

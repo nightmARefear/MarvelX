@@ -1,11 +1,5 @@
 package com.alexgreece45.marvelx.ui.screens.profile
 
-import androidx.compose.material.Icon
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.domain.interactors.LoginInteractor
@@ -20,42 +14,47 @@ import com.alexgreece45.marvelx.ui.screens.profile.model.ProfileScreenSection
 import com.alexgreece45.marvelx.util.ResourceProvider
 import kotlinx.coroutines.launch
 
-sealed interface ProfileEvent : BaseEvent {
-    data object Init : ProfileEvent
-    data object OnLogoutButtonPressed : ProfileEvent
-}
-
-data class ProfileState(
-    val isLoading: Boolean = true,
-    val sections: List<ProfileScreenSection> = emptyList(),
-
-    val error: ProfileScreenErrorView? = null,
-) : BaseState
-
-sealed class ProfileEffect : BaseEffect {
-    sealed class Navigation : ProfileEffect() {
-        data object NavigateToHomeScreen : Navigation()
-        data object NavigateToPersonalDetailsScreen : Navigation()
-        data object NavigateToFaqScreen : Navigation()
+sealed interface ProfileContract {
+    sealed interface Event : BaseEvent {
+        data object Init : Event
+        data object OnLogoutButtonPressed : Event
     }
 
-    data class ShowToast(val toastMessage: String) : ProfileEffect()
+    data class State(
+        val isLoading: Boolean = true,
+        val sections: List<ProfileScreenSection> = emptyList(),
+
+        val error: ProfileScreenErrorView? = null,
+    ) : BaseState
+
+    sealed class Effect : BaseEffect {
+        sealed class Navigation : Effect() {
+            data object NavigateToHomeScreen : Navigation()
+            data object NavigateToProfileDetailsScreen : Navigation()
+            data object NavigateToPrivacySettingsScreen : Navigation()
+            data object NavigateToFaqScreen : Navigation()
+        }
+
+        data class ShowToast(val toastMessage: String) : Effect()
+    }
 }
+
+
 
 class ProfileViewModel(
     private val loginInteractor: LoginInteractor,
     private val resourceProvider: ResourceProvider,
 ) :
-    BaseViewModel<ProfileEvent, ProfileState, ProfileEffect>() {
-    override fun setInitialState(): ProfileState = ProfileState()
+    BaseViewModel<ProfileContract.Event, ProfileContract.State, ProfileContract.Effect>() {
+    override fun setInitialState(): ProfileContract.State = ProfileContract.State()
 
-    override fun handleEvents(event: ProfileEvent) {
+    override fun handleEvents(event: ProfileContract.Event) {
         when (event) {
-            is ProfileEvent.Init -> {
+            is ProfileContract.Event.Init -> {
                 init()
             }
 
-            ProfileEvent.OnLogoutButtonPressed -> {
+            ProfileContract.Event.OnLogoutButtonPressed -> {
                 setState {
                     copy(
                         isLoading = true
@@ -80,7 +79,19 @@ class ProfileViewModel(
                         ),
                         onClick = {
                             setEffect {
-                                ProfileEffect.Navigation.NavigateToPersonalDetailsScreen
+                                ProfileContract.Effect.Navigation.NavigateToProfileDetailsScreen
+                            }
+                        }
+                    ),
+                    ProfileScreenSection(
+                        title = resourceProvider.getString(R.string.profile_screen_section_label_privacy_settings),
+                        iconData = IconData(
+                            iconResource = R.drawable.ic_privacy,
+                            contentDescription = R.string.content_description_privacy
+                        ),
+                        onClick = {
+                            setEffect {
+                                ProfileContract.Effect.Navigation.NavigateToPrivacySettingsScreen
                             }
                         }
                     ),
@@ -92,7 +103,7 @@ class ProfileViewModel(
                         ),
                         onClick = {
                             setEffect {
-                                ProfileEffect.Navigation.NavigateToFaqScreen
+                                ProfileContract.Effect.Navigation.NavigateToFaqScreen
                             }
                         }
                     ),
@@ -106,7 +117,7 @@ class ProfileViewModel(
      */
     private fun logout() {
         setEffect {
-            ProfileEffect.ShowToast("logout button clicked")
+            ProfileContract.Effect.ShowToast("logout button clicked")
         }
 
         viewModelScope.launch {
@@ -115,21 +126,21 @@ class ProfileViewModel(
                     is LogoutPartialState.Failed -> {
                         // Show error message.
                         setEffect {
-                            ProfileEffect.ShowToast(
+                            ProfileContract.Effect.ShowToast(
                                 toastMessage = logoutPartialState.errorMessage
                             )
                         }
 
                         // Navigate to Home Screen.
                         setEffect {
-                            ProfileEffect.Navigation.NavigateToHomeScreen
+                            ProfileContract.Effect.Navigation.NavigateToHomeScreen
                         }
                     }
 
                     LogoutPartialState.Success -> {
                         // Navigate to Home Screen.
                         setEffect {
-                            ProfileEffect.Navigation.NavigateToHomeScreen
+                            ProfileContract.Effect.Navigation.NavigateToHomeScreen
                         }
                     }
                 }

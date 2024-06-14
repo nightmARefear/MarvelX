@@ -19,6 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.res.stringResource
@@ -66,20 +67,37 @@ fun FaqScreen(
                 onPrimaryButtonClicked = { onEventSent(error.event) }
             )
         )
+        return
     }
 
     ContentScreen(
         isLoading = state.isLoading,
         onBack = { onEventSent(FaqContract.Event.OnBackClicked) },
         navigableAction = ScreenNavigableAction.Backable(onBack = { onEventSent(FaqContract.Event.OnBackClicked) }),
-        toolbarTitle = stringResource(R.string.faq_screen_toolbar_title),
-        showToolbar = true
+        showToolbar = true,
+        toolbarTitle = stringResource(R.string.faq_screen_toolbar_title)
     ) { paddingValues ->
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = paddingValues,
             verticalArrangement = Arrangement.spacedBy(SPACING_MEDIUM.dp)
         ) {
+            if (state.sections.isEmpty()) {
+                item {
+                    Column(
+                        modifier = Modifier.fillParentMaxSize(),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = stringResource(R.string.faq_screen_no_faqs_message),
+                            style = MaterialTheme.typography.h5
+                        )
+                    }
+                }
+                return@LazyColumn
+            }
+
             items(
                 items = state.sections,
                 key = { it.id }

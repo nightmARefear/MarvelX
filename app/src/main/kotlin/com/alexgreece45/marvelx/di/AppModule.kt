@@ -77,9 +77,9 @@ import com.alexgreece45.marvelx.domain.interactors.SplashInteractorImpl
 import com.alexgreece45.marvelx.domain.interactors.UserInteractor
 import com.alexgreece45.marvelx.domain.interactors.UserInteractorImpl
 import com.alexgreece45.marvelx.domain.worker.RefreshTokenWorker
+import com.alexgreece45.marvelx.network_logic.di.networkKoinModule
 import com.alexgreece45.marvelx.network_logic.interceptors.ApiInterceptor
 import com.alexgreece45.marvelx.network_logic.interceptors.WebsocketInterceptor
-import com.alexgreece45.marvelx.network_logic.networkKoinModule
 import com.alexgreece45.marvelx.ui.helper.FieldValidationRules
 import com.alexgreece45.marvelx.ui.helper.FieldValidationRulesImpl
 import com.alexgreece45.marvelx.ui.navigation.router.RouterHost
@@ -99,6 +99,7 @@ import com.alexgreece45.marvelx.ui.screens.mainActivity.ActivityViewModel
 import com.alexgreece45.marvelx.ui.screens.otp.OtpViewModel
 import com.alexgreece45.marvelx.ui.screens.profile.ProfileViewModel
 import com.alexgreece45.marvelx.ui.screens.profile.faq.FaqViewModel
+import com.alexgreece45.marvelx.ui.screens.profile.privacySettings.PrivacySettingsViewModel
 import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.ProfileDetailsViewModel
 import com.alexgreece45.marvelx.ui.screens.signup.SignupViewModel
 import com.alexgreece45.marvelx.ui.screens.splash.SplashViewModel
@@ -196,7 +197,7 @@ private val repositoryModule = module {
 
 private val interactorModule = module {
     factory<CharacterInteractor> { CharacterInteractorImpl(get(), get(), get(), get()) }
-    factory<ConfigInteractor> { ConfigInteractorImpl(get(), get()) }
+    factory<ConfigInteractor> { ConfigInteractorImpl(get()) }
     factory<ComicInteractor> { ComicInteractorImpl(get(), get(), get()) }
     factory<LoginInteractor> {
         LoginInteractorImpl(
@@ -272,6 +273,7 @@ private val viewModelModule = module {
     viewModel { ComicViewModel(get()) }
     viewModel { ProfileViewModel(get(), get()) }
     viewModel { ProfileDetailsViewModel(get(), get(), get(), get()) }
+    viewModel { PrivacySettingsViewModel(get(), get()) }
     viewModel { FaqViewModel(get(), get()) }
 }
 

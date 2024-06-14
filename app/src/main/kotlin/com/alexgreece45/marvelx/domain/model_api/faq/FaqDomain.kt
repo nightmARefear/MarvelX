@@ -1,7 +1,7 @@
 package com.alexgreece45.marvelx.domain.model_api.faq
 
-import com.alexgreece45.marvelx.network_logic.models_api.faq.ResponseFaq
-import com.alexgreece45.marvelx.network_logic.models_api.faq.ResponseFaqSection
+import com.alexgreece45.marvelx.data.model.RepositoryFaq
+import com.alexgreece45.marvelx.data.model.RepositoryFaqSection
 
 data class FaqDomain(
     val sections: List<FaqSectionDomain>
@@ -14,10 +14,10 @@ data class FaqSectionDomain(
     val order: Int
 )
 
-fun ResponseFaq.toFaqDomain(): FaqDomain =
-    FaqDomain(sections = this.sections.map { it.toFaqSectionDomain()})
+internal fun RepositoryFaq.toFaqDomain(): FaqDomain =
+    FaqDomain(sections = this.sections.map { it.toFaqSectionDomain() })
 
-private fun ResponseFaqSection.toFaqSectionDomain(): FaqSectionDomain =
+private fun RepositoryFaqSection.toFaqSectionDomain(): FaqSectionDomain =
     FaqSectionDomain(
         id = this.id,
         title = this.title,

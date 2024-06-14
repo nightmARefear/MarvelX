@@ -1,12 +1,11 @@
 package com.alexgreece45.marvelx.domain.interactors
 
+import com.alexgreece45.marvelx.data.model.RepositoryFaq
 import com.alexgreece45.marvelx.data.repository.ConfigRepository
 import com.alexgreece45.marvelx.domain.helper.InteractorPartialState
-import com.alexgreece45.marvelx.domain.helper.handleRepositoryResponse
+import com.alexgreece45.marvelx.domain.helper.handleRepositoryResult
 import com.alexgreece45.marvelx.domain.model_api.faq.FaqDomain
 import com.alexgreece45.marvelx.domain.model_api.faq.toFaqDomain
-import com.alexgreece45.marvelx.network_logic.models_api.faq.ResponseFaq
-import com.alexgreece45.marvelx.util.ResourceProvider
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
@@ -18,14 +17,14 @@ interface ConfigInteractor {
 }
 
 class ConfigInteractorImpl(
-    private val configRepository: ConfigRepository,
-    private val resourceProvider: ResourceProvider
+    private val configRepository: ConfigRepository
 ) : ConfigInteractor {
     override suspend fun getFaqs(): Flow<InteractorPartialState<FaqDomain>> = flow {
-        handleRepositoryResponse(
-            response = configRepository.getFaqs(),
-            transformation = ResponseFaq::toFaqDomain,
-            genericErrorMessage = resourceProvider.getGenericErrorMessage()
-        ).collect { interactorPartialState -> emit(interactorPartialState) }
+        configRepository.getFaqs().collect {
+            handleRepositoryResult(
+                result = it,
+                transformation = RepositoryFaq::toFaqDomain
+            ).collect { interactorPartialState -> emit(interactorPartialState) }
+        }
     }
 }

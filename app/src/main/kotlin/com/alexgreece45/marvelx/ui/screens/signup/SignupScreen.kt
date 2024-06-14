@@ -47,8 +47,8 @@ import kotlinx.coroutines.flow.Flow
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun SignUpScreen(
-    state: SignupState,
     onEventSent: (SignupEvent) -> Unit,
+    state: SignupState,
     effect: Flow<SignupEffect>,
     navigateToAllCharactersScreen: () -> Unit,
     navigateToOtpScreen: (Int, String, String, Boolean) -> Unit,

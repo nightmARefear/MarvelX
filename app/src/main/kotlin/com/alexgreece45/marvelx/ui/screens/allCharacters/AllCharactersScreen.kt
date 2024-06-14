@@ -163,9 +163,7 @@ fun AllCharactersScreen(
             topStart = SPACING_SMALL.dp,
             topEnd = SPACING_SMALL.dp
         ),
-        scrimColor = MaterialTheme.colors.background.copy(
-            alpha = 0.5f
-        ),
+        scrimColor = MaterialTheme.colors.background.copy(alpha = 0.5f),
         sheetContent = {
             SortingModalBottomSheetContent(
                 contentPadding = DEFAULT_SCREEN_PADDING,
@@ -205,75 +203,74 @@ fun AllCharactersScreen(
                     item {
                         ContentErrorScreen(
                             errorMessage = error.errorMessage,
-                            onRetryClick = {
-                                error.onRetryClick.invoke()
-                            }
+                            onRetryClick = error.onRetryClick
                         )
                     }
                 }
-            } ?: run {
-                PullRefreshable(
-                    onRefresh = { viewModel.setEvent(AllCharactersEvent.OnRefresh) },
-                    isRefreshing = state.isLoading
+                return@ContentScreen
+            }
+
+            PullRefreshable(
+                onRefresh = { viewModel.setEvent(AllCharactersEvent.OnRefresh) },
+                isRefreshing = state.isLoading
+            ) {
+                LazyVerticalGrid(
+                    modifier = Modifier.fillMaxSize(),
+                    columns = GridCells.Fixed(2),
+                    state = lazyGridState,
+                    contentPadding = contentPadding,
+                    verticalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp),
+                    horizontalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp)
                 ) {
-                    LazyVerticalGrid(
-                        modifier = Modifier.fillMaxSize(),
-                        columns = GridCells.Fixed(2),
-                        state = lazyGridState,
-                        contentPadding = contentPadding,
-                        verticalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp),
-                        horizontalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp)
-                    ) {
-                        item(span = { GridItemSpan(2) }) {
-                            SearchBar(
-                                searchTerm = state.searchBarTerm,
-                                hint = stringResource(R.string.all_characters_screen_search_bar_hint),
-                                onValueChange = { newSearchTerm ->
-                                    viewModel.setEvent(
-                                        AllCharactersEvent.SearchBar.OnKeyboardType(
-                                            searchTerm = newSearchTerm
-                                        )
+                    item(span = { GridItemSpan(2) }) {
+                        SearchBar(
+                            searchTerm = state.searchBarTerm,
+                            hint = stringResource(R.string.all_characters_screen_search_bar_hint),
+                            onValueChange = { newSearchTerm ->
+                                viewModel.setEvent(
+                                    AllCharactersEvent.SearchBar.OnKeyboardType(
+                                        searchTerm = newSearchTerm
                                     )
-                                },
-                                onCloseClick = {
-                                    viewModel.setEvent(AllCharactersEvent.SearchBar.OnCloseClick)
-                                }
+                                )
+                            },
+                            onCloseClick = {
+                                viewModel.setEvent(AllCharactersEvent.SearchBar.OnCloseClick)
+                            }
+                        )
+                    }
+
+                    // If the search term does not match any character's name.
+                    if (state.filteredCharacters.isEmpty()) {
+                        item(span = { GridItemSpan(2) }) {
+                            Text(
+                                text = stringResource(R.string.all_characters_screen_error_no_characters_found_search),
+                                style = MaterialTheme.typography.h6
                             )
                         }
+                    }
 
-                        // If the search term does not match any character's name.
-                        if (state.filteredCharacters.isEmpty()) {
-                            item(span = { GridItemSpan(2) }) {
-                                Text(
-                                    text = stringResource(R.string.all_characters_screen_error_no_characters_found_search),
-                                    style = MaterialTheme.typography.h6
+                    items(
+                        items = state.filteredCharacters,
+                        key = { characterCardUi ->
+                            characterCardUi.id
+                        }
+                    ) { characterCardUi ->
+                        CharacterItem(
+                            character = characterCardUi,
+                            context = context,
+                            onClick = {
+                                viewModel.setEvent(
+                                    AllCharactersEvent.OnCharacterClick(characterId = characterCardUi.id)
+                                )
+                            },
+                            onFavoriteClick = {
+                                viewModel.setEvent(
+                                    AllCharactersEvent.OnHeartClick(
+                                        characterId = characterCardUi.id
+                                    )
                                 )
                             }
-                        }
-
-                        items(
-                            items = state.filteredCharacters,
-                            key = { characterCardUi ->
-                                characterCardUi.id
-                            }
-                        ) { characterCardUi ->
-                            CharacterItem(
-                                character = characterCardUi,
-                                context = context,
-                                onClick = {
-                                    viewModel.setEvent(
-                                        AllCharactersEvent.OnCharacterClick(characterId = characterCardUi.id)
-                                    )
-                                },
-                                onFavoriteClick = {
-                                    viewModel.setEvent(
-                                        AllCharactersEvent.OnHeartClick(
-                                            characterId = characterCardUi.id
-                                        )
-                                    )
-                                }
-                            )
-                        }
+                        )
                     }
                 }
             }

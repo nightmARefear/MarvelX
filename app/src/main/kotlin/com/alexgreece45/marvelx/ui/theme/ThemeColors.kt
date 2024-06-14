@@ -31,7 +31,7 @@ fun themeColors(darkTheme: Boolean): ThemeColorsTemplate {
             primaryVariant = Color(0xFFE62429),
             onPrimary = Color(0xFF1B1314),
             secondary = Color(0xFFD6393D),
-            secondaryVariant = Color(0xFF292828),
+            secondaryVariant = Color(0xFFBB3337),
             onSecondary = Color(0xFF000000),
             background = Color(0xFF222222),
             onBackground = Color(0xFFFFFFFF),

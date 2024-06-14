@@ -31,8 +31,8 @@ import kotlinx.coroutines.flow.Flow
 
 @Composable
 fun ComicScreen(
-    state: ComicContract.State,
     onEventSent: (event: ComicContract.Event) -> Unit,
+    state: ComicContract.State,
     effect: Flow<ComicContract.Effect>,
     popBackStack: () -> Unit,
     comicId: Int

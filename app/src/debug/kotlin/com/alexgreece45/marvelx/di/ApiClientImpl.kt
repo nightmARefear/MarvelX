@@ -28,10 +28,15 @@ import com.alexgreece45.marvelx.network_logic.models_api.user.login.ResponseLogi
 import com.alexgreece45.marvelx.network_logic.models_api.user.loginWithToken.ResponseLoginWithToken
 import com.alexgreece45.marvelx.network_logic.models_api.user.postLogin.RequestPostLogin
 import com.alexgreece45.marvelx.network_logic.models_api.user.postLogin.ResponsePostLogin
+import com.alexgreece45.marvelx.network_logic.models_api.user.privacySettings.RequestPrivacySettings
+import com.alexgreece45.marvelx.network_logic.models_api.user.privacySettings.ResponsePrivacySettings
 import com.alexgreece45.marvelx.network_logic.models_api.user.profileDetails.RequestProfileDetailsUpdate
 import com.alexgreece45.marvelx.network_logic.models_api.user.profileDetails.ResponseProfileDetails
 import com.alexgreece45.marvelx.network_logic.models_api.user.signup.RequestUserSignup
 import com.alexgreece45.marvelx.network_logic.models_api.user.signup.ResponseSignup
+import com.alexgreece45.marvelx.network_logic.models_generic.ApiResult
+import com.alexgreece45.marvelx.network_logic.util.executeApiServiceCall
+import com.alexgreece45.marvelx.network_logic.util.executeApiServiceCallNoTransformation
 import retrofit2.Response
 
 class ApiClientImpl(
@@ -105,13 +110,24 @@ class ApiClientImpl(
 
     override suspend fun getUserMe(): Response<ResponseProfileDetails> = apiService.getUserMe()
 
-    override suspend fun updateUserMe(requestProfileDetailsUpdate: RequestProfileDetailsUpdate): Response<Void> =
-        apiService.updateUserMe(requestProfileDetailsUpdate)
+    override suspend fun updateUserMe(requestProfileDetailsUpdate: RequestProfileDetailsUpdate): ApiResult<String> =
+        executeApiServiceCallNoTransformation { apiService.updateUserMe(requestProfileDetailsUpdate) }
 
     override suspend fun getUserProfileDetails(userId: Int): Response<ResponseProfileDetails> =
         apiService.getUserProfileDetails(userId = userId)
 
-    override suspend fun getFaqs(): Response<ResponseFaq> = apiService.getFaqs()
+    override suspend fun getUserPrivacySettings(): ApiResult<ResponsePrivacySettings> =
+        executeApiServiceCall { apiService.getUserPrivacySettings() }
+
+    override suspend fun updateUserPrivacySettings(requestPrivacySettings: RequestPrivacySettings): ApiResult<String> =
+        executeApiServiceCallNoTransformation {
+            apiService.updateUserPrivacySettings(
+                requestPrivacySettings
+            )
+        }
+
+    override suspend fun getFaqs(): ApiResult<ResponseFaq> =
+        executeApiServiceCall { apiService.getFaqs() }
 
     override suspend fun getJwtForSensitiveUserData(requestJwtSensitiveUserData: RequestJwtSensitiveUserData): Response<ResponseJwtSensitiveUserData> =
         apiService.getJwtForSensitiveUserData(requestJwtSensitiveUserData)

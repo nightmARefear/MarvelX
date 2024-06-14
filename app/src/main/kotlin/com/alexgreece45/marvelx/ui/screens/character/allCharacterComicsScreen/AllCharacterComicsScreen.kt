@@ -50,8 +50,8 @@ import kotlinx.coroutines.flow.Flow
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun AllCharacterComicsScreen(
-    state: AllCharacterComicsState,
     onEventSent: (AllCharacterComicsEvent) -> Unit,
+    state: AllCharacterComicsState,
     effect: Flow<AllCharacterComicsEffect>,
     popBackStack: () -> Unit,
     navigateToComicScreen: (Int) -> Unit,

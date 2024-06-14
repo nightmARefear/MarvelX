@@ -686,7 +686,7 @@ private fun Toolbar(
                         }
                     )
                 }
-                HSpacer.Medium()
+                HSpacer.Tiny()
             }
 
             toolbarTitle?.let { toolbarTitle ->
@@ -696,7 +696,9 @@ private fun Toolbar(
 
                 Text(
                     text = toolbarTitle,
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(end = if (toolbarActions?.isEmpty() == true) SPACING_TINY.dp else 0.dp),
                     overflow = TextOverflow.Ellipsis,
                     maxLines = 1,
                     style = MaterialTheme.typography.h5
@@ -705,15 +707,15 @@ private fun Toolbar(
 
             toolbarActions?.sortedBy { it.order }?.forEach { toolbarAction ->
                 IconButton(
-                    onClick = { toolbarAction.onClick() },
+                    onClick = toolbarAction.onClick,
                     enabled = toolbarAction.iconData.enabled
                 ) {
                     val iconTintAlpha =
                         if (toolbarAction.iconData.enabled) LocalContentAlpha.current else ContentAlpha.disabled
                     Icon(
-                        modifier = Modifier.size(SPACING_LARGE.dp),
                         painter = painterResource(toolbarAction.iconData.iconResource),
                         contentDescription = stringResource(toolbarAction.iconData.contentDescription),
+                        modifier = Modifier.size(SPACING_LARGE.dp),
                         // TODO: To be reviewed.
                         tint = toolbarAction.iconData.colorTint?.copy(alpha = iconTintAlpha)
                             ?: LocalContentColor.current.copy(alpha = iconTintAlpha)

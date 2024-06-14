@@ -140,6 +140,11 @@ sealed class Screen(
      */
     data object FaqScreen : Screen(baseRoute = "faqScreen")
 
+    /**
+     * Profile Screen --> Privacy Settings
+     */
+    data object PrivacySettingsScreen : Screen(baseRoute = "privacySettingsScreen")
+
     // Main screens --> Other screens
     data object CharacterScreen : Screen(
         baseRoute = "characterScreen",

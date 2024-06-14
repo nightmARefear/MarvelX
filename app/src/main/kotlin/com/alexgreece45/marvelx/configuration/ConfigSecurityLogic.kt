@@ -73,9 +73,9 @@ class ConfigSecurityLogicImpl : ConfigSecurityLogic {
         get() = appBuildType !is AppBuildType.RELEASE
     override val excludedRequestPathsFromAuthorization: List<String>
         get() = listOf(
+            "/api/private/marvelx/user/signup",
             "/api/private/marvelx/user/login",
             "/api/private/marvelx/user/post_login",
-            "/api/private/marvelx/user/signup",
             "/api/private/marvelx/user/logout",
             "/api/private/marvelx/user/authorize",
             "/api/private/marvelx/user/token",

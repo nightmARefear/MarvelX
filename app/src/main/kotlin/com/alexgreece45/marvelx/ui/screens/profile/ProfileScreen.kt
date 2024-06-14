@@ -9,13 +9,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDropUp
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -32,30 +30,29 @@ import kotlinx.coroutines.flow.Flow
 
 @Composable
 fun ProfileScreen(
-    onEventSent: (event: ProfileEvent) -> Unit,
-    state: ProfileState,
-    effect: Flow<ProfileEffect>,
+    onEventSent: (event: ProfileContract.Event) -> Unit,
+    state: ProfileContract.State,
+    effect: Flow<ProfileContract.Effect>,
     bottomNavigationBarData: @Composable () -> BottomNavigationBarData,
-    navigateToHomeScreen: () -> Unit,
-    navigateToProfileDetailsScreen: () -> Unit,
-    navigateToFaqScreen: () -> Unit,
+    onNavigation: (ProfileContract.Effect.Navigation) -> Unit,
 ) {
     val context = LocalContext.current
 
     LaunchedEffect(Unit) {
-        onEventSent(ProfileEvent.Init)
+        onEventSent(ProfileContract.Event.Init)
 
         effect.collect { effect ->
             when (effect) {
-                ProfileEffect.Navigation.NavigateToHomeScreen -> navigateToHomeScreen()
-
-                is ProfileEffect.ShowToast -> {
-                    Toast.makeText(context, effect.toastMessage, Toast.LENGTH_LONG).show()
+                ProfileContract.Effect.Navigation.NavigateToHomeScreen,
+                ProfileContract.Effect.Navigation.NavigateToProfileDetailsScreen,
+                ProfileContract.Effect.Navigation.NavigateToFaqScreen,
+                ProfileContract.Effect.Navigation.NavigateToPrivacySettingsScreen -> {
+                    onNavigation(effect as ProfileContract.Effect.Navigation)
                 }
 
-                ProfileEffect.Navigation.NavigateToPersonalDetailsScreen -> navigateToProfileDetailsScreen()
-
-                ProfileEffect.Navigation.NavigateToFaqScreen -> navigateToFaqScreen()
+                is ProfileContract.Effect.ShowToast -> {
+                    Toast.makeText(context, effect.toastMessage, Toast.LENGTH_LONG).show()
+                }
             }
         }
     }
@@ -67,7 +64,7 @@ fun ProfileScreen(
         bottomNavigationBarData = bottomNavigationBarData(),
         stickyBottom = {
             WrapButton(
-                onClick = { onEventSent(ProfileEvent.OnLogoutButtonPressed) },
+                onClick = { onEventSent(ProfileContract.Event.OnLogoutButtonPressed) },
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(

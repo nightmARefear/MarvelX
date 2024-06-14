@@ -1,9 +1,14 @@
 package com.alexgreece45.marvelx.domain.interactors
 
 import com.alexgreece45.marvelx.controllers.AppLogger
+import com.alexgreece45.marvelx.data.model.RepositoryPrivacySettings
 import com.alexgreece45.marvelx.data.repository.GetProfileDetailsRepositoryResponse
-import com.alexgreece45.marvelx.data.repository.UpdateProfileDetailsRepositoryPartialState
 import com.alexgreece45.marvelx.data.repository.UserRepository
+import com.alexgreece45.marvelx.domain.helper.InteractorPartialState
+import com.alexgreece45.marvelx.domain.helper.handleRepositoryResult
+import com.alexgreece45.marvelx.domain.helper.handleRepositoryResultNoTransformation
+import com.alexgreece45.marvelx.domain.model_api.user.privacySettings.PrivacySettingsDomain
+import com.alexgreece45.marvelx.domain.model_api.user.privacySettings.toPrivacySettingsDomain
 import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.ProfileDetailsDomain
 import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.toProfileDetailsDomain
 import com.alexgreece45.marvelx.util.ResourceProvider
@@ -26,7 +31,17 @@ interface UserInteractor {
     /**
      * Updates the profile details of the current user.
      */
-    suspend fun updateCurrentUserProfileDetails(profileDetailsDomain: ProfileDetailsDomain): Flow<UpdateProfileDetailsPartialState>
+    suspend fun updateUserProfileDetails(profileDetailsDomain: ProfileDetailsDomain): Flow<InteractorPartialState<String>>
+
+    /**
+     * Gets the privacy settings of the current user.
+     */
+    suspend fun getPrivacySettings(): Flow<InteractorPartialState<PrivacySettingsDomain>>
+
+    /**
+     * Updates the privacy settings of the current user.
+     */
+    suspend fun updatePrivacySettings(privacySettingsDomain: PrivacySettingsDomain): Flow<InteractorPartialState<String>>
 }
 
 class UserInteractorImpl(
@@ -89,30 +104,44 @@ class UserInteractorImpl(
             }
         }
 
-    override suspend fun updateCurrentUserProfileDetails(profileDetailsDomain: ProfileDetailsDomain): Flow<UpdateProfileDetailsPartialState> =
+    override suspend fun updateUserProfileDetails(profileDetailsDomain: ProfileDetailsDomain): Flow<InteractorPartialState<String>> =
         flow {
             repository.updateCurrentUserProfileDetails(
                 firstName = profileDetailsDomain.firstName,
                 lastName = profileDetailsDomain.lastName,
                 gender = profileDetailsDomain.gender.key,
                 email = profileDetailsDomain.email
-            ).collect {
-                when (it) {
-                    UpdateProfileDetailsRepositoryPartialState.Failed -> emit(
-                        UpdateProfileDetailsPartialState.Failed
-                    )
-
-                    UpdateProfileDetailsRepositoryPartialState.Success -> emit(
-                        UpdateProfileDetailsPartialState.Success
-                    )
+            ).collect { repositoryResult ->
+                handleRepositoryResultNoTransformation(repositoryResult).collect {
+                    emit(it)
                 }
             }
-        }.safeAsync {
-            when (it) {
-                is IOException -> UpdateProfileDetailsPartialState.NoInternetConnection
-                else -> UpdateProfileDetailsPartialState.Failed
+        }
+
+    override suspend fun getPrivacySettings(): Flow<InteractorPartialState<PrivacySettingsDomain>> =
+        flow {
+            repository.getPrivacySettings().collect { repositoryResult ->
+                handleRepositoryResult(
+                    repositoryResult,
+                    RepositoryPrivacySettings::toPrivacySettingsDomain
+                ).collect {
+                    emit(it)
+                }
             }
         }
+
+    override suspend fun updatePrivacySettings(privacySettingsDomain: PrivacySettingsDomain): Flow<InteractorPartialState<String>> =
+        flow {
+            repository.updatePrivacySettings(
+                privacySettingsDomain.isGenderVisible,
+                privacySettingsDomain.isEmailVisible
+            ).collect { repositoryResult ->
+                handleRepositoryResultNoTransformation(repositoryResult).collect {
+                    emit(it)
+                }
+            }
+        }
+
 }
 
 sealed class GetProfileDetailsPartialState {
@@ -128,4 +157,10 @@ sealed interface UpdateProfileDetailsPartialState {
     data object Success : UpdateProfileDetailsPartialState
     data object Failed : UpdateProfileDetailsPartialState
     data object NoInternetConnection : UpdateProfileDetailsPartialState
+}
+
+sealed interface UpdatePrivacySettingsPartialState {
+    data object Success : UpdatePrivacySettingsPartialState
+    data object Failed : UpdatePrivacySettingsPartialState
+    data object NoInternetConnection : UpdatePrivacySettingsPartialState
 }

@@ -102,7 +102,7 @@ class FaqViewModel(
                             )
                         }
                         showError(
-                            subTitle = it.errorMessage,
+                            subTitle = resourceProvider.getString(R.string.generic_unknown_error),
                             event = event
                         )
                     }
@@ -114,7 +114,7 @@ class FaqViewModel(
                             )
                         }
                         showError(
-                            subTitle = it.failureMessage,
+                            subTitle = resourceProvider.getString(R.string.generic_unknown_error),
                             event = event
                         )
                     }
