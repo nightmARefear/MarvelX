@@ -13,6 +13,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.alexgreece45.marvelx.util.SPACING_MEDIUM
@@ -42,6 +45,7 @@ fun ProfileHeader(
     onClick: () -> Unit
 ) {
     val localView = LocalView.current
+    val headerShape = MaterialTheme.shapes.medium
 
     /**
      * The modifier to apply to the header.
@@ -51,11 +55,13 @@ fun ProfileHeader(
             if (throttleClicks) {
                 Modifier.throttledClickable(
                     view = localView,
+                    role = Role.Button,
                     showRipple = showRipple,
+                    rippleShape = headerShape,
                     onClick = onClick
                 )
             } else {
-                Modifier.clickableNoRipple(onClick = onClick)
+                Modifier.clickableNoRipple(rippleShape = headerShape, onClick = onClick)
             }
         )
     }
@@ -64,7 +70,7 @@ fun ProfileHeader(
         modifier = Modifier
             .fillMaxWidth()
             .then(modifier.value),
-        shape = MaterialTheme.shapes.medium
+        shape = headerShape
     ) {
         Row(
             modifier = Modifier

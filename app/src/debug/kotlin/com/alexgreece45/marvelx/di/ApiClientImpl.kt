@@ -37,6 +37,7 @@ import com.alexgreece45.marvelx.network_logic.models_api.user.signup.ResponseSig
 import com.alexgreece45.marvelx.network_logic.models_generic.ApiResult
 import com.alexgreece45.marvelx.network_logic.util.executeApiServiceCall
 import com.alexgreece45.marvelx.network_logic.util.executeApiServiceCallNoTransformation
+import okhttp3.MultipartBody
 import retrofit2.Response
 
 class ApiClientImpl(
@@ -112,6 +113,9 @@ class ApiClientImpl(
 
     override suspend fun updateUserMe(requestProfileDetailsUpdate: RequestProfileDetailsUpdate): ApiResult<String> =
         executeApiServiceCallNoTransformation { apiService.updateUserMe(requestProfileDetailsUpdate) }
+
+    override suspend fun updateUserProfileImage(profileImage: MultipartBody.Part): ApiResult<String> =
+        executeApiServiceCallNoTransformation { apiService.updateUserProfileImage(profileImage) }
 
     override suspend fun getUserProfileDetails(userId: Int): Response<ResponseProfileDetails> =
         apiService.getUserProfileDetails(userId = userId)

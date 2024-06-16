@@ -300,9 +300,9 @@ fun LoginScreen(
 
             // Login button.
             WrapButton(
+                onClick = { onEventSent(LoginEvent.OnLoginButtonClick) },
                 modifier = Modifier.fillMaxWidth(),
-                enabled = state.isLoginButtonEnabled,
-                onClick = { onEventSent(LoginEvent.OnLoginButtonClick) }
+                enabled = state.isLoginButtonEnabled
             ) {
                 Text(
                     text = stringResource(R.string.login_screen_login_button)

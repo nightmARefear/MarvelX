@@ -33,13 +33,16 @@ import com.alexgreece45.marvelx.network_logic.models_api.user.profileDetails.Res
 import com.alexgreece45.marvelx.network_logic.models_api.user.signup.RequestUserSignup
 import com.alexgreece45.marvelx.network_logic.models_api.user.signup.ResponseSignup
 import com.alexgreece45.marvelx.network_logic.models_generic.ApiResult
+import okhttp3.MultipartBody
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.Field
 import retrofit2.http.FormUrlEncoded
 import retrofit2.http.GET
+import retrofit2.http.Multipart
 import retrofit2.http.POST
 import retrofit2.http.PUT
+import retrofit2.http.Part
 import retrofit2.http.Path
 import retrofit2.http.Query
 
@@ -132,6 +135,13 @@ interface ApiService {
     suspend fun updateUserMe(@Body requestProfileDetailsUpdate: RequestProfileDetailsUpdate): Response<Void>
 
     /**
+     * Updates the profile image of the current user.
+     */
+    @Multipart
+    @PUT("/api/private/marvelx/user/me/profile_image")
+    suspend fun updateUserProfileImage(@Part profileImage: MultipartBody.Part): Response<Void>
+
+    /**
      * Retrieves the __public__ profile details of another user with the ID of [userId].
      */
     @GET("/api/private/marvelx/user/profile_details/{userId}")
@@ -196,6 +206,7 @@ interface ApiClient {
     suspend fun forgotPasswordValidateOtp(body: RequestForgotPasswordValidateOtp): Response<ResponseForgotPasswordValidateOtp>
     suspend fun getUserMe(): Response<ResponseProfileDetails>
     suspend fun updateUserMe(requestProfileDetailsUpdate: RequestProfileDetailsUpdate): ApiResult<String>
+    suspend fun updateUserProfileImage(profileImage: MultipartBody.Part): ApiResult<String>
     suspend fun getUserProfileDetails(userId: Int): Response<ResponseProfileDetails>
     suspend fun getUserPrivacySettings(): ApiResult<ResponsePrivacySettings>
     suspend fun updateUserPrivacySettings(requestPrivacySettings: RequestPrivacySettings): ApiResult<String>

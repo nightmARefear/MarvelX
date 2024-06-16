@@ -41,7 +41,20 @@ interface ConfigLogic {
      */
     val marvelApiConfig: MarvelApiConfig
 
+    /**
+     * The client ID for the Google Auth server.
+     */
     val googleServerClientId: String
+
+    /**
+     * A list of supported image file extensions (e.g., "jpg", "png").
+     */
+    val supportedImageFileExtensions: List<String>
+
+    /**
+     * The maximum allowed size for an image file, in bytes.
+     */
+    val imageFileMaxSize: Long
 }
 
 sealed class AppBuildType(val key: String) {
@@ -83,4 +96,8 @@ class ConfigLogicImpl : ConfigLogic {
         )
     override val googleServerClientId: String
         get() = BuildConfig.FIREBASE_SERVER_CLIENT_ID
+    override val supportedImageFileExtensions: List<String>
+        get() = listOf("jpg", "jpeg", "png")
+    override val imageFileMaxSize: Long
+        get() = 5 * 8 * 1024 * 1024 // 5MB
 }

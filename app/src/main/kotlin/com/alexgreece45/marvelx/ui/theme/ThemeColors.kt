@@ -1,10 +1,11 @@
 package com.alexgreece45.marvelx.ui.theme
 
 import androidx.compose.material.Colors
+import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.colorResource
-import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.ui.theme.customColors.CustomColors
 
 @Composable
 fun themeColors(darkTheme: Boolean): ThemeColorsTemplate {
@@ -44,6 +45,14 @@ fun themeColors(darkTheme: Boolean): ThemeColorsTemplate {
         )
     )
 }
+
+@Composable
+fun Colors.colorSuccess(): Color = Color(0xFF009900)
+
+val MaterialTheme.customColors: CustomColors
+    @Composable
+    @ReadOnlyComposable
+    get() = LocalCustomColors.current
 
 @Composable
 fun Colors.colorBlack(): Color {

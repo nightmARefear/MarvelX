@@ -309,8 +309,8 @@ private fun CharacterItem(
 
             // Favorite icon.
             IconButton(
-                modifier = Modifier.align(Alignment.TopEnd),
-                onClick = onFavoriteClick
+                onClick = onFavoriteClick,
+                modifier = Modifier.align(Alignment.TopEnd)
             ) {
                 when (character.isFavorite) {
                     true -> {

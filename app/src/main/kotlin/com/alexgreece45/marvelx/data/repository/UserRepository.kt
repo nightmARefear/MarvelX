@@ -14,6 +14,7 @@ import com.alexgreece45.marvelx.network_logic.models_api.user.profileDetails.Req
 import com.alexgreece45.marvelx.network_logic.models_api.user.profileDetails.ResponseProfileDetails
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import okhttp3.MultipartBody
 
 interface UserRepository {
     /**
@@ -35,6 +36,14 @@ interface UserRepository {
         gender: String,
         email: String
     ): Flow<RepositoryResult<String>>
+
+    /**
+     * Updates the profile image of the current user.
+     *
+     * @param imagePart The image data to be set as the new profile image, encapsulated in a
+     * [MultipartBody.Part].
+     */
+    suspend fun updateUserProfileImage(imagePart: MultipartBody.Part): Flow<RepositoryResult<String>>
 
     /**
      * Gets the privacy settings of the current user.
@@ -108,6 +117,13 @@ class UserRepositoryImpl(
         }
     }
 
+    override suspend fun updateUserProfileImage(imagePart: MultipartBody.Part): Flow<RepositoryResult<String>> =
+        flow {
+            handleApiResultNoTransformation(apiClient.updateUserProfileImage(imagePart)).collect {
+                emit(it)
+            }
+        }
+
     override suspend fun getPrivacySettings(): Flow<RepositoryResult<RepositoryPrivacySettings>> =
         flow {
             handleApiResult(
@@ -135,15 +151,4 @@ sealed class GetProfileDetailsRepositoryResponse {
 
     data class Failed(val responseUserError: ResponseUserError) :
         GetProfileDetailsRepositoryResponse()
-}
-
-sealed interface UpdateProfileDetailsRepositoryPartialState {
-    data object Success : UpdateProfileDetailsRepositoryPartialState
-    data object Failed : UpdateProfileDetailsRepositoryPartialState
-}
-
-sealed interface UpdatePrivacySettingsRepositoryPartialState {
-    data object Success : UpdatePrivacySettingsRepositoryPartialState
-    data object Failed : UpdatePrivacySettingsRepositoryPartialState
-    data object NetworkError : UpdatePrivacySettingsRepositoryPartialState
 }

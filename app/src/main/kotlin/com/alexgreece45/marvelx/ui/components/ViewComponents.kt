@@ -135,6 +135,7 @@ import com.alexgreece45.marvelx.util.THROTTLE_CLICKABLE_DEFAULT_DELAY
 import com.alexgreece45.marvelx.util.VSpacer
 import com.alexgreece45.marvelx.util.extensions.ClickState
 import com.alexgreece45.marvelx.util.extensions.applyPadding
+import com.alexgreece45.marvelx.util.extensions.applyPaddingValues
 import com.alexgreece45.marvelx.util.extensions.autofill
 import com.alexgreece45.marvelx.util.extensions.filterTouchesWhenObscured
 import com.alexgreece45.marvelx.util.extensions.screenPaddingsNone
@@ -202,10 +203,10 @@ fun ThrottledIconButton(
     Box(
         modifier = modifier
             .throttledClickableIcon(
-                onClick = onClick,
                 view = LocalView.current,
+                interactionSource = interactionSource,
                 enabled = enabled,
-                interactionSource = interactionSource
+                onClick = onClick,
             ),
         contentAlignment = Alignment.Center
     ) {
@@ -512,6 +513,12 @@ data class SnackbarState(
     val duration: SnackbarDuration = SnackbarDuration.Short
 )
 
+/**
+ * Base builder screen responsible for creating consistent UI layout screens throughout the application.
+ *
+ * @param paddingValues The padding values to apply on top of the scaffold's ones. Provide a non-null
+ * value to override the default padding values that are provided within this composable.
+ */
 @Composable
 fun ContentScreen(
     isLoading: Boolean,
@@ -525,6 +532,7 @@ fun ContentScreen(
     snackbarState: SnackbarState? = null,
     fabData: FabData? = null,
     stickyBottom: @Composable (() -> Unit)? = null,
+    paddingValues: PaddingValues? = null,
     content: @Composable (PaddingValues) -> Unit
 ) {
     val scaffoldState = rememberScaffoldState()
@@ -545,7 +553,7 @@ fun ContentScreen(
                 Toolbar(
                     navigableAction = navigableAction,
                     toolbarTitle = toolbarTitle,
-                    toolbarActions = toolbarActions
+                    toolbarActions = if (!isLoading) toolbarActions else emptyList()
                 )
             }
         },
@@ -614,13 +622,17 @@ fun ContentScreen(
                 }
             }
         }
-    ) { paddingValues ->
+    ) { scaffoldPaddingValues ->
         Column(modifier = Modifier.fillMaxSize()) {
             Box(modifier = Modifier.weight(1f)) {
                 if (isLoading) {
                     LoadingScreen()
                 }
-                content(paddingValues.applyPadding())
+                content(
+                    if (paddingValues != null) scaffoldPaddingValues.applyPaddingValues(
+                        paddingValues = paddingValues
+                    ) else scaffoldPaddingValues.applyPadding()
+                )
             }
 
             // Sticky bottom.
@@ -629,7 +641,11 @@ fun ContentScreen(
                     Box(
                         modifier = Modifier
                             .zIndex(STICKY_BOTTOM_Z_INDEX)
-                            .padding(paddingValues.applyPadding())
+                            .padding(
+                                if (paddingValues != null) scaffoldPaddingValues.applyPaddingValues(
+                                    paddingValues = paddingValues
+                                ) else scaffoldPaddingValues.applyPadding()
+                            )
                             .fillMaxWidth()
                     ) {
                         stickyBottom()
@@ -689,20 +705,27 @@ private fun Toolbar(
                 HSpacer.Tiny()
             }
 
-            toolbarTitle?.let { toolbarTitle ->
-                if (navigableAction is ScreenNavigableAction.None) {
-                    HSpacer.Custom(DEFAULT_SCREEN_PADDING)
+            when (toolbarTitle == null) {
+                true -> {
+                    // Ensures that the toolbar actions are pinned to the right-most of the screen.
+                    Box(modifier = Modifier.weight(1f))
                 }
 
-                Text(
-                    text = toolbarTitle,
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(end = if (toolbarActions?.isEmpty() == true) SPACING_TINY.dp else 0.dp),
-                    overflow = TextOverflow.Ellipsis,
-                    maxLines = 1,
-                    style = MaterialTheme.typography.h5
-                )
+                false -> {
+                    if (navigableAction is ScreenNavigableAction.None) {
+                        HSpacer.Custom(DEFAULT_SCREEN_PADDING)
+                    }
+
+                    Text(
+                        text = toolbarTitle,
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(end = if (toolbarActions?.isEmpty() == true) SPACING_TINY.dp else 0.dp),
+                        overflow = TextOverflow.Ellipsis,
+                        maxLines = 1,
+                        style = MaterialTheme.typography.h5
+                    )
+                }
             }
 
             toolbarActions?.sortedBy { it.order }?.forEach { toolbarAction ->
@@ -819,13 +842,13 @@ fun CollapsibleExtendedFloatingActionButton(
     val extendedFabTextPadding = 20.dp
 
     FloatingActionButton(
+        onClick = fabData.onClick,
         modifier = Modifier.sizeIn(
             minWidth = extendedFabSize,
             minHeight = extendedFabSize
         ),
         backgroundColor = backgroundColor,
-        contentColor = fabData.contentColor ?: contentColorFor(backgroundColor = backgroundColor),
-        onClick = { fabData.onClick() }
+        contentColor = fabData.contentColor ?: contentColorFor(backgroundColor = backgroundColor)
     ) {
         val startPadding =
             if (fabData.iconResource == null) extendedFabIconPadding else extendedFabTextPadding
@@ -838,9 +861,9 @@ fun CollapsibleExtendedFloatingActionButton(
         ) {
             fabData.iconResource?.let { iconResource ->
                 Icon(
-                    modifier = Modifier.size(SPACING_LARGE.dp),
                     painter = painterResource(iconResource),
-                    contentDescription = fabData.iconLabel
+                    contentDescription = fabData.iconLabel,
+                    modifier = Modifier.size(SPACING_LARGE.dp)
                 )
                 // Apply horizontal padding only if the label is visible.
                 if (extendedFabData.extended) {

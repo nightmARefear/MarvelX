@@ -32,6 +32,8 @@ import com.alexgreece45.marvelx.ui.screens.otp.OtpViewModel
 import com.alexgreece45.marvelx.ui.screens.profile.ProfileContract
 import com.alexgreece45.marvelx.ui.screens.profile.ProfileScreen
 import com.alexgreece45.marvelx.ui.screens.profile.ProfileViewModel
+import com.alexgreece45.marvelx.ui.screens.profile.editProfileDetails.EditProfileDetailsScreen
+import com.alexgreece45.marvelx.ui.screens.profile.editProfileDetails.EditProfileDetailsViewModel
 import com.alexgreece45.marvelx.ui.screens.profile.faq.FaqScreen
 import com.alexgreece45.marvelx.ui.screens.profile.faq.FaqViewModel
 import com.alexgreece45.marvelx.ui.screens.profile.privacySettings.PrivacySettingsScreen
@@ -353,6 +355,17 @@ fun NavGraph(navController: NavHostController) {
         composable(Screen.ProfileDetailsScreen) {
             val viewModel = koinViewModel<ProfileDetailsViewModel>()
             ProfileDetailsScreen(
+                onEventSent = viewModel::setEvent,
+                state = viewModel.uiState.collectAsStateWithLifecycle().value,
+                effect = viewModel.uiEffect,
+                popBackStack = navController::popBackStack,
+                navigateToEditProfileDetails = { navController.navigate(Screen.EditProfileDetailsScreen.route) },
+            )
+        }
+
+        composable(Screen.EditProfileDetailsScreen) {
+            val viewModel = koinViewModel<EditProfileDetailsViewModel>()
+            EditProfileDetailsScreen(
                 onEventSent = viewModel::setEvent,
                 state = viewModel.uiState.collectAsStateWithLifecycle().value,
                 effect = viewModel.uiEffect,

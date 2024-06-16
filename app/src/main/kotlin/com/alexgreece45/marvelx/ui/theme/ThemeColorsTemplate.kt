@@ -1,6 +1,7 @@
 package com.alexgreece45.marvelx.ui.theme
 
 import androidx.compose.material.Colors
+import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
 
 data class ThemeColorsTemplate(
@@ -17,6 +18,7 @@ data class ThemeColorsTemplate(
         }
 }
 
+@Immutable
 data class ColorsTemplate(
     val primary: Color,
     val primaryVariant: Color,

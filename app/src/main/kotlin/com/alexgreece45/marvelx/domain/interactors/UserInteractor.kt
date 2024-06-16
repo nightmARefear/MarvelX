@@ -1,5 +1,7 @@
 package com.alexgreece45.marvelx.domain.interactors
 
+import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.configuration.ConfigLogic
 import com.alexgreece45.marvelx.controllers.AppLogger
 import com.alexgreece45.marvelx.data.model.RepositoryPrivacySettings
 import com.alexgreece45.marvelx.data.repository.GetProfileDetailsRepositoryResponse
@@ -12,10 +14,15 @@ import com.alexgreece45.marvelx.domain.model_api.user.privacySettings.toPrivacyS
 import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.ProfileDetailsDomain
 import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.toProfileDetailsDomain
 import com.alexgreece45.marvelx.util.ResourceProvider
+import com.alexgreece45.marvelx.util.extensions.fromBytesToMb
 import com.alexgreece45.marvelx.util.extensions.safeAsync
+import com.alexgreece45.marvelx.util.extensions.toRequestBody
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flow
+import okhttp3.MultipartBody
 import okio.IOException
+import java.io.File
 
 interface UserInteractor {
     /**
@@ -34,6 +41,13 @@ interface UserInteractor {
     suspend fun updateUserProfileDetails(profileDetailsDomain: ProfileDetailsDomain): Flow<InteractorPartialState<String>>
 
     /**
+     * Updates the profile image of the current user by using the provided image file.
+     *
+     * @param profileImageFile The local file containing the new profile image.
+     */
+    suspend fun updateUserProfileImage(profileImageFile: File): Flow<InteractorPartialState<String>>
+
+    /**
      * Gets the privacy settings of the current user.
      */
     suspend fun getPrivacySettings(): Flow<InteractorPartialState<PrivacySettingsDomain>>
@@ -45,9 +59,10 @@ interface UserInteractor {
 }
 
 class UserInteractorImpl(
-    private val repository: UserRepository,
+    private val logger: AppLogger,
     private val resourceProvider: ResourceProvider,
-    private val logger: AppLogger
+    private val repository: UserRepository,
+    private val configLogic: ConfigLogic
 ) : UserInteractor {
 
     override suspend fun getProfileDetails(userId: Int): Flow<GetProfileDetailsPartialState> =
@@ -64,7 +79,6 @@ class UserInteractorImpl(
                         it.response?.let { responseProfileDetails ->
                             emit(GetProfileDetailsPartialState.Success(profileDetailsDomain = responseProfileDetails.toProfileDetailsDomain()))
                         }
-                            ?: emit(GetProfileDetailsPartialState.Failed(errorMessage = genericErrorMessage))
                     }
                 }
             }
@@ -118,6 +132,45 @@ class UserInteractorImpl(
             }
         }
 
+    override suspend fun updateUserProfileImage(profileImageFile: File): Flow<InteractorPartialState<String>> =
+        flow {
+            if (profileImageFile.extension.lowercase() !in configLogic.supportedImageFileExtensions) {
+                emit(
+                    InteractorPartialState.Error(
+                        resourceProvider.getString(R.string.image_extension_not_supported)
+                    )
+                )
+                return@flow
+            }
+
+            if (profileImageFile.length() > configLogic.imageFileMaxSize) {
+                emit(
+                    InteractorPartialState.Error(
+                        resourceProvider.getString(
+                            resId = R.string.image_size_too_large,
+                            formatArgs = arrayOf(configLogic.imageFileMaxSize.fromBytesToMb())
+                        )
+                    )
+                )
+                return@flow
+            }
+
+            // Create multipart from file.
+            val imagePart = MultipartBody.Part.createFormData(
+                name = "profile_image",
+                filename = "profile_image." + profileImageFile.extension,
+                body = profileImageFile.toRequestBody(configLogic.supportedImageFileExtensions)
+            )
+            repository.updateUserProfileImage(imagePart).collect { repositoryResult ->
+                handleRepositoryResultNoTransformation(repositoryResult).collect { emit(it) }
+            }
+        }.catch {
+            when (it) {
+                is IllegalArgumentException -> InteractorPartialState.Error<String>(it.message.orEmpty()) // Can be thrown from `.toRequestBody`.
+                else -> InteractorPartialState.Error<String>(resourceProvider.getGenericErrorMessage())
+            }
+        }
+
     override suspend fun getPrivacySettings(): Flow<InteractorPartialState<PrivacySettingsDomain>> =
         flow {
             repository.getPrivacySettings().collect { repositoryResult ->
@@ -141,7 +194,6 @@ class UserInteractorImpl(
                 }
             }
         }
-
 }
 
 sealed class GetProfileDetailsPartialState {
@@ -153,14 +205,3 @@ sealed class GetProfileDetailsPartialState {
     data object NoInternetConnection : GetProfileDetailsPartialState()
 }
 
-sealed interface UpdateProfileDetailsPartialState {
-    data object Success : UpdateProfileDetailsPartialState
-    data object Failed : UpdateProfileDetailsPartialState
-    data object NoInternetConnection : UpdateProfileDetailsPartialState
-}
-
-sealed interface UpdatePrivacySettingsPartialState {
-    data object Success : UpdatePrivacySettingsPartialState
-    data object Failed : UpdatePrivacySettingsPartialState
-    data object NoInternetConnection : UpdatePrivacySettingsPartialState
-}

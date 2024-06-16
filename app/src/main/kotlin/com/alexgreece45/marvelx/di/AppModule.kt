@@ -98,6 +98,7 @@ import com.alexgreece45.marvelx.ui.screens.login.LoginViewModel
 import com.alexgreece45.marvelx.ui.screens.mainActivity.ActivityViewModel
 import com.alexgreece45.marvelx.ui.screens.otp.OtpViewModel
 import com.alexgreece45.marvelx.ui.screens.profile.ProfileViewModel
+import com.alexgreece45.marvelx.ui.screens.profile.editProfileDetails.EditProfileDetailsViewModel
 import com.alexgreece45.marvelx.ui.screens.profile.faq.FaqViewModel
 import com.alexgreece45.marvelx.ui.screens.profile.privacySettings.PrivacySettingsViewModel
 import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.ProfileDetailsViewModel
@@ -212,7 +213,7 @@ private val interactorModule = module {
             get()
         )
     }
-    factory<UserInteractor> { UserInteractorImpl(get(), get(), get()) }
+    factory<UserInteractor> { UserInteractorImpl(get(), get(), get(), get()) }
     factory<ForgotPasswordInteractor> { ForgotPasswordInteractorImpl(get(), get()) }
     factory<ChangePasswordInteractor> { ChangePasswordInteractorImpl() }
     factory<OtpInteractor> { OtpInteractorImpl(get(), get(), get()) }
@@ -271,8 +272,9 @@ private val viewModelModule = module {
     viewModel { AllFavoriteCharactersViewModel(get()) }
     viewModel { CharacterViewModel(get(), get()) }
     viewModel { ComicViewModel(get()) }
-    viewModel { ProfileViewModel(get(), get()) }
-    viewModel { ProfileDetailsViewModel(get(), get(), get(), get()) }
+    viewModel { ProfileViewModel(get(), get(), get()) }
+    viewModel { ProfileDetailsViewModel(get(), get()) }
+    viewModel { EditProfileDetailsViewModel(get(), get(), get(), get()) }
     viewModel { PrivacySettingsViewModel(get(), get()) }
     viewModel { FaqViewModel(get(), get()) }
 }

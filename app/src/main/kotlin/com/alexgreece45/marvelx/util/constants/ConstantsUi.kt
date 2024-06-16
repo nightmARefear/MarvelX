@@ -13,4 +13,27 @@ object ConstantsUi {
     object FaqScreen {
         const val FAQ_SECTION_HEADER_ICON_TWEEN_MILLIS = 400
     }
+
+    object ProfileScreen {
+        val PROFILE_IMAGE_ELEVATION = 10.5.dp
+    }
+
+    object ProfileDetailsScreen {
+        val PROFILE_BANNER_PADDING = 12.dp
+    }
+
+    /**
+     * The standard border width of all images, expressed in density-independent pixels (dp).
+     */
+    val IMAGE_BORDER_WIDTH = 2.dp
+
+    /**
+     * The large size for profile images, expressed in density-independent pixels (dp).
+     */
+    val PROFILE_IMAGE_LARGE_SIZE = 150.dp
+
+    /**
+     * The small size for profile images, expressed in density-independent pixels (dp).
+     */
+    val PROFILE_IMAGE_SMALL_SIZE = PROFILE_IMAGE_LARGE_SIZE / 2.5f
 }

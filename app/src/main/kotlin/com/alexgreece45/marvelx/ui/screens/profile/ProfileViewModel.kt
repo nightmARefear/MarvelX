@@ -2,8 +2,11 @@ package com.alexgreece45.marvelx.ui.screens.profile
 
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.domain.interactors.GetProfileDetailsPartialState
 import com.alexgreece45.marvelx.domain.interactors.LoginInteractor
 import com.alexgreece45.marvelx.domain.interactors.LogoutPartialState
+import com.alexgreece45.marvelx.domain.interactors.UserInteractor
+import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.ProfileDetailsDomain
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
@@ -17,12 +20,20 @@ import kotlinx.coroutines.launch
 sealed interface ProfileContract {
     sealed interface Event : BaseEvent {
         data object Init : Event
-        data object OnLogoutButtonPressed : Event
+        data object OnSeeYourProfileClicked : Event
+        data object OnProfileImageLoaded : Event
+        data object OnErrorClose : Event
     }
 
+    /**
+     * @param isLoading Whether the screen is in loading state.
+     */
     data class State(
         val isLoading: Boolean = true,
+
+        val profileBannerLabel: String = "",
         val sections: List<ProfileScreenSection> = emptyList(),
+        val profileDetails: ProfileDetailsDomain? = null,
 
         val error: ProfileScreenErrorView? = null,
     ) : BaseState
@@ -40,10 +51,10 @@ sealed interface ProfileContract {
 }
 
 
-
 class ProfileViewModel(
-    private val loginInteractor: LoginInteractor,
     private val resourceProvider: ResourceProvider,
+    private val loginInteractor: LoginInteractor,
+    private val userInteractor: UserInteractor
 ) :
     BaseViewModel<ProfileContract.Event, ProfileContract.State, ProfileContract.Effect>() {
     override fun setInitialState(): ProfileContract.State = ProfileContract.State()
@@ -51,38 +62,101 @@ class ProfileViewModel(
     override fun handleEvents(event: ProfileContract.Event) {
         when (event) {
             is ProfileContract.Event.Init -> {
-                init()
+                init(event)
             }
 
-            ProfileContract.Event.OnLogoutButtonPressed -> {
+            ProfileContract.Event.OnErrorClose -> {
                 setState {
                     copy(
-                        isLoading = true
+                        error = null
                     )
                 }
-                logout()
+            }
+
+            ProfileContract.Event.OnProfileImageLoaded -> {
+                setState {
+                    copy(
+                        isLoading = false
+                    )
+                }
+            }
+
+            ProfileContract.Event.OnSeeYourProfileClicked -> {
+                setEffect {
+                    ProfileContract.Effect.Navigation.NavigateToProfileDetailsScreen
+                }
             }
         }
     }
 
-    private fun init() {
-        // Initializes the sections.
+    private fun init(event: ProfileContract.Event) {
+        setState {
+            copy(
+                isLoading = true
+            )
+        }
+        initializeSections()
+
+        // Load profile details.
+        viewModelScope.launch {
+            userInteractor.getCurrentUserProfileDetails().collect {
+                when (it) {
+                    is GetProfileDetailsPartialState.Success -> {
+                        setState {
+                            copy(
+                                profileBannerLabel = resourceProvider.getString(
+                                    R.string.profile_screen_profile_banner_label_welcome_back,
+                                    it.profileDetailsDomain.firstName
+                                ),
+                                profileDetails = it.profileDetailsDomain
+                            )
+                        }
+                    }
+
+                    is GetProfileDetailsPartialState.Failed -> {
+                        setState {
+                            copy(
+                                isLoading = false,
+                                profileBannerLabel = resourceProvider.getString(
+                                    R.string.profile_screen_profile_banner_label_welcome_back,
+                                    ""
+                                )
+                            )
+                        }
+                        showError(
+                            errorSubtitle = it.errorMessage,
+                            event = event
+                        )
+                    }
+
+                    GetProfileDetailsPartialState.NoInternetConnection -> {
+                        setState {
+                            copy(
+                                isLoading = false,
+                                profileBannerLabel = resourceProvider.getString(
+                                    R.string.profile_screen_profile_banner_label_welcome_back,
+                                    ""
+                                )
+                            )
+                        }
+                        showError(
+                            errorSubtitle = resourceProvider.getNoInternetConnectionMessage(),
+                            event = event
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Initializes the sections.
+     */
+    private fun initializeSections() {
         setState {
             copy(
                 isLoading = false,
                 sections = listOf(
-                    ProfileScreenSection(
-                        title = resourceProvider.getString(R.string.profile_screen_section_label_personal_information),
-                        iconData = IconData(
-                            iconResource = R.drawable.ic_person,
-                            contentDescription = R.string.content_description_person
-                        ),
-                        onClick = {
-                            setEffect {
-                                ProfileContract.Effect.Navigation.NavigateToProfileDetailsScreen
-                            }
-                        }
-                    ),
                     ProfileScreenSection(
                         title = resourceProvider.getString(R.string.profile_screen_section_label_privacy_settings),
                         iconData = IconData(
@@ -107,6 +181,15 @@ class ProfileViewModel(
                             }
                         }
                     ),
+                    ProfileScreenSection(
+                        title = resourceProvider.getString(R.string.profile_screen_section_label_logout),
+                        iconData = IconData(
+                            iconResource = R.drawable.ic_logout,
+                            contentDescription = R.string.content_description_ic_logout
+                        ),
+                        isNavigable = false,
+                        onClick = ::logout
+                    ),
                 )
             )
         }
@@ -116,10 +199,11 @@ class ProfileViewModel(
      * Logouts the user.
      */
     private fun logout() {
-        setEffect {
-            ProfileContract.Effect.ShowToast("logout button clicked")
+        setState {
+            copy(
+                isLoading = true
+            )
         }
-
         viewModelScope.launch {
             loginInteractor.logout().collect { logoutPartialState ->
                 when (logoutPartialState) {
@@ -145,6 +229,26 @@ class ProfileViewModel(
                     }
                 }
             }
+        }
+    }
+
+    /**
+     * Show the error view.
+     */
+    private fun showError(
+        errorTitle: String? = null,
+        errorSubtitle: String,
+        event: ProfileContract.Event
+    ) {
+        setState {
+            copy(
+                error = ProfileScreenErrorView(
+                    errorTitle = errorTitle
+                        ?: resourceProvider.getString(R.string.profile_screen_error_loading_profile_details),
+                    errorSubtitle = errorSubtitle,
+                    event = event
+                )
+            )
         }
     }
 }

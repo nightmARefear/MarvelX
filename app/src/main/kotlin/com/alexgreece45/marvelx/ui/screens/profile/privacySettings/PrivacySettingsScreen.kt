@@ -23,6 +23,7 @@ import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.domain.model_api.user.privacySettings.PrivacySettingsDomain
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
+import com.alexgreece45.marvelx.ui.components.WrapSwitch
 import com.alexgreece45.marvelx.ui.components.error.ContentErrorScreen
 import com.alexgreece45.marvelx.ui.components.model.ErrorButtonLayout
 import com.alexgreece45.marvelx.ui.theme.MarvelXTheme
@@ -50,6 +51,7 @@ fun PrivacySettingsScreen(
 
     state.errorView?.let { errorView ->
         ContentErrorScreen(
+            errorTitle = stringResource(R.string.privacy_settings_screen_error_loading_privacy_settings),
             errorSubtitle = errorView.errorSubtitle,
             onClose = { onEventSent(PrivacySettingsEvent.OnBackClicked) },
             errorButtonLayout = ErrorButtonLayout.Single(
@@ -142,12 +144,9 @@ private fun PrivacySettingItem(
                 style = MaterialTheme.typography.subtitle1
             )
 
-            Switch(
+            WrapSwitch(
                 checked = isChecked,
-                onCheckedChange = onCheckedToggle,
-                colors = SwitchDefaults.colors(
-                    checkedTrackAlpha = 0.3f
-                )
+                onCheckedToggle = onCheckedToggle
             )
         }
 
@@ -170,6 +169,9 @@ private fun PrivacySettingsScreenPreview() {
             state = PrivacySettingsState(
                 isLoading = false,
                 privacySettings = PrivacySettingsDomain(
+                    isFriendsListVisible = true,
+                    isListingsListVisible = false,
+                    isFavoritesListVisible = true,
                     isGenderVisible = false,
                     isEmailVisible = true
                 )

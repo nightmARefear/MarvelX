@@ -46,6 +46,8 @@
     <string name="no_internet_connection_error_message">No internet connection! Please try again!</string>
     <string name="internal_server_error">An internal server error has occurred!</string>
     <string name="no_data_was_found">No data was found!</string>
+    <string name="image_size_too_large">Oops, this file is too large. Please choose a JPEG or PNG image smaller than or equal to %1$sMB.</string>
+    <string name="image_extension_not_supported">Oops, this file extension is not supported. Please choose a JPEG or PNG image and try again.</string>
 
     // • Generic Error Buttons
     <string name="generic_retry_button">Try again</string>
@@ -137,37 +139,53 @@
     <string name="all_favorite_characters_screen_toolbar_title">Favorite Characters</string>
 
     // Profile Screen
-    <string name="profile_screen_toolbar_title">Profile</string>
-
-    <string name="profile_screen_section_label_personal_information">Personal Information</string>
+    <string name="profile_screen_profile_banner_label_welcome_back">Welcome back, %1$s!</string>
+    <string name="profile_screen_profile_banner_label_see_your_profile">See your profile</string>
     <string name="profile_screen_section_label_privacy_settings">Privacy Settings</string>
     <string name="profile_screen_section_label_faq">Frequently Asked Questions (FAQ)</string>
+    <string name="profile_screen_section_label_logout">Logout</string>
 
-    <string name="profile_screen_button_label_logout">Logout</string>
+    <string name="profile_screen_error_loading_profile_details">An error occurred while loading the profile details.</string>
 
-    // Profile --> Profile Details Screen
-    <string name="profile_details_screen_header_title">Personal Information</string>
+    // Profile Screen --> Profile Details
+    <string name="profile_details_screen_header_title">Profile Details</string>
 
-    <string name="profile_details_screen_button_label_save_changes">Save changes</string>
+    <string name="profile_details_screen_label_profile_banner_tile_friends">friends</string>
+    <string name="profile_details_screen_label_profile_banner_tile_listings">listings</string>
+    <string name="profile_details_screen_label_profile_banner_tile_favorites">favorites</string>
+    <string name="profile_details_screen_label_gender_hidden">Gender is hidden</string>
+    <string name="profile_details_screen_label_email_hidden">Email is hidden</string>
 
-    <string name="profile_details_screen_success_updating_profile_details">Your profile details have been successfully updated.</string>
-    <string name="profile_details_screen_alert_dialog_unsaved_changes_title">Unsaved changed</string>
-    <string name="profile_details_screen_alert_dialog_unsaved_changes_subtitle">If you exit your changes will be lost. Are you sure that you want to exit?</string>
+    <string name="profile_details_screen_content_description_edit_profile_details">edit profile details</string>
 
     <string name="profile_details_screen_error_loading_profile_details">Error loading profile details</string>
-    <string name="profile_details_screen_error_updating_profile_details">Error updating profile details</string>
+    <string name="profile_details_screen_error_hidden_list_friends">The friends list of this user is hidden.</string>
+    <string name="profile_details_screen_error_hidden_list_listings">The listings list of this user is hidden.</string>
+    <string name="profile_details_screen_error_hidden_list_favorites">The favorites list of this user is hidden.></string>
 
-    // Profile --> Privacy Settings Screen
+    // Profile Screen --> Profile Details -> Edit Profile Details
+    <string name="edit_profile_details_screen_header_title">Edit Profile Details</string>
+    <string name="edit_profile_details_screen_button_label_save_changes">Save changes</string>
+    <string name="edit_profile_details_screen_success_updating_profile_details">Your profile details have been successfully updated.</string>
+    <string name="edit_profile_details_screen_alert_dialog_unsaved_changes_title">Unsaved changed</string>
+    <string name="edit_profile_details_screen_alert_dialog_unsaved_changes_subtitle">If you exit your changes will be lost. Are you sure that you want to exit?</string>
+    <string name="edit_profile_details_screen_error_loading_profile_details">Error loading profile details</string>
+    <string name="edit_profile_details_screen_error_updating_profile_details">Error updating profile details</string>
+
+    // Profile Screen --> Privacy Settings
     <string name="privacy_settings_screen_toolbar_title">Privacy Settings</string>
 
     <string name="privacy_settings_screen_header_label_visible_to_everyone">Visible to everyone</string>
 
-    // Profile --> FAQ Screen
+    <string name="privacy_settings_screen_error_loading_privacy_settings">Error loading privacy settings</string>
+
+    // Profile Screen --> FAQ Screen
     <string name="faq_screen_toolbar_title">Frequently Asked Questions (FAQ)</string>
 
     <string name="faq_screen_button_label_save_changes">Save changes</string>
 
     <string name="faq_screen_no_faqs_message">No FAQs were found.</string>
+    <string name="faq_screen_error_loading_faqs">Error loading FAQs</string>
 
     // Intro Loading Screen
     <string name="intro_loading_screen_label_loading_stage_refresh_access_token">Refreshing access token</string>
@@ -293,5 +311,10 @@
     <string name="content_description_expand">expand</string>
     <string name="content_description_collapse">collapse</string>
     <string name="content_description_navigate">navigate</string>
+    <string name="content_description_icon_email">email icon</string>
+    <string name="content_description_gender_icon_female">female gender icon</string>
+    <string name="content_description_gender_icon_male">male gender icon</string>
+    <string name="content_description_gender_icon_other">other gender icon</string>
+    <string name="content_description_your_profile_image">Your profile image</string>
 
 </resources>

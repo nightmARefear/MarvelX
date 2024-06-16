@@ -46,7 +46,7 @@ fun <T : Any> ImageResponse.toDomain(
     characterName: String? = null
 ): ImageDomain {
     var actualCharacterName = ""
-    if (containerClassType == com.alexgreece45.marvelx.network_logic.models_api.character.CharacterResponse::class) {
+    if (containerClassType == CharacterResponse::class) {
         if (characterName == null) {
             throw IllegalStateException(
                 "Character name cannot be null if container class is of type \"CharacterResponse\". " +

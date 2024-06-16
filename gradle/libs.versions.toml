@@ -63,6 +63,7 @@ valentinilk-shimmer = "1.3.0"
 airbnb-lottie-compose = { module = "com.airbnb.android:lottie-compose", version.ref = "airbnb-lottie-compose" }
 
 androidx-compose-bom = { module = "androidx.compose:compose-bom", version.ref = "compose-bom" }
+androidx-activity-ktx = { module = "androidx.activity:activity-ktx" }
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activity-compose" }
 androidx-core = { module = "androidx.core:core-ktx", version.ref = "androidx-core" }
 androidx-compat = { module = "androidx.appcompat:appcompat", version.ref = "androidx-appcompat" }
@@ -147,19 +148,20 @@ ksp = { id = "com.google.devtools.ksp", version.ref = "plugin-ksp" }
 
 [bundles]
 app-ui = [
-    "androidx-core",
-    "androidx-lifecycle-runtime-ktx",
-    "androidx-lifecycle-runtime-compose",
     "androidx-activity-compose",
+    "androidx-activity-ktx",
+    "androidx-core",
     "androidx-compat",
-    "androidx-compose-ui",
     "androidx-compose-material",
     "androidx-compose-material-icons-extended",
+    "androidx-compose-ui",
     "androidx-compose-ui-tooling-preview",
+    "androidx-lifecycle-runtime-compose",
+    "androidx-lifecycle-runtime-ktx",
     "androidx-navigation",
     "androidx-navigation-compose",
-    "google-accompanist-systemuicontroller",
     "google-accompanist-placeholder",
+    "google-accompanist-systemuicontroller",
 ]
 
 app-ui-debug = [

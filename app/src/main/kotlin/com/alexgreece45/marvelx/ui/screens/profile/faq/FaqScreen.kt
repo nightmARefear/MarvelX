@@ -60,6 +60,7 @@ fun FaqScreen(
 
     state.error?.let { error ->
         ContentErrorScreen(
+            errorTitle = stringResource(R.string.faq_screen_error_loading_faqs),
             errorSubtitle = error.errorSubtitle,
             onClose = { onEventSent(FaqContract.Event.OnBackClicked) },
             errorButtonLayout = ErrorButtonLayout.Single(

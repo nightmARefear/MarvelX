@@ -136,6 +136,11 @@ sealed class Screen(
     data object ProfileDetailsScreen : Screen(baseRoute = "profileDetailsScreen")
 
     /**
+     * Profile Screen --> Profile Details --> Edit Profile Details
+     */
+    data object EditProfileDetailsScreen : Screen(baseRoute = "editProfileDetailsScreen")
+
+    /**
      * Profile Screen --> FAQ
      */
     data object FaqScreen : Screen(baseRoute = "faqScreen")

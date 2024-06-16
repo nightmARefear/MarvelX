@@ -4,6 +4,8 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import com.alexgreece45.marvelx.ui.theme.customColors.CustomColors
+import com.alexgreece45.marvelx.ui.theme.customShapes.CustomShapes
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.valentinilk.shimmer.LocalShimmerTheme
 import com.valentinilk.shimmer.defaultShimmerTheme
@@ -38,6 +40,8 @@ fun MarvelXTheme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composabl
     val shimmerTheme = defaultShimmerTheme.copy()
 
     CompositionLocalProvider(
+        LocalCustomColors provides CustomColors,
+        LocalCustomShapes provides CustomShapes,
         LocalShimmerTheme provides shimmerTheme
     ) {
         MaterialTheme(

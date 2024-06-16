@@ -30,8 +30,17 @@ sealed class Gender(
     companion object {
         fun asList(): List<Gender> = listOf(Female, Male, Other)
 
-        fun of(value: String): Gender? = asList().firstOrNull { it.key == value }
+        /**
+         * Returns the corresponding [Gender] based on the given [value]. If no match was found,
+         * [NoSuchElementException] is thrown.
+         */
+        fun of(value: String): Gender = asList().first { it.key == value }
 
-        fun isStringValidGender(value: String): Boolean = of(value) != null
+        fun isStringValidGender(value: String): Boolean = try {
+            of(value)
+            true
+        } catch (e: NoSuchElementException) {
+            false
+        }
     }
 }
