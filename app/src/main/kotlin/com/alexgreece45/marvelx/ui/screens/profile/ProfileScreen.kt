@@ -79,8 +79,8 @@ fun ProfileScreen(
         effect.collect { effect ->
             when (effect) {
                 ProfileContract.Effect.Navigation.NavigateToHomeScreen,
-                ProfileContract.Effect.Navigation.NavigateToProfileDetailsScreen,
                 ProfileContract.Effect.Navigation.NavigateToFaqScreen,
+                is ProfileContract.Effect.Navigation.NavigateToProfileDetailsScreen,
                 ProfileContract.Effect.Navigation.NavigateToPrivacySettingsScreen -> {
                     onNavigation(effect as ProfileContract.Effect.Navigation)
                 }
@@ -294,9 +294,9 @@ private fun ProfileScreenPreview() {
                 ),
                 profileBannerLabel = stringResource(
                     R.string.profile_screen_profile_banner_label_welcome_back,
-                    profileDetails.firstName
+                    profileDetails.basicProfileDetails.firstName
                 ),
-                profileDetails = profileDetails
+                profileDetails = profileDetails.basicProfileDetails
             ),
             effect = emptyFlow(),
             bottomNavigationBarData = { getBottomNavigationBarData(navController = rememberNavController()) },

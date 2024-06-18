@@ -16,6 +16,9 @@ import kotlinx.coroutines.launch
 sealed interface PrivacySettingsEvent : BaseEvent {
     data object Init : PrivacySettingsEvent
     data object OnBackClicked : PrivacySettingsEvent
+    data class OnFriendsListToggleClicked(val isChecked: Boolean) : PrivacySettingsEvent
+    data class OnListingsListToggleClicked(val isChecked: Boolean) : PrivacySettingsEvent
+    data class OnFavoritesListToggleClicked(val isChecked: Boolean) : PrivacySettingsEvent
     data class OnGenderToggleClicked(val isChecked: Boolean) : PrivacySettingsEvent
     data class OnEmailToggleClicked(val isChecked: Boolean) : PrivacySettingsEvent
 }
@@ -58,30 +61,59 @@ class PrivacySettingsViewModel(
                 }
             }
 
-            is PrivacySettingsEvent.OnGenderToggleClicked -> {
-                setState {
-                    copy(
-                        isLoading = true
+            is PrivacySettingsEvent.OnFriendsListToggleClicked -> {
+                currentState.privacySettings?.let {
+                    updatePrivacySettings(
+                        privacySettings = it.copy(
+                            isFriendsListVisible = event.isChecked
+                        ),
+                        event = event
                     )
                 }
-                updatePrivacySettings(
-                    isGenderVisible = event.isChecked,
-                    isEmailVisible = currentState.privacySettings?.isEmailVisible ?: false,
-                    event = event
-                )
+            }
+
+            is PrivacySettingsEvent.OnListingsListToggleClicked -> {
+                currentState.privacySettings?.let {
+                    updatePrivacySettings(
+                        privacySettings = it.copy(
+                            isListingsListVisible = event.isChecked
+                        ),
+                        event = event
+                    )
+                }
+            }
+
+            is PrivacySettingsEvent.OnFavoritesListToggleClicked -> {
+                currentState.privacySettings?.let {
+                    updatePrivacySettings(
+                        privacySettings = it.copy(
+                            isFavoritesListVisible = event.isChecked
+                        ),
+                        event = event
+                    )
+                }
+            }
+
+            is PrivacySettingsEvent.OnGenderToggleClicked -> {
+                currentState.privacySettings?.let {
+                    updatePrivacySettings(
+                        privacySettings = it.copy(
+                            isGenderVisible = event.isChecked
+                        ),
+                        event = event
+                    )
+                }
             }
 
             is PrivacySettingsEvent.OnEmailToggleClicked -> {
-                setState {
-                    copy(
-                        isLoading = true
+                currentState.privacySettings?.let {
+                    updatePrivacySettings(
+                        privacySettings = it.copy(
+                            isEmailVisible = event.isChecked
+                        ),
+                        event = event
                     )
                 }
-                updatePrivacySettings(
-                    isGenderVisible = currentState.privacySettings?.isGenderVisible ?: false,
-                    isEmailVisible = event.isChecked,
-                    event = event
-                )
             }
         }
     }
@@ -99,7 +131,11 @@ class PrivacySettingsViewModel(
                                 isLoading = false
                             )
                         }
-                        showError(resourceProvider.getGenericErrorMessage(), event)
+                        showError(
+                            errorTitle = resourceProvider.getString(R.string.privacy_settings_screen_error_loading_privacy_settings),
+                            errorSubtitle = resourceProvider.getGenericErrorMessage(),
+                            event = event
+                        )
                     }
 
                     InteractorPartialState.NoInternetConnection -> {
@@ -108,7 +144,11 @@ class PrivacySettingsViewModel(
                                 isLoading = false
                             )
                         }
-                        showError(resourceProvider.getNoInternetConnectionMessage(), event)
+                        showError(
+                            errorTitle = resourceProvider.getString(R.string.privacy_settings_screen_error_loading_privacy_settings),
+                            errorSubtitle = resourceProvider.getNoInternetConnectionMessage(),
+                            event = event
+                        )
                     }
 
                     is InteractorPartialState.Success -> {
@@ -125,21 +165,21 @@ class PrivacySettingsViewModel(
     }
 
     /**
-     * Updates the privacy settings based on the given [isGenderVisible] and [isEmailVisible].
+     * Updates the privacy settings.
      */
     private fun updatePrivacySettings(
-        isGenderVisible: Boolean,
-        isEmailVisible: Boolean,
+        privacySettings: PrivacySettingsDomain,
         event: PrivacySettingsEvent
     ) {
-        currentState.privacySettings?.let {
-            val finalPrivacySettings = it.copy(
-                isGenderVisible = isGenderVisible,
-                isEmailVisible = isEmailVisible
+        setState {
+            copy(
+                isLoading = true
             )
+        }
+        currentState.privacySettings?.let {
             viewModelScope.launch {
                 userInteractor.updatePrivacySettings(
-                    finalPrivacySettings
+                    privacySettings
                 ).collect { interactorPartialState ->
                     when (interactorPartialState) {
                         is InteractorPartialState.Error, is InteractorPartialState.Failed -> {
@@ -148,7 +188,11 @@ class PrivacySettingsViewModel(
                                     isLoading = false
                                 )
                             }
-                            showError(resourceProvider.getGenericErrorMessage(), event)
+                            showError(
+                                errorTitle = resourceProvider.getString(R.string.privacy_settings_screen_error_updating_privacy_settings),
+                                errorSubtitle = resourceProvider.getGenericErrorMessage(),
+                                event = event
+                            )
                         }
 
                         InteractorPartialState.NoInternetConnection -> {
@@ -157,14 +201,18 @@ class PrivacySettingsViewModel(
                                     isLoading = false
                                 )
                             }
-                            showError(resourceProvider.getNoInternetConnectionMessage(), event)
+                            showError(
+                                errorTitle = resourceProvider.getString(R.string.privacy_settings_screen_error_updating_privacy_settings),
+                                errorSubtitle = resourceProvider.getNoInternetConnectionMessage(),
+                                event = event
+                            )
                         }
 
                         is InteractorPartialState.Success -> {
                             setState {
                                 copy(
                                     isLoading = false,
-                                    privacySettings = finalPrivacySettings
+                                    privacySettings = privacySettings
                                 )
                             }
                         }
@@ -178,10 +226,15 @@ class PrivacySettingsViewModel(
      * Shows the error with the given [errorSubtitle] as the subtitle, and [event] as the event
      * to execute when the error button is clicked.
      */
-    private fun showError(errorSubtitle: String, event: PrivacySettingsEvent) {
+    private fun showError(
+        errorTitle: String,
+        errorSubtitle: String,
+        event: PrivacySettingsEvent
+    ) {
         setState {
             copy(
                 errorView = PrivacySettingsErrorView(
+                    errorTitle = errorTitle,
                     errorSubtitle = errorSubtitle,
                     primaryButtonLabel = resourceProvider.getString(R.string.generic_retry_button),
                     event = event

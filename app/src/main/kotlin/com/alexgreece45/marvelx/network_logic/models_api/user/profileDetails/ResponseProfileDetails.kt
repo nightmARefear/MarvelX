@@ -4,9 +4,9 @@ import com.alexgreece45.marvelx.network_logic.models_api.user.privacySettings.Re
 import com.google.gson.annotations.SerializedName
 
 /**
- * The profile details of a user. If [isDifferentUser] is `true` then that means that the data is
- * for another user than the currently logged in one. It should be noted that [privacySettings]
- * __must__ be non-null in this case.
+ * The profile details of a user including the privacy settings. If [isDifferentUser] is `true`
+ * then that means that the data is for another user than the currently logged in one. It should be
+ * noted that [privacySettings] __must__ be non-null in this case.
  *
  * @param isDifferentUser   Whether the fetched data is for the same user as the currently logged in
  * one. Depending on its value, the UI changes accordingly -- i.e., when the value is `true`, the
@@ -18,11 +18,7 @@ import com.google.gson.annotations.SerializedName
  * favorites count.
  */
 data class ResponseProfileDetails(
-    @SerializedName("first_name") val firstName: String,
-    @SerializedName("last_name") val lastName: String,
-    @SerializedName("gender") val gender: String,
-    @SerializedName("email") val email: String,
-    @SerializedName("profileImageUrl") val profileImageUrl: String,
+    @SerializedName("basicProfileDetails") val basicProfileDetails: ResponseBasicProfileDetails,
     @SerializedName("isDifferentUser") val isDifferentUser: Boolean,
     @SerializedName("privacySettings") val privacySettings: ResponsePrivacySettings?,
     @SerializedName("userStats") val userStats: ResponseUserStats

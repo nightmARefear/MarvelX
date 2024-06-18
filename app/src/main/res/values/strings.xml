@@ -176,8 +176,12 @@
     <string name="privacy_settings_screen_toolbar_title">Privacy Settings</string>
 
     <string name="privacy_settings_screen_header_label_visible_to_everyone">Visible to everyone</string>
+    <string name="privacy_settings_screen_label_friends_list">Friends list</string>
+    <string name="privacy_settings_screen_label_listings_list">Listings list</string>
+    <string name="privacy_settings_screen_label_favorites_list">Favorites list</string>
 
     <string name="privacy_settings_screen_error_loading_privacy_settings">Error loading privacy settings</string>
+    <string name="privacy_settings_screen_error_updating_privacy_settings">Error updating privacy settings</string>
 
     // Profile Screen --> FAQ Screen
     <string name="faq_screen_toolbar_title">Frequently Asked Questions (FAQ)</string>

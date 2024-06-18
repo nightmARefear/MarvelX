@@ -51,7 +51,7 @@ fun PrivacySettingsScreen(
 
     state.errorView?.let { errorView ->
         ContentErrorScreen(
-            errorTitle = stringResource(R.string.privacy_settings_screen_error_loading_privacy_settings),
+            errorTitle = errorView.errorTitle,
             errorSubtitle = errorView.errorSubtitle,
             onClose = { onEventSent(PrivacySettingsEvent.OnBackClicked) },
             errorButtonLayout = ErrorButtonLayout.Single(
@@ -90,6 +90,42 @@ fun PrivacySettingsScreen(
 
                         // Items.
                         Column(verticalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp)) {
+                            PrivacySettingItem(
+                                label = stringResource(R.string.privacy_settings_screen_label_friends_list),
+                                isChecked = privacySettings.isFriendsListVisible,
+                                onCheckedToggle = {
+                                    onEventSent(
+                                        PrivacySettingsEvent.OnFriendsListToggleClicked(
+                                            it
+                                        )
+                                    )
+                                }
+                            )
+
+                            PrivacySettingItem(
+                                label = stringResource(R.string.privacy_settings_screen_label_listings_list),
+                                isChecked = privacySettings.isListingsListVisible,
+                                onCheckedToggle = {
+                                    onEventSent(
+                                        PrivacySettingsEvent.OnListingsListToggleClicked(
+                                            it
+                                        )
+                                    )
+                                }
+                            )
+
+                            PrivacySettingItem(
+                                label = stringResource(R.string.privacy_settings_screen_label_favorites_list),
+                                isChecked = privacySettings.isFavoritesListVisible,
+                                onCheckedToggle = {
+                                    onEventSent(
+                                        PrivacySettingsEvent.OnFavoritesListToggleClicked(
+                                            it
+                                        )
+                                    )
+                                }
+                            )
+
                             PrivacySettingItem(
                                 label = stringResource(R.string.generic_label_gender),
                                 isChecked = privacySettings.isGenderVisible,

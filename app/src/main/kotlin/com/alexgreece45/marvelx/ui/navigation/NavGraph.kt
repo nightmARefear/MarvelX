@@ -336,8 +336,8 @@ fun NavGraph(navController: NavHostController) {
                             }
                         }
 
-                        ProfileContract.Effect.Navigation.NavigateToProfileDetailsScreen -> {
-                            navController.navigate(Screen.ProfileDetailsScreen.route)
+                        is ProfileContract.Effect.Navigation.NavigateToProfileDetailsScreen -> {
+                            navController.navigate(Screen.ProfileDetailsScreen.createNavRoute(navigationEffect.userId))
                         }
 
                         ProfileContract.Effect.Navigation.NavigateToFaqScreen -> {
@@ -352,12 +352,13 @@ fun NavGraph(navController: NavHostController) {
             )
         }
 
-        composable(Screen.ProfileDetailsScreen) {
+        composable(Screen.ProfileDetailsScreen) { navBackStackEntry ->
             val viewModel = koinViewModel<ProfileDetailsViewModel>()
             ProfileDetailsScreen(
                 onEventSent = viewModel::setEvent,
                 state = viewModel.uiState.collectAsStateWithLifecycle().value,
                 effect = viewModel.uiEffect,
+                userId = navBackStackEntry.arguments?.getInt(NavItem.UserId.key) ?: -1,
                 popBackStack = navController::popBackStack,
                 navigateToEditProfileDetails = { navController.navigate(Screen.EditProfileDetailsScreen.route) },
             )

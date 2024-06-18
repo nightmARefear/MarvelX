@@ -1,8 +1,8 @@
 package com.alexgreece45.marvelx.domain.model_api.user.privacySettings
 
 import com.alexgreece45.marvelx.data.model.RepositoryPrivacySettings
+import com.alexgreece45.marvelx.network_logic.models_api.user.privacySettings.RequestPrivacySettings
 import com.alexgreece45.marvelx.network_logic.models_api.user.privacySettings.ResponsePrivacySettings
-import com.google.gson.annotations.SerializedName
 
 /**
  * The privacy settings of a user.
@@ -21,13 +21,22 @@ data class PrivacySettingsDomain(
     val isEmailVisible: Boolean
 )
 
+fun PrivacySettingsDomain.toRequestPrivacySettings(): RequestPrivacySettings =
+    RequestPrivacySettings(
+        isFriendsListVisible = this.isFriendsListVisible.toString(),
+        isListingsListVisible = this.isListingsListVisible.toString(),
+        isFavoritesListVisible = this.isFavoritesListVisible.toString(),
+        isGenderVisible = this.isGenderVisible.toString(),
+        isEmailVisible = this.isEmailVisible.toString(),
+    )
+
 fun ResponsePrivacySettings.toPrivacySettingsDomain(): PrivacySettingsDomain =
     PrivacySettingsDomain(
         isFriendsListVisible = this.isFriendsListVisible,
         isListingsListVisible = this.isListingsListVisible,
         isFavoritesListVisible = this.isFavoritesListVisible,
-        isEmailVisible = this.isEmailVisible,
         isGenderVisible = this.isGenderVisible,
+        isEmailVisible = this.isEmailVisible,
     )
 
 fun RepositoryPrivacySettings.toPrivacySettingsDomain(): PrivacySettingsDomain =
@@ -35,6 +44,6 @@ fun RepositoryPrivacySettings.toPrivacySettingsDomain(): PrivacySettingsDomain =
         isFriendsListVisible = this.isFriendsListVisible,
         isListingsListVisible = this.isListingsListVisible,
         isFavoritesListVisible = this.isFavoritesListVisible,
-        isEmailVisible = this.isEmailVisible,
         isGenderVisible = this.isGenderVisible,
+        isEmailVisible = this.isEmailVisible,
     )

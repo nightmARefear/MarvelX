@@ -1,9 +1,8 @@
 package com.alexgreece45.marvelx.ui.screens.profile.profileDetails.model
 
 import androidx.annotation.StringRes
-import com.alexgreece45.marvelx.domain.model_api.user.privacySettings.PrivacySettingsDomain
+import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.BasicProfileDetailsDomain
 import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.ProfileDetailsDomain
-import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.UserStatsDomain
 import com.alexgreece45.marvelx.network_logic.models_api.user.Gender
 import com.alexgreece45.marvelx.ui.screens.profile.editProfileDetails.EditProfileDetailsContract
 import com.alexgreece45.marvelx.util.FormValidationResult
@@ -18,23 +17,14 @@ data class ProfileDetailsUi(
     val email: EditProfileDetailsItemUi<String>
 )
 
-fun ProfileDetailsUi.toProfileDetailsDomain(): ProfileDetailsDomain =
-    ProfileDetailsDomain(
-        firstName = firstName.currentValue,
-        lastName = lastName.currentValue,
-        gender = gender.currentValue,
-        email = email.currentValue,
-        profileImageUrl = "",
-        fullName = "${firstName.currentValue} ${lastName.currentValue}",
-        isDifferentUser = false,// This value doesn't matter for this transformation.
-        privacySettings = PrivacySettingsDomain(
-            isFriendsListVisible = false,
-            isListingsListVisible = false,
-            isFavoritesListVisible = false,
-            isGenderVisible = false,
-            isEmailVisible = false
-        ), // These values don't matter for this transformation.
-        userStats = UserStatsDomain("", "", "")// These values don't matter for this transformation.
+fun ProfileDetailsUi.toBasicProfileDetailsDomain(): BasicProfileDetailsDomain =
+    BasicProfileDetailsDomain(
+        firstName = this.firstName.currentValue,
+        lastName = this.lastName.currentValue,
+        gender = this.gender.currentValue,
+        email = this.email.currentValue,
+        profileImageUrl = "", // Doesn't matter for this transformation.
+        fullName = "" // Doesn't matter for this transformation.
     )
 
 /**

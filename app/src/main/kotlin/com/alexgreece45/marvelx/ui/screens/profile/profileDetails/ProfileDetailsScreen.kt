@@ -54,6 +54,7 @@ fun ProfileDetailsScreen(
     onEventSent: (ProfileDetailsContract.Event) -> Unit,
     state: ProfileDetailsContract.State,
     effect: Flow<ProfileDetailsContract.Effect>,
+    userId: Int,
     popBackStack: () -> Unit,
     navigateToEditProfileDetails: () -> Unit
 ) {
@@ -61,7 +62,7 @@ fun ProfileDetailsScreen(
     val bannerShapeColor = MaterialTheme.colors.surface
 
     LaunchedEffect(Unit) {
-        onEventSent(ProfileDetailsContract.Event.Init)
+        onEventSent(ProfileDetailsContract.Event.Init(userId))
 
         effect.collect {
             when (it) {
@@ -103,8 +104,8 @@ fun ProfileDetailsScreen(
             )
         },
         showToolbar = true,
-        toolbarTitle = state.profileDetails?.fullName,
-        toolbarActions = listOf(
+        toolbarTitle = state.profileDetails?.basicProfileDetails?.fullName,
+        toolbarActions = if (!state.isDifferentUser) listOf(
             ToolbarAction(
                 label = stringResource(R.string.profile_details_screen_content_description_edit_profile_details),
                 order = 0,
@@ -114,7 +115,7 @@ fun ProfileDetailsScreen(
                 ),
                 onClick = { onEventSent(ProfileDetailsContract.Event.OnEditProfileDetailsIconClicked) }
             )
-        )
+        ) else emptyList()
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -145,7 +146,7 @@ fun ProfileDetailsScreen(
                 ) {
                     // Profile image.
                     WrapAsyncImage(
-                        imageUrl = state.profileDetails?.profileImageUrl.orEmpty(),
+                        imageUrl = state.profileDetails?.basicProfileDetails?.profileImageUrl.orEmpty(),
                         contentDescription = stringResource(R.string.content_description_your_profile_image),
                         modifier = Modifier
                             .size(ConstantsUi.PROFILE_IMAGE_SMALL_SIZE)
@@ -203,14 +204,13 @@ fun ProfileDetailsScreen(
                 state.profileDetails?.let { profileDetails ->
                     VSpacer.Medium()
                     Row(modifier = Modifier.fillMaxWidth()) {
-                        // Icons.
                         Column(verticalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp)) {
                             // Gender.
                             Row(
                                 horizontalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                if (profileDetails.privacySettings != null && !profileDetails.privacySettings.isGenderVisible) {
+                                if (state.isGenderHidden) {
                                     // Hidden gender.
                                     Icon(
                                         painter = painterResource(R.drawable.ic_person),
@@ -218,7 +218,7 @@ fun ProfileDetailsScreen(
                                     )
                                     HiddenField(label = stringResource(R.string.profile_details_screen_label_gender_hidden))
                                 } else {
-                                    when (profileDetails.gender) {
+                                    when (profileDetails.basicProfileDetails.gender) {
                                         Gender.Other -> {
                                             Icon(
                                                 painter = painterResource(R.drawable.ic_person),
@@ -242,7 +242,7 @@ fun ProfileDetailsScreen(
                                             )
                                         }
                                     }
-                                    Text(text = stringResource(profileDetails.gender.label))
+                                    Text(text = stringResource(profileDetails.basicProfileDetails.gender.label))
                                 }
                             }
 
@@ -255,11 +255,11 @@ fun ProfileDetailsScreen(
                                     painter = painterResource(R.drawable.ic_email),
                                     contentDescription = stringResource(R.string.content_description_icon_email)
                                 )
-                                if (profileDetails.privacySettings != null && !profileDetails.privacySettings.isEmailVisible) {
+                                if (state.isEmailHidden) {
                                     // Hidden email.
                                     HiddenField(label = stringResource(R.string.profile_details_screen_label_email_hidden))
                                 } else {
-                                    Text(text = profileDetails.email)
+                                    Text(text = profileDetails.basicProfileDetails.email)
                                 }
                             }
                         }
@@ -322,6 +322,7 @@ private fun ProfileDetailsScreenPreview(modifier: Modifier = Modifier) {
                 profileDetails = ProfileDetailsDomain.mock()
             ),
             effect = emptyFlow(),
+            userId = -1,
             popBackStack = { },
             navigateToEditProfileDetails = {}
         )

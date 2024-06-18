@@ -20,12 +20,7 @@ import com.alexgreece45.marvelx.network_logic.models_api.user.profileDetails.Res
  * favorites count.
  */
 data class ProfileDetailsDomain(
-    val firstName: String,
-    val lastName: String,
-    val gender: Gender,
-    val email: String,
-    val profileImageUrl: String,
-    val fullName: String = "$firstName $lastName",
+    val basicProfileDetails: BasicProfileDetailsDomain,
     val isDifferentUser: Boolean,
     val privacySettings: PrivacySettingsDomain?,
     val userStats: UserStatsDomain
@@ -35,11 +30,14 @@ data class ProfileDetailsDomain(
          * Returns mock data. Useful for previews and testing.
          */
         fun mock(): ProfileDetailsDomain = ProfileDetailsDomain(
-            firstName = "Alexandros",
-            lastName = "Voliotis",
-            gender = Gender.Male,
-            email = "alexandrosv@domain.com",
-            profileImageUrl = "alexandros_voliotis_profile_image.jpeg",
+            BasicProfileDetailsDomain(
+                firstName = "Alexandros",
+                lastName = "Voliotis",
+                gender = Gender.Male,
+                email = "alexandrosv@domain.com",
+                profileImageUrl = "alexandros_voliotis_profile_image.jpeg",
+                fullName = "Alexandros Voliotis"
+            ),
             isDifferentUser = false,
             privacySettings = PrivacySettingsDomain(
                 isFriendsListVisible = true,
@@ -56,23 +54,21 @@ data class ProfileDetailsDomain(
 }
 
 /**
- * Converts this instance to [ProfileDetailsDomain]. If [ResponseProfileDetails.privacySettings] is
- * not `null` then that means that the response data is for another user than the currently logged
- * in one, and due to privacy settings being in place, the gender field can be omitted in the UI.
- * In that case, the server will send an empty [String] which will cause [Gender.of] to throw an
- * exception, so special handling is applied; more specifically, the gender is arbitrarily set to
- * [Gender.Other] even if that's not the user's actual gender. The gender is anyways disregarded in
- * the UI. The only time that the gender matters, is when [ResponseProfileDetails.privacySettings]
- * is set to `null`.
+ * Converts this instance to [ProfileDetailsDomain]. If [ResponseProfileDetails.isDifferentUser] is
+ * `true` then that means that the response data is for another user than the currently logged in
+ * one, and due to privacy settings being in place, the gender field can be hidden in the UI.
+ *
+ * In the case that `privacySettings.isGenderVisible` is set to `false` then the server will send an
+ * empty [String] which will cause [Gender.of] to throw an exception, so special handling is applied;
+ * more specifically, the gender is arbitrarily set to [Gender.Other] even if that's not the user's
+ * actual gender. The gender is anyways hidden in the UI. The only occasions that the gender
+ * matters in the sense of being displayed in the UI, is when [ResponseProfileDetails.isDifferentUser]
+ * is set to `false` or when [ResponseProfileDetails.privacySettings] is not `null` and
+ * `privacySettings.isGenderVisible` is set to `true`.
  */
 fun ResponseProfileDetails.toProfileDetailsDomain(): ProfileDetailsDomain =
     ProfileDetailsDomain(
-        firstName = this.firstName,
-        lastName = this.lastName,
-        gender = if (this.privacySettings == null) Gender.of(this.gender) else Gender.Other,
-        email = this.email,
-        profileImageUrl = this.profileImageUrl,
-        fullName = "${this.firstName} ${this.lastName}",
+        basicProfileDetails = this.basicProfileDetails.toBasicProfileDetailsDomain(isGenderVisible = !isDifferentUser || this.privacySettings?.isGenderVisible == true),
         isDifferentUser = this.isDifferentUser,
         privacySettings = this.privacySettings?.toPrivacySettingsDomain(),
         userStats = this.userStats.toUserStatsDomain()

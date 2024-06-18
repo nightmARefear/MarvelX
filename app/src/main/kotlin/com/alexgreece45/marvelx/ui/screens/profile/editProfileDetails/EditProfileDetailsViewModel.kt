@@ -3,7 +3,7 @@ package com.alexgreece45.marvelx.ui.screens.profile.editProfileDetails
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.domain.helper.InteractorPartialState
-import com.alexgreece45.marvelx.domain.interactors.GetProfileDetailsPartialState
+import com.alexgreece45.marvelx.domain.interactors.GetCurrentUserProfileDetailsPartialState
 import com.alexgreece45.marvelx.domain.interactors.UserInteractor
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
@@ -17,7 +17,7 @@ import com.alexgreece45.marvelx.ui.components.model.ErrorButtonType
 import com.alexgreece45.marvelx.ui.helper.FieldValidationRules
 import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.model.EditProfileDetailsItemUi
 import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.model.ProfileDetailsUi
-import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.model.toProfileDetailsDomain
+import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.model.toBasicProfileDetailsDomain
 import com.alexgreece45.marvelx.util.Form
 import com.alexgreece45.marvelx.util.FormValidationResult
 import com.alexgreece45.marvelx.util.FormValidator
@@ -262,7 +262,7 @@ class EditProfileDetailsViewModel(
         viewModelScope.launch {
             userInteractor.getCurrentUserProfileDetails().collect {
                 when (it) {
-                    is GetProfileDetailsPartialState.Failed -> {
+                    is GetCurrentUserProfileDetailsPartialState.Failed -> {
                         setState {
                             copy(
                                 isLoading = false,
@@ -279,7 +279,7 @@ class EditProfileDetailsViewModel(
                         }
                     }
 
-                    is GetProfileDetailsPartialState.NoInternetConnection -> {
+                    is GetCurrentUserProfileDetailsPartialState.NoInternetConnection -> {
                         setState {
                             copy(
                                 isLoading = false,
@@ -296,16 +296,16 @@ class EditProfileDetailsViewModel(
                         }
                     }
 
-                    is GetProfileDetailsPartialState.Success -> {
+                    is GetCurrentUserProfileDetailsPartialState.Success -> {
                         setState {
                             copy(
                                 isLoading = false,
                                 errorView = null,
-                                profileDetailsUi = it.profileDetailsDomain.let { profileDetailsDomain ->
+                                profileDetailsUi = it.basicProfileDetails.let { profileDetails ->
                                     ProfileDetailsUi(
                                         firstName = EditProfileDetailsItemUi(
-                                            initialValue = profileDetailsDomain.firstName,
-                                            currentValue = profileDetailsDomain.firstName,
+                                            initialValue = profileDetails.firstName,
+                                            currentValue = profileDetails.firstName,
                                             label = R.string.generic_label_first_name,
                                             onValueChanged = { value ->
                                                 EditProfileDetailsContract.Event.FirstNameField.OnValueChanged(
@@ -313,12 +313,12 @@ class EditProfileDetailsViewModel(
                                                 )
                                             },
                                             onResetIconClicked = EditProfileDetailsContract.Event.FirstNameField.OnValueChanged(
-                                                value = profileDetailsDomain.firstName
+                                                value = profileDetails.firstName
                                             )
                                         ),
                                         lastName = EditProfileDetailsItemUi(
-                                            initialValue = profileDetailsDomain.lastName,
-                                            currentValue = profileDetailsDomain.lastName,
+                                            initialValue = profileDetails.lastName,
+                                            currentValue = profileDetails.lastName,
                                             label = R.string.generic_label_last_name,
                                             onValueChanged = { value ->
                                                 EditProfileDetailsContract.Event.LastNameField.OnValueChanged(
@@ -326,12 +326,12 @@ class EditProfileDetailsViewModel(
                                                 )
                                             },
                                             onResetIconClicked = EditProfileDetailsContract.Event.LastNameField.OnValueChanged(
-                                                value = profileDetailsDomain.lastName
+                                                value = profileDetails.lastName
                                             )
                                         ),
                                         gender = EditProfileDetailsItemUi(
-                                            initialValue = profileDetailsDomain.gender,
-                                            currentValue = profileDetailsDomain.gender,
+                                            initialValue = profileDetails.gender,
+                                            currentValue = profileDetails.gender,
                                             label = R.string.generic_label_gender,
                                             onValueChanged = { value ->
                                                 EditProfileDetailsContract.Event.GenderField.OnValueChanged(
@@ -339,12 +339,12 @@ class EditProfileDetailsViewModel(
                                                 )
                                             },
                                             onResetIconClicked = EditProfileDetailsContract.Event.GenderField.OnValueChanged(
-                                                value = profileDetailsDomain.gender
+                                                value = profileDetails.gender
                                             )
                                         ),
                                         email = EditProfileDetailsItemUi(
-                                            initialValue = profileDetailsDomain.email,
-                                            currentValue = profileDetailsDomain.email,
+                                            initialValue = profileDetails.email,
+                                            currentValue = profileDetails.email,
                                             label = R.string.generic_label_email,
                                             onValueChanged = { value ->
                                                 EditProfileDetailsContract.Event.EmailField.OnValueChanged(
@@ -352,7 +352,7 @@ class EditProfileDetailsViewModel(
                                                 )
                                             },
                                             onResetIconClicked = EditProfileDetailsContract.Event.EmailField.OnValueChanged(
-                                                value = profileDetailsDomain.email
+                                                value = profileDetails.email
                                             )
                                         )
                                     )
@@ -396,9 +396,9 @@ class EditProfileDetailsViewModel(
                 isLoading = true
             )
         }
-        currentState.profileDetailsUi?.toProfileDetailsDomain()?.let { profileDetailsDomain ->
+        currentState.profileDetailsUi?.toBasicProfileDetailsDomain()?.let { profileDetailsDomain ->
             viewModelScope.launch {
-                userInteractor.updateUserProfileDetails(profileDetailsDomain).collect {
+                userInteractor.updateCurrentUserProfileDetails(profileDetailsDomain).collect {
                     when (it) {
                         is InteractorPartialState.Success -> {
                             // TODO: Review snackbar handling.

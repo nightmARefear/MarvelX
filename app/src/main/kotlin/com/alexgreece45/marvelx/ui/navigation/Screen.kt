@@ -133,7 +133,15 @@ sealed class Screen(
     /**
      * Profile Screen --> Profile Details
      */
-    data object ProfileDetailsScreen : Screen(baseRoute = "profileDetailsScreen")
+    data object ProfileDetailsScreen :
+        Screen(
+            baseRoute = "profileDetailsScreen",
+            navArgs = listOf(NavItem.UserId,)
+        ) {
+        fun createNavRoute(
+            userId: Int? = -1,
+        ): String = "$baseRoute/$userId"
+    }
 
     /**
      * Profile Screen --> Profile Details --> Edit Profile Details

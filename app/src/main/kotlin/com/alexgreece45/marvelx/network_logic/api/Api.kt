@@ -29,6 +29,7 @@ import com.alexgreece45.marvelx.network_logic.models_api.user.postLogin.Response
 import com.alexgreece45.marvelx.network_logic.models_api.user.privacySettings.RequestPrivacySettings
 import com.alexgreece45.marvelx.network_logic.models_api.user.privacySettings.ResponsePrivacySettings
 import com.alexgreece45.marvelx.network_logic.models_api.user.profileDetails.RequestProfileDetailsUpdate
+import com.alexgreece45.marvelx.network_logic.models_api.user.profileDetails.ResponseBasicProfileDetails
 import com.alexgreece45.marvelx.network_logic.models_api.user.profileDetails.ResponseProfileDetails
 import com.alexgreece45.marvelx.network_logic.models_api.user.signup.RequestUserSignup
 import com.alexgreece45.marvelx.network_logic.models_api.user.signup.ResponseSignup
@@ -126,7 +127,7 @@ interface ApiService {
      * Retrieves the profile details of the current user.
      */
     @GET("/api/private/marvelx/user/me")
-    suspend fun getUserMe(): Response<ResponseProfileDetails>
+    suspend fun getUserMe(): Response<ResponseBasicProfileDetails>
 
     /**
      * Updates the profile details of the current user.
@@ -204,7 +205,7 @@ interface ApiClient {
     suspend fun forgotPasswordIsOtpBlockedEmail(body: RequestForgotPasswordOtpBlockedEmail): Response<ResponseForgotPasswordOtpBlockedEmail>
     suspend fun forgotPasswordIsOtpBlockedPhoneNumber(body: RequestForgotPasswordOtpBlockedPhoneNumber): Response<ResponseForgotPasswordOtpBlockedPhoneNumber>
     suspend fun forgotPasswordValidateOtp(body: RequestForgotPasswordValidateOtp): Response<ResponseForgotPasswordValidateOtp>
-    suspend fun getUserMe(): Response<ResponseProfileDetails>
+    suspend fun getUserMe(): Response<ResponseBasicProfileDetails>
     suspend fun updateUserMe(requestProfileDetailsUpdate: RequestProfileDetailsUpdate): ApiResult<String>
     suspend fun updateUserProfileImage(profileImage: MultipartBody.Part): ApiResult<String>
     suspend fun getUserProfileDetails(userId: Int): Response<ResponseProfileDetails>

@@ -31,6 +31,7 @@ import com.alexgreece45.marvelx.network_logic.models_api.user.postLogin.Response
 import com.alexgreece45.marvelx.network_logic.models_api.user.privacySettings.RequestPrivacySettings
 import com.alexgreece45.marvelx.network_logic.models_api.user.privacySettings.ResponsePrivacySettings
 import com.alexgreece45.marvelx.network_logic.models_api.user.profileDetails.RequestProfileDetailsUpdate
+import com.alexgreece45.marvelx.network_logic.models_api.user.profileDetails.ResponseBasicProfileDetails
 import com.alexgreece45.marvelx.network_logic.models_api.user.profileDetails.ResponseProfileDetails
 import com.alexgreece45.marvelx.network_logic.models_api.user.signup.RequestUserSignup
 import com.alexgreece45.marvelx.network_logic.models_api.user.signup.ResponseSignup
@@ -109,7 +110,7 @@ class ApiClientImpl(
     override suspend fun forgotPasswordValidateOtp(body: RequestForgotPasswordValidateOtp): Response<ResponseForgotPasswordValidateOtp> =
         apiService.forgotPasswordValidateOtp(body)
 
-    override suspend fun getUserMe(): Response<ResponseProfileDetails> = apiService.getUserMe()
+    override suspend fun getUserMe(): Response<ResponseBasicProfileDetails> = apiService.getUserMe()
 
     override suspend fun updateUserMe(requestProfileDetailsUpdate: RequestProfileDetailsUpdate): ApiResult<String> =
         executeApiServiceCallNoTransformation { apiService.updateUserMe(requestProfileDetailsUpdate) }

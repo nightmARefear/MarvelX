@@ -2,11 +2,12 @@ package com.alexgreece45.marvelx.ui.screens.profile
 
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.domain.interactors.GetProfileDetailsPartialState
+import com.alexgreece45.marvelx.controllers.PrefKeys
+import com.alexgreece45.marvelx.domain.interactors.GetCurrentUserProfileDetailsPartialState
 import com.alexgreece45.marvelx.domain.interactors.LoginInteractor
 import com.alexgreece45.marvelx.domain.interactors.LogoutPartialState
 import com.alexgreece45.marvelx.domain.interactors.UserInteractor
-import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.ProfileDetailsDomain
+import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.BasicProfileDetailsDomain
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
@@ -33,7 +34,7 @@ sealed interface ProfileContract {
 
         val profileBannerLabel: String = "",
         val sections: List<ProfileScreenSection> = emptyList(),
-        val profileDetails: ProfileDetailsDomain? = null,
+        val profileDetails: BasicProfileDetailsDomain? = null,
 
         val error: ProfileScreenErrorView? = null,
     ) : BaseState
@@ -41,7 +42,7 @@ sealed interface ProfileContract {
     sealed class Effect : BaseEffect {
         sealed class Navigation : Effect() {
             data object NavigateToHomeScreen : Navigation()
-            data object NavigateToProfileDetailsScreen : Navigation()
+            data class NavigateToProfileDetailsScreen(val userId: Int) : Navigation()
             data object NavigateToPrivacySettingsScreen : Navigation()
             data object NavigateToFaqScreen : Navigation()
         }
@@ -54,7 +55,8 @@ sealed interface ProfileContract {
 class ProfileViewModel(
     private val resourceProvider: ResourceProvider,
     private val loginInteractor: LoginInteractor,
-    private val userInteractor: UserInteractor
+    private val userInteractor: UserInteractor,
+    private val prefKeys: PrefKeys
 ) :
     BaseViewModel<ProfileContract.Event, ProfileContract.State, ProfileContract.Effect>() {
     override fun setInitialState(): ProfileContract.State = ProfileContract.State()
@@ -83,7 +85,7 @@ class ProfileViewModel(
 
             ProfileContract.Event.OnSeeYourProfileClicked -> {
                 setEffect {
-                    ProfileContract.Effect.Navigation.NavigateToProfileDetailsScreen
+                    ProfileContract.Effect.Navigation.NavigateToProfileDetailsScreen(prefKeys.getUserId())
                 }
             }
         }
@@ -101,19 +103,19 @@ class ProfileViewModel(
         viewModelScope.launch {
             userInteractor.getCurrentUserProfileDetails().collect {
                 when (it) {
-                    is GetProfileDetailsPartialState.Success -> {
+                    is GetCurrentUserProfileDetailsPartialState.Success -> {
                         setState {
                             copy(
                                 profileBannerLabel = resourceProvider.getString(
                                     R.string.profile_screen_profile_banner_label_welcome_back,
-                                    it.profileDetailsDomain.firstName
+                                    it.basicProfileDetails.firstName
                                 ),
-                                profileDetails = it.profileDetailsDomain
+                                profileDetails = it.basicProfileDetails
                             )
                         }
                     }
 
-                    is GetProfileDetailsPartialState.Failed -> {
+                    is GetCurrentUserProfileDetailsPartialState.Failed -> {
                         setState {
                             copy(
                                 isLoading = false,
@@ -129,7 +131,7 @@ class ProfileViewModel(
                         )
                     }
 
-                    GetProfileDetailsPartialState.NoInternetConnection -> {
+                    GetCurrentUserProfileDetailsPartialState.NoInternetConnection -> {
                         setState {
                             copy(
                                 isLoading = false,

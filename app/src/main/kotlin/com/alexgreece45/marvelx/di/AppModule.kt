@@ -272,7 +272,7 @@ private val viewModelModule = module {
     viewModel { AllFavoriteCharactersViewModel(get()) }
     viewModel { CharacterViewModel(get(), get()) }
     viewModel { ComicViewModel(get()) }
-    viewModel { ProfileViewModel(get(), get(), get()) }
+    viewModel { ProfileViewModel(get(), get(), get(), get()) }
     viewModel { ProfileDetailsViewModel(get(), get()) }
     viewModel { EditProfileDetailsViewModel(get(), get(), get(), get()) }
     viewModel { PrivacySettingsViewModel(get(), get()) }

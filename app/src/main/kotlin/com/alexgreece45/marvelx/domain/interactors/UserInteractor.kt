@@ -4,6 +4,7 @@ import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.configuration.ConfigLogic
 import com.alexgreece45.marvelx.controllers.AppLogger
 import com.alexgreece45.marvelx.data.model.RepositoryPrivacySettings
+import com.alexgreece45.marvelx.data.repository.GetCurrentUserProfileDetailsRepositoryResponse
 import com.alexgreece45.marvelx.data.repository.GetProfileDetailsRepositoryResponse
 import com.alexgreece45.marvelx.data.repository.UserRepository
 import com.alexgreece45.marvelx.domain.helper.InteractorPartialState
@@ -11,7 +12,10 @@ import com.alexgreece45.marvelx.domain.helper.handleRepositoryResult
 import com.alexgreece45.marvelx.domain.helper.handleRepositoryResultNoTransformation
 import com.alexgreece45.marvelx.domain.model_api.user.privacySettings.PrivacySettingsDomain
 import com.alexgreece45.marvelx.domain.model_api.user.privacySettings.toPrivacySettingsDomain
+import com.alexgreece45.marvelx.domain.model_api.user.privacySettings.toRequestPrivacySettings
+import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.BasicProfileDetailsDomain
 import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.ProfileDetailsDomain
+import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.toBasicProfileDetailsDomain
 import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.toProfileDetailsDomain
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.extensions.fromBytesToMb
@@ -33,12 +37,12 @@ interface UserInteractor {
     /**
      * Gets the profile details of the current user.
      */
-    suspend fun getCurrentUserProfileDetails(): Flow<GetProfileDetailsPartialState>
+    suspend fun getCurrentUserProfileDetails(): Flow<GetCurrentUserProfileDetailsPartialState>
 
     /**
      * Updates the profile details of the current user.
      */
-    suspend fun updateUserProfileDetails(profileDetailsDomain: ProfileDetailsDomain): Flow<InteractorPartialState<String>>
+    suspend fun updateCurrentUserProfileDetails(profileDetails: BasicProfileDetailsDomain): Flow<InteractorPartialState<String>>
 
     /**
      * Updates the profile image of the current user by using the provided image file.
@@ -62,7 +66,7 @@ class UserInteractorImpl(
     private val logger: AppLogger,
     private val resourceProvider: ResourceProvider,
     private val repository: UserRepository,
-    private val configLogic: ConfigLogic
+    private val configLogic: ConfigLogic,
 ) : UserInteractor {
 
     override suspend fun getProfileDetails(userId: Int): Flow<GetProfileDetailsPartialState> =
@@ -93,38 +97,53 @@ class UserInteractorImpl(
             }
         }
 
-    override suspend fun getCurrentUserProfileDetails(): Flow<GetProfileDetailsPartialState> =
+    override suspend fun getCurrentUserProfileDetails(): Flow<GetCurrentUserProfileDetailsPartialState> =
         flow {
             val genericErrorMessage = resourceProvider.getGenericErrorMessage()
             repository.getCurrentUserProfileDetails().collect {
                 when (it) {
-                    is GetProfileDetailsRepositoryResponse.Success -> {
-                        it.response?.let { response ->
-                            emit(GetProfileDetailsPartialState.Success(response.toProfileDetailsDomain()))
-                        } ?: run {
-                            emit(GetProfileDetailsPartialState.Failed(genericErrorMessage))
+                    is GetCurrentUserProfileDetailsRepositoryResponse.Success -> {
+                        when (val response = it.response) {
+                            null -> {
+                                emit(
+                                    GetCurrentUserProfileDetailsPartialState.Failed(
+                                        genericErrorMessage
+                                    )
+                                )
+                            }
+
+                            else -> {
+                                emit(
+                                    GetCurrentUserProfileDetailsPartialState.Success(
+                                        response.toBasicProfileDetailsDomain(
+                                            isGenderVisible = true
+                                        )
+                                    )
+                                )
+                            }
                         }
                     }
 
-                    is GetProfileDetailsRepositoryResponse.Failed -> {
-                        emit(GetProfileDetailsPartialState.Failed(genericErrorMessage))
+                    is GetCurrentUserProfileDetailsRepositoryResponse.Failed -> {
+                        emit(GetCurrentUserProfileDetailsPartialState.Failed(genericErrorMessage))
                     }
                 }
             }
         }.safeAsync {
+            logger.e { "(getCurrentUserProfileDetails) error: ${it.message.orEmpty()}" }
             when (it) {
-                is IOException -> GetProfileDetailsPartialState.NoInternetConnection
-                else -> GetProfileDetailsPartialState.Failed(resourceProvider.getGenericErrorMessage())
+                is IOException -> GetCurrentUserProfileDetailsPartialState.NoInternetConnection
+                else -> GetCurrentUserProfileDetailsPartialState.Failed(resourceProvider.getGenericErrorMessage())
             }
         }
 
-    override suspend fun updateUserProfileDetails(profileDetailsDomain: ProfileDetailsDomain): Flow<InteractorPartialState<String>> =
+    override suspend fun updateCurrentUserProfileDetails(profileDetails: BasicProfileDetailsDomain): Flow<InteractorPartialState<String>> =
         flow {
             repository.updateCurrentUserProfileDetails(
-                firstName = profileDetailsDomain.firstName,
-                lastName = profileDetailsDomain.lastName,
-                gender = profileDetailsDomain.gender.key,
-                email = profileDetailsDomain.email
+                firstName = profileDetails.firstName,
+                lastName = profileDetails.lastName,
+                gender = profileDetails.gender.key,
+                email = profileDetails.email
             ).collect { repositoryResult ->
                 handleRepositoryResultNoTransformation(repositoryResult).collect {
                     emit(it)
@@ -185,15 +204,22 @@ class UserInteractorImpl(
 
     override suspend fun updatePrivacySettings(privacySettingsDomain: PrivacySettingsDomain): Flow<InteractorPartialState<String>> =
         flow {
-            repository.updatePrivacySettings(
-                privacySettingsDomain.isGenderVisible,
-                privacySettingsDomain.isEmailVisible
-            ).collect { repositoryResult ->
-                handleRepositoryResultNoTransformation(repositoryResult).collect {
-                    emit(it)
+            repository.updatePrivacySettings(privacySettingsDomain.toRequestPrivacySettings())
+                .collect { repositoryResult ->
+                    handleRepositoryResultNoTransformation(repositoryResult).collect {
+                        emit(it)
+                    }
                 }
-            }
         }
+}
+
+sealed class GetCurrentUserProfileDetailsPartialState {
+    data class Success(val basicProfileDetails: BasicProfileDetailsDomain) :
+        GetCurrentUserProfileDetailsPartialState()
+
+    data class Failed(val errorMessage: String) : GetCurrentUserProfileDetailsPartialState()
+
+    data object NoInternetConnection : GetCurrentUserProfileDetailsPartialState()
 }
 
 sealed class GetProfileDetailsPartialState {

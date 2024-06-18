@@ -33,7 +33,7 @@ sealed interface ProfileDetailsContract {
     )
 
     sealed interface Event : BaseEvent {
-        data object Init : Event
+        data class Init(val userId: Int) : Event
         data object OnBackClicked : Event
         data object OnEditProfileDetailsIconClicked : Event
 
@@ -56,6 +56,10 @@ sealed interface ProfileDetailsContract {
         val isGenderDropDownExpanded: Boolean = false,
         val profileDetails: ProfileDetailsDomain? = null,
 
+        val isDifferentUser: Boolean = true,
+        val isGenderHidden: Boolean = false,
+        val isEmailHidden: Boolean = false,
+
         val alertDialogError: AlertDialogErrorData? = null,
         val errorView: ErrorView? = null,
     ) : BaseState
@@ -73,14 +77,14 @@ sealed interface ProfileDetailsContract {
 
 class ProfileDetailsViewModel(
     private val userInteractor: UserInteractor,
-    private val resourceProvider: ResourceProvider
+    private val resourceProvider: ResourceProvider,
 ) : BaseViewModel<ProfileDetailsContract.Event, ProfileDetailsContract.State, ProfileDetailsContract.Effect>() {
     override fun setInitialState(): ProfileDetailsContract.State =
         ProfileDetailsContract.State()
 
     override fun handleEvents(event: ProfileDetailsContract.Event) {
         when (event) {
-            ProfileDetailsContract.Event.Init -> {
+            is ProfileDetailsContract.Event.Init -> {
                 loadProfileDetails(event)
             }
 
@@ -129,9 +133,9 @@ class ProfileDetailsViewModel(
     }
 
     /**
-     * Loads the profile details.
+     * Loads the profile details by user ID.
      */
-    private fun loadProfileDetails(event: ProfileDetailsContract.Event) {
+    private fun loadProfileDetails(event: ProfileDetailsContract.Event.Init) {
         setState {
             copy(
                 isLoading = true,
@@ -139,8 +143,21 @@ class ProfileDetailsViewModel(
             )
         }
         viewModelScope.launch {
-            userInteractor.getCurrentUserProfileDetails().collect {
+            userInteractor.getProfileDetails(event.userId).collect {
                 when (it) {
+                    is GetProfileDetailsPartialState.Success -> {
+                        setState {
+                            copy(
+                                isLoading = false,
+                                errorView = null,
+                                profileDetails = it.profileDetailsDomain,
+                                isDifferentUser = it.profileDetailsDomain.isDifferentUser,
+                                isGenderHidden = it.profileDetailsDomain.isDifferentUser && it.profileDetailsDomain.privacySettings != null && !it.profileDetailsDomain.privacySettings.isGenderVisible,
+                                isEmailHidden = it.profileDetailsDomain.isDifferentUser && it.profileDetailsDomain.privacySettings != null && !it.profileDetailsDomain.privacySettings.isEmailVisible,
+                            )
+                        }
+                    }
+
                     is GetProfileDetailsPartialState.Failed -> {
                         setState {
                             copy(
@@ -171,16 +188,6 @@ class ProfileDetailsViewModel(
                                         onPrimaryButtonClicked = { loadProfileDetails(event) }
                                     )
                                 )
-                            )
-                        }
-                    }
-
-                    is GetProfileDetailsPartialState.Success -> {
-                        setState {
-                            copy(
-                                isLoading = false,
-                                errorView = null,
-                                profileDetails = it.profileDetailsDomain
                             )
                         }
                     }

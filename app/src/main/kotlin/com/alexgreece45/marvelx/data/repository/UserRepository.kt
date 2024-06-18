@@ -11,6 +11,7 @@ import com.alexgreece45.marvelx.network_logic.models_api.user.ResponseUserError
 import com.alexgreece45.marvelx.network_logic.models_api.user.privacySettings.RequestPrivacySettings
 import com.alexgreece45.marvelx.network_logic.models_api.user.privacySettings.ResponsePrivacySettings
 import com.alexgreece45.marvelx.network_logic.models_api.user.profileDetails.RequestProfileDetailsUpdate
+import com.alexgreece45.marvelx.network_logic.models_api.user.profileDetails.ResponseBasicProfileDetails
 import com.alexgreece45.marvelx.network_logic.models_api.user.profileDetails.ResponseProfileDetails
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -25,7 +26,7 @@ interface UserRepository {
     /**
      * Get the profile details of the current user.
      */
-    suspend fun getCurrentUserProfileDetails(): Flow<GetProfileDetailsRepositoryResponse>
+    suspend fun getCurrentUserProfileDetails(): Flow<GetCurrentUserProfileDetailsRepositoryResponse>
 
     /**
      * Updates the profile details of the current user.
@@ -53,44 +54,44 @@ interface UserRepository {
     /**
      * Updates the privacy settings of the current user.
      */
-    suspend fun updatePrivacySettings(
-        isGenderVisible: Boolean,
-        isEmailVisible: Boolean
-    ): Flow<RepositoryResult<String>>
+    suspend fun updatePrivacySettings(requestPrivacySettings: RequestPrivacySettings): Flow<RepositoryResult<String>>
 }
 
 class UserRepositoryImpl(
     private val apiClient: ApiClient
 ) : UserRepository {
-    override suspend fun getProfileDetails(userId: Int): Flow<GetProfileDetailsRepositoryResponse> =
+    override suspend fun getProfileDetails(
+        userId: Int
+    ): Flow<GetProfileDetailsRepositoryResponse> =
         flow {
-            apiClient.getUserProfileDetails(userId).let { response ->
-                if (response.isSuccessful) {
-                    emit(
-                        GetProfileDetailsRepositoryResponse.Success(
-                            response = response.body()
-                        )
-                    )
-                } else {
-                    emit(
-                        GetProfileDetailsRepositoryResponse.Failed(
-                            responseUserError = parseError(
-                                response
+            apiClient.getUserProfileDetails(userId)
+                .let { response ->
+                    if (response.isSuccessful) {
+                        emit(
+                            GetProfileDetailsRepositoryResponse.Success(
+                                response = response.body()
                             )
                         )
-                    )
+                    } else {
+                        emit(
+                            GetProfileDetailsRepositoryResponse.Failed(
+                                responseUserError = parseError(
+                                    response
+                                )
+                            )
+                        )
+                    }
                 }
-            }
         }
 
-    override suspend fun getCurrentUserProfileDetails(): Flow<GetProfileDetailsRepositoryResponse> =
+    override suspend fun getCurrentUserProfileDetails(): Flow<GetCurrentUserProfileDetailsRepositoryResponse> =
         flow {
             apiClient.getUserMe().let { response ->
                 if (response.isSuccessful) {
-                    emit(GetProfileDetailsRepositoryResponse.Success(response.body()))
+                    emit(GetCurrentUserProfileDetailsRepositoryResponse.Success(response.body()))
                 } else {
                     emit(
-                        GetProfileDetailsRepositoryResponse.Failed(
+                        GetCurrentUserProfileDetailsRepositoryResponse.Failed(
                             responseUserError = parseError(
                                 response
                             )
@@ -134,15 +135,24 @@ class UserRepositoryImpl(
             }
         }
 
-    override suspend fun updatePrivacySettings(
-        isGenderVisible: Boolean,
-        isEmailVisible: Boolean
-    ): Flow<RepositoryResult<String>> = flow {
-        val request = RequestPrivacySettings(isGenderVisible.toString(), isEmailVisible.toString())
-        handleApiResultNoTransformation(apiClient.updateUserPrivacySettings(request)).collect {
-            emit(it)
+    override suspend fun updatePrivacySettings(requestPrivacySettings: RequestPrivacySettings): Flow<RepositoryResult<String>> =
+        flow {
+            handleApiResultNoTransformation(
+                apiClient.updateUserPrivacySettings(
+                    requestPrivacySettings
+                )
+            ).collect {
+                emit(it)
+            }
         }
-    }
+}
+
+sealed class GetCurrentUserProfileDetailsRepositoryResponse {
+    data class Success(val response: ResponseBasicProfileDetails?) :
+        GetCurrentUserProfileDetailsRepositoryResponse()
+
+    data class Failed(val responseUserError: ResponseUserError) :
+        GetCurrentUserProfileDetailsRepositoryResponse()
 }
 
 sealed class GetProfileDetailsRepositoryResponse {
