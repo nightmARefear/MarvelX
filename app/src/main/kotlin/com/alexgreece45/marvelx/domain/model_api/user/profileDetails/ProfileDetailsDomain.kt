@@ -27,9 +27,9 @@ data class ProfileDetailsDomain(
 ) {
     companion object {
         /**
-         * Returns mock data. Useful for previews and testing.
+         * Mock data representing the same user.
          */
-        fun mock(): ProfileDetailsDomain = ProfileDetailsDomain(
+        fun mockSameUser(): ProfileDetailsDomain = ProfileDetailsDomain(
             BasicProfileDetailsDomain(
                 firstName = "Alexandros",
                 lastName = "Voliotis",
@@ -48,6 +48,31 @@ data class ProfileDetailsDomain(
             ),
             userStats = UserStatsDomain(
                 friendsCount = "3,002", listingsCount = "100", favoritesCount = "10.2K"
+            )
+        )
+
+        /**
+         * Mock data representing another user.
+         */
+        fun mockAnotherUser(): ProfileDetailsDomain = ProfileDetailsDomain(
+            BasicProfileDetailsDomain(
+                firstName = "Jill",
+                lastName = "Doe",
+                gender = Gender.Female,
+                email = "jill.d@domain.com",
+                profileImageUrl = "jill_d_profile_image.jpg",
+                fullName = "Jill Doe"
+            ),
+            isDifferentUser = true,
+            privacySettings = PrivacySettingsDomain(
+                isFriendsListVisible = true,
+                isListingsListVisible = true,
+                isFavoritesListVisible = false,
+                isGenderVisible = true,
+                isEmailVisible = false
+            ),
+            userStats = UserStatsDomain(
+                friendsCount = "20", listingsCount = "1,006", favoritesCount = "1.09K"
             )
         )
     }

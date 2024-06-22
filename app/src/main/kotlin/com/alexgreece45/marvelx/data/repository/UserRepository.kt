@@ -1,13 +1,16 @@
 package com.alexgreece45.marvelx.data.repository
 
 import com.alexgreece45.marvelx.data.model.RepositoryPrivacySettings
+import com.alexgreece45.marvelx.data.model.RepositoryUsersBlocked
 import com.alexgreece45.marvelx.data.model.toRepositoryPrivacySettings
+import com.alexgreece45.marvelx.data.model.toRepositoryUsersBlocked
 import com.alexgreece45.marvelx.data.repository.helper.RepositoryResult
 import com.alexgreece45.marvelx.data.repository.helper.handleApiResult
 import com.alexgreece45.marvelx.data.repository.helper.handleApiResultNoTransformation
 import com.alexgreece45.marvelx.data.repository.helper.parseError
 import com.alexgreece45.marvelx.network_logic.api.ApiClient
 import com.alexgreece45.marvelx.network_logic.models_api.user.ResponseUserError
+import com.alexgreece45.marvelx.network_logic.models_api.user.ResponseUsersBlocked
 import com.alexgreece45.marvelx.network_logic.models_api.user.privacySettings.RequestPrivacySettings
 import com.alexgreece45.marvelx.network_logic.models_api.user.privacySettings.ResponsePrivacySettings
 import com.alexgreece45.marvelx.network_logic.models_api.user.profileDetails.RequestProfileDetailsUpdate
@@ -27,6 +30,8 @@ interface UserRepository {
      * Get the profile details of the current user.
      */
     suspend fun getCurrentUserProfileDetails(): Flow<GetCurrentUserProfileDetailsRepositoryResponse>
+
+    suspend fun getCurrentUserBlockedUsers(): Flow<RepositoryResult<RepositoryUsersBlocked>>
 
     /**
      * Updates the profile details of the current user.
@@ -55,6 +60,16 @@ interface UserRepository {
      * Updates the privacy settings of the current user.
      */
     suspend fun updatePrivacySettings(requestPrivacySettings: RequestPrivacySettings): Flow<RepositoryResult<String>>
+
+    /**
+     * Blocks the user with [userId].
+     */
+    suspend fun blockUser(userId: Int): Flow<RepositoryResult<String>>
+
+    /**
+     * Unblocks the user with [userId].
+     */
+    suspend fun unblockUser(userId: Int): Flow<RepositoryResult<String>>
 }
 
 class UserRepositoryImpl(
@@ -86,7 +101,7 @@ class UserRepositoryImpl(
 
     override suspend fun getCurrentUserProfileDetails(): Flow<GetCurrentUserProfileDetailsRepositoryResponse> =
         flow {
-            apiClient.getUserMe().let { response ->
+            apiClient.getCurrentUserProfileDetails().let { response ->
                 if (response.isSuccessful) {
                     emit(GetCurrentUserProfileDetailsRepositoryResponse.Success(response.body()))
                 } else {
@@ -101,6 +116,14 @@ class UserRepositoryImpl(
             }
         }
 
+    override suspend fun getCurrentUserBlockedUsers(): Flow<RepositoryResult<RepositoryUsersBlocked>> =
+        flow {
+            handleApiResult(
+                apiResult = apiClient.getCurrentUserBlockedUsers(),
+                transformation = ResponseUsersBlocked::toRepositoryUsersBlocked
+            ).collect { emit(it) }
+        }
+
     override suspend fun updateCurrentUserProfileDetails(
         firstName: String,
         lastName: String,
@@ -113,7 +136,7 @@ class UserRepositoryImpl(
             gender = gender,
             email = email
         )
-        handleApiResultNoTransformation(apiClient.updateUserMe(request)).collect {
+        handleApiResultNoTransformation(apiClient.updateCurrentUserProfileDetails(request)).collect {
             emit(it)
         }
     }
@@ -145,6 +168,18 @@ class UserRepositoryImpl(
                 emit(it)
             }
         }
+
+    override suspend fun blockUser(userId: Int): Flow<RepositoryResult<String>> = flow {
+        handleApiResultNoTransformation(
+            apiClient.blockUser(userId)
+        ).collect { emit(it) }
+    }
+
+    override suspend fun unblockUser(userId: Int): Flow<RepositoryResult<String>> = flow {
+        handleApiResultNoTransformation(
+            apiClient.unblockUser(userId)
+        ).collect { emit(it) }
+    }
 }
 
 sealed class GetCurrentUserProfileDetailsRepositoryResponse {

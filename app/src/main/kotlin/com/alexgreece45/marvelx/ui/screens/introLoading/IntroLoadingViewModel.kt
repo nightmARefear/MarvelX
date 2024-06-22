@@ -81,9 +81,17 @@ class IntroLoadingViewModel(
     override fun handleEvents(event: IntroLoadingContract.Event) {
         when (event) {
             IntroLoadingContract.Event.Init -> {
+                resetFailedAuthenticationValues()
                 loginFlow()
             }
         }
+    }
+
+    /**
+     * Resets the failed authentication related values.
+     */
+    private fun resetFailedAuthenticationValues() {
+        authController.currentConsecutiveFailedAuthenticationData = null
     }
 
     /**

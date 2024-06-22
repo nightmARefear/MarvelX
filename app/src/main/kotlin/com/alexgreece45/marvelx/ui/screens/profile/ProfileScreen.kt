@@ -28,7 +28,6 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
@@ -259,7 +258,7 @@ private fun ProfileSection(
 )
 @Composable
 private fun ProfileScreenPreview() {
-    val profileDetails = ProfileDetailsDomain.mock()
+    val profileDetails = ProfileDetailsDomain.mockSameUser()
     MarvelXTheme {
         ProfileScreen(
             onEventSent = {},

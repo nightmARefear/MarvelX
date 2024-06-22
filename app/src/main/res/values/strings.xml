@@ -150,15 +150,27 @@
     // Profile Screen --> Profile Details
     <string name="profile_details_screen_header_title">Profile Details</string>
 
+    <string name="profile_details_screen_label_more_actions_block">Block</string>
+    <string name="profile_details_screen_label_more_actions_share_profile">Share Profile</string>
+    <string name="profile_details_screen_label_more_actions_show_qr_code">Show QR code</string>
     <string name="profile_details_screen_label_profile_banner_tile_friends">friends</string>
     <string name="profile_details_screen_label_profile_banner_tile_listings">listings</string>
     <string name="profile_details_screen_label_profile_banner_tile_favorites">favorites</string>
     <string name="profile_details_screen_label_gender_hidden">Gender is hidden</string>
     <string name="profile_details_screen_label_email_hidden">Email is hidden</string>
+    <string name="profile_details_screen_label_scan_qr_code">Scan the QR code below</string>
+    <string name="profile_details_screen_label_success_block_user">This user has been blocked.</string>
+    <string name="profile_details_screen_label_alert_dialog_block_user_title">Block User?</string>
+    <string name="profile_details_screen_label_alert_dialog_block_user_subtitle">If you block this user you won\'t be able to see each other\'s profile, and perform transactions.</string>
+    <string name="profile_details_screen_label_alert_dialog_block_user_button_cancel">Cancel</string>
+    <string name="profile_details_screen_label_alert_dialog_block_user_button_block">Block</string>
 
     <string name="profile_details_screen_content_description_edit_profile_details">edit profile details</string>
+    <string name="profile_details_screen_content_description_qr_code">QR code</string>
 
     <string name="profile_details_screen_error_loading_profile_details">Error loading profile details</string>
+    <string name="profile_details_screen_error_blocking_user">An error occurred whilst blocking this user. Try again later.</string>
+    <string name="profile_details_screen_error_generating_qr_code">An error occurred whilst generating the QR code.</string>
     <string name="profile_details_screen_error_hidden_list_friends">The friends list of this user is hidden.</string>
     <string name="profile_details_screen_error_hidden_list_listings">The listings list of this user is hidden.</string>
     <string name="profile_details_screen_error_hidden_list_favorites">The favorites list of this user is hidden.></string>
@@ -304,9 +316,10 @@
     <string name="content_description_back">Back</string>
     <string name="content_description_close">Close</string>
     <string name="content_description_ic_reset">Reset</string>
-    <string name="content_description_ic_edit">Google</string>
+    <string name="content_description_ic_edit">Edit</string>
     <string name="content_description_ic_google_logo">Google</string>
     <string name="content_description_ic_logout">logout</string>
+    <string name="content_description_ic_more_actions">more actions icon</string>
     <string name="content_description_splash_loading_animation">Loading animation</string>
     <string name="content_description_lock">lock</string>
     <string name="content_description_person">person</string>
@@ -316,6 +329,7 @@
     <string name="content_description_collapse">collapse</string>
     <string name="content_description_navigate">navigate</string>
     <string name="content_description_icon_email">email icon</string>
+    <string name="content_description_more_actions">more actions</string>
     <string name="content_description_gender_icon_female">female gender icon</string>
     <string name="content_description_gender_icon_male">male gender icon</string>
     <string name="content_description_gender_icon_other">other gender icon</string>

@@ -24,12 +24,16 @@ import com.alexgreece45.marvelx.controllers.AuthController
 import com.alexgreece45.marvelx.controllers.AuthControllerImpl
 import com.alexgreece45.marvelx.controllers.CryptoController
 import com.alexgreece45.marvelx.controllers.CryptoControllerImpl
+import com.alexgreece45.marvelx.controllers.MarvelXBackendRequestController
+import com.alexgreece45.marvelx.controllers.MarvelXBackendRequestControllerImpl
 import com.alexgreece45.marvelx.controllers.PrefKeys
 import com.alexgreece45.marvelx.controllers.PrefKeysImpl
 import com.alexgreece45.marvelx.controllers.PreferencesController
 import com.alexgreece45.marvelx.controllers.PreferencesControllerImpl
 import com.alexgreece45.marvelx.controllers.RefreshTokenController
 import com.alexgreece45.marvelx.controllers.RefreshTokenControllerImpl
+import com.alexgreece45.marvelx.controllers.RequestController
+import com.alexgreece45.marvelx.controllers.RequestControllerImpl
 import com.alexgreece45.marvelx.controllers.RootController
 import com.alexgreece45.marvelx.controllers.RootControllerImpl
 import com.alexgreece45.marvelx.controllers.SecurityController
@@ -50,6 +54,8 @@ import com.alexgreece45.marvelx.data.repository.LoginRepository
 import com.alexgreece45.marvelx.data.repository.LoginRepositoryImpl
 import com.alexgreece45.marvelx.data.repository.OtpRepository
 import com.alexgreece45.marvelx.data.repository.OtpRepositoryImpl
+import com.alexgreece45.marvelx.data.repository.RefreshTokenRepository
+import com.alexgreece45.marvelx.data.repository.RefreshTokenRepositoryImpl
 import com.alexgreece45.marvelx.data.repository.RegisterRepository
 import com.alexgreece45.marvelx.data.repository.RegisterRepositoryImpl
 import com.alexgreece45.marvelx.data.repository.UserRepository
@@ -78,8 +84,6 @@ import com.alexgreece45.marvelx.domain.interactors.UserInteractor
 import com.alexgreece45.marvelx.domain.interactors.UserInteractorImpl
 import com.alexgreece45.marvelx.domain.worker.RefreshTokenWorker
 import com.alexgreece45.marvelx.network_logic.di.networkKoinModule
-import com.alexgreece45.marvelx.network_logic.interceptors.ApiInterceptor
-import com.alexgreece45.marvelx.network_logic.interceptors.WebsocketInterceptor
 import com.alexgreece45.marvelx.ui.helper.FieldValidationRules
 import com.alexgreece45.marvelx.ui.helper.FieldValidationRulesImpl
 import com.alexgreece45.marvelx.ui.navigation.router.RouterHost
@@ -132,7 +136,6 @@ fun initKoin(marvelXApplication: MarvelXApplication) {
         modules(
             navigationModule,
             databaseModule,
-            interceptorModule,
             networkModule,
             repositoryModule,
             interactorModule,
@@ -165,29 +168,14 @@ private val databaseModule = module {
     }
 }
 
-private val interceptorModule = module {
-    single<ApiInterceptor> {
-        ApiInterceptor(
-            get(),
-            get(),
-            get(),
-            get(),
-            get()
-        )
-    }
-
-    single<WebsocketInterceptor> {
-        WebsocketInterceptor(get())
-    }
-}
-
 //private val networkModule: Module = defaultModule
 private val networkModule: Module = networkKoinModule
 
 private val repositoryModule = module {
     single<CharacterRepository> { CharacterRepositoryImpl(get()) }
     single<FavoriteCharactersRepository> { FavoriteCharactersRepositoryImpl(get()) }
-    single<LoginRepository> { LoginRepositoryImpl(get(), get(), get()) }
+    single<RefreshTokenRepository> { RefreshTokenRepositoryImpl(get()) }
+    single<LoginRepository> { LoginRepositoryImpl(get(), get(), get(), get()) }
     single<UserRepository> { UserRepositoryImpl(get()) }
     single<ConfigRepository> { ConfigRepositoryImpl(get()) }
     single<ForgotPasswordRepository> { ForgotPasswordRepositoryImpl(get(), get()) }
@@ -202,6 +190,7 @@ private val interactorModule = module {
     factory<ComicInteractor> { ComicInteractorImpl(get(), get(), get()) }
     factory<LoginInteractor> {
         LoginInteractorImpl(
+            get(),
             get(),
             get(),
             get(),
@@ -225,7 +214,7 @@ private val controllerModule = module {
     single<PreferencesController> { PreferencesControllerImpl(get()) }
     single<PrefKeys> { PrefKeysImpl(get(), get()) }
     single<CryptoController> { CryptoControllerImpl(get(), get()) }
-    single<AuthController> { AuthControllerImpl(get(), get()) }
+    single<AuthController> { AuthControllerImpl(get(), get(), get(), get()) }
     single<RefreshTokenController> { RefreshTokenControllerImpl(get(), get(), get()) }
     single<TimerController> { TimerControllerImpl() }
     single<RootController> { RootControllerImpl(get()) }
@@ -234,6 +223,14 @@ private val controllerModule = module {
     single<AppLogger> { AppLoggerImpl(get()) }
     single<AntiReverseEngineeringController> { AntiReverseEngineeringControllerImpl(get(), get()) }
     single<AntiHookController> { AntiHookControllerImpl() }
+    single<RequestController> { RequestControllerImpl(get(), get(), get()) }
+    single<MarvelXBackendRequestController> {
+        MarvelXBackendRequestControllerImpl(
+            get(),
+            get(),
+            get()
+        )
+    }
 }
 
 private val formValidatorModule = module {
@@ -257,8 +254,8 @@ private val viewModelModule = module {
     viewModel { SplashViewModel(get(), get()) }
     viewModel { IntroLoadingViewModel(get(), get(), get(), get(), get(), get(), get()) }
 
-    viewModel { HomeViewModel(get()) }
-    viewModel { LoginViewModel(get(), get(), get(), get(), get()) }
+    viewModel { HomeViewModel(get(), get()) }
+    viewModel { LoginViewModel(get(), get(), get(), get()) }
     viewModel { SignupViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get()) }
 
     viewModel { OtpViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
@@ -267,7 +264,7 @@ private val viewModelModule = module {
     viewModel { ForgotPasswordViewModel(get(), get(), get(), get()) }
     viewModel { ChangePasswordViewModel(get(), get()) }
 
-    viewModel { AllCharactersViewModel(get(), get()) }
+    viewModel { AllCharactersViewModel(get(), get(), get()) }
     viewModel { AllCharacterComicsViewModel(get()) }
     viewModel { AllFavoriteCharactersViewModel(get()) }
     viewModel { CharacterViewModel(get(), get()) }

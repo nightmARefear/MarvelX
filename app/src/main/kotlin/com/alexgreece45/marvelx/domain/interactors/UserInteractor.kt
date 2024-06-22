@@ -4,12 +4,14 @@ import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.configuration.ConfigLogic
 import com.alexgreece45.marvelx.controllers.AppLogger
 import com.alexgreece45.marvelx.data.model.RepositoryPrivacySettings
+import com.alexgreece45.marvelx.data.model.RepositoryUsersBlocked
 import com.alexgreece45.marvelx.data.repository.GetCurrentUserProfileDetailsRepositoryResponse
 import com.alexgreece45.marvelx.data.repository.GetProfileDetailsRepositoryResponse
 import com.alexgreece45.marvelx.data.repository.UserRepository
 import com.alexgreece45.marvelx.domain.helper.InteractorPartialState
 import com.alexgreece45.marvelx.domain.helper.handleRepositoryResult
 import com.alexgreece45.marvelx.domain.helper.handleRepositoryResultNoTransformation
+import com.alexgreece45.marvelx.domain.model_api.user.UsersBlockedDomain
 import com.alexgreece45.marvelx.domain.model_api.user.privacySettings.PrivacySettingsDomain
 import com.alexgreece45.marvelx.domain.model_api.user.privacySettings.toPrivacySettingsDomain
 import com.alexgreece45.marvelx.domain.model_api.user.privacySettings.toRequestPrivacySettings
@@ -17,6 +19,7 @@ import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.BasicProfil
 import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.ProfileDetailsDomain
 import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.toBasicProfileDetailsDomain
 import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.toProfileDetailsDomain
+import com.alexgreece45.marvelx.domain.model_api.user.toUsersBlockedDomain
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.extensions.fromBytesToMb
 import com.alexgreece45.marvelx.util.extensions.safeAsync
@@ -35,9 +38,11 @@ interface UserInteractor {
     suspend fun getProfileDetails(userId: Int): Flow<GetProfileDetailsPartialState>
 
     /**
-     * Gets the profile details of the current user.
+     * Gets the basic profile details of the current user.
      */
-    suspend fun getCurrentUserProfileDetails(): Flow<GetCurrentUserProfileDetailsPartialState>
+    suspend fun getCurrentUserBasicProfileDetails(): Flow<GetCurrentUserProfileDetailsPartialState>
+
+    suspend fun getCurrentUserBlockedUsers(): Flow<InteractorPartialState<UsersBlockedDomain>>
 
     /**
      * Updates the profile details of the current user.
@@ -60,6 +65,16 @@ interface UserInteractor {
      * Updates the privacy settings of the current user.
      */
     suspend fun updatePrivacySettings(privacySettingsDomain: PrivacySettingsDomain): Flow<InteractorPartialState<String>>
+
+    /**
+     * Blocks the user with the given [userId].
+     */
+    suspend fun blockUser(userId: Int): Flow<InteractorPartialState<String>>
+
+    /**
+     * Blocks the user with the given [userId].
+     */
+    suspend fun unblockUser(userId: Int): Flow<InteractorPartialState<String>>
 }
 
 class UserInteractorImpl(
@@ -97,7 +112,7 @@ class UserInteractorImpl(
             }
         }
 
-    override suspend fun getCurrentUserProfileDetails(): Flow<GetCurrentUserProfileDetailsPartialState> =
+    override suspend fun getCurrentUserBasicProfileDetails(): Flow<GetCurrentUserProfileDetailsPartialState> =
         flow {
             val genericErrorMessage = resourceProvider.getGenericErrorMessage()
             repository.getCurrentUserProfileDetails().collect {
@@ -134,6 +149,18 @@ class UserInteractorImpl(
             when (it) {
                 is IOException -> GetCurrentUserProfileDetailsPartialState.NoInternetConnection
                 else -> GetCurrentUserProfileDetailsPartialState.Failed(resourceProvider.getGenericErrorMessage())
+            }
+        }
+
+    override suspend fun getCurrentUserBlockedUsers(): Flow<InteractorPartialState<UsersBlockedDomain>> =
+        flow {
+            repository.getCurrentUserBlockedUsers().collect { repositoryResult ->
+                handleRepositoryResult(
+                    repositoryResult,
+                    RepositoryUsersBlocked::toUsersBlockedDomain
+                ).collect {
+                    emit(it)
+                }
             }
         }
 
@@ -211,6 +238,22 @@ class UserInteractorImpl(
                     }
                 }
         }
+
+    override suspend fun blockUser(userId: Int): Flow<InteractorPartialState<String>> = flow {
+        repository.blockUser(userId).collect { repositoryResult ->
+            handleRepositoryResultNoTransformation(repositoryResult).collect {
+                emit(it)
+            }
+        }
+    }
+
+    override suspend fun unblockUser(userId: Int): Flow<InteractorPartialState<String>> = flow {
+        repository.unblockUser(userId).collect { repositoryResult ->
+            handleRepositoryResultNoTransformation(repositoryResult).collect {
+                emit(it)
+            }
+        }
+    }
 }
 
 sealed class GetCurrentUserProfileDetailsPartialState {

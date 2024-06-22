@@ -2,12 +2,9 @@ package com.alexgreece45.marvelx.network_logic.interceptors
 
 import com.alexgreece45.marvelx.BuildConfig
 import com.alexgreece45.marvelx.configuration.ConfigLogic
-import com.alexgreece45.marvelx.configuration.ConfigSecurityLogic
-import com.alexgreece45.marvelx.controllers.AuthController
-import com.alexgreece45.marvelx.controllers.RequestController
+import com.alexgreece45.marvelx.controllers.MarvelXBackendRequestController
 import com.alexgreece45.marvelx.util.DateUtil
 import com.alexgreece45.marvelx.util.ResourceProvider
-import com.alexgreece45.marvelx.util.constants.ConstantsSecurity
 import com.alexgreece45.marvelx.util.extensions.hasInternetConnectivity
 import com.alexgreece45.marvelx.util.extensions.toMd5
 import okhttp3.Interceptor
@@ -21,11 +18,9 @@ import okio.IOException
  * added here.
  */
 class ApiInterceptor(
-    private val configLogic: ConfigLogic,
-    private val configSecurityLogic: ConfigSecurityLogic,
-    private val authController: AuthController,
     private val resourceProvider: ResourceProvider,
-    private val requestController: RequestController
+    private val configLogic: ConfigLogic,
+    private val marvelXBackendRequestController: MarvelXBackendRequestController
 ) : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
         if (resourceProvider.getContext().hasInternetConnectivity().not()) {
@@ -99,28 +94,10 @@ class ApiInterceptor(
         path: String,
         chain: Interceptor.Chain
     ): Response {
-        // Get request from chain.
-        val originalRequest = chain.request()
-
-        // Create modified request based on the modifiedUrl and the config.
-        val modifiedRequest = Request.Builder()
-            .url(originalRequest.url)
-            .addHeader(
-                name = ConstantsSecurity.HeaderName.UserAgent.name,
-                value = ConstantsSecurity.HeaderValue.APP_USER_AGENT
-            )
-            .method(originalRequest.method, originalRequest.body)
-
-        // Add authorization headers only if the path of this request isn't in the excluded paths list.
-        if (configSecurityLogic.excludedRequestPathsFromAuthorization.all { it != path }) {
-            modifiedRequest.addHeader(
-                name = ConstantsSecurity.HeaderName.Authorization.name,
-                value = authController.getAccessToken()
-            )
-
-            requestController.addAuthenticationHeaders(modifiedRequest)
-        }
-
-        return chain.proceed(modifiedRequest.build())
+        val finalRequest = marvelXBackendRequestController.applyMarvelXBackendTransformations(
+            originalRequest = chain.request(),
+            path = path
+        )
+        return chain.proceed(finalRequest)
     }
 }

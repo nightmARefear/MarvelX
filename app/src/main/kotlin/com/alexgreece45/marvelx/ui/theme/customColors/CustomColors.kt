@@ -5,4 +5,5 @@ import androidx.compose.ui.graphics.Color
 object CustomColors {
     val genderMale: Color = Color(0xFF2196F3)
     val genderFemale: Color = Color(0xFFE91E63)
+    val error: Color = Color(0xFFD50000)
 }

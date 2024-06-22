@@ -17,8 +17,6 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -35,18 +33,18 @@ import com.alexgreece45.marvelx.ui.components.BottomNavigationBarData
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.SPACING_TINY
-import org.koin.androidx.compose.koinViewModel
+import kotlinx.coroutines.flow.Flow
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun AllFavoriteCharactersScreen(
+    onEventSent: (AllFavoriteCharactersEvent) -> Unit,
+    state: AllFavoriteCharactersState,
+    effect: Flow<AllFavoriteCharactersEffect>,
     bottomNavigationBarData: @Composable () -> BottomNavigationBarData,
-    viewModel: AllFavoriteCharactersViewModel = koinViewModel()
 ) {
-    val state by viewModel.uiState.collectAsState()
-
     LaunchedEffect(Unit) {
-        viewModel.setEvent(AllFavoriteCharactersEvent.Init)
+        onEventSent(AllFavoriteCharactersEvent.Init)
     }
 
     ContentScreen(

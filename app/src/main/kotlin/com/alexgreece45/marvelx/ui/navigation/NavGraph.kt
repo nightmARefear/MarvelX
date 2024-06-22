@@ -12,7 +12,9 @@ import com.alexgreece45.marvelx.ui.components.BottomBarItem
 import com.alexgreece45.marvelx.ui.components.BottomNavigationBarData
 import com.alexgreece45.marvelx.ui.components.IconData
 import com.alexgreece45.marvelx.ui.screens.allCharacters.AllCharactersScreen
+import com.alexgreece45.marvelx.ui.screens.allCharacters.AllCharactersViewModel
 import com.alexgreece45.marvelx.ui.screens.allFavoriteCharacters.AllFavoriteCharactersScreen
+import com.alexgreece45.marvelx.ui.screens.allFavoriteCharacters.AllFavoriteCharactersViewModel
 import com.alexgreece45.marvelx.ui.screens.changePassword.ChangePasswordScreen
 import com.alexgreece45.marvelx.ui.screens.character.CharacterScreen
 import com.alexgreece45.marvelx.ui.screens.character.CharacterViewModel
@@ -233,7 +235,11 @@ fun NavGraph(navController: NavHostController) {
 
         // Main screens.
         composable(screen = Screen.AllCharactersScreen) {
+            val viewModel = koinViewModel<AllCharactersViewModel>()
             AllCharactersScreen(
+                onEventSent = viewModel::setEvent,
+                state = viewModel.uiState.collectAsStateWithLifecycle().value,
+                effect = viewModel.uiEffect,
                 navigateToCharacterScreen = { characterId ->
                     navController.navigate(
                         Screen.CharacterScreen.createNavRoute(
@@ -316,7 +322,11 @@ fun NavGraph(navController: NavHostController) {
         }
 
         composable(Screen.AllFavoriteCharactersScreen) {
+            val viewModel = koinViewModel<AllFavoriteCharactersViewModel>()
             AllFavoriteCharactersScreen(
+                onEventSent = viewModel::setEvent,
+                state = viewModel.uiState.collectAsStateWithLifecycle().value,
+                effect = viewModel.uiEffect,
                 bottomNavigationBarData = { getBottomNavigationBarData(navController = navController) }
             )
         }
@@ -337,7 +347,11 @@ fun NavGraph(navController: NavHostController) {
                         }
 
                         is ProfileContract.Effect.Navigation.NavigateToProfileDetailsScreen -> {
-                            navController.navigate(Screen.ProfileDetailsScreen.createNavRoute(navigationEffect.userId))
+                            navController.navigate(
+                                Screen.ProfileDetailsScreen.createNavRoute(
+                                    navigationEffect.userId
+                                )
+                            )
                         }
 
                         ProfileContract.Effect.Navigation.NavigateToFaqScreen -> {
@@ -360,7 +374,7 @@ fun NavGraph(navController: NavHostController) {
                 effect = viewModel.uiEffect,
                 userId = navBackStackEntry.arguments?.getInt(NavItem.UserId.key) ?: -1,
                 popBackStack = navController::popBackStack,
-                navigateToEditProfileDetails = { navController.navigate(Screen.EditProfileDetailsScreen.route) },
+                navigateToEditProfileDetailsScreen = { navController.navigate(Screen.EditProfileDetailsScreen.route) },
             )
         }
 

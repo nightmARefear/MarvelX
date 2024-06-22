@@ -21,6 +21,7 @@ import com.alexgreece45.marvelx.network_logic.models_api.resendOtp.ResponseResen
 import com.alexgreece45.marvelx.network_logic.models_api.sensitiveUserData.RequestSensitiveUserData
 import com.alexgreece45.marvelx.network_logic.models_api.sensitiveUserData.ResponseSensitiveUserData
 import com.alexgreece45.marvelx.network_logic.models_api.token.ResponseToken
+import com.alexgreece45.marvelx.network_logic.models_api.user.ResponseUsersBlocked
 import com.alexgreece45.marvelx.network_logic.models_api.user.login.RequestUserLogin
 import com.alexgreece45.marvelx.network_logic.models_api.user.login.ResponseLogin
 import com.alexgreece45.marvelx.network_logic.models_api.user.loginWithToken.ResponseLoginWithToken
@@ -90,14 +91,6 @@ interface ApiService {
         @Field("grant_type") grantType: String = "authorization_code"
     ): Response<ResponseToken>
 
-    @POST("/api/private/marvelx/user/token")
-    @FormUrlEncoded
-    suspend fun refreshAccessToken(
-        @Field("client_id") clientId: String,
-        @Field("refresh_token") refreshToken: String,
-        @Field("grant_type") grantType: String = "refresh_token"
-    ): Response<ResponseToken>
-
     @POST("/api/private/marvelx/user/logout")
     @FormUrlEncoded
     suspend fun logout(
@@ -126,14 +119,20 @@ interface ApiService {
     /**
      * Retrieves the profile details of the current user.
      */
-    @GET("/api/private/marvelx/user/me")
-    suspend fun getUserMe(): Response<ResponseBasicProfileDetails>
+    @GET("/api/private/marvelx/user/me-profile")
+    suspend fun getCurrentUserProfileDetails(): Response<ResponseBasicProfileDetails>
+
+    /**
+     * Retrieves the blocked users of the current user.
+     */
+    @GET("/api/private/marvelx/user/me/blocked")
+    suspend fun getCurrentUserBlockedUsers(): Response<ResponseUsersBlocked>
 
     /**
      * Updates the profile details of the current user.
      */
-    @PUT("/api/private/marvelx/user/me")
-    suspend fun updateUserMe(@Body requestProfileDetailsUpdate: RequestProfileDetailsUpdate): Response<Void>
+    @PUT("/api/private/marvelx/user/me-profile")
+    suspend fun updateCurrentUserProfileDetails(@Body requestProfileDetailsUpdate: RequestProfileDetailsUpdate): Response<Void>
 
     /**
      * Updates the profile image of the current user.
@@ -145,7 +144,7 @@ interface ApiService {
     /**
      * Retrieves the __public__ profile details of another user with the ID of [userId].
      */
-    @GET("/api/private/marvelx/user/profile_details/{userId}")
+    @GET("/api/private/marvelx/user/{userId}/profile")
     suspend fun getUserProfileDetails(@Path("userId") userId: Int): Response<ResponseProfileDetails>
 
     /**
@@ -159,6 +158,18 @@ interface ApiService {
      */
     @PUT("/api/private/marvelx/user/me/privacy_settings")
     suspend fun updateUserPrivacySettings(@Body requestPrivacySettings: RequestPrivacySettings): Response<Void>
+
+    /**
+     * Blocks the user with the given [userId].
+     */
+    @POST("/api/private/marvelx/user/{userId}/block")
+    suspend fun blockUser(@Path("userId") userId: Int): Response<Void>
+
+    /**
+     * Unblocks the user with the given [userId].
+     */
+    @POST("/api/private/marvelx/user/{userId}/unblock")
+    suspend fun unblockUser(@Path("userId") userId: Int): Response<Void>
 
     /**
      * Retrieves the FAQs.
@@ -197,7 +208,6 @@ interface ApiClient {
         uri: String
     ): Response<ResponseToken>
 
-    suspend fun refreshAccessToken(clientId: String, refreshToken: String): Response<ResponseToken>
     suspend fun logout(clientId: String, refreshToken: String): Response<Void>
     suspend fun validateOtp(otpRequest: OtpRequest): Response<OtpResponseSuccess>
     suspend fun resendOtp(requestResendOtp: RequestResendOtp): Response<ResponseResendOtpSuccess>
@@ -205,12 +215,15 @@ interface ApiClient {
     suspend fun forgotPasswordIsOtpBlockedEmail(body: RequestForgotPasswordOtpBlockedEmail): Response<ResponseForgotPasswordOtpBlockedEmail>
     suspend fun forgotPasswordIsOtpBlockedPhoneNumber(body: RequestForgotPasswordOtpBlockedPhoneNumber): Response<ResponseForgotPasswordOtpBlockedPhoneNumber>
     suspend fun forgotPasswordValidateOtp(body: RequestForgotPasswordValidateOtp): Response<ResponseForgotPasswordValidateOtp>
-    suspend fun getUserMe(): Response<ResponseBasicProfileDetails>
-    suspend fun updateUserMe(requestProfileDetailsUpdate: RequestProfileDetailsUpdate): ApiResult<String>
+    suspend fun getCurrentUserProfileDetails(): Response<ResponseBasicProfileDetails>
+    suspend fun getCurrentUserBlockedUsers(): ApiResult<ResponseUsersBlocked>
+    suspend fun updateCurrentUserProfileDetails(requestProfileDetailsUpdate: RequestProfileDetailsUpdate): ApiResult<String>
     suspend fun updateUserProfileImage(profileImage: MultipartBody.Part): ApiResult<String>
     suspend fun getUserProfileDetails(userId: Int): Response<ResponseProfileDetails>
     suspend fun getUserPrivacySettings(): ApiResult<ResponsePrivacySettings>
     suspend fun updateUserPrivacySettings(requestPrivacySettings: RequestPrivacySettings): ApiResult<String>
+    suspend fun blockUser(userId: Int): ApiResult<String>
+    suspend fun unblockUser(userId: Int): ApiResult<String>
     suspend fun getFaqs(): ApiResult<ResponseFaq>
     suspend fun getJwtForSensitiveUserData(requestJwtSensitiveUserData: RequestJwtSensitiveUserData): Response<ResponseJwtSensitiveUserData>
     suspend fun getSensitiveUserData(requestSensitiveUserData: RequestSensitiveUserData): Response<ResponseSensitiveUserData>

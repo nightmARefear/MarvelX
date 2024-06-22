@@ -3,7 +3,8 @@ package com.alexgreece45.marvelx.util.extensions
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
-import androidx.core.content.ContextCompat.getSystemService
+import com.alexgreece45.marvelx.ui.helper.model.DeepLinkAction
+import com.alexgreece45.marvelx.ui.screens.mainActivity.MainActivity
 
 /**
  * Detects if this device has internet connection and returns `true` if it has otherwise `false`.
@@ -22,4 +23,24 @@ fun Context.hasInternetConnectivity(): Boolean {
         }
     }
     return false
+}
+
+/**
+ * Attempts to retrieve the pending deep link action. If it wasn't found, `null` is returned.
+ */
+fun Context.getPendingDeepLinkAction(): DeepLinkAction? =
+    (this as? MainActivity)?.pendingDeepLinkAction
+
+/**
+ * Clears the pending deep link action.
+ */
+fun Context.clearPendingDeepLinkAction() {
+    (this as? MainActivity)?.pendingDeepLinkAction = null
+}
+
+/**
+ * Closes the [MainActivity].
+ */
+fun Context.finish() {
+    (this as? MainActivity)?.finish()
 }

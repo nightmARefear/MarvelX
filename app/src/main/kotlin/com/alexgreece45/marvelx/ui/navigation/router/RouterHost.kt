@@ -33,6 +33,11 @@ interface RouterHost {
     fun isCurrentRouteIncludedInAutoLogout(): Boolean
 
     /**
+     * Examines whether the current route can open a deep link and returns the result as a [Boolean].
+     */
+    fun canCurrentRouteRunDeepLink(): Boolean
+
+    /**
      * Indicates whether the navigation flow has started. It has an initial value of `false`.
      */
     val flowStarted: Boolean
@@ -73,4 +78,6 @@ class RouterHostImpl : RouterHost {
     override fun isCurrentRouteIncludedInAutoLogout(): Boolean =
         Screen.fromRoute(navController.currentDestination?.route.orEmpty())?.isIncludedInAutoLogout
             ?: false
+
+    override fun canCurrentRouteRunDeepLink(): Boolean = isCurrentRouteIncludedInAutoLogout()
 }

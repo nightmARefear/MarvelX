@@ -1,5 +1,6 @@
 package com.alexgreece45.marvelx.ui.screens.mainActivity
 
+import android.net.Uri
 import androidx.lifecycle.viewModelScope
 import androidx.work.WorkManager
 import com.alexgreece45.marvelx.controllers.AppLogger
@@ -18,6 +19,10 @@ import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
 import com.alexgreece45.marvelx.mvi.BaseViewModel
 import com.alexgreece45.marvelx.network_logic.models_websocket.ResponseWebsocket
+import com.alexgreece45.marvelx.network_logic.typeAdapters.DeepLinkActionTypeTypeAdapter
+import com.alexgreece45.marvelx.ui.helper.model.DeepLinkAction
+import com.alexgreece45.marvelx.ui.helper.model.DeepLinkActionType
+import com.alexgreece45.marvelx.ui.navigation.Screen
 import com.alexgreece45.marvelx.ui.navigation.router.RouterHost
 import com.alexgreece45.marvelx.ui.screens.mainActivity.model.CoroutineWebSocketListener
 import com.alexgreece45.marvelx.ui.screens.mainActivity.model.WebSocketEvent
@@ -62,11 +67,16 @@ sealed class ActivityEvent : BaseEvent {
      * window mode, but in fact it is.
      */
     data object ApplicationInMultiWindowModeViolation : ActivityEvent()
+
+    data class OnDeepLinkReceived(val uri: Uri) : ActivityEvent()
 }
 
 data class ActivityState(val flowStarted: Boolean = false) : BaseState
 
 sealed class ActivityEffect : BaseEffect {
+    data class OpenOrCacheDeepLink(val deepLinkAction: DeepLinkAction) :
+        ActivityEffect()
+
     sealed class Navigation : ActivityEffect() {
         data class NavigateToHomeScreenWithSessionExpired(val showErrorDialog: Boolean) :
             Navigation()
@@ -82,7 +92,6 @@ class ActivityViewModel : BaseViewModel<ActivityEvent, ActivityState, ActivityEf
     private val logger: AppLogger by inject()
     private val loginInteractor: LoginInteractor by inject()
     private val resourceProvider: ResourceProvider by inject()
-    private val appLogger: AppLogger by inject()
     private val websocketController: WebsocketController by inject()
     private val securityController: SecurityController by inject()
     private val routerHost: RouterHost by inject()
@@ -93,7 +102,7 @@ class ActivityViewModel : BaseViewModel<ActivityEvent, ActivityState, ActivityEf
         when (event) {
             ActivityEvent.LifecycleEvent.OnCreate -> {
                 prefKeys.autoLogoutTimestamp = null
-                init()
+                setWebsocketListener()
             }
 
             ActivityEvent.LifecycleEvent.OnPause -> {
@@ -141,13 +150,28 @@ class ActivityViewModel : BaseViewModel<ActivityEvent, ActivityState, ActivityEf
                     )
                 }
             }
+
+            is ActivityEvent.OnDeepLinkReceived -> {
+                logger.d("ActivityViewModel") { "ActivityEvent.OnDeepLinkReceived" }
+                try {
+                    val gson = Gson().newBuilder().registerTypeAdapter(
+                        DeepLinkActionType::class.java,
+                        DeepLinkActionTypeTypeAdapter()
+                    ).create()
+                    val deepLinkAction =
+                        gson.fromJson(event.uri.pathSegments[1], DeepLinkAction::class.java)
+                    handleDeepLink(deepLinkAction)
+                } catch (e: Exception) {
+                    logger.e("ActivityViewModel") { "An error occurred whilst parsing the received deep link:\n ${e.message.orEmpty()}" }
+                }
+            }
         }
     }
 
     /**
      * The actions to perform when the viewModel is instantiated.
      */
-    private fun init() {
+    private fun setWebsocketListener() {
         viewModelScope.launch {
             logger.d { "authData: ${prefKeys.getUserAuthData()}" }
             websocketController.setWebSocketListener(getWebSocketListener())
@@ -229,6 +253,36 @@ class ActivityViewModel : BaseViewModel<ActivityEvent, ActivityState, ActivityEf
                             }
                         }
                     }
+                }
+            }
+        }
+    }
+
+    /**
+     * Handles the given deep link depending on whether the user is logged in, and in which screen
+     * they currently are in. If the [DeepLinkAction] contains invalid data, then no action is taken.
+     *
+     * @param deepLinkAction    The deep link action.
+     */
+    private fun handleDeepLink(deepLinkAction: DeepLinkAction) {
+        if (deepLinkAction.actionType is DeepLinkActionType.Invalid) {
+            logger.e("ActivityViewModel") { "(handleDeepLink) Invalid deep link action type: ${deepLinkAction.actionType.name}" }
+            return
+        }
+
+        when (val screen = Screen.matchDeepLinkScreenName(deepLinkAction.screenRoute)) {
+            null -> {
+                logger.e("ActivityViewModel") { "(handleDeepLink) No deep link supported screen name \"${deepLinkAction.screenRoute}\" was found." }
+            }
+
+            else -> {
+                // Check if the required data is present.
+                if (deepLinkAction.data.keys == screen.deepLinkArgs.map { it.key }.toSet()) {
+                    setEffect {
+                        ActivityEffect.OpenOrCacheDeepLink(deepLinkAction)
+                    }
+                } else {
+                    logger.e("ActivityViewModel") { "(handleDeepLink) Data is missing from the deep link." }
                 }
             }
         }

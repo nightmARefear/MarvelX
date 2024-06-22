@@ -1,9 +1,16 @@
 package com.alexgreece45.marvelx.controllers
 
+import com.alexgreece45.marvelx.controllers.model.auth.CurrentConsecutiveFailedAuthenticationData
 import com.alexgreece45.marvelx.domain.model_api.userAuthData.UserAuthData
 import com.alexgreece45.marvelx.util.DateUtil
+import com.alexgreece45.marvelx.util.constants.ConstantsPrefs
 import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException
+
+/**
+ * This controller contains all authentication related data such as the access token, when the last
+ * failed authentication attempt occurred, and more.
+ */
 
 interface AuthController {
     /**
@@ -36,6 +43,14 @@ interface AuthController {
     fun isRefreshTokenExpired(): Boolean
 
     /**
+     * Stores data about consecutive failed authentication attempts, including the timestamp
+     * of the most recent failed attempt and the current number of consecutive failures.
+     *
+     * This should be initialized to `null` when the app first starts.
+     */
+    var currentConsecutiveFailedAuthenticationData: CurrentConsecutiveFailedAuthenticationData?
+
+    /**
      * Removes the stored user credentials: userId, and UserAuthData.
      *
      * ### Note: This operation is irreversible, and it MUST be used with caution.
@@ -44,8 +59,10 @@ interface AuthController {
 }
 
 class AuthControllerImpl(
+    private val logger: AppLogger,
     private val prefKeys: PrefKeys,
-    private val logger: AppLogger
+    private val preferencesController: PreferencesController,
+    private val gson: Gson
 ) : AuthController {
     private val userAuthData: UserAuthData?
         get() {
@@ -89,6 +106,27 @@ class AuthControllerImpl(
             DateUtil.getSecondsFromEpoch() >= getRefreshTokenExpiration()
         } else {
             true
+        }
+
+    override var currentConsecutiveFailedAuthenticationData: CurrentConsecutiveFailedAuthenticationData?
+        get() = try {
+            gson.fromJson(
+                preferencesController.getString(ConstantsPrefs.CURRENT_CONSECUTIVE_FAILED_AUTHENTICATION_DATA, null.toString()),
+                CurrentConsecutiveFailedAuthenticationData::class.java
+            )
+        } catch (e: Exception) {
+            logger.e("AuthController") { "An exception occurred whilst parsing the current consecutive failed authentication data:\n ${e.localizedMessage.orEmpty()}" }
+            null
+        }
+        set(value) {
+            if (value == null) {
+                preferencesController.remove(ConstantsPrefs.CURRENT_CONSECUTIVE_FAILED_AUTHENTICATION_DATA)
+            } else {
+                preferencesController.setString(
+                    ConstantsPrefs.CURRENT_CONSECUTIVE_FAILED_AUTHENTICATION_DATA,
+                    gson.toJson(value)
+                )
+            }
         }
 
     override fun removeUserCredentials() {

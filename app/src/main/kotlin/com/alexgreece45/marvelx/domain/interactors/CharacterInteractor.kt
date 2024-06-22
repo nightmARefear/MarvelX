@@ -2,17 +2,17 @@ package com.alexgreece45.marvelx.domain.interactors
 
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.controllers.AppLogger
-import com.alexgreece45.marvelx.domain.model_api.character.CharacterDomain
-import com.alexgreece45.marvelx.domain.model_api.comic.ComicDomain
-import com.alexgreece45.marvelx.network_logic.models_api.character.comic.toComicDomainList
-import com.alexgreece45.marvelx.network_logic.models_api.character.toCharacterDomain
-import com.alexgreece45.marvelx.network_logic.models_api.character.toCharacterDomainList
-import com.alexgreece45.marvelx.database.FavoriteCharacterEntity
 import com.alexgreece45.marvelx.data.repository.CharacterRepository
 import com.alexgreece45.marvelx.data.repository.FavoriteCharactersRepository
 import com.alexgreece45.marvelx.data.repository.GetAllCharactersRepositoryResponse
 import com.alexgreece45.marvelx.data.repository.GetCharacterComicsRepositoryResponse
 import com.alexgreece45.marvelx.data.repository.GetCharacterRepositoryResponse
+import com.alexgreece45.marvelx.database.FavoriteCharacterEntity
+import com.alexgreece45.marvelx.domain.model_api.character.CharacterDomain
+import com.alexgreece45.marvelx.domain.model_api.comic.ComicDomain
+import com.alexgreece45.marvelx.network_logic.models_api.character.comic.toComicDomainList
+import com.alexgreece45.marvelx.network_logic.models_api.character.toCharacterDomain
+import com.alexgreece45.marvelx.network_logic.models_api.character.toCharacterDomainList
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.extensions.safeAsync
 import kotlinx.coroutines.flow.Flow

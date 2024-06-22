@@ -35,14 +35,6 @@ interface LoginRepository {
     ): Flow<GrandNewAccessTokenRepositoryResponse>
 
     /**
-     * Refreshes the access token.
-     */
-    suspend fun refreshAccessToken(
-        clientId: String,
-        refreshToken: String
-    ): Flow<RefreshAccessTokenRepositoryResponse>
-
-    /**
      * Logouts the user.
      */
     suspend fun logout(clientId: String, refreshToken: String): Flow<LogoutRepositoryResponse>
@@ -57,9 +49,10 @@ interface LoginRepository {
 }
 
 class LoginRepositoryImpl(
-    private val apiClient: ApiClient,
+    private val logger: AppLogger,
     private val resourceProvider: ResourceProvider,
-    private val logger: AppLogger
+    private val apiClient: ApiClient,
+    private val refreshTokenRepository: RefreshTokenRepository
 ) : LoginRepository {
     override suspend fun authorize(
         tempAuthCode: String,
@@ -103,26 +96,6 @@ class LoginRepositoryImpl(
                 }
             }
         }
-
-    override suspend fun refreshAccessToken(
-        clientId: String,
-        refreshToken: String
-    ): Flow<RefreshAccessTokenRepositoryResponse> = flow {
-        val response = apiClient.refreshAccessToken(
-            clientId = clientId,
-            refreshToken = refreshToken
-        )
-
-        if (response.isSuccessful) {
-            emit(RefreshAccessTokenRepositoryResponse.Success(response = response.body()))
-        } else {
-            emit(
-                RefreshAccessTokenRepositoryResponse.Failed(
-                    errorMessage = resourceProvider.getGenericErrorMessage()
-                )
-            )
-        }
-    }
 
     override suspend fun logout(
         clientId: String,
@@ -180,11 +153,6 @@ sealed interface PostLoginRepositoryResponse {
 sealed class GrandNewAccessTokenRepositoryResponse {
     data class Success(val response: ResponseToken?) : GrandNewAccessTokenRepositoryResponse()
     data class Failed(val errorMessage: String) : GrandNewAccessTokenRepositoryResponse()
-}
-
-sealed class RefreshAccessTokenRepositoryResponse {
-    data class Success(val response: ResponseToken?) : RefreshAccessTokenRepositoryResponse()
-    data class Failed(val errorMessage: String?) : RefreshAccessTokenRepositoryResponse()
 }
 
 sealed class LogoutRepositoryResponse {

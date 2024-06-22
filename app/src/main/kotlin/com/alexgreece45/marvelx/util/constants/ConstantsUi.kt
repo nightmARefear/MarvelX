@@ -20,6 +20,11 @@ object ConstantsUi {
 
     object ProfileDetailsScreen {
         val PROFILE_BANNER_PADDING = 12.dp
+
+        /**
+         * The size of the QR code image.
+         */
+        const val QR_CODE_SIZE = 750
     }
 
     /**

@@ -4,6 +4,8 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
+import androidx.navigation.navDeepLink
+import com.alexgreece45.marvelx.BuildConfig
 import com.alexgreece45.marvelx.ui.navigation.Screen
 
 /**
@@ -18,7 +20,8 @@ fun NavGraphBuilder.composable(
 ) {
     composable(
         route = screen.route,
-        arguments = screen.navigationArguments
+        arguments = screen.navigationArguments,
+        deepLinks = screen.deepLinks
     ) {
         content(it)
     }

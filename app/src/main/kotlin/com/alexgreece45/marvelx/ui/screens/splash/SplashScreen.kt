@@ -26,6 +26,7 @@ import com.alexgreece45.marvelx.ui.components.AlertDialogButton
 import com.alexgreece45.marvelx.ui.components.AlertDialogError
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.effect.OneTimeLaunchedEffect
+import com.alexgreece45.marvelx.util.extensions.finish
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -49,7 +50,7 @@ fun SplashScreen(
                 }
 
                 SplashContract.Effect.Navigation.CloseApplication -> {
-                    (context as Activity).finish()
+                    context.finish()
                 }
 
                 SplashContract.Effect.Navigation.NavigateToIntroLoadingScreen -> {

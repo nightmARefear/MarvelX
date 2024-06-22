@@ -2,7 +2,6 @@ package com.alexgreece45.marvelx.ui.screens.login
 
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.configuration.ConfigLogic
 import com.alexgreece45.marvelx.controllers.PrefKeys
 import com.alexgreece45.marvelx.domain.interactors.LoginPartialState
 import com.alexgreece45.marvelx.domain.interactors.RegisterInteractor
@@ -142,8 +141,7 @@ class LoginViewModel(
     private val resourceProvider: ResourceProvider,
     private val formValidator: FormValidator,
     private val registerInteractor: RegisterInteractor,
-    private val prefKeys: PrefKeys,
-    private val configLogic: ConfigLogic
+    private val prefKeys: PrefKeys
 ) : BaseViewModel<LoginEvent, LoginState, LoginEffect>() {
 
     override fun setInitialState(): LoginState = LoginState()
@@ -468,6 +466,7 @@ class LoginViewModel(
         return true
     }
 
+    // TODO: Get rules from formvalidationrules.
     private fun getEmailValidationRules(): List<Rule> {
         return listOf(
             Rule.ValidateNotBlank(

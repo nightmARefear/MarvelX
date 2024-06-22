@@ -2,6 +2,7 @@ package com.alexgreece45.marvelx.configuration
 
 import com.alexgreece45.marvelx.BuildConfig
 import com.alexgreece45.marvelx.configuration.models.MarvelApiConfig
+import com.alexgreece45.marvelx.configuration.models.TimeoutData
 import com.alexgreece45.marvelx.util.extensions.getPortFromUrl
 import com.alexgreece45.marvelx.util.extensions.getSchemeFromUrl
 
@@ -40,6 +41,21 @@ interface ConfigLogic {
      * The network config for the Marvel API.
      */
     val marvelApiConfig: MarvelApiConfig
+
+    /**
+     * The timeout data for the MarvelX backend.
+     */
+    val backendTimeoutData: TimeoutData
+
+    /**
+     * The timeout data for the websocket.
+     */
+    val websocketTimeoutData: TimeoutData
+
+    /**
+     * The maximum number of authentication tries for the marvelx backend.
+     */
+    val backendMaxAuthenticationTries: Int
 
     /**
      * The client ID for the Google Auth server.
@@ -94,10 +110,27 @@ class ConfigLogicImpl : ConfigLogic {
             host = BuildConfig.MARVEL_API_DOMAIN,
             endpointPrefix = BuildConfig.MARVEL_API_ENDPOINT_PREFIX
         )
+
+    override val backendTimeoutData: TimeoutData
+        get() = TimeoutData(
+            connectTimeout = 15L,
+            readTimeout = 15L
+        )
+
+    override val websocketTimeoutData: TimeoutData
+        get() = TimeoutData(
+            connectTimeout = 10L,
+            readTimeout = 10L
+        )
+    override val backendMaxAuthenticationTries: Int
+        get() = 3
+
     override val googleServerClientId: String
         get() = BuildConfig.FIREBASE_SERVER_CLIENT_ID
+
     override val supportedImageFileExtensions: List<String>
         get() = listOf("jpg", "jpeg", "png")
+
     override val imageFileMaxSize: Long
         get() = 5 * 8 * 1024 * 1024 // 5MB
 }

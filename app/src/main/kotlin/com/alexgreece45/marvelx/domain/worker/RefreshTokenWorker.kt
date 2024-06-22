@@ -7,7 +7,7 @@ import com.alexgreece45.marvelx.configuration.ConfigOauth
 import com.alexgreece45.marvelx.controllers.AppLogger
 import com.alexgreece45.marvelx.controllers.AuthController
 import com.alexgreece45.marvelx.domain.model_api.userAuthData.UserAuthData
-import com.alexgreece45.marvelx.network_logic.api.ApiClient
+import com.alexgreece45.marvelx.network_logic.clients.RefreshTokenClient
 import com.alexgreece45.marvelx.util.DateUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -15,7 +15,7 @@ import kotlinx.coroutines.withContext
 class RefreshTokenWorker(
     context: Context,
     workerParameters: WorkerParameters,
-    private val apiClient: ApiClient,
+    private val refreshTokenClient: RefreshTokenClient,
     private val authController: AuthController,
     private val configOauth: ConfigOauth,
     private val logger: AppLogger
@@ -35,7 +35,7 @@ class RefreshTokenWorker(
                     var result: Result
 
                     // Access token will expire within the next 20 seconds. Thus, refresh it.
-                    apiClient.refreshAccessToken(configOauth.clientId, refreshToken)
+                    refreshTokenClient.refreshAccessToken(configOauth.clientId, refreshToken)
                         .let { response ->
                             result = if (response.isSuccessful) {
                                 response.body()?.let { tokenResponse ->

@@ -78,7 +78,6 @@ class ConfigSecurityLogicImpl : ConfigSecurityLogic {
             "/api/private/marvelx/user/post_login",
             "/api/private/marvelx/user/logout",
             "/api/private/marvelx/user/authorize",
-            "/api/private/marvelx/user/token",
             "/api/private/marvelx/user/validate_otp",
             "/api/private/marvelx/user/resend_otp",
             "/api/private/marvelx/user/forgot_password/send_otp",
@@ -100,5 +99,5 @@ class ConfigSecurityLogicImpl : ConfigSecurityLogic {
         get() = AppBuildType.getType()
 
     override val packageSignature: String
-        get() = "tPwQygNBC+Pl1e3T5qwNGCg/oy9wOM9p+c4oddwuGFE="
+        get() = "M2wqQ4AaGrAm/ch656I3n1LCOfcsCiSDsboMQs+vGaY="
 }

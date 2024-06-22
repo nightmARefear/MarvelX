@@ -40,6 +40,13 @@
 
 # network security config
 network_security_config.xml
+network_security_config_backup.xml
 
 # google services json
 /app/google-services.json
+
+# keystore keys
+/keys
+
+# text files
+*.txt

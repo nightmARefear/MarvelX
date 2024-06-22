@@ -39,6 +39,7 @@ google-firebase-bom = "33.1.0"
 google-firebase-crashlytics = "3.0.1"
 google-play-services-auth = "21.2.0"
 google-gms-google-services = "4.4.2"
+google-zxing = "3.5.1"
 
 hilt-navigation = "1.2.0"
 
@@ -105,6 +106,7 @@ google-firebase-auth = { group = "com.google.firebase", name = "firebase-auth" }
 google-firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics" }
 google-firebase-firestore = { group = "com.google.firebase", name = "firebase-firestore" }
 google-play-services-auth = { group = "com.google.android.gms", name = "play-services-auth", version.ref = "google-play-services-auth" }
+google-zxing = { module = "com.google.zxing:core", version.ref = "google-zxing" }
 
 junit = { module = "junit:junit", version.ref = "junit" }
 

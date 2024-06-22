@@ -260,7 +260,7 @@ class EditProfileDetailsViewModel(
             )
         }
         viewModelScope.launch {
-            userInteractor.getCurrentUserProfileDetails().collect {
+            userInteractor.getCurrentUserBasicProfileDetails().collect {
                 when (it) {
                     is GetCurrentUserProfileDetailsPartialState.Failed -> {
                         setState {

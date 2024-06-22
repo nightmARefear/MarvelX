@@ -1,9 +1,17 @@
 package com.alexgreece45.marvelx.configuration
 
+import com.alexgreece45.marvelx.BuildConfig
+
 /**
  * The configuration for the OAuth flow.
  */
 interface ConfigOauth {
+
+    /**
+     * The retrieve/refresh token path.
+     */
+    val tokenPath: String
+
     /**
      * The client ID -- i.e., if the request is sent from the mobile/web app.
      */
@@ -26,6 +34,8 @@ interface ConfigOauth {
 }
 
 class ConfigOauthImpl : ConfigOauth {
+    override val tokenPath: String
+        get() = BuildConfig.MARVELX_BACKEND_PATH_TOKEN
     override val clientId: String
         get() = "mobile"
     override val codeChallengeMethod: String

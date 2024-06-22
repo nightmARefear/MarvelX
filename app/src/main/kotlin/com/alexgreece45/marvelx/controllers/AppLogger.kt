@@ -30,7 +30,7 @@ class AppLoggerImpl(
     private val configSecurityLogic: ConfigSecurityLogic
 ) : AppLogger {
     override fun installLogger() {
-        if (LogcatLogger.isInstalled.not() && configSecurityLogic.appBuildType != AppBuildType.RELEASE) {
+        if (LogcatLogger.isInstalled.not() && configSecurityLogic.appBuildType !is AppBuildType.RELEASE) {
             LogcatLogger.install(AndroidLogcatLogger(LogPriority.VERBOSE))
         }
     }

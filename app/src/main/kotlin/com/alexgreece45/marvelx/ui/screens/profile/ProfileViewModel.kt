@@ -101,7 +101,7 @@ class ProfileViewModel(
 
         // Load profile details.
         viewModelScope.launch {
-            userInteractor.getCurrentUserProfileDetails().collect {
+            userInteractor.getCurrentUserBasicProfileDetails().collect {
                 when (it) {
                     is GetCurrentUserProfileDetailsPartialState.Success -> {
                         setState {

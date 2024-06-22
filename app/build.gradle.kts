@@ -11,9 +11,11 @@ plugins {
     alias(libs.plugins.google.firebase.crashlytics)
 }
 
-// Load keystore credentials.
 val keystoreProperties = Properties()
 keystoreProperties.load(FileInputStream(rootProject.file("keystore.properties")))
+
+val deeplinkProperties = Properties()
+deeplinkProperties.load(FileInputStream(rootProject.file("deeplink.properties")))
 
 android {
     namespace = libs.versions.application.name.get()
@@ -21,10 +23,10 @@ android {
 
     signingConfigs {
         create("release") {
-            keyAlias = keystoreProperties["keyAlias"].toString()
-            keyPassword = keystoreProperties["keyPassword"].toString()
-            storeFile = file(keystoreProperties["storeFile"].toString())
-            storePassword = keystoreProperties["storePassword"].toString()
+            keyAlias = keystoreProperties["releaseKeyAlias"].toString()
+            keyPassword = keystoreProperties["releaseKeyPassword"].toString()
+            storeFile = file(keystoreProperties["releaseStoreFile"].toString())
+            storePassword = keystoreProperties["releaseStorePassword"].toString()
             enableV1Signing = true
             enableV2Signing = true
         }
@@ -51,11 +53,21 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
 
-            manifestPlaceholders["appNameSuffix"] = ""
+            manifestPlaceholders.putAll(
+                mapOf(
+                    "appNameSuffix" to "",
+                    "deeplinkScheme" to deeplinkProperties["deeplinkScheme"].toString(),
+                    "deeplinkHost" to deeplinkProperties["releaseHost"].toString(),
+                    "deeplinkPort" to deeplinkProperties["releasePort"].toString(),
+                    "deeplinkPathAdvancedPattern" to deeplinkProperties["deeplinkPathAdvancedPattern.regexp"].toString(),
+                )
+            )
+
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+
             signingConfig = signingConfigs.getByName("release")
         }
 
@@ -64,7 +76,16 @@ android {
             isMinifyEnabled = false
             enableUnitTestCoverage = true
 
-            manifestPlaceholders["appNameSuffix"] = "[DEBUG]"
+            manifestPlaceholders.putAll(
+                mapOf(
+                    "appNameSuffix" to "[DEBUG]",
+                    "deeplinkScheme" to deeplinkProperties["deeplinkScheme"].toString(),
+                    "deeplinkHost" to deeplinkProperties["debugHost"].toString(),
+                    "deeplinkPort" to deeplinkProperties["debugPort"].toString(),
+                    "deeplinkPathAdvancedPattern" to deeplinkProperties["deeplinkPathAdvancedPattern.regexp"].toString(),
+                )
+            )
+
             versionNameSuffix = "-DEBUG"
         }
 
@@ -73,7 +94,16 @@ android {
             isMinifyEnabled = false
             enableUnitTestCoverage = true
 
-            manifestPlaceholders["appNameSuffix"] = "[MOCK]"
+            manifestPlaceholders.putAll(
+                mapOf(
+                    "appNameSuffix" to "[MOCK]",
+                    "deeplinkScheme" to deeplinkProperties["deeplinkScheme"].toString(),
+                    "deeplinkHost" to deeplinkProperties["debugHost"].toString(),
+                    "deeplinkPort" to deeplinkProperties["debugPort"].toString(),
+                    "deeplinkPathAdvancedPattern" to deeplinkProperties["deeplinkPathAdvancedPattern.regexp"].toString(),
+                )
+            )
+
             versionNameSuffix = "-MOCK"
         }
     }
@@ -136,12 +166,18 @@ tasks.register("buildDebugApk") {
 }*/
 
 dependencies {
+    // Kotlin reflection.
     implementation(libs.kotlin.reflect)
 
+    // Compose.
     implementation(project.dependencies.platform(libs.androidx.compose.bom))
     implementation(libs.bundles.app.ui)
     debugImplementation(libs.bundles.app.ui.debug)
 
+    // QR code.
+    implementation(libs.google.zxing)
+
+    // Testing.
     testImplementation(libs.bundles.test.implementation)
     androidTestImplementation(libs.bundles.android.test.implementation)
 

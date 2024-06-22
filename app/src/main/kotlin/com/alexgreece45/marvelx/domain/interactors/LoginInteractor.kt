@@ -14,10 +14,10 @@ import com.alexgreece45.marvelx.data.repository.GrandNewAccessTokenRepositoryRes
 import com.alexgreece45.marvelx.data.repository.LoginRepository
 import com.alexgreece45.marvelx.data.repository.LogoutRepositoryResponse
 import com.alexgreece45.marvelx.data.repository.PostLoginRepositoryResponse
-import com.alexgreece45.marvelx.data.repository.RefreshAccessTokenRepositoryResponse
+import com.alexgreece45.marvelx.data.repository.RefreshTokenRepository
+import com.alexgreece45.marvelx.data.repository.TokenRefreshRepositoryResult
 import com.alexgreece45.marvelx.domain.model_api.sensitiveUserData.SensitiveUserDataDomain
 import com.alexgreece45.marvelx.domain.model_api.user.postLogin.SignData
-import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.ProfileDetailsDomain
 import com.alexgreece45.marvelx.domain.model_api.userAuthData.UserAuthData
 import com.alexgreece45.marvelx.network_logic.models_api.sensitiveUserData.RequestSensitiveUserData
 import com.alexgreece45.marvelx.network_logic.models_api.sensitiveUserData.toSensitiveUserDataDomain
@@ -63,7 +63,8 @@ interface LoginInteractor {
 }
 
 class LoginInteractorImpl(
-    private val repository: LoginRepository,
+    private val loginRepository: LoginRepository,
+    private val refreshTokenRepository: RefreshTokenRepository,
     private val resourceProvider: ResourceProvider,
     private val configOauth: ConfigOauth,
     private val authController: AuthController,
@@ -84,31 +85,35 @@ class LoginInteractorImpl(
 
     override suspend fun authorize(tempAuthCode: String): Flow<AuthorizePartialState> = flow {
         val genericErrorMessage = resourceProvider.getGenericErrorMessage()
-        repository.authorize(tempAuthCode, configOauth.clientId, codeChallenge, configOauth.codeChallengeMethod)
-            .collect {
-                when (it) {
-                    is AuthorizeRepositoryPartialState.Success -> {
-                        when (val body = it.response) {
-                            null -> emit(AuthorizePartialState.Failed(genericErrorMessage))
-                            else -> {
-                                if (body.authCode.isBlank()) {
-                                    emit(AuthorizePartialState.Failed(genericErrorMessage))
-                                } else {
-                                    emit(AuthorizePartialState.Success(body.authCode))
-                                }
+        loginRepository.authorize(
+            tempAuthCode,
+            configOauth.clientId,
+            codeChallenge,
+            configOauth.codeChallengeMethod
+        ).collect {
+            when (it) {
+                is AuthorizeRepositoryPartialState.Success -> {
+                    when (val body = it.response) {
+                        null -> emit(AuthorizePartialState.Failed(genericErrorMessage))
+                        else -> {
+                            if (body.authCode.isBlank()) {
+                                emit(AuthorizePartialState.Failed(genericErrorMessage))
+                            } else {
+                                emit(AuthorizePartialState.Success(body.authCode))
                             }
                         }
                     }
+                }
 
-                    is AuthorizeRepositoryPartialState.Failed -> {
-                        emit(
-                            AuthorizePartialState.Failed(
-                                genericErrorMessage
-                            )
+                is AuthorizeRepositoryPartialState.Failed -> {
+                    emit(
+                        AuthorizePartialState.Failed(
+                            genericErrorMessage
                         )
-                    }
+                    )
                 }
             }
+        }
     }.safeAsync {
         when (it) {
             is IOException -> AuthorizePartialState.Failed(resourceProvider.getNoInternetConnectionMessage())
@@ -118,7 +123,6 @@ class LoginInteractorImpl(
 
     override suspend fun logout(): Flow<LogoutPartialState> = flow {
         val genericErrorMessage = resourceProvider.getGenericErrorMessage()
-        val clientId = configOauth.clientId
         val refreshToken = authController.getRefreshToken()
 
         // Close websocket connection.
@@ -144,25 +148,26 @@ class LoginInteractorImpl(
             return@flow
         }
 
-        repository.logout(configOauth.clientId, refreshToken).collect { logoutRepositoryResponse ->
-            // Stop refresh token worker irrespectively of the response.
-            refreshTokenController.stopWorker()
+        loginRepository.logout(configOauth.clientId, refreshToken)
+            .collect { logoutRepositoryResponse ->
+                // Stop refresh token worker irrespectively of the response.
+                refreshTokenController.stopWorker()
 
-            when (logoutRepositoryResponse) {
-                is LogoutRepositoryResponse.Failed -> {
-                    emit(
-                        LogoutPartialState.Failed(
-                            errorMessage = logoutRepositoryResponse.errorMessage
-                                ?: genericErrorMessage
+                when (logoutRepositoryResponse) {
+                    is LogoutRepositoryResponse.Failed -> {
+                        emit(
+                            LogoutPartialState.Failed(
+                                errorMessage = logoutRepositoryResponse.errorMessage
+                                    ?: genericErrorMessage
+                            )
                         )
-                    )
-                }
+                    }
 
-                is LogoutRepositoryResponse.Success -> {
-                    emit(LogoutPartialState.Success)
+                    is LogoutRepositoryResponse.Success -> {
+                        emit(LogoutPartialState.Success)
+                    }
                 }
             }
-        }
     }.safeAsync {
         logger.e("LoginInteractor") { "(logout) error: ${it.message.orEmpty()}" }
         when (it) {
@@ -183,7 +188,7 @@ class LoginInteractorImpl(
     override suspend fun postLogin(accessToken: String): Flow<PostLoginPartialState> = flow {
         val genericErrorMessage = resourceProvider.getGenericErrorMessage()
 
-        repository.postLogin(accessToken).collect {
+        loginRepository.postLogin(accessToken).collect {
             when (it) {
                 is PostLoginRepositoryResponse.Success -> {
                     val sign = it.response?.sign
@@ -225,7 +230,7 @@ class LoginInteractorImpl(
     override suspend fun grandNewAccessToken(authCode: String): Flow<GrandNewAccessTokenPartialState> =
         flow {
             val genericErrorMessage = resourceProvider.getGenericErrorMessage()
-            repository.grandNewAccessToken(
+            loginRepository.grandNewAccessToken(
                 clientId = configOauth.clientId,
                 code = authCode,
                 codeVerifier = codeVerifier,
@@ -241,13 +246,17 @@ class LoginInteractorImpl(
                     }
 
                     is GrandNewAccessTokenRepositoryResponse.Success -> {
-                        it.response?.let { response ->
-                            emit(GrandNewAccessTokenPartialState.Success(response.toUserAuthData()))
-                        } ?: emit(
-                            GrandNewAccessTokenPartialState.Failed(
-                                errorMessage = genericErrorMessage
-                            )
-                        )
+                        when (val response = it.response) {
+                            null -> {
+                                GrandNewAccessTokenPartialState.Failed(
+                                    errorMessage = genericErrorMessage
+                                )
+                            }
+
+                            else -> {
+                                emit(GrandNewAccessTokenPartialState.Success(response.toUserAuthData()))
+                            }
+                        }
                     }
                 }
             }
@@ -267,20 +276,20 @@ class LoginInteractorImpl(
         }
 
     override suspend fun refreshAccessToken(): Flow<RefreshAccessTokenPartialState> = flow {
-        val clientId = configOauth.clientId
-        val token = authController.getRefreshToken()
         val genericErrorMessage = resourceProvider.getGenericErrorMessage()
+        val clientId = configOauth.clientId
+        val refreshToken = authController.getRefreshToken()
 
-        if (token.isNullOrBlank()) {
+        if (refreshToken.isNullOrBlank()) {
             // Remove stored credentials.
             authController.removeUserCredentials()
             emit(RefreshAccessTokenPartialState.Failed(errorMessage = genericErrorMessage))
             return@flow
         }
 
-        repository.refreshAccessToken(clientId, token).collect {
+        refreshTokenRepository.refreshAccessToken(clientId, refreshToken).collect {
             when (it) {
-                is RefreshAccessTokenRepositoryResponse.Failed -> {
+                is TokenRefreshRepositoryResult.Failed -> {
                     // Remove stored credentials.
                     authController.removeUserCredentials()
                     emit(
@@ -290,19 +299,23 @@ class LoginInteractorImpl(
                     )
                 }
 
-                is RefreshAccessTokenRepositoryResponse.Success -> {
-                    it.response?.let { tokenResponse ->
-                        // Save token info to device.
-                        authController.setData(tokenResponse.toUserAuthData())
-                        emit(RefreshAccessTokenPartialState.Success)
-                    } ?: run {
-                        // Remove stored credentials.
-                        authController.removeUserCredentials()
-                        emit(
-                            RefreshAccessTokenPartialState.Failed(
-                                errorMessage = genericErrorMessage
+                is TokenRefreshRepositoryResult.Success -> {
+                    when (val response = it.responseToken) {
+                        null -> {
+                            // Remove stored credentials.
+                            authController.removeUserCredentials()
+                            emit(
+                                RefreshAccessTokenPartialState.Failed(
+                                    errorMessage = genericErrorMessage
+                                )
                             )
-                        )
+                        }
+
+                        else -> {
+                            // Save token info to device.
+                            authController.setData(response.toUserAuthData())
+                            emit(RefreshAccessTokenPartialState.Success)
+                        }
                     }
                 }
             }
@@ -326,7 +339,7 @@ class LoginInteractorImpl(
         flow {
             val request = RequestSensitiveUserData(token = token)
 
-            repository.getSensitiveUserData(request).collect { repositoryResponse ->
+            loginRepository.getSensitiveUserData(request).collect { repositoryResponse ->
                 when (repositoryResponse) {
                     is GetSensitiveUserDataRepositoryResponse.Failed -> {
                         emit(
@@ -337,30 +350,36 @@ class LoginInteractorImpl(
                     }
 
                     is GetSensitiveUserDataRepositoryResponse.Success -> {
-                        repositoryResponse.response?.let { responseSensitiveUserData ->
-                            // If the OTP functionality is blocked, but there's no expiresIn info,
-                            // throw an "internal server error".
-                            if (responseSensitiveUserData.isOtpBlocked &&
-                                responseSensitiveUserData.otpBlockExpiresIn == null
-                            ) {
+                        when (val responseSensitiveUserData = repositoryResponse.response) {
+                            null -> {
                                 emit(
                                     GetSensitiveUserDataPartialState.Failed(
-                                        errorMessage = resourceProvider.getString(R.string.internal_server_error)
+                                        errorMessage = resourceProvider.getGenericErrorMessage()
                                     )
                                 )
-                                return@collect
                             }
 
-                            emit(
-                                GetSensitiveUserDataPartialState.Success(
-                                    sensitiveUserDataDomain = responseSensitiveUserData.toSensitiveUserDataDomain()
+                            else -> {
+                                // If the OTP functionality is blocked, but there's no expiresIn info,
+                                // throw an "internal server error".
+                                if (responseSensitiveUserData.isOtpBlocked &&
+                                    responseSensitiveUserData.otpBlockExpiresIn == null
+                                ) {
+                                    emit(
+                                        GetSensitiveUserDataPartialState.Failed(
+                                            errorMessage = resourceProvider.getString(R.string.internal_server_error)
+                                        )
+                                    )
+                                    return@collect
+                                }
+
+                                emit(
+                                    GetSensitiveUserDataPartialState.Success(
+                                        sensitiveUserDataDomain = responseSensitiveUserData.toSensitiveUserDataDomain()
+                                    )
                                 )
-                            )
-                        } ?: emit(
-                            GetSensitiveUserDataPartialState.Failed(
-                                errorMessage = resourceProvider.getGenericErrorMessage()
-                            )
-                        )
+                            }
+                        }
                     }
                 }
             }

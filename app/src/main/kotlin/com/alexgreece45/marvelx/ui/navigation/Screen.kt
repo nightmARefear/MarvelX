@@ -1,8 +1,12 @@
 package com.alexgreece45.marvelx.ui.navigation
 
+import android.content.Intent
 import androidx.navigation.NamedNavArgument
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
+import androidx.navigation.navDeepLink
+import com.alexgreece45.marvelx.BuildConfig
+import com.alexgreece45.marvelx.util.extensions.getPortFromUrl
 
 /**
  * Represents a unique screen in this application. You can set the screen name through [baseRoute],
@@ -11,8 +15,9 @@ import androidx.navigation.navArgument
  * value of `true`.
  */
 sealed class Screen(
-    protected val baseRoute: String,
+    val baseRoute: String,
     private val navArgs: List<NavItem> = emptyList(),
+    val deepLinkArgs: List<NavDeepLinkItem> = emptyList(),
     val isIncludedInAutoLogout: Boolean = true
 ) {
     /**
@@ -32,6 +37,27 @@ sealed class Screen(
             type = navItem.type
         }
     }
+
+    /**
+     * The `deepLinks` object for the graph builder.
+     */
+    val deepLinks = if (deepLinkArgs.isNotEmpty()) {
+        listOf(
+            navDeepLink {
+                uriPattern = buildString {
+                    append("${BuildConfig.DEEPLINK_SCHEME}://")
+                    append("${BuildConfig.MARVELX_BACKEND_DOMAIN}:")
+                    append("${BuildConfig.MARVELX_BACKEND_BASE_URL.getPortFromUrl()}/")
+                    append("$baseRoute/")
+                    deepLinkArgs.forEach { navDeepLinkItem ->
+                        append("{${navDeepLinkItem.key}}")
+                        append("/")
+                    }
+                }.removeSuffix("/")
+                action = Intent.ACTION_VIEW
+            }
+        )
+    } else emptyList()
 
     companion object {
         /**
@@ -53,6 +79,17 @@ sealed class Screen(
                 .firstOrNull { screen ->
                     screen.route == route
                 }
+
+        /**
+         * Attempts to match the given [screenName] against a predefined selection of
+         * deeplink-supported screens and returns the requested [Screen] if it was found, otherwise
+         * `null`.
+         */
+        fun matchDeepLinkScreenName(screenName: String): Screen? =
+            when (screenName) {
+                ProfileDetailsScreen.baseRoute -> ProfileDetailsScreen
+                else -> null
+            }
     }
 
     // Register screens
@@ -136,7 +173,8 @@ sealed class Screen(
     data object ProfileDetailsScreen :
         Screen(
             baseRoute = "profileDetailsScreen",
-            navArgs = listOf(NavItem.UserId,)
+            navArgs = listOf(NavItem.UserId),
+            deepLinkArgs = listOf(NavDeepLinkItem.UserId)
         ) {
         fun createNavRoute(
             userId: Int? = -1,
@@ -200,4 +238,8 @@ enum class NavItem(val key: String, val type: NavType<*>) {
     ShouldRememberUserSession(key = "shouldRememberUserSession", type = NavType.BoolType),
     RequestIdEmail(key = "requestIdEmail", type = NavType.StringType),
     RequestIdPhoneNumber(key = "requestIdPhoneNumber", type = NavType.StringType),
+}
+
+enum class NavDeepLinkItem(val key: String) {
+    UserId(key = "userId")
 }

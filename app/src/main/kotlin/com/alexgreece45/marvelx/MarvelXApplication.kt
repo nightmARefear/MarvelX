@@ -13,7 +13,7 @@ import com.alexgreece45.marvelx.controllers.AppLogger
 import com.alexgreece45.marvelx.controllers.AuthController
 import com.alexgreece45.marvelx.di.initKoin
 import com.alexgreece45.marvelx.domain.worker.RefreshTokenWorker
-import com.alexgreece45.marvelx.network_logic.api.ApiClient
+import com.alexgreece45.marvelx.network_logic.clients.RefreshTokenClient
 import com.google.firebase.FirebaseApp
 import org.koin.android.ext.android.inject
 
@@ -68,7 +68,7 @@ class MarvelXApplication : Application(), Configuration.Provider {
 }
 
 class RefreshTokenWorkerFactory(
-    private val apiClient: ApiClient,
+    private val refreshTokenClient: RefreshTokenClient,
     private val authController: AuthController,
     private val configOauth: ConfigOauth,
     private val logger: AppLogger
@@ -80,7 +80,7 @@ class RefreshTokenWorkerFactory(
     ): ListenableWorker = RefreshTokenWorker(
         context = appContext,
         workerParameters = workerParameters,
-        apiClient = apiClient,
+        refreshTokenClient = refreshTokenClient,
         authController = authController,
         configOauth = configOauth,
         logger = logger

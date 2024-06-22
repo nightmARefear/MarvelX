@@ -214,7 +214,7 @@ class PrefKeysImpl(
                 )
             )
         } catch (e: DateTimeParseException) {
-            logger.e("PrefKeys") { "Auto logout timestamp is null." }
+            logger.e("PrefKeys") { "Auto logout timestamp could not be parsed." }
             null
         }
         set(value) {
