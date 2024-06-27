@@ -11,7 +11,7 @@ import com.alexgreece45.marvelx.mvi.BaseState
 import com.alexgreece45.marvelx.mvi.BaseViewModel
 import com.alexgreece45.marvelx.network_logic.models_api.user.Gender
 import com.alexgreece45.marvelx.ui.components.AlertDialogButton
-import com.alexgreece45.marvelx.ui.components.SnackbarState
+import com.alexgreece45.marvelx.ui.components.SnackbarStateData
 import com.alexgreece45.marvelx.ui.components.model.ErrorButtonLayout
 import com.alexgreece45.marvelx.ui.components.model.ErrorButtonType
 import com.alexgreece45.marvelx.ui.helper.FieldValidationRules
@@ -91,7 +91,7 @@ sealed interface EditProfileDetailsContract {
 
         val alertDialogView: AlertDialogView? = null,
         val errorView: ErrorView? = null,
-        val snackbarState: SnackbarState? = null
+        val snackbarStateData: SnackbarStateData? = null
     ) : BaseState
 
     sealed interface Effect : BaseEffect {
@@ -404,7 +404,7 @@ class EditProfileDetailsViewModel(
                             // TODO: Review snackbar handling.
                             setState {
                                 copy(
-                                    snackbarState = SnackbarState(
+                                    snackbarStateData = SnackbarStateData(
                                         message = resourceProvider.getString(R.string.edit_profile_details_screen_success_updating_profile_details)
                                     )
                                 )

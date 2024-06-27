@@ -24,6 +24,8 @@ import com.alexgreece45.marvelx.controllers.AuthController
 import com.alexgreece45.marvelx.controllers.AuthControllerImpl
 import com.alexgreece45.marvelx.controllers.CryptoController
 import com.alexgreece45.marvelx.controllers.CryptoControllerImpl
+import com.alexgreece45.marvelx.controllers.DeepLinkController
+import com.alexgreece45.marvelx.controllers.DeepLinkControllerImpl
 import com.alexgreece45.marvelx.controllers.MarvelXBackendRequestController
 import com.alexgreece45.marvelx.controllers.MarvelXBackendRequestControllerImpl
 import com.alexgreece45.marvelx.controllers.PrefKeys
@@ -106,6 +108,8 @@ import com.alexgreece45.marvelx.ui.screens.profile.editProfileDetails.EditProfil
 import com.alexgreece45.marvelx.ui.screens.profile.faq.FaqViewModel
 import com.alexgreece45.marvelx.ui.screens.profile.privacySettings.PrivacySettingsViewModel
 import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.ProfileDetailsViewModel
+import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.stats.ProfileDetailsStatsViewModel
+import com.alexgreece45.marvelx.ui.screens.qrCode.QrCodeScanViewModel
 import com.alexgreece45.marvelx.ui.screens.signup.SignupViewModel
 import com.alexgreece45.marvelx.ui.screens.splash.SplashViewModel
 import com.alexgreece45.marvelx.util.FormValidator
@@ -175,7 +179,7 @@ private val repositoryModule = module {
     single<CharacterRepository> { CharacterRepositoryImpl(get()) }
     single<FavoriteCharactersRepository> { FavoriteCharactersRepositoryImpl(get()) }
     single<RefreshTokenRepository> { RefreshTokenRepositoryImpl(get()) }
-    single<LoginRepository> { LoginRepositoryImpl(get(), get(), get(), get()) }
+    single<LoginRepository> { LoginRepositoryImpl(get(), get(), get()) }
     single<UserRepository> { UserRepositoryImpl(get()) }
     single<ConfigRepository> { ConfigRepositoryImpl(get()) }
     single<ForgotPasswordRepository> { ForgotPasswordRepositoryImpl(get(), get()) }
@@ -202,7 +206,7 @@ private val interactorModule = module {
             get()
         )
     }
-    factory<UserInteractor> { UserInteractorImpl(get(), get(), get(), get()) }
+    factory<UserInteractor> { UserInteractorImpl(get(), get(), get(), get(), get()) }
     factory<ForgotPasswordInteractor> { ForgotPasswordInteractorImpl(get(), get()) }
     factory<ChangePasswordInteractor> { ChangePasswordInteractorImpl() }
     factory<OtpInteractor> { OtpInteractorImpl(get(), get(), get()) }
@@ -231,6 +235,7 @@ private val controllerModule = module {
             get()
         )
     }
+    single<DeepLinkController> { DeepLinkControllerImpl(get(), get()) }
 }
 
 private val formValidatorModule = module {
@@ -272,8 +277,10 @@ private val viewModelModule = module {
     viewModel { ProfileViewModel(get(), get(), get(), get()) }
     viewModel { ProfileDetailsViewModel(get(), get()) }
     viewModel { EditProfileDetailsViewModel(get(), get(), get(), get()) }
+    viewModel { ProfileDetailsStatsViewModel(get()) }
     viewModel { PrivacySettingsViewModel(get(), get()) }
     viewModel { FaqViewModel(get(), get()) }
+    viewModel { QrCodeScanViewModel() }
 }
 
 private val workerModule = module {

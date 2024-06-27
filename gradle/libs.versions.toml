@@ -1,11 +1,11 @@
 [versions]
-compose-bom = "2024.05.00"
+compose-bom = "2024.06.00"
 koin-bom = "3.5.6"
 
 compose-compiler = "1.5.13"
 compose-navigation = "2.7.7"
 
-plugin-agp = "8.4.1"
+plugin-agp = "8.4.2"
 plugin-kotlin = "1.9.23"
 plugin-google-mapsplatform-secrets = "2.0.1"
 plugin-ksp = "1.9.23-1.0.20"
@@ -16,6 +16,7 @@ airbnb-lottie-compose = "6.1.0"
 
 androidx-activity-compose = "1.9.0"
 androidx-appcompat = "1.6.1"
+androidx-camera = "1.3.3"
 androidx-core = "1.13.1"
 androidx-credentials = "1.2.2"
 androidx-lifecycle = "2.7.0"
@@ -23,8 +24,8 @@ androidx-room = "2.6.1"
 androidx-security-crypto = "1.0.0"
 androidx-work = "2.9.0"
 
-androidx-test-ext-junit = "1.1.5"
-androidx-test-espresso-core = "3.5.1"
+androidx-test-ext-junit = "1.2.0"
+androidx-test-espresso-core = "3.6.0"
 
 bouncycastle-bcprov = "1.70"
 
@@ -35,11 +36,11 @@ coil = "2.6.0"
 google-accompanist = "0.32.0"
 google-android-libraries-identity = "1.1.0"
 google-code-gson = "2.10.1"
-google-firebase-bom = "33.1.0"
-google-firebase-crashlytics = "3.0.1"
+google-firebase-bom = "33.1.1"
+google-firebase-crashlytics = "3.0.2"
 google-play-services-auth = "21.2.0"
 google-gms-google-services = "4.4.2"
-google-zxing = "3.5.1"
+google-zxing = "3.5.2"
 
 hilt-navigation = "1.2.0"
 
@@ -66,6 +67,10 @@ airbnb-lottie-compose = { module = "com.airbnb.android:lottie-compose", version.
 androidx-compose-bom = { module = "androidx.compose:compose-bom", version.ref = "compose-bom" }
 androidx-activity-ktx = { module = "androidx.activity:activity-ktx" }
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activity-compose" }
+androidx-camera-core = { group = "androidx.camera", name = "camera-core", version.ref = "androidx-camera" }
+androidx-camera2 = { group = "androidx.camera", name = "camera-camera2", version.ref = "androidx-camera" }
+androidx-camera-lifecycle = { group = "androidx.camera", name = "camera-lifecycle", version.ref = "androidx-camera" }
+androidx-camera-view = { group = "androidx.camera", name = "camera-view", version.ref = "androidx-camera" }
 androidx-core = { module = "androidx.core:core-ktx", version.ref = "androidx-core" }
 androidx-compat = { module = "androidx.appcompat:appcompat", version.ref = "androidx-appcompat" }
 androidx-compose-material = { module = "androidx.compose.material:material" }
@@ -96,8 +101,9 @@ chucker-no-op = { module = "com.github.chuckerteam.chucker:library-no-op", versi
 coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coil" }
 coil-gif = { module = "io.coil-kt:coil-gif", version.ref = "coil" }
 
-google-accompanist-systemuicontroller = { module = "com.google.accompanist:accompanist-systemuicontroller", version.ref = "google-accompanist" }
-google-accompanist-placeholder = { module = "com.google.accompanist:accompanist-systemuicontroller", version.ref = "google-accompanist" }
+google-accompanist-permissions = { group = "com.google.accompanist", name = "accompanist-permissions", version.ref = "google-accompanist" }
+google-accompanist-systemuicontroller = { group = "com.google.accompanist", name = "accompanist-systemuicontroller", version.ref = "google-accompanist" }
+google-accompanist-placeholder = { group = "com.google.accompanist", name = "accompanist-systemuicontroller", version.ref = "google-accompanist" }
 google-android-libraries-identity = { module = "com.google.android.libraries.identity.googleid:googleid", version.ref = "google-android-libraries-identity" }
 google-code-gson = { module = "com.google.code.gson:gson", version.ref = "google-code-gson" }
 google-firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "google-firebase-bom" }
@@ -152,6 +158,10 @@ ksp = { id = "com.google.devtools.ksp", version.ref = "plugin-ksp" }
 app-ui = [
     "androidx-activity-compose",
     "androidx-activity-ktx",
+    "androidx-camera-core",
+    "androidx-camera2",
+    "androidx-camera-lifecycle",
+    "androidx-camera-view",
     "androidx-core",
     "androidx-compat",
     "androidx-compose-material",
@@ -162,6 +172,7 @@ app-ui = [
     "androidx-lifecycle-runtime-ktx",
     "androidx-navigation",
     "androidx-navigation-compose",
+    "google-accompanist-permissions",
     "google-accompanist-placeholder",
     "google-accompanist-systemuicontroller",
 ]

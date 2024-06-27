@@ -36,7 +36,7 @@
 *.properties
 
 # pinning certificates
-.pem
+*.pem
 
 # network security config
 network_security_config.xml

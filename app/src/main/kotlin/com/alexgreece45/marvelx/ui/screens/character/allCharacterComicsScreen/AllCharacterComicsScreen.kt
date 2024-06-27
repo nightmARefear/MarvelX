@@ -10,11 +10,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Icon
-import androidx.compose.material.LocalContentAlpha
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.ModalBottomSheetValue
 import androidx.compose.material.Text
@@ -37,12 +35,11 @@ import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.domain.model_api.comic.ComicDomain
 import com.alexgreece45.marvelx.ui.components.ContentErrorScreen
 import com.alexgreece45.marvelx.ui.components.ContentScreen
-import com.alexgreece45.marvelx.ui.components.ModalBottomSheet
 import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
 import com.alexgreece45.marvelx.ui.components.SortingModalBottomSheetContent
+import com.alexgreece45.marvelx.ui.components.WrapModalBottomSheetLayout
 import com.alexgreece45.marvelx.util.DEFAULT_SCREEN_PADDING
 import com.alexgreece45.marvelx.util.HSpacer
-import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.VSpacer
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
@@ -93,12 +90,7 @@ fun AllCharacterComicsScreen(
         }
     }
 
-    ModalBottomSheet(
-        sheetState = modalBottomSheetState,
-        sheetShape = RoundedCornerShape(topStart = SPACING_SMALL.dp, topEnd = SPACING_SMALL.dp),
-        scrimColor = MaterialTheme.colors.background.copy(
-            alpha = LocalContentAlpha.current.minus(0.5f)
-        ),
+    WrapModalBottomSheetLayout(
         sheetContent = {
             SortingModalBottomSheetContent(
                 contentPadding = DEFAULT_SCREEN_PADDING,
@@ -110,7 +102,8 @@ fun AllCharacterComicsScreen(
                     onEventSent(AllCharacterComicsEvent.Sorting.OnCloseClick)
                 }
             )
-        }
+        },
+        sheetState = modalBottomSheetState,
     ) {
         ContentScreen(
             isLoading = state.isLoading,
@@ -132,7 +125,7 @@ fun AllCharacterComicsScreen(
                 state.error?.let {
                     item {
                         ContentErrorScreen(errorMessage = it.errorMessage) {
-                            it.onRetryClick.invoke()
+                            it.onRetryClick()
                         }
                     }
                 }
@@ -158,10 +151,11 @@ fun AllCharacterComicsScreen(
                             // Disables the on tap ripple effect for both single and long clicks. It also removes the background color.
                             .clickable(
                                 interactionSource = remember { MutableInteractionSource() },
-                                indication = rememberRipple(radius = 0.dp)
-                            ) {
-                                onEventSent(AllCharacterComicsEvent.OnDropDownArrowClick)
-                            },
+                                indication = rememberRipple(radius = 0.dp),
+                                onClick = {
+                                    onEventSent(AllCharacterComicsEvent.OnDropDownArrowClick)
+                                }
+                            ),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
@@ -207,7 +201,7 @@ private fun ComicItem(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick() },
+            .clickable(onClick = onClick),
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -215,14 +209,14 @@ private fun ComicItem(
             verticalAlignment = Alignment.CenterVertically
         ) {
             AsyncImage(
+                model = ImageRequest.Builder(context)
+                    .data(comic.thumbnail.downloadUrl)
+                    .crossfade(true).build(),
+                contentDescription = comic.thumbnail.contentDescription,
                 modifier = Modifier
                     .width(85.dp)
                     .aspectRatio(ratio = 0.66f)
                     .clip(MaterialTheme.shapes.medium),
-                model = ImageRequest.Builder(context)
-                    .data(comic.thumbnail.downloadUrl)
-                    .crossfade(true).build(),
-                contentDescription = comic.thumbnail.contentDescription
             )
 
             HSpacer.Small()

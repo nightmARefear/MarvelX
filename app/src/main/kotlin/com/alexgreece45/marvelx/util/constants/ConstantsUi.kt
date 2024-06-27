@@ -25,6 +25,16 @@ object ConstantsUi {
          * The size of the QR code image.
          */
         const val QR_CODE_SIZE = 750
+
+        val LOTTIE_ANIMATION_SIZE = 420.dp
+    }
+
+    object ProfileDetailsStatsScreen {
+        val DATA_TILE_PADDING = 12.dp
+    }
+
+    object QrCodeScreen {
+        val LOTTIE_ANIMATION_SIZE = 200.dp
     }
 
     /**
@@ -41,4 +51,9 @@ object ConstantsUi {
      * The small size for profile images, expressed in density-independent pixels (dp).
      */
     val PROFILE_IMAGE_SMALL_SIZE = PROFILE_IMAGE_LARGE_SIZE / 2.5f
+
+    /**
+     * The size for generic images in tiles, express in density-independent pixels (dp).
+     */
+    val GENERIC_IMAGE_TILE_SIZE = 60.dp
 }

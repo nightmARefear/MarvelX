@@ -23,9 +23,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.ui.components.WrapButton
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
+import com.alexgreece45.marvelx.ui.components.WrapButton
 import com.alexgreece45.marvelx.ui.components.effect.OneTimeLaunchedEffect
 import com.alexgreece45.marvelx.ui.components.error.ContentErrorScreen
 import com.alexgreece45.marvelx.ui.components.otpTextField.OtpTextField
@@ -107,9 +107,11 @@ fun OtpScreen(
 
     ContentScreen(
         isLoading = state.isLoading,
-        navigableAction = ScreenNavigableAction.Backable {
-            onEventSent(OtpEvent.OnBackClick)
-        },
+        navigableAction = if (!state.isLoading) {
+            ScreenNavigableAction.Backable {
+                onEventSent(OtpEvent.OnBackClick)
+            }
+        } else ScreenNavigableAction.None,
         showToolbar = true
     ) { paddingValues ->
         Column(

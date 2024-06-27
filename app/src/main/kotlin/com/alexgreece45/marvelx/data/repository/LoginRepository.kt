@@ -1,7 +1,7 @@
 package com.alexgreece45.marvelx.data.repository
 
 import com.alexgreece45.marvelx.controllers.AppLogger
-import com.alexgreece45.marvelx.data.repository.helper.parseError
+import com.alexgreece45.marvelx.data.repository.helper.parseUserError
 import com.alexgreece45.marvelx.network_logic.api.ApiClient
 import com.alexgreece45.marvelx.network_logic.models_api.authorize.ResponseAuthorize
 import com.alexgreece45.marvelx.network_logic.models_api.sensitiveUserData.RequestSensitiveUserData
@@ -52,7 +52,6 @@ class LoginRepositoryImpl(
     private val logger: AppLogger,
     private val resourceProvider: ResourceProvider,
     private val apiClient: ApiClient,
-    private val refreshTokenRepository: RefreshTokenRepository
 ) : LoginRepository {
     override suspend fun authorize(
         tempAuthCode: String,
@@ -86,7 +85,7 @@ class LoginRepositoryImpl(
                 if (response.isSuccessful) {
                     emit(GrandNewAccessTokenRepositoryResponse.Success(response = response.body()))
                 } else {
-                    val parsedError = parseError(response)
+                    val parsedError = parseUserError(response)
                     logger.e { "(grandNewAccessToken) failed: ${parsedError.errorMessage}" }
                     emit(
                         GrandNewAccessTokenRepositoryResponse.Failed(
@@ -132,7 +131,7 @@ class LoginRepositoryImpl(
                 } else {
                     emit(
                         GetSensitiveUserDataRepositoryResponse.Failed(
-                            responseUserError = parseError(response)
+                            responseUserError = parseUserError(response)
                         )
                     )
                 }

@@ -11,6 +11,7 @@ import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.ui.components.BottomBarItem
 import com.alexgreece45.marvelx.ui.components.BottomNavigationBarData
 import com.alexgreece45.marvelx.ui.components.IconData
+import com.alexgreece45.marvelx.ui.helper.openDeepLinkAction
 import com.alexgreece45.marvelx.ui.screens.allCharacters.AllCharactersScreen
 import com.alexgreece45.marvelx.ui.screens.allCharacters.AllCharactersViewModel
 import com.alexgreece45.marvelx.ui.screens.allFavoriteCharacters.AllFavoriteCharactersScreen
@@ -40,13 +41,20 @@ import com.alexgreece45.marvelx.ui.screens.profile.faq.FaqScreen
 import com.alexgreece45.marvelx.ui.screens.profile.faq.FaqViewModel
 import com.alexgreece45.marvelx.ui.screens.profile.privacySettings.PrivacySettingsScreen
 import com.alexgreece45.marvelx.ui.screens.profile.privacySettings.PrivacySettingsViewModel
+import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.ProfileDetailsContract
 import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.ProfileDetailsScreen
 import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.ProfileDetailsViewModel
+import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.stats.ProfileDetailsStatsScreen
+import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.stats.ProfileDetailsStatsViewModel
+import com.alexgreece45.marvelx.ui.screens.qrCode.QrCodeScanContract
+import com.alexgreece45.marvelx.ui.screens.qrCode.QrCodeScanScreen
+import com.alexgreece45.marvelx.ui.screens.qrCode.QrCodeScanViewModel
 import com.alexgreece45.marvelx.ui.screens.signup.SignUpScreen
 import com.alexgreece45.marvelx.ui.screens.signup.SignupViewModel
 import com.alexgreece45.marvelx.ui.screens.splash.SplashScreen
 import com.alexgreece45.marvelx.util.SPACING_MEDIUM
 import com.alexgreece45.marvelx.util.extensions.composable
+import com.alexgreece45.marvelx.util.extensions.openAppSettings
 import com.alexgreece45.marvelx.util.extensions.popUpToTop
 import org.koin.androidx.compose.koinViewModel
 
@@ -349,7 +357,7 @@ fun NavGraph(navController: NavHostController) {
                         is ProfileContract.Effect.Navigation.NavigateToProfileDetailsScreen -> {
                             navController.navigate(
                                 Screen.ProfileDetailsScreen.createNavRoute(
-                                    navigationEffect.userId
+                                    userId = navigationEffect.userId
                                 )
                             )
                         }
@@ -361,7 +369,21 @@ fun NavGraph(navController: NavHostController) {
                         ProfileContract.Effect.Navigation.NavigateToPrivacySettingsScreen -> {
                             navController.navigate(Screen.PrivacySettingsScreen.route)
                         }
+
+                        is ProfileContract.Effect.Navigation.NavigateToQrCodeScreen -> {
+                            navController.navigate(
+                                Screen.QrCodeScreen.createNavRoute(
+                                    navigationEffect.previousScreenRoute
+                                )
+                            )
+                        }
                     }
+                },
+                openDeepLinkAction = { deepLinkAction ->
+                    openDeepLinkAction(
+                        navController = navController,
+                        deepLinkAction = deepLinkAction
+                    )
                 }
             )
         }
@@ -373,8 +395,40 @@ fun NavGraph(navController: NavHostController) {
                 state = viewModel.uiState.collectAsStateWithLifecycle().value,
                 effect = viewModel.uiEffect,
                 userId = navBackStackEntry.arguments?.getInt(NavItem.UserId.key) ?: -1,
-                popBackStack = navController::popBackStack,
-                navigateToEditProfileDetailsScreen = { navController.navigate(Screen.EditProfileDetailsScreen.route) },
+                onNavigation = { navigationEffect ->
+                    when (navigationEffect) {
+                        ProfileDetailsContract.Effect.Navigation.PopBackStack -> {
+                            navController.popBackStack()
+                        }
+
+                        ProfileDetailsContract.Effect.Navigation.NavigateToEditProfileDetailsScreen -> {
+                            navController.navigate(Screen.EditProfileDetailsScreen.route)
+                        }
+
+                        is ProfileDetailsContract.Effect.Navigation.NavigateToProfileDetailsStatsScreen -> {
+                            navController.navigate(
+                                Screen.ProfileDetailsStatsScreen.createNavRoute(
+                                    fullName = navigationEffect.fullName,
+                                    userId = navigationEffect.userId,
+                                    tabIndex = navigationEffect.tab.tabIndex
+                                )
+                            )
+                        }
+                    }
+                },
+            )
+        }
+
+        composable(Screen.ProfileDetailsStatsScreen) { navBackStackEntry ->
+            val viewModel = koinViewModel<ProfileDetailsStatsViewModel>()
+            ProfileDetailsStatsScreen(
+                onEventSent = viewModel::setEvent,
+                state = viewModel.uiState.collectAsStateWithLifecycle().value,
+                effect = viewModel.uiEffect,
+                fullName = navBackStackEntry.arguments?.getString(NavItem.FullName.key).orEmpty(),
+                userId = navBackStackEntry.arguments?.getInt(NavItem.UserId.key) ?: -1,
+                tabIndex = navBackStackEntry.arguments?.getInt(NavItem.TabIndex.key) ?: 0,
+                navigateUp = navController::navigateUp,
             )
         }
 
@@ -405,6 +459,34 @@ fun NavGraph(navController: NavHostController) {
                 state = viewModel.uiState.collectAsStateWithLifecycle().value,
                 effect = viewModel.uiEffect,
                 popBackStack = navController::popBackStack,
+            )
+        }
+
+        composable(Screen.QrCodeScreen) { navBackStackEntry ->
+            val viewModel = koinViewModel<QrCodeScanViewModel>()
+            QrCodeScanScreen(
+                onEventSent = viewModel::setEvent,
+                state = viewModel.uiState.collectAsStateWithLifecycle().value,
+                effect = viewModel.uiEffect,
+                previousScreenRoute = navBackStackEntry.arguments?.getString(NavItem.PreviousScreenRoute.key)
+                    .orEmpty(),
+                onNavigation = {
+                    when (it) {
+                        QrCodeScanContract.Effect.Navigation.NavigateUp -> navController.navigateUp()
+
+                        QrCodeScanContract.Effect.Navigation.OpenAppSettings -> {
+                            navController.context.openAppSettings()
+                        }
+                    }
+                },
+                navigateUpAndOpenDeepLinkAction = { deepLinkAction ->
+                    navController.navigateUp()
+                    openDeepLinkAction(
+                        navController = navController,
+                        deepLinkAction = deepLinkAction
+                    )
+                },
+                navigateUp = navController::navigateUp
             )
         }
     }

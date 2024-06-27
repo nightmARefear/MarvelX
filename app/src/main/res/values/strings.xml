@@ -35,6 +35,12 @@
     <string name="generic_label_email">Email</string>
     <string name="generic_label_password">Password</string>
 
+    // • Generic --> Chips
+    <string name="generic_chip_label_add_friend">Add friend</string>
+    <string name="generic_chip_label_remove_friend">Remove friend</string>
+    <string name="generic_chip_label_friends">Friends</string>
+    <string name="generic_chip_label_cancel_request">Cancel request</string>
+
     // ERROR HANDLING
     // • Generic Errors
     <string name="generic_error">An error has occurred!</string>
@@ -129,6 +135,9 @@
     // Comic Screen
     <string name="comic_screen_toolbar_title">%1$s</string>
 
+    <string name="comic_screen_label_section_pricing_details">Pricing Details</string>
+    <string name="comic_screen_label_section_creators">Creators</string>
+
     <string name="comic_screen_comic_could_not_be_retrieved">Error retrieving comic details</string>
     <string name="comic_screen_no_description">Comic description is not available.</string>
 
@@ -143,6 +152,7 @@
     <string name="profile_screen_profile_banner_label_see_your_profile">See your profile</string>
     <string name="profile_screen_section_label_privacy_settings">Privacy Settings</string>
     <string name="profile_screen_section_label_faq">Frequently Asked Questions (FAQ)</string>
+    <string name="profile_screen_section_label_scar_qr_code">Scan QR Code</string>
     <string name="profile_screen_section_label_logout">Logout</string>
 
     <string name="profile_screen_error_loading_profile_details">An error occurred while loading the profile details.</string>
@@ -156,10 +166,12 @@
     <string name="profile_details_screen_label_profile_banner_tile_friends">friends</string>
     <string name="profile_details_screen_label_profile_banner_tile_listings">listings</string>
     <string name="profile_details_screen_label_profile_banner_tile_favorites">favorites</string>
+    <string name="profile_details_screen_label_share_profile_intent_title">Sharing Profile of %1$s</string>
     <string name="profile_details_screen_label_gender_hidden">Gender is hidden</string>
     <string name="profile_details_screen_label_email_hidden">Email is hidden</string>
     <string name="profile_details_screen_label_scan_qr_code">Scan the QR code below</string>
     <string name="profile_details_screen_label_success_block_user">This user has been blocked.</string>
+    <string name="profile_details_screen_label_full_screen_error_view_button_go_back">Go back</string>
     <string name="profile_details_screen_label_alert_dialog_block_user_title">Block User?</string>
     <string name="profile_details_screen_label_alert_dialog_block_user_subtitle">If you block this user you won\'t be able to see each other\'s profile, and perform transactions.</string>
     <string name="profile_details_screen_label_alert_dialog_block_user_button_cancel">Cancel</string>
@@ -168,12 +180,15 @@
     <string name="profile_details_screen_content_description_edit_profile_details">edit profile details</string>
     <string name="profile_details_screen_content_description_qr_code">QR code</string>
 
-    <string name="profile_details_screen_error_loading_profile_details">Error loading profile details</string>
-    <string name="profile_details_screen_error_blocking_user">An error occurred whilst blocking this user. Try again later.</string>
+    <string name="profile_details_screen_error_loading_profile_details_generic">Error loading profile details</string>
+    <string name="profile_details_screen_error_loading_profile_details_user_not_exists">This user does not exist.</string>
+    <string name="profile_details_screen_error_loading_profile_details_user_blocked">This user profile is not available.</string>
+    <string name="profile_details_screen_error_blocking_user_generic">An error occurred whilst blocking this user. Try again later.</string>
+    <string name="profile_details_screen_error_blocking_user_same_user">You cannot block yourself!</string>
     <string name="profile_details_screen_error_generating_qr_code">An error occurred whilst generating the QR code.</string>
     <string name="profile_details_screen_error_hidden_list_friends">The friends list of this user is hidden.</string>
     <string name="profile_details_screen_error_hidden_list_listings">The listings list of this user is hidden.</string>
-    <string name="profile_details_screen_error_hidden_list_favorites">The favorites list of this user is hidden.></string>
+    <string name="profile_details_screen_error_hidden_list_favorites">The favorites list of this user is hidden.</string>
 
     // Profile Screen --> Profile Details -> Edit Profile Details
     <string name="edit_profile_details_screen_header_title">Edit Profile Details</string>
@@ -183,6 +198,11 @@
     <string name="edit_profile_details_screen_alert_dialog_unsaved_changes_subtitle">If you exit your changes will be lost. Are you sure that you want to exit?</string>
     <string name="edit_profile_details_screen_error_loading_profile_details">Error loading profile details</string>
     <string name="edit_profile_details_screen_error_updating_profile_details">Error updating profile details</string>
+
+    // Profile Screen --> Profile Details --> Profile Details Stats
+    <string name="profile_details_stats_screen_label_tab_friends">friends</string>
+    <string name="profile_details_stats_screen_label_tab_listings">listings</string>
+    <string name="profile_details_stats_screen_label_tab_favorites">favorites</string>
 
     // Profile Screen --> Privacy Settings
     <string name="privacy_settings_screen_toolbar_title">Privacy Settings</string>
@@ -291,6 +311,15 @@
     <string name="otp_screen_verify_button">Verify</string>
     <string name="otp_screen_back_to_login_button">Back To Login</string>
 
+    // Qr Code Screen
+    <string name="qr_code_screen_label_success_qr_code_scan">Success scanning the QR code.</string>
+    <string name="qr_code_screen_label_processing">Processing the QR code… Please wait…</string>
+    <string name="qr_code_screen_label_camera_permission_not_granted">The camera permission has not been granted.</string>
+    <string name="qr_code_screen_label_button_open_app_settings">Open App Settings</string>
+
+    <string name="qr_code_screen_label_error_invalid_qr_code_type">Invalid QR code type. Try scanning another QR.</string>
+    <string name="qr_code_screen_label_error_camera_binding_failed">Camera binding failed.</string>
+
     // `OtpErrorCause` sealed class strings
     <string name="otp_error_cause_not_match">OTP is incorrect.</string>
     <string name="otp_error_cause_invalid_length">OTP must be 6 characters.</string>
@@ -325,6 +354,7 @@
     <string name="content_description_person">person</string>
     <string name="content_description_privacy">privacy</string>
     <string name="content_description_faq">frequently asked questions</string>
+    <string name="content_description_scan_qr_code">scan QR code</string>
     <string name="content_description_expand">expand</string>
     <string name="content_description_collapse">collapse</string>
     <string name="content_description_navigate">navigate</string>
@@ -334,5 +364,9 @@
     <string name="content_description_gender_icon_male">male gender icon</string>
     <string name="content_description_gender_icon_other">other gender icon</string>
     <string name="content_description_your_profile_image">Your profile image</string>
+    <string name="content_description_add_friend">Add friend</string>
+    <string name="content_description_remove_friend">Remove friend</string>
+    <string name="content_description_friends">Friends</string>
+    <string name="content_description_cancel_request">Cancel request</string>
 
 </resources>

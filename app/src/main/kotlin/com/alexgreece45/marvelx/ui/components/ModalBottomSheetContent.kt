@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -16,6 +17,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.alexgreece45.marvelx.util.SPACING_MEDIUM
+import com.alexgreece45.marvelx.util.SPACING_SMALL
+import com.alexgreece45.marvelx.util.SPACING_TINY
 import com.alexgreece45.marvelx.util.VSpacer
 
 /**
@@ -35,6 +38,7 @@ fun ModalBottomSheetContent(
     Column(
         modifier = Modifier
             .fillMaxWidth()
+            .navigationBarsPadding()
             .padding(
                 paddingValues = paddingValues ?: modalBottomSheetContentDefaultPaddingValues
             )
@@ -42,7 +46,7 @@ fun ModalBottomSheetContent(
         Box(
             modifier = Modifier.padding(
                 start = if (paddingValues != null) SPACING_MEDIUM.dp else 0.dp,
-                top = if (paddingValues != null) SPACING_MEDIUM.dp else 0.dp,
+                top = if (paddingValues != null) SPACING_SMALL.dp else 0.dp,
                 end = if (paddingValues != null) SPACING_MEDIUM.dp else 0.dp
             )
         ) {
@@ -64,16 +68,21 @@ private fun ModalBottomSheetDragHandle() {
     ) {
         Box(
             modifier = Modifier
-                .width(36.dp)
-                .height(6.dp)
+                .width(48.dp)
+                .height(SPACING_TINY.dp)
                 .background(
-                    color = MaterialTheme.colors.surface,
+//                    color = MaterialTheme.colors.surface,
+                    color = MaterialTheme.colors.primary,
                     shape = RoundedCornerShape(50)
                 )
         )
     }
 }
 
-private val modalBottomSheetContentDefaultPaddingValues = PaddingValues(
-    horizontal = SPACING_MEDIUM.dp, vertical = SPACING_MEDIUM.dp
-)
+private val modalBottomSheetContentDefaultPaddingValues: PaddingValues =
+    PaddingValues(
+        start = SPACING_MEDIUM.dp,
+        top = SPACING_SMALL.dp,
+        end = SPACING_MEDIUM.dp,
+        bottom = SPACING_MEDIUM.dp
+    )

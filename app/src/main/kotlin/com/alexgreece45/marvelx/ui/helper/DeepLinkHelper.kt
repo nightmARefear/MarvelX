@@ -10,6 +10,7 @@ import androidx.navigation.navOptions
 import com.alexgreece45.marvelx.BuildConfig
 import com.alexgreece45.marvelx.ui.helper.model.DeepLinkAction
 import com.alexgreece45.marvelx.ui.helper.model.DeepLinkActionType
+import com.alexgreece45.marvelx.ui.navigation.NavItem
 import com.alexgreece45.marvelx.ui.screens.mainActivity.MainActivity
 import com.alexgreece45.marvelx.util.extensions.getPortFromUrl
 
@@ -74,7 +75,7 @@ private fun generateNewTaskDeepLink(
 /**
  * Generates composable - friendly deep link arguments.
  */
-private fun generateComposableArguments(arguments: Map<String, Any>): String {
+fun generateComposableArguments(arguments: Map<String, Any>): String {
     if (arguments.isEmpty()) return ""
     return buildString {
         append("/")
@@ -97,3 +98,17 @@ private fun generateComposableDeepLinkUri(screenRoute: String, arguments: String
         append(arguments)
     }.toUri()
 
+/**
+ * Creates the URI pattern for a deeplink based on the given [baseRoute] and [deepLinkArgs].
+ */
+fun createUriPatternForDeepLink(baseRoute: String, deepLinkArgs: List<NavItem>): String =
+    buildString {
+        append("${BuildConfig.DEEPLINK_SCHEME}://")
+        append("${BuildConfig.MARVELX_BACKEND_DOMAIN}:")
+        append("${BuildConfig.MARVELX_BACKEND_BASE_URL.getPortFromUrl()}/")
+        append("$baseRoute/")
+        deepLinkArgs.forEach { navDeepLinkItem ->
+            append("{${navDeepLinkItem.key}}")
+            append("/")
+        }
+    }.removeSuffix("/")

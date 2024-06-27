@@ -9,8 +9,5 @@ const val BOTTOM_NAVIGATION_BAR_MIN_ITEMS = 3
 const val BOTTOM_NAVIGATION_BAR_MAX_ITEMS = 5
 const val BOTTOM_NAVIGATION_BAR_ITEM_LABEL_MAX_LENGTH = 10
 
-// Sticky bottom z-Index.
-const val STICKY_BOTTOM_Z_INDEX = 5f
-
 // Throttle clickable constants.
 const val THROTTLE_CLICKABLE_DEFAULT_DELAY: Long = 1500

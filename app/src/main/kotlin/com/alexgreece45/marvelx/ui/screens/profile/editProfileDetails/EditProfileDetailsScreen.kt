@@ -76,7 +76,7 @@ fun EditProfileDetailsScreen(
         },
         showToolbar = true,
         toolbarTitle = stringResource(R.string.edit_profile_details_screen_header_title),
-        snackbarState = state.snackbarState,
+        snackbarStateData = state.snackbarStateData,
         stickyBottom = {
             WrapButton(
                 onClick = { onEventSent(EditProfileDetailsContract.Event.OnSaveChangesButtonClicked) },

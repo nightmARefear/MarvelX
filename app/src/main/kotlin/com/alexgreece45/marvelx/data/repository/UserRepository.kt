@@ -1,21 +1,26 @@
 package com.alexgreece45.marvelx.data.repository
 
 import com.alexgreece45.marvelx.data.model.RepositoryPrivacySettings
+import com.alexgreece45.marvelx.data.model.RepositoryUserBlock
 import com.alexgreece45.marvelx.data.model.RepositoryUsersBlocked
 import com.alexgreece45.marvelx.data.model.toRepositoryPrivacySettings
+import com.alexgreece45.marvelx.data.model.toRepositoryUserBlock
 import com.alexgreece45.marvelx.data.model.toRepositoryUsersBlocked
 import com.alexgreece45.marvelx.data.repository.helper.RepositoryResult
 import com.alexgreece45.marvelx.data.repository.helper.handleApiResult
 import com.alexgreece45.marvelx.data.repository.helper.handleApiResultNoTransformation
-import com.alexgreece45.marvelx.data.repository.helper.parseError
+import com.alexgreece45.marvelx.data.repository.helper.parseUserError
 import com.alexgreece45.marvelx.network_logic.api.ApiClient
 import com.alexgreece45.marvelx.network_logic.models_api.user.ResponseUserError
 import com.alexgreece45.marvelx.network_logic.models_api.user.ResponseUsersBlocked
+import com.alexgreece45.marvelx.network_logic.models_api.user.block.ResponseUserBlock
 import com.alexgreece45.marvelx.network_logic.models_api.user.privacySettings.RequestPrivacySettings
 import com.alexgreece45.marvelx.network_logic.models_api.user.privacySettings.ResponsePrivacySettings
 import com.alexgreece45.marvelx.network_logic.models_api.user.profileDetails.RequestProfileDetailsUpdate
 import com.alexgreece45.marvelx.network_logic.models_api.user.profileDetails.ResponseBasicProfileDetails
 import com.alexgreece45.marvelx.network_logic.models_api.user.profileDetails.ResponseProfileDetails
+import com.alexgreece45.marvelx.network_logic.models_api.user.profileDetails.ResponseProfileDetailsError
+import com.google.gson.Gson
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import okhttp3.MultipartBody
@@ -64,7 +69,7 @@ interface UserRepository {
     /**
      * Blocks the user with [userId].
      */
-    suspend fun blockUser(userId: Int): Flow<RepositoryResult<String>>
+    suspend fun blockUser(userId: Int): Flow<BlockUserRepositoryResult>
 
     /**
      * Unblocks the user with [userId].
@@ -90,8 +95,9 @@ class UserRepositoryImpl(
                     } else {
                         emit(
                             GetProfileDetailsRepositoryResponse.Failed(
-                                responseUserError = parseError(
-                                    response
+                                responseProfileDetailsError = Gson().fromJson(
+                                    response.errorBody()?.byteString()?.utf8(),
+                                    ResponseProfileDetailsError::class.java
                                 )
                             )
                         )
@@ -107,7 +113,7 @@ class UserRepositoryImpl(
                 } else {
                     emit(
                         GetCurrentUserProfileDetailsRepositoryResponse.Failed(
-                            responseUserError = parseError(
+                            responseUserError = parseUserError(
                                 response
                             )
                         )
@@ -169,10 +175,22 @@ class UserRepositoryImpl(
             }
         }
 
-    override suspend fun blockUser(userId: Int): Flow<RepositoryResult<String>> = flow {
-        handleApiResultNoTransformation(
-            apiClient.blockUser(userId)
-        ).collect { emit(it) }
+    override suspend fun blockUser(userId: Int): Flow<BlockUserRepositoryResult> = flow {
+        apiClient.blockUser(userId).let { response ->
+            if (response.isSuccessful) {
+                emit(BlockUserRepositoryResult.Success)
+            } else {
+                emit(
+                    BlockUserRepositoryResult.Failed(
+                        repositoryUserBlock =
+                        Gson().fromJson(
+                            response.errorBody()?.byteString()?.utf8(),
+                            ResponseUserBlock::class.java
+                        ).toRepositoryUserBlock()
+                    )
+                )
+            }
+        }
     }
 
     override suspend fun unblockUser(userId: Int): Flow<RepositoryResult<String>> = flow {
@@ -194,6 +212,11 @@ sealed class GetProfileDetailsRepositoryResponse {
     data class Success(val response: ResponseProfileDetails?) :
         GetProfileDetailsRepositoryResponse()
 
-    data class Failed(val responseUserError: ResponseUserError) :
+    data class Failed(val responseProfileDetailsError: ResponseProfileDetailsError) :
         GetProfileDetailsRepositoryResponse()
+}
+
+sealed interface BlockUserRepositoryResult {
+    data object Success : BlockUserRepositoryResult
+    data class Failed(val repositoryUserBlock: RepositoryUserBlock) : BlockUserRepositoryResult
 }

@@ -3,8 +3,10 @@ package com.alexgreece45.marvelx.domain.interactors
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.configuration.ConfigLogic
 import com.alexgreece45.marvelx.controllers.AppLogger
+import com.alexgreece45.marvelx.controllers.PrefKeys
 import com.alexgreece45.marvelx.data.model.RepositoryPrivacySettings
 import com.alexgreece45.marvelx.data.model.RepositoryUsersBlocked
+import com.alexgreece45.marvelx.data.repository.BlockUserRepositoryResult
 import com.alexgreece45.marvelx.data.repository.GetCurrentUserProfileDetailsRepositoryResponse
 import com.alexgreece45.marvelx.data.repository.GetProfileDetailsRepositoryResponse
 import com.alexgreece45.marvelx.data.repository.UserRepository
@@ -12,13 +14,17 @@ import com.alexgreece45.marvelx.domain.helper.InteractorPartialState
 import com.alexgreece45.marvelx.domain.helper.handleRepositoryResult
 import com.alexgreece45.marvelx.domain.helper.handleRepositoryResultNoTransformation
 import com.alexgreece45.marvelx.domain.model_api.user.UsersBlockedDomain
+import com.alexgreece45.marvelx.domain.model_api.user.block.UserBlockResult
+import com.alexgreece45.marvelx.domain.model_api.user.block.toUserBlockDomain
 import com.alexgreece45.marvelx.domain.model_api.user.privacySettings.PrivacySettingsDomain
 import com.alexgreece45.marvelx.domain.model_api.user.privacySettings.toPrivacySettingsDomain
 import com.alexgreece45.marvelx.domain.model_api.user.privacySettings.toRequestPrivacySettings
 import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.BasicProfileDetailsDomain
 import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.ProfileDetailsDomain
+import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.ProfileDetailsErrorType
 import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.toBasicProfileDetailsDomain
 import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.toProfileDetailsDomain
+import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.toProfileDetailsErrorDomain
 import com.alexgreece45.marvelx.domain.model_api.user.toUsersBlockedDomain
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.extensions.fromBytesToMb
@@ -69,7 +75,7 @@ interface UserInteractor {
     /**
      * Blocks the user with the given [userId].
      */
-    suspend fun blockUser(userId: Int): Flow<InteractorPartialState<String>>
+    suspend fun blockUser(userId: Int): Flow<BlockUserPartialState>
 
     /**
      * Blocks the user with the given [userId].
@@ -82,16 +88,19 @@ class UserInteractorImpl(
     private val resourceProvider: ResourceProvider,
     private val repository: UserRepository,
     private val configLogic: ConfigLogic,
+    private val prefKeys: PrefKeys
 ) : UserInteractor {
 
     override suspend fun getProfileDetails(userId: Int): Flow<GetProfileDetailsPartialState> =
         flow {
-            val genericErrorMessage = resourceProvider.getGenericErrorMessage()
             repository.getProfileDetails(userId).collect {
                 when (it) {
-
                     is GetProfileDetailsRepositoryResponse.Failed -> {
-                        emit(GetProfileDetailsPartialState.Failed(errorMessage = genericErrorMessage))
+                        emit(
+                            GetProfileDetailsPartialState.Failed(
+                                profileDetailsErrorType = it.responseProfileDetailsError.toProfileDetailsErrorDomain().profileDetailsErrorType
+                            )
+                        )
                     }
 
                     is GetProfileDetailsRepositoryResponse.Success -> {
@@ -102,11 +111,11 @@ class UserInteractorImpl(
                 }
             }
         }.safeAsync {
-            logger.e { "(getProfileDetails) error: ${it.message.orEmpty()}" }
+            logger.e("UserInteractor") { "(getProfileDetails) error: ${it.message.orEmpty()}" }
             when (it) {
                 is IOException -> GetProfileDetailsPartialState.NoInternetConnection
 
-                else -> GetProfileDetailsPartialState.Failed(
+                else -> GetProfileDetailsPartialState.Error(
                     errorMessage = resourceProvider.getGenericErrorMessage()
                 )
             }
@@ -145,7 +154,7 @@ class UserInteractorImpl(
                 }
             }
         }.safeAsync {
-            logger.e { "(getCurrentUserProfileDetails) error: ${it.message.orEmpty()}" }
+            logger.e("UserInteractor") { "(getCurrentUserProfileDetails) error: ${it.localizedMessage.orEmpty()}" }
             when (it) {
                 is IOException -> GetCurrentUserProfileDetailsPartialState.NoInternetConnection
                 else -> GetCurrentUserProfileDetailsPartialState.Failed(resourceProvider.getGenericErrorMessage())
@@ -211,8 +220,9 @@ class UserInteractorImpl(
                 handleRepositoryResultNoTransformation(repositoryResult).collect { emit(it) }
             }
         }.catch {
+            logger.e("UserInteractor") { "(updateUserProfileImage) e: ${it.localizedMessage.orEmpty()}" }
             when (it) {
-                is IllegalArgumentException -> InteractorPartialState.Error<String>(it.message.orEmpty()) // Can be thrown from `.toRequestBody`.
+                is IllegalArgumentException -> InteractorPartialState.Error<String>(it.localizedMessage.orEmpty()) // Can be thrown from `.toRequestBody`.
                 else -> InteractorPartialState.Error<String>(resourceProvider.getGenericErrorMessage())
             }
         }
@@ -239,13 +249,36 @@ class UserInteractorImpl(
                 }
         }
 
-    override suspend fun blockUser(userId: Int): Flow<InteractorPartialState<String>> = flow {
-        repository.blockUser(userId).collect { repositoryResult ->
-            handleRepositoryResultNoTransformation(repositoryResult).collect {
-                emit(it)
+    override suspend fun blockUser(userId: Int): Flow<BlockUserPartialState> =
+        flow {
+            if (userId == prefKeys.getUserId()) {
+                emit(BlockUserPartialState.Failed(UserBlockResult.SameUser))
+                return@flow
+            }
+
+            repository.blockUser(userId).collect { repositoryResult ->
+                when (repositoryResult) {
+                    BlockUserRepositoryResult.Success -> {
+                        emit(BlockUserPartialState.Success)
+                    }
+
+                    is BlockUserRepositoryResult.Failed -> {
+                        emit(BlockUserPartialState.Failed(repositoryResult.repositoryUserBlock.toUserBlockDomain().userBlockResult))
+                    }
+                }
+            }
+        }.safeAsync {
+            logger.e("UserInteractor") { "(blockUser) e: ${it.localizedMessage.orEmpty()}" }
+            when (it) {
+                is IOException -> {
+                    BlockUserPartialState.Error(errorMessage = resourceProvider.getNoInternetConnectionMessage())
+                }
+
+                else -> {
+                    BlockUserPartialState.Error(errorMessage = resourceProvider.getGenericErrorMessage())
+                }
             }
         }
-    }
 
     override suspend fun unblockUser(userId: Int): Flow<InteractorPartialState<String>> = flow {
         repository.unblockUser(userId).collect { repositoryResult ->
@@ -269,8 +302,16 @@ sealed class GetProfileDetailsPartialState {
     data class Success(val profileDetailsDomain: ProfileDetailsDomain) :
         GetProfileDetailsPartialState()
 
-    data class Failed(val errorMessage: String) : GetProfileDetailsPartialState()
+    data class Failed(val profileDetailsErrorType: ProfileDetailsErrorType) :
+        GetProfileDetailsPartialState()
+
+    data class Error(val errorMessage: String) : GetProfileDetailsPartialState()
 
     data object NoInternetConnection : GetProfileDetailsPartialState()
 }
 
+sealed interface BlockUserPartialState {
+    data object Success : BlockUserPartialState
+    data class Failed(val userBlockResult: UserBlockResult) : BlockUserPartialState
+    data class Error(val errorMessage: String) : BlockUserPartialState
+}

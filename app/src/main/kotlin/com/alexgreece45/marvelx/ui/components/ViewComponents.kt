@@ -5,7 +5,6 @@ import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -18,11 +17,9 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.grid.LazyGridState
@@ -61,7 +58,7 @@ import androidx.compose.material.ModalBottomSheetState
 import androidx.compose.material.OutlinedButton
 import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Scaffold
-import androidx.compose.material.SnackbarDuration
+import androidx.compose.material.SnackbarHostState
 import androidx.compose.material.Text
 import androidx.compose.material.TextButton
 import androidx.compose.material.TextField
@@ -116,11 +113,6 @@ import androidx.compose.ui.zIndex
 import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
-import com.airbnb.lottie.compose.LottieAnimation
-import com.airbnb.lottie.compose.LottieCompositionSpec
-import com.airbnb.lottie.compose.LottieConstants
-import com.airbnb.lottie.compose.animateLottieCompositionAsState
-import com.airbnb.lottie.compose.rememberLottieComposition
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.ui.components.model.AutofillData
 import com.alexgreece45.marvelx.ui.components.model.ErrorButtonType
@@ -133,9 +125,9 @@ import com.alexgreece45.marvelx.util.SPACING_LARGE
 import com.alexgreece45.marvelx.util.SPACING_MEDIUM
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.SPACING_TINY
-import com.alexgreece45.marvelx.util.STICKY_BOTTOM_Z_INDEX
 import com.alexgreece45.marvelx.util.THROTTLE_CLICKABLE_DEFAULT_DELAY
 import com.alexgreece45.marvelx.util.VSpacer
+import com.alexgreece45.marvelx.util.constants.ConstantsZIndex
 import com.alexgreece45.marvelx.util.extensions.ClickState
 import com.alexgreece45.marvelx.util.extensions.applyPadding
 import com.alexgreece45.marvelx.util.extensions.applyPaddingValues
@@ -511,11 +503,6 @@ data class ExtendedFabData(
 // ======== START OF ========
 //        Generic Screens
 // ==========================
-data class SnackbarState(
-    val message: String,
-    val duration: SnackbarDuration = SnackbarDuration.Short
-)
-
 /**
  * Base builder screen responsible for creating consistent UI layout screens throughout the application.
  *
@@ -532,25 +519,25 @@ fun ContentScreen(
     toolbarActions: List<ToolbarAction>? = null,
     bottomBarData: BottomBarData? = null,
     bottomNavigationBarData: BottomNavigationBarData? = null,
-    snackbarState: SnackbarState? = null,
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
+    snackbarStateData: SnackbarStateData? = null,
     fabData: FabData? = null,
     stickyBottom: @Composable (() -> Unit)? = null,
     paddingValues: PaddingValues? = null,
     content: @Composable (PaddingValues) -> Unit
 ) {
-    val scaffoldState = rememberScaffoldState()
-
-    LaunchedEffect(snackbarState) {
-        snackbarState?.let {
-            scaffoldState.snackbarHostState.showSnackbar(
-                message = snackbarState.message,
-                duration = snackbarState.duration
+    LaunchedEffect(snackbarStateData) {
+        snackbarStateData?.let {
+            snackbarHostState.showSnackbar(
+                message = it.message,
+                actionLabel = it.actionLabel,
+                duration = it.duration
             )
         }
     }
 
     Scaffold(
-        scaffoldState = scaffoldState,
+        scaffoldState = rememberScaffoldState(snackbarHostState = snackbarHostState),
         topBar = {
             if (showToolbar) {
                 Toolbar(
@@ -610,7 +597,6 @@ fun ContentScreen(
             }
         },
         floatingActionButton = {
-            // Display FAB only when loading is false.
             if (!isLoading) {
                 fabData?.let { fabData ->
                     when (fabData) {
@@ -643,13 +629,13 @@ fun ContentScreen(
                 if (!isLoading) {
                     Box(
                         modifier = Modifier
-                            .zIndex(STICKY_BOTTOM_Z_INDEX)
+                            .fillMaxWidth()
+                            .zIndex(ConstantsZIndex.STICKY_BOTTOM)
                             .padding(
                                 if (paddingValues != null) scaffoldPaddingValues.applyPaddingValues(
                                     paddingValues = paddingValues
                                 ) else scaffoldPaddingValues.applyPadding()
                             )
-                            .fillMaxWidth()
                     ) {
                         stickyBottom()
                     }
@@ -769,7 +755,7 @@ fun StickyBottom(
         Spacer(modifier = Modifier.weight(1f))
         Box(
             modifier = Modifier
-                .zIndex(STICKY_BOTTOM_Z_INDEX)
+                .zIndex(ConstantsZIndex.STICKY_BOTTOM)
                 .padding(paddingValues)
                 .fillMaxWidth()
         ) {
@@ -899,8 +885,8 @@ fun SearchBar(
         placeholder = {
             Text(
                 text = hint,
-                style = MaterialTheme.typography.h6,
-                fontStyle = FontStyle.Italic
+                fontStyle = FontStyle.Italic,
+                style = MaterialTheme.typography.h6
             )
         },
         trailingIcon = {
@@ -944,28 +930,41 @@ fun SearchBar(
     )
 }
 
+/**
+ * A wrapper composable for the native [ModalBottomSheetLayout] providing the app's custom styling.
+ *
+ * The sheet shape and scrim color are already set. If you wish to override them, you can do so,
+ * but it's not recommended.
+ */
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun ModalBottomSheet(
-    sheetState: ModalBottomSheetState,
-    sheetShape: Shape = MaterialTheme.shapes.large,
-    sheetElevation: Dp = ModalBottomSheetDefaults.Elevation,
-    scrimColor: Color = ModalBottomSheetDefaults.scrimColor,
+fun WrapModalBottomSheetLayout(
     sheetContent: @Composable () -> Unit,
+    modifier: Modifier = Modifier,
+    sheetState: ModalBottomSheetState,
+    sheetGesturesEnabled: Boolean = true,
+    sheetShape: Shape = RoundedCornerShape(
+        topStart = SPACING_MEDIUM.dp,
+        topEnd = SPACING_MEDIUM.dp
+    ),
+    sheetElevation: Dp = ModalBottomSheetDefaults.Elevation,
+    sheetBackgroundColor: Color = MaterialTheme.colors.surface,
+    sheetContentColor: Color = contentColorFor(sheetBackgroundColor),
+    scrimColor: Color = MaterialTheme.colors.background.copy(alpha = 0.65f),
     content: @Composable () -> Unit
 ) {
     ModalBottomSheetLayout(
-        modifier = Modifier
-            .fillMaxWidth()
-            .wrapContentHeight(),
         sheetContent = { sheetContent() },
+        modifier = modifier,
         sheetState = sheetState,
+        sheetGesturesEnabled = sheetGesturesEnabled,
         sheetShape = sheetShape,
         sheetElevation = sheetElevation,
+        sheetBackgroundColor = sheetBackgroundColor,
+        sheetContentColor = sheetContentColor,
         scrimColor = scrimColor,
-    ) {
-        content()
-    }
+        content = content
+    )
 }
 
 /**
@@ -1082,45 +1081,18 @@ fun ModalBottomSheetScaffold(
 
 @Composable
 fun LoadingScreen() {
-    val composition by rememberLottieComposition(
-        spec = LottieCompositionSpec.RawRes(
-            resId = R.raw.loading_animation
-        )
-    )
-    val progress by animateLottieCompositionAsState(
-        composition = composition,
-        iterations = LottieConstants.IterateForever
-    )
-
-    Box(
+    LottieComposable(
+        resourceId = R.raw.loading_animation,
+        size = 140.dp,
         modifier = Modifier
             .fillMaxSize()
-            .zIndex(10f)
+            .zIndex(ConstantsZIndex.LOADING_SCREEN),
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colors.background)
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null,
-                    onClick = {}
-                ),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            LottieAnimation(
-                modifier = Modifier.size(140.dp),
-                composition = composition,
-                progress = { progress }
-            )
-
-            Text(
-                text = stringResource(R.string.loading),
-                textAlign = TextAlign.Center,
-                style = MaterialTheme.typography.h4,
-            )
-        }
+        Text(
+            text = stringResource(R.string.loading),
+            textAlign = TextAlign.Center,
+            style = MaterialTheme.typography.h4
+        )
     }
 }
 

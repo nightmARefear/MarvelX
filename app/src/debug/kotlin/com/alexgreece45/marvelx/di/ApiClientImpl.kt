@@ -24,6 +24,7 @@ import com.alexgreece45.marvelx.network_logic.models_api.sensitiveUserData.Reque
 import com.alexgreece45.marvelx.network_logic.models_api.sensitiveUserData.ResponseSensitiveUserData
 import com.alexgreece45.marvelx.network_logic.models_api.token.ResponseToken
 import com.alexgreece45.marvelx.network_logic.models_api.user.ResponseUsersBlocked
+import com.alexgreece45.marvelx.network_logic.models_api.user.block.ResponseUserBlock
 import com.alexgreece45.marvelx.network_logic.models_api.user.login.RequestUserLogin
 import com.alexgreece45.marvelx.network_logic.models_api.user.login.ResponseLogin
 import com.alexgreece45.marvelx.network_logic.models_api.user.loginWithToken.ResponseLoginWithToken
@@ -137,10 +138,8 @@ class ApiClientImpl(
             )
         }
 
-    override suspend fun blockUser(userId: Int): ApiResult<String> =
-        executeApiServiceCallNoTransformation {
-            apiService.blockUser(userId)
-        }
+    override suspend fun blockUser(userId: Int): Response<Void> =
+        apiService.blockUser(userId)
 
     override suspend fun unblockUser(userId: Int): ApiResult<String> =
         executeApiServiceCallNoTransformation {

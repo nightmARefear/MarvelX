@@ -1,23 +1,30 @@
 package com.alexgreece45.marvelx.ui.screens.profile.profileDetails
 
 import android.graphics.Bitmap
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.lifecycle.viewModelScope
-import com.alexgreece45.marvelx.BuildConfig
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.domain.helper.InteractorPartialState
+import com.alexgreece45.marvelx.configuration.models.DeepLinkWebUrl
+import com.alexgreece45.marvelx.domain.interactors.BlockUserPartialState
 import com.alexgreece45.marvelx.domain.interactors.GetProfileDetailsPartialState
 import com.alexgreece45.marvelx.domain.interactors.UserInteractor
+import com.alexgreece45.marvelx.domain.model_api.user.block.UserBlockResult
 import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.ProfileDetailsDomain
+import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.ProfileDetailsErrorType
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
 import com.alexgreece45.marvelx.mvi.BaseViewModel
 import com.alexgreece45.marvelx.ui.components.AlertDialogButton
-import com.alexgreece45.marvelx.ui.components.SnackbarState
+import com.alexgreece45.marvelx.ui.components.SnackbarStateData
 import com.alexgreece45.marvelx.ui.components.model.ErrorButtonLayout
 import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.model.ProfileDetailsAlertDialogErrorData
 import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.model.ProfileDetailsBottomSheetType
+import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.model.ProfileDetailsFullScreenErrorView
 import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.model.ProfileDetailsMoreActionItem
+import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.model.ProfileDetailsNestedErrorView
+import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.stats.model.ProfileDetailsStatsTab
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.constants.ConstantsUi
 import com.google.zxing.BarcodeFormat
@@ -26,16 +33,6 @@ import com.google.zxing.WriterException
 import kotlinx.coroutines.launch
 
 sealed interface ProfileDetailsContract {
-    /**
-     * Error view data.
-     */
-    data class ErrorView(
-        val errorTitle: String,
-        val errorSubtitle: String,
-        val onCloseClicked: Event,
-        val errorButtonLayout: ErrorButtonLayout.Single
-    )
-
     sealed interface Event : BaseEvent {
         data class Init(val userId: Int) : Event
         data object OnBackClicked : Event
@@ -82,20 +79,25 @@ sealed interface ProfileDetailsContract {
         // Data.
         val isGenderDropDownExpanded: Boolean = false,
         val profileDetails: ProfileDetailsDomain? = null,
-        val userId: Int? = null,
-        val isDifferentUser: Boolean = true,
+        val userId: Int = -1,
+        val isDifferentUser: Boolean? = null,
         val isGenderHidden: Boolean = false,
         val isEmailHidden: Boolean = false,
 
         // Errors.
-        val snackbarState: SnackbarState? = null,
+        val snackbarStateData: SnackbarStateData? = null,
         val alertDialogError: ProfileDetailsAlertDialogErrorData? = null,
-        val errorView: ErrorView? = null,
+        val fullScreenErrorView: ProfileDetailsFullScreenErrorView? = null,
+
+        /**
+         * The nested error view inside the bounds of the scaffold (under the toolbar).
+         */
+        val nestedErrorView: ProfileDetailsNestedErrorView? = null,
     ) : BaseState
 
     sealed interface Effect : BaseEffect {
         /**
-         * Shows the bottom sheet.
+         * Hides the bottom sheet.
          */
         data object HideBottomSheet : Effect
 
@@ -108,16 +110,24 @@ sealed interface ProfileDetailsContract {
         data class ShowBottomSheet(val setState: () -> Unit) : Effect
 
         /**
-         * Executes events.
+         * Executes the given [Event].
          */
         data class ExecuteEvent(val event: Event) : Effect
+
+        data class ShareProfileUrl(val url: String, val intentTitle: String) : Effect
 
         sealed interface Navigation : Effect {
             data object PopBackStack : Navigation
             data object NavigateToEditProfileDetailsScreen : Navigation
-            data object NavigateToFriendsScreen : Navigation
-            data object NavigateToListingsScreen : Navigation
-            data object NavigateToFavoritesScreen : Navigation
+
+            /**
+             * Navigates the user to the `ProfileDetailsStats` screen.
+             */
+            data class NavigateToProfileDetailsStatsScreen(
+                val fullName: String,
+                val userId: Int,
+                val tab: ProfileDetailsStatsTab
+            ) : Navigation
         }
     }
 }
@@ -126,13 +136,13 @@ class ProfileDetailsViewModel(
     private val userInteractor: UserInteractor,
     private val resourceProvider: ResourceProvider,
 ) : BaseViewModel<ProfileDetailsContract.Event, ProfileDetailsContract.State, ProfileDetailsContract.Effect>() {
+
     override fun setInitialState(): ProfileDetailsContract.State =
         ProfileDetailsContract.State()
 
     override fun handleEvents(event: ProfileDetailsContract.Event) {
         when (event) {
             is ProfileDetailsContract.Event.Init -> {
-                initializeMoreActionItems()
                 loadProfileDetails(event)
             }
 
@@ -188,21 +198,21 @@ class ProfileDetailsViewModel(
             }
 
             ProfileDetailsContract.Event.MoreActions.OnShareProfileClicked -> {
-                // Send deep-link url. Open with intent
+                hideBottomSheet()
+                setEffect {
+                    ProfileDetailsContract.Effect.ShareProfileUrl(
+                        url = DeepLinkWebUrl.ProfileDetails.webUrl + currentState.userId,
+                        intentTitle = resourceProvider.getString(
+                            resId = R.string.profile_details_screen_label_share_profile_intent_title,
+                            formatArgs = arrayOf(currentState.profileDetails?.basicProfileDetails?.fullName.orEmpty())
+                        )
+                    )
+                }
             }
 
             ProfileDetailsContract.Event.MoreActions.OnShowQrCodeClicked -> {
-                val userId = currentState.userId
-                if (userId == null) {
-                    setEffect {
-                        ProfileDetailsContract.Effect.Navigation.PopBackStack
-                    }
-                    showGenericAlertDialogError(resourceProvider.getString(R.string.profile_details_screen_error_generating_qr_code))
-                    return
-                }
-
                 when (val qrBitmap =
-                    generateQRCodeBitmap(BuildConfig.DEEPLINK_PROFILE_DETAILS + userId.toString())) {
+                    generateQRCodeBitmap(DeepLinkWebUrl.ProfileDetails.webUrl + currentState.userId)) {
                     null -> {
                         showGenericAlertDialogError(resourceProvider.getString(R.string.profile_details_screen_error_generating_qr_code))
                     }
@@ -218,33 +228,33 @@ class ProfileDetailsViewModel(
             }
 
             ProfileDetailsContract.Event.ProfileBanner.OnFriendsListClicked -> {
-                if (currentState.profileDetails?.privacySettings?.isFriendsListVisible == true) {
-                    setEffect {
-                        ProfileDetailsContract.Effect.Navigation.NavigateToFriendsScreen
-                    }
-                } else {
-                    showGenericAlertDialogError(resourceProvider.getString(R.string.profile_details_screen_error_hidden_list_friends))
+                if (currentState.isDifferentUser == false
+                    || currentState.profileDetails?.privacySettings?.isFriendsListVisible == true
+                ) {
+                    navigateToProfileDetailsStatsScreen(tab = ProfileDetailsStatsTab.Friends)
+                    return
                 }
+                showGenericAlertDialogError(resourceProvider.getString(R.string.profile_details_screen_error_hidden_list_friends))
             }
 
             ProfileDetailsContract.Event.ProfileBanner.OnListingsListClicked -> {
-                if (currentState.profileDetails?.privacySettings?.isListingsListVisible == true) {
-                    setEffect {
-                        ProfileDetailsContract.Effect.Navigation.NavigateToListingsScreen
-                    }
-                } else {
-                    showGenericAlertDialogError(resourceProvider.getString(R.string.profile_details_screen_error_hidden_list_listings))
+                if (currentState.isDifferentUser == false
+                    || currentState.profileDetails?.privacySettings?.isListingsListVisible == true
+                ) {
+                    navigateToProfileDetailsStatsScreen(tab = ProfileDetailsStatsTab.Listings)
+                    return
                 }
+                showGenericAlertDialogError(resourceProvider.getString(R.string.profile_details_screen_error_hidden_list_listings))
             }
 
             ProfileDetailsContract.Event.ProfileBanner.OnFavoritesListClicked -> {
-                if (currentState.profileDetails?.privacySettings?.isFavoritesListVisible == true) {
-                    setEffect {
-                        ProfileDetailsContract.Effect.Navigation.NavigateToFavoritesScreen
-                    }
-                } else {
-                    showGenericAlertDialogError(resourceProvider.getString(R.string.profile_details_screen_error_hidden_list_favorites))
+                if (currentState.isDifferentUser == false
+                    || currentState.profileDetails?.privacySettings?.isFavoritesListVisible == true
+                ) {
+                    navigateToProfileDetailsStatsScreen(tab = ProfileDetailsStatsTab.Favorites)
+                    return
                 }
+                showGenericAlertDialogError(resourceProvider.getString(R.string.profile_details_screen_error_hidden_list_favorites))
             }
 
             ProfileDetailsContract.Event.HideAlertDialog -> {
@@ -258,53 +268,49 @@ class ProfileDetailsViewModel(
                     )
                 }
                 viewModelScope.launch {
-                    userInteractor.blockUser(currentState.userId ?: -1).collect {
+                    userInteractor.blockUser(currentState.userId).collect {
                         when (it) {
-                            is InteractorPartialState.Success -> {
+                            is BlockUserPartialState.Success -> {
                                 showSnackbar(message = resourceProvider.getString(R.string.profile_details_screen_label_success_block_user))
                                 setEffect {
                                     ProfileDetailsContract.Effect.Navigation.PopBackStack
                                 }
                             }
 
-                            is InteractorPartialState.Error, is InteractorPartialState.Failed, InteractorPartialState.NoInternetConnection -> {
+                            is BlockUserPartialState.Failed -> {
+                                when (it.userBlockResult) {
+                                    UserBlockResult.Failed -> {
+                                        setState {
+                                            copy(
+                                                isLoading = false
+                                            )
+                                        }
+                                        showSnackbar(message = resourceProvider.getString(R.string.profile_details_screen_error_blocking_user_generic))
+                                    }
+
+                                    UserBlockResult.SameUser -> {
+                                        setState {
+                                            copy(
+                                                isLoading = false
+                                            )
+                                        }
+                                        showSnackbar(message = resourceProvider.getString(R.string.profile_details_screen_error_blocking_user_same_user))
+                                    }
+                                }
+                            }
+
+                            is BlockUserPartialState.Error -> {
                                 setState {
                                     copy(
                                         isLoading = false
                                     )
                                 }
-                                showSnackbar(message = resourceProvider.getString(R.string.profile_details_screen_error_blocking_user))
+                                showSnackbar(message = resourceProvider.getString(R.string.profile_details_screen_error_blocking_user_generic))
                             }
                         }
                     }
                 }
             }
-        }
-    }
-
-    /**
-     * Initializes the more actions item bottom sheet only once.
-     */
-    private fun initializeMoreActionItems() {
-        if (currentState.moreActionItems.isNotEmpty()) return
-        setState {
-            copy(
-                moreActionItems = listOf(
-                    ProfileDetailsMoreActionItem(
-                        label = resourceProvider.getString(R.string.profile_details_screen_label_more_actions_block),
-                        isRestrictiveAction = true,
-                        event = ProfileDetailsContract.Event.MoreActions.OnBlockClicked
-                    ),
-                    ProfileDetailsMoreActionItem(
-                        label = resourceProvider.getString(R.string.profile_details_screen_label_more_actions_share_profile),
-                        event = ProfileDetailsContract.Event.MoreActions.OnShareProfileClicked
-                    ),
-                    ProfileDetailsMoreActionItem(
-                        label = resourceProvider.getString(R.string.profile_details_screen_label_more_actions_show_qr_code),
-                        event = ProfileDetailsContract.Event.MoreActions.OnShowQrCodeClicked
-                    ),
-                )
-            )
         }
     }
 
@@ -315,17 +321,18 @@ class ProfileDetailsViewModel(
         setState {
             copy(
                 isLoading = true,
-                errorView = null
+                fullScreenErrorView = null
             )
         }
         viewModelScope.launch {
             userInteractor.getProfileDetails(event.userId).collect {
                 when (it) {
                     is GetProfileDetailsPartialState.Success -> {
+                        initializeMoreActionItems(it.profileDetailsDomain.isDifferentUser)
                         setState {
                             copy(
                                 isLoading = false,
-                                errorView = null,
+                                fullScreenErrorView = null,
                                 profileDetails = it.profileDetailsDomain,
                                 userId = event.userId,
                                 isDifferentUser = it.profileDetailsDomain.isDifferentUser,
@@ -335,17 +342,21 @@ class ProfileDetailsViewModel(
                         }
                     }
 
-                    is GetProfileDetailsPartialState.Failed -> {
+                    is GetProfileDetailsPartialState.Error -> {
                         setState {
                             copy(
                                 isLoading = false,
-                                errorView = ProfileDetailsContract.ErrorView(
-                                    errorTitle = resourceProvider.getString(R.string.profile_details_screen_error_loading_profile_details),
-                                    errorSubtitle = resourceProvider.getString(R.string.internal_server_error),
+                                fullScreenErrorView = ProfileDetailsFullScreenErrorView(
+                                    errorTitle = resourceProvider.getString(R.string.profile_details_screen_error_loading_profile_details_generic),
+                                    errorSubtitle = resourceProvider.getGenericErrorMessage(),
                                     onCloseClicked = ProfileDetailsContract.Event.OnBackClicked,
                                     errorButtonLayout = ErrorButtonLayout.Single(
-                                        primaryButtonLabel = resourceProvider.getString(R.string.generic_retry_button),
-                                        onPrimaryButtonClicked = { loadProfileDetails(event) }
+                                        primaryButtonLabel = resourceProvider.getString(R.string.profile_details_screen_label_full_screen_error_view_button_go_back),
+                                        onPrimaryButtonClicked = {
+                                            setEffect {
+                                                ProfileDetailsContract.Effect.Navigation.PopBackStack
+                                            }
+                                        }
                                     )
                                 )
                             )
@@ -356,8 +367,8 @@ class ProfileDetailsViewModel(
                         setState {
                             copy(
                                 isLoading = false,
-                                errorView = ProfileDetailsContract.ErrorView(
-                                    errorTitle = resourceProvider.getString(R.string.profile_details_screen_error_loading_profile_details),
+                                fullScreenErrorView = ProfileDetailsFullScreenErrorView(
+                                    errorTitle = resourceProvider.getString(R.string.profile_details_screen_error_loading_profile_details_generic),
                                     errorSubtitle = resourceProvider.getNoInternetConnectionMessage(),
                                     onCloseClicked = ProfileDetailsContract.Event.OnBackClicked,
                                     errorButtonLayout = ErrorButtonLayout.Single(
@@ -368,38 +379,121 @@ class ProfileDetailsViewModel(
                             )
                         }
                     }
+
+                    is GetProfileDetailsPartialState.Failed -> {
+                        when (it.profileDetailsErrorType) {
+                            ProfileDetailsErrorType.Blocked -> {
+                                setState {
+                                    copy(
+                                        isLoading = false,
+                                        nestedErrorView = ProfileDetailsNestedErrorView(
+                                            errorLabel = resourceProvider.getString(R.string.profile_details_screen_error_loading_profile_details_user_blocked),
+                                            errorResourceId = R.raw.lottie_not_available,
+                                            buttonLabel = resourceProvider.getString(R.string.profile_details_screen_label_full_screen_error_view_button_go_back),
+                                            onButtonClicked = ProfileDetailsContract.Event.OnBackClicked
+                                        )
+                                    )
+                                }
+                            }
+
+                            ProfileDetailsErrorType.InternalServerError -> {
+                                setState {
+                                    copy(
+                                        isLoading = false,
+                                        fullScreenErrorView = ProfileDetailsFullScreenErrorView(
+                                            errorTitle = resourceProvider.getString(R.string.profile_details_screen_error_loading_profile_details_generic),
+                                            errorSubtitle = resourceProvider.getString(R.string.internal_server_error),
+                                            onCloseClicked = ProfileDetailsContract.Event.OnBackClicked,
+                                            errorButtonLayout = ErrorButtonLayout.Single(
+                                                primaryButtonLabel = resourceProvider.getString(R.string.profile_details_screen_label_full_screen_error_view_button_go_back),
+                                                onPrimaryButtonClicked = {
+                                                    setEffect {
+                                                        ProfileDetailsContract.Effect.Navigation.PopBackStack
+                                                    }
+                                                }
+                                            )
+                                        )
+                                    )
+                                }
+                            }
+
+                            ProfileDetailsErrorType.NotExists -> {
+                                setState {
+                                    copy(
+                                        isLoading = false,
+                                        nestedErrorView = ProfileDetailsNestedErrorView(
+                                            errorLabel = resourceProvider.getString(R.string.profile_details_screen_error_loading_profile_details_user_not_exists),
+                                            errorResourceId = R.raw.lottie_error_not_found,
+                                            buttonLabel = resourceProvider.getString(R.string.profile_details_screen_label_full_screen_error_view_button_go_back),
+                                            onButtonClicked = ProfileDetailsContract.Event.OnBackClicked
+                                        )
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
     }
 
     /**
-     * Attempts to generate a QR code bitmap with the given [content]. If the QR generation failed,
+     * Initializes the more actions item bottom sheet only once. Some menu items may not be shown
+     * based on the given [isDifferentUser].
+     */
+    private fun initializeMoreActionItems(isDifferentUser: Boolean) {
+        if (currentState.moreActionItems.isNotEmpty()) return
+        val items = listOf(
+            ProfileDetailsMoreActionItem(
+                label = resourceProvider.getString(R.string.profile_details_screen_label_more_actions_block),
+                isRestrictiveAction = true,
+                event = ProfileDetailsContract.Event.MoreActions.OnBlockClicked
+            ),
+            ProfileDetailsMoreActionItem(
+                label = resourceProvider.getString(R.string.profile_details_screen_label_more_actions_share_profile),
+                event = ProfileDetailsContract.Event.MoreActions.OnShareProfileClicked
+            ),
+            ProfileDetailsMoreActionItem(
+                label = resourceProvider.getString(R.string.profile_details_screen_label_more_actions_show_qr_code),
+                event = ProfileDetailsContract.Event.MoreActions.OnShowQrCodeClicked
+            ),
+        )
+        setState {
+            copy(
+                moreActionItems = if (isDifferentUser) items else items.subList(1, items.size)
+            )
+        }
+    }
+
+    /**
+     * Attempts to generate a QR code bitmap with the given [content]. If the QR generation fails,
      * then `null` is returned.
      *
-     * @param content   The content of the QR.
+     * @param content   The content of the QR code.
+     * @return          The generated QR code bitmap, or `null` if generation failed.
      */
     private fun generateQRCodeBitmap(content: String): Bitmap? {
-        val width = ConstantsUi.ProfileDetailsScreen.QR_CODE_SIZE
-        val height = ConstantsUi.ProfileDetailsScreen.QR_CODE_SIZE
+        val size = ConstantsUi.ProfileDetailsScreen.QR_CODE_SIZE
+        val blackArgb = Color.Black.toArgb()
+        val whiteArgb = Color.White.toArgb()
+
         return try {
-            val bitMatrix =
-                MultiFormatWriter().encode(content, BarcodeFormat.QR_CODE, width, height)
-            val w = bitMatrix.width
-            val h = bitMatrix.height
-            val pixels = IntArray(w * h)
-            for (y in 0 until h) {
-                val offset = y * w
-                for (x in 0 until w) {
-                    pixels[offset + x] =
-                        if (bitMatrix[x, y]) 0xFF000000.toInt() else 0xFFFFFFFF.toInt()
+            val bitMatrix = MultiFormatWriter().encode(content, BarcodeFormat.QR_CODE, size, size)
+            val width = bitMatrix.width
+            val height = bitMatrix.height
+            val pixels = IntArray(width * height)
+
+            for (y in 0 until height) {
+                for (x in 0 until width) {
+                    pixels[y * width + x] = if (bitMatrix[x, y]) blackArgb else whiteArgb
                 }
             }
-            Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888).apply {
+
+            Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888).apply {
                 setPixels(pixels, 0, width, 0, 0, width, height)
             }
         } catch (e: WriterException) {
-            appLogger.e("ProfileDetailsViewModel") { "(generateQRCodeBitmap) e: $e" }
+            appLogger.e("ProfileDetailsViewModel") { "(generateQRCodeBitmap) Failed to generate QR code for content: $content. Error: $e" }
             null
         }
     }
@@ -499,7 +593,20 @@ class ProfileDetailsViewModel(
     private fun showSnackbar(message: String) {
         setState {
             copy(
-                snackbarState = SnackbarState(message)
+                snackbarStateData = SnackbarStateData(message)
+            )
+        }
+    }
+
+    /**
+     * Navigates the user to the `ProfileDetailsStats` screen.
+     */
+    private fun navigateToProfileDetailsStatsScreen(tab: ProfileDetailsStatsTab) {
+        setEffect {
+            ProfileDetailsContract.Effect.Navigation.NavigateToProfileDetailsStatsScreen(
+                fullName = currentState.profileDetails?.basicProfileDetails?.fullName.orEmpty(),
+                userId = currentState.userId,
+                tab = tab
             )
         }
     }

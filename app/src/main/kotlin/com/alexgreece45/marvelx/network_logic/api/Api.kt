@@ -22,6 +22,7 @@ import com.alexgreece45.marvelx.network_logic.models_api.sensitiveUserData.Reque
 import com.alexgreece45.marvelx.network_logic.models_api.sensitiveUserData.ResponseSensitiveUserData
 import com.alexgreece45.marvelx.network_logic.models_api.token.ResponseToken
 import com.alexgreece45.marvelx.network_logic.models_api.user.ResponseUsersBlocked
+import com.alexgreece45.marvelx.network_logic.models_api.user.block.ResponseUserBlock
 import com.alexgreece45.marvelx.network_logic.models_api.user.login.RequestUserLogin
 import com.alexgreece45.marvelx.network_logic.models_api.user.login.ResponseLogin
 import com.alexgreece45.marvelx.network_logic.models_api.user.loginWithToken.ResponseLoginWithToken
@@ -222,7 +223,7 @@ interface ApiClient {
     suspend fun getUserProfileDetails(userId: Int): Response<ResponseProfileDetails>
     suspend fun getUserPrivacySettings(): ApiResult<ResponsePrivacySettings>
     suspend fun updateUserPrivacySettings(requestPrivacySettings: RequestPrivacySettings): ApiResult<String>
-    suspend fun blockUser(userId: Int): ApiResult<String>
+    suspend fun blockUser(userId: Int): Response<Void>
     suspend fun unblockUser(userId: Int): ApiResult<String>
     suspend fun getFaqs(): ApiResult<ResponseFaq>
     suspend fun getJwtForSensitiveUserData(requestJwtSensitiveUserData: RequestJwtSensitiveUserData): Response<ResponseJwtSensitiveUserData>

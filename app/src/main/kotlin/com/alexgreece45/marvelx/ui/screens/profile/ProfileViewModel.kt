@@ -13,6 +13,8 @@ import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
 import com.alexgreece45.marvelx.mvi.BaseViewModel
 import com.alexgreece45.marvelx.ui.components.IconData
+import com.alexgreece45.marvelx.ui.helper.model.DeepLinkAction
+import com.alexgreece45.marvelx.ui.navigation.Screen
 import com.alexgreece45.marvelx.ui.screens.profile.model.ProfileScreenErrorView
 import com.alexgreece45.marvelx.ui.screens.profile.model.ProfileScreenSection
 import com.alexgreece45.marvelx.util.ResourceProvider
@@ -20,14 +22,22 @@ import kotlinx.coroutines.launch
 
 sealed interface ProfileContract {
     sealed interface Event : BaseEvent {
-        data object Init : Event
+        data class Init(val deepLinkAction: DeepLinkAction?) : Event
         data object OnSeeYourProfileClicked : Event
-        data object OnProfileImageLoaded : Event
+
         data object OnErrorClose : Event
+
+        /**
+         * All the events related to the profile image.
+         */
+        sealed interface ProfileImage : Event {
+            data object OnLoaded : ProfileImage
+            data object OnClicked : ProfileImage
+        }
     }
 
     /**
-     * @param isLoading Whether the screen is in loading state.
+     * @param isLoading Whether the screen is in loading content.
      */
     data class State(
         val isLoading: Boolean = true,
@@ -42,12 +52,14 @@ sealed interface ProfileContract {
     sealed class Effect : BaseEffect {
         sealed class Navigation : Effect() {
             data object NavigateToHomeScreen : Navigation()
+            data class NavigateToQrCodeScreen(val previousScreenRoute: String) : Navigation()
             data class NavigateToProfileDetailsScreen(val userId: Int) : Navigation()
             data object NavigateToPrivacySettingsScreen : Navigation()
             data object NavigateToFaqScreen : Navigation()
         }
 
         data class ShowToast(val toastMessage: String) : Effect()
+        data class OpenDeepLinkAction(val deepLinkAction: DeepLinkAction) : Effect()
     }
 }
 
@@ -64,7 +76,14 @@ class ProfileViewModel(
     override fun handleEvents(event: ProfileContract.Event) {
         when (event) {
             is ProfileContract.Event.Init -> {
-                init(event)
+                if (event.deepLinkAction == null) {
+                    init(event)
+                    return
+                }
+
+                setEffect {
+                    ProfileContract.Effect.OpenDeepLinkAction(event.deepLinkAction)
+                }
             }
 
             ProfileContract.Event.OnErrorClose -> {
@@ -75,7 +94,7 @@ class ProfileViewModel(
                 }
             }
 
-            ProfileContract.Event.OnProfileImageLoaded -> {
+            ProfileContract.Event.ProfileImage.OnLoaded -> {
                 setState {
                     copy(
                         isLoading = false
@@ -88,6 +107,8 @@ class ProfileViewModel(
                     ProfileContract.Effect.Navigation.NavigateToProfileDetailsScreen(prefKeys.getUserId())
                 }
             }
+
+            ProfileContract.Event.ProfileImage.OnClicked -> TODO()
         }
     }
 
@@ -184,6 +205,19 @@ class ProfileViewModel(
                         }
                     ),
                     ProfileScreenSection(
+                        title = resourceProvider.getString(R.string.profile_screen_section_label_scar_qr_code),
+                        iconData = IconData(
+                            iconResource = R.drawable.ic_scan_qr_code,
+                            contentDescription = R.string.content_description_scan_qr_code
+                        ),
+                        isNavigable = false,
+                        onClick = {
+                            setEffect {
+                                ProfileContract.Effect.Navigation.NavigateToQrCodeScreen(Screen.ProfileScreen.baseRoute)
+                            }
+                        }
+                    ),
+                    ProfileScreenSection(
                         title = resourceProvider.getString(R.string.profile_screen_section_label_logout),
                         iconData = IconData(
                             iconResource = R.drawable.ic_logout,
@@ -235,7 +269,7 @@ class ProfileViewModel(
     }
 
     /**
-     * Show the error view.
+     * Shows the error view.
      */
     private fun showError(
         errorTitle: String? = null,

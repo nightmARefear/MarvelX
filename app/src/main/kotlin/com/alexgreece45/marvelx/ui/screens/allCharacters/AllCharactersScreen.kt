@@ -18,7 +18,6 @@ import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Icon
@@ -52,11 +51,11 @@ import com.alexgreece45.marvelx.ui.components.BottomNavigationBarData
 import com.alexgreece45.marvelx.ui.components.ContentErrorScreen
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.ExtendedFabData
-import com.alexgreece45.marvelx.ui.components.ModalBottomSheet
 import com.alexgreece45.marvelx.ui.components.NormalFabData
 import com.alexgreece45.marvelx.ui.components.PullRefreshable
 import com.alexgreece45.marvelx.ui.components.SearchBar
 import com.alexgreece45.marvelx.ui.components.SortingModalBottomSheetContent
+import com.alexgreece45.marvelx.ui.components.WrapModalBottomSheetLayout
 import com.alexgreece45.marvelx.ui.components.effect.DisposableEffectWithLifecycle
 import com.alexgreece45.marvelx.ui.components.effect.ObserveUiEffect
 import com.alexgreece45.marvelx.ui.components.effect.OneTimeLaunchedEffect
@@ -67,6 +66,7 @@ import com.alexgreece45.marvelx.util.DEFAULT_SCREEN_PADDING
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.SPACING_TINY
 import com.alexgreece45.marvelx.util.extensions.getPendingDeepLinkAction
+import com.alexgreece45.marvelx.util.extensions.hideIfVisible
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 
@@ -137,7 +137,7 @@ fun AllCharactersScreen(
 
             AllCharactersEffect.SortingBottomSheet.Hide -> {
                 coroutineScope.launch {
-                    modalBottomSheetState.hide()
+                    modalBottomSheetState.hideIfVisible()
                 }
             }
 
@@ -158,13 +158,7 @@ fun AllCharactersScreen(
         }
     }
 
-    ModalBottomSheet(
-        sheetState = modalBottomSheetState,
-        sheetShape = RoundedCornerShape(
-            topStart = SPACING_SMALL.dp,
-            topEnd = SPACING_SMALL.dp
-        ),
-        scrimColor = MaterialTheme.colors.background.copy(alpha = 0.5f),
+    WrapModalBottomSheetLayout(
         sheetContent = {
             SortingModalBottomSheetContent(
                 contentPadding = DEFAULT_SCREEN_PADDING,
@@ -176,7 +170,8 @@ fun AllCharactersScreen(
                     onEventSent(AllCharactersEvent.Sorting.OnCloseClick)
                 }
             )
-        }
+        },
+        sheetState = modalBottomSheetState,
     ) {
         ContentScreen(
             isLoading = state.isLoading,

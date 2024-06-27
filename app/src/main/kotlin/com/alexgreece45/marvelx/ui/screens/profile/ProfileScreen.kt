@@ -2,6 +2,8 @@ package com.alexgreece45.marvelx.ui.screens.profile
 
 import android.content.res.Configuration
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -13,17 +15,17 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
+import androidx.compose.material.ModalBottomSheetValue
 import androidx.compose.material.Text
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.graphics.drawscope.Fill
@@ -42,9 +44,13 @@ import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.IconData
 import com.alexgreece45.marvelx.ui.components.ProfileHeader
 import com.alexgreece45.marvelx.ui.components.WrapAsyncImage
+import com.alexgreece45.marvelx.ui.components.WrapModalBottomSheetLayout
+import com.alexgreece45.marvelx.ui.components.effect.ObserveUiEffect
 import com.alexgreece45.marvelx.ui.components.error.ContentErrorScreen
+import com.alexgreece45.marvelx.ui.components.icons.NavigateIcon
 import com.alexgreece45.marvelx.ui.components.model.ErrorButtonLayout
 import com.alexgreece45.marvelx.ui.components.model.ShadowData
+import com.alexgreece45.marvelx.ui.helper.model.DeepLinkAction
 import com.alexgreece45.marvelx.ui.navigation.getBottomNavigationBarData
 import com.alexgreece45.marvelx.ui.screens.profile.model.ProfileScreenSection
 import com.alexgreece45.marvelx.ui.theme.MarvelXTheme
@@ -54,42 +60,56 @@ import com.alexgreece45.marvelx.util.VSpacer
 import com.alexgreece45.marvelx.util.constants.ConstantsUi
 import com.alexgreece45.marvelx.util.extensions.applyPadding
 import com.alexgreece45.marvelx.util.extensions.circularImageWithBorder
+import com.alexgreece45.marvelx.util.extensions.getPendingDeepLinkAction
 import com.alexgreece45.marvelx.util.extensions.screenPaddingsNone
 import com.alexgreece45.marvelx.util.extensions.throttledClickable
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun ProfileScreen(
-    onEventSent: (event: ProfileContract.Event) -> Unit,
+    onEventSent: (ProfileContract.Event) -> Unit,
     state: ProfileContract.State,
     effect: Flow<ProfileContract.Effect>,
     bottomNavigationBarData: @Composable () -> BottomNavigationBarData,
     onNavigation: (ProfileContract.Effect.Navigation) -> Unit,
+    openDeepLinkAction: (DeepLinkAction) -> Unit
 ) {
     val context = LocalContext.current
 
     val waveShape = MaterialTheme.customShapes.waveShape
     val waveColor = MaterialTheme.colors.surface
 
+    val modalBottomSheetState =
+        rememberModalBottomSheetState(initialValue = ModalBottomSheetValue.Hidden)
+
     LaunchedEffect(Unit) {
-        onEventSent(ProfileContract.Event.Init)
+        onEventSent(ProfileContract.Event.Init(context.getPendingDeepLinkAction()))
+    }
 
-        effect.collect { effect ->
-            when (effect) {
-                ProfileContract.Effect.Navigation.NavigateToHomeScreen,
-                ProfileContract.Effect.Navigation.NavigateToFaqScreen,
-                is ProfileContract.Effect.Navigation.NavigateToProfileDetailsScreen,
-                ProfileContract.Effect.Navigation.NavigateToPrivacySettingsScreen -> {
-                    onNavigation(effect as ProfileContract.Effect.Navigation)
-                }
+    ObserveUiEffect(effect) { uiEffect ->
+        when (uiEffect) {
+            is ProfileContract.Effect.Navigation -> {
+                onNavigation(uiEffect)
+            }
 
-                is ProfileContract.Effect.ShowToast -> {
-                    Toast.makeText(context, effect.toastMessage, Toast.LENGTH_LONG).show()
-                }
+            is ProfileContract.Effect.ShowToast -> {
+                Toast.makeText(context, uiEffect.toastMessage, Toast.LENGTH_LONG).show()
+            }
+
+            is ProfileContract.Effect.OpenDeepLinkAction -> {
+                openDeepLinkAction(uiEffect.deepLinkAction)
             }
         }
     }
+
+    val singlePhotoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia(),
+        onResult = { uri ->
+
+        }
+    )
 
     // Error.
     state.error?.let { error ->
@@ -104,44 +124,49 @@ fun ProfileScreen(
         )
     }
 
-    ContentScreen(
-        isLoading = state.isLoading,
-        bottomNavigationBarData = bottomNavigationBarData(),
-        paddingValues = PaddingValues.Absolute()
-    ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(paddingValues)
-                .drawBehind {
-                    drawOutline(
-                        outline = waveShape.createOutline(
-                            size = Size(width = size.width, height = size.height * 0.6f),
-                            layoutDirection = layoutDirection,
-                            density = this
-                        ),
-                        color = waveColor,
-                        style = Fill
-                    )
-                }
-        ) {
-            // Banner.
-            ProfileBanner(
-                welcomeMessageLabel = state.profileBannerLabel,
-                imageUrl = state.profileDetails?.profileImageUrl.orEmpty(),
-                onSeeYourProfileClicked = { onEventSent(ProfileContract.Event.OnSeeYourProfileClicked) },
-                onProfileImageLoaded = { onEventSent(ProfileContract.Event.OnProfileImageLoaded) }
-            )
+    WrapModalBottomSheetLayout(
+        sheetContent = {},
+        sheetState = modalBottomSheetState
+    ) {
+        ContentScreen(
+            isLoading = state.isLoading,
+            bottomNavigationBarData = bottomNavigationBarData(),
+            paddingValues = PaddingValues.Absolute()
+        ) { paddingValues ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(paddingValues)
+                    .drawBehind {
+                        drawOutline(
+                            outline = waveShape.createOutline(
+                                size = Size(width = size.width, height = size.height * 0.6f),
+                                layoutDirection = layoutDirection,
+                                density = this
+                            ),
+                            color = waveColor,
+                            style = Fill
+                        )
+                    }
+            ) {
+                // Banner.
+                ProfileBanner(
+                    welcomeMessageLabel = state.profileBannerLabel,
+                    imageUrl = state.profileDetails?.profileImageUrl.orEmpty(),
+                    onSeeYourProfileClicked = { onEventSent(ProfileContract.Event.OnSeeYourProfileClicked) },
+                    onProfileImageLoaded = { onEventSent(ProfileContract.Event.ProfileImage.OnLoaded) }
+                )
 
 //            VSpacer.Custom(height = 100) // todo: to be replaced with weights
 
-            // Sections.
-            Column(
-                modifier = Modifier.padding(screenPaddingsNone().applyPadding()),
-                verticalArrangement = Arrangement.spacedBy(SPACING_MEDIUM.dp)
-            ) {
-                state.sections.forEach { section -> ProfileSection(section = section) }
+                // Sections.
+                Column(
+                    modifier = Modifier.padding(screenPaddingsNone().applyPadding()),
+                    verticalArrangement = Arrangement.spacedBy(SPACING_MEDIUM.dp)
+                ) {
+                    state.sections.forEach { section -> ProfileSection(section = section) }
+                }
             }
         }
     }
@@ -174,6 +199,7 @@ fun ProfileBanner(
                     borderColor = MaterialTheme.colors.secondary
                 ),
             placeholder = painterResource(R.drawable.ic_person),
+            error = painterResource(R.drawable.ic_person),
             onSuccess = { onProfileImageLoaded() },
             onError = { onProfileImageLoaded() },
             contentScale = ContentScale.Fit,
@@ -210,12 +236,8 @@ fun ProfileBanner(
                 style = MaterialTheme.typography.subtitle2
             )
 
-            Icon(
-                imageVector = Icons.Filled.KeyboardArrowUp,
-                contentDescription = stringResource(R.string.content_description_navigate),
-                modifier = Modifier
-                    .size(18.dp)
-                    .rotate(90f),
+            NavigateIcon(
+                modifier = Modifier.size(18.dp),
                 tint = MaterialTheme.colors.secondary
             )
         }
@@ -241,11 +263,7 @@ private fun ProfileSection(
         },
         trailingIcon = {
             if (section.isNavigable) {
-                Icon(
-                    imageVector = Icons.Filled.KeyboardArrowUp,
-                    contentDescription = stringResource(R.string.content_description_navigate),
-                    modifier = Modifier.rotate(90f)
-                )
+                NavigateIcon()
             }
         },
         onClick = section.onClick
@@ -299,7 +317,8 @@ private fun ProfileScreenPreview() {
             ),
             effect = emptyFlow(),
             bottomNavigationBarData = { getBottomNavigationBarData(navController = rememberNavController()) },
-            onNavigation = {}
+            onNavigation = {},
+            openDeepLinkAction = {},
         )
     }
 }

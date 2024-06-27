@@ -5,14 +5,19 @@ import androidx.navigation.NamedNavArgument
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
-import com.alexgreece45.marvelx.BuildConfig
-import com.alexgreece45.marvelx.util.extensions.getPortFromUrl
+import com.alexgreece45.marvelx.ui.helper.createUriPatternForDeepLink
 
 /**
  * Represents a unique screen in this application. You can set the screen name through [baseRoute],
  * the arguments through [navArgs], and whether this screen should be included in the auto-logout
  * functionality through [isIncludedInAutoLogout] -- note: [isIncludedInAutoLogout] has a default
  * value of `true`.
+ *
+ * @param baseRoute                 The base route of this route.
+ * @param navArgs                   The navigation arguments of this route.
+ * @param deepLinkArgs              The deep link arguments of this route.
+ * @param isIncludedInAutoLogout    Whether this route is included in the auto-logout functionality.
+ * It has the default value of `true`.
  */
 sealed class Screen(
     val baseRoute: String,
@@ -44,16 +49,7 @@ sealed class Screen(
     val deepLinks = if (deepLinkArgs.isNotEmpty()) {
         listOf(
             navDeepLink {
-                uriPattern = buildString {
-                    append("${BuildConfig.DEEPLINK_SCHEME}://")
-                    append("${BuildConfig.MARVELX_BACKEND_DOMAIN}:")
-                    append("${BuildConfig.MARVELX_BACKEND_BASE_URL.getPortFromUrl()}/")
-                    append("$baseRoute/")
-                    deepLinkArgs.forEach { navDeepLinkItem ->
-                        append("{${navDeepLinkItem.key}}")
-                        append("/")
-                    }
-                }.removeSuffix("/")
+                uriPattern = createUriPatternForDeepLink(baseRoute, navArgs)
                 action = Intent.ACTION_VIEW
             }
         )
@@ -81,15 +77,22 @@ sealed class Screen(
                 }
 
         /**
-         * Attempts to match the given [screenName] against a predefined selection of
+         * Attempts to match the given [screenRoute] against a predefined selection of
          * deeplink-supported screens and returns the requested [Screen] if it was found, otherwise
          * `null`.
          */
-        fun matchDeepLinkScreenName(screenName: String): Screen? =
-            when (screenName) {
+        fun matchDeepLinkScreenRoute(screenRoute: String): Screen? =
+            when (screenRoute) {
+                ProfileScreen.baseRoute -> ProfileScreen
                 ProfileDetailsScreen.baseRoute -> ProfileDetailsScreen
                 else -> null
             }
+
+        /**
+         * Checks whether the given [deepLinkArgs] matches the ones of the given [Screen].
+         */
+        fun doDeepLinkArgsMatch(screen: Screen, deepLinkArgs: List<NavDeepLinkItem>): Boolean =
+            deepLinkArgs == screen.deepLinkArgs
     }
 
     // Register screens
@@ -165,7 +168,14 @@ sealed class Screen(
     // Main screens --> Bottom Navigation
     data object AllCharactersScreen : Screen(baseRoute = "allCharactersScreen")
     data object AllFavoriteCharactersScreen : Screen(baseRoute = "allFavoriteCharactersScreen")
-    data object ProfileScreen : Screen(baseRoute = "profileScreen")
+    data object ProfileScreen : Screen(
+        baseRoute = "profileScreen",
+        navArgs = listOf(NavItem.QrCodeScanErrorMessage),
+        deepLinkArgs = listOf(NavDeepLinkItem.QrCodeScanErrorMessage)
+    ) {
+        fun createNavRoute(qrCodeScanErrorMessage: String): String =
+            "$baseRoute/$qrCodeScanErrorMessage"
+    }
 
     /**
      * Profile Screen --> Profile Details
@@ -177,7 +187,7 @@ sealed class Screen(
             deepLinkArgs = listOf(NavDeepLinkItem.UserId)
         ) {
         fun createNavRoute(
-            userId: Int? = -1,
+            userId: Int,
         ): String = "$baseRoute/$userId"
     }
 
@@ -185,6 +195,17 @@ sealed class Screen(
      * Profile Screen --> Profile Details --> Edit Profile Details
      */
     data object EditProfileDetailsScreen : Screen(baseRoute = "editProfileDetailsScreen")
+
+    /**
+     * Profile Screen --> Profile Details --> Profile Details Stats
+     */
+    data object ProfileDetailsStatsScreen : Screen(
+        baseRoute = "profileDetailsStatsScreen",
+        navArgs = listOf(NavItem.FullName, NavItem.UserId, NavItem.TabIndex)
+    ) {
+        fun createNavRoute(fullName: String, userId: Int, tabIndex: Int): String =
+            "$baseRoute/$fullName/$userId/$tabIndex"
+    }
 
     /**
      * Profile Screen --> FAQ
@@ -220,6 +241,13 @@ sealed class Screen(
     ) {
         fun createNavRoute(comicId: Int): String = "$baseRoute/$comicId"
     }
+
+    data object QrCodeScreen : Screen(
+        baseRoute = "qrCodeScreen",
+        navArgs = listOf(NavItem.PreviousScreenRoute)
+    ) {
+        fun createNavRoute(previousScreenRoute: String): String = "$baseRoute/$previousScreenRoute"
+    }
 }
 
 /**
@@ -229,17 +257,47 @@ sealed class Screen(
  * @param type  The type of this item.
  */
 enum class NavItem(val key: String, val type: NavType<*>) {
-    CharacterId(key = "characterId", type = NavType.IntType),
-    ComicId(key = "comicId", type = NavType.IntType),
-    ToolbarTitlePrefix(key = "toolbarTitlePrefix", type = NavType.StringType),
-    UserId(key = "userId", type = NavType.IntType),
-    OtpFlowType(key = "otpFlowType", type = NavType.StringType),
-    VerificationStep(key = "verificationStep", type = NavType.StringType),
-    ShouldRememberUserSession(key = "shouldRememberUserSession", type = NavType.BoolType),
-    RequestIdEmail(key = "requestIdEmail", type = NavType.StringType),
-    RequestIdPhoneNumber(key = "requestIdPhoneNumber", type = NavType.StringType),
+    CharacterId(key = NavItemKey.characterId, type = NavType.IntType),
+    ComicId(key = NavItemKey.comicId, type = NavType.IntType),
+    ToolbarTitlePrefix(key = NavItemKey.toolbarTitlePrefix, type = NavType.StringType),
+    UserId(key = NavItemKey.userId, type = NavType.IntType),
+    OtpFlowType(key = NavItemKey.otpFlowType, type = NavType.StringType),
+    VerificationStep(key = NavItemKey.verificationStep, type = NavType.StringType),
+    ShouldRememberUserSession(key = NavItemKey.shouldRememberUserSession, type = NavType.BoolType),
+    RequestIdEmail(key = NavItemKey.requestIdEmail, type = NavType.StringType),
+    RequestIdPhoneNumber(key = NavItemKey.requestIdPhoneNumber, type = NavType.StringType),
+    FullName(key = NavItemKey.fullName, type = NavType.StringType),
+    TabIndex(key = NavItemKey.tabIndex, type = NavType.IntType),
+    PreviousScreenRoute(key = NavItemKey.previousScreenRoute, type = NavType.StringType),
+    QrCodeScanErrorMessage(key = NavItemKey.qrCodeScanErrorMessage, type = NavType.StringType)
 }
 
+/**
+ * Represents the different types of deep link items used for navigation.
+ */
 enum class NavDeepLinkItem(val key: String) {
-    UserId(key = "userId")
+    UserId(key = NavItemKey.userId),
+    ListingId(key = NavItemKey.listingId),
+    QrCodeScanErrorMessage(key = NavItemKey.qrCodeScanErrorMessage)
+}
+
+/**
+ * Contains the keys used for normal and deep link navigation arguments. This object provides
+ * consistent naming, and compile-time hardcoded values.
+ */
+object NavItemKey {
+    const val characterId = "characterId"
+    const val comicId = "comicId"
+    const val toolbarTitlePrefix = "toolbarTitlePrefix"
+    const val userId = "userId"
+    const val otpFlowType = "otpFlowType"
+    const val verificationStep = "verificationStep"
+    const val shouldRememberUserSession = "shouldRememberUserSession"
+    const val requestIdEmail = "requestIdEmail"
+    const val requestIdPhoneNumber = "requestIdPhoneNumber"
+    const val fullName = "fullName"
+    const val tabIndex = "tabIndex"
+    const val listingId = "listingId"
+    const val qrCodeScanErrorMessage = "qrCodeScanErrorMessage"
+    const val previousScreenRoute = "previousScreenRoute"
 }

@@ -4,6 +4,8 @@ import android.net.Uri
 import androidx.lifecycle.viewModelScope
 import androidx.work.WorkManager
 import com.alexgreece45.marvelx.controllers.AppLogger
+import com.alexgreece45.marvelx.controllers.DeepLinkController
+import com.alexgreece45.marvelx.controllers.HandleDeepLinkActionResult
 import com.alexgreece45.marvelx.controllers.PrefKeys
 import com.alexgreece45.marvelx.controllers.SecurityController
 import com.alexgreece45.marvelx.controllers.WebsocketController
@@ -19,10 +21,7 @@ import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
 import com.alexgreece45.marvelx.mvi.BaseViewModel
 import com.alexgreece45.marvelx.network_logic.models_websocket.ResponseWebsocket
-import com.alexgreece45.marvelx.network_logic.typeAdapters.DeepLinkActionTypeTypeAdapter
 import com.alexgreece45.marvelx.ui.helper.model.DeepLinkAction
-import com.alexgreece45.marvelx.ui.helper.model.DeepLinkActionType
-import com.alexgreece45.marvelx.ui.navigation.Screen
 import com.alexgreece45.marvelx.ui.navigation.router.RouterHost
 import com.alexgreece45.marvelx.ui.screens.mainActivity.model.CoroutineWebSocketListener
 import com.alexgreece45.marvelx.ui.screens.mainActivity.model.WebSocketEvent
@@ -95,6 +94,7 @@ class ActivityViewModel : BaseViewModel<ActivityEvent, ActivityState, ActivityEf
     private val websocketController: WebsocketController by inject()
     private val securityController: SecurityController by inject()
     private val routerHost: RouterHost by inject()
+    private val deepLinkController: DeepLinkController by inject()
 
     override fun setInitialState(): ActivityState = ActivityState()
 
@@ -152,17 +152,18 @@ class ActivityViewModel : BaseViewModel<ActivityEvent, ActivityState, ActivityEf
             }
 
             is ActivityEvent.OnDeepLinkReceived -> {
-                logger.d("ActivityViewModel") { "ActivityEvent.OnDeepLinkReceived" }
-                try {
-                    val gson = Gson().newBuilder().registerTypeAdapter(
-                        DeepLinkActionType::class.java,
-                        DeepLinkActionTypeTypeAdapter()
-                    ).create()
-                    val deepLinkAction =
-                        gson.fromJson(event.uri.pathSegments[1], DeepLinkAction::class.java)
-                    handleDeepLink(deepLinkAction)
-                } catch (e: Exception) {
-                    logger.e("ActivityViewModel") { "An error occurred whilst parsing the received deep link:\n ${e.message.orEmpty()}" }
+                viewModelScope.launch {
+                    deepLinkController.handleDeepLinkUri(event.uri).collect {
+                        when (it) {
+                            is HandleDeepLinkActionResult.Success -> {
+                                setEffect {
+                                    ActivityEffect.OpenOrCacheDeepLink(it.deepLinkAction)
+                                }
+                            }
+
+                            HandleDeepLinkActionResult.Failed -> {}
+                        }
+                    }
                 }
             }
         }
@@ -253,36 +254,6 @@ class ActivityViewModel : BaseViewModel<ActivityEvent, ActivityState, ActivityEf
                             }
                         }
                     }
-                }
-            }
-        }
-    }
-
-    /**
-     * Handles the given deep link depending on whether the user is logged in, and in which screen
-     * they currently are in. If the [DeepLinkAction] contains invalid data, then no action is taken.
-     *
-     * @param deepLinkAction    The deep link action.
-     */
-    private fun handleDeepLink(deepLinkAction: DeepLinkAction) {
-        if (deepLinkAction.actionType is DeepLinkActionType.Invalid) {
-            logger.e("ActivityViewModel") { "(handleDeepLink) Invalid deep link action type: ${deepLinkAction.actionType.name}" }
-            return
-        }
-
-        when (val screen = Screen.matchDeepLinkScreenName(deepLinkAction.screenRoute)) {
-            null -> {
-                logger.e("ActivityViewModel") { "(handleDeepLink) No deep link supported screen name \"${deepLinkAction.screenRoute}\" was found." }
-            }
-
-            else -> {
-                // Check if the required data is present.
-                if (deepLinkAction.data.keys == screen.deepLinkArgs.map { it.key }.toSet()) {
-                    setEffect {
-                        ActivityEffect.OpenOrCacheDeepLink(deepLinkAction)
-                    }
-                } else {
-                    logger.e("ActivityViewModel") { "(handleDeepLink) Data is missing from the deep link." }
                 }
             }
         }

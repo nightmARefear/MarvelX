@@ -1,31 +1,36 @@
 package com.alexgreece45.marvelx.ui.screens.profile.profileDetails
 
+import android.content.Intent
 import android.content.res.Configuration
 import android.graphics.Bitmap
+import androidx.compose.animation.core.FastOutLinearInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Icon
 import androidx.compose.material.LocalContentColor
 import androidx.compose.material.MaterialTheme
-import androidx.compose.material.ModalBottomSheetLayout
 import androidx.compose.material.ModalBottomSheetValue
 import androidx.compose.material.Text
 import androidx.compose.material.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
@@ -35,27 +40,38 @@ import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.airbnb.lottie.compose.LottieAnimation
+import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.LottieConstants
+import com.airbnb.lottie.compose.animateLottieCompositionAsState
+import com.airbnb.lottie.compose.rememberLottieComposition
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.ProfileDetailsDomain
 import com.alexgreece45.marvelx.network_logic.models_api.user.Gender
 import com.alexgreece45.marvelx.ui.components.AlertDialogError
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.IconData
+import com.alexgreece45.marvelx.ui.components.WrapModalBottomSheetLayout
 import com.alexgreece45.marvelx.ui.components.ModalBottomSheetContent
 import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
 import com.alexgreece45.marvelx.ui.components.ToolbarAction
 import com.alexgreece45.marvelx.ui.components.WrapAsyncImage
+import com.alexgreece45.marvelx.ui.components.WrapButton
 import com.alexgreece45.marvelx.ui.components.effect.ObserveUiEffect
+import com.alexgreece45.marvelx.ui.components.enforceMaxBrightness
 import com.alexgreece45.marvelx.ui.components.error.ContentErrorScreen
 import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.model.ProfileDetailsBottomSheetType
 import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.model.ProfileDetailsMoreActionItem
+import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.model.ProfileDetailsNestedErrorView
 import com.alexgreece45.marvelx.ui.theme.MarvelXTheme
 import com.alexgreece45.marvelx.ui.theme.customColors
 import com.alexgreece45.marvelx.util.SPACING_MEDIUM
@@ -63,6 +79,7 @@ import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.VSpacer
 import com.alexgreece45.marvelx.util.constants.ConstantsUi
 import com.alexgreece45.marvelx.util.extensions.circularImageWithBorder
+import com.alexgreece45.marvelx.util.extensions.hideIfVisible
 import com.alexgreece45.marvelx.util.extensions.throttledClickable
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
@@ -75,41 +92,52 @@ fun ProfileDetailsScreen(
     state: ProfileDetailsContract.State,
     effect: Flow<ProfileDetailsContract.Effect>,
     userId: Int,
-    popBackStack: () -> Unit,
-    navigateToEditProfileDetailsScreen: () -> Unit
+    onNavigation: (ProfileDetailsContract.Effect.Navigation) -> Unit
 ) {
+    val context = LocalContext.current
+
     val bannerShape = MaterialTheme.shapes.large
     val bannerShapeColor = MaterialTheme.colors.surface
 
     val coroutineScope = rememberCoroutineScope()
 
     val modalBottomSheetState =
-        rememberModalBottomSheetState(initialValue = ModalBottomSheetValue.Hidden)
+        rememberModalBottomSheetState(
+            initialValue = ModalBottomSheetValue.Hidden,
+            animationSpec = tween(
+                durationMillis = 175,
+                easing = FastOutLinearInEasing
+            ),
+            skipHalfExpanded = true
+        )
+
+    /**
+     * Whether to enforce the max screen brightness.
+     */
+    var shouldEnforceMaxBrightness by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         onEventSent(ProfileDetailsContract.Event.Init(userId))
     }
 
+    LaunchedEffect(modalBottomSheetState.currentValue, state.bottomSheetType) {
+        shouldEnforceMaxBrightness =
+            modalBottomSheetState.currentValue != ModalBottomSheetValue.Hidden
+                    && state.bottomSheetType is ProfileDetailsBottomSheetType.QrCode
+        enforceMaxBrightness(context, shouldEnforceMaxBrightness)
+    }
+
     ObserveUiEffect(effect) { uiEffect ->
         when (uiEffect) {
-            ProfileDetailsContract.Effect.Navigation.PopBackStack -> {
-                popBackStack()
-            }
+            is ProfileDetailsContract.Effect.Navigation -> onNavigation(uiEffect)
 
-            ProfileDetailsContract.Effect.Navigation.NavigateToEditProfileDetailsScreen -> {
-                navigateToEditProfileDetailsScreen()
-            }
-
-            ProfileDetailsContract.Effect.Navigation.NavigateToFriendsScreen -> {}
-            ProfileDetailsContract.Effect.Navigation.NavigateToListingsScreen -> {}
-            ProfileDetailsContract.Effect.Navigation.NavigateToFavoritesScreen -> {}
             is ProfileDetailsContract.Effect.ExecuteEvent -> {
                 onEventSent(uiEffect.event)
             }
 
             is ProfileDetailsContract.Effect.ShowBottomSheet -> {
                 coroutineScope.launch {
-                    modalBottomSheetState.hide()
+                    modalBottomSheetState.hideIfVisible()
                     uiEffect.setState()
                     modalBottomSheetState.show()
                 }
@@ -117,20 +145,32 @@ fun ProfileDetailsScreen(
 
             ProfileDetailsContract.Effect.HideBottomSheet -> {
                 coroutineScope.launch {
-                    modalBottomSheetState.show()
+                    modalBottomSheetState.hideIfVisible()
                 }
+            }
+
+            is ProfileDetailsContract.Effect.ShareProfileUrl -> {
+                val share = Intent.createChooser(Intent().apply {
+                    action = Intent.ACTION_SEND
+//                    addCategory(Intent.CATEGORY_DEFAULT)
+//                    addCategory(Intent.CATEGORY_APP_MESSAGING)
+//                    addCategory(Intent.CATEGORY_BROWSABLE)
+                    putExtra(Intent.EXTRA_TEXT, uiEffect.url)
+                    putExtra(Intent.EXTRA_TITLE, uiEffect.intentTitle)
+                    type = "text/plain"
+                }, uiEffect.intentTitle)
+                context.startActivity(share)
             }
         }
     }
 
-    state.errorView?.let { errorView ->
+    state.fullScreenErrorView?.let { errorView ->
         ContentErrorScreen(
             errorTitle = errorView.errorTitle,
             errorSubtitle = errorView.errorSubtitle,
             onClose = { onEventSent(errorView.onCloseClicked) },
             errorButtonLayout = errorView.errorButtonLayout
         )
-        return
     }
 
     state.alertDialogError?.let { alertDialogData ->
@@ -143,21 +183,19 @@ fun ProfileDetailsScreen(
         )
     }
 
-    ModalBottomSheetLayout(
+    WrapModalBottomSheetLayout(
         sheetState = modalBottomSheetState,
-        sheetShape = RoundedCornerShape(topStart = SPACING_MEDIUM.dp, topEnd = SPACING_MEDIUM.dp),
-        scrimColor = MaterialTheme.colors.background.copy(alpha = 0.65f),
         sheetContent = {
             when (val bottomSheetType = state.bottomSheetType) {
                 ProfileDetailsBottomSheetType.MoreActions -> {
-                    MoreActionsBottomSheetContent(
+                    BottomSheetMoreActions(
                         moreActionItems = state.moreActionItems,
                         onEventSent = { onEventSent(it) }
                     )
                 }
 
                 is ProfileDetailsBottomSheetType.QrCode -> {
-                    QrCodeBottomSheetContent(
+                    BottomSheetQrCode(
                         qrCodeBitmap = bottomSheetType.qrBitmap,
                         fullName = state.profileDetails?.basicProfileDetails?.fullName.orEmpty()
                     )
@@ -182,6 +220,8 @@ fun ProfileDetailsScreen(
             showToolbar = true,
             toolbarTitle = state.profileDetails?.basicProfileDetails?.fullName,
             toolbarActions = when (state.isDifferentUser) {
+                null -> emptyList()
+
                 true -> listOf(
                     ToolbarAction(
                         label = stringResource(id = R.string.content_description_more_actions),
@@ -203,10 +243,19 @@ fun ProfileDetailsScreen(
                             contentDescription = R.string.profile_details_screen_content_description_edit_profile_details
                         ),
                         onClick = { onEventSent(ProfileDetailsContract.Event.OnEditProfileDetailsIconClicked) }
+                    ),
+                    ToolbarAction(
+                        label = stringResource(id = R.string.content_description_more_actions),
+                        order = 0,
+                        iconData = IconData(
+                            iconResource = R.drawable.ic_more,
+                            contentDescription = R.string.content_description_ic_more_actions
+                        ),
+                        onClick = { onEventSent(ProfileDetailsContract.Event.MoreActions.OnClicked) }
                     )
                 )
             },
-            snackbarState = state.snackbarState,
+            snackbarStateData = state.snackbarStateData,
         ) { paddingValues ->
             Column(
                 modifier = Modifier
@@ -214,85 +263,95 @@ fun ProfileDetailsScreen(
                     .verticalScroll(rememberScrollState())
                     .padding(paddingValues)
             ) {
-                // Profile Banner.
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .drawBehind {
-                            drawOutline(
-                                outline = bannerShape.createOutline(
-                                    size = Size(width = size.width, height = size.height),
-                                    layoutDirection = layoutDirection,
-                                    density = this
-                                ),
-                                color = bannerShapeColor,
-                                style = Fill
-                            )
-                        }
-                        .padding(ConstantsUi.ProfileDetailsScreen.PROFILE_BANNER_PADDING)
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
+                // User does not exist or is blocked error view.
+                state.nestedErrorView?.let { nestedErrorView ->
+                    NestedErrorView(
+                        nestedErrorView = nestedErrorView,
+                        onEventSent = { onEventSent(it) }
+                    )
+                }
+
+                // Profile details.
+                state.profileDetails?.let { profileDetails ->
+                    // Profile Banner.
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .drawBehind {
+                                drawOutline(
+                                    outline = bannerShape.createOutline(
+                                        size = Size(width = size.width, height = size.height),
+                                        layoutDirection = layoutDirection,
+                                        density = this
+                                    ),
+                                    color = bannerShapeColor,
+                                    style = Fill
+                                )
+                            }
+                            .padding(ConstantsUi.ProfileDetailsScreen.PROFILE_BANNER_PADDING)
                     ) {
-                        // Profile image.
-                        WrapAsyncImage(
-                            imageUrl = state.profileDetails?.basicProfileDetails?.profileImageUrl.orEmpty(),
-                            contentDescription = stringResource(R.string.content_description_your_profile_image),
-                            modifier = Modifier
-                                .size(ConstantsUi.PROFILE_IMAGE_SMALL_SIZE)
-                                .circularImageWithBorder(
-                                    borderWidth = ConstantsUi.IMAGE_BORDER_WIDTH,
-                                    borderColor = MaterialTheme.colors.secondary
-                                ),
-                            placeholder = painterResource(R.drawable.ic_person),
-                            contentScale = ContentScale.Fit
-                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            // Profile image.
+                            WrapAsyncImage(
+                                imageUrl = profileDetails.basicProfileDetails.profileImageUrl,
+                                contentDescription = stringResource(R.string.content_description_your_profile_image),
+                                modifier = Modifier
+                                    .size(ConstantsUi.PROFILE_IMAGE_SMALL_SIZE)
+                                    .circularImageWithBorder(
+                                        borderWidth = ConstantsUi.IMAGE_BORDER_WIDTH,
+                                        borderColor = MaterialTheme.colors.secondary
+                                    ),
+                                error = painterResource(R.drawable.ic_person),
+                                placeholder = painterResource(R.drawable.ic_person),
+                                contentScale = ContentScale.Fit
+                            )
 
-                        // Profile Banner tiles.
-                        Layout(
-                            content = {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(32.dp)
+                            // Profile Banner tiles.
+                            Layout(
+                                content = {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(32.dp)
+                                    ) {
+                                        // Friends tile.
+                                        ProfileBannerTile(
+                                            label = stringResource(R.string.profile_details_screen_label_profile_banner_tile_friends),
+                                            count = profileDetails.userStats.friendsCount,
+                                            onClick = { onEventSent(ProfileDetailsContract.Event.ProfileBanner.OnFriendsListClicked) }
+                                        )
+
+                                        ProfileBannerTile(
+                                            label = stringResource(R.string.profile_details_screen_label_profile_banner_tile_listings),
+                                            count = profileDetails.userStats.listingsCount,
+                                            onClick = { onEventSent(ProfileDetailsContract.Event.ProfileBanner.OnListingsListClicked) }
+                                        )
+
+                                        ProfileBannerTile(
+                                            label = stringResource(R.string.profile_details_screen_label_profile_banner_tile_favorites),
+                                            count = profileDetails.userStats.favoritesCount,
+                                            onClick = { onEventSent(ProfileDetailsContract.Event.ProfileBanner.OnFavoritesListClicked) }
+                                        )
+                                    }
+                                }
+                            ) { measurables, constraints ->
+                                val tilePlaceable = measurables[0].measure(constraints)
+
+                                val remainingSpace = constraints.maxWidth - tilePlaceable.width
+
+                                val tileOffset = (remainingSpace * 0.55f).toInt()
+
+                                layout(
+                                    width = constraints.maxWidth,
+                                    height = tilePlaceable.height
                                 ) {
-                                    // Friends tile.
-                                    ProfileBannerTile(
-                                        label = stringResource(R.string.profile_details_screen_label_profile_banner_tile_friends),
-                                        count = state.profileDetails?.userStats?.friendsCount?.ifEmpty { "-" }
-                                            ?: "-",
-                                        onClick = { onEventSent(ProfileDetailsContract.Event.ProfileBanner.OnFriendsListClicked) }
-                                    )
-
-                                    ProfileBannerTile(
-                                        label = stringResource(R.string.profile_details_screen_label_profile_banner_tile_listings),
-                                        count = state.profileDetails?.userStats?.listingsCount?.ifEmpty { "-" }
-                                            ?: "-",
-                                        onClick = { onEventSent(ProfileDetailsContract.Event.ProfileBanner.OnListingsListClicked) }
-                                    )
-
-                                    ProfileBannerTile(
-                                        label = stringResource(R.string.profile_details_screen_label_profile_banner_tile_favorites),
-                                        count = state.profileDetails?.userStats?.favoritesCount?.ifEmpty { "-" }
-                                            ?: "-",
-                                        onClick = { onEventSent(ProfileDetailsContract.Event.ProfileBanner.OnFavoritesListClicked) }
-                                    )
+                                    tilePlaceable.placeRelative(tileOffset, 0)
                                 }
                             }
-                        ) { measurables, constraints ->
-                            val tilePlaceable = measurables[0].measure(constraints)
-
-                            val remainingSpace = constraints.maxWidth - tilePlaceable.width
-
-                            val tileOffset = (remainingSpace * 0.55f).toInt()
-
-                            layout(width = constraints.maxWidth, height = tilePlaceable.height) {
-                                tilePlaceable.placeRelative(tileOffset, 0)
-                            }
                         }
-                    }
 
-                    state.profileDetails?.let { profileDetails ->
                         VSpacer.Medium()
                         Row(modifier = Modifier.fillMaxWidth()) {
                             Column(verticalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp)) {
@@ -333,7 +392,7 @@ fun ProfileDetailsScreen(
                                                 )
                                             }
                                         }
-                                        Text(text = stringResource(profileDetails.basicProfileDetails.gender.label))
+                                        VisibleField(label = stringResource(profileDetails.basicProfileDetails.gender.label))
                                     }
                                 }
 
@@ -350,7 +409,7 @@ fun ProfileDetailsScreen(
                                         // Hidden email.
                                         HiddenField(label = stringResource(R.string.profile_details_screen_label_email_hidden))
                                     } else {
-                                        Text(text = profileDetails.basicProfileDetails.email)
+                                        VisibleField(label = profileDetails.basicProfileDetails.email)
                                     }
                                 }
                             }
@@ -366,20 +425,18 @@ fun ProfileDetailsScreen(
  * The content for the `more actions` bottom sheet.
  */
 @Composable
-private fun MoreActionsBottomSheetContent(
+private fun BottomSheetMoreActions(
     moreActionItems: List<ProfileDetailsMoreActionItem>,
     onEventSent: (ProfileDetailsContract.Event.MoreActions) -> Unit
 ) {
-    ModalBottomSheetContent(paddingValues = PaddingValues.Absolute()) {
-        Box(modifier = Modifier.padding(bottom = SPACING_MEDIUM.dp)) {
-            Column {
-                moreActionItems.forEach { moreActionItem ->
-                    MoreActionItem(
-                        label = moreActionItem.label,
-                        isRestrictiveAction = moreActionItem.isRestrictiveAction,
-                        onClick = { onEventSent(moreActionItem.event) }
-                    )
-                }
+    ModalBottomSheetContent(paddingValues = PaddingValues(bottom = SPACING_MEDIUM.dp)) {
+        Column {
+            moreActionItems.forEach { moreActionItem ->
+                MoreActionItem(
+                    label = moreActionItem.label,
+                    isRestrictiveAction = moreActionItem.isRestrictiveAction,
+                    onClick = { onEventSent(moreActionItem.event) }
+                )
             }
         }
     }
@@ -389,29 +446,29 @@ private fun MoreActionsBottomSheetContent(
  * The content for the `QR code` bottom sheet.
  */
 @Composable
-private fun QrCodeBottomSheetContent(qrCodeBitmap: Bitmap, fullName: String) {
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = stringResource(R.string.profile_details_screen_label_scan_qr_code)
-        )
+private fun BottomSheetQrCode(qrCodeBitmap: Bitmap, fullName: String) {
+    ModalBottomSheetContent {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                text = stringResource(R.string.profile_details_screen_label_scan_qr_code),
+                style = MaterialTheme.typography.h5
+            )
 
-        VSpacer.Medium()
+            VSpacer.Small()
 
-        Image(
-            bitmap = qrCodeBitmap.asImageBitmap(),
-            contentDescription = stringResource(R.string.profile_details_screen_content_description_qr_code),
-            modifier = Modifier.size(ConstantsUi.ProfileDetailsScreen.QR_CODE_SIZE.dp)
-        )
+            Image(
+                bitmap = qrCodeBitmap.asImageBitmap(),
+                contentDescription = stringResource(R.string.profile_details_screen_content_description_qr_code),
+                modifier = Modifier.aspectRatio(1f)
+            )
 
-        VSpacer.Small()
+            VSpacer.Small()
 
-        Text(
-            text = fullName,
-            style = MaterialTheme.typography.subtitle1
-        )
+            Text(
+                text = fullName,
+                style = MaterialTheme.typography.h5
+            )
+        }
     }
 }
 
@@ -452,7 +509,19 @@ private fun HiddenField(label: String) {
     Text(
         text = label,
         fontStyle = FontStyle.Italic,
-        style = MaterialTheme.typography.h6
+        style = MaterialTheme.typography.subtitle1
+    )
+}
+
+/**
+ * Provides custom styling to a [Text] composable which is used when a field's value is visible to
+ * the user. The text to show is set through [label].
+ */
+@Composable
+private fun VisibleField(label: String) {
+    Text(
+        text = label,
+        style = MaterialTheme.typography.subtitle1
     )
 }
 
@@ -481,12 +550,57 @@ private fun ProfileBannerTile(label: String, count: String, onClick: () -> Unit)
     }
 }
 
+/**
+ * The nested error view representing the error label when a user was not found, or is blocked.
+ */
+@Composable
+private fun NestedErrorView(
+    nestedErrorView: ProfileDetailsNestedErrorView,
+    onEventSent: (ProfileDetailsContract.Event) -> Unit
+) {
+    val composition by rememberLottieComposition(
+        spec = LottieCompositionSpec.RawRes(
+            resId = nestedErrorView.errorResourceId
+        )
+    )
+    val progress by animateLottieCompositionAsState(
+        composition = composition,
+        iterations = LottieConstants.IterateForever
+    )
+
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        LottieAnimation(
+            composition = composition,
+            progress = { progress },
+            modifier = Modifier.size(ConstantsUi.ProfileDetailsScreen.LOTTIE_ANIMATION_SIZE)
+        )
+
+        Text(
+            text = nestedErrorView.errorLabel,
+            textAlign = TextAlign.Center,
+            overflow = TextOverflow.Ellipsis,
+            maxLines = 1,
+            style = MaterialTheme.typography.h5
+        )
+
+        VSpacer.Medium()
+
+        WrapButton(onClick = { onEventSent(nestedErrorView.onButtonClicked) }) {
+            Text(text = nestedErrorView.buttonLabel)
+        }
+    }
+}
+
 @Preview(
     apiLevel = 34,
     uiMode = Configuration.UI_MODE_NIGHT_YES or Configuration.UI_MODE_TYPE_NORMAL
 )
 @Composable
-private fun ProfileDetailsScreenPreview(modifier: Modifier = Modifier) {
+private fun ProfileDetailsScreenPreview() {
     MarvelXTheme {
         ProfileDetailsScreen(
             onEventSent = {},
@@ -497,8 +611,7 @@ private fun ProfileDetailsScreenPreview(modifier: Modifier = Modifier) {
             ),
             effect = emptyFlow(),
             userId = -1,
-            popBackStack = { },
-            navigateToEditProfileDetailsScreen = {}
+            onNavigation = {}
         )
     }
 }
@@ -508,7 +621,34 @@ private fun ProfileDetailsScreenPreview(modifier: Modifier = Modifier) {
     uiMode = Configuration.UI_MODE_NIGHT_YES or Configuration.UI_MODE_TYPE_NORMAL
 )
 @Composable
-private fun ProfileDetailsScreenMoreActionBottomSheetPreview(modifier: Modifier = Modifier) {
+private fun ProfileDetailsScreenNestedErrorViewPreview() {
+    MarvelXTheme {
+        ProfileDetailsScreen(
+            onEventSent = {},
+            state = ProfileDetailsContract.State(
+                isLoading = false,
+                profileDetails = null,
+                isEmailHidden = true,
+                nestedErrorView = ProfileDetailsNestedErrorView(
+                    errorLabel = stringResource(R.string.profile_details_screen_error_loading_profile_details_user_blocked),
+                    errorResourceId = R.raw.lottie_not_available,
+                    buttonLabel = stringResource(R.string.profile_details_screen_label_full_screen_error_view_button_go_back),
+                    onButtonClicked = ProfileDetailsContract.Event.OnBackClicked
+                )
+            ),
+            effect = emptyFlow(),
+            userId = -1,
+            onNavigation = {}
+        )
+    }
+}
+
+@Preview(
+    apiLevel = 34,
+    uiMode = Configuration.UI_MODE_NIGHT_YES or Configuration.UI_MODE_TYPE_NORMAL
+)
+@Composable
+private fun ProfileDetailsScreenMoreActionBottomSheetPreview() {
     MarvelXTheme {
         ProfileDetailsScreen(
             onEventSent = {},
@@ -535,8 +675,7 @@ private fun ProfileDetailsScreenMoreActionBottomSheetPreview(modifier: Modifier 
             ),
             effect = emptyFlow(),
             userId = -1,
-            popBackStack = { },
-            navigateToEditProfileDetailsScreen = {}
+            onNavigation = {}
         )
     }
 }

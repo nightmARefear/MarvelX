@@ -166,7 +166,7 @@ fun Modifier.throttledClickable(
         .then(clipModifier)
         .filterTouchesWhenObscured(view)
         .clickable(
-            interactionSource = remember { interactionSource },
+            interactionSource = interactionSource,
             indication = if (showRipple) when (isIcon) {
                 true -> rememberRipple(bounded = false, radius = RippleRadius)
                 false -> if (rippleShape != null) rememberRipple(bounded = true) else indication

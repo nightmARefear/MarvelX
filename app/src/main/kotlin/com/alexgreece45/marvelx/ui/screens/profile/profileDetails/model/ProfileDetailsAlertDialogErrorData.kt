@@ -3,7 +3,7 @@ package com.alexgreece45.marvelx.ui.screens.profile.profileDetails.model
 import com.alexgreece45.marvelx.ui.components.AlertDialogButton
 
 /**
- * Alert dialog error data for the `profile details` screen.
+ * Alert dialog error data for the `Profile Details` screen.
  */
 data class ProfileDetailsAlertDialogErrorData(
     val errorTitle: String,
