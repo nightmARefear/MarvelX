@@ -10,6 +10,8 @@ import com.alexgreece45.marvelx.util.extensions.popUpToTop
 interface RouterHost {
     /**
      * Initializes the navigation graph.
+     *
+     * __Note:__ The navigation graph will be re-initialized if a configuration change occurs.
      */
     @Composable
     fun StartFlow()
@@ -46,7 +48,7 @@ interface RouterHost {
 class RouterHostImpl : RouterHost {
 
     /**
-     * Indicates whether the navigation flow has started. It has an initial value of `false`.
+     * Indicates whether the navigation flow has started. It has the initial value of `false`.
      */
     private var _flowStarted: Boolean = false
 
@@ -59,12 +61,9 @@ class RouterHostImpl : RouterHost {
 
     @Composable
     override fun StartFlow() {
-        // Ensures that the navigation graph is only set once.
-        if (_flowStarted.not()) {
-            navController = rememberNavController()
-            NavGraph(navController = navController)
-            _flowStarted = true
-        }
+        navController = rememberNavController()
+        NavGraph(navController = navController)
+        _flowStarted = true
     }
 
     override fun logout() {

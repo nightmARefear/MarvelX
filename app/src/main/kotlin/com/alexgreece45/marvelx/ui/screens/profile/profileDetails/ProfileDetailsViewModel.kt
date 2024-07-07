@@ -18,13 +18,14 @@ import com.alexgreece45.marvelx.mvi.BaseState
 import com.alexgreece45.marvelx.mvi.BaseViewModel
 import com.alexgreece45.marvelx.ui.components.AlertDialogButton
 import com.alexgreece45.marvelx.ui.components.SnackbarStateData
+import com.alexgreece45.marvelx.ui.components.model.BottomSheetContentItem
 import com.alexgreece45.marvelx.ui.components.model.ErrorButtonLayout
 import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.model.ProfileDetailsAlertDialogErrorData
 import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.model.ProfileDetailsBottomSheetType
 import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.model.ProfileDetailsFullScreenErrorView
-import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.model.ProfileDetailsMoreActionItem
 import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.model.ProfileDetailsNestedErrorView
 import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.stats.model.ProfileDetailsStatsTab
+import com.alexgreece45.marvelx.ui.theme.values.getErrorColor
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.constants.ConstantsUi
 import com.google.zxing.BarcodeFormat
@@ -60,6 +61,11 @@ sealed interface ProfileDetailsContract {
          * Hides the alert dialog.
          */
         data object HideAlertDialog : Event
+
+        /**
+         * Triggered when the system's back button is clicked.
+         */
+        data object OnSystemBack : Event
     }
 
     /**
@@ -73,7 +79,7 @@ sealed interface ProfileDetailsContract {
         val isLoading: Boolean = true,
 
         // Modal bottom sheet data.
-        val moreActionItems: List<ProfileDetailsMoreActionItem> = emptyList(),
+        val moreActionItems: List<BottomSheetContentItem> = emptyList(),
         val bottomSheetType: ProfileDetailsBottomSheetType? = null,
 
         // Data.
@@ -97,17 +103,14 @@ sealed interface ProfileDetailsContract {
 
     sealed interface Effect : BaseEffect {
         /**
+         * Shows the bottom sheet. Make sure to firstly set its type in the ViewModel state.
+         */
+        data object ShowBottomSheet : Effect
+
+        /**
          * Hides the bottom sheet.
          */
         data object HideBottomSheet : Effect
-
-        /**
-         * Shows the bottom sheet by firstly hiding the current one. If no bottom sheet is visible,
-         * this [Effect] won't cause any issues. [setState] is executed after the hiding of the
-         * current bottom sheet, and it actually sets the ViewModel state for the new bottom sheet
-         * type. After [setState] is executed, the new bottom sheet is shown.
-         */
-        data class ShowBottomSheet(val setState: () -> Unit) : Effect
 
         /**
          * Executes the given [Event].
@@ -169,7 +172,7 @@ class ProfileDetailsViewModel(
                         errorTitle = resourceProvider.getString(R.string.profile_details_screen_label_alert_dialog_block_user_title),
                         errorSubtitle = resourceProvider.getString(R.string.profile_details_screen_label_alert_dialog_block_user_subtitle),
                         dismissAlertDialogButton = AlertDialogButton(
-                            value = resourceProvider.getString(R.string.profile_details_screen_label_alert_dialog_block_user_button_cancel),
+                            label = resourceProvider.getString(R.string.profile_details_screen_label_alert_dialog_block_user_button_cancel),
                             onClick = {
                                 setEffect {
                                     ProfileDetailsContract.Effect.ExecuteEvent(
@@ -179,7 +182,7 @@ class ProfileDetailsViewModel(
                             }
                         ),
                         confirmAlertDialogButton = AlertDialogButton(
-                            value = resourceProvider.getString(R.string.profile_details_screen_label_alert_dialog_block_user_button_block),
+                            label = resourceProvider.getString(R.string.profile_details_screen_label_alert_dialog_block_user_button_block),
                             onClick = {
                                 setEffect {
                                     ProfileDetailsContract.Effect.ExecuteEvent(
@@ -310,6 +313,10 @@ class ProfileDetailsViewModel(
                         }
                     }
                 }
+            }
+
+            ProfileDetailsContract.Event.OnSystemBack -> {
+                hideBottomSheet()
             }
         }
     }
@@ -444,18 +451,18 @@ class ProfileDetailsViewModel(
     private fun initializeMoreActionItems(isDifferentUser: Boolean) {
         if (currentState.moreActionItems.isNotEmpty()) return
         val items = listOf(
-            ProfileDetailsMoreActionItem(
-                label = resourceProvider.getString(R.string.profile_details_screen_label_more_actions_block),
-                isRestrictiveAction = true,
-                event = ProfileDetailsContract.Event.MoreActions.OnBlockClicked
+            BottomSheetContentItem(
+                title = resourceProvider.getString(R.string.profile_details_screen_label_more_actions_block),
+                titleColor = getErrorColor(),
+                onClick = ProfileDetailsContract.Event.MoreActions.OnBlockClicked
             ),
-            ProfileDetailsMoreActionItem(
-                label = resourceProvider.getString(R.string.profile_details_screen_label_more_actions_share_profile),
-                event = ProfileDetailsContract.Event.MoreActions.OnShareProfileClicked
+            BottomSheetContentItem(
+                title = resourceProvider.getString(R.string.profile_details_screen_label_more_actions_share_profile),
+                onClick = ProfileDetailsContract.Event.MoreActions.OnShareProfileClicked
             ),
-            ProfileDetailsMoreActionItem(
-                label = resourceProvider.getString(R.string.profile_details_screen_label_more_actions_show_qr_code),
-                event = ProfileDetailsContract.Event.MoreActions.OnShowQrCodeClicked
+            BottomSheetContentItem(
+                title = resourceProvider.getString(R.string.profile_details_screen_label_more_actions_show_qr_code),
+                onClick = ProfileDetailsContract.Event.MoreActions.OnShowQrCodeClicked
             ),
         )
         setState {
@@ -500,26 +507,15 @@ class ProfileDetailsViewModel(
 
     /**
      * Shows the bottom sheet of type [bottomSheetType].
-     *
-     * __Note:__ It first hides the current bottom sheet.
      */
     private fun showBottomSheet(bottomSheetType: ProfileDetailsBottomSheetType) {
-        // Just in case there is a bottom sheet type.
-        currentState.bottomSheetType?.let {
-            setState {
-                copy(
-                    bottomSheetType = null
-                )
-            }
+        setState {
+            copy(
+                bottomSheetType = bottomSheetType
+            )
         }
         setEffect {
-            ProfileDetailsContract.Effect.ShowBottomSheet {
-                setState {
-                    copy(
-                        bottomSheetType = bottomSheetType
-                    )
-                }
-            }
+            ProfileDetailsContract.Effect.ShowBottomSheet
         }
     }
 
@@ -562,7 +558,7 @@ class ProfileDetailsViewModel(
                     errorTitle = resourceProvider.getString(R.string.error),
                     errorSubtitle = errorSubtitle,
                     confirmAlertDialogButton = AlertDialogButton(
-                        value = resourceProvider.getString(R.string.generic_ok_button),
+                        label = resourceProvider.getString(R.string.generic_ok_button),
                         onClick = {
                             setEffect {
                                 ProfileDetailsContract.Effect.ExecuteEvent(

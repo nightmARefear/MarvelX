@@ -506,7 +506,7 @@ class EditProfileDetailsViewModel(
                     title = resourceProvider.getString(R.string.edit_profile_details_screen_alert_dialog_unsaved_changes_title),
                     errorMessage = resourceProvider.getString(R.string.edit_profile_details_screen_alert_dialog_unsaved_changes_subtitle),
                     dismissButton = AlertDialogButton(
-                        value = resourceProvider.getString(R.string.generic_no_button),
+                        label = resourceProvider.getString(R.string.generic_no_button),
                         onClick = {
                             setState {
                                 copy(
@@ -516,7 +516,7 @@ class EditProfileDetailsViewModel(
                         }
                     ),
                     confirmButton = AlertDialogButton(
-                        value = resourceProvider.getString(R.string.generic_yes_button),
+                        label = resourceProvider.getString(R.string.generic_yes_button),
                         buttonType = ErrorButtonType.Contained,
                         onClick = {
                             setEffect {

@@ -51,8 +51,11 @@
                     android:port="${deeplinkPort}" />
                 <data android:pathAdvancedPattern="${deeplinkPathAdvancedPattern}" />
             </intent-filter>
-
         </activity>
+
+        <activity
+            android:name="com.canhub.cropper.CropImageActivity"
+            android:theme="@style/Base.Theme.AppCompat" />
 
         <provider
             android:name="androidx.startup.InitializationProvider"

@@ -24,7 +24,6 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.AlertDialog
@@ -52,9 +51,6 @@ import androidx.compose.material.LocalContentAlpha
 import androidx.compose.material.LocalContentColor
 import androidx.compose.material.LocalTextStyle
 import androidx.compose.material.MaterialTheme
-import androidx.compose.material.ModalBottomSheetDefaults
-import androidx.compose.material.ModalBottomSheetLayout
-import androidx.compose.material.ModalBottomSheetState
 import androidx.compose.material.OutlinedButton
 import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Scaffold
@@ -313,7 +309,7 @@ private fun BottomBar(
                         Icon(
                             painter = painterResource(bottomBarAction.iconData.iconResource),
                             contentDescription = stringResource(bottomBarAction.iconData.contentDescription),
-                            tint = bottomBarAction.iconData.colorTint
+                            tint = bottomBarAction.iconData.tint
                                 ?: LocalContentColor.current.copy(
                                     alpha = LocalContentAlpha.current
                                 )
@@ -418,7 +414,7 @@ fun BottomNavigationBar(
                             modifier = Modifier.size(24.dp),
                             painter = painterResource(item.iconData.iconResource),
                             contentDescription = stringResource(item.iconData.contentDescription),
-                            tint = item.iconData.colorTint
+                            tint = item.iconData.tint
                                 ?: LocalContentColor.current.copy(alpha = LocalContentAlpha.current)
                         )
                     },
@@ -441,7 +437,7 @@ fun BottomNavigationBar(
                             }
                         }
                     },
-                    selectedContentColor = MaterialTheme.colors.primaryVariant,
+                    selectedContentColor = MaterialTheme.colors.error,
                     unselectedContentColor = MaterialTheme.colors.primary.copy(alpha = ContentAlpha.medium)
                 )
             }
@@ -449,10 +445,13 @@ fun BottomNavigationBar(
     }
 }
 
+/**
+ * Defines the required data to draw an icon.
+ */
 data class IconData(
     @DrawableRes val iconResource: Int,
     @StringRes val contentDescription: Int,
-    val colorTint: Color? = null,
+    val tint: Color? = null,
     val enabled: Boolean = true
 )
 
@@ -506,6 +505,10 @@ data class ExtendedFabData(
 /**
  * Base builder screen responsible for creating consistent UI layout screens throughout the application.
  *
+ * @param toolbarActions The list of toolbar actions to display. [toolbarActionsContent] must be
+ * `null`.
+ * @param toolbarActionsContent The composable function to display as the toolbar actions.
+ * [toolbarActions] must be `null`.
  * @param paddingValues The padding values to apply on top of the scaffold's ones. Provide a non-null
  * value to override the default padding values that are provided within this composable.
  */
@@ -517,6 +520,7 @@ fun ContentScreen(
     showToolbar: Boolean = false,
     toolbarTitle: String? = null,
     toolbarActions: List<ToolbarAction>? = null,
+    toolbarActionsContent: (@Composable RowScope.() -> Unit)? = null,
     bottomBarData: BottomBarData? = null,
     bottomNavigationBarData: BottomNavigationBarData? = null,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
@@ -526,6 +530,10 @@ fun ContentScreen(
     paddingValues: PaddingValues? = null,
     content: @Composable (PaddingValues) -> Unit
 ) {
+    if (toolbarActions != null && toolbarActionsContent != null) {
+        throw IllegalArgumentException("You cannot use `toolbarActions` and `toolbarActionsContent` at the same time. Set either argument.")
+    }
+
     LaunchedEffect(snackbarStateData) {
         snackbarStateData?.let {
             snackbarHostState.showSnackbar(
@@ -658,6 +666,7 @@ private fun Toolbar(
     navigableAction: ScreenNavigableAction,
     toolbarTitle: String? = null,
     toolbarActions: List<ToolbarAction>? = null,
+    toolbarActionsContent: (@Composable RowScope.() -> Unit)? = null,
 ) {
     val keyboard = LocalSoftwareKeyboardController.current
 
@@ -717,6 +726,11 @@ private fun Toolbar(
                 }
             }
 
+            toolbarActionsContent?.let { content ->
+                Box(modifier = Modifier.weight(1f)) // Stick content to the far right side of the screen.
+                content()
+            }
+
             toolbarActions?.sortedBy { it.order }?.forEach { toolbarAction ->
                 IconButton(
                     onClick = toolbarAction.onClick,
@@ -729,7 +743,7 @@ private fun Toolbar(
                         contentDescription = stringResource(toolbarAction.iconData.contentDescription),
                         modifier = Modifier.size(SPACING_LARGE.dp),
                         // TODO: To be reviewed.
-                        tint = toolbarAction.iconData.colorTint?.copy(alpha = iconTintAlpha)
+                        tint = toolbarAction.iconData.tint?.copy(alpha = iconTintAlpha)
                             ?: LocalContentColor.current.copy(alpha = iconTintAlpha)
                     )
                 }
@@ -931,43 +945,6 @@ fun SearchBar(
 }
 
 /**
- * A wrapper composable for the native [ModalBottomSheetLayout] providing the app's custom styling.
- *
- * The sheet shape and scrim color are already set. If you wish to override them, you can do so,
- * but it's not recommended.
- */
-@OptIn(ExperimentalMaterialApi::class)
-@Composable
-fun WrapModalBottomSheetLayout(
-    sheetContent: @Composable () -> Unit,
-    modifier: Modifier = Modifier,
-    sheetState: ModalBottomSheetState,
-    sheetGesturesEnabled: Boolean = true,
-    sheetShape: Shape = RoundedCornerShape(
-        topStart = SPACING_MEDIUM.dp,
-        topEnd = SPACING_MEDIUM.dp
-    ),
-    sheetElevation: Dp = ModalBottomSheetDefaults.Elevation,
-    sheetBackgroundColor: Color = MaterialTheme.colors.surface,
-    sheetContentColor: Color = contentColorFor(sheetBackgroundColor),
-    scrimColor: Color = MaterialTheme.colors.background.copy(alpha = 0.65f),
-    content: @Composable () -> Unit
-) {
-    ModalBottomSheetLayout(
-        sheetContent = { sheetContent() },
-        modifier = modifier,
-        sheetState = sheetState,
-        sheetGesturesEnabled = sheetGesturesEnabled,
-        sheetShape = sheetShape,
-        sheetElevation = sheetElevation,
-        sheetBackgroundColor = sheetBackgroundColor,
-        sheetContentColor = sheetContentColor,
-        scrimColor = scrimColor,
-        content = content
-    )
-}
-
-/**
  * Pull-to-refresh functionality. This [Composable] is used in scrollable lists where if you pull at
  * the top of the list, the items refresh.
  *
@@ -1001,7 +978,7 @@ fun PullRefreshable(
             modifier = Modifier.align(
                 Alignment.TopCenter
             ),
-            contentColor = MaterialTheme.colors.primaryVariant
+            contentColor = MaterialTheme.colors.error
         )
     }
 }
@@ -1056,7 +1033,7 @@ fun ModalBottomSheetScaffold(
                                 Icon(
                                     painter = painterResource(toolbarAction.iconData.iconResource),
                                     contentDescription = stringResource(toolbarAction.iconData.contentDescription),
-                                    tint = toolbarAction.iconData.colorTint
+                                    tint = toolbarAction.iconData.tint
                                         ?: LocalContentColor.current.copy(alpha = LocalContentAlpha.current)
                                 )
                             }
@@ -1388,11 +1365,15 @@ fun WrapTextButton(
 
 
 /**
- * @param buttonType The button type. For the dismiss button, the type is
- * always [ErrorButtonType.Text].
+ * The button to be used in [AlertDialogError].
+ *
+ * @param label The text label of the button.
+ * @param buttonType The button type. For the dismiss button, the type is always
+ * [ErrorButtonType.Text].
+ * @param onClick Callback to be invoked when the button is clicked.
  */
 data class AlertDialogButton(
-    val value: String,
+    val label: String,
     val buttonType: ErrorButtonType = ErrorButtonType.defaultType,
     val onClick: () -> Unit
 )
@@ -1455,7 +1436,7 @@ fun AlertDialogError(
             dismissButton?.let { button ->
                 WrapTextButton(onClick = button.onClick) {
                     Text(
-                        text = button.value
+                        text = button.label
                     )
                 }
             }
@@ -1466,7 +1447,7 @@ fun AlertDialogError(
                     ErrorButtonType.Contained -> {
                         WrapButton(onClick = button.onClick) {
                             Text(
-                                text = button.value
+                                text = button.label
                             )
                         }
                     }
@@ -1474,7 +1455,7 @@ fun AlertDialogError(
                     ErrorButtonType.Outlined -> {
                         WrapOutlinedButton(onClick = button.onClick) {
                             Text(
-                                text = button.value
+                                text = button.label
                             )
                         }
                     }
@@ -1482,7 +1463,7 @@ fun AlertDialogError(
                     ErrorButtonType.Text -> {
                         WrapTextButton(onClick = button.onClick) {
                             Text(
-                                text = button.value
+                                text = button.label
                             )
                         }
                     }
@@ -1596,9 +1577,7 @@ fun SortingModalBottomSheetContent(
                 style = MaterialTheme.typography.h4
             )
 
-            IconButton(
-                onClick = { onCloseClick() }
-            ) {
+            IconButton(onClick = onCloseClick) {
                 Icon(
                     modifier = Modifier
                         .size(SPACING_LARGE.dp)

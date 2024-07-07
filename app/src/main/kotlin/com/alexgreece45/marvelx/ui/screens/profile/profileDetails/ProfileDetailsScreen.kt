@@ -3,12 +3,12 @@ package com.alexgreece45.marvelx.ui.screens.profile.profileDetails
 import android.content.Intent
 import android.content.res.Configuration
 import android.graphics.Bitmap
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,7 +19,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Icon
-import androidx.compose.material.LocalContentColor
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.ModalBottomSheetValue
 import androidx.compose.material.Text
@@ -60,21 +59,21 @@ import com.alexgreece45.marvelx.network_logic.models_api.user.Gender
 import com.alexgreece45.marvelx.ui.components.AlertDialogError
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.IconData
-import com.alexgreece45.marvelx.ui.components.WrapModalBottomSheetLayout
 import com.alexgreece45.marvelx.ui.components.ModalBottomSheetContent
 import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
 import com.alexgreece45.marvelx.ui.components.ToolbarAction
 import com.alexgreece45.marvelx.ui.components.WrapAsyncImage
 import com.alexgreece45.marvelx.ui.components.WrapButton
+import com.alexgreece45.marvelx.ui.components.WrapModalBottomSheetLayout
 import com.alexgreece45.marvelx.ui.components.effect.ObserveUiEffect
 import com.alexgreece45.marvelx.ui.components.enforceMaxBrightness
 import com.alexgreece45.marvelx.ui.components.error.ContentErrorScreen
+import com.alexgreece45.marvelx.ui.components.modalBottomSheetContents.ModalBottomSheetContentItems
+import com.alexgreece45.marvelx.ui.components.model.BottomSheetContentItem
 import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.model.ProfileDetailsBottomSheetType
-import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.model.ProfileDetailsMoreActionItem
 import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.model.ProfileDetailsNestedErrorView
 import com.alexgreece45.marvelx.ui.theme.MarvelXTheme
-import com.alexgreece45.marvelx.ui.theme.customColors
-import com.alexgreece45.marvelx.util.SPACING_MEDIUM
+import com.alexgreece45.marvelx.ui.theme.values.customColors
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.VSpacer
 import com.alexgreece45.marvelx.util.constants.ConstantsUi
@@ -104,8 +103,9 @@ fun ProfileDetailsScreen(
     val modalBottomSheetState =
         rememberModalBottomSheetState(
             initialValue = ModalBottomSheetValue.Hidden,
+            // Allows to display a bottom sheet directly after the previous one.
             animationSpec = tween(
-                durationMillis = 175,
+                durationMillis = 150,
                 easing = FastOutLinearInEasing
             ),
             skipHalfExpanded = true
@@ -135,10 +135,8 @@ fun ProfileDetailsScreen(
                 onEventSent(uiEffect.event)
             }
 
-            is ProfileDetailsContract.Effect.ShowBottomSheet -> {
+            ProfileDetailsContract.Effect.ShowBottomSheet -> {
                 coroutineScope.launch {
-                    modalBottomSheetState.hideIfVisible()
-                    uiEffect.setState()
                     modalBottomSheetState.show()
                 }
             }
@@ -212,11 +210,6 @@ fun ProfileDetailsScreen(
                     ProfileDetailsContract.Event.OnBackClicked
                 )
             }),
-            onBack = {
-                onEventSent(
-                    ProfileDetailsContract.Event.OnBackClicked
-                )
-            },
             showToolbar = true,
             toolbarTitle = state.profileDetails?.basicProfileDetails?.fullName,
             toolbarActions = when (state.isDifferentUser) {
@@ -302,7 +295,7 @@ fun ProfileDetailsScreen(
                                     .size(ConstantsUi.PROFILE_IMAGE_SMALL_SIZE)
                                     .circularImageWithBorder(
                                         borderWidth = ConstantsUi.IMAGE_BORDER_WIDTH,
-                                        borderColor = MaterialTheme.colors.secondary
+                                        borderColor = MaterialTheme.colors.error
                                     ),
                                 error = painterResource(R.drawable.ic_person),
                                 placeholder = painterResource(R.drawable.ic_person),
@@ -419,6 +412,10 @@ fun ProfileDetailsScreen(
             }
         }
     }
+
+    BackHandler(modalBottomSheetState.isVisible) {
+        onEventSent(ProfileDetailsContract.Event.OnSystemBack)
+    }
 }
 
 /**
@@ -426,21 +423,12 @@ fun ProfileDetailsScreen(
  */
 @Composable
 private fun BottomSheetMoreActions(
-    moreActionItems: List<ProfileDetailsMoreActionItem>,
-    onEventSent: (ProfileDetailsContract.Event.MoreActions) -> Unit
-) {
-    ModalBottomSheetContent(paddingValues = PaddingValues(bottom = SPACING_MEDIUM.dp)) {
-        Column {
-            moreActionItems.forEach { moreActionItem ->
-                MoreActionItem(
-                    label = moreActionItem.label,
-                    isRestrictiveAction = moreActionItem.isRestrictiveAction,
-                    onClick = { onEventSent(moreActionItem.event) }
-                )
-            }
-        }
-    }
-}
+    moreActionItems: List<BottomSheetContentItem>,
+    onEventSent: (ProfileDetailsContract.Event) -> Unit
+) = ModalBottomSheetContentItems(
+    bottomSheetContentItems = moreActionItems,
+    onEventSent = onEventSent
+)
 
 /**
  * The content for the `QR code` bottom sheet.
@@ -469,34 +457,6 @@ private fun BottomSheetQrCode(qrCodeBitmap: Bitmap, fullName: String) {
                 style = MaterialTheme.typography.h5
             )
         }
-    }
-}
-
-/**
- * Defines a single action item in the `more actions` bottom sheet.
- *
- * @param label                 The label of this item.
- * @param isRestrictiveAction   Whether this item performs a restrictive action such as blocking the
- * user.
- * @param onClick               Callback to invoke when this item is clicked.
- */
-@Composable
-private fun MoreActionItem(
-    label: String,
-    isRestrictiveAction: Boolean = false,
-    onClick: () -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .throttledClickable(LocalView.current, onClick = onClick)
-    ) {
-        Text(
-            text = label,
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 12.dp),
-            color = if (isRestrictiveAction) MaterialTheme.customColors.error else LocalContentColor.current,
-            style = MaterialTheme.typography.subtitle1
-        )
     }
 }
 
@@ -657,18 +617,18 @@ private fun ProfileDetailsScreenMoreActionBottomSheetPreview() {
                 profileDetails = ProfileDetailsDomain.mockAnotherUser(),
                 isEmailHidden = true,
                 moreActionItems = listOf(
-                    ProfileDetailsMoreActionItem(
-                        label = stringResource(R.string.profile_details_screen_label_more_actions_block),
-                        isRestrictiveAction = true,
-                        event = ProfileDetailsContract.Event.MoreActions.OnBlockClicked
+                    BottomSheetContentItem(
+                        title = stringResource(R.string.profile_details_screen_label_more_actions_block),
+                        titleColor = MaterialTheme.customColors.error,
+                        onClick = ProfileDetailsContract.Event.MoreActions.OnBlockClicked
                     ),
-                    ProfileDetailsMoreActionItem(
-                        label = stringResource(R.string.profile_details_screen_label_more_actions_share_profile),
-                        event = ProfileDetailsContract.Event.MoreActions.OnShareProfileClicked
+                    BottomSheetContentItem(
+                        title = stringResource(R.string.profile_details_screen_label_more_actions_share_profile),
+                        onClick = ProfileDetailsContract.Event.MoreActions.OnShareProfileClicked
                     ),
-                    ProfileDetailsMoreActionItem(
-                        label = stringResource(R.string.profile_details_screen_label_more_actions_show_qr_code),
-                        event = ProfileDetailsContract.Event.MoreActions.OnShowQrCodeClicked
+                    BottomSheetContentItem(
+                        title = stringResource(R.string.profile_details_screen_label_more_actions_show_qr_code),
+                        onClick = ProfileDetailsContract.Event.MoreActions.OnShowQrCodeClicked
                     ),
                 ),
                 bottomSheetType = ProfileDetailsBottomSheetType.MoreActions

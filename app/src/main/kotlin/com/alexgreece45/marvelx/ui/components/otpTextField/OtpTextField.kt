@@ -99,7 +99,7 @@ private fun CharView(
     }
 
     val lineColor = when (isFocused) {
-        true -> MaterialTheme.colors.primaryVariant
+        true -> MaterialTheme.colors.error
         false -> MaterialTheme.colors.onBackground
     }
 

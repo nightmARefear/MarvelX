@@ -43,14 +43,22 @@ object ConstantsUi {
     val IMAGE_BORDER_WIDTH = 2.dp
 
     /**
-     * The large size for profile images, expressed in density-independent pixels (dp).
+     * The size for profile images to be used when updating the profile image, or viewing the
+     * current one, expressed in density-independent pixels (dp).
      */
-    val PROFILE_IMAGE_LARGE_SIZE = 150.dp
+    val PROFILE_IMAGE_FULL_SIZE = 450.dp
 
     /**
-     * The small size for profile images, expressed in density-independent pixels (dp).
+     * The size for profile images to be used when displaying the profile image in the `Profile`
+     * screen, expressed in density-independent pixels (dp).
      */
-    val PROFILE_IMAGE_SMALL_SIZE = PROFILE_IMAGE_LARGE_SIZE / 2.5f
+    val PROFILE_IMAGE_NORMAL_SIZE = 150.dp
+
+    /**
+     * The size for profile images to be used in lists, expressed in density-independent
+     * pixels (dp).
+     */
+    val PROFILE_IMAGE_SMALL_SIZE = PROFILE_IMAGE_FULL_SIZE / 2.5f
 
     /**
      * The size for generic images in tiles, express in density-independent pixels (dp).

@@ -18,7 +18,6 @@ import com.alexgreece45.marvelx.util.DateUtil
 import com.alexgreece45.marvelx.util.extensions.differenceInMilliseconds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -192,7 +191,7 @@ class ApiAuthenticator(
      */
     private fun performLogoutOperations() {
         NavArgHelper.setArgument(NavArg.HomeLogout, "reAuthenticationError")
-        val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+        val scope = CoroutineScope(Dispatchers.Main)
         scope.launch {
             routerHost.logout()
         }

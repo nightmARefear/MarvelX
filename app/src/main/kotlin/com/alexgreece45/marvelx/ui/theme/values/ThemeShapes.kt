@@ -1,8 +1,9 @@
-package com.alexgreece45.marvelx.ui.theme
+package com.alexgreece45.marvelx.ui.theme.values
 
 import androidx.compose.foundation.shape.CornerBasedShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.unit.dp
+import com.alexgreece45.marvelx.ui.theme.templates.ThemeShapesTemplate
 import com.alexgreece45.marvelx.util.SPACING_LARGE
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.SPACING_TINY

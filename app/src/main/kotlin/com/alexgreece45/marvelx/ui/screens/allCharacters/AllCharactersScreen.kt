@@ -313,7 +313,7 @@ private fun CharacterItem(
                         Icon(
                             painter = painterResource(R.drawable.ic_favorite_filled),
                             contentDescription = stringResource(R.string.all_characters_screen_favorite_character_icon_description),
-                            tint = MaterialTheme.colors.primaryVariant
+                            tint = MaterialTheme.colors.error
                         )
                     }
 
@@ -321,7 +321,7 @@ private fun CharacterItem(
                         Icon(
                             painter = painterResource(R.drawable.ic_favorite_empty),
                             contentDescription = stringResource(R.string.all_characters_screen_not_favorite_character_icon_description),
-                            tint = MaterialTheme.colors.primaryVariant
+                            tint = MaterialTheme.colors.error
                         )
                     }
                 }

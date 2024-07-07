@@ -109,7 +109,7 @@ fun CharacterScreen(
                             IconData(
                                 iconResource = R.drawable.ic_favorite_filled,
                                 contentDescription = R.string.ic_favorite_content_description,
-                                colorTint = MaterialTheme.colors.primaryVariant
+                                tint = MaterialTheme.colors.error
                             )
                         }
 
@@ -117,7 +117,7 @@ fun CharacterScreen(
                             IconData(
                                 iconResource = R.drawable.ic_favorite_empty,
                                 contentDescription = R.string.ic_not_favorite_content_description,
-                                colorTint = MaterialTheme.colors.primaryVariant
+                                tint = MaterialTheme.colors.error
                             )
                         }
                     }
@@ -195,7 +195,7 @@ private fun CharacterItem(
                 .border(
                     BorderStroke(
                         width = IMAGE_BORDER_WIDTH,
-                        color = MaterialTheme.colors.primaryVariant
+                        color = MaterialTheme.colors.error
                     ),
                     CircleShape
                 )

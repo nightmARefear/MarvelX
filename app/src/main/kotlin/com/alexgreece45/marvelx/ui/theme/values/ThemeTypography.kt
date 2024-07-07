@@ -1,6 +1,5 @@
-package com.alexgreece45.marvelx.ui.theme
+package com.alexgreece45.marvelx.ui.theme.values
 
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -8,6 +7,7 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.ui.theme.templates.ThemeTypographyTemplate
 
 class ThemeTypography : ThemeTypographyTemplate() {
     override val defaultFontFamily: FontFamily

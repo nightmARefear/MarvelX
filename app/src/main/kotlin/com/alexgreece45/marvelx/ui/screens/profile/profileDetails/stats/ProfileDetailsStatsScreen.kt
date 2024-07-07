@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.Card
-import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Tab
 import androidx.compose.material.TabRow
@@ -138,7 +137,7 @@ fun DataTile(profileDetailsStatsGenericUi: ProfileDetailsStatsGenericUi) {
                         .size(ConstantsUi.GENERIC_IMAGE_TILE_SIZE)
                         .circularImageWithBorder(
                             borderWidth = ConstantsUi.IMAGE_BORDER_WIDTH,
-                            borderColor = MaterialTheme.colors.secondary
+                            borderColor = MaterialTheme.colors.error
                         ),
                     error = painterResource(R.drawable.ic_broken_image),
                     contentScale = ContentScale.Fit

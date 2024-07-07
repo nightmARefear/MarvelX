@@ -85,7 +85,7 @@ fun HomeScreen(
                         title = homeAlertDialogErrorView.title,
                         errorMessage = homeAlertDialogErrorView.errorMessage,
                         confirmButton = AlertDialogButton(
-                            value = homeAlertDialogErrorView.buttonLabel,
+                            label = homeAlertDialogErrorView.buttonLabel,
                             onClick = homeAlertDialogErrorView.alertDialogOnClick
                         )
                     )

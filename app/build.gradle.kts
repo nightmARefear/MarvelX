@@ -230,4 +230,7 @@ dependencies {
 
     // Shimmer.
     implementation(libs.valentinilk.shimmer)
+
+    // Image cropper.
+    implementation(libs.vanniktech.android.image.cropper)
 }

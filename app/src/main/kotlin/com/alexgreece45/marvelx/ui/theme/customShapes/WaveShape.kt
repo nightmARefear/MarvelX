@@ -7,6 +7,9 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 
+/**
+ * Defines a wave-like shape.
+ */
 class WaveShape : Shape {
     override fun createOutline(
         size: Size,

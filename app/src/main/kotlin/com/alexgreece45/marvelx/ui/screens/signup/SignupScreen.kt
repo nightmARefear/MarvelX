@@ -111,7 +111,7 @@ fun SignUpScreen(
                     title = state.alertDialogTitle,
                     errorMessage = state.alertDialogErrorMessage,
                     confirmButton = AlertDialogButton(
-                        value = stringResource(R.string.generic_ok_button),
+                        label = stringResource(R.string.generic_ok_button),
                         buttonType = ErrorButtonType.Text,
                         onClick = { onEventSent(SignupEvent.AlertDialogError.OnOkClick) }
                     )

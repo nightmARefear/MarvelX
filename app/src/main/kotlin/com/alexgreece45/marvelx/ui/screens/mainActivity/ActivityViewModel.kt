@@ -47,7 +47,15 @@ sealed class ActivityEvent : BaseEvent {
         data object OnCreate : LifecycleEvent()
         data object OnPause : LifecycleEvent()
         data object OnResume : LifecycleEvent()
-        data object OnDestroy : LifecycleEvent()
+
+        /**
+         * This event is executed when the activity is destroyed. [willBeRecreated] defines whether
+         * the activity will be recreated indicating that the onDestroy function was called due to a
+         * configuration change, and not because the user/OS closed/killed the app.
+         *
+         * If [willBeRecreated] is `true`, then the user isn't logged out.
+         */
+        data class OnDestroy(val willBeRecreated: Boolean) : LifecycleEvent()
     }
 
     /**
@@ -125,8 +133,10 @@ class ActivityViewModel : BaseViewModel<ActivityEvent, ActivityState, ActivityEf
                 }
             }
 
-            ActivityEvent.LifecycleEvent.OnDestroy -> {
-                onDestroy()
+            is ActivityEvent.LifecycleEvent.OnDestroy -> {
+                if (!event.willBeRecreated) {
+                    onDestroy()
+                }
             }
 
             ActivityEvent.OnUserInteraction -> {

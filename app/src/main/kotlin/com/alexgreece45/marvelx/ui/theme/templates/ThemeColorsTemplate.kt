@@ -1,4 +1,4 @@
-package com.alexgreece45.marvelx.ui.theme
+package com.alexgreece45.marvelx.ui.theme.templates
 
 import androidx.compose.material.Colors
 import androidx.compose.runtime.Immutable

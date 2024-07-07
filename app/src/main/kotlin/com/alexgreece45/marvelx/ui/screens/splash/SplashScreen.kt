@@ -1,6 +1,5 @@
 package com.alexgreece45.marvelx.ui.screens.splash
 
-import android.app.Activity
 import android.os.Build
 import android.os.Build.VERSION.SDK_INT
 import androidx.compose.animation.AnimatedVisibility
@@ -83,7 +82,7 @@ fun SplashScreen(
                     title = splashScreenError.title,
                     errorMessage = splashScreenError.errorMessage,
                     confirmButton = AlertDialogButton(
-                        value = stringResource(R.string.splash_screen_alert_dialog_confirm_button),
+                        label = stringResource(R.string.splash_screen_alert_dialog_confirm_button),
                         onClick = splashScreenError.onCloseClick
                     )
                 )

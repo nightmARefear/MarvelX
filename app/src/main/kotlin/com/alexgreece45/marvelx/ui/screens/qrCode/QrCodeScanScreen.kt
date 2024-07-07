@@ -40,7 +40,7 @@ import com.alexgreece45.marvelx.ui.components.WrapButton
 import com.alexgreece45.marvelx.ui.components.effect.ObserveUiEffect
 import com.alexgreece45.marvelx.ui.components.effect.OneTimeLaunchedEffect
 import com.alexgreece45.marvelx.ui.helper.model.DeepLinkAction
-import com.alexgreece45.marvelx.ui.theme.customColors
+import com.alexgreece45.marvelx.ui.theme.values.customColors
 import com.alexgreece45.marvelx.util.QrCodeAnalyzer
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.SPACING_TINY
@@ -172,7 +172,7 @@ private fun CameraScreen(
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp
     val cameraSize = screenWidth * 0.875f
     val cameraShape = MaterialTheme.shapes.medium
-    val archColor = MaterialTheme.colors.secondary
+    val archColor = MaterialTheme.colors.error
     val archStrokeWidth = SPACING_TINY.dp
 
     val permissionState = rememberPermissionState(permission = Manifest.permission.CAMERA)

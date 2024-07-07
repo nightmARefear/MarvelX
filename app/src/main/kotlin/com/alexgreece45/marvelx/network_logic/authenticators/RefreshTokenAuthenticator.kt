@@ -8,7 +8,6 @@ import com.alexgreece45.marvelx.ui.navigation.models.NavArg
 import com.alexgreece45.marvelx.ui.navigation.router.RouterHost
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import okhttp3.Authenticator
 import okhttp3.Request
@@ -48,7 +47,7 @@ class RefreshTokenAuthenticator(
      */
     private fun performLogoutOperations() {
         NavArgHelper.setArgument(NavArg.HomeLogout, "reAuthenticationNoAuthorizationError")
-        val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+        val scope = CoroutineScope(Dispatchers.Main)
         scope.launch {
             routerHost.logout()
         }

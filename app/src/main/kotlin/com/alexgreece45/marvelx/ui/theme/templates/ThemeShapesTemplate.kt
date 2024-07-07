@@ -1,11 +1,12 @@
-package com.alexgreece45.marvelx.ui.theme
+package com.alexgreece45.marvelx.ui.theme.templates
 
 import androidx.compose.foundation.shape.CornerBasedShape
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Shapes
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
-import com.alexgreece45.marvelx.ui.theme.customShapes.CustomShapes
+import com.alexgreece45.marvelx.ui.theme.values.CustomShapes
+import com.alexgreece45.marvelx.ui.theme.values.LocalCustomShapes
 
 abstract class ThemeShapesTemplate {
 
@@ -22,12 +23,3 @@ abstract class ThemeShapesTemplate {
     abstract val mediumShape: CornerBasedShape
     abstract val largeShape: CornerBasedShape
 }
-
-/**
- * Retrieves the current value of [LocalCustomShapes] from the composition.
- * This provides access to the custom defined shapes for the current composition context.
- */
-val MaterialTheme.customShapes: CustomShapes
-    @Composable
-    @ReadOnlyComposable
-    get() = LocalCustomShapes.current

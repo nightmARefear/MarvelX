@@ -136,7 +136,7 @@ class MainActivity : ComponentActivity() {
         super.onDestroy()
 
         logger.d("MainActivity") { "onDestroy called." }
-        viewModel.setEvent(ActivityEvent.LifecycleEvent.OnDestroy)
+        viewModel.setEvent(ActivityEvent.LifecycleEvent.OnDestroy(willBeRecreated = !isFinishing))
     }
 
     override fun onUserInteraction() {

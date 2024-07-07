@@ -106,7 +106,7 @@ fun WrapClickableText(
                 )
                 withStyle(
                     style = SpanStyle(
-                        color = linkStringData.color ?: MaterialTheme.colors.primaryVariant,
+                        color = linkStringData.color ?: MaterialTheme.colors.error,
                         fontSize = linkStringData.fontSize ?: textStyle.fontSize,
                         fontWeight = linkStringData.fontWeight ?: textStyle.fontWeight
                     )

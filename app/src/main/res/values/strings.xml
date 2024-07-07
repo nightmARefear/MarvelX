@@ -154,8 +154,18 @@
     <string name="profile_screen_section_label_faq">Frequently Asked Questions (FAQ)</string>
     <string name="profile_screen_section_label_scar_qr_code">Scan QR Code</string>
     <string name="profile_screen_section_label_logout">Logout</string>
+    <string name="profile_screen_bottom_sheet_label_view_profile_image">View profile image</string>
+    <string name="profile_screen_bottom_sheet_label_upload_profile_image">Upload profile image</string>
+    <string name="profile_screen_cropped_cropped_image_toolbar_title">Edit profile image</string>
+    <string name="profile_screen_cropped_cropped_image_label_button_save">Save</string>
+
+    <string name="profile_screen_content_description_cropped_image_new_profile_image">New profile image preview</string>
 
     <string name="profile_screen_error_loading_profile_details">An error occurred while loading the profile details.</string>
+    <string name="profile_screen_label_error_alert_dialog_cropped_image_title_exit">Discard changes?</string>
+    <string name="profile_screen_label_error_alert_dialog_cropped_image_subtitle_exit">If you leave this screen you will lose the changes that you have made.</string>
+    <string name="profile_screen_label_error_alert_dialog_cropped_image_button_negative">Discard</string>
+    <string name="profile_screen_label_error_alert_dialog_cropped_image_button_positive">Stay</string>
 
     // Profile Screen --> Profile Details
     <string name="profile_details_screen_header_title">Profile Details</string>
@@ -368,5 +378,7 @@
     <string name="content_description_remove_friend">Remove friend</string>
     <string name="content_description_friends">Friends</string>
     <string name="content_description_cancel_request">Cancel request</string>
+    <string name="content_description_view_profile_image">View profile image</string>
+    <string name="content_description_upload_profile_image">Upload profile image</string>
 
 </resources>

@@ -348,6 +348,8 @@ fun NavGraph(navController: NavHostController) {
                 bottomNavigationBarData = { getBottomNavigationBarData(navController = navController) },
                 onNavigation = { navigationEffect ->
                     when (navigationEffect) {
+                        ProfileContract.Effect.Navigation.NavigateUp -> navController.navigateUp()
+
                         ProfileContract.Effect.Navigation.NavigateToHomeScreen -> {
                             navController.navigate(Screen.HomeScreen.route) {
                                 popUpToTop(navController)
@@ -504,7 +506,7 @@ fun getBottomNavigationBarData(navController: NavController): BottomNavigationBa
         items = getBottomNavigationItems(),
         backgroundColor = MaterialTheme.colors.background,
         topHorizontalColor = MaterialTheme.colors.onBackground.copy(alpha = 0.8f),
-        selectedItemTopHorizontalColor = MaterialTheme.colors.primaryVariant.copy(alpha = 0.8f),
+        selectedItemTopHorizontalColor = MaterialTheme.colors.error.copy(alpha = 0.8f),
         elevation = SPACING_MEDIUM.dp
     )
 

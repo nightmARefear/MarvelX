@@ -28,7 +28,7 @@ import com.alexgreece45.marvelx.util.VSpacer
  *
  * @param paddingValues     The padding values to apply. It has the default value of [SPACING_MEDIUM]
  * .dp for both horizontal and vertical edges.
- * @param content           The content.
+ * @param content           The content to draw.
  */
 @Composable
 fun ModalBottomSheetContent(

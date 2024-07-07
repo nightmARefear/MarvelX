@@ -5,7 +5,7 @@ koin-bom = "3.5.6"
 compose-compiler = "1.5.13"
 compose-navigation = "2.7.7"
 
-plugin-agp = "8.4.2"
+plugin-agp = "8.5.0"
 plugin-kotlin = "1.9.23"
 plugin-google-mapsplatform-secrets = "2.0.1"
 plugin-ksp = "1.9.23-1.0.20"
@@ -15,17 +15,17 @@ application-name = "com.alexgreece45.marvelx"
 airbnb-lottie-compose = "6.1.0"
 
 androidx-activity-compose = "1.9.0"
-androidx-appcompat = "1.6.1"
-androidx-camera = "1.3.3"
+androidx-appcompat = "1.7.0"
+androidx-camera = "1.3.4"
 androidx-core = "1.13.1"
 androidx-credentials = "1.2.2"
-androidx-lifecycle = "2.7.0"
+androidx-lifecycle = "2.8.3"
 androidx-room = "2.6.1"
 androidx-security-crypto = "1.0.0"
 androidx-work = "2.9.0"
 
-androidx-test-ext-junit = "1.2.0"
-androidx-test-espresso-core = "3.6.0"
+androidx-test-ext-junit = "1.2.1"
+androidx-test-espresso-core = "3.6.1"
 
 bouncycastle-bcprov = "1.70"
 
@@ -33,8 +33,8 @@ chucker = "4.0.0"
 
 coil = "2.6.0"
 
-google-accompanist = "0.32.0"
-google-android-libraries-identity = "1.1.0"
+google-accompanist = "0.34.0"
+google-android-libraries-identity = "1.1.1"
 google-code-gson = "2.10.1"
 google-firebase-bom = "33.1.1"
 google-firebase-crashlytics = "3.0.2"
@@ -60,13 +60,14 @@ squareup-retrofit2 = "2.11.0"
 squareup-leakcanary = "2.12"
 
 valentinilk-shimmer = "1.3.0"
+vanniktech-android-image-cropper = "4.5.0"
 
 [libraries]
 airbnb-lottie-compose = { module = "com.airbnb.android:lottie-compose", version.ref = "airbnb-lottie-compose" }
 
 androidx-compose-bom = { module = "androidx.compose:compose-bom", version.ref = "compose-bom" }
-androidx-activity-ktx = { module = "androidx.activity:activity-ktx" }
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activity-compose" }
+androidx-activity-ktx = { module = "androidx.activity:activity-ktx" }
 androidx-camera-core = { group = "androidx.camera", name = "camera-core", version.ref = "androidx-camera" }
 androidx-camera2 = { group = "androidx.camera", name = "camera-camera2", version.ref = "androidx-camera" }
 androidx-camera-lifecycle = { group = "androidx.camera", name = "camera-lifecycle", version.ref = "androidx-camera" }
@@ -103,7 +104,7 @@ coil-gif = { module = "io.coil-kt:coil-gif", version.ref = "coil" }
 
 google-accompanist-permissions = { group = "com.google.accompanist", name = "accompanist-permissions", version.ref = "google-accompanist" }
 google-accompanist-systemuicontroller = { group = "com.google.accompanist", name = "accompanist-systemuicontroller", version.ref = "google-accompanist" }
-google-accompanist-placeholder = { group = "com.google.accompanist", name = "accompanist-systemuicontroller", version.ref = "google-accompanist" }
+google-accompanist-placeholder = { group = "com.google.accompanist", name = "accompanist-placeholder", version.ref = "google-accompanist" }
 google-android-libraries-identity = { module = "com.google.android.libraries.identity.googleid:googleid", version.ref = "google-android-libraries-identity" }
 google-code-gson = { module = "com.google.code.gson:gson", version.ref = "google-code-gson" }
 google-firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "google-firebase-bom" }
@@ -140,6 +141,7 @@ squareup-retrofit2-converter-gson = { module = "com.squareup.retrofit2:converter
 squareup-leakcanary = { module = "com.squareup.leakcanary:leakcanary-android", version.ref = "squareup-leakcanary" }
 
 valentinilk-shimmer = { module = "com.valentinilk.shimmer:compose-shimmer", version.ref = "valentinilk-shimmer" }
+vanniktech-android-image-cropper = { module = "com.vanniktech:android-image-cropper", version.ref = "vanniktech-android-image-cropper" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "plugin-agp" }
