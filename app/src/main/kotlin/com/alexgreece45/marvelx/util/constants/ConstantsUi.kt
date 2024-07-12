@@ -58,7 +58,7 @@ object ConstantsUi {
      * The size for profile images to be used in lists, expressed in density-independent
      * pixels (dp).
      */
-    val PROFILE_IMAGE_SMALL_SIZE = PROFILE_IMAGE_FULL_SIZE / 2.5f
+    val PROFILE_IMAGE_SMALL_SIZE = PROFILE_IMAGE_NORMAL_SIZE / 2.5f
 
     /**
      * The size for generic images in tiles, express in density-independent pixels (dp).

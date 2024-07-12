@@ -177,6 +177,14 @@ sealed class Screen(
             "$baseRoute/$qrCodeScanErrorMessage"
     }
 
+    data object ProfileImageScreen : Screen(
+        baseRoute = "profileImageScreen",
+        navArgs = listOf(NavItem.FullName)
+    ) {
+        fun createNavRoute(fullName: String): String =
+            "$baseRoute/$fullName"
+    }
+
     /**
      * Profile Screen --> Profile Details
      */
@@ -269,7 +277,7 @@ enum class NavItem(val key: String, val type: NavType<*>) {
     FullName(key = NavItemKey.fullName, type = NavType.StringType),
     TabIndex(key = NavItemKey.tabIndex, type = NavType.IntType),
     PreviousScreenRoute(key = NavItemKey.previousScreenRoute, type = NavType.StringType),
-    QrCodeScanErrorMessage(key = NavItemKey.qrCodeScanErrorMessage, type = NavType.StringType)
+    QrCodeScanErrorMessage(key = NavItemKey.qrCodeScanErrorMessage, type = NavType.StringType),
 }
 
 /**
@@ -285,7 +293,7 @@ enum class NavDeepLinkItem(val key: String) {
  * Contains the keys used for normal and deep link navigation arguments. This object provides
  * consistent naming, and compile-time hardcoded values.
  */
-object NavItemKey {
+private object NavItemKey {
     const val characterId = "characterId"
     const val comicId = "comicId"
     const val toolbarTitlePrefix = "toolbarTitlePrefix"
@@ -300,4 +308,5 @@ object NavItemKey {
     const val listingId = "listingId"
     const val qrCodeScanErrorMessage = "qrCodeScanErrorMessage"
     const val previousScreenRoute = "previousScreenRoute"
+    const val profileImageUri = "profileImageUri"
 }

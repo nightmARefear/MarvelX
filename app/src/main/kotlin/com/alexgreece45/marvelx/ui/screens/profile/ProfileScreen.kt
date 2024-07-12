@@ -51,8 +51,8 @@ import com.alexgreece45.marvelx.ui.components.IconData
 import com.alexgreece45.marvelx.ui.components.ProfileHeader
 import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
 import com.alexgreece45.marvelx.ui.components.WrapAsyncImage
-import com.alexgreece45.marvelx.ui.components.WrapButton
 import com.alexgreece45.marvelx.ui.components.WrapModalBottomSheetLayout
+import com.alexgreece45.marvelx.ui.components.WrapTextButton
 import com.alexgreece45.marvelx.ui.components.effect.ObserveUiEffect
 import com.alexgreece45.marvelx.ui.components.error.ContentErrorScreen
 import com.alexgreece45.marvelx.ui.components.icons.NavigateIcon
@@ -164,8 +164,9 @@ fun ProfileScreen(
                             cropImageOptions = CropImageOptions(
                                 cropShape = CropImageView.CropShape.OVAL,
                                 guidelines = CropImageView.Guidelines.ON_TOUCH,
+                                autoZoomEnabled = false,
                                 multiTouchEnabled = true,
-                                maxZoom = 2,
+                                maxZoom = 3,
                                 minCropResultWidth = uiEffect.imageSize,
                                 minCropResultHeight = uiEffect.imageSize,
                                 maxCropResultWidth = uiEffect.imageSize,
@@ -301,13 +302,16 @@ private fun CroppedImage(
     onSaveClicked: () -> Unit
 ) {
     ContentScreen(
-        isLoading = false,
+        isLoading = isLoading,
         showToolbar = true,
         toolbarTitle = stringResource(R.string.profile_screen_cropped_cropped_image_toolbar_title),
         navigableAction = ScreenNavigableAction.Closeable(onClose = onCloseClicked),
         toolbarActionsContent = {
-            WrapButton(onClick = onSaveClicked) {
-                Text(text = stringResource(R.string.profile_screen_cropped_cropped_image_label_button_save))
+            WrapTextButton(onClick = onSaveClicked) {
+                Text(
+                    text = stringResource(R.string.profile_screen_cropped_cropped_image_label_button_save),
+                    style = MaterialTheme.typography.h6
+                )
             }
         }
     ) { paddingValues ->

@@ -162,25 +162,6 @@ fun ProfileDetailsScreen(
         }
     }
 
-    state.fullScreenErrorView?.let { errorView ->
-        ContentErrorScreen(
-            errorTitle = errorView.errorTitle,
-            errorSubtitle = errorView.errorSubtitle,
-            onClose = { onEventSent(errorView.onCloseClicked) },
-            errorButtonLayout = errorView.errorButtonLayout
-        )
-    }
-
-    state.alertDialogError?.let { alertDialogData ->
-        AlertDialogError(
-            isVisible = true,
-            title = alertDialogData.errorTitle,
-            errorMessage = alertDialogData.errorSubtitle,
-            dismissButton = alertDialogData.dismissAlertDialogButton,
-            confirmButton = alertDialogData.confirmAlertDialogButton
-        )
-    }
-
     WrapModalBottomSheetLayout(
         sheetState = modalBottomSheetState,
         sheetContent = {
@@ -411,6 +392,25 @@ fun ProfileDetailsScreen(
                 }
             }
         }
+    }
+
+    state.fullScreenErrorView?.let { errorView ->
+        ContentErrorScreen(
+            errorTitle = errorView.errorTitle,
+            errorSubtitle = errorView.errorSubtitle,
+            onClose = { onEventSent(errorView.onCloseClicked) },
+            errorButtonLayout = errorView.errorButtonLayout
+        )
+    }
+
+    state.alertDialogError?.let { alertDialogData ->
+        AlertDialogError(
+            isVisible = true,
+            title = alertDialogData.errorTitle,
+            errorMessage = alertDialogData.errorSubtitle,
+            dismissButton = alertDialogData.dismissAlertDialogButton,
+            confirmButton = alertDialogData.confirmAlertDialogButton
+        )
     }
 
     BackHandler(modalBottomSheetState.isVisible) {

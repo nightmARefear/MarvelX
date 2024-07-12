@@ -20,15 +20,16 @@ sealed class DeepLinkActionType(open val name: String) {
     data class Invalid(override val name: String) : DeepLinkActionType(name = name)
 
     companion object {
+        private val deeplinkActionTypes: List<DeepLinkActionType> =
+            listOf(
+                View, Action
+            )
+
         /**
          * Returns the [DeepLinkActionType] based on the given [name]. If it could not be found,
          * [Invalid] with the [name] is returned.
          */
         fun fromName(name: String): DeepLinkActionType =
-            DeepLinkActionType::class.sealedSubclasses
-                .mapNotNull { it.objectInstance }
-                .firstOrNull { deepLinkActionType ->
-                    deepLinkActionType.name == name
-                } ?: Invalid(name = name)
+            deeplinkActionTypes.firstOrNull { it.name == name } ?: Invalid(name)
     }
 }

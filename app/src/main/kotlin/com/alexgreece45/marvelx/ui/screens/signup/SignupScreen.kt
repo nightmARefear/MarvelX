@@ -33,11 +33,11 @@ import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.network_logic.models_api.user.Gender
 import com.alexgreece45.marvelx.ui.components.AlertDialogButton
 import com.alexgreece45.marvelx.ui.components.AlertDialogError
-import com.alexgreece45.marvelx.ui.components.WrapButton
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.ExposedDropdownMenu
 import com.alexgreece45.marvelx.ui.components.OutlinedTextFieldValidation
 import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
+import com.alexgreece45.marvelx.ui.components.WrapButton
 import com.alexgreece45.marvelx.ui.components.model.ErrorButtonType
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.VSpacer
@@ -134,7 +134,7 @@ fun SignUpScreen(
                         label = stringResource(R.string.generic_label_first_name),
                         errorMessage = state.firstNameValidationResult.messages.firstOrNull()
                             .orEmpty(),
-                        isError = state.firstNameValidationResult.isValid.not() &&
+                        isError = !state.firstNameValidationResult.isValid &&
                                 state.firstNameValidationResult.messages.firstOrNull() != null,
                         keyboardOptions = KeyboardOptions(
                             imeAction = ImeAction.Next
@@ -156,7 +156,7 @@ fun SignUpScreen(
                         label = stringResource(R.string.generic_label_last_name),
                         errorMessage = state.lastNameValidationResult.messages.firstOrNull()
                             .orEmpty(),
-                        isError = state.lastNameValidationResult.isValid.not() &&
+                        isError = !state.lastNameValidationResult.isValid &&
                                 state.lastNameValidationResult.messages.firstOrNull() != null,
                         keyboardOptions = KeyboardOptions(
                             imeAction = ImeAction.Next
@@ -221,7 +221,7 @@ fun SignUpScreen(
                         ),
                     label = stringResource(R.string.generic_label_email),
                     errorMessage = state.emailValidationResult.messages.firstOrNull().orEmpty(),
-                    isError = state.emailValidationResult.isValid.not() &&
+                    isError = !state.emailValidationResult.isValid &&
                             state.emailValidationResult.messages.firstOrNull() != null,
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Email,
@@ -272,7 +272,7 @@ fun SignUpScreen(
                     },
                     errorMessage = state.passwordValidationResult.messages.firstOrNull()
                         .orEmpty(),
-                    isError = state.passwordValidationResult.isValid.not() &&
+                    isError = !state.passwordValidationResult.isValid &&
                             state.passwordValidationResult.messages.firstOrNull() != null,
                     visualTransformation = if (state.isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                     keyboardOptions = KeyboardOptions(

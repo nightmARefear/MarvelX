@@ -38,28 +38,18 @@ fun EditProfileDetailsScreen(
     onEventSent: (event: EditProfileDetailsContract.Event) -> Unit,
     state: EditProfileDetailsContract.State,
     effect: Flow<EditProfileDetailsContract.Effect>,
-    popBackStack: () -> Unit
+    navigateUp: () -> Unit
 ) {
     LaunchedEffect(Unit) {
         onEventSent(EditProfileDetailsContract.Event.Init)
 
         effect.collect {
             when (it) {
-                EditProfileDetailsContract.Effect.Navigation.PopBackStack -> {
-                    popBackStack()
+                EditProfileDetailsContract.Effect.Navigation.NavigateUp -> {
+                    navigateUp()
                 }
             }
         }
-    }
-
-    state.errorView?.let { errorView ->
-        ContentErrorScreen(
-            errorTitle = errorView.errorTitle,
-            errorSubtitle = errorView.errorSubtitle,
-            onClose = { onEventSent(errorView.onCloseClicked) },
-            errorButtonLayout = errorView.errorButtonLayout
-        )
-        return
     }
 
     ContentScreen(
@@ -128,7 +118,7 @@ fun EditProfileDetailsScreen(
                         ExposedDropdownMenu(
                             label = stringResource(R.string.generic_label_gender),
                             expanded = state.isGenderDropDownExpanded,
-//                                modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier.fillMaxWidth(),
                             value = stringResource(profileDetailsUi.gender.currentValue.label),
                             onDismissRequest = { onEventSent(EditProfileDetailsContract.Event.GenderField.OnDismiss) },
                             onExpandedChange = { onEventSent(EditProfileDetailsContract.Event.GenderField.OnClick) },
@@ -137,11 +127,12 @@ fun EditProfileDetailsScreen(
                                 DropdownMenuItem(
                                     onClick = {
                                         onEventSent(
-                                            EditProfileDetailsContract.Event.GenderField.OnValueChanged(
+                                            EditProfileDetailsContract.Event.GenderField.OnGenderSelected(
                                                 gender
                                             )
                                         )
-                                    }
+                                    },
+                                    modifier = Modifier.fillMaxWidth()
                                 ) {
                                     Text(
                                         text = stringResource(gender.label)
@@ -160,6 +151,15 @@ fun EditProfileDetailsScreen(
                 }
             }
         }
+    }
+
+    state.errorView?.let { errorView ->
+        ContentErrorScreen(
+            errorTitle = errorView.errorTitle,
+            errorSubtitle = errorView.errorSubtitle,
+            onClose = { onEventSent(errorView.onCloseClicked) },
+            errorButtonLayout = errorView.errorButtonLayout
+        )
     }
 }
 

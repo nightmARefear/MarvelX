@@ -1,6 +1,5 @@
 package com.alexgreece45.marvelx.ui.screens.profile
 
-import android.graphics.Bitmap.CompressFormat
 import android.net.Uri
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
@@ -20,7 +19,9 @@ import com.alexgreece45.marvelx.ui.components.model.BottomSheetContentItem
 import com.alexgreece45.marvelx.ui.components.model.BottomSheetContentItemIconData
 import com.alexgreece45.marvelx.ui.components.model.ErrorButtonType
 import com.alexgreece45.marvelx.ui.helper.model.DeepLinkAction
+import com.alexgreece45.marvelx.ui.navigation.NavArgHelper
 import com.alexgreece45.marvelx.ui.navigation.Screen
+import com.alexgreece45.marvelx.ui.navigation.models.NavArg
 import com.alexgreece45.marvelx.ui.screens.profile.model.ProfileBottomSheetType
 import com.alexgreece45.marvelx.ui.screens.profile.model.ProfileErrorAlertDialog
 import com.alexgreece45.marvelx.ui.screens.profile.model.ProfileScreenErrorView
@@ -128,6 +129,7 @@ sealed interface ProfileContract {
             data object NavigateUp : Navigation()
             data object NavigateToHomeScreen : Navigation()
             data class NavigateToQrCodeScreen(val previousScreenRoute: String) : Navigation()
+            data class NavigateToProfileImageScreen(val fullName: String) : Navigation()
             data class NavigateToProfileDetailsScreen(val userId: Int) : Navigation()
             data object NavigateToPrivacySettingsScreen : Navigation()
             data object NavigateToFaqScreen : Navigation()
@@ -219,7 +221,15 @@ class ProfileViewModel(
             }
 
             ProfileContract.Event.ProfileImage.BottomSheet.OnViewImageClicked -> {
+                hideBottomSheet()
 
+                NavArgHelper.setArgument(
+                    navArg = NavArg.ProfileImageUri,
+                    value = currentState.profileDetails?.profileImageUrl.orEmpty()
+                )
+                setEffect {
+                    ProfileContract.Effect.Navigation.NavigateToProfileImageScreen(fullName = currentState.profileDetails?.fullName.orEmpty())
+                }
             }
 
             is ProfileContract.Event.ProfileImage.OnImageSelected -> {

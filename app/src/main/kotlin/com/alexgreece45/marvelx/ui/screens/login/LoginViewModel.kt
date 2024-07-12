@@ -201,7 +201,7 @@ class LoginViewModel(
             LoginEvent.OnPasswordVisibilityIconClick -> {
                 setState {
                     copy(
-                        isPasswordVisible = currentState.isPasswordVisible.not()
+                        isPasswordVisible = !isPasswordVisible
                     )
                 }
             }

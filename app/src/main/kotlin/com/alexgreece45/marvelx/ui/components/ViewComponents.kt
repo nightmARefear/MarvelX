@@ -331,7 +331,7 @@ private fun BottomBar(
  * @param selectedItemTopHorizontalColor the [Color] of the top horizontal axis of the selected item
  * */
 @Composable
-fun BottomNavigationBar(
+private fun BottomNavigationBar(
     navController: NavController,
     items: List<BottomBarItem>,
     backgroundColor: Color? = null,
@@ -551,7 +551,8 @@ fun ContentScreen(
                 Toolbar(
                     navigableAction = navigableAction,
                     toolbarTitle = toolbarTitle,
-                    toolbarActions = if (!isLoading) toolbarActions else emptyList()
+                    toolbarActions = if (!isLoading) toolbarActions else emptyList(),
+                    toolbarActionsContent = toolbarActionsContent
                 )
             }
         },
@@ -671,81 +672,79 @@ private fun Toolbar(
     val keyboard = LocalSoftwareKeyboardController.current
 
     TopAppBar(
-        modifier = Modifier.fillMaxWidth(),
         backgroundColor = MaterialTheme.colors.background,
         elevation = 0.dp,
         contentPadding = screenPaddingsNone()
     ) {
         CompositionLocalProvider(LocalContentAlpha provides ContentAlpha.high) {
-            // Navigable action button; either `Close` or `Back`.
-            if (navigableAction !is ScreenNavigableAction.None) {
-                ThrottledIconButton(
-                    onClick = {
-                        keyboard?.hide()
-                        when (navigableAction) {
-                            is ScreenNavigableAction.Closeable -> navigableAction.onClose()
-                            is ScreenNavigableAction.Backable -> navigableAction.onBack()
-                            else -> {}
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                // Navigable action button; either `Close` or `Back`.
+                if (navigableAction !is ScreenNavigableAction.None) {
+                    ThrottledIconButton(
+                        onClick = {
+                            keyboard?.hide()
+                            when (navigableAction) {
+                                is ScreenNavigableAction.Closeable -> navigableAction.onClose()
+                                is ScreenNavigableAction.Backable -> navigableAction.onBack()
+                                else -> {}
+                            }
                         }
+                    ) {
+                        Icon(
+                            imageVector = when (navigableAction) {
+                                is ScreenNavigableAction.Closeable -> Icons.Filled.Close
+                                else -> Icons.AutoMirrored.Filled.ArrowBack
+                            },
+                            contentDescription = when (navigableAction) {
+                                is ScreenNavigableAction.Closeable -> stringResource(R.string.content_description_close)
+                                else -> stringResource(R.string.content_description_back)
+                            }
+                        )
                     }
-                ) {
-                    Icon(
-                        imageVector = when (navigableAction) {
-                            is ScreenNavigableAction.Closeable -> Icons.Filled.Close
-                            else -> Icons.AutoMirrored.Filled.ArrowBack
-                        },
-                        contentDescription = when (navigableAction) {
-                            is ScreenNavigableAction.Closeable -> stringResource(R.string.content_description_close)
-                            else -> stringResource(R.string.content_description_back)
-                        }
-                    )
-                }
-                HSpacer.Tiny()
-            }
-
-            when (toolbarTitle == null) {
-                true -> {
-                    // Ensures that the toolbar actions are pinned to the right-most of the screen.
-                    Box(modifier = Modifier.weight(1f))
+                    HSpacer.Tiny()
                 }
 
-                false -> {
-                    if (navigableAction is ScreenNavigableAction.None) {
-                        HSpacer.Custom(DEFAULT_SCREEN_PADDING)
+                when (toolbarTitle == null) {
+                    true -> {
+                        // Ensures that the toolbar actions are pinned to the right-most of the screen.
+                        Box(modifier = Modifier.weight(1f))
                     }
 
-                    Text(
-                        text = toolbarTitle,
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(end = if (toolbarActions?.isEmpty() == true) SPACING_TINY.dp else 0.dp),
-                        overflow = TextOverflow.Ellipsis,
-                        maxLines = 1,
-                        style = MaterialTheme.typography.h5
-                    )
+                    false -> {
+                        if (navigableAction is ScreenNavigableAction.None) {
+                            HSpacer.Custom(DEFAULT_SCREEN_PADDING)
+                        }
+
+                        Text(
+                            text = toolbarTitle,
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(end = if (toolbarActions?.isEmpty() == true) SPACING_TINY.dp else 0.dp),
+                            overflow = TextOverflow.Ellipsis,
+                            maxLines = 1,
+                            style = MaterialTheme.typography.h5
+                        )
+                    }
                 }
-            }
 
-            toolbarActionsContent?.let { content ->
-                Box(modifier = Modifier.weight(1f)) // Stick content to the far right side of the screen.
-                content()
-            }
+                toolbarActionsContent?.let { content -> content() }
 
-            toolbarActions?.sortedBy { it.order }?.forEach { toolbarAction ->
-                IconButton(
-                    onClick = toolbarAction.onClick,
-                    enabled = toolbarAction.iconData.enabled
-                ) {
-                    val iconTintAlpha =
-                        if (toolbarAction.iconData.enabled) LocalContentAlpha.current else ContentAlpha.disabled
-                    Icon(
-                        painter = painterResource(toolbarAction.iconData.iconResource),
-                        contentDescription = stringResource(toolbarAction.iconData.contentDescription),
-                        modifier = Modifier.size(SPACING_LARGE.dp),
-                        // TODO: To be reviewed.
-                        tint = toolbarAction.iconData.tint?.copy(alpha = iconTintAlpha)
-                            ?: LocalContentColor.current.copy(alpha = iconTintAlpha)
-                    )
+                toolbarActions?.sortedBy { it.order }?.forEach { toolbarAction ->
+                    IconButton(
+                        onClick = toolbarAction.onClick,
+                        enabled = toolbarAction.iconData.enabled
+                    ) {
+                        val iconTintAlpha =
+                            if (toolbarAction.iconData.enabled) LocalContentAlpha.current else ContentAlpha.disabled
+                        Icon(
+                            painter = painterResource(toolbarAction.iconData.iconResource),
+                            contentDescription = stringResource(toolbarAction.iconData.contentDescription),
+                            modifier = Modifier.size(SPACING_LARGE.dp),
+                            // TODO: To be reviewed.
+                            tint = toolbarAction.iconData.tint?.copy(alpha = iconTintAlpha)
+                                ?: LocalContentColor.current.copy(alpha = iconTintAlpha)
+                        )
+                    }
                 }
             }
         }
@@ -1206,15 +1205,16 @@ fun ExposedDropdownMenu(
     content: @Composable ColumnScope.() -> Unit
 ) {
     ExposedDropdownMenuBox(
-        modifier = modifier,
         expanded = expanded,
         onExpandedChange = { onExpandedChange?.invoke() },
+        modifier = modifier
     ) {
         OutlinedTextField(
             value = TextFieldValue(
                 text = value.orEmpty()
             ),
             onValueChange = {},
+            modifier = Modifier.fillMaxWidth(),
             readOnly = true,
             label = {
                 Text(
@@ -1231,6 +1231,7 @@ fun ExposedDropdownMenu(
         ExposedDropdownMenu(
             expanded = expanded,
             onDismissRequest = { onDismissRequest?.invoke() },
+            modifier = Modifier.fillMaxWidth(),
             content = content
         )
     }
@@ -1382,7 +1383,6 @@ data class AlertDialogButton(
  * A wrapper for [AlertDialog] providing additional functionality and custom styling. Avoid using the
  * native one. Use this wrapper instead.
  *
- * @param modifier          The modifier to be applied.
  * @param isVisible         Defines whether this alert is visible.
  * @param title             The title of this dialog.
  * @param errorMessage      The error message of this dialog.
@@ -1400,7 +1400,6 @@ data class AlertDialogButton(
  */
 @Composable
 fun AlertDialogError(
-    modifier: Modifier = Modifier,
     isVisible: Boolean,
     title: String,
     errorMessage: String,
@@ -1414,7 +1413,6 @@ fun AlertDialogError(
 ) {
     if (!isVisible) return
     AlertDialog(
-        modifier = modifier,
         title = {
             Text(
                 text = title,

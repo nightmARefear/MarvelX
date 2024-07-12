@@ -39,6 +39,8 @@ import com.alexgreece45.marvelx.ui.screens.profile.editProfileDetails.EditProfil
 import com.alexgreece45.marvelx.ui.screens.profile.editProfileDetails.EditProfileDetailsViewModel
 import com.alexgreece45.marvelx.ui.screens.profile.faq.FaqScreen
 import com.alexgreece45.marvelx.ui.screens.profile.faq.FaqViewModel
+import com.alexgreece45.marvelx.ui.screens.profile.image.ProfileImageScreen
+import com.alexgreece45.marvelx.ui.screens.profile.image.ProfileImageViewModel
 import com.alexgreece45.marvelx.ui.screens.profile.privacySettings.PrivacySettingsScreen
 import com.alexgreece45.marvelx.ui.screens.profile.privacySettings.PrivacySettingsViewModel
 import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.ProfileDetailsContract
@@ -356,6 +358,12 @@ fun NavGraph(navController: NavHostController) {
                             }
                         }
 
+                        is ProfileContract.Effect.Navigation.NavigateToProfileImageScreen -> {
+                            navController.navigate(
+                                Screen.ProfileImageScreen.createNavRoute(navigationEffect.fullName)
+                            )
+                        }
+
                         is ProfileContract.Effect.Navigation.NavigateToProfileDetailsScreen -> {
                             navController.navigate(
                                 Screen.ProfileDetailsScreen.createNavRoute(
@@ -387,6 +395,17 @@ fun NavGraph(navController: NavHostController) {
                         deepLinkAction = deepLinkAction
                     )
                 }
+            )
+        }
+
+        composable(Screen.ProfileImageScreen) { navBackStackEntry ->
+            val viewModel = koinViewModel<ProfileImageViewModel>()
+            ProfileImageScreen(
+                onEventSent = viewModel::setEvent,
+                state = viewModel.uiState.collectAsStateWithLifecycle().value,
+                effect = viewModel.uiEffect,
+                fullName = navBackStackEntry.arguments?.getString(NavItem.FullName.key).orEmpty(),
+                navigateUp = navController::navigateUp,
             )
         }
 
@@ -440,7 +459,7 @@ fun NavGraph(navController: NavHostController) {
                 onEventSent = viewModel::setEvent,
                 state = viewModel.uiState.collectAsStateWithLifecycle().value,
                 effect = viewModel.uiEffect,
-                popBackStack = navController::popBackStack,
+                navigateUp = navController::navigateUp,
             )
         }
 

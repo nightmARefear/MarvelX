@@ -106,6 +106,7 @@ import com.alexgreece45.marvelx.ui.screens.otp.OtpViewModel
 import com.alexgreece45.marvelx.ui.screens.profile.ProfileViewModel
 import com.alexgreece45.marvelx.ui.screens.profile.editProfileDetails.EditProfileDetailsViewModel
 import com.alexgreece45.marvelx.ui.screens.profile.faq.FaqViewModel
+import com.alexgreece45.marvelx.ui.screens.profile.image.ProfileImageViewModel
 import com.alexgreece45.marvelx.ui.screens.profile.privacySettings.PrivacySettingsViewModel
 import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.ProfileDetailsViewModel
 import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.stats.ProfileDetailsStatsViewModel
@@ -275,6 +276,7 @@ private val viewModelModule = module {
     viewModel { CharacterViewModel(get(), get()) }
     viewModel { ComicViewModel(get()) }
     viewModel { ProfileViewModel(get(), get(), get(), get()) }
+    viewModel { ProfileImageViewModel() }
     viewModel { ProfileDetailsViewModel(get(), get()) }
     viewModel { EditProfileDetailsViewModel(get(), get(), get(), get()) }
     viewModel { ProfileDetailsStatsViewModel(get()) }

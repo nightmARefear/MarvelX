@@ -270,7 +270,7 @@ class ActivityViewModel : BaseViewModel<ActivityEvent, ActivityState, ActivityEf
     }
 
     /**
-     * Returns the websocket client responsible for handling connections, terminations, and more.
+     * Returns the websocket listener responsible for handling connections, terminations, and more.
      */
     private suspend fun getWebSocketListener(): WebSocketListener {
         val listener = CoroutineWebSocketListener()

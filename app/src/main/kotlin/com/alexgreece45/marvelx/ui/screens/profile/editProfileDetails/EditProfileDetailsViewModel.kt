@@ -63,7 +63,7 @@ sealed interface EditProfileDetailsContract {
         sealed interface GenderField : Event {
             data object OnDismiss : GenderField
             data object OnClick : GenderField
-            data class OnValueChanged(val value: Gender) : GenderField
+            data class OnGenderSelected(val value: Gender) : GenderField
         }
 
         sealed interface EmailField : Event {
@@ -96,7 +96,7 @@ sealed interface EditProfileDetailsContract {
 
     sealed interface Effect : BaseEffect {
         sealed interface Navigation : Effect {
-            data object PopBackStack : Navigation
+            data object NavigateUp : Navigation
         }
     }
 }
@@ -166,7 +166,7 @@ class EditProfileDetailsViewModel(
                 }
             }
 
-            is EditProfileDetailsContract.Event.GenderField.OnValueChanged -> {
+            is EditProfileDetailsContract.Event.GenderField.OnGenderSelected -> {
                 viewModelScope.launch {
                     validateField(
                         value = event.value.key,
@@ -238,7 +238,7 @@ class EditProfileDetailsViewModel(
                     showAlertDialogForUnsavedChanges()
                 } else {
                     setEffect {
-                        EditProfileDetailsContract.Effect.Navigation.PopBackStack
+                        EditProfileDetailsContract.Effect.Navigation.NavigateUp
                     }
                 }
             }
@@ -334,11 +334,11 @@ class EditProfileDetailsViewModel(
                                             currentValue = profileDetails.gender,
                                             label = R.string.generic_label_gender,
                                             onValueChanged = { value ->
-                                                EditProfileDetailsContract.Event.GenderField.OnValueChanged(
+                                                EditProfileDetailsContract.Event.GenderField.OnGenderSelected(
                                                     value
                                                 )
                                             },
-                                            onResetIconClicked = EditProfileDetailsContract.Event.GenderField.OnValueChanged(
+                                            onResetIconClicked = EditProfileDetailsContract.Event.GenderField.OnGenderSelected(
                                                 value = profileDetails.gender
                                             )
                                         ),
@@ -381,7 +381,7 @@ class EditProfileDetailsViewModel(
                             primaryButtonLabel = resourceProvider.getString(R.string.generic_ok_button),
                             onPrimaryButtonClicked = {
                                 setEffect {
-                                    EditProfileDetailsContract.Effect.Navigation.PopBackStack
+                                    EditProfileDetailsContract.Effect.Navigation.NavigateUp
                                 }
                             }
                         )
@@ -410,7 +410,7 @@ class EditProfileDetailsViewModel(
                                 )
                             }
                             setEffect {
-                                EditProfileDetailsContract.Effect.Navigation.PopBackStack
+                                EditProfileDetailsContract.Effect.Navigation.NavigateUp
                             }
                         }
 
@@ -520,7 +520,7 @@ class EditProfileDetailsViewModel(
                         buttonType = ErrorButtonType.Contained,
                         onClick = {
                             setEffect {
-                                EditProfileDetailsContract.Effect.Navigation.PopBackStack
+                                EditProfileDetailsContract.Effect.Navigation.NavigateUp
                             }
                         }
                     )
