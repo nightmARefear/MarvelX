@@ -6,7 +6,7 @@ import com.google.gson.annotations.SerializedName
 /**
  * The profile details of a user including the privacy settings. If [isDifferentUser] is `true`
  * then that means that the data is for another user than the currently logged in one. It should be
- * noted that [privacySettings] __must__ be non-null in this case.
+ * noted that [relationshipStatus] and [privacySettings] __must__ be non-null in this case.
  *
  * @param isDifferentUser   Whether the fetched data is for the same user as the currently logged in
  * one. Depending on its value, the UI changes accordingly -- i.e., when the value is `true`, the
@@ -20,6 +20,7 @@ import com.google.gson.annotations.SerializedName
 data class ResponseProfileDetails(
     @SerializedName("basicProfileDetails") val basicProfileDetails: ResponseBasicProfileDetails,
     @SerializedName("isDifferentUser") val isDifferentUser: Boolean,
+    @SerializedName("relationshipStatus") val relationshipStatus: String?,
     @SerializedName("privacySettings") val privacySettings: ResponsePrivacySettings?,
     @SerializedName("userStats") val userStats: ResponseUserStats
 )

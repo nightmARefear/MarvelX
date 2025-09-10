@@ -22,6 +22,7 @@ import com.alexgreece45.marvelx.util.SecurityUtil
 import com.alexgreece45.marvelx.util.constants.ConstantsInputField
 import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.launch
+import kotlin.coroutines.CoroutineContext
 
 data class LoginScreenErrorView(
     val errorTitle: String,
@@ -100,10 +101,10 @@ sealed class LoginEffect : BaseEffect {
 
         data object NavigateToForgotPasswordScreen : Navigation()
 
-        data class NavigateToAllCharactersScreen(val userId: Int) : Navigation()
+        data class NavigateToAllCharactersScreen(val userId: String) : Navigation()
 
         data class NavigateToOtpScreen(
-            val userId: Int,
+            val userId: String,
             val otpFlowType: String,
             val verificationStep: String,
             val shouldRememberUserSession: Boolean
@@ -141,7 +142,8 @@ class LoginViewModel(
     private val resourceProvider: ResourceProvider,
     private val formValidator: FormValidator,
     private val registerInteractor: RegisterInteractor,
-    private val prefKeys: PrefKeys
+    private val prefKeys: PrefKeys,
+    private val defaultDispatcher: CoroutineContext,
 ) : BaseViewModel<LoginEvent, LoginState, LoginEffect>() {
 
     override fun setInitialState(): LoginState = LoginState()
@@ -330,7 +332,8 @@ class LoginViewModel(
             registerInteractor.login(
                 email = currentState.email,
                 password = if (isLoggedInWithFirebase) "firebase" else SecurityUtil.getHashedPasswordFromString(
-                    currentState.password
+                    defaultDispatcher = defaultDispatcher,
+                    password = currentState.password
                 ).single(),
                 isLoggedInWithFirebase = isLoggedInWithFirebase
             ).collect { userPartialStatePostLogIn ->

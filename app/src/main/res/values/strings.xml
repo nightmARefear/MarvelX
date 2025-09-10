@@ -37,9 +37,10 @@
 
     // • Generic --> Chips
     <string name="generic_chip_label_add_friend">Add friend</string>
-    <string name="generic_chip_label_remove_friend">Remove friend</string>
+    <string name="generic_chip_label_unfriend">Unfriend</string>
     <string name="generic_chip_label_friends">Friends</string>
     <string name="generic_chip_label_cancel_request">Cancel request</string>
+    <string name="generic_chip_label_incoming_friend_request">Incoming friend request</string>
 
     // ERROR HANDLING
     // • Generic Errors
@@ -148,11 +149,12 @@
     <string name="all_favorite_characters_screen_toolbar_title">Favorite Characters</string>
 
     // Profile Screen
+    <string name="profile_screen_toolbar_title">Profile</string>
+
     <string name="profile_screen_profile_banner_label_welcome_back">Welcome back, %1$s!</string>
     <string name="profile_screen_profile_banner_label_see_your_profile">See your profile</string>
-    <string name="profile_screen_section_label_privacy_settings">Privacy Settings</string>
-    <string name="profile_screen_section_label_faq">Frequently Asked Questions (FAQ)</string>
-    <string name="profile_screen_section_label_scar_qr_code">Scan QR Code</string>
+    <string name="profile_screen_section_label_scan_qr_code">Scan QR Code</string>
+    <string name="profile_screen_section_label_friends">Friends</string>
     <string name="profile_screen_section_label_logout">Logout</string>
     <string name="profile_screen_bottom_sheet_label_view_profile_image">View profile image</string>
     <string name="profile_screen_bottom_sheet_label_upload_profile_image">Upload profile image</string>
@@ -191,10 +193,26 @@
     <string name="profile_details_screen_label_scan_qr_code">Scan the QR code below</string>
     <string name="profile_details_screen_label_success_block_user">This user has been blocked.</string>
     <string name="profile_details_screen_label_full_screen_error_view_button_go_back">Go back</string>
+
     <string name="profile_details_screen_label_alert_dialog_block_user_title">Block User?</string>
     <string name="profile_details_screen_label_alert_dialog_block_user_subtitle">If you block this user you won\'t be able to see each other\'s profile, and perform transactions.</string>
     <string name="profile_details_screen_label_alert_dialog_block_user_button_cancel">Cancel</string>
     <string name="profile_details_screen_label_alert_dialog_block_user_button_block">Block</string>
+
+    <string name="profile_details_screen_label_alert_dialog_title_delete_friend_request">Delete friend request</string>
+    <string name="profile_details_screen_label_alert_dialog_subtitle_delete_friend_request">Are you sure that you want to delete the pending friend request?</string>
+    <string name="profile_details_screen_label_alert_dialog_button_negative_delete_friend_request">Cancel</string>
+    <string name="profile_details_screen_label_alert_dialog_button_positive_delete_friend_request">Delete</string>
+
+    <string name="profile_details_screen_label_alert_dialog_title_accept_friend_request">Accept friend request</string>
+    <string name="profile_details_screen_label_alert_dialog_subtitle_accept_friend_request">Are you sure that you want to accept this friend request?</string>
+    <string name="profile_details_screen_label_alert_dialog_button_negative_accept_friend_request">Cancel</string>
+    <string name="profile_details_screen_label_alert_dialog_button_positive_accept_friend_request">Accept</string>
+
+    <string name="profile_details_screen_label_alert_dialog_title_delete_friend">Delete friend</string>
+    <string name="profile_details_screen_label_alert_dialog_subtitle_delete_friend">Are you sure that you want to delete this friend?</string>
+    <string name="profile_details_screen_label_alert_dialog_button_negative_delete_friend">Cancel</string>
+    <string name="profile_details_screen_label_alert_dialog_button_positive_delete_friend">Delete</string>
 
     <string name="profile_details_screen_content_description_edit_profile_details">edit profile details</string>
     <string name="profile_details_screen_content_description_qr_code">QR code</string>
@@ -202,6 +220,10 @@
     <string name="profile_details_screen_error_loading_profile_details_generic">Error loading profile details</string>
     <string name="profile_details_screen_error_loading_profile_details_user_not_exists">This user does not exist.</string>
     <string name="profile_details_screen_error_loading_profile_details_user_blocked">This user profile is not available.</string>
+    <string name="profile_details_screen_error_sending_friend_request">An error occurred whilst sending a friend request. Try again later.</string>
+    <string name="profile_details_screen_error_deleting_friend_request">An error occurred whilst deleting the friend request. Try again later.</string>
+    <string name="profile_details_screen_error_accepting_friend_request">An error occurred whilst accepting the friend request. Try again later.</string>
+    <string name="profile_details_screen_error_deleting_friend">An error occurred whilst deleting this friend. Try again later.</string>
     <string name="profile_details_screen_error_blocking_user_generic">An error occurred whilst blocking this user. Try again later.</string>
     <string name="profile_details_screen_error_blocking_user_same_user">You cannot block yourself!</string>
     <string name="profile_details_screen_error_generating_qr_code">An error occurred whilst generating the QR code.</string>
@@ -223,7 +245,15 @@
     <string name="profile_details_stats_screen_label_tab_listings">listings</string>
     <string name="profile_details_stats_screen_label_tab_favorites">favorites</string>
 
-    // Profile Screen --> Privacy Settings
+    // Settings Screen
+    <string name="screen_settings_toolbar_title">Settings</string>
+
+    <string name="screen_settings_section_label_privacy_settings">Privacy Settings</string>
+    <string name="screen_settings_section_label_faq">Frequently Asked Questions (FAQ)</string>
+
+    <string name="screen_settings_label_version">Version: %1$s</string>
+
+    // Privacy Settings Screen
     <string name="privacy_settings_screen_toolbar_title">Privacy Settings</string>
 
     <string name="privacy_settings_screen_header_label_visible_to_everyone">Visible to everyone</string>
@@ -234,7 +264,7 @@
     <string name="privacy_settings_screen_error_loading_privacy_settings">Error loading privacy settings</string>
     <string name="privacy_settings_screen_error_updating_privacy_settings">Error updating privacy settings</string>
 
-    // Profile Screen --> FAQ Screen
+    // FAQ Screen
     <string name="faq_screen_toolbar_title">Frequently Asked Questions (FAQ)</string>
 
     <string name="faq_screen_button_label_save_changes">Save changes</string>
@@ -384,9 +414,8 @@
     <string name="content_description_gender_icon_other">other gender icon</string>
     <string name="content_description_your_profile_image">Your profile image</string>
     <string name="content_description_add_friend">Add friend</string>
-    <string name="content_description_remove_friend">Remove friend</string>
+    <string name="content_description_unfriend">Unfriend</string>
     <string name="content_description_friends">Friends</string>
-    <string name="content_description_cancel_request">Cancel request</string>
     <string name="content_description_view_profile_image">View profile image</string>
     <string name="content_description_upload_profile_image">Upload profile image</string>
 

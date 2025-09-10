@@ -21,9 +21,9 @@ import kotlinx.coroutines.flow.flow
 import okio.IOException
 
 interface OtpInteractor {
-    suspend fun validateOtp(userId: Int, otp: String): Flow<ValidateOtpPartialState>
+    suspend fun validateOtp(userId: String, otp: String): Flow<ValidateOtpPartialState>
     suspend fun resendOtp(
-        userId: Int,
+        userId: String,
         verificationStep: VerificationStep
     ): Flow<ResendOtpPartialState>
 }
@@ -33,7 +33,7 @@ class OtpInteractorImpl(
     private val resourceProvider: ResourceProvider,
     private val logger: AppLogger
 ) : OtpInteractor {
-    override suspend fun validateOtp(userId: Int, otp: String): Flow<ValidateOtpPartialState> =
+    override suspend fun validateOtp(userId: String, otp: String): Flow<ValidateOtpPartialState> =
         flow {
             repository.validateOtp(userId.toString(), otp).collect {
                 when (it) {
@@ -112,7 +112,7 @@ class OtpInteractorImpl(
         }
 
     override suspend fun resendOtp(
-        userId: Int,
+        userId: String,
         verificationStep: VerificationStep
     ): Flow<ResendOtpPartialState> = flow {
         val genericErrorMessage = resourceProvider.getGenericErrorMessage()

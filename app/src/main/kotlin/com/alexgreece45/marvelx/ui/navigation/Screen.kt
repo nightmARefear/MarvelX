@@ -155,7 +155,7 @@ sealed class Screen(
         isIncludedInAutoLogout = false
     ) {
         fun createNavRoute(
-            userId: Int? = -1,
+            userId: String? = "",
             otpFlowType: String,
             verificationStep: String,
             shouldRememberUserSession: Boolean,
@@ -179,11 +179,7 @@ sealed class Screen(
 
     data object ProfileImageScreen : Screen(
         baseRoute = "profileImageScreen",
-        navArgs = listOf(NavItem.FullName)
-    ) {
-        fun createNavRoute(fullName: String): String =
-            "$baseRoute/$fullName"
-    }
+    )
 
     /**
      * Profile Screen --> Profile Details
@@ -195,7 +191,7 @@ sealed class Screen(
             deepLinkArgs = listOf(NavDeepLinkItem.UserId)
         ) {
         fun createNavRoute(
-            userId: Int,
+            userId: String,
         ): String = "$baseRoute/$userId"
     }
 
@@ -211,17 +207,21 @@ sealed class Screen(
         baseRoute = "profileDetailsStatsScreen",
         navArgs = listOf(NavItem.FullName, NavItem.UserId, NavItem.TabIndex)
     ) {
-        fun createNavRoute(fullName: String, userId: Int, tabIndex: Int): String =
+        fun createNavRoute(fullName: String, userId: String, tabIndex: Int): String =
             "$baseRoute/$fullName/$userId/$tabIndex"
     }
 
+    data object SettingsScreen : Screen(
+        baseRoute = "settingsScreen"
+    )
+
     /**
-     * Profile Screen --> FAQ
+     * Settings Screen --> FAQ
      */
     data object FaqScreen : Screen(baseRoute = "faqScreen")
 
     /**
-     * Profile Screen --> Privacy Settings
+     * Settings Screen --> Privacy Settings
      */
     data object PrivacySettingsScreen : Screen(baseRoute = "privacySettingsScreen")
 
@@ -268,7 +268,7 @@ enum class NavItem(val key: String, val type: NavType<*>) {
     CharacterId(key = NavItemKey.characterId, type = NavType.IntType),
     ComicId(key = NavItemKey.comicId, type = NavType.IntType),
     ToolbarTitlePrefix(key = NavItemKey.toolbarTitlePrefix, type = NavType.StringType),
-    UserId(key = NavItemKey.userId, type = NavType.IntType),
+    UserId(key = NavItemKey.userId, type = NavType.StringType),
     OtpFlowType(key = NavItemKey.otpFlowType, type = NavType.StringType),
     VerificationStep(key = NavItemKey.verificationStep, type = NavType.StringType),
     ShouldRememberUserSession(key = NavItemKey.shouldRememberUserSession, type = NavType.BoolType),

@@ -65,7 +65,7 @@ import com.alexgreece45.marvelx.ui.screens.allCharacters.uiModel.CharacterCardUi
 import com.alexgreece45.marvelx.util.DEFAULT_SCREEN_PADDING
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.SPACING_TINY
-import com.alexgreece45.marvelx.util.extensions.getPendingDeepLinkAction
+import com.alexgreece45.marvelx.util.extensions.getAndRemovePendingDeepLinkAction
 import com.alexgreece45.marvelx.util.extensions.hideIfVisible
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
@@ -94,8 +94,8 @@ fun AllCharactersScreen(
     val keyboard = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
 
-    OneTimeLaunchedEffect {
-        onEventSent(AllCharactersEvent.Init(context.getPendingDeepLinkAction()))
+    LaunchedEffect(Unit) {
+        onEventSent(AllCharactersEvent.Init(context.getAndRemovePendingDeepLinkAction()))
     }
 
     LaunchedEffect(initLock) {

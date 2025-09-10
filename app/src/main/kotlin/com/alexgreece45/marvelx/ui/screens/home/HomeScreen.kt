@@ -32,7 +32,7 @@ fun HomeScreen(
     navigateToLoginScreen: () -> Unit,
     navigateToSignupScreen: () -> Unit,
     navigateToAllCharactersScreen: () -> Unit,
-    navigateToOtpScreen: (Int, String, String, Boolean) -> Unit,
+    navigateToOtpScreen: (String, String, String, Boolean) -> Unit,
     popBackStack: () -> Boolean
 ) {
     OneTimeLaunchedEffect {

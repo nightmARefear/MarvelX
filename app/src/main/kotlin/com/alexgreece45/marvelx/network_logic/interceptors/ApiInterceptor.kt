@@ -12,11 +12,13 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
 import okio.IOException
+import org.koin.core.annotation.Single
 
 /**
  * Interceptor class used by [OkHttpClient] to intercept network requests. All required headers are
  * added here.
  */
+@Single
 class ApiInterceptor(
     private val resourceProvider: ResourceProvider,
     private val configLogic: ConfigLogic,

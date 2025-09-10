@@ -9,6 +9,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
@@ -112,6 +113,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.ui.components.model.AutofillData
 import com.alexgreece45.marvelx.ui.components.model.ErrorButtonType
+import com.alexgreece45.marvelx.ui.components.model.SnackbarStateData
 import com.alexgreece45.marvelx.util.BOTTOM_NAVIGATION_BAR_ITEM_LABEL_MAX_LENGTH
 import com.alexgreece45.marvelx.util.BOTTOM_NAVIGATION_BAR_MAX_ITEMS
 import com.alexgreece45.marvelx.util.BOTTOM_NAVIGATION_BAR_MIN_ITEMS
@@ -447,6 +449,11 @@ private fun BottomNavigationBar(
 
 /**
  * Defines the required data to draw an icon.
+ *
+ * @param iconResource The resource ID of the icon.
+ * @param contentDescription The resource ID of the content description of the icon.
+ * @param tint The color to paint this icon.
+ * @param enabled Whether the icon is enabled.
  */
 data class IconData(
     @DrawableRes val iconResource: Int,
@@ -526,7 +533,7 @@ fun ContentScreen(
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
     snackbarStateData: SnackbarStateData? = null,
     fabData: FabData? = null,
-    stickyBottom: @Composable (() -> Unit)? = null,
+    stickyBottom: @Composable (BoxScope.() -> Unit)? = null,
     paddingValues: PaddingValues? = null,
     content: @Composable (PaddingValues) -> Unit
 ) {
@@ -795,7 +802,7 @@ fun ContentScreenHeader(
         // Title.
         Text(
             text = title,
-            style = MaterialTheme.typography.h4
+            style = MaterialTheme.typography.h5
         )
         VSpacer.Large()
 

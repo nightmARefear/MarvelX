@@ -1,8 +1,8 @@
 package com.alexgreece45.marvelx.ui.screens.profile.profileDetails.model
 
 import androidx.annotation.StringRes
+import androidx.compose.ui.text.input.KeyboardType
 import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.BasicProfileDetailsDomain
-import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.ProfileDetailsDomain
 import com.alexgreece45.marvelx.network_logic.models_api.user.Gender
 import com.alexgreece45.marvelx.ui.screens.profile.editProfileDetails.EditProfileDetailsContract
 import com.alexgreece45.marvelx.util.FormValidationResult
@@ -34,6 +34,7 @@ fun ProfileDetailsUi.toBasicProfileDetailsDomain(): BasicProfileDetailsDomain =
  * the state of the `save changes` button.
  * @param currentValue          The current value of this item.
  * @param label                 The label of this item.
+ * @param keyboardType          The keyboard type to be applied to the text-field of this item.
  * @param onValueChanged        The action(s) to invoke when the value of this item changes.
  * @param onResetIconClicked    The action(s) to invoke when the reset icon of this item is clicked.
  * @param validationResult      The validation result of this item. It has the initial value of
@@ -43,6 +44,7 @@ data class EditProfileDetailsItemUi<T>(
     val initialValue: T,
     val currentValue: T,
     @StringRes val label: Int,
+    val keyboardType: KeyboardType = KeyboardType.Text,
     val onValueChanged: (T) -> EditProfileDetailsContract.Event,
     val onResetIconClicked: EditProfileDetailsContract.Event,
     val validationResult: FormValidationResult = FormValidationResult(isValid = true)

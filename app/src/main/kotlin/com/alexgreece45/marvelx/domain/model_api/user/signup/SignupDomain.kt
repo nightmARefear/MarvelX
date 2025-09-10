@@ -11,13 +11,13 @@ import com.alexgreece45.marvelx.domain.model_api.user.VerificationStep
  */
 data class SignupDomain(
     val verificationStep: VerificationStep,
-    val userId: Int,
+    val userId: String,
     val tempAuthCode: String
 )
 
 fun ResponseSignup.toSignupDomain(): SignupDomain =
     SignupDomain(
         verificationStep = VerificationStep.of(this.verificationStep),
-        userId = this.userId.toInt(),
+        userId = this.userId,
         tempAuthCode = this.tempAuthCode
     )

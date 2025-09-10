@@ -54,3 +54,24 @@ internal suspend fun handleApiResultNoTransformation(
     }.safeAsync {
         RepositoryResult.Failed(it.message.orEmpty())
     }
+
+/**
+ * Handles the result of an API client call, and returns the appropriate [RepositoryResult]. No data
+ * transformation is performed.
+ * If the call was successful, [RepositoryResult.Success] is returned with the response's data.
+ *
+ * @param apiResult The API result.
+ */
+internal suspend fun <A : Any> handleApiResultNoTransformationWithData(
+    apiResult: ApiResult<A>,
+): Flow<RepositoryResult<A>> =
+    flow {
+        when (apiResult) {
+            is ApiResult.Success -> emit(RepositoryResult.Success(apiResult.body))
+            is ApiResult.Error -> emit(RepositoryResult.Failed(apiResult.errorBody))
+            is ApiResult.Failed -> emit(RepositoryResult.Failed(apiResult.failureMessage))
+            ApiResult.NetworkError -> emit(RepositoryResult.NetworkError)
+        }
+    }.safeAsync {
+        RepositoryResult.Failed(it.message.orEmpty())
+    }

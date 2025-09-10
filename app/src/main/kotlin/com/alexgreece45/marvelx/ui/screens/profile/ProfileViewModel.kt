@@ -5,8 +5,6 @@ import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.controllers.PrefKeys
 import com.alexgreece45.marvelx.domain.interactors.GetCurrentUserProfileDetailsPartialState
-import com.alexgreece45.marvelx.domain.interactors.LoginInteractor
-import com.alexgreece45.marvelx.domain.interactors.LogoutPartialState
 import com.alexgreece45.marvelx.domain.interactors.UserInteractor
 import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.BasicProfileDetailsDomain
 import com.alexgreece45.marvelx.mvi.BaseEffect
@@ -18,6 +16,7 @@ import com.alexgreece45.marvelx.ui.components.IconData
 import com.alexgreece45.marvelx.ui.components.model.BottomSheetContentItem
 import com.alexgreece45.marvelx.ui.components.model.BottomSheetContentItemIconData
 import com.alexgreece45.marvelx.ui.components.model.ErrorButtonType
+import com.alexgreece45.marvelx.ui.components.sections.model.SectionHeaderData
 import com.alexgreece45.marvelx.ui.helper.model.DeepLinkAction
 import com.alexgreece45.marvelx.ui.navigation.NavArgHelper
 import com.alexgreece45.marvelx.ui.navigation.Screen
@@ -25,7 +24,6 @@ import com.alexgreece45.marvelx.ui.navigation.models.NavArg
 import com.alexgreece45.marvelx.ui.screens.profile.model.ProfileBottomSheetType
 import com.alexgreece45.marvelx.ui.screens.profile.model.ProfileErrorAlertDialog
 import com.alexgreece45.marvelx.ui.screens.profile.model.ProfileScreenErrorView
-import com.alexgreece45.marvelx.ui.screens.profile.model.ProfileScreenSection
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.constants.ConstantsUi
 import kotlinx.coroutines.launch
@@ -33,6 +31,7 @@ import kotlinx.coroutines.launch
 sealed interface ProfileContract {
     sealed interface Event : BaseEvent {
         data class Init(val deepLinkAction: DeepLinkAction?) : Event
+        data object OnSettingsIconButtonClicked : Event
         data object OnSystemBack : Event
         data object OnSeeYourProfileClicked : Event
         data object OnErrorClose : Event
@@ -108,7 +107,7 @@ sealed interface ProfileContract {
         val croppedImageIsLoading: Boolean = false,
 
         val profileBannerLabel: String = "",
-        val sections: List<ProfileScreenSection> = emptyList(),
+        val sections: List<SectionHeaderData> = emptyList(),
         val profileDetails: BasicProfileDetailsDomain? = null,
         val croppedImageUri: Uri? = null,
 
@@ -127,12 +126,11 @@ sealed interface ProfileContract {
 
         sealed class Navigation : Effect() {
             data object NavigateUp : Navigation()
-            data object NavigateToHomeScreen : Navigation()
+            data object NavigateToSettingsScreen : Navigation()
+            data object NavigateToFriendsScreen : Navigation()
             data class NavigateToQrCodeScreen(val previousScreenRoute: String) : Navigation()
-            data class NavigateToProfileImageScreen(val fullName: String) : Navigation()
-            data class NavigateToProfileDetailsScreen(val userId: Int) : Navigation()
-            data object NavigateToPrivacySettingsScreen : Navigation()
-            data object NavigateToFaqScreen : Navigation()
+            data object NavigateToProfileImageScreen : Navigation()
+            data class NavigateToProfileDetailsScreen(val userId: String) : Navigation()
         }
 
         /**
@@ -149,7 +147,6 @@ sealed interface ProfileContract {
             val imageUri: Uri
         ) : Effect()
 
-        data class ShowToast(val toastMessage: String) : Effect()
         data class OpenDeepLinkAction(val deepLinkAction: DeepLinkAction) : Effect()
     }
 }
@@ -157,7 +154,6 @@ sealed interface ProfileContract {
 
 class ProfileViewModel(
     private val resourceProvider: ResourceProvider,
-    private val loginInteractor: LoginInteractor,
     private val userInteractor: UserInteractor,
     private val prefKeys: PrefKeys
 ) :
@@ -174,6 +170,12 @@ class ProfileViewModel(
 
                 setEffect {
                     ProfileContract.Effect.OpenDeepLinkAction(event.deepLinkAction)
+                }
+            }
+
+            ProfileContract.Event.OnSettingsIconButtonClicked -> {
+                setEffect {
+                    ProfileContract.Effect.Navigation.NavigateToSettingsScreen
                 }
             }
 
@@ -228,7 +230,7 @@ class ProfileViewModel(
                     value = currentState.profileDetails?.profileImageUrl.orEmpty()
                 )
                 setEffect {
-                    ProfileContract.Effect.Navigation.NavigateToProfileImageScreen(fullName = currentState.profileDetails?.fullName.orEmpty())
+                    ProfileContract.Effect.Navigation.NavigateToProfileImageScreen
                 }
             }
 
@@ -355,32 +357,8 @@ class ProfileViewModel(
             copy(
                 isLoading = false,
                 sections = listOf(
-                    ProfileScreenSection(
-                        title = resourceProvider.getString(R.string.profile_screen_section_label_privacy_settings),
-                        iconData = IconData(
-                            iconResource = R.drawable.ic_privacy,
-                            contentDescription = R.string.content_description_privacy
-                        ),
-                        onClick = {
-                            setEffect {
-                                ProfileContract.Effect.Navigation.NavigateToPrivacySettingsScreen
-                            }
-                        }
-                    ),
-                    ProfileScreenSection(
-                        title = resourceProvider.getString(R.string.profile_screen_section_label_faq),
-                        iconData = IconData(
-                            iconResource = R.drawable.ic_faq,
-                            contentDescription = R.string.content_description_faq
-                        ),
-                        onClick = {
-                            setEffect {
-                                ProfileContract.Effect.Navigation.NavigateToFaqScreen
-                            }
-                        }
-                    ),
-                    ProfileScreenSection(
-                        title = resourceProvider.getString(R.string.profile_screen_section_label_scar_qr_code),
+                    SectionHeaderData(
+                        title = resourceProvider.getString(R.string.profile_screen_section_label_scan_qr_code),
                         iconData = IconData(
                             iconResource = R.drawable.ic_scan_qr_code,
                             contentDescription = R.string.content_description_scan_qr_code
@@ -391,16 +369,7 @@ class ProfileViewModel(
                                 ProfileContract.Effect.Navigation.NavigateToQrCodeScreen(Screen.ProfileScreen.baseRoute)
                             }
                         }
-                    ),
-                    ProfileScreenSection(
-                        title = resourceProvider.getString(R.string.profile_screen_section_label_logout),
-                        iconData = IconData(
-                            iconResource = R.drawable.ic_logout,
-                            contentDescription = R.string.content_description_ic_logout
-                        ),
-                        isNavigable = false,
-                        onClick = ::logout
-                    ),
+                    )
                 )
             )
         }
@@ -437,43 +406,6 @@ class ProfileViewModel(
                     ),
                 )
             )
-        }
-    }
-
-    /**
-     * Logouts the user.
-     */
-    private fun logout() {
-        setState {
-            copy(
-                isLoading = true
-            )
-        }
-        viewModelScope.launch {
-            loginInteractor.logout().collect { logoutPartialState ->
-                when (logoutPartialState) {
-                    is LogoutPartialState.Failed -> {
-                        // Show error message.
-                        setEffect {
-                            ProfileContract.Effect.ShowToast(
-                                toastMessage = logoutPartialState.errorMessage
-                            )
-                        }
-
-                        // Navigate to Home Screen.
-                        setEffect {
-                            ProfileContract.Effect.Navigation.NavigateToHomeScreen
-                        }
-                    }
-
-                    LogoutPartialState.Success -> {
-                        // Navigate to Home Screen.
-                        setEffect {
-                            ProfileContract.Effect.Navigation.NavigateToHomeScreen
-                        }
-                    }
-                }
-            }
         }
     }
 

@@ -28,6 +28,7 @@ import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.SecurityUtil
 import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.launch
+import kotlin.coroutines.CoroutineContext
 
 sealed class SignupEvent : BaseEvent {
     sealed class GenderDropdownMenu : SignupEvent() {
@@ -105,7 +106,7 @@ sealed class SignupEffect : BaseEffect {
     sealed class Navigation : SignupEffect() {
         data object NavigateToAllCharactersScreen : Navigation()
         data class NavigateToOtpScreen(
-            val userId: Int,
+            val userId: String,
             val otpFlowType: String = OtpFlowType.Register.key,
             val verificationStep: String,
             val shouldRememberUserSession: Boolean
@@ -128,7 +129,8 @@ class SignupViewModel(
     private val refreshTokenController: RefreshTokenController,
     private val loginInteractor: LoginInteractor,
     private val authController: AuthController,
-    private val fieldValidationRules: FieldValidationRules
+    private val fieldValidationRules: FieldValidationRules,
+    private val defaultDispatcher: CoroutineContext,
 ) : BaseViewModel<SignupEvent, SignupState, SignupEffect>() {
 
     override fun setInitialState(): SignupState =
@@ -533,7 +535,10 @@ class SignupViewModel(
             lastName = currentState.lastName,
             gender = currentState.gender?.key.orEmpty(),
             email = currentState.email,
-            password = SecurityUtil.getHashedPasswordFromString(currentState.password).single()
+            password = SecurityUtil.getHashedPasswordFromString(
+                defaultDispatcher = defaultDispatcher,
+                password = currentState.password
+            ).single()
         )
 
     /**

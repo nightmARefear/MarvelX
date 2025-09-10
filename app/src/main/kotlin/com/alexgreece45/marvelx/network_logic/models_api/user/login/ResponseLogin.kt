@@ -12,5 +12,5 @@ data class ResponseLogin(
 fun ResponseLogin.toUserLoginResponseDomain(): LoginResponseDomain =
     LoginResponseDomain(
         verificationStep = VerificationStep.of(this.verificationStep),
-        userId = this.userId.toInt()
+        userId = this.userId
     )

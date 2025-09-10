@@ -5,17 +5,17 @@ import com.alexgreece45.marvelx.configuration.ConfigLogic
 import com.alexgreece45.marvelx.controllers.AppLogger
 import com.alexgreece45.marvelx.controllers.PrefKeys
 import com.alexgreece45.marvelx.data.model.RepositoryPrivacySettings
-import com.alexgreece45.marvelx.data.model.RepositoryUsersBlocked
 import com.alexgreece45.marvelx.data.repository.BlockUserRepositoryResult
 import com.alexgreece45.marvelx.data.repository.GetCurrentUserProfileDetailsRepositoryResponse
 import com.alexgreece45.marvelx.data.repository.GetProfileDetailsRepositoryResponse
 import com.alexgreece45.marvelx.data.repository.UserRepository
+import com.alexgreece45.marvelx.data.repository.helper.RepositoryResult
 import com.alexgreece45.marvelx.domain.helper.InteractorPartialState
 import com.alexgreece45.marvelx.domain.helper.handleRepositoryResult
 import com.alexgreece45.marvelx.domain.helper.handleRepositoryResultNoTransformation
-import com.alexgreece45.marvelx.domain.model_api.user.UsersBlockedDomain
-import com.alexgreece45.marvelx.domain.model_api.user.block.UserBlockResult
-import com.alexgreece45.marvelx.domain.model_api.user.block.toUserBlockDomain
+import com.alexgreece45.marvelx.domain.model_api.user.block.UserBlockDomain
+import com.alexgreece45.marvelx.domain.model_api.user.block.UserBlockResultType
+import com.alexgreece45.marvelx.domain.model_api.user.block.toUserBlockResultDomain
 import com.alexgreece45.marvelx.domain.model_api.user.privacySettings.PrivacySettingsDomain
 import com.alexgreece45.marvelx.domain.model_api.user.privacySettings.toPrivacySettingsDomain
 import com.alexgreece45.marvelx.domain.model_api.user.privacySettings.toRequestPrivacySettings
@@ -25,7 +25,6 @@ import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.ProfileDeta
 import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.toBasicProfileDetailsDomain
 import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.toProfileDetailsDomain
 import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.toProfileDetailsErrorDomain
-import com.alexgreece45.marvelx.domain.model_api.user.toUsersBlockedDomain
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.extensions.fromBytesToMb
 import com.alexgreece45.marvelx.util.extensions.safeAsync
@@ -41,14 +40,12 @@ interface UserInteractor {
     /**
      * Gets the profile details of the given [userId].
      */
-    suspend fun getProfileDetails(userId: Int): Flow<GetProfileDetailsPartialState>
+    suspend fun getProfileDetails(userId: String): Flow<GetProfileDetailsPartialState>
 
     /**
      * Gets the basic profile details of the current user.
      */
     suspend fun getCurrentUserBasicProfileDetails(): Flow<GetCurrentUserProfileDetailsPartialState>
-
-    suspend fun getCurrentUserBlockedUsers(): Flow<InteractorPartialState<UsersBlockedDomain>>
 
     /**
      * Updates the profile details of the current user.
@@ -73,14 +70,24 @@ interface UserInteractor {
     suspend fun updatePrivacySettings(privacySettingsDomain: PrivacySettingsDomain): Flow<InteractorPartialState<String>>
 
     /**
-     * Blocks the user with the given [userId].
+     * Deletes the friend with the given ID.
      */
-    suspend fun blockUser(userId: Int): Flow<BlockUserPartialState>
+    suspend fun deleteFriend(userId: String): Flow<Boolean>
+
+    /**
+     * Returns the blocked users.
+     */
+    suspend fun getBlockedUsers(): Flow<InteractorPartialState<List<UserBlockDomain>>>
 
     /**
      * Blocks the user with the given [userId].
      */
-    suspend fun unblockUser(userId: Int): Flow<InteractorPartialState<String>>
+    suspend fun blockUser(userId: String): Flow<BlockUserPartialState>
+
+    /**
+     * Blocks the user with the given [userId].
+     */
+    suspend fun unblockUser(userId: String): Flow<InteractorPartialState<String>>
 }
 
 class UserInteractorImpl(
@@ -91,22 +98,20 @@ class UserInteractorImpl(
     private val prefKeys: PrefKeys
 ) : UserInteractor {
 
-    override suspend fun getProfileDetails(userId: Int): Flow<GetProfileDetailsPartialState> =
+    override suspend fun getProfileDetails(userId: String): Flow<GetProfileDetailsPartialState> =
         flow {
-            repository.getProfileDetails(userId).collect {
-                when (it) {
-                    is GetProfileDetailsRepositoryResponse.Failed -> {
-                        emit(
-                            GetProfileDetailsPartialState.Failed(
-                                profileDetailsErrorType = it.responseProfileDetailsError.toProfileDetailsErrorDomain().profileDetailsErrorType
-                            )
+            when (val profileDetailsResponse = repository.getProfileDetails(userId)) {
+                is GetProfileDetailsRepositoryResponse.Failed -> {
+                    emit(
+                        GetProfileDetailsPartialState.Failed(
+                            profileDetailsErrorType = profileDetailsResponse.responseProfileDetailsError.toProfileDetailsErrorDomain().profileDetailsErrorType
                         )
-                    }
+                    )
+                }
 
-                    is GetProfileDetailsRepositoryResponse.Success -> {
-                        it.response?.let { responseProfileDetails ->
-                            emit(GetProfileDetailsPartialState.Success(profileDetailsDomain = responseProfileDetails.toProfileDetailsDomain()))
-                        }
+                is GetProfileDetailsRepositoryResponse.Success -> {
+                    profileDetailsResponse.response?.let { responseProfileDetails ->
+                        emit(GetProfileDetailsPartialState.Success(profileDetailsDomain = responseProfileDetails.toProfileDetailsDomain()))
                     }
                 }
             }
@@ -158,18 +163,6 @@ class UserInteractorImpl(
             when (it) {
                 is IOException -> GetCurrentUserProfileDetailsPartialState.NoInternetConnection
                 else -> GetCurrentUserProfileDetailsPartialState.Failed(resourceProvider.getGenericErrorMessage())
-            }
-        }
-
-    override suspend fun getCurrentUserBlockedUsers(): Flow<InteractorPartialState<UsersBlockedDomain>> =
-        flow {
-            repository.getCurrentUserBlockedUsers().collect { repositoryResult ->
-                handleRepositoryResult(
-                    repositoryResult,
-                    RepositoryUsersBlocked::toUsersBlockedDomain
-                ).collect {
-                    emit(it)
-                }
             }
         }
 
@@ -249,10 +242,21 @@ class UserInteractorImpl(
                 }
         }
 
-    override suspend fun blockUser(userId: Int): Flow<BlockUserPartialState> =
+    override suspend fun deleteFriend(userId: String): Flow<Boolean> = flow {
+        repository.deleteFriend(userId).collect {
+            emit(
+                when (it) {
+                    is RepositoryResult.Success -> true
+                    else -> false
+                }
+            )
+        }
+    }
+
+    override suspend fun blockUser(userId: String): Flow<BlockUserPartialState> =
         flow {
             if (userId == prefKeys.getUserId()) {
-                emit(BlockUserPartialState.Failed(UserBlockResult.SameUser))
+                emit(BlockUserPartialState.Failed(UserBlockResultType.SameUser))
                 return@flow
             }
 
@@ -263,7 +267,7 @@ class UserInteractorImpl(
                     }
 
                     is BlockUserRepositoryResult.Failed -> {
-                        emit(BlockUserPartialState.Failed(repositoryResult.repositoryUserBlock.toUserBlockDomain().userBlockResult))
+                        emit(BlockUserPartialState.Failed(repositoryResult.repositoryUserBlockResult.toUserBlockResultDomain().userBlockResultType))
                     }
                 }
             }
@@ -280,7 +284,7 @@ class UserInteractorImpl(
             }
         }
 
-    override suspend fun unblockUser(userId: Int): Flow<InteractorPartialState<String>> = flow {
+    override suspend fun unblockUser(userId: String): Flow<InteractorPartialState<String>> = flow {
         repository.unblockUser(userId).collect { repositoryResult ->
             handleRepositoryResultNoTransformation(repositoryResult).collect {
                 emit(it)
@@ -312,6 +316,6 @@ sealed class GetProfileDetailsPartialState {
 
 sealed interface BlockUserPartialState {
     data object Success : BlockUserPartialState
-    data class Failed(val userBlockResult: UserBlockResult) : BlockUserPartialState
+    data class Failed(val userBlockResultType: UserBlockResultType) : BlockUserPartialState
     data class Error(val errorMessage: String) : BlockUserPartialState
 }

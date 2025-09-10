@@ -6,20 +6,25 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.configuration.models.DeepLinkWebUrl
+import com.alexgreece45.marvelx.data.repository.FriendRequestsRepository
 import com.alexgreece45.marvelx.domain.interactors.BlockUserPartialState
 import com.alexgreece45.marvelx.domain.interactors.GetProfileDetailsPartialState
 import com.alexgreece45.marvelx.domain.interactors.UserInteractor
-import com.alexgreece45.marvelx.domain.model_api.user.block.UserBlockResult
+import com.alexgreece45.marvelx.domain.model_api.user.block.UserBlockResultType
 import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.ProfileDetailsDomain
 import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.ProfileDetailsErrorType
+import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.RelationshipStatusDomain
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
 import com.alexgreece45.marvelx.mvi.BaseViewModel
 import com.alexgreece45.marvelx.ui.components.AlertDialogButton
-import com.alexgreece45.marvelx.ui.components.SnackbarStateData
 import com.alexgreece45.marvelx.ui.components.model.BottomSheetContentItem
 import com.alexgreece45.marvelx.ui.components.model.ErrorButtonLayout
+import com.alexgreece45.marvelx.ui.components.model.ErrorButtonType
+import com.alexgreece45.marvelx.ui.components.model.SnackbarStateData
+import com.alexgreece45.marvelx.ui.navigation.NavArgHelper
+import com.alexgreece45.marvelx.ui.navigation.models.NavArg
 import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.model.ProfileDetailsAlertDialogErrorData
 import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.model.ProfileDetailsBottomSheetType
 import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.model.ProfileDetailsFullScreenErrorView
@@ -35,7 +40,7 @@ import kotlinx.coroutines.launch
 
 sealed interface ProfileDetailsContract {
     sealed interface Event : BaseEvent {
-        data class Init(val userId: Int) : Event
+        data class Init(val userId: String) : Event
         data object OnBackClicked : Event
         data object OnEditProfileDetailsIconClicked : Event
 
@@ -47,15 +52,12 @@ sealed interface ProfileDetailsContract {
         }
 
         sealed interface ProfileBanner : Event {
+            data object OnProfileImageClicked : ProfileBanner
             data object OnFriendsListClicked : ProfileBanner
             data object OnListingsListClicked : ProfileBanner
             data object OnFavoritesListClicked : ProfileBanner
+            data object OnRelationshipStatusChipClicked : ProfileBanner
         }
-
-        /**
-         * Triggered when the user clicks on the "block" button.
-         */
-        data object OnBlockConfirmClicked : Event
 
         /**
          * Hides the alert dialog.
@@ -69,14 +71,16 @@ sealed interface ProfileDetailsContract {
     }
 
     /**
-     * @param isLoading                     Whether this screen is in loading state. It has the
-     * default value of `true`.
-     * @param profileDetails                The profile details of the user. It has the default
-     * value of `null` indicating no user data.
+     * @param isLoading Whether this screen is in loading state. It has the default value of `true`.
+     * @param isRelationshipStatusChipLoading Whether the `relationship status` chip is in loading
+     * state.
+     * @param profileDetails The profile details of the user. It has the default value of `null`
+     * indicating no user data.
      */
     data class State(
         // Loading.
         val isLoading: Boolean = true,
+        val isRelationshipStatusChipLoading: Boolean = false,
 
         // Modal bottom sheet data.
         val moreActionItems: List<BottomSheetContentItem> = emptyList(),
@@ -85,8 +89,7 @@ sealed interface ProfileDetailsContract {
         // Data.
         val isGenderDropDownExpanded: Boolean = false,
         val profileDetails: ProfileDetailsDomain? = null,
-        val userId: Int = -1,
-        val isDifferentUser: Boolean? = null,
+        val userId: String = "",
         val isGenderHidden: Boolean = false,
         val isEmailHidden: Boolean = false,
 
@@ -112,15 +115,11 @@ sealed interface ProfileDetailsContract {
          */
         data object HideBottomSheet : Effect
 
-        /**
-         * Executes the given [Event].
-         */
-        data class ExecuteEvent(val event: Event) : Effect
-
         data class ShareProfileUrl(val url: String, val intentTitle: String) : Effect
 
         sealed interface Navigation : Effect {
             data object PopBackStack : Navigation
+            data object NavigateToProfileImageScreen : Navigation
             data object NavigateToEditProfileDetailsScreen : Navigation
 
             /**
@@ -128,7 +127,7 @@ sealed interface ProfileDetailsContract {
              */
             data class NavigateToProfileDetailsStatsScreen(
                 val fullName: String,
-                val userId: Int,
+                val userId: String,
                 val tab: ProfileDetailsStatsTab
             ) : Navigation
         }
@@ -138,6 +137,7 @@ sealed interface ProfileDetailsContract {
 class ProfileDetailsViewModel(
     private val userInteractor: UserInteractor,
     private val resourceProvider: ResourceProvider,
+    private val friendRequestsRepository: FriendRequestsRepository,
 ) : BaseViewModel<ProfileDetailsContract.Event, ProfileDetailsContract.State, ProfileDetailsContract.Effect>() {
 
     override fun setInitialState(): ProfileDetailsContract.State =
@@ -173,28 +173,12 @@ class ProfileDetailsViewModel(
                         errorSubtitle = resourceProvider.getString(R.string.profile_details_screen_label_alert_dialog_block_user_subtitle),
                         dismissAlertDialogButton = AlertDialogButton(
                             label = resourceProvider.getString(R.string.profile_details_screen_label_alert_dialog_block_user_button_cancel),
-                            onClick = {
-                                setEffect {
-                                    ProfileDetailsContract.Effect.ExecuteEvent(
-                                        ProfileDetailsContract.Event.HideAlertDialog
-                                    )
-                                }
-                            }
+                            onClick = ::hideAlertDialogError
                         ),
                         confirmAlertDialogButton = AlertDialogButton(
                             label = resourceProvider.getString(R.string.profile_details_screen_label_alert_dialog_block_user_button_block),
-                            onClick = {
-                                setEffect {
-                                    ProfileDetailsContract.Effect.ExecuteEvent(
-                                        ProfileDetailsContract.Event.HideAlertDialog
-                                    )
-                                }
-                                setEffect {
-                                    ProfileDetailsContract.Effect.ExecuteEvent(
-                                        ProfileDetailsContract.Event.OnBlockConfirmClicked
-                                    )
-                                }
-                            }
+                            buttonType = ErrorButtonType.Contained,
+                            onClick = ::onBlockConfirmClicked
                         )
                     )
                 )
@@ -230,93 +214,154 @@ class ProfileDetailsViewModel(
                 }
             }
 
+            ProfileDetailsContract.Event.ProfileBanner.OnProfileImageClicked -> {
+                NavArgHelper.setArgument(
+                    navArg = NavArg.ProfileImageUri,
+                    value = currentState.profileDetails?.basicProfileDetails?.profileImageUrl.orEmpty()
+                )
+                setEffect {
+                    ProfileDetailsContract.Effect.Navigation.NavigateToProfileImageScreen
+                }
+            }
+
             ProfileDetailsContract.Event.ProfileBanner.OnFriendsListClicked -> {
-                if (currentState.isDifferentUser == false
+                if (currentState.profileDetails?.isDifferentUser == false
                     || currentState.profileDetails?.privacySettings?.isFriendsListVisible == true
                 ) {
                     navigateToProfileDetailsStatsScreen(tab = ProfileDetailsStatsTab.Friends)
-                    return
+                } else {
+                    showGenericAlertDialogError(resourceProvider.getString(R.string.profile_details_screen_error_hidden_list_friends))
                 }
-                showGenericAlertDialogError(resourceProvider.getString(R.string.profile_details_screen_error_hidden_list_friends))
             }
 
             ProfileDetailsContract.Event.ProfileBanner.OnListingsListClicked -> {
-                if (currentState.isDifferentUser == false
+                if (currentState.profileDetails?.isDifferentUser == false
                     || currentState.profileDetails?.privacySettings?.isListingsListVisible == true
                 ) {
                     navigateToProfileDetailsStatsScreen(tab = ProfileDetailsStatsTab.Listings)
                     return
+                } else {
+                    showGenericAlertDialogError(resourceProvider.getString(R.string.profile_details_screen_error_hidden_list_listings))
                 }
-                showGenericAlertDialogError(resourceProvider.getString(R.string.profile_details_screen_error_hidden_list_listings))
             }
 
             ProfileDetailsContract.Event.ProfileBanner.OnFavoritesListClicked -> {
-                if (currentState.isDifferentUser == false
+                if (currentState.profileDetails?.isDifferentUser == false
                     || currentState.profileDetails?.privacySettings?.isFavoritesListVisible == true
                 ) {
                     navigateToProfileDetailsStatsScreen(tab = ProfileDetailsStatsTab.Favorites)
-                    return
+                } else {
+                    showGenericAlertDialogError(resourceProvider.getString(R.string.profile_details_screen_error_hidden_list_favorites))
                 }
-                showGenericAlertDialogError(resourceProvider.getString(R.string.profile_details_screen_error_hidden_list_favorites))
+            }
+
+            ProfileDetailsContract.Event.ProfileBanner.OnRelationshipStatusChipClicked -> {
+                currentState.profileDetails?.let { profileDetails ->
+                    viewModelScope.launch {
+                        when (profileDetails.relationshipStatus) {
+                            RelationshipStatusDomain.None -> {
+                                setState {
+                                    copy(
+                                        isRelationshipStatusChipLoading = true
+                                    )
+                                }
+
+                                friendRequestsRepository.sendFriendRequest(currentState.userId)
+                                    .collect { wasSent ->
+                                        setState {
+                                            copy(
+                                                isRelationshipStatusChipLoading = false,
+                                                profileDetails = if (wasSent) profileDetails.copy(
+                                                    relationshipStatus = RelationshipStatusDomain.PendingFriendRequestSender
+                                                ) else profileDetails
+                                            )
+                                        }
+
+                                        if (!wasSent) {
+                                            showSnackbar(resourceProvider.getString(R.string.profile_details_screen_error_sending_friend_request))
+                                        }
+                                    }
+                            }
+
+                            RelationshipStatusDomain.PendingFriendRequestSender -> {
+                                showAlertDialogError(
+                                    ProfileDetailsAlertDialogErrorData(
+                                        errorTitle = resourceProvider.getString(R.string.profile_details_screen_label_alert_dialog_title_delete_friend_request),
+                                        errorSubtitle = resourceProvider.getString(R.string.profile_details_screen_label_alert_dialog_subtitle_delete_friend_request),
+                                        dismissAlertDialogButton = AlertDialogButton(
+                                            label = resourceProvider.getString(R.string.profile_details_screen_label_alert_dialog_button_negative_delete_friend_request),
+                                            buttonType = ErrorButtonType.defaultType,
+                                            onClick = ::hideAlertDialogError
+                                        ),
+                                        confirmAlertDialogButton = AlertDialogButton(
+                                            label = resourceProvider.getString(R.string.profile_details_screen_label_alert_dialog_button_positive_delete_friend_request),
+                                            buttonType = ErrorButtonType.Contained,
+                                            onClick = ::deletePendingFriendRequest
+                                        )
+                                    )
+                                )
+                            }
+
+                            RelationshipStatusDomain.PendingFriendRequestReceiver -> {
+                                showAlertDialogError(
+                                    ProfileDetailsAlertDialogErrorData(
+                                        errorTitle = resourceProvider.getString(R.string.profile_details_screen_label_alert_dialog_title_accept_friend_request),
+                                        errorSubtitle = resourceProvider.getString(R.string.profile_details_screen_label_alert_dialog_subtitle_accept_friend_request),
+                                        dismissAlertDialogButton = AlertDialogButton(
+                                            label = resourceProvider.getString(R.string.profile_details_screen_label_alert_dialog_button_negative_accept_friend_request),
+                                            buttonType = ErrorButtonType.defaultType,
+                                            onClick = ::hideAlertDialogError
+                                        ),
+                                        confirmAlertDialogButton = AlertDialogButton(
+                                            label = resourceProvider.getString(R.string.profile_details_screen_label_alert_dialog_button_positive_accept_friend_request),
+                                            buttonType = ErrorButtonType.Contained,
+                                            onClick = ::acceptFriendRequest
+                                        )
+                                    )
+                                )
+                            }
+
+                            RelationshipStatusDomain.Friends -> {
+                                showAlertDialogError(
+                                    ProfileDetailsAlertDialogErrorData(
+                                        errorTitle = resourceProvider.getString(R.string.profile_details_screen_label_alert_dialog_title_delete_friend),
+                                        errorSubtitle = resourceProvider.getString(R.string.profile_details_screen_label_alert_dialog_subtitle_delete_friend),
+                                        dismissAlertDialogButton = AlertDialogButton(
+                                            label = resourceProvider.getString(R.string.profile_details_screen_label_alert_dialog_button_negative_delete_friend),
+                                            buttonType = ErrorButtonType.defaultType,
+                                            onClick = ::hideAlertDialogError
+                                        ),
+                                        confirmAlertDialogButton = AlertDialogButton(
+                                            label = resourceProvider.getString(R.string.profile_details_screen_label_alert_dialog_button_positive_delete_friend),
+                                            buttonType = ErrorButtonType.Contained,
+                                            onClick = ::deleteFriend
+                                        )
+                                    )
+                                )
+                            }
+
+                            null -> {}
+                        }
+                    }
+                }
             }
 
             ProfileDetailsContract.Event.HideAlertDialog -> {
                 hideAlertDialogError()
             }
 
-            ProfileDetailsContract.Event.OnBlockConfirmClicked -> {
-                setState {
-                    copy(
-                        isLoading = true
-                    )
-                }
-                viewModelScope.launch {
-                    userInteractor.blockUser(currentState.userId).collect {
-                        when (it) {
-                            is BlockUserPartialState.Success -> {
-                                showSnackbar(message = resourceProvider.getString(R.string.profile_details_screen_label_success_block_user))
-                                setEffect {
-                                    ProfileDetailsContract.Effect.Navigation.PopBackStack
-                                }
-                            }
+            ProfileDetailsContract.Event.OnSystemBack -> {
+                when {
+                    currentState.bottomSheetType != null -> {
+                        hideBottomSheet()
+                    }
 
-                            is BlockUserPartialState.Failed -> {
-                                when (it.userBlockResult) {
-                                    UserBlockResult.Failed -> {
-                                        setState {
-                                            copy(
-                                                isLoading = false
-                                            )
-                                        }
-                                        showSnackbar(message = resourceProvider.getString(R.string.profile_details_screen_error_blocking_user_generic))
-                                    }
-
-                                    UserBlockResult.SameUser -> {
-                                        setState {
-                                            copy(
-                                                isLoading = false
-                                            )
-                                        }
-                                        showSnackbar(message = resourceProvider.getString(R.string.profile_details_screen_error_blocking_user_same_user))
-                                    }
-                                }
-                            }
-
-                            is BlockUserPartialState.Error -> {
-                                setState {
-                                    copy(
-                                        isLoading = false
-                                    )
-                                }
-                                showSnackbar(message = resourceProvider.getString(R.string.profile_details_screen_error_blocking_user_generic))
-                            }
+                    else -> {
+                        setEffect {
+                            ProfileDetailsContract.Effect.Navigation.PopBackStack
                         }
                     }
                 }
-            }
-
-            ProfileDetailsContract.Event.OnSystemBack -> {
-                hideBottomSheet()
             }
         }
     }
@@ -342,7 +387,6 @@ class ProfileDetailsViewModel(
                                 fullScreenErrorView = null,
                                 profileDetails = it.profileDetailsDomain,
                                 userId = event.userId,
-                                isDifferentUser = it.profileDetailsDomain.isDifferentUser,
                                 isGenderHidden = it.profileDetailsDomain.isDifferentUser && it.profileDetailsDomain.privacySettings != null && !it.profileDetailsDomain.privacySettings.isGenderVisible,
                                 isEmailHidden = it.profileDetailsDomain.isDifferentUser && it.profileDetailsDomain.privacySettings != null && !it.profileDetailsDomain.privacySettings.isEmailVisible,
                             )
@@ -395,9 +439,7 @@ class ProfileDetailsViewModel(
                                         isLoading = false,
                                         nestedErrorView = ProfileDetailsNestedErrorView(
                                             errorLabel = resourceProvider.getString(R.string.profile_details_screen_error_loading_profile_details_user_blocked),
-                                            errorResourceId = R.raw.lottie_not_available,
-                                            buttonLabel = resourceProvider.getString(R.string.profile_details_screen_label_full_screen_error_view_button_go_back),
-                                            onButtonClicked = ProfileDetailsContract.Event.OnBackClicked
+                                            errorResourceId = R.raw.lottie_not_available
                                         )
                                     )
                                 }
@@ -430,9 +472,7 @@ class ProfileDetailsViewModel(
                                         isLoading = false,
                                         nestedErrorView = ProfileDetailsNestedErrorView(
                                             errorLabel = resourceProvider.getString(R.string.profile_details_screen_error_loading_profile_details_user_not_exists),
-                                            errorResourceId = R.raw.lottie_error_not_found,
-                                            buttonLabel = resourceProvider.getString(R.string.profile_details_screen_label_full_screen_error_view_button_go_back),
-                                            onButtonClicked = ProfileDetailsContract.Event.OnBackClicked
+                                            errorResourceId = R.raw.lottie_error_not_found
                                         )
                                     )
                                 }
@@ -467,7 +507,10 @@ class ProfileDetailsViewModel(
         )
         setState {
             copy(
-                moreActionItems = if (isDifferentUser) items else items.subList(1, items.size)
+                moreActionItems = if (isDifferentUser) items.dropLast(1) else items.subList(
+                    1,
+                    items.size
+                )
             )
         }
     }
@@ -502,6 +545,184 @@ class ProfileDetailsViewModel(
         } catch (e: WriterException) {
             appLogger.e("ProfileDetailsViewModel") { "(generateQRCodeBitmap) Failed to generate QR code for content: $content. Error: $e" }
             null
+        }
+    }
+
+    /**
+     * Triggered when the user clicks on the "block" button.
+     */
+    private fun onBlockConfirmClicked() {
+        hideAlertDialogError()
+
+        setState {
+            copy(
+                isLoading = true
+            )
+        }
+        viewModelScope.launch {
+            userInteractor.blockUser(currentState.userId).collect {
+                when (it) {
+                    is BlockUserPartialState.Success -> {
+                        showSnackbar(message = resourceProvider.getString(R.string.profile_details_screen_label_success_block_user))
+                        setEffect {
+                            ProfileDetailsContract.Effect.Navigation.PopBackStack
+                        }
+                    }
+
+                    is BlockUserPartialState.Failed -> {
+                        when (it.userBlockResultType) {
+                            UserBlockResultType.Failed -> {
+                                setState {
+                                    copy(
+                                        isLoading = false
+                                    )
+                                }
+                                showSnackbar(message = resourceProvider.getString(R.string.profile_details_screen_error_blocking_user_generic))
+                            }
+
+                            UserBlockResultType.SameUser -> {
+                                setState {
+                                    copy(
+                                        isLoading = false
+                                    )
+                                }
+                                showSnackbar(message = resourceProvider.getString(R.string.profile_details_screen_error_blocking_user_same_user))
+                            }
+                        }
+                    }
+
+                    is BlockUserPartialState.Error -> {
+                        setState {
+                            copy(
+                                isLoading = false
+                            )
+                        }
+                        showSnackbar(message = resourceProvider.getString(R.string.profile_details_screen_error_blocking_user_generic))
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Deletes this friend request.
+     */
+    private fun deletePendingFriendRequest() {
+        setState {
+            copy(
+                isRelationshipStatusChipLoading = true
+            )
+        }
+        hideAlertDialogError()
+
+        viewModelScope.launch {
+            friendRequestsRepository.deleteFriendRequest(currentState.userId)
+                .collect { wasDeleted ->
+                    when (wasDeleted) {
+                        true -> {
+                            setState {
+                                copy(
+                                    isRelationshipStatusChipLoading = false,
+                                    profileDetails = profileDetails?.copy(
+                                        relationshipStatus = RelationshipStatusDomain.None
+                                    )
+                                )
+                            }
+                        }
+
+                        false -> {
+                            setState {
+                                copy(
+                                    isRelationshipStatusChipLoading = false
+                                )
+                            }
+                            showSnackbar(message = resourceProvider.getString(R.string.profile_details_screen_error_deleting_friend_request))
+                        }
+                    }
+                }
+        }
+    }
+
+    /**
+     * Accepts this friend request.
+     */
+    private fun acceptFriendRequest() {
+        setState {
+            copy(
+                isRelationshipStatusChipLoading = true
+            )
+        }
+        hideAlertDialogError()
+
+        viewModelScope.launch {
+            friendRequestsRepository.acceptFriendRequest(currentState.userId)
+                .collect { wasAccepted ->
+                    when (wasAccepted) {
+                        true -> {
+                            setState {
+                                copy(
+                                    isRelationshipStatusChipLoading = false,
+                                    profileDetails = profileDetails?.copy(
+                                        relationshipStatus = RelationshipStatusDomain.Friends,
+                                        userStats = profileDetails.userStats.copy(
+                                            friendsCount = profileDetails.userStats.friendsCount + 1
+                                        )
+                                    )
+                                )
+                            }
+                        }
+
+                        false -> {
+                            setState {
+                                copy(
+                                    isRelationshipStatusChipLoading = false
+                                )
+                            }
+                            showSnackbar(message = resourceProvider.getString(R.string.profile_details_screen_error_accepting_friend_request))
+                        }
+                    }
+                }
+        }
+    }
+
+    /**
+     * Deletes this friend.
+     */
+    private fun deleteFriend() {
+        setState {
+            copy(
+                isRelationshipStatusChipLoading = true
+            )
+        }
+        hideAlertDialogError()
+
+        viewModelScope.launch {
+            userInteractor.deleteFriend(currentState.userId).collect { wasDeleted ->
+                when (wasDeleted) {
+                    true -> {
+                        setState {
+                            copy(
+                                isRelationshipStatusChipLoading = false,
+                                profileDetails = profileDetails?.copy(
+                                    relationshipStatus = RelationshipStatusDomain.None,
+                                    userStats = profileDetails.userStats.copy(
+                                        friendsCount = profileDetails.userStats.friendsCount - 1
+                                    )
+                                )
+                            )
+                        }
+                    }
+
+                    false -> {
+                        setState {
+                            copy(
+                                isRelationshipStatusChipLoading = false
+                            )
+                        }
+                        showSnackbar(message = resourceProvider.getString(R.string.profile_details_screen_error_deleting_friend))
+                    }
+                }
+            }
         }
     }
 
@@ -559,13 +780,7 @@ class ProfileDetailsViewModel(
                     errorSubtitle = errorSubtitle,
                     confirmAlertDialogButton = AlertDialogButton(
                         label = resourceProvider.getString(R.string.generic_ok_button),
-                        onClick = {
-                            setEffect {
-                                ProfileDetailsContract.Effect.ExecuteEvent(
-                                    event = ProfileDetailsContract.Event.HideAlertDialog
-                                )
-                            }
-                        }
+                        onClick = ::hideAlertDialogError
                     )
                 )
             )

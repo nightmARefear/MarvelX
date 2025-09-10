@@ -23,8 +23,9 @@ import com.alexgreece45.marvelx.network_logic.models_api.resendOtp.ResponseResen
 import com.alexgreece45.marvelx.network_logic.models_api.sensitiveUserData.RequestSensitiveUserData
 import com.alexgreece45.marvelx.network_logic.models_api.sensitiveUserData.ResponseSensitiveUserData
 import com.alexgreece45.marvelx.network_logic.models_api.token.ResponseToken
-import com.alexgreece45.marvelx.network_logic.models_api.user.ResponseUsersBlocked
+import com.alexgreece45.marvelx.network_logic.models_api.user.BodyUserId
 import com.alexgreece45.marvelx.network_logic.models_api.user.block.ResponseUserBlock
+import com.alexgreece45.marvelx.network_logic.models_api.user.friend.ResponseFriend
 import com.alexgreece45.marvelx.network_logic.models_api.user.login.RequestUserLogin
 import com.alexgreece45.marvelx.network_logic.models_api.user.login.ResponseLogin
 import com.alexgreece45.marvelx.network_logic.models_api.user.loginWithToken.ResponseLoginWithToken
@@ -110,11 +111,6 @@ class ApiClientImpl(
     override suspend fun getCurrentUserProfileDetails(): Response<ResponseBasicProfileDetails> =
         apiService.getCurrentUserProfileDetails()
 
-    override suspend fun getCurrentUserBlockedUsers(): ApiResult<ResponseUsersBlocked> =
-        executeApiServiceCall {
-            apiService.getCurrentUserBlockedUsers()
-        }
-
     override suspend fun updateCurrentUserProfileDetails(requestProfileDetailsUpdate: RequestProfileDetailsUpdate): ApiResult<String> =
         executeApiServiceCallNoTransformation {
             apiService.updateCurrentUserProfileDetails(
@@ -125,7 +121,7 @@ class ApiClientImpl(
     override suspend fun updateUserProfileImage(profileImage: MultipartBody.Part): ApiResult<String> =
         executeApiServiceCallNoTransformation { apiService.updateUserProfileImage(profileImage) }
 
-    override suspend fun getUserProfileDetails(userId: Int): Response<ResponseProfileDetails> =
+    override suspend fun getUserProfileDetails(userId: String): Response<ResponseProfileDetails> =
         apiService.getUserProfileDetails(userId = userId)
 
     override suspend fun getUserPrivacySettings(): ApiResult<ResponsePrivacySettings> =
@@ -138,10 +134,47 @@ class ApiClientImpl(
             )
         }
 
-    override suspend fun blockUser(userId: Int): Response<Void> =
-        apiService.blockUser(userId)
+    override suspend fun sendFriendRequest(userId: String): ApiResult<String> {
+        return executeApiServiceCallNoTransformation {
+            apiService.sendFriendRequest(BodyUserId(userId))
+        }
+    }
 
-    override suspend fun unblockUser(userId: Int): ApiResult<String> =
+    override suspend fun acceptFriendRequest(userId: String): ApiResult<String> {
+        return executeApiServiceCallNoTransformation {
+            apiService.acceptFriendRequest(BodyUserId(userId))
+        }
+    }
+
+    override suspend fun deleteFriendRequest(userId: String): ApiResult<String> {
+        return executeApiServiceCallNoTransformation {
+            apiService.deleteFriendRequest(userId)
+        }
+    }
+
+    override suspend fun getFriends(): ApiResult<List<ResponseFriend>> {
+        return executeApiServiceCall {
+            apiService.getFriends()
+        }
+    }
+
+    override suspend fun deleteFriend(userId: String): ApiResult<String> {
+        return executeApiServiceCallNoTransformation {
+            apiService.deleteFriend(userId)
+        }
+    }
+
+    override suspend fun getBlockedUsers(): ApiResult<List<ResponseUserBlock>> {
+        return executeApiServiceCall {
+            apiService.getBlockedUsers()
+        }
+    }
+
+    override suspend fun blockUser(userId: String): Response<Void> {
+        return apiService.blockUser(BodyUserId(userId))
+    }
+
+    override suspend fun unblockUser(userId: String): ApiResult<String> =
         executeApiServiceCallNoTransformation {
             apiService.unblockUser(userId)
         }

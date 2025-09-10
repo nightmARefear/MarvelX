@@ -2,7 +2,6 @@ package com.alexgreece45.marvelx.ui.screens.profile
 
 import android.content.res.Configuration
 import android.net.Uri
-import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -48,8 +47,8 @@ import com.alexgreece45.marvelx.ui.components.AlertDialogError
 import com.alexgreece45.marvelx.ui.components.BottomNavigationBarData
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.IconData
-import com.alexgreece45.marvelx.ui.components.ProfileHeader
 import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
+import com.alexgreece45.marvelx.ui.components.ToolbarAction
 import com.alexgreece45.marvelx.ui.components.WrapAsyncImage
 import com.alexgreece45.marvelx.ui.components.WrapModalBottomSheetLayout
 import com.alexgreece45.marvelx.ui.components.WrapTextButton
@@ -61,19 +60,19 @@ import com.alexgreece45.marvelx.ui.components.model.BottomSheetContentItem
 import com.alexgreece45.marvelx.ui.components.model.ErrorButtonLayout
 import com.alexgreece45.marvelx.ui.components.model.ShadowData
 import com.alexgreece45.marvelx.ui.components.rememberWrapModalBottomSheetState
+import com.alexgreece45.marvelx.ui.components.sections.SectionListHeader
+import com.alexgreece45.marvelx.ui.components.sections.model.SectionHeaderData
 import com.alexgreece45.marvelx.ui.helper.model.DeepLinkAction
 import com.alexgreece45.marvelx.ui.navigation.getBottomNavigationBarData
 import com.alexgreece45.marvelx.ui.screens.profile.model.ProfileBottomSheetType
-import com.alexgreece45.marvelx.ui.screens.profile.model.ProfileScreenSection
 import com.alexgreece45.marvelx.ui.theme.MarvelXTheme
 import com.alexgreece45.marvelx.ui.theme.values.customShapes
-import com.alexgreece45.marvelx.util.SPACING_MEDIUM
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.VSpacer
 import com.alexgreece45.marvelx.util.constants.ConstantsUi
 import com.alexgreece45.marvelx.util.extensions.applyPadding
 import com.alexgreece45.marvelx.util.extensions.circularImageWithBorder
-import com.alexgreece45.marvelx.util.extensions.getPendingDeepLinkAction
+import com.alexgreece45.marvelx.util.extensions.getAndRemovePendingDeepLinkAction
 import com.alexgreece45.marvelx.util.extensions.hideIfVisible
 import com.alexgreece45.marvelx.util.extensions.screenPaddingsNone
 import com.alexgreece45.marvelx.util.extensions.throttledClickable
@@ -123,17 +122,13 @@ fun ProfileScreen(
     )
 
     LaunchedEffect(Unit) {
-        onEventSent(ProfileContract.Event.Init(context.getPendingDeepLinkAction()))
+        onEventSent(ProfileContract.Event.Init(context.getAndRemovePendingDeepLinkAction()))
     }
 
     ObserveUiEffect(effect) { uiEffect ->
         when (uiEffect) {
             is ProfileContract.Effect.Navigation -> {
                 onNavigation(uiEffect)
-            }
-
-            is ProfileContract.Effect.ShowToast -> {
-                Toast.makeText(context, uiEffect.toastMessage, Toast.LENGTH_LONG).show()
             }
 
             is ProfileContract.Effect.OpenDeepLinkAction -> {
@@ -198,6 +193,21 @@ fun ProfileScreen(
     ) {
         ContentScreen(
             isLoading = state.isLoading,
+            showToolbar = true,
+            toolbarTitle = stringResource(id = R.string.profile_screen_toolbar_title),
+            toolbarActions = listOf(
+                ToolbarAction(
+                    label = stringResource(id = R.string.content_description_settings),
+                    order = 1,
+                    iconData = IconData(
+                        iconResource = R.drawable.ic_settings,
+                        contentDescription = R.string.content_description_settings,
+                    ),
+                    onClick = {
+                        onEventSent(ProfileContract.Event.OnSettingsIconButtonClicked)
+                    }
+                )
+            ),
             bottomNavigationBarData = bottomNavigationBarData(),
             paddingValues = PaddingValues.Absolute()
         ) { paddingValues ->
@@ -229,24 +239,21 @@ fun ProfileScreen(
 //            VSpacer.Custom(height = 100) // todo: to be replaced with weights
 
                 // Sections.
-                Column(
-                    modifier = Modifier.padding(screenPaddingsNone().applyPadding()),
-                    verticalArrangement = Arrangement.spacedBy(SPACING_MEDIUM.dp)
-                ) {
-                    state.sections.forEach { section -> ProfileSection(section = section) }
-                }
+                SectionListHeader(
+                    paddingValues = screenPaddingsNone().applyPadding(),
+                    sectionHeadersData = state.sections
+                )
             }
         }
     }
 
-    // Alert Dialog error.
-    state.errorAlertDialog?.let { errorAlertDialog ->
-        AlertDialogError(
-            isVisible = true,
-            title = errorAlertDialog.errorTitle,
-            errorMessage = errorAlertDialog.errorSubtitle,
-            confirmButton = errorAlertDialog.alertDialogButtonPositive,
-            dismissButton = errorAlertDialog.alertDialogButtonNegative
+    // Cropped image result screen.
+    state.croppedImageUri?.let { imageUri ->
+        CroppedImage(
+            isLoading = state.croppedImageIsLoading,
+            imageUri = imageUri,
+            onCloseClicked = { onEventSent(ProfileContract.Event.ProfileImage.CroppedImage.OnCloseClicked) },
+            onSaveClicked = { onEventSent(ProfileContract.Event.ProfileImage.CroppedImage.OnSaveClicked) }
         )
     }
 
@@ -263,13 +270,14 @@ fun ProfileScreen(
         )
     }
 
-    // Cropped image result screen.
-    state.croppedImageUri?.let { imageUri ->
-        CroppedImage(
-            isLoading = state.croppedImageIsLoading,
-            imageUri = imageUri,
-            onCloseClicked = { onEventSent(ProfileContract.Event.ProfileImage.CroppedImage.OnCloseClicked) },
-            onSaveClicked = { onEventSent(ProfileContract.Event.ProfileImage.CroppedImage.OnSaveClicked) }
+    // Alert Dialog error.
+    state.errorAlertDialog?.let { errorAlertDialog ->
+        AlertDialogError(
+            isVisible = true,
+            title = errorAlertDialog.errorTitle,
+            errorMessage = errorAlertDialog.errorSubtitle,
+            confirmButton = errorAlertDialog.alertDialogButtonPositive,
+            dismissButton = errorAlertDialog.alertDialogButtonNegative
         )
     }
 
@@ -424,32 +432,6 @@ private fun ProfileBanner(
     }
 }
 
-/**
- * Displays a single profile section.
- */
-@Composable
-private fun ProfileSection(
-    section: ProfileScreenSection
-) {
-    ProfileHeader(
-        title = section.title,
-        leadingIcon = {
-            Icon(
-                painter = painterResource(section.iconData.iconResource),
-                contentDescription = stringResource(
-                    section.iconData.contentDescription
-                )
-            )
-        },
-        trailingIcon = {
-            if (section.isNavigable) {
-                NavigateIcon()
-            }
-        },
-        onClick = section.onClick
-    )
-}
-
 @Preview(
     apiLevel = 34,
     uiMode = Configuration.UI_MODE_NIGHT_YES or Configuration.UI_MODE_TYPE_NORMAL
@@ -463,23 +445,23 @@ private fun ProfileScreenPreview() {
             state = ProfileContract.State(
                 isLoading = false,
                 sections = listOf(
-                    ProfileScreenSection(
-                        title = stringResource(R.string.profile_screen_section_label_privacy_settings),
+                    SectionHeaderData(
+                        title = stringResource(R.string.screen_settings_section_label_privacy_settings),
                         iconData = IconData(
                             iconResource = R.drawable.ic_privacy,
                             contentDescription = R.string.content_description_privacy
                         ),
                         onClick = { }
                     ),
-                    ProfileScreenSection(
-                        title = stringResource(R.string.profile_screen_section_label_faq),
+                    SectionHeaderData(
+                        title = stringResource(R.string.screen_settings_section_label_faq),
                         iconData = IconData(
                             iconResource = R.drawable.ic_faq,
                             contentDescription = R.string.content_description_faq
                         ),
                         onClick = { }
                     ),
-                    ProfileScreenSection(
+                    SectionHeaderData(
                         title = stringResource(R.string.profile_screen_section_label_logout),
                         iconData = IconData(
                             iconResource = R.drawable.ic_logout,

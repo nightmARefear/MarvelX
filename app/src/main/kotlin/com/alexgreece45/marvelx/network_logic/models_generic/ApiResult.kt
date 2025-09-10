@@ -1,6 +1,7 @@
 package com.alexgreece45.marvelx.network_logic.models_generic
 
 sealed class ApiResult <out T> {
+
     /**
      * The call was successful. The data is stored in [body].
      */

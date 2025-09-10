@@ -50,7 +50,7 @@ fun OtpScreen(
     popBackStack: () -> Unit,
     navigateToAllCharactersScreen: () -> Unit,
     navigateToChangePasswordScreen: (String, String?) -> Unit,
-    userId: Int?,
+    userId: String?,
     otpFlowType: String?,
     verificationStep: String?,
     shouldRememberUserSession: Boolean?,

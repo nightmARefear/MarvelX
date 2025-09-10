@@ -106,7 +106,7 @@ interface PrefKeys {
     fun containsUserCredentials(): Boolean
     fun containsUserAuthData(): Boolean
 
-    fun getUserId(): Int
+    fun getUserId(): String
     fun getUserAuthData(): String
 
     /**
@@ -120,7 +120,7 @@ interface PrefKeys {
      */
     fun isUserLoggedIn(): Boolean
 
-    fun setUserId(userId: Int)
+    fun setUserId(userId: String)
     fun setUserAuthData(userAuthData: String)
 
     /**
@@ -169,8 +169,8 @@ class PrefKeysImpl(
     override fun containsUserAuthData(): Boolean =
         preferencesController.containsKey("UserAuthData")
 
-    override fun getUserId(): Int =
-        preferencesController.getInt(BuildConfig.ENCRYPTED_SHARED_PREFERENCES_KEY_USER_ID, -1)
+    override fun getUserId(): String =
+        preferencesController.getString(BuildConfig.ENCRYPTED_SHARED_PREFERENCES_KEY_USER_ID, "")
 
     override fun getUserAuthData(): String =
         preferencesController.getString("UserAuthData", "{}")
@@ -181,10 +181,10 @@ class PrefKeysImpl(
     override fun isUserLoggedIn(): Boolean =
         preferencesController.getBoolean("isUserLoggedIn", false)
 
-    override fun setUserId(userId: Int) =
-        preferencesController.setInt(
-            BuildConfig.ENCRYPTED_SHARED_PREFERENCES_KEY_USER_ID,
-            userId
+    override fun setUserId(userId: String) =
+        preferencesController.setString(
+            key = BuildConfig.ENCRYPTED_SHARED_PREFERENCES_KEY_USER_ID,
+            value = userId
         ).also { logger.d { "(setUserId) user_id = $userId" } }
 
     override fun setUserAuthData(userAuthData: String) =

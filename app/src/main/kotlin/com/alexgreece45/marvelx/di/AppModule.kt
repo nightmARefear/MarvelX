@@ -52,6 +52,8 @@ import com.alexgreece45.marvelx.data.repository.FavoriteCharactersRepository
 import com.alexgreece45.marvelx.data.repository.FavoriteCharactersRepositoryImpl
 import com.alexgreece45.marvelx.data.repository.ForgotPasswordRepository
 import com.alexgreece45.marvelx.data.repository.ForgotPasswordRepositoryImpl
+import com.alexgreece45.marvelx.data.repository.FriendRequestsRepository
+import com.alexgreece45.marvelx.data.repository.FriendRequestsRepositoryImpl
 import com.alexgreece45.marvelx.data.repository.LoginRepository
 import com.alexgreece45.marvelx.data.repository.LoginRepositoryImpl
 import com.alexgreece45.marvelx.data.repository.OtpRepository
@@ -64,6 +66,8 @@ import com.alexgreece45.marvelx.data.repository.UserRepository
 import com.alexgreece45.marvelx.data.repository.UserRepositoryImpl
 import com.alexgreece45.marvelx.database.FavoriteCharactersDao
 import com.alexgreece45.marvelx.database.FavoriteCharactersDatabase
+import com.alexgreece45.marvelx.dispatchers.MarvelXDispatchers
+import com.alexgreece45.marvelx.dispatchers.dispatchersModule
 import com.alexgreece45.marvelx.domain.interactors.ChangePasswordInteractor
 import com.alexgreece45.marvelx.domain.interactors.ChangePasswordInteractorImpl
 import com.alexgreece45.marvelx.domain.interactors.CharacterInteractor
@@ -105,12 +109,13 @@ import com.alexgreece45.marvelx.ui.screens.mainActivity.ActivityViewModel
 import com.alexgreece45.marvelx.ui.screens.otp.OtpViewModel
 import com.alexgreece45.marvelx.ui.screens.profile.ProfileViewModel
 import com.alexgreece45.marvelx.ui.screens.profile.editProfileDetails.EditProfileDetailsViewModel
-import com.alexgreece45.marvelx.ui.screens.profile.faq.FaqViewModel
 import com.alexgreece45.marvelx.ui.screens.profile.image.ProfileImageViewModel
-import com.alexgreece45.marvelx.ui.screens.profile.privacySettings.PrivacySettingsViewModel
 import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.ProfileDetailsViewModel
 import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.stats.ProfileDetailsStatsViewModel
 import com.alexgreece45.marvelx.ui.screens.qrCode.QrCodeScanViewModel
+import com.alexgreece45.marvelx.ui.screens.settings.SettingsViewModel
+import com.alexgreece45.marvelx.ui.screens.settings.faq.FaqViewModel
+import com.alexgreece45.marvelx.ui.screens.settings.privacySettings.PrivacySettingsViewModel
 import com.alexgreece45.marvelx.ui.screens.signup.SignupViewModel
 import com.alexgreece45.marvelx.ui.screens.splash.SplashViewModel
 import com.alexgreece45.marvelx.util.FormValidator
@@ -120,11 +125,13 @@ import com.alexgreece45.marvelx.util.ResourceProviderImpl
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.androidx.viewmodel.dsl.viewModel
+import org.koin.androidx.viewmodel.dsl.viewModelOf
 import org.koin.androidx.workmanager.dsl.worker
 import org.koin.androidx.workmanager.koin.workManagerFactory
 import org.koin.core.context.startKoin
 import org.koin.core.logger.Level
 import org.koin.core.module.Module
+import org.koin.core.qualifier.named
 import org.koin.dsl.module
 
 /**
@@ -141,7 +148,7 @@ fun initKoin(marvelXApplication: MarvelXApplication) {
         modules(
             navigationModule,
             databaseModule,
-            networkModule,
+            networkKoinModule,
             repositoryModule,
             interactorModule,
             controllerModule,
@@ -149,7 +156,8 @@ fun initKoin(marvelXApplication: MarvelXApplication) {
             resourceProviderModule,
             configModule,
             viewModelModule,
-            workerModule
+            workerModule,
+            dispatchersModule
         )
     }
 }
@@ -173,9 +181,6 @@ private val databaseModule = module {
     }
 }
 
-//private val networkModule: Module = defaultModule
-private val networkModule: Module = networkKoinModule
-
 private val repositoryModule = module {
     single<CharacterRepository> { CharacterRepositoryImpl(get()) }
     single<FavoriteCharactersRepository> { FavoriteCharactersRepositoryImpl(get()) }
@@ -187,6 +192,7 @@ private val repositoryModule = module {
     single<ChangePasswordRepository> { ChangePasswordRepositoryImpl(get()) }
     single<OtpRepository> { OtpRepositoryImpl(get(), get()) }
     single<RegisterRepository> { RegisterRepositoryImpl(get()) }
+    single<FriendRequestsRepository> { FriendRequestsRepositoryImpl(get(), get(named(MarvelXDispatchers.IO))) }
 }
 
 private val interactorModule = module {
@@ -261,8 +267,21 @@ private val viewModelModule = module {
     viewModel { IntroLoadingViewModel(get(), get(), get(), get(), get(), get(), get()) }
 
     viewModel { HomeViewModel(get(), get()) }
-    viewModel { LoginViewModel(get(), get(), get(), get()) }
-    viewModel { SignupViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get()) }
+    viewModel { LoginViewModel(get(), get(), get(), get(), get(named(MarvelXDispatchers.Main))) }
+    viewModel {
+        SignupViewModel(
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(named(MarvelXDispatchers.Main))
+        )
+    }
 
     viewModel { OtpViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
 
@@ -274,15 +293,17 @@ private val viewModelModule = module {
     viewModel { AllCharacterComicsViewModel(get()) }
     viewModel { AllFavoriteCharactersViewModel(get()) }
     viewModel { CharacterViewModel(get(), get()) }
-    viewModel { ComicViewModel(get()) }
-    viewModel { ProfileViewModel(get(), get(), get(), get()) }
-    viewModel { ProfileImageViewModel() }
-    viewModel { ProfileDetailsViewModel(get(), get()) }
+    viewModelOf(::ComicViewModel)
+    viewModelOf(::ProfileViewModel)
+    viewModelOf(::ProfileImageViewModel)
+    viewModelOf(::ProfileDetailsViewModel)
     viewModel { EditProfileDetailsViewModel(get(), get(), get(), get()) }
-    viewModel { ProfileDetailsStatsViewModel(get()) }
+    viewModel { ProfileDetailsStatsViewModel() }
     viewModel { PrivacySettingsViewModel(get(), get()) }
     viewModel { FaqViewModel(get(), get()) }
     viewModel { QrCodeScanViewModel() }
+
+    viewModelOf(::SettingsViewModel)
 }
 
 private val workerModule = module {

@@ -29,6 +29,7 @@ import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -55,9 +56,10 @@ import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.OutlinedTextFieldValidation
 import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
 import com.alexgreece45.marvelx.ui.components.WrapButton
-import com.alexgreece45.marvelx.ui.components.WrapOutlinedButton
-import com.alexgreece45.marvelx.ui.components.error.ContentErrorScreen
 import com.alexgreece45.marvelx.ui.components.WrapClickableText
+import com.alexgreece45.marvelx.ui.components.WrapOutlinedButton
+import com.alexgreece45.marvelx.ui.components.effect.ObserveUiEffect
+import com.alexgreece45.marvelx.ui.components.error.ContentErrorScreen
 import com.alexgreece45.marvelx.ui.components.line.HorizontalLine
 import com.alexgreece45.marvelx.ui.components.model.AutofillData
 import com.alexgreece45.marvelx.ui.components.model.ClickableString
@@ -80,7 +82,7 @@ fun LoginScreen(
     effect: Flow<LoginEffect>,
     navigateToSignupScreen: () -> Unit,
     navigateToAllCharactersScreen: () -> Unit,
-    navigateToOtpScreen: (Int, String, String, Boolean) -> Unit,
+    navigateToOtpScreen: (String, String, String, Boolean) -> Unit,
     navigateToForgotPasswordScreen: () -> Unit,
     popBackStack: () -> Unit
 ) {
@@ -90,52 +92,52 @@ fun LoginScreen(
 
     LaunchedEffect(Unit) {
         onEventSent(LoginEvent.Init)
+    }
 
-        effect.collect { effect ->
-            when (effect) {
-                is LoginEffect.Navigation.NavigateToAllCharactersScreen -> {
-                    navigateToAllCharactersScreen()
-                }
+    ObserveUiEffect(effect) { uiEffect ->
+        when (uiEffect) {
+            is LoginEffect.Navigation.NavigateToAllCharactersScreen -> {
+                navigateToAllCharactersScreen()
+            }
 
-                is LoginEffect.Navigation.NavigateToOtpScreen -> {
-                    navigateToOtpScreen(
-                        effect.userId,
-                        effect.otpFlowType,
-                        effect.verificationStep,
-                        effect.shouldRememberUserSession
-                    )
-                }
+            is LoginEffect.Navigation.NavigateToOtpScreen -> {
+                navigateToOtpScreen(
+                    uiEffect.userId,
+                    uiEffect.otpFlowType,
+                    uiEffect.verificationStep,
+                    uiEffect.shouldRememberUserSession
+                )
+            }
 
-                LoginEffect.Navigation.NavigateToSignupScreen -> {
-                    navigateToSignupScreen()
-                }
+            LoginEffect.Navigation.NavigateToSignupScreen -> {
+                navigateToSignupScreen()
+            }
 
-                LoginEffect.CloseKeyboardAndClearFocus -> {
-                    keyboard?.hide()
-                    focusManager.clearFocus(
-                        force = true
-                    )
-                }
+            LoginEffect.CloseKeyboardAndClearFocus -> {
+                keyboard?.hide()
+                focusManager.clearFocus(
+                    force = true
+                )
+            }
 
-                LoginEffect.Navigation.PopBackStack -> {
-                    popBackStack()
-                }
+            LoginEffect.Navigation.PopBackStack -> {
+                popBackStack()
+            }
 
-                LoginEffect.OnDoneClick -> {
-                    onEventSent(LoginEvent.OnLoginButtonClick)
-                }
+            LoginEffect.OnDoneClick -> {
+                onEventSent(LoginEvent.OnLoginButtonClick)
+            }
 
-                LoginEffect.Navigation.NavigateToForgotPasswordScreen -> {
-                    navigateToForgotPasswordScreen()
-                }
+            LoginEffect.Navigation.NavigateToForgotPasswordScreen -> {
+                navigateToForgotPasswordScreen()
+            }
 
-                is LoginEffect.ExecuteEvent -> {
-                    onEventSent(effect.event)
-                }
+            is LoginEffect.ExecuteEvent -> {
+                onEventSent(uiEffect.event)
+            }
 
-                is LoginEffect.ShowToast -> {
-                    Toast.makeText(context, effect.text, Toast.LENGTH_SHORT).show()
-                }
+            is LoginEffect.ShowToast -> {
+                Toast.makeText(context, uiEffect.text, Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -333,8 +335,8 @@ private fun LoginWithGoogle(onLoginWithGoogleResult: (LoginWithIntentWithGoogleR
     val context = LocalContext.current
     val googleAuthUiClient = remember { GoogleAuthUiClient(Identity.getSignInClient(context)) }
 
-    val linePaddingSpace = remember { mutableStateOf(16.dp) }
-    val lineWidth = remember { mutableStateOf(1.25.dp) }
+    val linePaddingSpace by remember { mutableStateOf(16.dp) }
+    val lineWidth by remember { mutableStateOf(1.25.dp) }
 
     val lifecycleScope = LocalLifecycleOwner.current.lifecycle.coroutineScope
 
@@ -373,16 +375,16 @@ private fun LoginWithGoogle(onLoginWithGoogleResult: (LoginWithIntentWithGoogleR
                 color = MaterialTheme.colors.primary,
                 modifier = Modifier
                     .weight(1f)
-                    .padding(end = linePaddingSpace.value),
-                strokeWidth = lineWidth.value
+                    .padding(end = linePaddingSpace),
+                strokeWidth = lineWidth
             )
             Text(text = stringResource(id = R.string.login_screen_or_login_with))
             HorizontalLine(
                 color = MaterialTheme.colors.primary,
                 modifier = Modifier
                     .weight(1f)
-                    .padding(start = linePaddingSpace.value),
-                strokeWidth = lineWidth.value
+                    .padding(start = linePaddingSpace),
+                strokeWidth = lineWidth
             )
         }
 
@@ -408,7 +410,7 @@ private fun LoginWithGoogle(onLoginWithGoogleResult: (LoginWithIntentWithGoogleR
             },
             modifier = Modifier.align(Alignment.CenterHorizontally),
             shape = RoundedCornerShape(25.dp),
-            border = BorderStroke(lineWidth.value, MaterialTheme.colors.primary)
+            border = BorderStroke(lineWidth, MaterialTheme.colors.primary)
         ) {
             Image(
                 painter = painterResource(R.drawable.ic_google_logo),
@@ -419,7 +421,7 @@ private fun LoginWithGoogle(onLoginWithGoogleResult: (LoginWithIntentWithGoogleR
 
             HSpacer.Small()
 
-            Text(stringResource(R.string.login_screen_google_button))
+            Text(text = stringResource(R.string.login_screen_google_button))
         }
     }
 }

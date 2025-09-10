@@ -1,30 +1,36 @@
 package com.alexgreece45.marvelx.ui.components.chips
 
-import androidx.compose.material.Chip
+import androidx.compose.material.ChipDefaults
 import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.Icon
-import androidx.compose.material.Text
+import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalView
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.util.extensions.throttledClickable
+import com.alexgreece45.marvelx.ui.components.IconData
+import com.alexgreece45.marvelx.ui.theme.values.customColors
 
+/**
+ * The `cancel request` chip.
+ *
+ * @param onClick Callback invoked when this chip is clicked.
+ * @param isLoading Whether the chip is in loading state.
+ */
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun CancelRequestChip(onClick: () -> Unit) {
-    Chip(
-        onClick = {},
-        modifier = Modifier.throttledClickable(view = LocalView.current, onClick = onClick),
-        leadingIcon = {
-            Icon(
-                painter = painterResource(R.drawable.ic_person),
-                contentDescription = stringResource(R.string.content_description_cancel_request)
-            )
-        }
-    ) {
-        Text(text = stringResource(R.string.generic_chip_label_cancel_request))
-    }
+fun CancelRequestChip(onClick: () -> Unit, isLoading: Boolean) {
+    LoadingChip(
+        onClick = onClick,
+        label = stringResource(R.string.generic_chip_label_cancel_request),
+        isLoading = isLoading,
+        colors = ChipDefaults.chipColors(
+            backgroundColor = MaterialTheme.customColors.chipBackgroundColors.cancelRequest,
+            contentColor = Color.White,
+            leadingIconContentColor = Color.White
+        ),
+        leadingIconData = IconData(
+            iconResource = R.drawable.ic_person,
+            contentDescription = R.string.content_description_person
+        )
+    )
 }

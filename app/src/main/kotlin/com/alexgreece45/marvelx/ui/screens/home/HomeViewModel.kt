@@ -35,7 +35,7 @@ sealed interface HomeEffect : BaseEffect {
         data object NavigateToLoginScreen : Navigation()
         data object NavigateToSignupScreen : Navigation()
         data class NavigateToOtpScreen(
-            val userId: Int,
+            val userId: String,
             val otpFlowType: String,
             val verificationStep: String,
             val shouldRememberUserSession: Boolean

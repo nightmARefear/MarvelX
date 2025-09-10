@@ -16,7 +16,7 @@ import org.koin.core.component.inject
 sealed interface ProfileImageContract {
     sealed interface Event : BaseEvent {
         data object OnBack : Event
-        data class Init(val fullName: String) : Event
+        data object Init : Event
 
         sealed interface ProfileImage : Event {
             data object OnLoadedError : ProfileImage
@@ -27,8 +27,7 @@ sealed interface ProfileImageContract {
     data class State(
         val isLoading: Boolean = true,
 
-        val imageUri: String = "",
-        val fullName: String = "",
+        val imageUri: String? = null,
 
         val errorView: ProfileImageErrorView? = null
     ) : BaseState
@@ -50,7 +49,7 @@ class ProfileImageViewModel :
 
     override fun handleEvents(event: ProfileImageContract.Event) {
         when (event) {
-            is ProfileImageContract.Event.Init -> {
+            ProfileImageContract.Event.Init -> {
                 when (val navArgStatus = NavArgHelper.getArgument<String>(NavArg.ProfileImageUri)) {
                     is NavArgStatus.Exists -> {
                         val imageUri = navArgStatus.value
@@ -65,7 +64,6 @@ class ProfileImageViewModel :
                         setState {
                             copy(
                                 imageUri = imageUri,
-                                fullName = event.fullName
                             )
                         }
                     }

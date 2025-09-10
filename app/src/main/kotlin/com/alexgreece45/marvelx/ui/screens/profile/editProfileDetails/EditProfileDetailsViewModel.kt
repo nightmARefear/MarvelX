@@ -1,5 +1,6 @@
 package com.alexgreece45.marvelx.ui.screens.profile.editProfileDetails
 
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.domain.helper.InteractorPartialState
@@ -11,7 +12,7 @@ import com.alexgreece45.marvelx.mvi.BaseState
 import com.alexgreece45.marvelx.mvi.BaseViewModel
 import com.alexgreece45.marvelx.network_logic.models_api.user.Gender
 import com.alexgreece45.marvelx.ui.components.AlertDialogButton
-import com.alexgreece45.marvelx.ui.components.SnackbarStateData
+import com.alexgreece45.marvelx.ui.components.model.SnackbarStateData
 import com.alexgreece45.marvelx.ui.components.model.ErrorButtonLayout
 import com.alexgreece45.marvelx.ui.components.model.ErrorButtonType
 import com.alexgreece45.marvelx.ui.helper.FieldValidationRules
@@ -346,6 +347,7 @@ class EditProfileDetailsViewModel(
                                             initialValue = profileDetails.email,
                                             currentValue = profileDetails.email,
                                             label = R.string.generic_label_email,
+                                            keyboardType = KeyboardType.Email,
                                             onValueChanged = { value ->
                                                 EditProfileDetailsContract.Event.EmailField.OnValueChanged(
                                                     value

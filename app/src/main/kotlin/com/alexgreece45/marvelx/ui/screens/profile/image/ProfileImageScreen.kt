@@ -1,39 +1,45 @@
 package com.alexgreece45.marvelx.ui.screens.profile.image
 
-import androidx.compose.foundation.layout.Arrangement
+import android.content.res.Configuration
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.ui.components.ContentScreen
-import com.alexgreece45.marvelx.ui.components.ContentScreenHeader
 import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
 import com.alexgreece45.marvelx.ui.components.WrapAsyncImage
 import com.alexgreece45.marvelx.ui.components.effect.ObserveUiEffect
 import com.alexgreece45.marvelx.ui.components.effect.OneTimeLaunchedEffect
-import com.alexgreece45.marvelx.util.VSpacer
+import com.alexgreece45.marvelx.ui.components.error.ContentErrorScreen
+import com.alexgreece45.marvelx.ui.theme.MarvelXTheme
 import com.alexgreece45.marvelx.util.constants.ConstantsUi
+import com.alexgreece45.marvelx.util.extensions.circularImageWithBorder
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
 
 @Composable
 fun ProfileImageScreen(
     onEventSent: (ProfileImageContract.Event) -> Unit,
     state: ProfileImageContract.State,
     effect: Flow<ProfileImageContract.Effect>,
-    fullName: String,
     navigateUp: () -> Unit,
 ) {
     OneTimeLaunchedEffect {
-        onEventSent(ProfileImageContract.Event.Init(fullName = fullName))
+        onEventSent(ProfileImageContract.Event.Init)
     }
 
     ObserveUiEffect(effect) { uiEffect ->
@@ -59,39 +65,56 @@ fun ProfileImageScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues),
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            ContentScreenHeader(
-                title = stringResource(
-                    R.string.profile_image_screen_toolbar_title,
-                    state.fullName
-                )
-            )
-
-            VSpacer.Medium()
-
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                WrapAsyncImage(
-                    imageUrl = state.imageUri,
-                    contentDescription = stringResource(R.string.profile_image_screen_content_description_profile_image),
-                    modifier = Modifier
-                        .size(ConstantsUi.PROFILE_IMAGE_FULL_SIZE)
-                        .clip(CircleShape),
-                    placeholder = painterResource(R.drawable.ic_person),
-                    error = painterResource(R.drawable.ic_person),
-                    onSuccess = { onEventSent(ProfileImageContract.Event.ProfileImage.OnLoadedSuccess) },
-                    onError = { onEventSent(ProfileImageContract.Event.ProfileImage.OnLoadedError) },
-                    contentScale = ContentScale.Fit,
-                )
+            state.imageUri?.let { imageUri ->
+                Spacer(modifier = Modifier.weight(0.15f))
+                Row(modifier = Modifier.weight(0.85f)) {
+                    WrapAsyncImage(
+                        imageUrl = imageUri,
+                        contentDescription = stringResource(R.string.profile_image_screen_content_description_profile_image),
+                        modifier = Modifier
+                            .size(size = ConstantsUi.PROFILE_IMAGE_FULL_SIZE)
+                            .circularImageWithBorder(
+                                borderWidth = ConstantsUi.IMAGE_BORDER_WIDTH,
+                                borderColor = MaterialTheme.colors.error
+                            ),
+                        placeholder = painterResource(R.drawable.ic_person),
+                        error = painterResource(R.drawable.ic_person),
+                        onSuccess = { onEventSent(ProfileImageContract.Event.ProfileImage.OnLoadedSuccess) },
+                        onError = { onEventSent(ProfileImageContract.Event.ProfileImage.OnLoadedError) },
+                        contentScale = ContentScale.FillBounds,
+                    )
+                }
             }
         }
-
     }
 
     state.errorView?.let { errorView ->
+        ContentErrorScreen(
+            errorTitle = errorView.title,
+            errorSubtitle = errorView.subtitle,
+            onClose = { onEventSent(ProfileImageContract.Event.OnBack) },
+            errorButtonLayout = errorView.errorButtonLayout
+        )
+    }
+}
 
+@Preview(
+    apiLevel = 34,
+    uiMode = Configuration.UI_MODE_NIGHT_YES or Configuration.UI_MODE_TYPE_NORMAL
+)
+@Composable
+private fun ProfileImageScreenPreview() {
+    MarvelXTheme {
+        ProfileImageScreen(
+            onEventSent = {},
+            state = ProfileImageContract.State(
+                isLoading = false,
+                imageUri = ""
+            ),
+            effect = emptyFlow(),
+            navigateUp = {}
+        )
     }
 }

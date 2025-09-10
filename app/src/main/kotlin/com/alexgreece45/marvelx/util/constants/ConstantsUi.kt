@@ -38,6 +38,11 @@ object ConstantsUi {
     }
 
     /**
+     * The minimum icon size of all icons, expressed in density-independent pixels (dp).
+     */
+    val MIN_ICON_SIZE = 24.dp
+
+    /**
      * The standard border width of all images, expressed in density-independent pixels (dp).
      */
     val IMAGE_BORDER_WIDTH = 2.dp
@@ -46,7 +51,7 @@ object ConstantsUi {
      * The size for profile images to be used when updating the profile image, or viewing the
      * current one, expressed in density-independent pixels (dp).
      */
-    val PROFILE_IMAGE_FULL_SIZE = 450.dp
+    val PROFILE_IMAGE_FULL_SIZE = 300.dp
 
     /**
      * The size for profile images to be used when displaying the profile image in the `Profile`

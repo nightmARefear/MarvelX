@@ -5,7 +5,6 @@ import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
 import com.alexgreece45.marvelx.mvi.BaseViewModel
 import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.stats.model.ProfileDetailsStatsTab
-import com.alexgreece45.marvelx.util.ResourceProvider
 
 sealed interface ProfileDetailsStatsContract {
     sealed interface Event : BaseEvent {
@@ -29,9 +28,7 @@ sealed interface ProfileDetailsStatsContract {
     }
 }
 
-class ProfileDetailsStatsViewModel(
-    private val resourceProvider: ResourceProvider
-) :
+class ProfileDetailsStatsViewModel :
     BaseViewModel<ProfileDetailsStatsContract.Event, ProfileDetailsStatsContract.State, ProfileDetailsStatsContract.Effect>() {
     override fun setInitialState(): ProfileDetailsStatsContract.State =
         ProfileDetailsStatsContract.State()

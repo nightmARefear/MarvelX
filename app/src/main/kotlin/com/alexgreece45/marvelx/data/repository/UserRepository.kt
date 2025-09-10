@@ -1,42 +1,41 @@
 package com.alexgreece45.marvelx.data.repository
 
 import com.alexgreece45.marvelx.data.model.RepositoryPrivacySettings
-import com.alexgreece45.marvelx.data.model.RepositoryUserBlock
-import com.alexgreece45.marvelx.data.model.RepositoryUsersBlocked
+import com.alexgreece45.marvelx.data.model.RepositoryUserBlockResult
 import com.alexgreece45.marvelx.data.model.toRepositoryPrivacySettings
 import com.alexgreece45.marvelx.data.model.toRepositoryUserBlock
-import com.alexgreece45.marvelx.data.model.toRepositoryUsersBlocked
 import com.alexgreece45.marvelx.data.repository.helper.RepositoryResult
 import com.alexgreece45.marvelx.data.repository.helper.handleApiResult
 import com.alexgreece45.marvelx.data.repository.helper.handleApiResultNoTransformation
+import com.alexgreece45.marvelx.data.repository.helper.handleApiResultNoTransformationWithData
 import com.alexgreece45.marvelx.data.repository.helper.parseUserError
 import com.alexgreece45.marvelx.network_logic.api.ApiClient
 import com.alexgreece45.marvelx.network_logic.models_api.user.ResponseUserError
-import com.alexgreece45.marvelx.network_logic.models_api.user.ResponseUsersBlocked
 import com.alexgreece45.marvelx.network_logic.models_api.user.block.ResponseUserBlock
+import com.alexgreece45.marvelx.network_logic.models_api.user.block.ResponseUserBlockResult
 import com.alexgreece45.marvelx.network_logic.models_api.user.privacySettings.RequestPrivacySettings
 import com.alexgreece45.marvelx.network_logic.models_api.user.privacySettings.ResponsePrivacySettings
 import com.alexgreece45.marvelx.network_logic.models_api.user.profileDetails.RequestProfileDetailsUpdate
 import com.alexgreece45.marvelx.network_logic.models_api.user.profileDetails.ResponseBasicProfileDetails
 import com.alexgreece45.marvelx.network_logic.models_api.user.profileDetails.ResponseProfileDetails
 import com.alexgreece45.marvelx.network_logic.models_api.user.profileDetails.ResponseProfileDetailsError
+import com.alexgreece45.marvelx.network_logic.util.extensions.toSerialized
 import com.google.gson.Gson
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import okhttp3.MultipartBody
 
 interface UserRepository {
+
     /**
      * Gets the profile details of the given [userId].
      */
-    suspend fun getProfileDetails(userId: Int): Flow<GetProfileDetailsRepositoryResponse>
+    suspend fun getProfileDetails(userId: String): GetProfileDetailsRepositoryResponse
 
     /**
      * Get the profile details of the current user.
      */
     suspend fun getCurrentUserProfileDetails(): Flow<GetCurrentUserProfileDetailsRepositoryResponse>
-
-    suspend fun getCurrentUserBlockedUsers(): Flow<RepositoryResult<RepositoryUsersBlocked>>
 
     /**
      * Updates the profile details of the current user.
@@ -67,43 +66,44 @@ interface UserRepository {
     suspend fun updatePrivacySettings(requestPrivacySettings: RequestPrivacySettings): Flow<RepositoryResult<String>>
 
     /**
+     * Deletes the friend with the given ID.
+     */
+    suspend fun deleteFriend(userId: String): Flow<RepositoryResult<String>>
+
+    suspend fun getBlockedUsers(): Flow<RepositoryResult<List<ResponseUserBlock>>>
+
+    /**
      * Blocks the user with [userId].
      */
-    suspend fun blockUser(userId: Int): Flow<BlockUserRepositoryResult>
+    suspend fun blockUser(userId: String): Flow<BlockUserRepositoryResult>
 
     /**
      * Unblocks the user with [userId].
      */
-    suspend fun unblockUser(userId: Int): Flow<RepositoryResult<String>>
+    suspend fun unblockUser(userId: String): Flow<RepositoryResult<String>>
 }
 
 class UserRepositoryImpl(
     private val apiClient: ApiClient
 ) : UserRepository {
+
     override suspend fun getProfileDetails(
-        userId: Int
-    ): Flow<GetProfileDetailsRepositoryResponse> =
-        flow {
-            apiClient.getUserProfileDetails(userId)
-                .let { response ->
-                    if (response.isSuccessful) {
-                        emit(
-                            GetProfileDetailsRepositoryResponse.Success(
-                                response = response.body()
-                            )
-                        )
-                    } else {
-                        emit(
-                            GetProfileDetailsRepositoryResponse.Failed(
-                                responseProfileDetailsError = Gson().fromJson(
-                                    response.errorBody()?.byteString()?.utf8(),
-                                    ResponseProfileDetailsError::class.java
-                                )
-                            )
-                        )
-                    }
+        userId: String
+    ): GetProfileDetailsRepositoryResponse =
+        apiClient.getUserProfileDetails(userId)
+            .let { response ->
+                if (response.isSuccessful) {
+                    GetProfileDetailsRepositoryResponse.Success(
+                        response = response.body()
+                    )
+
+                } else {
+                    GetProfileDetailsRepositoryResponse.Failed(
+                        responseProfileDetailsError = response.errorBody()
+                            .toSerialized<ResponseProfileDetailsError>()
+                    )
                 }
-        }
+            }
 
     override suspend fun getCurrentUserProfileDetails(): Flow<GetCurrentUserProfileDetailsRepositoryResponse> =
         flow {
@@ -120,14 +120,6 @@ class UserRepositoryImpl(
                     )
                 }
             }
-        }
-
-    override suspend fun getCurrentUserBlockedUsers(): Flow<RepositoryResult<RepositoryUsersBlocked>> =
-        flow {
-            handleApiResult(
-                apiResult = apiClient.getCurrentUserBlockedUsers(),
-                transformation = ResponseUsersBlocked::toRepositoryUsersBlocked
-            ).collect { emit(it) }
         }
 
     override suspend fun updateCurrentUserProfileDetails(
@@ -175,17 +167,29 @@ class UserRepositoryImpl(
             }
         }
 
-    override suspend fun blockUser(userId: Int): Flow<BlockUserRepositoryResult> = flow {
+    override suspend fun deleteFriend(userId: String): Flow<RepositoryResult<String>> = flow {
+        handleApiResultNoTransformation(
+            apiClient.deleteFriend(userId)
+        ).collect { emit(it) }
+    }
+
+    override suspend fun getBlockedUsers(): Flow<RepositoryResult<List<ResponseUserBlock>>> = flow {
+        handleApiResultNoTransformationWithData(
+            apiClient.getBlockedUsers()
+        ).collect { emit(it) }
+    }
+
+    override suspend fun blockUser(userId: String): Flow<BlockUserRepositoryResult> = flow {
         apiClient.blockUser(userId).let { response ->
             if (response.isSuccessful) {
                 emit(BlockUserRepositoryResult.Success)
             } else {
                 emit(
                     BlockUserRepositoryResult.Failed(
-                        repositoryUserBlock =
+                        repositoryUserBlockResult =
                         Gson().fromJson(
                             response.errorBody()?.byteString()?.utf8(),
-                            ResponseUserBlock::class.java
+                            ResponseUserBlockResult::class.java
                         ).toRepositoryUserBlock()
                     )
                 )
@@ -193,7 +197,7 @@ class UserRepositoryImpl(
         }
     }
 
-    override suspend fun unblockUser(userId: Int): Flow<RepositoryResult<String>> = flow {
+    override suspend fun unblockUser(userId: String): Flow<RepositoryResult<String>> = flow {
         handleApiResultNoTransformation(
             apiClient.unblockUser(userId)
         ).collect { emit(it) }
@@ -218,5 +222,6 @@ sealed class GetProfileDetailsRepositoryResponse {
 
 sealed interface BlockUserRepositoryResult {
     data object Success : BlockUserRepositoryResult
-    data class Failed(val repositoryUserBlock: RepositoryUserBlock) : BlockUserRepositoryResult
+    data class Failed(val repositoryUserBlockResult: RepositoryUserBlockResult) :
+        BlockUserRepositoryResult
 }

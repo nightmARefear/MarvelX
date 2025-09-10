@@ -22,7 +22,6 @@ import com.alexgreece45.marvelx.ui.screens.allCharacters.model.AllCharactersScre
 import com.alexgreece45.marvelx.ui.screens.allCharacters.uiModel.CharacterCardUi
 import com.alexgreece45.marvelx.ui.screens.allCharacters.uiModel.toFavoriteCharacterEntity
 import com.alexgreece45.marvelx.util.ResourceProvider
-import com.alexgreece45.marvelx.util.extensions.clearPendingDeepLinkAction
 import kotlinx.coroutines.launch
 
 sealed interface AllCharactersEvent : BaseEvent {
@@ -107,7 +106,7 @@ data class AllCharactersState(
 class AllCharactersViewModel(
     private val interactor: CharacterInteractor,
     private val resourceProvider: ResourceProvider,
-    private val routerHost: RouterHost
+    private val routerHost: RouterHost,
 ) : BaseViewModel<AllCharactersEvent, AllCharactersState, AllCharactersEffect>() {
     override fun setInitialState(): AllCharactersState =
         AllCharactersState(
@@ -123,13 +122,11 @@ class AllCharactersViewModel(
     override fun handleEvents(event: AllCharactersEvent) {
         when (event) {
             is AllCharactersEvent.Init -> {
-                // TODO: NEEDS TO BE FIXED; intent is re-executed when navigation occurs to this screen
                 if (event.deepLinkAction != null) {
-                    resourceProvider.getContext().clearPendingDeepLinkAction()
                     setEffect {
                         AllCharactersEffect.Navigation.OpenDeepLinkAction(
-                            routerHost.getNavController(),
-                            event.deepLinkAction
+                            navController = routerHost.getNavController(),
+                            deepLinkAction = event.deepLinkAction
                         )
                     }
                 } else {

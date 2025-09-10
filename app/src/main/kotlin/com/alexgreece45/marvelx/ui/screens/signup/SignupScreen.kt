@@ -51,7 +51,7 @@ fun SignUpScreen(
     state: SignupState,
     effect: Flow<SignupEffect>,
     navigateToAllCharactersScreen: () -> Unit,
-    navigateToOtpScreen: (Int, String, String, Boolean) -> Unit,
+    navigateToOtpScreen: (String, String, String, Boolean) -> Unit,
     popBackStack: () -> Unit,
 ) {
     val focusManager = LocalFocusManager.current

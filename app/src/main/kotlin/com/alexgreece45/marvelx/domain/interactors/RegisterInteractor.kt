@@ -40,7 +40,7 @@ interface RegisterInteractor {
     suspend fun loginWithToken(): Flow<LoginWithTokenPartialState>
 
     suspend fun getJwtForSensitiveUserData(
-        userId: Int,
+        userId: String,
         verificationStep: VerificationStep
     ): Flow<GetJwtForSensitiveUserDataPartialState>
 }
@@ -203,7 +203,7 @@ class RegisterInteractorImpl(
         }
 
     override suspend fun getJwtForSensitiveUserData(
-        userId: Int,
+        userId: String,
         verificationStep: VerificationStep
     ): Flow<GetJwtForSensitiveUserDataPartialState> = flow {
         val genericErrorMessage = resourceProvider.getGenericErrorMessage()

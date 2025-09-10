@@ -30,6 +30,13 @@ android {
             enableV1Signing = true
             enableV2Signing = true
         }
+
+        getByName("debug") {
+            keyAlias = keystoreProperties["debugKeyAlias"].toString()
+            keyPassword = keystoreProperties["debugKeyPassword"].toString()
+            storeFile = file(keystoreProperties["debugStoreFile"].toString())
+            storePassword = keystoreProperties["debugStorePassword"].toString()
+        }
     }
 
     defaultConfig {
@@ -87,6 +94,8 @@ android {
             )
 
             versionNameSuffix = "-DEBUG"
+
+            signingConfig = signingConfigs.getByName("debug")
         }
 
         create("mock") {

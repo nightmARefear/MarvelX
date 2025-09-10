@@ -82,7 +82,7 @@ data class OtpScreenErrorView(
 
 sealed class OtpEvent : BaseEvent {
     data class Init(
-        val userId: Int?,
+        val userId: String?,
         val otpFlowType: String?,
         val verificationStep: String?,
         val shouldRememberUserSession: Boolean?,
@@ -114,7 +114,7 @@ data class OtpState(
     /**
      * The user ID.
      * */
-    val userId: Int = -1,
+    val userId: String = "",
 
     val requestIdEmail: String = "",
     val requestIdPhoneNumber: String = "",
@@ -364,7 +364,7 @@ class OtpViewModel(
      * begins.
      */
     private fun initRegisterFlow(
-        userId: Int?,
+        userId: String?,
         verificationStep: VerificationStep,
         otpFlowType: OtpFlowType,
         shouldRememberUserSession: Boolean?
@@ -774,7 +774,7 @@ class OtpViewModel(
      *
      * ### Note: The JWT is valid for a short period of time for security reasons (~1 minute).
      */
-    private fun retrieveJwt(userId: Int, verificationStep: VerificationStep) {
+    private fun retrieveJwt(userId: String, verificationStep: VerificationStep) {
         setState {
             copy(
                 isLoading = true

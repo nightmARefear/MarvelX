@@ -31,7 +31,7 @@ import com.alexgreece45.marvelx.util.extensions.clickableNoRipple
  * [LottieConstants.IterateForever].
  * @param backgroundColor       The background color of the container, defaults to MaterialTheme
  * background.
- * @param verticalArrangment    The vertical arrangement of the content inside the Column, defaults
+ * @param verticalArrangement    The vertical arrangement of the content inside the Column, defaults
  * to [Arrangement.Center].
  * @param horizontalAlignment   The horizontal alignment of the content inside the Column, defaults
  * to [Alignment.CenterHorizontally].
@@ -45,7 +45,7 @@ fun LottieComposable(
     modifier: Modifier = Modifier,
     iterations: Int = LottieConstants.IterateForever,
     backgroundColor: Color? = null,
-    verticalArrangment: Arrangement.Vertical = Arrangement.Center,
+    verticalArrangement: Arrangement.Vertical = Arrangement.Center,
     horizontalAlignment: Alignment.Horizontal = Alignment.CenterHorizontally,
     subtitleContent: (@Composable () -> Unit)? = null,
 ) {
@@ -65,7 +65,7 @@ fun LottieComposable(
                 .fillMaxSize()
                 .background(backgroundColor ?: MaterialTheme.colors.background)
                 .clickableNoRipple(onClick = {}),
-            verticalArrangement = verticalArrangment,
+            verticalArrangement = verticalArrangement,
             horizontalAlignment = horizontalAlignment
         ) {
             LottieAnimation(

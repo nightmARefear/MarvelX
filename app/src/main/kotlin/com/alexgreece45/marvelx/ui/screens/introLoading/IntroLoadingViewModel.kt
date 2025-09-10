@@ -54,7 +54,7 @@ sealed interface IntroLoadingContract {
                 Navigation
 
             data class NavigateToOtpScreen(
-                val userId: Int,
+                val userId: String,
                 val otpFlowType: String,
                 val verificationStep: String,
                 val shouldRememberUserSession: Boolean

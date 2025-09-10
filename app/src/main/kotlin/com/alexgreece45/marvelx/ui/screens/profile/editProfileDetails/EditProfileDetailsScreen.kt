@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.DropdownMenuItem
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
@@ -24,6 +25,7 @@ import com.alexgreece45.marvelx.ui.components.OutlinedTextFieldValidation
 import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
 import com.alexgreece45.marvelx.ui.components.ThrottledIconButton
 import com.alexgreece45.marvelx.ui.components.WrapButton
+import com.alexgreece45.marvelx.ui.components.effect.ObserveUiEffect
 import com.alexgreece45.marvelx.ui.components.error.ContentErrorScreen
 import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.model.EditProfileDetailsItemUi
 import com.alexgreece45.marvelx.util.SPACING_SMALL
@@ -42,23 +44,25 @@ fun EditProfileDetailsScreen(
 ) {
     LaunchedEffect(Unit) {
         onEventSent(EditProfileDetailsContract.Event.Init)
+    }
 
-        effect.collect {
-            when (it) {
-                EditProfileDetailsContract.Effect.Navigation.NavigateUp -> {
-                    navigateUp()
-                }
+    ObserveUiEffect(effect) { uiEffect ->
+        when (uiEffect) {
+            EditProfileDetailsContract.Effect.Navigation.NavigateUp -> {
+                navigateUp()
             }
         }
     }
 
     ContentScreen(
         isLoading = state.isLoading,
-        navigableAction = ScreenNavigableAction.Backable(onBack = {
-            onEventSent(
-                EditProfileDetailsContract.Event.OnBackClicked
-            )
-        }),
+        navigableAction = ScreenNavigableAction.Backable(
+            onBack = {
+                onEventSent(
+                    EditProfileDetailsContract.Event.OnBackClicked
+                )
+            }
+        ),
         onBack = {
             onEventSent(
                 EditProfileDetailsContract.Event.OnBackClicked
@@ -200,6 +204,7 @@ private fun <T : Any> ProfileDetailsItem(
             }
         },
         errorMessage = editProfileDetailsItemUi.validationResult.message,
-        isError = !editProfileDetailsItemUi.validationResult.isValid && editProfileDetailsItemUi.validationResult.message.isNotBlank()
+        isError = !editProfileDetailsItemUi.validationResult.isValid && editProfileDetailsItemUi.validationResult.message.isNotBlank(),
+        keyboardOptions = KeyboardOptions(keyboardType = editProfileDetailsItemUi.keyboardType)
     )
 }

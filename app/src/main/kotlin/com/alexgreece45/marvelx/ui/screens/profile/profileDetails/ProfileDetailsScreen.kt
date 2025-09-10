@@ -17,6 +17,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.Card
+import androidx.compose.material.Divider
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
@@ -32,11 +34,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.graphics.drawOutline
-import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalContext
@@ -55,6 +53,7 @@ import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.ProfileDetailsDomain
+import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.RelationshipStatusDomain
 import com.alexgreece45.marvelx.network_logic.models_api.user.Gender
 import com.alexgreece45.marvelx.ui.components.AlertDialogError
 import com.alexgreece45.marvelx.ui.components.ContentScreen
@@ -63,8 +62,11 @@ import com.alexgreece45.marvelx.ui.components.ModalBottomSheetContent
 import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
 import com.alexgreece45.marvelx.ui.components.ToolbarAction
 import com.alexgreece45.marvelx.ui.components.WrapAsyncImage
-import com.alexgreece45.marvelx.ui.components.WrapButton
 import com.alexgreece45.marvelx.ui.components.WrapModalBottomSheetLayout
+import com.alexgreece45.marvelx.ui.components.chips.AddFriendChip
+import com.alexgreece45.marvelx.ui.components.chips.CancelRequestChip
+import com.alexgreece45.marvelx.ui.components.chips.FriendsChip
+import com.alexgreece45.marvelx.ui.components.chips.IncomingFriendRequestChip
 import com.alexgreece45.marvelx.ui.components.effect.ObserveUiEffect
 import com.alexgreece45.marvelx.ui.components.enforceMaxBrightness
 import com.alexgreece45.marvelx.ui.components.error.ContentErrorScreen
@@ -74,6 +76,7 @@ import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.model.ProfileD
 import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.model.ProfileDetailsNestedErrorView
 import com.alexgreece45.marvelx.ui.theme.MarvelXTheme
 import com.alexgreece45.marvelx.ui.theme.values.customColors
+import com.alexgreece45.marvelx.util.SPACING_MEDIUM
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.VSpacer
 import com.alexgreece45.marvelx.util.constants.ConstantsUi
@@ -90,13 +93,10 @@ fun ProfileDetailsScreen(
     onEventSent: (ProfileDetailsContract.Event) -> Unit,
     state: ProfileDetailsContract.State,
     effect: Flow<ProfileDetailsContract.Effect>,
-    userId: Int,
+    userId: String,
     onNavigation: (ProfileDetailsContract.Effect.Navigation) -> Unit
 ) {
     val context = LocalContext.current
-
-    val bannerShape = MaterialTheme.shapes.large
-    val bannerShapeColor = MaterialTheme.colors.surface
 
     val coroutineScope = rememberCoroutineScope()
 
@@ -131,10 +131,6 @@ fun ProfileDetailsScreen(
         when (uiEffect) {
             is ProfileDetailsContract.Effect.Navigation -> onNavigation(uiEffect)
 
-            is ProfileDetailsContract.Effect.ExecuteEvent -> {
-                onEventSent(uiEffect.event)
-            }
-
             ProfileDetailsContract.Effect.ShowBottomSheet -> {
                 coroutineScope.launch {
                     modalBottomSheetState.show()
@@ -162,6 +158,10 @@ fun ProfileDetailsScreen(
         }
     }
 
+    BackHandler {
+        onEventSent(ProfileDetailsContract.Event.OnSystemBack)
+    }
+
     WrapModalBottomSheetLayout(
         sheetState = modalBottomSheetState,
         sheetContent = {
@@ -169,7 +169,7 @@ fun ProfileDetailsScreen(
                 ProfileDetailsBottomSheetType.MoreActions -> {
                     BottomSheetMoreActions(
                         moreActionItems = state.moreActionItems,
-                        onEventSent = { onEventSent(it) }
+                        onEventSent = onEventSent
                     )
                 }
 
@@ -186,14 +186,16 @@ fun ProfileDetailsScreen(
     ) {
         ContentScreen(
             isLoading = state.isLoading,
-            navigableAction = ScreenNavigableAction.Backable(onBack = {
-                onEventSent(
-                    ProfileDetailsContract.Event.OnBackClicked
-                )
-            }),
+            navigableAction = ScreenNavigableAction.Backable(
+                onBack = {
+                    onEventSent(
+                        ProfileDetailsContract.Event.OnBackClicked
+                    )
+                }
+            ),
             showToolbar = true,
             toolbarTitle = state.profileDetails?.basicProfileDetails?.fullName,
-            toolbarActions = when (state.isDifferentUser) {
+            toolbarActions = when (state.profileDetails?.isDifferentUser) {
                 null -> emptyList()
 
                 true -> listOf(
@@ -220,7 +222,7 @@ fun ProfileDetailsScreen(
                     ),
                     ToolbarAction(
                         label = stringResource(id = R.string.content_description_more_actions),
-                        order = 0,
+                        order = 1,
                         iconData = IconData(
                             iconResource = R.drawable.ic_more,
                             contentDescription = R.string.content_description_ic_more_actions
@@ -237,158 +239,196 @@ fun ProfileDetailsScreen(
                     .verticalScroll(rememberScrollState())
                     .padding(paddingValues)
             ) {
-                // User does not exist or is blocked error view.
-                state.nestedErrorView?.let { nestedErrorView ->
-                    NestedErrorView(
-                        nestedErrorView = nestedErrorView,
-                        onEventSent = { onEventSent(it) }
-                    )
-                }
-
                 // Profile details.
                 state.profileDetails?.let { profileDetails ->
                     // Profile Banner.
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .drawBehind {
-                                drawOutline(
-                                    outline = bannerShape.createOutline(
-                                        size = Size(width = size.width, height = size.height),
-                                        layoutDirection = layoutDirection,
-                                        density = this
-                                    ),
-                                    color = bannerShapeColor,
-                                    style = Fill
-                                )
-                            }
-                            .padding(ConstantsUi.ProfileDetailsScreen.PROFILE_BANNER_PADDING)
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = MaterialTheme.shapes.large,
                     ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(ConstantsUi.ProfileDetailsScreen.PROFILE_BANNER_PADDING),
+                            verticalArrangement = Arrangement.spacedBy(SPACING_MEDIUM.dp)
                         ) {
-                            // Profile image.
-                            WrapAsyncImage(
-                                imageUrl = profileDetails.basicProfileDetails.profileImageUrl,
-                                contentDescription = stringResource(R.string.content_description_your_profile_image),
-                                modifier = Modifier
-                                    .size(ConstantsUi.PROFILE_IMAGE_SMALL_SIZE)
-                                    .circularImageWithBorder(
-                                        borderWidth = ConstantsUi.IMAGE_BORDER_WIDTH,
-                                        borderColor = MaterialTheme.colors.error
-                                    ),
-                                error = painterResource(R.drawable.ic_person),
-                                placeholder = painterResource(R.drawable.ic_person),
-                                contentScale = ContentScale.Fit
-                            )
-
-                            // Profile Banner tiles.
-                            Layout(
-                                content = {
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(32.dp)
-                                    ) {
-                                        // Friends tile.
-                                        ProfileBannerTile(
-                                            label = stringResource(R.string.profile_details_screen_label_profile_banner_tile_friends),
-                                            count = profileDetails.userStats.friendsCount,
-                                            onClick = { onEventSent(ProfileDetailsContract.Event.ProfileBanner.OnFriendsListClicked) }
+                            // Profile image and lists.
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                // Profile image.
+                                WrapAsyncImage(
+                                    imageUrl = profileDetails.basicProfileDetails.profileImageUrl,
+                                    contentDescription = stringResource(R.string.content_description_your_profile_image),
+                                    modifier = Modifier
+                                        .size(ConstantsUi.PROFILE_IMAGE_SMALL_SIZE)
+                                        .throttledClickable(
+                                            view = LocalView.current,
+                                            onClick = { onEventSent(ProfileDetailsContract.Event.ProfileBanner.OnProfileImageClicked) }
                                         )
+                                        .circularImageWithBorder(
+                                            borderWidth = ConstantsUi.IMAGE_BORDER_WIDTH,
+                                            borderColor = MaterialTheme.colors.error
+                                        ),
+                                    error = painterResource(R.drawable.ic_person),
+                                    placeholder = painterResource(R.drawable.ic_person),
+                                    contentScale = ContentScale.FillBounds
+                                )
 
-                                        ProfileBannerTile(
-                                            label = stringResource(R.string.profile_details_screen_label_profile_banner_tile_listings),
-                                            count = profileDetails.userStats.listingsCount,
-                                            onClick = { onEventSent(ProfileDetailsContract.Event.ProfileBanner.OnListingsListClicked) }
-                                        )
+                                // Profile Banner tiles.
+                                Layout(
+                                    content = {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(32.dp)
+                                        ) {
+                                            ProfileBannerTile(
+                                                label = stringResource(R.string.profile_details_screen_label_profile_banner_tile_friends),
+                                                count = profileDetails.userStats.friendsCountFormatted,
+                                                onClick = { onEventSent(ProfileDetailsContract.Event.ProfileBanner.OnFriendsListClicked) }
+                                            )
 
-                                        ProfileBannerTile(
-                                            label = stringResource(R.string.profile_details_screen_label_profile_banner_tile_favorites),
-                                            count = profileDetails.userStats.favoritesCount,
-                                            onClick = { onEventSent(ProfileDetailsContract.Event.ProfileBanner.OnFavoritesListClicked) }
-                                        )
+                                            ProfileBannerTile(
+                                                label = stringResource(R.string.profile_details_screen_label_profile_banner_tile_listings),
+                                                count = profileDetails.userStats.listingsCountFormatted,
+                                                onClick = { onEventSent(ProfileDetailsContract.Event.ProfileBanner.OnListingsListClicked) }
+                                            )
+
+                                            ProfileBannerTile(
+                                                label = stringResource(R.string.profile_details_screen_label_profile_banner_tile_favorites),
+                                                count = profileDetails.userStats.favoritesCountFormatted,
+                                                onClick = { onEventSent(ProfileDetailsContract.Event.ProfileBanner.OnFavoritesListClicked) }
+                                            )
+                                        }
                                     }
-                                }
-                            ) { measurables, constraints ->
-                                val tilePlaceable = measurables[0].measure(constraints)
+                                ) { measurables, constraints ->
+                                    val tilePlaceable = measurables[0].measure(constraints)
 
-                                val remainingSpace = constraints.maxWidth - tilePlaceable.width
+                                    val remainingSpace = constraints.maxWidth - tilePlaceable.width
 
-                                val tileOffset = (remainingSpace * 0.55f).toInt()
+                                    val tileOffset = (remainingSpace * 0.55f).toInt()
 
-                                layout(
-                                    width = constraints.maxWidth,
-                                    height = tilePlaceable.height
-                                ) {
-                                    tilePlaceable.placeRelative(tileOffset, 0)
+                                    layout(
+                                        width = constraints.maxWidth,
+                                        height = tilePlaceable.height
+                                    ) {
+                                        tilePlaceable.placeRelative(tileOffset, 0)
+                                    }
                                 }
                             }
-                        }
 
-                        VSpacer.Medium()
-                        Row(modifier = Modifier.fillMaxWidth()) {
-                            Column(verticalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp)) {
-                                // Gender.
-                                Row(
-                                    horizontalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    if (state.isGenderHidden) {
-                                        // Hidden gender.
-                                        Icon(
-                                            painter = painterResource(R.drawable.ic_person),
-                                            contentDescription = stringResource(R.string.content_description_gender_icon_other)
-                                        )
-                                        HiddenField(label = stringResource(R.string.profile_details_screen_label_gender_hidden))
-                                    } else {
-                                        when (profileDetails.basicProfileDetails.gender) {
-                                            Gender.Other -> {
-                                                Icon(
-                                                    painter = painterResource(R.drawable.ic_person),
-                                                    contentDescription = stringResource(R.string.content_description_gender_icon_other)
-                                                )
-                                            }
+                            // Gender and email.
+                            Row(modifier = Modifier.fillMaxWidth()) {
+                                Column(verticalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp)) {
+                                    // Gender.
+                                    Row(
+                                        horizontalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        if (state.isGenderHidden) {
+                                            // Hidden gender.
+                                            Icon(
+                                                painter = painterResource(R.drawable.ic_person),
+                                                contentDescription = stringResource(R.string.content_description_gender_icon_other)
+                                            )
+                                            HiddenField(label = stringResource(R.string.profile_details_screen_label_gender_hidden))
+                                        } else {
+                                            when (profileDetails.basicProfileDetails.gender) {
+                                                Gender.Other -> {
+                                                    Icon(
+                                                        painter = painterResource(R.drawable.ic_person),
+                                                        contentDescription = stringResource(R.string.content_description_gender_icon_other)
+                                                    )
+                                                }
 
-                                            Gender.Female -> {
-                                                Icon(
-                                                    painter = painterResource(R.drawable.ic_female),
-                                                    contentDescription = stringResource(R.string.content_description_gender_icon_female),
-                                                    tint = MaterialTheme.customColors.genderFemale
-                                                )
-                                            }
+                                                Gender.Female -> {
+                                                    Icon(
+                                                        painter = painterResource(R.drawable.ic_female),
+                                                        contentDescription = stringResource(R.string.content_description_gender_icon_female),
+                                                        tint = MaterialTheme.customColors.genderFemale
+                                                    )
+                                                }
 
-                                            Gender.Male -> {
-                                                Icon(
-                                                    painter = painterResource(R.drawable.ic_male),
-                                                    contentDescription = stringResource(R.string.content_description_gender_icon_male),
-                                                    tint = MaterialTheme.customColors.genderMale
-                                                )
+                                                Gender.Male -> {
+                                                    Icon(
+                                                        painter = painterResource(R.drawable.ic_male),
+                                                        contentDescription = stringResource(R.string.content_description_gender_icon_male),
+                                                        tint = MaterialTheme.customColors.genderMale
+                                                    )
+                                                }
                                             }
+                                            VisibleField(label = stringResource(profileDetails.basicProfileDetails.gender.label))
                                         }
-                                        VisibleField(label = stringResource(profileDetails.basicProfileDetails.gender.label))
+                                    }
+
+                                    // Email.
+                                    Row(
+                                        horizontalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Icon(
+                                            painter = painterResource(R.drawable.ic_email),
+                                            contentDescription = stringResource(R.string.content_description_icon_email)
+                                        )
+                                        if (state.isEmailHidden) {
+                                            // Hidden email.
+                                            HiddenField(label = stringResource(R.string.profile_details_screen_label_email_hidden))
+                                        } else {
+                                            VisibleField(label = profileDetails.basicProfileDetails.email)
+                                        }
                                     }
                                 }
+                            }
 
-                                // Email.
-                                Row(
-                                    horizontalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Icon(
-                                        painter = painterResource(R.drawable.ic_email),
-                                        contentDescription = stringResource(R.string.content_description_icon_email)
-                                    )
-                                    if (state.isEmailHidden) {
-                                        // Hidden email.
-                                        HiddenField(label = stringResource(R.string.profile_details_screen_label_email_hidden))
-                                    } else {
-                                        VisibleField(label = profileDetails.basicProfileDetails.email)
+                            // Relationship status.
+                            if (profileDetails.isDifferentUser) {
+                                Divider(
+                                    color = MaterialTheme.colors.onSurface,
+                                    thickness = 1.dp
+                                )
+
+                                when (profileDetails.relationshipStatus) {
+                                    null -> {}
+
+                                    RelationshipStatusDomain.None -> {
+                                        AddFriendChip(
+                                            onClick = { onEventSent(ProfileDetailsContract.Event.ProfileBanner.OnRelationshipStatusChipClicked) },
+                                            isLoading = state.isRelationshipStatusChipLoading
+                                        )
+                                    }
+
+                                    RelationshipStatusDomain.PendingFriendRequestSender -> {
+                                        CancelRequestChip(
+                                            onClick = { onEventSent(ProfileDetailsContract.Event.ProfileBanner.OnRelationshipStatusChipClicked) },
+                                            isLoading = state.isRelationshipStatusChipLoading
+                                        )
+                                    }
+
+                                    RelationshipStatusDomain.PendingFriendRequestReceiver -> {
+                                        IncomingFriendRequestChip(
+                                            onClick = { onEventSent(ProfileDetailsContract.Event.ProfileBanner.OnRelationshipStatusChipClicked) },
+                                            isLoading = state.isRelationshipStatusChipLoading
+                                        )
+                                    }
+
+                                    RelationshipStatusDomain.Friends -> {
+                                        FriendsChip(
+                                            onClick = { onEventSent(ProfileDetailsContract.Event.ProfileBanner.OnRelationshipStatusChipClicked) },
+                                            isLoading = state.isRelationshipStatusChipLoading
+                                        )
                                     }
                                 }
                             }
                         }
                     }
+                }
+
+                // User does not exist or is blocked error view.
+                state.nestedErrorView?.let { nestedErrorView ->
+                    NestedErrorView(
+                        nestedErrorView = nestedErrorView
+                    )
                 }
             }
         }
@@ -411,10 +451,6 @@ fun ProfileDetailsScreen(
             dismissButton = alertDialogData.dismissAlertDialogButton,
             confirmButton = alertDialogData.confirmAlertDialogButton
         )
-    }
-
-    BackHandler(modalBottomSheetState.isVisible) {
-        onEventSent(ProfileDetailsContract.Event.OnSystemBack)
     }
 }
 
@@ -515,8 +551,7 @@ private fun ProfileBannerTile(label: String, count: String, onClick: () -> Unit)
  */
 @Composable
 private fun NestedErrorView(
-    nestedErrorView: ProfileDetailsNestedErrorView,
-    onEventSent: (ProfileDetailsContract.Event) -> Unit
+    nestedErrorView: ProfileDetailsNestedErrorView
 ) {
     val composition by rememberLottieComposition(
         spec = LottieCompositionSpec.RawRes(
@@ -546,18 +581,12 @@ private fun NestedErrorView(
             maxLines = 1,
             style = MaterialTheme.typography.h5
         )
-
-        VSpacer.Medium()
-
-        WrapButton(onClick = { onEventSent(nestedErrorView.onButtonClicked) }) {
-            Text(text = nestedErrorView.buttonLabel)
-        }
     }
 }
 
 @Preview(
     apiLevel = 34,
-    uiMode = Configuration.UI_MODE_NIGHT_YES or Configuration.UI_MODE_TYPE_NORMAL
+    uiMode = Configuration.UI_MODE_NIGHT_YES or Configuration.UI_MODE_TYPE_NORMAL,
 )
 @Composable
 private fun ProfileDetailsScreenPreview() {
@@ -567,10 +596,10 @@ private fun ProfileDetailsScreenPreview() {
             state = ProfileDetailsContract.State(
                 isLoading = false,
                 profileDetails = ProfileDetailsDomain.mockAnotherUser(),
-                isEmailHidden = true
+                isEmailHidden = true,
             ),
             effect = emptyFlow(),
-            userId = -1,
+            userId = "",
             onNavigation = {}
         )
     }
@@ -591,13 +620,11 @@ private fun ProfileDetailsScreenNestedErrorViewPreview() {
                 isEmailHidden = true,
                 nestedErrorView = ProfileDetailsNestedErrorView(
                     errorLabel = stringResource(R.string.profile_details_screen_error_loading_profile_details_user_blocked),
-                    errorResourceId = R.raw.lottie_not_available,
-                    buttonLabel = stringResource(R.string.profile_details_screen_label_full_screen_error_view_button_go_back),
-                    onButtonClicked = ProfileDetailsContract.Event.OnBackClicked
+                    errorResourceId = R.raw.lottie_not_available
                 )
             ),
             effect = emptyFlow(),
-            userId = -1,
+            userId = "100",
             onNavigation = {}
         )
     }
@@ -634,7 +661,7 @@ private fun ProfileDetailsScreenMoreActionBottomSheetPreview() {
                 bottomSheetType = ProfileDetailsBottomSheetType.MoreActions
             ),
             effect = emptyFlow(),
-            userId = -1,
+            userId = "101",
             onNavigation = {}
         )
     }

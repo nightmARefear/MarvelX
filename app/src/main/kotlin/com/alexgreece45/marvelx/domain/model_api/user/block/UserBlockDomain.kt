@@ -1,12 +1,8 @@
 package com.alexgreece45.marvelx.domain.model_api.user.block
 
-import com.alexgreece45.marvelx.data.model.RepositoryUserBlock
-
 data class UserBlockDomain(
-    val userBlockResult: UserBlockResult
+    val userId: String,
+    val firstName: String,
+    val lastName: String,
+    val profileImageUrl: String
 )
-
-internal fun RepositoryUserBlock.toUserBlockDomain(): UserBlockDomain =
-    UserBlockDomain(
-        userBlockResult = UserBlockResult.fromName(this.userBlockResult)
-    )

@@ -6,10 +6,12 @@ import com.alexgreece45.marvelx.util.constants.ConstantsSecurity
 import okhttp3.Interceptor
 import okhttp3.Request
 import okhttp3.Response
+import org.koin.core.annotation.Single
 
 /**
  * The interceptor for the `Refresh Token Client`.
  */
+@Single
 class RefreshTokenInterceptor(
     private val configOauth: ConfigOauth
 ) : Interceptor {

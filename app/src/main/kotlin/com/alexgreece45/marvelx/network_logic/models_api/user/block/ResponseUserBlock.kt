@@ -2,9 +2,9 @@ package com.alexgreece45.marvelx.network_logic.models_api.user.block
 
 import com.google.gson.annotations.SerializedName
 
-/**
- * The response when blocking another user.
- */
 data class ResponseUserBlock(
-    @SerializedName("user_block_result") val userBlockResult: String
+    @SerializedName("userId") val userId: String,
+    @SerializedName("firstName") val firstName: String,
+    @SerializedName("lastName") val lastName: String,
+    @SerializedName("profileImageUrl") val profileImageUrl: String
 )

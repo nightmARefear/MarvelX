@@ -26,6 +26,7 @@ import okhttp3.Authenticator
 import okhttp3.Request
 import okhttp3.Response
 import okhttp3.Route
+import kotlin.coroutines.CoroutineContext
 
 /**
  * The authenticator class for all the API calls of the MarvelX backend. Is is triggered when a
@@ -38,7 +39,8 @@ class ApiAuthenticator(
     private val refreshTokenRepository: RefreshTokenRepository,
     private val authController: AuthController,
     private val marvelXBackendRequestController: MarvelXBackendRequestController,
-    private val routerHost: RouterHost
+    private val routerHost: RouterHost,
+    private val mainDispatcher: CoroutineContext,
 ) : Authenticator {
 
     /**
@@ -191,7 +193,7 @@ class ApiAuthenticator(
      */
     private fun performLogoutOperations() {
         NavArgHelper.setArgument(NavArg.HomeLogout, "reAuthenticationError")
-        val scope = CoroutineScope(Dispatchers.Main)
+        val scope = CoroutineScope(mainDispatcher)
         scope.launch {
             routerHost.logout()
         }

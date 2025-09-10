@@ -13,10 +13,12 @@ import okhttp3.Authenticator
 import okhttp3.Request
 import okhttp3.Response
 import okhttp3.Route
+import org.koin.core.annotation.Single
 
 /**
  * The authenticator class for the `RefreshTokenClient`.
  */
+@Single
 class RefreshTokenAuthenticator(
     private val appLogger: AppLogger,
     private val configOauth: ConfigOauth,

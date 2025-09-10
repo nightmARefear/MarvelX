@@ -12,9 +12,17 @@ import kotlinx.coroutines.flow.flowOn
 import logcat.logcat
 import java.security.MessageDigest
 import java.security.SecureRandom
+import kotlin.coroutines.CoroutineContext
 
 object SecurityUtil {
-    suspend fun getHashedPasswordFromString(password: String): Flow<String> = flow {
+    /**
+     * Gets the hashed version of the given password. The `Argon2ID` algorithm is used, alongside
+     * a strong iteration count.
+     */
+    suspend fun getHashedPasswordFromString(
+        defaultDispatcher: CoroutineContext,
+        password: String
+    ): Flow<String> = flow {
         // Initializes Argon2Kt and loads the native library.
         val argon2Kt = Argon2Kt()
 
@@ -33,7 +41,7 @@ object SecurityUtil {
 
         emit(hashResult.encodedOutputAsByteArray().toString(Charsets.UTF_8)
             .also { logcat { "(getHashedPasswordFromString) finalPassword: $it" } })
-    }.flowOn(Dispatchers.Default)
+    }.flowOn(defaultDispatcher)
 
     /**
      * Creates a secure nonce using [SecureRandom], hashes it with `SHA-256` and returns the result

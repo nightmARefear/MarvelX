@@ -20,6 +20,7 @@ class RequestControllerImpl(
     private val cryptoController: CryptoController,
     private val prefKeys: PrefKeys
 ) : RequestController {
+
     override fun addAuthenticationHeaders(
         requestBuilder: Request.Builder
     ): Request.Builder {
@@ -44,7 +45,7 @@ class RequestControllerImpl(
         return requestBuilder
             .addHeader(
                 name = ConstantsSecurity.HeaderName.XAuthNonce.name,
-                value = nonce.toString()
+                value = nonce
             )
             .addHeader(
                 name = ConstantsSecurity.HeaderName.XAuthTimestamp.name,

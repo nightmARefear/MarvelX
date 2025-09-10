@@ -1,30 +1,53 @@
 package com.alexgreece45.marvelx.ui.components.chips
 
-import androidx.compose.material.Chip
+import android.content.res.Configuration
+import androidx.compose.material.ChipDefaults
 import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.Icon
-import androidx.compose.material.Text
+import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalView
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.util.extensions.throttledClickable
+import com.alexgreece45.marvelx.ui.components.IconData
+import com.alexgreece45.marvelx.ui.theme.MarvelXTheme
+import com.alexgreece45.marvelx.ui.theme.values.customColors
 
+/**
+ * The `add friend` chip.
+ *
+ * @param onClick Callback invoked when this chip is clicked.
+ * @param isLoading Whether the chip is in loading state.
+ */
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun AddFriendChip(onClick: () -> Unit) {
-    Chip(
-        onClick = {},
-        modifier = Modifier.throttledClickable(view = LocalView.current, onClick = onClick),
-        leadingIcon = {
-            Icon(
-                painter = painterResource(R.drawable.ic_add_friend),
-                contentDescription = stringResource(R.string.content_description_add_friend)
-            )
-        }
-    ) {
-        Text(text = stringResource(R.string.generic_chip_label_add_friend))
+fun AddFriendChip(onClick: () -> Unit, isLoading: Boolean) {
+    LoadingChip(
+        onClick = onClick,
+        label = stringResource(R.string.generic_chip_label_add_friend),
+        isLoading = isLoading,
+        colors = ChipDefaults.chipColors(
+            backgroundColor = MaterialTheme.customColors.chipBackgroundColors.addFriend,
+            contentColor = Color.White,
+            leadingIconContentColor = Color.White
+        ),
+        leadingIconData = IconData(
+            iconResource = R.drawable.ic_add_friend,
+            contentDescription = R.string.content_description_add_friend
+        )
+    )
+}
+
+@Preview(
+    apiLevel = 34,
+    uiMode = Configuration.UI_MODE_NIGHT_YES or Configuration.UI_MODE_TYPE_NORMAL
+)
+@Composable
+private fun AddFriendChipPreview() {
+    MarvelXTheme {
+        AddFriendChip(
+            onClick = {},
+            isLoading = true
+        )
     }
 }

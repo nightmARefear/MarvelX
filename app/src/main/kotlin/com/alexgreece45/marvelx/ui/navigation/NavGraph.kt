@@ -37,12 +37,8 @@ import com.alexgreece45.marvelx.ui.screens.profile.ProfileScreen
 import com.alexgreece45.marvelx.ui.screens.profile.ProfileViewModel
 import com.alexgreece45.marvelx.ui.screens.profile.editProfileDetails.EditProfileDetailsScreen
 import com.alexgreece45.marvelx.ui.screens.profile.editProfileDetails.EditProfileDetailsViewModel
-import com.alexgreece45.marvelx.ui.screens.profile.faq.FaqScreen
-import com.alexgreece45.marvelx.ui.screens.profile.faq.FaqViewModel
 import com.alexgreece45.marvelx.ui.screens.profile.image.ProfileImageScreen
 import com.alexgreece45.marvelx.ui.screens.profile.image.ProfileImageViewModel
-import com.alexgreece45.marvelx.ui.screens.profile.privacySettings.PrivacySettingsScreen
-import com.alexgreece45.marvelx.ui.screens.profile.privacySettings.PrivacySettingsViewModel
 import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.ProfileDetailsContract
 import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.ProfileDetailsScreen
 import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.ProfileDetailsViewModel
@@ -51,9 +47,18 @@ import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.stats.ProfileD
 import com.alexgreece45.marvelx.ui.screens.qrCode.QrCodeScanContract
 import com.alexgreece45.marvelx.ui.screens.qrCode.QrCodeScanScreen
 import com.alexgreece45.marvelx.ui.screens.qrCode.QrCodeScanViewModel
+import com.alexgreece45.marvelx.ui.screens.settings.SettingsScreen
+import com.alexgreece45.marvelx.ui.screens.settings.SettingsViewModel
+import com.alexgreece45.marvelx.ui.screens.settings.faq.FaqScreen
+import com.alexgreece45.marvelx.ui.screens.settings.faq.FaqViewModel
+import com.alexgreece45.marvelx.ui.screens.settings.model.SettingsContract
+import com.alexgreece45.marvelx.ui.screens.settings.privacySettings.PrivacySettingsScreen
+import com.alexgreece45.marvelx.ui.screens.settings.privacySettings.PrivacySettingsViewModel
 import com.alexgreece45.marvelx.ui.screens.signup.SignUpScreen
 import com.alexgreece45.marvelx.ui.screens.signup.SignupViewModel
 import com.alexgreece45.marvelx.ui.screens.splash.SplashScreen
+import com.alexgreece45.marvelx.ui.transitions.EnterTransition
+import com.alexgreece45.marvelx.ui.transitions.ExitTransition
 import com.alexgreece45.marvelx.util.SPACING_MEDIUM
 import com.alexgreece45.marvelx.util.extensions.composable
 import com.alexgreece45.marvelx.util.extensions.openAppSettings
@@ -234,7 +239,7 @@ fun NavGraph(navController: NavHostController) {
                         )
                     )
                 },
-                userId = navBackStackEntry.arguments?.getInt(NavItem.UserId.key),
+                userId = navBackStackEntry.arguments?.getString(NavItem.UserId.key),
                 otpFlowType = navBackStackEntry.arguments?.getString(NavItem.OtpFlowType.key),
                 verificationStep = navBackStackEntry.arguments?.getString(NavItem.VerificationStep.key),
                 shouldRememberUserSession = navBackStackEntry.arguments?.getBoolean(NavItem.ShouldRememberUserSession.key),
@@ -264,7 +269,9 @@ fun NavGraph(navController: NavHostController) {
         }
 
         composable(
-            screen = Screen.CharacterScreen
+            screen = Screen.CharacterScreen,
+            enterTransition = { EnterTransition.RightToLeft },
+            exitTransition = { ExitTransition.LeftToRight },
         ) { navBackStackEntry ->
             val viewModel = koinViewModel<CharacterViewModel>()
             CharacterScreen(
@@ -352,15 +359,9 @@ fun NavGraph(navController: NavHostController) {
                     when (navigationEffect) {
                         ProfileContract.Effect.Navigation.NavigateUp -> navController.navigateUp()
 
-                        ProfileContract.Effect.Navigation.NavigateToHomeScreen -> {
-                            navController.navigate(Screen.HomeScreen.route) {
-                                popUpToTop(navController)
-                            }
-                        }
-
                         is ProfileContract.Effect.Navigation.NavigateToProfileImageScreen -> {
                             navController.navigate(
-                                Screen.ProfileImageScreen.createNavRoute(navigationEffect.fullName)
+                                Screen.ProfileImageScreen.route
                             )
                         }
 
@@ -372,14 +373,6 @@ fun NavGraph(navController: NavHostController) {
                             )
                         }
 
-                        ProfileContract.Effect.Navigation.NavigateToFaqScreen -> {
-                            navController.navigate(Screen.FaqScreen.route)
-                        }
-
-                        ProfileContract.Effect.Navigation.NavigateToPrivacySettingsScreen -> {
-                            navController.navigate(Screen.PrivacySettingsScreen.route)
-                        }
-
                         is ProfileContract.Effect.Navigation.NavigateToQrCodeScreen -> {
                             navController.navigate(
                                 Screen.QrCodeScreen.createNavRoute(
@@ -387,6 +380,12 @@ fun NavGraph(navController: NavHostController) {
                                 )
                             )
                         }
+
+                        ProfileContract.Effect.Navigation.NavigateToSettingsScreen -> {
+                            navController.navigate(Screen.SettingsScreen.route)
+                        }
+
+                        ProfileContract.Effect.Navigation.NavigateToFriendsScreen -> {}
                     }
                 },
                 openDeepLinkAction = { deepLinkAction ->
@@ -398,28 +397,39 @@ fun NavGraph(navController: NavHostController) {
             )
         }
 
-        composable(Screen.ProfileImageScreen) { navBackStackEntry ->
+        composable(
+            screen = Screen.ProfileImageScreen,
+            enterTransition = { EnterTransition.BottomToTop },
+            exitTransition = { ExitTransition.TopToBottom }
+        ) {
             val viewModel = koinViewModel<ProfileImageViewModel>()
             ProfileImageScreen(
                 onEventSent = viewModel::setEvent,
                 state = viewModel.uiState.collectAsStateWithLifecycle().value,
                 effect = viewModel.uiEffect,
-                fullName = navBackStackEntry.arguments?.getString(NavItem.FullName.key).orEmpty(),
                 navigateUp = navController::navigateUp,
             )
         }
 
-        composable(Screen.ProfileDetailsScreen) { navBackStackEntry ->
+        composable(
+            screen = Screen.ProfileDetailsScreen,
+            enterTransition = { EnterTransition.RightToLeft },
+            exitTransition = { ExitTransition.LeftToRight },
+        ) { navBackStackEntry ->
             val viewModel = koinViewModel<ProfileDetailsViewModel>()
             ProfileDetailsScreen(
                 onEventSent = viewModel::setEvent,
                 state = viewModel.uiState.collectAsStateWithLifecycle().value,
                 effect = viewModel.uiEffect,
-                userId = navBackStackEntry.arguments?.getInt(NavItem.UserId.key) ?: -1,
+                userId = navBackStackEntry.arguments?.getString(NavItem.UserId.key).orEmpty(),
                 onNavigation = { navigationEffect ->
                     when (navigationEffect) {
                         ProfileDetailsContract.Effect.Navigation.PopBackStack -> {
                             navController.popBackStack()
+                        }
+
+                        ProfileDetailsContract.Effect.Navigation.NavigateToProfileImageScreen -> {
+                            navController.navigate(Screen.ProfileImageScreen.route)
                         }
 
                         ProfileDetailsContract.Effect.Navigation.NavigateToEditProfileDetailsScreen -> {
@@ -453,7 +463,11 @@ fun NavGraph(navController: NavHostController) {
             )
         }
 
-        composable(Screen.EditProfileDetailsScreen) {
+        composable(
+            screen = Screen.EditProfileDetailsScreen,
+            enterTransition = { EnterTransition.RightToLeft },
+            exitTransition = { ExitTransition.LeftToRight },
+        ) {
             val viewModel = koinViewModel<EditProfileDetailsViewModel>()
             EditProfileDetailsScreen(
                 onEventSent = viewModel::setEvent,
@@ -463,7 +477,41 @@ fun NavGraph(navController: NavHostController) {
             )
         }
 
-        composable(Screen.PrivacySettingsScreen) {
+        composable(
+            screen = Screen.SettingsScreen
+        ) {
+            val viewModel = koinViewModel<SettingsViewModel>()
+
+            SettingsScreen(
+                onEvent = viewModel::setEvent,
+                state = viewModel.uiState.collectAsStateWithLifecycle().value,
+                effect = viewModel.uiEffect,
+                onNavigationEffect = {
+                    when (it) {
+                        SettingsContract.Effect.Navigation.GoBack -> navController.navigateUp()
+                        SettingsContract.Effect.Navigation.NavigateToFaqScreen -> navController.navigate(
+                            Screen.FaqScreen.route
+                        )
+
+                        SettingsContract.Effect.Navigation.NavigateToHomeScreen -> {
+                            navController.navigate(Screen.HomeScreen.route) {
+                                popUpToTop(navController)
+                            }
+                        }
+
+                        SettingsContract.Effect.Navigation.NavigateToPrivacySettingsScreen -> navController.navigate(
+                            Screen.PrivacySettingsScreen.route
+                        )
+                    }
+                }
+            )
+        }
+
+        composable(
+            screen = Screen.PrivacySettingsScreen,
+            enterTransition = { EnterTransition.RightToLeft },
+            exitTransition = { ExitTransition.LeftToRight },
+        ) {
             val viewModel = koinViewModel<PrivacySettingsViewModel>()
             PrivacySettingsScreen(
                 onEventSent = viewModel::setEvent,
@@ -473,13 +521,17 @@ fun NavGraph(navController: NavHostController) {
             )
         }
 
-        composable(Screen.FaqScreen) {
+        composable(
+            screen = Screen.FaqScreen,
+            enterTransition = { EnterTransition.RightToLeft },
+            exitTransition = { ExitTransition.LeftToRight },
+        ) {
             val viewModel = koinViewModel<FaqViewModel>()
             FaqScreen(
                 onEventSent = viewModel::setEvent,
                 state = viewModel.uiState.collectAsStateWithLifecycle().value,
                 effect = viewModel.uiEffect,
-                popBackStack = navController::popBackStack,
+                navigateUp = navController::navigateUp,
             )
         }
 

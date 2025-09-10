@@ -7,13 +7,15 @@ import com.alexgreece45.marvelx.network_logic.models_api.user.profileDetails.Res
 
 /**
  * The profile details of a user. If [isDifferentUser] is `true` then that means that the data is
- * for another user than the currently logged in one. It should be noted that [privacySettings]
- * __must__ be non-null in this case.
+ * for another user than the currently logged in one. It should be noted that [relationshipStatus]
+ * and [privacySettings] __must__ be non-null in this case.
  *
  * @param isDifferentUser   Whether the fetched data is for the same user as the currently logged in
  * one. Depending on its value, the UI changes accordingly -- i.e., when the value is `true`, the
  * `Add friend` / `Remove friend` button is displayed, and when the value is `false` this button is
  * not visible, however, the `Edit Profile Details` toolbar button is visible.
+ * @param relationshipStatus The relationship status between the currently logged in user and the
+ * fetched user. This value __must not__ be `null` if [isDifferentUser] is `true`.
  * @param privacySettings   The privacy settings of a user. If [isDifferentUser] is `true`, then
  * this field __must__ be non-null.
  * @param userStats         The statistics of a user such as the friends count, listings count, and
@@ -22,6 +24,7 @@ import com.alexgreece45.marvelx.network_logic.models_api.user.profileDetails.Res
 data class ProfileDetailsDomain(
     val basicProfileDetails: BasicProfileDetailsDomain,
     val isDifferentUser: Boolean,
+    val relationshipStatus: RelationshipStatusDomain?,
     val privacySettings: PrivacySettingsDomain?,
     val userStats: UserStatsDomain
 ) {
@@ -39,6 +42,7 @@ data class ProfileDetailsDomain(
                 fullName = "Alexandros Voliotis"
             ),
             isDifferentUser = false,
+            relationshipStatus = null,
             privacySettings = PrivacySettingsDomain(
                 isFriendsListVisible = true,
                 isListingsListVisible = true,
@@ -47,7 +51,7 @@ data class ProfileDetailsDomain(
                 isEmailVisible = false
             ),
             userStats = UserStatsDomain(
-                friendsCount = "3,002", listingsCount = "100", favoritesCount = "10.2K"
+                friendsCount = 3002, listingsCount = 100, favoritesCount = 10215
             )
         )
 
@@ -64,6 +68,7 @@ data class ProfileDetailsDomain(
                 fullName = "Jill Doe"
             ),
             isDifferentUser = true,
+            relationshipStatus = RelationshipStatusDomain.None,
             privacySettings = PrivacySettingsDomain(
                 isFriendsListVisible = true,
                 isListingsListVisible = true,
@@ -72,7 +77,7 @@ data class ProfileDetailsDomain(
                 isEmailVisible = false
             ),
             userStats = UserStatsDomain(
-                friendsCount = "20", listingsCount = "1,006", favoritesCount = "1.09K"
+                friendsCount = 20, listingsCount = 1006, favoritesCount = 1092
             )
         )
     }
@@ -95,6 +100,7 @@ fun ResponseProfileDetails.toProfileDetailsDomain(): ProfileDetailsDomain =
     ProfileDetailsDomain(
         basicProfileDetails = this.basicProfileDetails.toBasicProfileDetailsDomain(isGenderVisible = !isDifferentUser || this.privacySettings?.isGenderVisible == true),
         isDifferentUser = this.isDifferentUser,
-        privacySettings = this.privacySettings?.toPrivacySettingsDomain(),
+        relationshipStatus = if (this.isDifferentUser) RelationshipStatusDomain.fromKey(this.relationshipStatus.orEmpty()) else null,
+        privacySettings = if (this.isDifferentUser) this.privacySettings?.toPrivacySettingsDomain() else null,
         userStats = this.userStats.toUserStatsDomain()
     )

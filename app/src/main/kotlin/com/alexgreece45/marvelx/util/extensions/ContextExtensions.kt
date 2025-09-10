@@ -31,7 +31,7 @@ fun Context.hasInternetConnectivity(): Boolean {
 /**
  * Attempts to retrieve the pending deep link action. If it wasn't found, `null` is returned.
  */
-fun Context.getPendingDeepLinkAction(): DeepLinkAction? =
+private fun Context.getPendingDeepLinkAction(): DeepLinkAction? =
     this.getActivity()?.pendingDeepLinkAction
 
 /**
@@ -44,8 +44,18 @@ fun Context.setPendingDeepLinkAction(deepLinkAction: DeepLinkAction) {
 /**
  * Clears the pending deep link action.
  */
-fun Context.clearPendingDeepLinkAction() {
+private fun Context.clearPendingDeepLinkAction() {
     this.getActivity()?.pendingDeepLinkAction = null
+}
+
+/**
+ * Retrieves the pending deep link action and removes it from cache as well. If no deep link was
+ * found, `null` is returned instead.
+ */
+fun Context.getAndRemovePendingDeepLinkAction(): DeepLinkAction? {
+    val pendingDeepLinkAction = this.getActivity()?.getPendingDeepLinkAction()
+    clearPendingDeepLinkAction()
+    return pendingDeepLinkAction
 }
 
 /**
