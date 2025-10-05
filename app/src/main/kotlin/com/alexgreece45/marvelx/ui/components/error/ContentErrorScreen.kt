@@ -1,5 +1,6 @@
 package com.alexgreece45.marvelx.ui.components.error
 
+import android.content.res.Configuration
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -144,7 +145,7 @@ fun ContentErrorScreen(
 }
 
 @Composable
-private fun ContentErrorScreenHeader(
+fun ContentErrorScreenHeader(
     title: String,
     subtitle: String
 ) {
@@ -172,7 +173,8 @@ private fun ContentErrorScreenHeader(
 @Preview(
     apiLevel = 34,
     showBackground = true,
-    showSystemUi = true
+    showSystemUi = true,
+    uiMode = Configuration.UI_MODE_NIGHT_YES or Configuration.UI_MODE_TYPE_NORMAL
 )
 @Composable
 private fun ContentErrorScreenPreview() {

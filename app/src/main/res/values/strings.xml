@@ -59,6 +59,7 @@
     // • Generic Error Buttons
     <string name="generic_retry_button">Try again</string>
     <string name="generic_go_to_previous_screen_button">Go To Previous Screen</string>
+    <string name="generic_go_back">go back</string>
 
     // Insecure application.
     <string name="splash_screen_alert_dialog_title_insecure_application">Insecure application</string>
@@ -119,7 +120,7 @@
     <string name="all_characters_screen_favorite_character_icon_description">favorite</string>
     <string name="all_characters_screen_not_favorite_character_icon_description">not favorite</string>
 
-    <string name="all_characters_screen_error_no_characters_found_search">No characters were found based on the specified criteria...</string>
+    <string name="all_characters_screen_error_no_characters_found_search">No characters were found based on the specified criteria…</string>
     <string name="all_characters_screen_error_favoring_character">An error occurred while favoring this character.</string>
     <string name="all_characters_screen_error_unfavoring_character">An error occurred while unfavoring this character.</string>
     <string name="all_characters_screen_error_retrieving_favorite_characters">An error occurred while retrieving favorite characters.</string>
@@ -147,6 +148,38 @@
 
     // All Favorite Characters Screen
     <string name="all_favorite_characters_screen_toolbar_title">Favorite Characters</string>
+
+    // Friends Screen
+    <string name="screen_friends_toolbar_title">Friends</string>
+
+    <string name="screen_friends_tab_all_title">All</string>
+
+    <string name="screen_friends_tab_requests_title">Requests</string>
+    <string name="screen_friends_tab_requests_button_negative">Decline</string>
+    <string name="screen_friends_tab_requests_button_positive">Accept</string>
+
+    <string name="screen_friends_tab_blocked_title">Blocked</string>
+    <string name="screen_friends_tab_blocked_button_positive">Unblock</string>
+
+    <string name="screen_friends_dialog_remove_friend_title">Remove friend</string>
+    <string name="screen_friends_dialog_remove_friend_subtitle">Are you sure that you want to remove this friend?</string>
+    <string name="screen_friends_dialog_remove_friend_button_negative">Cancel</string>
+    <string name="screen_friends_dialog_remove_friend_button_positive">Remove</string>
+
+    <string name="screen_friends_dialog_unblock_user_title">Unblock user</string>
+    <string name="screen_friends_dialog_unblock_user_subtitle"><![CDATA[Are you sure that you want to unblock <b>%1$s</b>?]]></string>
+    <string name="screen_friends_dialog_unblock_user_button_negative">Cancel</string>
+    <string name="screen_friends_dialog_unblock_user_button_positive">Unblock</string>
+
+    <string name="screen_friends_success_accepting_friend_request">Friend request accepted.</string>
+    <string name="screen_friends_success_declining_friend_request">Friend request declined.</string>
+    <string name="screen_friends_success_deleting_friend">You have successfully deleted this friend.</string>
+    <string name="screen_friends_success_unblocking_user">You have successfully unblocked this user.</string>
+
+    <string name="screen_friends_error_accepting_friend_request">An error occurred whilst accepting this friend request.</string>
+    <string name="screen_friends_error_declining_friend_request">An error occurred whilst declining this friend request.</string>
+    <string name="screen_friends_error_deleting_friend">An error whilst deleting this friend.</string>
+    <string name="screen_friends_error_unblocking_user">An error whilst unblocking this user.</string>
 
     // Profile Screen
     <string name="profile_screen_toolbar_title">Profile</string>
@@ -241,9 +274,14 @@
     <string name="edit_profile_details_screen_error_updating_profile_details">Error updating profile details</string>
 
     // Profile Screen --> Profile Details --> Profile Details Stats
-    <string name="profile_details_stats_screen_label_tab_friends">friends</string>
-    <string name="profile_details_stats_screen_label_tab_listings">listings</string>
-    <string name="profile_details_stats_screen_label_tab_favorites">favorites</string>
+    <string name="screen_profile_details_stats_tab_friends">friends</string>
+    <string name="screen_profile_details_stats_tab_listings">listings</string>
+    <string name="screen_profile_details_stats_tab_favorites">favorites</string>
+
+    <string name="screen_profile_details_stats_error_no_items">No %1$s were found.</string>
+    <string name="screen_profile_details_stats_error_button">Go back</string>
+
+    <string name="screen_profile_details_stats_content_description_profile_image">profile image of %1$s</string>
 
     // Settings Screen
     <string name="screen_settings_toolbar_title">Settings</string>

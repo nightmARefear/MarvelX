@@ -369,6 +369,19 @@ class ProfileViewModel(
                                 ProfileContract.Effect.Navigation.NavigateToQrCodeScreen(Screen.ProfileScreen.baseRoute)
                             }
                         }
+                    ),
+                    SectionHeaderData(
+                        title = resourceProvider.getString(R.string.profile_screen_section_label_friends),
+                        iconData = IconData(
+                            iconResource = R.drawable.ic_friends,
+                            contentDescription = R.string.content_description_friends
+                        ),
+                        isNavigable = true,
+                        onClick = {
+                            setEffect {
+                                ProfileContract.Effect.Navigation.NavigateToFriendsScreen
+                            }
+                        }
                     )
                 )
             )

@@ -25,6 +25,9 @@ import com.alexgreece45.marvelx.ui.screens.comic.ComicScreen
 import com.alexgreece45.marvelx.ui.screens.comic.ComicViewModel
 import com.alexgreece45.marvelx.ui.screens.forgotPasswordScreen.ForgotPasswordScreen
 import com.alexgreece45.marvelx.ui.screens.forgotPasswordScreen.forgotPasswordValidateEmailScreen.ForgotPasswordValidateEmailScreen
+import com.alexgreece45.marvelx.ui.screens.friends.FriendsScreen
+import com.alexgreece45.marvelx.ui.screens.friends.FriendsViewModel
+import com.alexgreece45.marvelx.ui.screens.friends.model.FriendsContract
 import com.alexgreece45.marvelx.ui.screens.home.HomeScreen
 import com.alexgreece45.marvelx.ui.screens.home.HomeViewModel
 import com.alexgreece45.marvelx.ui.screens.introLoading.IntroLoadingScreen
@@ -44,6 +47,7 @@ import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.ProfileDetails
 import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.ProfileDetailsViewModel
 import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.stats.ProfileDetailsStatsScreen
 import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.stats.ProfileDetailsStatsViewModel
+import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.stats.model.ProfileDetailsStatsContract
 import com.alexgreece45.marvelx.ui.screens.qrCode.QrCodeScanContract
 import com.alexgreece45.marvelx.ui.screens.qrCode.QrCodeScanScreen
 import com.alexgreece45.marvelx.ui.screens.qrCode.QrCodeScanViewModel
@@ -348,6 +352,28 @@ fun NavGraph(navController: NavHostController) {
             )
         }
 
+        composable(Screen.FriendsScreen) {
+            val viewModel = koinViewModel<FriendsViewModel>()
+            FriendsScreen(
+                onEventSent = viewModel::setEvent,
+                state = viewModel.uiState.collectAsStateWithLifecycle().value,
+                effect = viewModel.uiEffect,
+                onNavigationEffect = { navigationEffect ->
+                    when (navigationEffect) {
+                        FriendsContract.Effect.Navigation.GoBack -> {
+                            navController.navigateUp()
+                        }
+
+                        is FriendsContract.Effect.Navigation.NavigateToProfileDetailsScreen -> {
+                            navController.navigate(
+                                Screen.ProfileDetailsScreen.createNavRoute(userId = navigationEffect.userId)
+                            )
+                        }
+                    }
+                }
+            )
+        }
+
         composable(Screen.ProfileScreen) {
             val viewModel = koinViewModel<ProfileViewModel>()
             ProfileScreen(
@@ -385,7 +411,9 @@ fun NavGraph(navController: NavHostController) {
                             navController.navigate(Screen.SettingsScreen.route)
                         }
 
-                        ProfileContract.Effect.Navigation.NavigateToFriendsScreen -> {}
+                        ProfileContract.Effect.Navigation.NavigateToFriendsScreen -> {
+                            navController.navigate(Screen.FriendsScreen.route)
+                        }
                     }
                 },
                 openDeepLinkAction = { deepLinkAction ->
@@ -457,9 +485,24 @@ fun NavGraph(navController: NavHostController) {
                 state = viewModel.uiState.collectAsStateWithLifecycle().value,
                 effect = viewModel.uiEffect,
                 fullName = navBackStackEntry.arguments?.getString(NavItem.FullName.key).orEmpty(),
-                userId = navBackStackEntry.arguments?.getInt(NavItem.UserId.key) ?: -1,
+                userId = navBackStackEntry.arguments?.getString(NavItem.UserId.key).orEmpty(),
                 tabIndex = navBackStackEntry.arguments?.getInt(NavItem.TabIndex.key) ?: 0,
-                navigateUp = navController::navigateUp,
+                onNavigationEffect = { effect ->
+                    when (effect) {
+                        ProfileDetailsStatsContract.Effect.Navigation.NavigateUp -> navController.navigateUp()
+                        is ProfileDetailsStatsContract.Effect.Navigation.NavigateToProfileDetailsScreen -> navController.navigate(
+                            Screen.ProfileDetailsScreen.createNavRoute(userId = effect.userId)
+                        )
+
+                        is ProfileDetailsStatsContract.Effect.Navigation.NavigateToListingScreen -> TODO(
+                            "Not implemented yet."
+                        )
+
+                        is ProfileDetailsStatsContract.Effect.Navigation.NavigateToCharacterScreen -> navController.navigate(
+                            Screen.CharacterScreen.createNavRoute(characterId = effect.characterId)
+                        )
+                    }
+                }
             )
         }
 

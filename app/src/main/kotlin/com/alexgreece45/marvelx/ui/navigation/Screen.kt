@@ -182,6 +182,11 @@ sealed class Screen(
     )
 
     /**
+     * Friends Screen
+     */
+    data object FriendsScreen : Screen(baseRoute = "friendsScreen")
+
+    /**
      * Profile Screen --> Profile Details
      */
     data object ProfileDetailsScreen :

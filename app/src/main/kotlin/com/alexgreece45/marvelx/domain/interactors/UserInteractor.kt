@@ -13,9 +13,12 @@ import com.alexgreece45.marvelx.data.repository.helper.RepositoryResult
 import com.alexgreece45.marvelx.domain.helper.InteractorPartialState
 import com.alexgreece45.marvelx.domain.helper.handleRepositoryResult
 import com.alexgreece45.marvelx.domain.helper.handleRepositoryResultNoTransformation
-import com.alexgreece45.marvelx.domain.model_api.user.block.UserBlockDomain
+import com.alexgreece45.marvelx.domain.model_api.user.block.BlockedUserDomain
 import com.alexgreece45.marvelx.domain.model_api.user.block.UserBlockResultType
+import com.alexgreece45.marvelx.domain.model_api.user.block.toBlockedUserDomainList
 import com.alexgreece45.marvelx.domain.model_api.user.block.toUserBlockResultDomain
+import com.alexgreece45.marvelx.domain.model_api.user.friend.FriendDomain
+import com.alexgreece45.marvelx.domain.model_api.user.friend.toFriendDomainList
 import com.alexgreece45.marvelx.domain.model_api.user.privacySettings.PrivacySettingsDomain
 import com.alexgreece45.marvelx.domain.model_api.user.privacySettings.toPrivacySettingsDomain
 import com.alexgreece45.marvelx.domain.model_api.user.privacySettings.toRequestPrivacySettings
@@ -25,6 +28,11 @@ import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.ProfileDeta
 import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.toBasicProfileDetailsDomain
 import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.toProfileDetailsDomain
 import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.toProfileDetailsErrorDomain
+import com.alexgreece45.marvelx.network_logic.models_api.user.block.ResponseBlockedUser
+import com.alexgreece45.marvelx.network_logic.models_api.user.friend.ResponseFriend
+import com.alexgreece45.marvelx.network_logic.models_api.user.incomingFriendRequest.ResponseIncomingFriendRequest
+import com.alexgreece45.marvelx.ui.screens.friends.model.IncomingFriendRequestDomain
+import com.alexgreece45.marvelx.ui.screens.friends.model.toIncomingFriendRequestList
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.extensions.fromBytesToMb
 import com.alexgreece45.marvelx.util.extensions.safeAsync
@@ -37,6 +45,7 @@ import okio.IOException
 import java.io.File
 
 interface UserInteractor {
+
     /**
      * Gets the profile details of the given [userId].
      */
@@ -70,14 +79,24 @@ interface UserInteractor {
     suspend fun updatePrivacySettings(privacySettingsDomain: PrivacySettingsDomain): Flow<InteractorPartialState<String>>
 
     /**
+     * Returns the friends of the given user ID.
+     */
+    suspend fun getFriends(userId: String): Flow<InteractorPartialState<List<FriendDomain>>>
+
+    /**
      * Deletes the friend with the given ID.
      */
     suspend fun deleteFriend(userId: String): Flow<Boolean>
 
     /**
+     * Returns the incoming friend requests of the current user.
+     */
+    suspend fun getIncomingFriendRequests(): Flow<InteractorPartialState<List<IncomingFriendRequestDomain>>>
+
+    /**
      * Returns the blocked users.
      */
-    suspend fun getBlockedUsers(): Flow<InteractorPartialState<List<UserBlockDomain>>>
+    suspend fun getBlockedUsers(): Flow<InteractorPartialState<List<BlockedUserDomain>>>
 
     /**
      * Blocks the user with the given [userId].
@@ -252,6 +271,36 @@ class UserInteractorImpl(
             )
         }
     }
+
+    override suspend fun getIncomingFriendRequests(): Flow<InteractorPartialState<List<IncomingFriendRequestDomain>>> =
+        flow {
+            repository.getIncomingFriendRequests().collect { repositoryResult ->
+                handleRepositoryResult(
+                    result = repositoryResult,
+                    transformation = List<ResponseIncomingFriendRequest>::toIncomingFriendRequestList
+                )
+            }
+        }
+
+    override suspend fun getFriends(userId: String): Flow<InteractorPartialState<List<FriendDomain>>> =
+        flow {
+            repository.getFriends(userId).collect { repositoryResult ->
+                handleRepositoryResult(
+                    result = repositoryResult,
+                    transformation = List<ResponseFriend>::toFriendDomainList
+                )
+            }
+        }
+
+    override suspend fun getBlockedUsers(): Flow<InteractorPartialState<List<BlockedUserDomain>>> =
+        flow {
+            repository.getBlockedUsers().collect { repositoryResult ->
+                handleRepositoryResult(
+                    result = repositoryResult,
+                    transformation = List<ResponseBlockedUser>::toBlockedUserDomainList
+                )
+            }
+        }
 
     override suspend fun blockUser(userId: String): Flow<BlockUserPartialState> =
         flow {

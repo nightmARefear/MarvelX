@@ -24,8 +24,9 @@ import com.alexgreece45.marvelx.network_logic.models_api.sensitiveUserData.Reque
 import com.alexgreece45.marvelx.network_logic.models_api.sensitiveUserData.ResponseSensitiveUserData
 import com.alexgreece45.marvelx.network_logic.models_api.token.ResponseToken
 import com.alexgreece45.marvelx.network_logic.models_api.user.BodyUserId
-import com.alexgreece45.marvelx.network_logic.models_api.user.block.ResponseUserBlock
+import com.alexgreece45.marvelx.network_logic.models_api.user.block.ResponseBlockedUser
 import com.alexgreece45.marvelx.network_logic.models_api.user.friend.ResponseFriend
+import com.alexgreece45.marvelx.network_logic.models_api.user.incomingFriendRequest.ResponseIncomingFriendRequest
 import com.alexgreece45.marvelx.network_logic.models_api.user.login.RequestUserLogin
 import com.alexgreece45.marvelx.network_logic.models_api.user.login.ResponseLogin
 import com.alexgreece45.marvelx.network_logic.models_api.user.loginWithToken.ResponseLoginWithToken
@@ -134,6 +135,18 @@ class ApiClientImpl(
             )
         }
 
+    override suspend fun getUserFriends(userId: String): ApiResult<List<ResponseFriend>> {
+        return executeApiServiceCall {
+            apiService.getUserFriends(userId)
+        }
+    }
+
+    override suspend fun getIncomingFriendRequests(): ApiResult<List<ResponseIncomingFriendRequest>> {
+        return executeApiServiceCall {
+            apiService.getIncomingFriendRequests()
+        }
+    }
+
     override suspend fun sendFriendRequest(userId: String): ApiResult<String> {
         return executeApiServiceCallNoTransformation {
             apiService.sendFriendRequest(BodyUserId(userId))
@@ -164,7 +177,7 @@ class ApiClientImpl(
         }
     }
 
-    override suspend fun getBlockedUsers(): ApiResult<List<ResponseUserBlock>> {
+    override suspend fun getBlockedUsers(): ApiResult<List<ResponseBlockedUser>> {
         return executeApiServiceCall {
             apiService.getBlockedUsers()
         }

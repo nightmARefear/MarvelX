@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.flow
 import kotlin.coroutines.CoroutineContext
 
 interface FriendRequestsRepository {
+
     suspend fun sendFriendRequest(userId: String): Flow<Boolean>
     suspend fun acceptFriendRequest(userId: String): Flow<Boolean>
     suspend fun deleteFriendRequest(userId: String): Flow<Boolean>

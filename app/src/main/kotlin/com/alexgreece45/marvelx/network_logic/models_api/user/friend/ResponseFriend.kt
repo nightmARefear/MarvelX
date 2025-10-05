@@ -6,5 +6,6 @@ data class ResponseFriend(
     @SerializedName("userId") val userId: String,
     @SerializedName("firstName") val firstName: String,
     @SerializedName("lastName") val lastName: String,
-    @SerializedName("profileImageUrl") val profileImageUrl: String
+    @SerializedName("profileImageUrl") val profileImageUrl: String,
+    @SerializedName("friendsSince") val friendsSince: Long
 )

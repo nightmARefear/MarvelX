@@ -12,7 +12,6 @@ import com.alexgreece45.marvelx.network_logic.models_api.forgotPassword.email.Re
 import com.alexgreece45.marvelx.network_logic.models_api.forgotPassword.email.ResponseForgotPasswordValidateOtp
 import com.alexgreece45.marvelx.network_logic.models_api.forgotPassword.phoneNumber.RequestForgotPasswordOtpBlockedPhoneNumber
 import com.alexgreece45.marvelx.network_logic.models_api.forgotPassword.phoneNumber.ResponseForgotPasswordOtpBlockedPhoneNumber
-import com.alexgreece45.marvelx.network_logic.models_api.user.friend.ResponseFriend
 import com.alexgreece45.marvelx.network_logic.models_api.jwtSensitiveUserData.RequestJwtSensitiveUserData
 import com.alexgreece45.marvelx.network_logic.models_api.jwtSensitiveUserData.ResponseJwtSensitiveUserData
 import com.alexgreece45.marvelx.network_logic.models_api.otp.OtpRequest
@@ -22,7 +21,9 @@ import com.alexgreece45.marvelx.network_logic.models_api.resendOtp.ResponseResen
 import com.alexgreece45.marvelx.network_logic.models_api.sensitiveUserData.RequestSensitiveUserData
 import com.alexgreece45.marvelx.network_logic.models_api.sensitiveUserData.ResponseSensitiveUserData
 import com.alexgreece45.marvelx.network_logic.models_api.token.ResponseToken
-import com.alexgreece45.marvelx.network_logic.models_api.user.block.ResponseUserBlock
+import com.alexgreece45.marvelx.network_logic.models_api.user.block.ResponseBlockedUser
+import com.alexgreece45.marvelx.network_logic.models_api.user.friend.ResponseFriend
+import com.alexgreece45.marvelx.network_logic.models_api.user.incomingFriendRequest.ResponseIncomingFriendRequest
 import com.alexgreece45.marvelx.network_logic.models_api.user.login.RequestUserLogin
 import com.alexgreece45.marvelx.network_logic.models_api.user.login.ResponseLogin
 import com.alexgreece45.marvelx.network_logic.models_api.user.loginWithToken.ResponseLoginWithToken
@@ -76,7 +77,9 @@ interface ApiClient {
     suspend fun getUserProfileDetails(userId: String): Response<ResponseProfileDetails>
     suspend fun getUserPrivacySettings(): ApiResult<ResponsePrivacySettings>
     suspend fun updateUserPrivacySettings(requestPrivacySettings: RequestPrivacySettings): ApiResult<String>
+    suspend fun getUserFriends(userId: String): ApiResult<List<ResponseFriend>>
 
+    suspend fun getIncomingFriendRequests(): ApiResult<List<ResponseIncomingFriendRequest>>
     suspend fun sendFriendRequest(userId: String): ApiResult<String>
     suspend fun acceptFriendRequest(userId: String): ApiResult<String>
     suspend fun deleteFriendRequest(userId: String): ApiResult<String>
@@ -84,7 +87,7 @@ interface ApiClient {
     suspend fun getFriends(): ApiResult<List<ResponseFriend>>
     suspend fun deleteFriend(userId: String): ApiResult<String>
 
-    suspend fun getBlockedUsers(): ApiResult<List<ResponseUserBlock>>
+    suspend fun getBlockedUsers(): ApiResult<List<ResponseBlockedUser>>
     suspend fun blockUser(userId: String): Response<Void>
     suspend fun unblockUser(userId: String): ApiResult<String>
 

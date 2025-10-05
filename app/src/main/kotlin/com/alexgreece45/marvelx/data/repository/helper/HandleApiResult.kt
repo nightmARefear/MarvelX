@@ -2,8 +2,10 @@ package com.alexgreece45.marvelx.data.repository.helper
 
 import com.alexgreece45.marvelx.network_logic.models_generic.ApiResult
 import com.alexgreece45.marvelx.util.extensions.safeAsync
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlin.coroutines.CoroutineContext
 
 /**
  * Handles the result of an API client call, and returns the appropriate [RepositoryResult] by
@@ -64,6 +66,7 @@ internal suspend fun handleApiResultNoTransformation(
  */
 internal suspend fun <A : Any> handleApiResultNoTransformationWithData(
     apiResult: ApiResult<A>,
+    ioDispatcher: CoroutineContext = Dispatchers.IO
 ): Flow<RepositoryResult<A>> =
     flow {
         when (apiResult) {
@@ -72,6 +75,6 @@ internal suspend fun <A : Any> handleApiResultNoTransformationWithData(
             is ApiResult.Failed -> emit(RepositoryResult.Failed(apiResult.failureMessage))
             ApiResult.NetworkError -> emit(RepositoryResult.NetworkError)
         }
-    }.safeAsync {
+    }.safeAsync(ioDispatcher) {
         RepositoryResult.Failed(it.message.orEmpty())
     }

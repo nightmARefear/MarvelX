@@ -23,7 +23,8 @@ import com.alexgreece45.marvelx.network_logic.models_api.sensitiveUserData.Reque
 import com.alexgreece45.marvelx.network_logic.models_api.sensitiveUserData.ResponseSensitiveUserData
 import com.alexgreece45.marvelx.network_logic.models_api.token.ResponseToken
 import com.alexgreece45.marvelx.network_logic.models_api.user.BodyUserId
-import com.alexgreece45.marvelx.network_logic.models_api.user.block.ResponseUserBlock
+import com.alexgreece45.marvelx.network_logic.models_api.user.block.ResponseBlockedUser
+import com.alexgreece45.marvelx.network_logic.models_api.user.incomingFriendRequest.ResponseIncomingFriendRequest
 import com.alexgreece45.marvelx.network_logic.models_api.user.login.RequestUserLogin
 import com.alexgreece45.marvelx.network_logic.models_api.user.login.ResponseLogin
 import com.alexgreece45.marvelx.network_logic.models_api.user.loginWithToken.ResponseLoginWithToken
@@ -121,6 +122,18 @@ interface ApiService {
     suspend fun forgotPasswordValidateOtp(@Body body: RequestForgotPasswordValidateOtp): Response<ResponseForgotPasswordValidateOtp>
 
     /**
+     * Retrieves the __public__ profile details of another user with the ID of [userId].
+     */
+    @GET("/api/private/marvelx/user/{userId}/profile")
+    suspend fun getUserProfileDetails(@Path("userId") userId: String): Response<ResponseProfileDetails>
+
+    /**
+     * Retrieves the friends of another user.
+     */
+    @GET("/api/private/marvelx/user/{userId}/friends")
+    suspend fun getUserFriends(@Path("userId") userId: String): Response<List<ResponseFriend>>
+
+    /**
      * Retrieves the profile details of the current user.
      */
     @GET("/api/private/marvelx/user/me-profile")
@@ -139,14 +152,11 @@ interface ApiService {
     @PUT("/api/private/marvelx/user/me/profile_image")
     suspend fun updateUserProfileImage(@Part profileImage: MultipartBody.Part): Response<Void>
 
-    @GET("/api/private/marvelx/user/me/blocked")
-    suspend fun getBlockedUsers(): Response<List<ResponseUserBlock>>
-
     /**
-     * Retrieves the __public__ profile details of another user with the ID of [userId].
+     * Retrieves the blocked users of the current one.
      */
-    @GET("/api/private/marvelx/user/{userId}/profile")
-    suspend fun getUserProfileDetails(@Path("userId") userId: String): Response<ResponseProfileDetails>
+    @GET("/api/private/marvelx/user/me/blocked")
+    suspend fun getBlockedUsers(): Response<List<ResponseBlockedUser>>
 
     /**
      * Retrieves the privacy settings of the current user.
@@ -160,8 +170,17 @@ interface ApiService {
     @PUT("/api/private/marvelx/user/me/privacy_settings")
     suspend fun updateUserPrivacySettings(@Body requestPrivacySettings: RequestPrivacySettings): Response<Void>
 
+    /**
+     * Retrieves the friends of the current user.
+     */
     @GET("/api/private/marvelx/user/me/friends")
     suspend fun getFriends(): Response<List<ResponseFriend>>
+
+    /**
+     * Retrieves the incoming friend requests of the current user.
+     */
+    @GET("/api/private/marvelx/user/me/friend-requests")
+    suspend fun getIncomingFriendRequests(): Response<List<ResponseIncomingFriendRequest>>
 
     /**
      * Sends a friend request to another user.

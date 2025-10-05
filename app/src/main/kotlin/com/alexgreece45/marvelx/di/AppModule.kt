@@ -102,6 +102,7 @@ import com.alexgreece45.marvelx.ui.screens.character.allCharacterComicsScreen.Al
 import com.alexgreece45.marvelx.ui.screens.comic.ComicViewModel
 import com.alexgreece45.marvelx.ui.screens.forgotPasswordScreen.ForgotPasswordViewModel
 import com.alexgreece45.marvelx.ui.screens.forgotPasswordScreen.forgotPasswordValidateEmailScreen.ForgotPasswordValidateEmailViewModel
+import com.alexgreece45.marvelx.ui.screens.friends.FriendsViewModel
 import com.alexgreece45.marvelx.ui.screens.home.HomeViewModel
 import com.alexgreece45.marvelx.ui.screens.introLoading.IntroLoadingViewModel
 import com.alexgreece45.marvelx.ui.screens.login.LoginViewModel
@@ -186,13 +187,18 @@ private val repositoryModule = module {
     single<FavoriteCharactersRepository> { FavoriteCharactersRepositoryImpl(get()) }
     single<RefreshTokenRepository> { RefreshTokenRepositoryImpl(get()) }
     single<LoginRepository> { LoginRepositoryImpl(get(), get(), get()) }
-    single<UserRepository> { UserRepositoryImpl(get()) }
+    single<UserRepository> { UserRepositoryImpl(get(), get(named(MarvelXDispatchers.IO))) }
     single<ConfigRepository> { ConfigRepositoryImpl(get()) }
     single<ForgotPasswordRepository> { ForgotPasswordRepositoryImpl(get(), get()) }
     single<ChangePasswordRepository> { ChangePasswordRepositoryImpl(get()) }
     single<OtpRepository> { OtpRepositoryImpl(get(), get()) }
     single<RegisterRepository> { RegisterRepositoryImpl(get()) }
-    single<FriendRequestsRepository> { FriendRequestsRepositoryImpl(get(), get(named(MarvelXDispatchers.IO))) }
+    single<FriendRequestsRepository> {
+        FriendRequestsRepositoryImpl(
+            get(),
+            get(named(MarvelXDispatchers.IO))
+        )
+    }
 }
 
 private val interactorModule = module {
@@ -294,11 +300,15 @@ private val viewModelModule = module {
     viewModel { AllFavoriteCharactersViewModel(get()) }
     viewModel { CharacterViewModel(get(), get()) }
     viewModelOf(::ComicViewModel)
+
+    viewModelOf(::FriendsViewModel)
+
     viewModelOf(::ProfileViewModel)
     viewModelOf(::ProfileImageViewModel)
     viewModelOf(::ProfileDetailsViewModel)
+
     viewModel { EditProfileDetailsViewModel(get(), get(), get(), get()) }
-    viewModel { ProfileDetailsStatsViewModel() }
+    viewModel { ProfileDetailsStatsViewModel(get(), get()) }
     viewModel { PrivacySettingsViewModel(get(), get()) }
     viewModel { FaqViewModel(get(), get()) }
     viewModel { QrCodeScanViewModel() }

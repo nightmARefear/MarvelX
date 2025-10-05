@@ -11,8 +11,10 @@ import com.alexgreece45.marvelx.data.repository.helper.handleApiResultNoTransfor
 import com.alexgreece45.marvelx.data.repository.helper.parseUserError
 import com.alexgreece45.marvelx.network_logic.api.ApiClient
 import com.alexgreece45.marvelx.network_logic.models_api.user.ResponseUserError
-import com.alexgreece45.marvelx.network_logic.models_api.user.block.ResponseUserBlock
+import com.alexgreece45.marvelx.network_logic.models_api.user.block.ResponseBlockedUser
 import com.alexgreece45.marvelx.network_logic.models_api.user.block.ResponseUserBlockResult
+import com.alexgreece45.marvelx.network_logic.models_api.user.friend.ResponseFriend
+import com.alexgreece45.marvelx.network_logic.models_api.user.incomingFriendRequest.ResponseIncomingFriendRequest
 import com.alexgreece45.marvelx.network_logic.models_api.user.privacySettings.RequestPrivacySettings
 import com.alexgreece45.marvelx.network_logic.models_api.user.privacySettings.ResponsePrivacySettings
 import com.alexgreece45.marvelx.network_logic.models_api.user.profileDetails.RequestProfileDetailsUpdate
@@ -24,6 +26,7 @@ import com.google.gson.Gson
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import okhttp3.MultipartBody
+import kotlin.coroutines.CoroutineContext
 
 interface UserRepository {
 
@@ -66,11 +69,24 @@ interface UserRepository {
     suspend fun updatePrivacySettings(requestPrivacySettings: RequestPrivacySettings): Flow<RepositoryResult<String>>
 
     /**
+     * Retrieves the friends of the given user ID.
+     */
+    suspend fun getFriends(userId: String): Flow<RepositoryResult<List<ResponseFriend>>>
+
+    /**
      * Deletes the friend with the given ID.
      */
     suspend fun deleteFriend(userId: String): Flow<RepositoryResult<String>>
 
-    suspend fun getBlockedUsers(): Flow<RepositoryResult<List<ResponseUserBlock>>>
+    /**
+     * Returns the incoming friend requests of the current user.
+     */
+    suspend fun getIncomingFriendRequests(): Flow<RepositoryResult<List<ResponseIncomingFriendRequest>>>
+
+    /**
+     * Returns the blocked users of the current user.
+     */
+    suspend fun getBlockedUsers(): Flow<RepositoryResult<List<ResponseBlockedUser>>>
 
     /**
      * Blocks the user with [userId].
@@ -84,7 +100,8 @@ interface UserRepository {
 }
 
 class UserRepositoryImpl(
-    private val apiClient: ApiClient
+    private val apiClient: ApiClient,
+    private val ioDispatcher: CoroutineContext
 ) : UserRepository {
 
     override suspend fun getProfileDetails(
@@ -167,17 +184,35 @@ class UserRepositoryImpl(
             }
         }
 
+    override suspend fun getFriends(userId: String): Flow<RepositoryResult<List<ResponseFriend>>> =
+        flow {
+            handleApiResultNoTransformationWithData(
+                apiResult = apiClient.getUserFriends(userId),
+                ioDispatcher = ioDispatcher
+            ).collect { emit(it) }
+        }
+
     override suspend fun deleteFriend(userId: String): Flow<RepositoryResult<String>> = flow {
         handleApiResultNoTransformation(
             apiClient.deleteFriend(userId)
         ).collect { emit(it) }
     }
 
-    override suspend fun getBlockedUsers(): Flow<RepositoryResult<List<ResponseUserBlock>>> = flow {
-        handleApiResultNoTransformationWithData(
-            apiClient.getBlockedUsers()
-        ).collect { emit(it) }
-    }
+    override suspend fun getIncomingFriendRequests(): Flow<RepositoryResult<List<ResponseIncomingFriendRequest>>> =
+        flow {
+            handleApiResultNoTransformationWithData(
+                apiResult = apiClient.getIncomingFriendRequests(),
+                ioDispatcher = ioDispatcher
+            ).collect { emit(it) }
+        }
+
+    override suspend fun getBlockedUsers(): Flow<RepositoryResult<List<ResponseBlockedUser>>> =
+        flow {
+            handleApiResultNoTransformationWithData(
+                apiResult = apiClient.getBlockedUsers(),
+                ioDispatcher = ioDispatcher
+            ).collect { emit(it) }
+        }
 
     override suspend fun blockUser(userId: String): Flow<BlockUserRepositoryResult> = flow {
         apiClient.blockUser(userId).let { response ->

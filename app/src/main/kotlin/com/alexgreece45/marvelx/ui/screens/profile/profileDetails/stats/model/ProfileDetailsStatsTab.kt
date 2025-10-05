@@ -7,9 +7,20 @@ import com.alexgreece45.marvelx.R
  * Defines the data of a single tab in the `Profile Details Stats` screen.
  */
 sealed class ProfileDetailsStatsTab(@StringRes val title: Int, val tabIndex: Int) {
-    data object Friends : ProfileDetailsStatsTab(title = R.string.profile_details_stats_screen_label_tab_friends, tabIndex = 0)
-    data object Listings : ProfileDetailsStatsTab(title = R.string.profile_details_stats_screen_label_tab_listings, tabIndex = 1)
-    data object Favorites : ProfileDetailsStatsTab(title = R.string.profile_details_stats_screen_label_tab_favorites, tabIndex = 2)
+    data object Friends : ProfileDetailsStatsTab(
+        title = R.string.screen_profile_details_stats_tab_friends,
+        tabIndex = 0
+    )
+
+    data object Listings : ProfileDetailsStatsTab(
+        title = R.string.screen_profile_details_stats_tab_listings,
+        tabIndex = 1
+    )
+
+    data object Favorites : ProfileDetailsStatsTab(
+        title = R.string.screen_profile_details_stats_tab_favorites,
+        tabIndex = 2
+    )
 
     companion object {
         /**
@@ -21,8 +32,10 @@ sealed class ProfileDetailsStatsTab(@StringRes val title: Int, val tabIndex: Int
          * Returns all the tabs.
          */
         fun getTabs(): List<ProfileDetailsStatsTab> =
-            ProfileDetailsStatsTab::class.sealedSubclasses
-                .mapNotNull { it.objectInstance }
-                .map { it }
+            listOf(
+                Friends,
+                Listings,
+                Favorites
+            )
     }
 }

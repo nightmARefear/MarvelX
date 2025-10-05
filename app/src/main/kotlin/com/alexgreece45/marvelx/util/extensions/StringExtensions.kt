@@ -138,3 +138,8 @@ fun String.getPortFromUrl(): Int {
     if (parts.isEmpty()) return -1
     return parts.last().toInt()
 }
+
+/**
+ * Converts this pair to a full name.
+ */
+fun Pair<String, String>.toFullName(): String = "$first $second"
