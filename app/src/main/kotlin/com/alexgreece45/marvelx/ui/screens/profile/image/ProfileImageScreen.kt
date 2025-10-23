@@ -26,6 +26,7 @@ import com.alexgreece45.marvelx.ui.components.effect.ObserveUiEffect
 import com.alexgreece45.marvelx.ui.components.effect.OneTimeLaunchedEffect
 import com.alexgreece45.marvelx.ui.components.error.ContentErrorScreen
 import com.alexgreece45.marvelx.ui.theme.MarvelXTheme
+import com.alexgreece45.marvelx.ui.theme.values.customColors
 import com.alexgreece45.marvelx.util.constants.ConstantsUi
 import com.alexgreece45.marvelx.util.extensions.circularImageWithBorder
 import kotlinx.coroutines.flow.Flow
@@ -77,7 +78,7 @@ fun ProfileImageScreen(
                             .size(size = ConstantsUi.PROFILE_IMAGE_FULL_SIZE)
                             .circularImageWithBorder(
                                 borderWidth = ConstantsUi.IMAGE_BORDER_WIDTH,
-                                borderColor = MaterialTheme.colors.error
+                                borderColor = MaterialTheme.customColors.genericRed
                             ),
                         placeholder = painterResource(R.drawable.ic_person),
                         error = painterResource(R.drawable.ic_person),

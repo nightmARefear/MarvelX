@@ -269,7 +269,7 @@ fun ProfileDetailsScreen(
                                         )
                                         .circularImageWithBorder(
                                             borderWidth = ConstantsUi.IMAGE_BORDER_WIDTH,
-                                            borderColor = MaterialTheme.colors.error
+                                            borderColor = MaterialTheme.customColors.genericRed
                                         ),
                                     error = painterResource(R.drawable.ic_person),
                                     placeholder = painterResource(R.drawable.ic_person),
@@ -447,7 +447,7 @@ fun ProfileDetailsScreen(
         AlertDialogError(
             isVisible = true,
             title = alertDialogData.errorTitle,
-            errorMessage = alertDialogData.errorSubtitle,
+            errorMessage = { Text(text=alertDialogData.errorSubtitle) },
             dismissButton = alertDialogData.dismissAlertDialogButton,
             confirmButton = alertDialogData.confirmAlertDialogButton
         )
@@ -646,7 +646,7 @@ private fun ProfileDetailsScreenMoreActionBottomSheetPreview() {
                 moreActionItems = listOf(
                     BottomSheetContentItem(
                         title = stringResource(R.string.profile_details_screen_label_more_actions_block),
-                        titleColor = MaterialTheme.customColors.error,
+                        titleColor = MaterialTheme.customColors.genericRed,
                         onClick = ProfileDetailsContract.Event.MoreActions.OnBlockClicked
                     ),
                     BottomSheetContentItem(

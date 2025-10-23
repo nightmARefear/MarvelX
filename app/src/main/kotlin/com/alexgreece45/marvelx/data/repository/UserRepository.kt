@@ -74,6 +74,11 @@ interface UserRepository {
     suspend fun getFriends(userId: String): Flow<RepositoryResult<List<ResponseFriend>>>
 
     /**
+     * Retrieves the friends of the current user.
+     */
+    suspend fun getCurrentUserFriends(): Flow<RepositoryResult<List<ResponseFriend>>>
+
+    /**
      * Deletes the friend with the given ID.
      */
     suspend fun deleteFriend(userId: String): Flow<RepositoryResult<String>>
@@ -188,6 +193,14 @@ class UserRepositoryImpl(
         flow {
             handleApiResultNoTransformationWithData(
                 apiResult = apiClient.getUserFriends(userId),
+                ioDispatcher = ioDispatcher
+            ).collect { emit(it) }
+        }
+
+    override suspend fun getCurrentUserFriends(): Flow<RepositoryResult<List<ResponseFriend>>> =
+        flow {
+            handleApiResultNoTransformationWithData(
+                apiResult = apiClient.getFriends(),
                 ioDispatcher = ioDispatcher
             ).collect { emit(it) }
         }

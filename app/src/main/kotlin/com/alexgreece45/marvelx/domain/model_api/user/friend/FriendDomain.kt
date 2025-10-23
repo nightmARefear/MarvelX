@@ -13,13 +13,13 @@ data class FriendDomain(
     val userId: String,
     val fullName: String,
     val profileImageUrl: String,
-    val friendsSince: Long
+    val friendsSince: Instant
 ) {
 
     /**
      * When the friendship started.
      */
-    val friendsSinceFormatted: String = Instant.ofEpochMilli(friendsSince)
+    val friendsSinceFormatted: String = friendsSince
         .atZone(ZoneId.systemDefault())
         .format(DateTimeFormatter.ofPattern("MMMM d, yyyy"))
 }
@@ -30,6 +30,6 @@ fun List<ResponseFriend>.toFriendDomainList(): List<FriendDomain> =
             userId = friend.userId,
             fullName = Pair(friend.firstName, friend.lastName).toFullName(),
             profileImageUrl = friend.profileImageUrl,
-            friendsSince = friend.friendsSince,
+            friendsSince = Instant.parse(friend.friendsSince),
         )
     }

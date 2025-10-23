@@ -92,7 +92,7 @@ fun EditProfileDetailsScreen(
                     AlertDialogError(
                         isVisible = true,
                         title = alertDialogView.title,
-                        errorMessage = alertDialogView.errorMessage,
+                        errorMessage = { Text(text = alertDialogView.errorMessage) },
                         dismissButton = alertDialogView.dismissButton,
                         confirmButton = alertDialogView.confirmButton
                     )

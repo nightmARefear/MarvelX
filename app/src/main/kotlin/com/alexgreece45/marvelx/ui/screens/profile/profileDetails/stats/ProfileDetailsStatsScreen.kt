@@ -33,6 +33,7 @@ import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.stats.model.Pr
 import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.stats.model.ProfileDetailsStatsItem
 import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.stats.model.ProfileDetailsStatsTab
 import com.alexgreece45.marvelx.ui.theme.MarvelXTheme
+import com.alexgreece45.marvelx.ui.theme.values.customColors
 import com.alexgreece45.marvelx.util.SPACING_MEDIUM
 import com.alexgreece45.marvelx.util.constants.ConstantsUi
 import com.alexgreece45.marvelx.util.extensions.circularImageWithBorder
@@ -150,7 +151,7 @@ fun DataTile(profileDetailsStatsItem: ProfileDetailsStatsItem, onClicked: () -> 
                     .size(ConstantsUi.GENERIC_IMAGE_TILE_SIZE)
                     .circularImageWithBorder(
                         borderWidth = ConstantsUi.IMAGE_BORDER_WIDTH,
-                        borderColor = MaterialTheme.colors.error
+                        borderColor = MaterialTheme.customColors.genericRed
                     ),
                 error = painterResource(R.drawable.ic_broken_image),
                 contentScale = ContentScale.Fit

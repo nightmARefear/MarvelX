@@ -61,6 +61,7 @@ import com.alexgreece45.marvelx.ui.screens.settings.privacySettings.PrivacySetti
 import com.alexgreece45.marvelx.ui.screens.signup.SignUpScreen
 import com.alexgreece45.marvelx.ui.screens.signup.SignupViewModel
 import com.alexgreece45.marvelx.ui.screens.splash.SplashScreen
+import com.alexgreece45.marvelx.ui.theme.values.customColors
 import com.alexgreece45.marvelx.ui.transitions.EnterTransition
 import com.alexgreece45.marvelx.ui.transitions.ExitTransition
 import com.alexgreece45.marvelx.util.SPACING_MEDIUM
@@ -620,7 +621,7 @@ fun getBottomNavigationBarData(navController: NavController): BottomNavigationBa
         items = getBottomNavigationItems(),
         backgroundColor = MaterialTheme.colors.background,
         topHorizontalColor = MaterialTheme.colors.onBackground.copy(alpha = 0.8f),
-        selectedItemTopHorizontalColor = MaterialTheme.colors.error.copy(alpha = 0.8f),
+        selectedItemTopHorizontalColor = MaterialTheme.customColors.genericRed.copy(alpha = 0.8f),
         elevation = SPACING_MEDIUM.dp
     )
 

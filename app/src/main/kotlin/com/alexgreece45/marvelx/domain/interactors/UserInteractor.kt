@@ -84,6 +84,11 @@ interface UserInteractor {
     suspend fun getFriends(userId: String): Flow<InteractorPartialState<List<FriendDomain>>>
 
     /**
+     *  Returns the friends of the current user.
+     */
+    suspend fun getCurrentUserFriends(): Flow<InteractorPartialState<List<FriendDomain>>>
+
+    /**
      * Deletes the friend with the given ID.
      */
     suspend fun deleteFriend(userId: String): Flow<Boolean>
@@ -278,7 +283,7 @@ class UserInteractorImpl(
                 handleRepositoryResult(
                     result = repositoryResult,
                     transformation = List<ResponseIncomingFriendRequest>::toIncomingFriendRequestList
-                )
+                ).collect { emit(it) }
             }
         }
 
@@ -288,7 +293,17 @@ class UserInteractorImpl(
                 handleRepositoryResult(
                     result = repositoryResult,
                     transformation = List<ResponseFriend>::toFriendDomainList
-                )
+                ).collect { emit(it) }
+            }
+        }
+
+    override suspend fun getCurrentUserFriends(): Flow<InteractorPartialState<List<FriendDomain>>> =
+        flow {
+            repository.getCurrentUserFriends().collect { repositoryResult ->
+                handleRepositoryResult(
+                    result = repositoryResult,
+                    transformation = List<ResponseFriend>::toFriendDomainList
+                ).collect { emit(it) }
             }
         }
 
@@ -298,7 +313,7 @@ class UserInteractorImpl(
                 handleRepositoryResult(
                     result = repositoryResult,
                     transformation = List<ResponseBlockedUser>::toBlockedUserDomainList
-                )
+                ).collect { emit(it) }
             }
         }
 

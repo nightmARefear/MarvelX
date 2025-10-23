@@ -13,6 +13,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.TextUnit
 import com.alexgreece45.marvelx.ui.components.model.ClickableString
+import com.alexgreece45.marvelx.ui.theme.values.customColors
 
 /**
  * A wrapper for [ClickableText] providing an easier way to locate [String]s and provide styling and
@@ -106,7 +107,7 @@ fun WrapClickableText(
                 )
                 withStyle(
                     style = SpanStyle(
-                        color = linkStringData.color ?: MaterialTheme.colors.error,
+                        color = linkStringData.color ?: MaterialTheme.customColors.genericRed,
                         fontSize = linkStringData.fontSize ?: textStyle.fontSize,
                         fontWeight = linkStringData.fontWeight ?: textStyle.fontWeight
                     )

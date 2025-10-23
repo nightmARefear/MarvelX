@@ -20,6 +20,7 @@ import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
 import com.alexgreece45.marvelx.ui.components.effect.ObserveUiEffect
 import com.alexgreece45.marvelx.ui.components.sections.SectionListHeader
 import com.alexgreece45.marvelx.ui.screens.settings.model.SettingsContract
+import com.alexgreece45.marvelx.ui.theme.values.customColors
 import kotlinx.coroutines.flow.Flow
 
 @Composable
@@ -57,7 +58,7 @@ fun SettingsScreen(
             Text(
                 text = stringResource(R.string.screen_settings_label_version, state.appVersion),
                 modifier = Modifier.align(Alignment.Center),
-                color = MaterialTheme.colors.error,
+                color = MaterialTheme.customColors.genericRed,
                 style = MaterialTheme.typography.subtitle2
             )
         }

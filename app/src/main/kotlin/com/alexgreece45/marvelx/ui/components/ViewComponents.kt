@@ -114,6 +114,7 @@ import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.ui.components.model.AutofillData
 import com.alexgreece45.marvelx.ui.components.model.ErrorButtonType
 import com.alexgreece45.marvelx.ui.components.model.SnackbarStateData
+import com.alexgreece45.marvelx.ui.theme.values.customColors
 import com.alexgreece45.marvelx.util.BOTTOM_NAVIGATION_BAR_ITEM_LABEL_MAX_LENGTH
 import com.alexgreece45.marvelx.util.BOTTOM_NAVIGATION_BAR_MAX_ITEMS
 import com.alexgreece45.marvelx.util.BOTTOM_NAVIGATION_BAR_MIN_ITEMS
@@ -984,7 +985,7 @@ fun PullRefreshable(
             modifier = Modifier.align(
                 Alignment.TopCenter
             ),
-            contentColor = MaterialTheme.colors.error
+            contentColor = MaterialTheme.customColors.genericRed
         )
     }
 }
@@ -1261,7 +1262,7 @@ fun WrapButton(
     shape: Shape = MaterialTheme.shapes.small,
     border: BorderStroke? = null,
     colors: ButtonColors = ButtonDefaults.buttonColors(),
-    contentPadding: PaddingValues? = null,
+    contentPadding: PaddingValues = ButtonDefaults.ContentPadding,
     content: @Composable RowScope.() -> Unit
 ) {
     var lastClicked by remember { mutableLongStateOf(0L) }
@@ -1300,7 +1301,7 @@ fun WrapButton(
         shape = shape,
         border = border,
         colors = colors,
-        contentPadding = contentPadding ?: PaddingValues(vertical = 12.dp, horizontal = 32.dp),
+        contentPadding = contentPadding,
         content = content
     )
 }
@@ -1320,7 +1321,7 @@ fun WrapOutlinedButton(
     shape: Shape = MaterialTheme.shapes.small,
     border: BorderStroke? = ButtonDefaults.outlinedBorder,
     colors: ButtonColors = ButtonDefaults.outlinedButtonColors(),
-    contentPadding: PaddingValues? = null,
+    contentPadding: PaddingValues = ButtonDefaults.ContentPadding,
     content: @Composable RowScope.() -> Unit
 ) {
     WrapButton(
@@ -1409,7 +1410,7 @@ data class AlertDialogButton(
 fun AlertDialogError(
     isVisible: Boolean,
     title: String,
-    errorMessage: String,
+    errorMessage: @Composable () -> Unit,
     dismissButton: AlertDialogButton? = null,
     confirmButton: AlertDialogButton,
     shape: Shape = MaterialTheme.shapes.medium,
@@ -1429,12 +1430,10 @@ fun AlertDialogError(
         text = {
             // Overrides the provided content alpha of "ContentAlpha.medium".
             CompositionLocalProvider(
-                LocalContentAlpha provides ContentAlpha.high
+                LocalContentAlpha provides ContentAlpha.high,
+                LocalTextStyle provides MaterialTheme.typography.body1 // Overrides the provided style of "body2".
             ) {
-                Text(
-                    text = errorMessage,
-                    style = MaterialTheme.typography.body1 // Overrides the provided style of "body2".
-                )
+                errorMessage()
             }
         },
         dismissButton = {

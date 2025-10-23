@@ -172,7 +172,7 @@ private fun CameraScreen(
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp
     val cameraSize = screenWidth * 0.875f
     val cameraShape = MaterialTheme.shapes.medium
-    val archColor = MaterialTheme.colors.error
+    val archColor = MaterialTheme.customColors.genericRed
     val archStrokeWidth = SPACING_TINY.dp
 
     val permissionState = rememberPermissionState(permission = Manifest.permission.CAMERA)

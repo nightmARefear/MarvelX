@@ -30,7 +30,7 @@ sealed interface FriendsContract {
         }
 
         sealed interface BlockedTabEvent : Event {
-            data class OnUnblockClicked(val userId: String) : BlockedTabEvent
+            data class OnUnblockClicked(val blockedUserDomain: BlockedUserDomain) : BlockedTabEvent
         }
     }
 

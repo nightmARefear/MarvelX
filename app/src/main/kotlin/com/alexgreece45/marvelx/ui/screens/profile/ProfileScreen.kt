@@ -66,6 +66,7 @@ import com.alexgreece45.marvelx.ui.helper.model.DeepLinkAction
 import com.alexgreece45.marvelx.ui.navigation.getBottomNavigationBarData
 import com.alexgreece45.marvelx.ui.screens.profile.model.ProfileBottomSheetType
 import com.alexgreece45.marvelx.ui.theme.MarvelXTheme
+import com.alexgreece45.marvelx.ui.theme.values.customColors
 import com.alexgreece45.marvelx.ui.theme.values.customShapes
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.VSpacer
@@ -275,7 +276,7 @@ fun ProfileScreen(
         AlertDialogError(
             isVisible = true,
             title = errorAlertDialog.errorTitle,
-            errorMessage = errorAlertDialog.errorSubtitle,
+            errorMessage = { Text(text = errorAlertDialog.errorSubtitle) },
             confirmButton = errorAlertDialog.alertDialogButtonPositive,
             dismissButton = errorAlertDialog.alertDialogButtonNegative
         )
@@ -373,7 +374,7 @@ private fun ProfileBanner(
                     .size(ConstantsUi.PROFILE_IMAGE_NORMAL_SIZE)
                     .circularImageWithBorder(
                         borderWidth = ConstantsUi.IMAGE_BORDER_WIDTH,
-                        borderColor = MaterialTheme.colors.error
+                        borderColor = MaterialTheme.customColors.genericRed
                     ),
                 placeholder = painterResource(R.drawable.ic_person),
                 error = painterResource(R.drawable.ic_person),
@@ -384,8 +385,8 @@ private fun ProfileBanner(
                     elevation = ConstantsUi.ProfileScreen.PROFILE_IMAGE_ELEVATION,
                     shape = CircleShape,
                     clip = true,
-                    ambientColor = MaterialTheme.colors.error,
-                    spotColor = MaterialTheme.colors.error
+                    ambientColor = MaterialTheme.customColors.genericRed,
+                    spotColor = MaterialTheme.customColors.genericRed
                 )
             )
 
@@ -420,13 +421,13 @@ private fun ProfileBanner(
         ) {
             Text(
                 text = stringResource(R.string.profile_screen_profile_banner_label_see_your_profile),
-                color = MaterialTheme.colors.error,
+                color = MaterialTheme.customColors.genericRed,
                 style = MaterialTheme.typography.subtitle2
             )
 
             NavigateIcon(
                 modifier = Modifier.size(18.dp),
-                tint = MaterialTheme.colors.error
+                tint = MaterialTheme.customColors.genericRed
             )
         }
     }

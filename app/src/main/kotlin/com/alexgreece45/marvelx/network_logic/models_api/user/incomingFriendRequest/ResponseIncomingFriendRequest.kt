@@ -7,5 +7,5 @@ data class ResponseIncomingFriendRequest(
     @SerializedName("firstName") val firstName: String,
     @SerializedName("lastName") val lastName: String,
     @SerializedName("profileImageUrl") val profileImageUrl: String,
-    @SerializedName("receivedAt") val receivedAt: Long
+    @SerializedName("receivedAt") val receivedAt: String
 )

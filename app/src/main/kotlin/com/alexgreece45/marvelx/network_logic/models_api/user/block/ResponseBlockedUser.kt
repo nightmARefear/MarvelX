@@ -7,5 +7,5 @@ data class ResponseBlockedUser(
     @SerializedName("firstName") val firstName: String,
     @SerializedName("lastName") val lastName: String,
     @SerializedName("profileImageUrl") val profileImageUrl: String,
-    @SerializedName("blockedAt") val blockedAt: Long
+    @SerializedName("blockedAt") val blockedAt: String
 )

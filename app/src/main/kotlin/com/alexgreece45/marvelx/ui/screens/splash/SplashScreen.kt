@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -80,7 +81,7 @@ fun SplashScreen(
                 AlertDialogError(
                     isVisible = true,
                     title = splashScreenError.title,
-                    errorMessage = splashScreenError.errorMessage,
+                    errorMessage = { Text(text = splashScreenError.errorMessage) },
                     confirmButton = AlertDialogButton(
                         label = stringResource(R.string.splash_screen_alert_dialog_confirm_button),
                         onClick = splashScreenError.onCloseClick

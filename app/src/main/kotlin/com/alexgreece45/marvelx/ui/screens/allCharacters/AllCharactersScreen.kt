@@ -62,6 +62,7 @@ import com.alexgreece45.marvelx.ui.components.effect.OneTimeLaunchedEffect
 import com.alexgreece45.marvelx.ui.components.isScrollingUp
 import com.alexgreece45.marvelx.ui.helper.openDeepLinkAction
 import com.alexgreece45.marvelx.ui.screens.allCharacters.uiModel.CharacterCardUi
+import com.alexgreece45.marvelx.ui.theme.values.customColors
 import com.alexgreece45.marvelx.util.DEFAULT_SCREEN_PADDING
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.SPACING_TINY
@@ -313,7 +314,7 @@ private fun CharacterItem(
                         Icon(
                             painter = painterResource(R.drawable.ic_favorite_filled),
                             contentDescription = stringResource(R.string.all_characters_screen_favorite_character_icon_description),
-                            tint = MaterialTheme.colors.error
+                            tint = MaterialTheme.customColors.genericRed
                         )
                     }
 
@@ -321,7 +322,7 @@ private fun CharacterItem(
                         Icon(
                             painter = painterResource(R.drawable.ic_favorite_empty),
                             contentDescription = stringResource(R.string.all_characters_screen_not_favorite_character_icon_description),
-                            tint = MaterialTheme.colors.error
+                            tint = MaterialTheme.customColors.genericRed
                         )
                     }
                 }

@@ -21,7 +21,12 @@ data class CustomColors(
     val genderFemale: Color,
     val error: Color,
     val scrim: Color,
-    val chipBackgroundColors: ChipBackgroundColors
+    val chipBackgroundColors: ChipBackgroundColors,
+    val buttonBackgroundPositive: Color,
+    val buttonBackgroundNegative: Color,
+    val buttonContentWhite: Color,
+    val genericRed: Color,
+    val friendsDateColor: Color,
 )
 
 /**
@@ -32,7 +37,7 @@ data class ChipBackgroundColors(
     val addFriend: Color,
     val friends: Color,
     val cancelRequest: Color,
-    val incomingFriendRequest:Color,
+    val incomingFriendRequest: Color,
     val unfriend: Color
 )
 
@@ -51,6 +56,11 @@ internal fun customLightColors() = CustomColors(
         incomingFriendRequest = Color(0xFF21F33D),
         unfriend = Color(0xFFF1F1F1)
     ),
+    buttonBackgroundPositive = Color(0xFF21F33D),
+    buttonBackgroundNegative = Color(0xFFD50000),
+    buttonContentWhite = Color(0xFFF1F1F1),
+    genericRed = Color(0xFFD50000),
+    friendsDateColor = Color(0xFF2196F3),
 )
 
 /**
@@ -68,6 +78,11 @@ internal fun customDarkColors() = CustomColors(
         incomingFriendRequest = Color(0xFF21F33D),
         unfriend = Color(0xFFF1F1F1)
     ),
+    buttonBackgroundPositive = Color(0xFF21F33D),
+    buttonBackgroundNegative = Color(0xFFD50000),
+    buttonContentWhite = Color(0xFFF1F1F1),
+    genericRed = Color(0xFFD50000),
+    friendsDateColor = Color(0xFF2196F3),
 )
 
 internal val LocalCustomColors = staticCompositionLocalOf { customLightColors() }

@@ -2,25 +2,23 @@ package com.alexgreece45.marvelx.ui.screens.friends
 
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.controllers.PrefKeys
 import com.alexgreece45.marvelx.data.repository.FriendRequestsRepository
 import com.alexgreece45.marvelx.domain.helper.InteractorPartialState
 import com.alexgreece45.marvelx.domain.interactors.UserInteractor
+import com.alexgreece45.marvelx.domain.model_api.user.block.BlockedUserDomain
 import com.alexgreece45.marvelx.domain.model_api.user.friend.FriendDomain
 import com.alexgreece45.marvelx.mvi.BaseViewModel
 import com.alexgreece45.marvelx.ui.screens.friends.model.FriendsContract
 import com.alexgreece45.marvelx.ui.screens.friends.model.FriendsDialogView
 import com.alexgreece45.marvelx.ui.screens.friends.model.FriendsErrorView
 import com.alexgreece45.marvelx.ui.screens.friends.model.IncomingFriendRequestDomain
-import com.alexgreece45.marvelx.util.DateUtil
 import com.alexgreece45.marvelx.util.ResourceProvider
-import com.alexgreece45.marvelx.util.extensions.toFullName
 import kotlinx.coroutines.launch
+import java.time.Instant
 
 class FriendsViewModel(
     private val resourceProvider: ResourceProvider,
     private val userInteractor: UserInteractor,
-    private val prefKeys: PrefKeys,
     private val friendRequestsRepository: FriendRequestsRepository,
 ) : BaseViewModel<FriendsContract.Event, FriendsContract.State, FriendsContract.Effect>() {
 
@@ -56,7 +54,7 @@ class FriendsViewModel(
 
             // Blocked tab
             is FriendsContract.Event.BlockedTabEvent.OnUnblockClicked -> blockedTabOnUnblockClicked(
-                event.userId
+                event.blockedUserDomain
             )
         }
     }
@@ -119,6 +117,12 @@ class FriendsViewModel(
     private fun onTabClicked(tabIndex: Int) {
         if (currentState.selectedTabIndex == tabIndex) return
 
+        setState {
+            copy(
+                selectedTabIndex = tabIndex
+            )
+        }
+
         when (tabIndex) {
             0 -> getFriends(isFromRefresh = false)
             1 -> getIncomingFriendRequests(isFromRefresh = false)
@@ -166,18 +170,22 @@ class FriendsViewModel(
         removeFriendRequest(userId)
     }
 
-    private fun blockedTabOnUnblockClicked(userId: String) {
+    private fun blockedTabOnUnblockClicked(blockedUserDomain: BlockedUserDomain) {
         setState {
             copy(
                 dialogView = FriendsDialogView(
                     title = resourceProvider.getString(R.string.screen_friends_dialog_unblock_user_title),
-                    subtitle = resourceProvider.getString(R.string.screen_friends_dialog_unblock_user_subtitle),
+                    subtitle = resourceProvider.getString(
+                        R.string.screen_friends_dialog_unblock_user_subtitle,
+                        blockedUserDomain.fullName
+                    ),
+                    doesSubtitleContainBold = true,
                     negativeButtonLabel = resourceProvider.getString(R.string.screen_friends_dialog_unblock_user_button_negative),
                     negativeButtonOnClicked = ::hideDialogView,
                     positiveButtonLabel = resourceProvider.getString(R.string.screen_friends_dialog_unblock_user_button_positive),
                     positiveButtonOnClicked = {
                         hideDialogView()
-                        unblockUser(userId)
+                        unblockUser(userId = blockedUserDomain.userId)
                     }
                 )
             )
@@ -218,7 +226,7 @@ class FriendsViewModel(
         }
 
         viewModelScope.launch {
-            userInteractor.getFriends(userId = prefKeys.getUserId()).collect { result ->
+            userInteractor.getCurrentUserFriends().collect { result ->
                 when (result) {
                     is InteractorPartialState.Error,
                     is InteractorPartialState.Failed -> {
@@ -227,13 +235,9 @@ class FriendsViewModel(
                                 isTabLoading = false,
                                 isTabRefreshing = false,
                                 errorView = FriendsErrorView(
+                                    tabIndex = 0,
                                     subtitle = resourceProvider.getString(R.string.generic_unknown_error),
-                                    primaryButtonLabel = resourceProvider.getString(R.string.generic_go_back),
-                                    primaryButtonOnClicked = {
-                                        setEffect {
-                                            FriendsContract.Effect.Navigation.GoBack
-                                        }
-                                    }
+                                    primaryButtonOnClicked = { getFriends(isFromRefresh) }
                                 )
                             )
                         }
@@ -245,8 +249,8 @@ class FriendsViewModel(
                                 isTabLoading = false,
                                 isTabRefreshing = false,
                                 errorView = FriendsErrorView(
+                                    tabIndex = 0,
                                     subtitle = resourceProvider.getString(R.string.no_internet_connection_error_message),
-                                    primaryButtonLabel = resourceProvider.getString(R.string.generic_retry_button),
                                     primaryButtonOnClicked = { getFriends(isFromRefresh) }
                                 )
                             )
@@ -293,13 +297,9 @@ class FriendsViewModel(
                                 isTabLoading = false,
                                 isTabRefreshing = false,
                                 errorView = FriendsErrorView(
+                                    tabIndex = 1,
                                     subtitle = resourceProvider.getString(R.string.generic_unknown_error),
-                                    primaryButtonLabel = resourceProvider.getString(R.string.generic_go_back),
-                                    primaryButtonOnClicked = {
-                                        setEffect {
-                                            FriendsContract.Effect.Navigation.GoBack
-                                        }
-                                    }
+                                    primaryButtonOnClicked = { getIncomingFriendRequests((isFromRefresh)) }
                                 )
                             )
                         }
@@ -311,8 +311,8 @@ class FriendsViewModel(
                                 isTabLoading = false,
                                 isTabRefreshing = false,
                                 errorView = FriendsErrorView(
+                                    tabIndex = 1,
                                     subtitle = resourceProvider.getString(R.string.no_internet_connection_error_message),
-                                    primaryButtonLabel = resourceProvider.getString(R.string.generic_retry_button),
                                     primaryButtonOnClicked = { getIncomingFriendRequests((isFromRefresh)) }
                                 )
                             )
@@ -359,13 +359,9 @@ class FriendsViewModel(
                                 isTabLoading = false,
                                 isTabRefreshing = false,
                                 errorView = FriendsErrorView(
+                                    tabIndex = 2,
                                     subtitle = resourceProvider.getString(R.string.generic_unknown_error),
-                                    primaryButtonLabel = resourceProvider.getString(R.string.generic_go_back),
-                                    primaryButtonOnClicked = {
-                                        setEffect {
-                                            FriendsContract.Effect.Navigation.GoBack
-                                        }
-                                    }
+                                    primaryButtonOnClicked = { getBlockedUsers(isFromRefresh) }
                                 )
                             )
                         }
@@ -377,8 +373,8 @@ class FriendsViewModel(
                                 isTabLoading = false,
                                 isTabRefreshing = false,
                                 errorView = FriendsErrorView(
+                                    tabIndex = 2,
                                     subtitle = resourceProvider.getString(R.string.no_internet_connection_error_message),
-                                    primaryButtonLabel = resourceProvider.getString(R.string.generic_retry_button),
                                     primaryButtonOnClicked = { getBlockedUsers(isFromRefresh) }
                                 )
                             )
@@ -457,9 +453,9 @@ class FriendsViewModel(
                         val newFriend = with(incomingFriendRequest) {
                             FriendDomain(
                                 userId = userId,
-                                fullName = Pair(firstName, lastName).toFullName(),
+                                fullName = fullName,
                                 profileImageUrl = profileImageUrl,
-                                friendsSince = DateUtil.getSecondsFromEpoch()
+                                friendsSince = Instant.now()
                             )
                         }
 
@@ -469,7 +465,8 @@ class FriendsViewModel(
                                 allFriends = buildList {
                                     add(newFriend)
                                     addAll(allFriends)
-                                }
+                                },
+                                incomingFriendRequests = incomingFriendRequests.filterNot { it.userId == incomingFriendRequest.userId }
                             )
                         }
                     } else {

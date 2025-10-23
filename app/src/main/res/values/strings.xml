@@ -153,13 +153,17 @@
     <string name="screen_friends_toolbar_title">Friends</string>
 
     <string name="screen_friends_tab_all_title">All</string>
+    <string name="screen_friends_tab_all_button_remove_friend">Remove</string>
+    <string name="screen_friends_tab_all_no_friends">No friends were found.</string>
 
     <string name="screen_friends_tab_requests_title">Requests</string>
     <string name="screen_friends_tab_requests_button_negative">Decline</string>
     <string name="screen_friends_tab_requests_button_positive">Accept</string>
+    <string name="screen_friends_tab_requests_no_requests">No incoming friend requests were found.</string>
 
     <string name="screen_friends_tab_blocked_title">Blocked</string>
     <string name="screen_friends_tab_blocked_button_positive">Unblock</string>
+    <string name="screen_friends_tab_blocked_no_blocked_users">No blocked users were found.</string>
 
     <string name="screen_friends_dialog_remove_friend_title">Remove friend</string>
     <string name="screen_friends_dialog_remove_friend_subtitle">Are you sure that you want to remove this friend?</string>
@@ -180,6 +184,8 @@
     <string name="screen_friends_error_declining_friend_request">An error occurred whilst declining this friend request.</string>
     <string name="screen_friends_error_deleting_friend">An error whilst deleting this friend.</string>
     <string name="screen_friends_error_unblocking_user">An error whilst unblocking this user.</string>
+
+    <string name="screen_friends_content_description_profile_image">profile image of %1$s</string>
 
     // Profile Screen
     <string name="profile_screen_toolbar_title">Profile</string>
