@@ -8,7 +8,6 @@ import okhttp3.Headers
 import okhttp3.HttpUrl
 import java.security.MessageDigest
 import java.security.SecureRandom
-import java.util.UUID
 import javax.crypto.Mac
 
 /**
@@ -16,6 +15,7 @@ import javax.crypto.Mac
  * signature for API calls, and many more.
  */
 interface CryptoController {
+
     /**
      * Creates the session signature for API calls. The given parameters correspond to a single
      * request.
@@ -59,6 +59,7 @@ class CryptoControllerImpl(
     private val appLogger: AppLogger,
     private val configSecurityLogic: ConfigSecurityLogic
 ) : CryptoController {
+
     override fun createSessionSignature(
         requestMethod: String,
         requestUrl: HttpUrl,

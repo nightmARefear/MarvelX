@@ -19,7 +19,6 @@ import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.rememberModalBottomSheetState
-import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -151,7 +150,7 @@ fun AllCharacterComicsScreen(
                             // Disables the on tap ripple effect for both single and long clicks. It also removes the background color.
                             .clickable(
                                 interactionSource = remember { MutableInteractionSource() },
-                                indication = rememberRipple(radius = 0.dp),
+                                indication = null,
                                 onClick = {
                                     onEventSent(AllCharacterComicsEvent.OnDropDownArrowClick)
                                 }

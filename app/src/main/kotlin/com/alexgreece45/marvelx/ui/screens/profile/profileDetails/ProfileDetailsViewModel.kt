@@ -23,8 +23,6 @@ import com.alexgreece45.marvelx.ui.components.model.BottomSheetContentItem
 import com.alexgreece45.marvelx.ui.components.model.ErrorButtonLayout
 import com.alexgreece45.marvelx.ui.components.model.ErrorButtonType
 import com.alexgreece45.marvelx.ui.components.model.SnackbarStateData
-import com.alexgreece45.marvelx.ui.navigation.NavArgHelper
-import com.alexgreece45.marvelx.ui.navigation.models.NavArg
 import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.model.ProfileDetailsAlertDialogErrorData
 import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.model.ProfileDetailsBottomSheetType
 import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.model.ProfileDetailsFullScreenErrorView
@@ -33,6 +31,7 @@ import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.stats.model.Pr
 import com.alexgreece45.marvelx.ui.theme.values.getErrorColor
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.constants.ConstantsUi
+import com.alexgreece45.marvelx.util.extensions.toUrlEncoding
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.MultiFormatWriter
 import com.google.zxing.WriterException
@@ -119,7 +118,7 @@ sealed interface ProfileDetailsContract {
 
         sealed interface Navigation : Effect {
             data object PopBackStack : Navigation
-            data object NavigateToProfileImageScreen : Navigation
+            data class NavigateToProfileImageScreen(val profileImageUrl: String) : Navigation
             data object NavigateToEditProfileDetailsScreen : Navigation
 
             /**
@@ -215,12 +214,10 @@ class ProfileDetailsViewModel(
             }
 
             ProfileDetailsContract.Event.ProfileBanner.OnProfileImageClicked -> {
-                NavArgHelper.setArgument(
-                    navArg = NavArg.ProfileImageUri,
-                    value = currentState.profileDetails?.basicProfileDetails?.profileImageUrl.orEmpty()
-                )
                 setEffect {
-                    ProfileDetailsContract.Effect.Navigation.NavigateToProfileImageScreen
+                    ProfileDetailsContract.Effect.Navigation.NavigateToProfileImageScreen(
+                        profileImageUrl = currentState.profileDetails?.basicProfileDetails?.profileImageUrl.orEmpty().toUrlEncoding()
+                    )
                 }
             }
 

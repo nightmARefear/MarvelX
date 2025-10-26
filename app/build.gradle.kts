@@ -4,6 +4,7 @@ import java.util.Properties
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.google.mapsplatform.secrets)
     alias(libs.plugins.ksp)
     alias(libs.plugins.kotlin.parcelize)
@@ -19,7 +20,7 @@ deeplinkProperties.load(FileInputStream(rootProject.file("deeplink.properties"))
 
 android {
     namespace = libs.versions.application.name.get()
-    compileSdk = 34
+    compileSdk = libs.versions.target.sdk.get().toInt()
 
     signingConfigs {
         create("release") {
@@ -41,8 +42,8 @@ android {
 
     defaultConfig {
         applicationId = libs.versions.application.name.get()
-        minSdk = 26
-        targetSdk = 34
+        minSdk = libs.versions.min.sdk.get().toInt()
+        targetSdk = libs.versions.target.sdk.get().toInt()
         versionCode = 1
         versionName = "1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -129,10 +130,6 @@ android {
 
     kotlinOptions {
         jvmTarget = JavaVersion.toVersion(libs.versions.java.version.get()).toString()
-    }
-
-    composeOptions {
-        kotlinCompilerExtensionVersion = libs.versions.compose.compiler.get()
     }
 
     packaging {

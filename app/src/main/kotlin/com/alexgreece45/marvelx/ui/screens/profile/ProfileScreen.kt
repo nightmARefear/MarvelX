@@ -2,6 +2,7 @@ package com.alexgreece45.marvelx.ui.screens.profile
 
 import android.content.res.Configuration
 import android.net.Uri
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -43,6 +44,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.rememberNavController
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.ProfileDetailsDomain
+import com.alexgreece45.marvelx.domain.model_generic.ReadFileContentData
 import com.alexgreece45.marvelx.ui.components.AlertDialogError
 import com.alexgreece45.marvelx.ui.components.BottomNavigationBarData
 import com.alexgreece45.marvelx.ui.components.ContentScreen
@@ -68,15 +70,18 @@ import com.alexgreece45.marvelx.ui.screens.profile.model.ProfileBottomSheetType
 import com.alexgreece45.marvelx.ui.theme.MarvelXTheme
 import com.alexgreece45.marvelx.ui.theme.values.customColors
 import com.alexgreece45.marvelx.ui.theme.values.customShapes
+import com.alexgreece45.marvelx.util.FileUtil
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.VSpacer
 import com.alexgreece45.marvelx.util.constants.ConstantsUi
 import com.alexgreece45.marvelx.util.extensions.applyPadding
 import com.alexgreece45.marvelx.util.extensions.circularImageWithBorder
+import com.alexgreece45.marvelx.util.extensions.compressImage
 import com.alexgreece45.marvelx.util.extensions.getAndRemovePendingDeepLinkAction
 import com.alexgreece45.marvelx.util.extensions.hideIfVisible
 import com.alexgreece45.marvelx.util.extensions.screenPaddingsNone
 import com.alexgreece45.marvelx.util.extensions.throttledClickable
+import com.alexgreece45.marvelx.util.extensions.toCompressFormat
 import com.canhub.cropper.CropImageContract
 import com.canhub.cropper.CropImageContractOptions
 import com.canhub.cropper.CropImageOptions
@@ -107,7 +112,14 @@ fun ProfileScreen(
     val singlePhotoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia(),
         onResult = { uri ->
-            onEventSent(ProfileContract.Event.ProfileImage.OnImageSelected(uri))
+            onEventSent(
+                ProfileContract.Event.ProfileImage.OnImageSelected(
+                    imageFileContentData = FileUtil.getFileContentData(
+                        uri = uri,
+                        context = context
+                    )
+                )
+            )
         }
     )
 
@@ -115,9 +127,16 @@ fun ProfileScreen(
         contract = CropImageContract(),
         onResult = { result ->
             if (result.isSuccessful) {
-                onEventSent(ProfileContract.Event.ProfileImage.ImageCropper.OnSuccess(result.uriContent))
+                onEventSent(
+                    ProfileContract.Event.ProfileImage.OnImageCropped(
+                        imageFileContentData = FileUtil.getFileContentData(
+                            uri = result.uriContent,
+                            context = context
+                        )
+                    )
+                )
             } else {
-                onEventSent(ProfileContract.Event.ProfileImage.ImageCropper.OnFailed)
+                onEventSent(ProfileContract.Event.ProfileImage.OnImageCropped(null))
             }
         }
     )
@@ -138,18 +157,6 @@ fun ProfileScreen(
 
             is ProfileContract.Effect.OpenPhotoPicker -> {
                 singlePhotoPickerLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
-            }
-
-            ProfileContract.Effect.BottomSheet.Show -> {
-                modalBottomSheetCoroutineScope.launch {
-                    modalBottomSheetState.show()
-                }
-            }
-
-            ProfileContract.Effect.BottomSheet.Hide -> {
-                modalBottomSheetCoroutineScope.launch {
-                    modalBottomSheetState.hideIfVisible()
-                }
             }
 
             is ProfileContract.Effect.OpenImageCropper -> {
@@ -173,6 +180,50 @@ fun ProfileScreen(
                         )
                     )
                 }
+            }
+
+            is ProfileContract.Effect.ReadCroppedImageFileContent -> {
+                val fileName = uiEffect.fileName
+
+                val compressFormat = fileName.toCompressFormat()
+                if (compressFormat == null) {
+                    onEventSent(ProfileContract.Event.ProfileImage.OnCroppedImageFileContentRead(null))
+                    return@ObserveUiEffect
+                }
+
+                val fileContent = FileUtil.decodeBitmapFromFileUri(context, uiEffect.fileUri)
+                    ?.compressImage(
+                        compressFormat = compressFormat
+                    )
+                if (fileContent == null) {
+                    onEventSent(ProfileContract.Event.ProfileImage.OnCroppedImageFileContentRead(null))
+                    return@ObserveUiEffect
+                }
+
+                onEventSent(
+                    ProfileContract.Event.ProfileImage.OnCroppedImageFileContentRead(
+                        croppedImageFileReadContentData = ReadFileContentData(
+                            fileName = fileName,
+                            fileContent = fileContent
+                        )
+                    )
+                )
+            }
+
+            ProfileContract.Effect.BottomSheet.Show -> {
+                modalBottomSheetCoroutineScope.launch {
+                    modalBottomSheetState.show()
+                }
+            }
+
+            ProfileContract.Effect.BottomSheet.Hide -> {
+                modalBottomSheetCoroutineScope.launch {
+                    modalBottomSheetState.hideIfVisible()
+                }
+            }
+
+            is ProfileContract.Effect.ShowToastMessage -> {
+                Toast.makeText(context, uiEffect.message, Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -249,10 +300,10 @@ fun ProfileScreen(
     }
 
     // Cropped image result screen.
-    state.croppedImageUri?.let { imageUri ->
+    state.croppedImageFileContentData?.let { fileContentData ->
         CroppedImage(
             isLoading = state.croppedImageIsLoading,
-            imageUri = imageUri,
+            imageUri = fileContentData.uri,
             onCloseClicked = { onEventSent(ProfileContract.Event.ProfileImage.CroppedImage.OnCloseClicked) },
             onSaveClicked = { onEventSent(ProfileContract.Event.ProfileImage.CroppedImage.OnSaveClicked) }
         )

@@ -136,20 +136,20 @@ interface ApiService {
     /**
      * Retrieves the profile details of the current user.
      */
-    @GET("/api/private/marvelx/user/me-profile")
+    @GET("/api/private/marvelx/user/me/profile")
     suspend fun getCurrentUserProfileDetails(): Response<ResponseBasicProfileDetails>
 
     /**
      * Updates the profile details of the current user.
      */
-    @PUT("/api/private/marvelx/user/me-profile")
+    @PUT("/api/private/marvelx/user/me/profile")
     suspend fun updateCurrentUserProfileDetails(@Body requestProfileDetailsUpdate: RequestProfileDetailsUpdate): Response<Void>
 
     /**
      * Updates the profile image of the current user.
      */
     @Multipart
-    @PUT("/api/private/marvelx/user/me/profile_image")
+    @PUT("/api/private/marvelx/user/me/profile-image")
     suspend fun updateUserProfileImage(@Part profileImage: MultipartBody.Part): Response<Void>
 
     /**
@@ -161,13 +161,13 @@ interface ApiService {
     /**
      * Retrieves the privacy settings of the current user.
      */
-    @GET("/api/private/marvelx/user/me/privacy_settings")
+    @GET("/api/private/marvelx/user/me/privacy-settings")
     suspend fun getUserPrivacySettings(): Response<ResponsePrivacySettings>
 
     /**
      * Updates the privacy settings of the current user.
      */
-    @PUT("/api/private/marvelx/user/me/privacy_settings")
+    @PUT("/api/private/marvelx/user/me/privacy-settings")
     suspend fun updateUserPrivacySettings(@Body requestPrivacySettings: RequestPrivacySettings): Response<Void>
 
     /**

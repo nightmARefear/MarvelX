@@ -3,10 +3,14 @@ package com.alexgreece45.marvelx.ui.screens.profile
 import android.net.Uri
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.configuration.ConfigLogic
 import com.alexgreece45.marvelx.controllers.PrefKeys
+import com.alexgreece45.marvelx.domain.helper.InteractorPartialState
 import com.alexgreece45.marvelx.domain.interactors.GetCurrentUserProfileDetailsPartialState
 import com.alexgreece45.marvelx.domain.interactors.UserInteractor
 import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.BasicProfileDetailsDomain
+import com.alexgreece45.marvelx.domain.model_generic.AttachedFileContentData
+import com.alexgreece45.marvelx.domain.model_generic.ReadFileContentData
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
@@ -18,14 +22,15 @@ import com.alexgreece45.marvelx.ui.components.model.BottomSheetContentItemIconDa
 import com.alexgreece45.marvelx.ui.components.model.ErrorButtonType
 import com.alexgreece45.marvelx.ui.components.sections.model.SectionHeaderData
 import com.alexgreece45.marvelx.ui.helper.model.DeepLinkAction
-import com.alexgreece45.marvelx.ui.navigation.NavArgHelper
 import com.alexgreece45.marvelx.ui.navigation.Screen
-import com.alexgreece45.marvelx.ui.navigation.models.NavArg
 import com.alexgreece45.marvelx.ui.screens.profile.model.ProfileBottomSheetType
 import com.alexgreece45.marvelx.ui.screens.profile.model.ProfileErrorAlertDialog
 import com.alexgreece45.marvelx.ui.screens.profile.model.ProfileScreenErrorView
+import com.alexgreece45.marvelx.util.FileUtil
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.constants.ConstantsUi
+import com.alexgreece45.marvelx.util.extensions.endsWithAnySuffix
+import com.alexgreece45.marvelx.util.extensions.toUrlEncoding
 import kotlinx.coroutines.launch
 
 sealed interface ProfileContract {
@@ -53,15 +58,20 @@ sealed interface ProfileContract {
             /**
              * Triggered when an image is selected in the `photo picker`.
              */
-            data class OnImageSelected(val imageUri: Uri?) : ProfileImage
+            data class OnImageSelected(val imageFileContentData: AttachedFileContentData?) :
+                ProfileImage
 
             /**
-             * Events for the image cropper activity.
+             * Triggered when a selected image has been cropped.
              */
-            sealed interface ImageCropper : ProfileImage {
-                data class OnSuccess(val croppedImageUri: Uri?) : ImageCropper
-                data object OnFailed : ImageCropper
-            }
+            data class OnImageCropped(val imageFileContentData: AttachedFileContentData?) :
+                ProfileImage
+
+            /**
+             * Triggered when the cropped image's content is read.
+             */
+            data class OnCroppedImageFileContentRead(val croppedImageFileReadContentData: ReadFileContentData?) :
+                ProfileImage
 
             /**
              * Events for updating the current profile image.
@@ -99,8 +109,8 @@ sealed interface ProfileContract {
     /**
      * @param isLoading Whether the screen is in loading state.
      * @param croppedImageIsLoading Whether the `Cropped Image` screen is in loading state.
-     * @param croppedImageUri The uri of the cropped image. When it's not `null`, a full screen view
-     * is displayed.
+     * @param croppedImageFileContentData The file content data of the cropped image.
+     * When it's not `null`, a full screen view is displayed.
      */
     data class State(
         val isLoading: Boolean = true,
@@ -109,7 +119,7 @@ sealed interface ProfileContract {
         val profileBannerLabel: String = "",
         val sections: List<SectionHeaderData> = emptyList(),
         val profileDetails: BasicProfileDetailsDomain? = null,
-        val croppedImageUri: Uri? = null,
+        val croppedImageFileContentData: AttachedFileContentData? = null,
 
         val bottomSheetType: ProfileBottomSheetType? = null,
         val profileImageBottomSheetContentItems: List<BottomSheetContentItem> = emptyList(),
@@ -129,7 +139,7 @@ sealed interface ProfileContract {
             data object NavigateToSettingsScreen : Navigation()
             data object NavigateToFriendsScreen : Navigation()
             data class NavigateToQrCodeScreen(val previousScreenRoute: String) : Navigation()
-            data object NavigateToProfileImageScreen : Navigation()
+            data class NavigateToProfileImageScreen(val profileImageUrl: String) : Navigation()
             data class NavigateToProfileDetailsScreen(val userId: String) : Navigation()
         }
 
@@ -147,7 +157,14 @@ sealed interface ProfileContract {
             val imageUri: Uri
         ) : Effect()
 
+        data class ReadCroppedImageFileContent(
+            val fileUri: Uri,
+            val fileName: String
+        ) : Effect()
+
         data class OpenDeepLinkAction(val deepLinkAction: DeepLinkAction) : Effect()
+
+        data class ShowToastMessage(val message: String) : Effect()
     }
 }
 
@@ -155,7 +172,8 @@ sealed interface ProfileContract {
 class ProfileViewModel(
     private val resourceProvider: ResourceProvider,
     private val userInteractor: UserInteractor,
-    private val prefKeys: PrefKeys
+    private val prefKeys: PrefKeys,
+    private val configLogic: ConfigLogic
 ) :
     BaseViewModel<ProfileContract.Event, ProfileContract.State, ProfileContract.Effect>() {
     override fun setInitialState(): ProfileContract.State = ProfileContract.State()
@@ -182,7 +200,7 @@ class ProfileViewModel(
             ProfileContract.Event.OnSystemBack -> {
                 when {
                     currentState.bottomSheetType != null -> hideBottomSheet()
-                    currentState.croppedImageUri != null -> exitCroppedImageScreen()
+                    currentState.croppedImageFileContentData != null -> exitCroppedImageScreen()
                     else -> setEffect {
                         ProfileContract.Effect.Navigation.NavigateUp
                     }
@@ -225,53 +243,83 @@ class ProfileViewModel(
             ProfileContract.Event.ProfileImage.BottomSheet.OnViewImageClicked -> {
                 hideBottomSheet()
 
-                NavArgHelper.setArgument(
-                    navArg = NavArg.ProfileImageUri,
-                    value = currentState.profileDetails?.profileImageUrl.orEmpty()
-                )
                 setEffect {
-                    ProfileContract.Effect.Navigation.NavigateToProfileImageScreen
+                    ProfileContract.Effect.Navigation.NavigateToProfileImageScreen(
+                        currentState.profileDetails?.profileImageUrl.orEmpty().toUrlEncoding()
+                    )
                 }
             }
 
             is ProfileContract.Event.ProfileImage.OnImageSelected -> {
-                when (val imageUri = event.imageUri) {
-                    null -> {
-                        appLogger.d("ProfileViewModel") { "(OnImageSelected) No image was selected." }
-                    }
+                val imageFileContentData = event.imageFileContentData
+                if (imageFileContentData == null) {
+                    showToastMessage(message = resourceProvider.getString(R.string.screen_profile_error_image_select_reading))
+                    return
+                }
 
-                    else -> {
-                        appLogger.d("ProfileViewModel") { "(OnImageSelected) selected image URI: $imageUri" }
-                        setEffect {
-                            ProfileContract.Effect.OpenImageCropper(
-                                toolbarTitle = resourceProvider.getString(R.string.profile_screen_cropped_cropped_image_toolbar_title),
-                                imageSize = ConstantsUi.PROFILE_IMAGE_FULL_SIZE.value.toInt(),
-                                imageUri = imageUri
-                            )
-                        }
-                    }
+                if (!imageFileContentData.name.endsWithAnySuffix(suffixes = configLogic.supportedImageFileExtensions)) {
+                    showToastMessage(message = resourceProvider.getString(R.string.screen_profile_error_image_select_invalid_extension))
+                    return
+                }
+
+                if (imageFileContentData.bytesCount > configLogic.imageFileMaxSize) {
+                    showToastMessage(
+                        message = resourceProvider.getString(
+                            R.string.screen_profile_error_image_select_too_big,
+                            FileUtil.getMegabytesFromBytes(configLogic.imageFileMaxSize)
+                        )
+                    )
+                    return
+                }
+
+                appLogger.d("ProfileViewModel") { "(OnImageSelected) selected image URI: ${imageFileContentData.uri}" }
+                setEffect {
+                    ProfileContract.Effect.OpenImageCropper(
+                        toolbarTitle = resourceProvider.getString(R.string.profile_screen_cropped_cropped_image_toolbar_title),
+                        imageSize = ConstantsUi.PROFILE_IMAGE_FULL_SIZE.value.toInt(),
+                        imageUri = imageFileContentData.uri
+                    )
                 }
             }
 
-            is ProfileContract.Event.ProfileImage.ImageCropper.OnSuccess -> {
-                when (event.croppedImageUri) {
-                    null -> {
-                        appLogger.e("ProfileViewModel") { "Error cropping image!" }
-                    }
+            is ProfileContract.Event.ProfileImage.OnImageCropped -> {
+                if (event.imageFileContentData == null) {
+                    appLogger.e("ProfileViewModel") { "Error cropping image!" }
 
-                    else -> {
-                        appLogger.d("ProfileViewModel") { "Image was successfully cropped!" }
-                        setState {
-                            copy(
-                                croppedImageUri = event.croppedImageUri
-                            )
-                        }
+                    showToastMessage(message = resourceProvider.getString(R.string.screen_profile_error_image_crop))
+                    setState {
+                        copy(
+                            croppedImageIsLoading = false,
+                            croppedImageFileContentData = null
+                        )
                     }
+                    return
+                }
+
+                appLogger.d("ProfileViewModel") { "Image was successfully cropped!" }
+                setState {
+                    copy(
+                        croppedImageFileContentData = event.imageFileContentData
+                    )
                 }
             }
 
-            ProfileContract.Event.ProfileImage.ImageCropper.OnFailed -> {
-                appLogger.e("ProfileViewModel") { "Error cropping image!" }
+            is ProfileContract.Event.ProfileImage.OnCroppedImageFileContentRead -> {
+                val readFileContentData = event.croppedImageFileReadContentData
+                if (readFileContentData == null) {
+                    showToastMessage(message = resourceProvider.getString(R.string.screen_profile_error_image_crop_reading))
+                    setState {
+                        copy(
+                            croppedImageIsLoading = false,
+                            croppedImageFileContentData = null
+                        )
+                    }
+                    return
+                }
+
+                updateProfileImage(
+                    readFileContentData = readFileContentData
+                )
             }
 
             ProfileContract.Event.ProfileImage.CroppedImage.OnCloseClicked -> {
@@ -279,7 +327,7 @@ class ProfileViewModel(
             }
 
             ProfileContract.Event.ProfileImage.CroppedImage.OnSaveClicked -> {
-
+                readCroppedImageFileContentData()
             }
         }
     }
@@ -423,24 +471,6 @@ class ProfileViewModel(
     }
 
     /**
-     * Updates the current profile image with the one that the user has cropped.
-     */
-    private fun updateProfileImage() {
-        setState {
-            copy(
-                croppedImageIsLoading = true
-            )
-        }
-        if (currentState.croppedImageUri == null) {
-            setState {
-                copy(
-                    croppedImageIsLoading = false
-                )
-            }
-        }
-    }
-
-    /**
      * Shows the error view.
      */
     private fun showError(
@@ -503,7 +533,7 @@ class ProfileViewModel(
                         onClick = {
                             setState {
                                 copy(
-                                    croppedImageUri = null,
+                                    croppedImageFileContentData = null,
                                     errorAlertDialog = null
                                 )
                             }
@@ -522,6 +552,74 @@ class ProfileViewModel(
                     )
                 )
             )
+        }
+    }
+
+    private fun readCroppedImageFileContentData() {
+        when (val fileContentData = currentState.croppedImageFileContentData) {
+            null -> {
+                setState {
+                    copy(
+                        croppedImageIsLoading = false,
+                        croppedImageFileContentData = null
+                    )
+                }
+            }
+
+            else -> {
+                setState {
+                    copy(
+                        croppedImageIsLoading = true
+                    )
+                }
+
+                setEffect {
+                    ProfileContract.Effect.ReadCroppedImageFileContent(
+                        fileUri = fileContentData.uri,
+                        fileName = fileContentData.name
+                    )
+                }
+            }
+        }
+    }
+
+    /**
+     * Updates the current profile image with the one that the user has cropped.
+     */
+    private fun updateProfileImage(readFileContentData: ReadFileContentData) {
+        viewModelScope.launch {
+            userInteractor.updateUserProfileImage(profileImageReadFileContentData = readFileContentData)
+                .collect { result ->
+                    when (result) {
+                        is InteractorPartialState.Error<*>,
+                        is InteractorPartialState.Failed<*>,
+                        InteractorPartialState.NoInternetConnection -> {
+                            showToastMessage(message = resourceProvider.getString(R.string.screen_profile_error_image_upload))
+                            setState {
+                                copy(
+                                    croppedImageIsLoading = false,
+                                    croppedImageFileContentData = null
+                                )
+                            }
+                        }
+
+                        is InteractorPartialState.Success<*> -> {
+                            showToastMessage(message = resourceProvider.getString(R.string.screen_profile_success_image_upload))
+                            setState {
+                                copy(
+                                    croppedImageIsLoading = false,
+                                    croppedImageFileContentData = null
+                                )
+                            }
+                        }
+                    }
+                }
+        }
+    }
+
+    private fun showToastMessage(message: String) {
+        setEffect {
+            ProfileContract.Effect.ShowToastMessage(message = message)
         }
     }
 }

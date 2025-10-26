@@ -81,6 +81,8 @@ class FriendsViewModel(
         }
 
         getFriends(isFromRefresh = false)
+        getIncomingFriendRequests(isFromRefresh = false)
+        getBlockedUsers(isFromRefresh = false)
     }
 
     private fun onBackClicked() {

@@ -53,8 +53,6 @@
     <string name="no_internet_connection_error_message">No internet connection! Please try again!</string>
     <string name="internal_server_error">An internal server error has occurred!</string>
     <string name="no_data_was_found">No data was found!</string>
-    <string name="image_size_too_large">Oops, this file is too large. Please choose a JPEG or PNG image smaller than or equal to %1$sMB.</string>
-    <string name="image_extension_not_supported">Oops, this file extension is not supported. Please choose a JPEG or PNG image and try again.</string>
 
     // • Generic Error Buttons
     <string name="generic_retry_button">Try again</string>
@@ -202,11 +200,21 @@
 
     <string name="profile_screen_content_description_cropped_image_new_profile_image">New profile image preview</string>
 
+    <string name="screen_profile_success_image_upload">The profile image has been successfully uploaded!</string>
+
     <string name="profile_screen_error_loading_profile_details">An error occurred while loading the profile details.</string>
     <string name="profile_screen_label_error_alert_dialog_cropped_image_title_exit">Discard changes?</string>
     <string name="profile_screen_label_error_alert_dialog_cropped_image_subtitle_exit">If you leave this screen you will lose the changes that you have made.</string>
     <string name="profile_screen_label_error_alert_dialog_cropped_image_button_negative">Discard</string>
     <string name="profile_screen_label_error_alert_dialog_cropped_image_button_positive">Stay</string>
+
+    <string name="screen_profile_error_image_select_reading">An error occurred whilst reading the image.</string>
+    <string name="screen_profile_error_image_select_too_big">Oops, this file is too large. Please choose a JPEG or PNG image smaller than or equal to %1$sMB.</string>
+    <string name="screen_profile_error_image_select_invalid_extension">Oops, this file extension is not supported. Please choose a JPEG or PNG image and try again.</string>
+    <string name="screen_profile_error_image_upload">An error occurred whilst uploading the profile image.</string>
+
+    <string name="screen_profile_error_image_crop">An error occurred whilst cropping the image.</string>
+    <string name="screen_profile_error_image_crop_reading">An error occurred whilst reading the cropped image.</string>
 
     // Profile Image Screen
     <string name="profile_image_screen_toolbar_title">Profile Image of %1$s</string>

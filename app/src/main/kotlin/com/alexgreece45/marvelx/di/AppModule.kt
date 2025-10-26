@@ -3,8 +3,8 @@ package com.alexgreece45.marvelx.di
 import androidx.room.Room
 import androidx.work.WorkerFactory
 import com.alexgreece45.marvelx.BuildConfig
-import com.alexgreece45.marvelx.MarvelXApplication
-import com.alexgreece45.marvelx.RefreshTokenWorkerFactory
+import com.alexgreece45.marvelx.application.MarvelXApplication
+import com.alexgreece45.marvelx.application.worker.RefreshTokenWorkerFactory
 import com.alexgreece45.marvelx.configuration.AppBuildType
 import com.alexgreece45.marvelx.configuration.ConfigLogic
 import com.alexgreece45.marvelx.configuration.ConfigLogicImpl
@@ -64,6 +64,7 @@ import com.alexgreece45.marvelx.data.repository.RegisterRepository
 import com.alexgreece45.marvelx.data.repository.RegisterRepositoryImpl
 import com.alexgreece45.marvelx.data.repository.UserRepository
 import com.alexgreece45.marvelx.data.repository.UserRepositoryImpl
+import com.alexgreece45.marvelx.data.repository.imageLoader.AuthenticatedImageLoader
 import com.alexgreece45.marvelx.database.FavoriteCharactersDao
 import com.alexgreece45.marvelx.database.FavoriteCharactersDatabase
 import com.alexgreece45.marvelx.dispatchers.MarvelXDispatchers
@@ -90,6 +91,7 @@ import com.alexgreece45.marvelx.domain.interactors.UserInteractor
 import com.alexgreece45.marvelx.domain.interactors.UserInteractorImpl
 import com.alexgreece45.marvelx.domain.worker.RefreshTokenWorker
 import com.alexgreece45.marvelx.network_logic.di.networkKoinModule
+import com.alexgreece45.marvelx.network_logic.di.provideOkHttpClient
 import com.alexgreece45.marvelx.ui.helper.FieldValidationRules
 import com.alexgreece45.marvelx.ui.helper.FieldValidationRulesImpl
 import com.alexgreece45.marvelx.ui.navigation.router.RouterHost
@@ -197,6 +199,14 @@ private val repositoryModule = module {
         FriendRequestsRepositoryImpl(
             get(),
             get(named(MarvelXDispatchers.IO))
+        )
+    }
+
+    // Image loader.
+    single<AuthenticatedImageLoader> {
+        AuthenticatedImageLoader(
+            context = get(),
+            okHttpClient = provideOkHttpClient(get(), get(), get(), get(), get(), get())
         )
     }
 }
@@ -317,6 +327,24 @@ private val viewModelModule = module {
 }
 
 private val workerModule = module {
-    worker<RefreshTokenWorker> { RefreshTokenWorker(get(), get(), get(), get(), get(), get()) }
-    factory<WorkerFactory> { RefreshTokenWorkerFactory(get(), get(), get(), get()) }
+    worker<RefreshTokenWorker> {
+        RefreshTokenWorker(
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(named(MarvelXDispatchers.IO))
+        )
+    }
+    factory<WorkerFactory> {
+        RefreshTokenWorkerFactory(
+            get(),
+            get(),
+            get(),
+            get(),
+            get(named(MarvelXDispatchers.IO))
+        )
+    }
 }

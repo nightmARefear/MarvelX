@@ -8,6 +8,7 @@ import okhttp3.Request
  * This controller modifies all the requests that are intended for the MarvelX backend.
  */
 interface MarvelXBackendRequestController {
+
     /**
      * Applies the necessary transformations to produce the final request.
      *
@@ -25,6 +26,7 @@ class MarvelXBackendRequestControllerImpl(
     private val authController: AuthController,
     private val requestController: RequestController
 ) : MarvelXBackendRequestController {
+
     override fun applyMarvelXBackendTransformations(
         originalRequest: Request,
         path: String

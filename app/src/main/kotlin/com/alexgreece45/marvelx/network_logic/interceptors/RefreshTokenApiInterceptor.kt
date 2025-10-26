@@ -15,6 +15,7 @@ import org.koin.core.annotation.Single
 class RefreshTokenInterceptor(
     private val configOauth: ConfigOauth
 ) : Interceptor {
+
     override fun intercept(chain: Interceptor.Chain): Response {
         val originalRequest = chain.request()
 

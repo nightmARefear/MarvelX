@@ -3,6 +3,7 @@ package com.alexgreece45.marvelx.configuration
 import com.alexgreece45.marvelx.BuildConfig
 import com.alexgreece45.marvelx.configuration.models.MarvelApiConfig
 import com.alexgreece45.marvelx.configuration.models.TimeoutData
+import com.alexgreece45.marvelx.util.constants.ConstantsContentTypes
 import com.alexgreece45.marvelx.util.extensions.getPortFromUrl
 import com.alexgreece45.marvelx.util.extensions.getSchemeFromUrl
 
@@ -129,7 +130,7 @@ class ConfigLogicImpl : ConfigLogic {
         get() = BuildConfig.FIREBASE_SERVER_CLIENT_ID
 
     override val supportedImageFileExtensions: List<String>
-        get() = listOf("jpg", "jpeg", "png")
+        get() = ConstantsContentTypes.ALL_FORMATS
 
     override val imageFileMaxSize: Long
         get() = 5 * 8 * 1024 * 1024 // 5MB

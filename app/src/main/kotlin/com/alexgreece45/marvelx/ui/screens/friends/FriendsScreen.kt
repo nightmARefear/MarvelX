@@ -2,6 +2,7 @@ package com.alexgreece45.marvelx.ui.screens.friends
 
 import android.text.Html
 import android.widget.Toast
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Card
 import androidx.compose.material.MaterialTheme
@@ -24,12 +26,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.ui.components.AlertDialogButton
@@ -48,6 +52,7 @@ import com.alexgreece45.marvelx.ui.screens.friends.model.FriendsContract
 import com.alexgreece45.marvelx.ui.theme.values.customColors
 import com.alexgreece45.marvelx.util.SPACING_MEDIUM
 import com.alexgreece45.marvelx.util.SPACING_SMALL
+import com.alexgreece45.marvelx.util.SPACING_TINY
 import com.alexgreece45.marvelx.util.VSpacer
 import com.alexgreece45.marvelx.util.constants.ConstantsUi
 import com.alexgreece45.marvelx.util.extensions.circularImageWithBorder
@@ -113,10 +118,37 @@ fun FriendsScreen(
                         onClick = { onEventSent(FriendsContract.Event.OnTabClicked(index)) },
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text(
-                            text = title,
-                            modifier = Modifier.padding(vertical = SPACING_SMALL.dp)
-                        )
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = SPACING_SMALL.dp),
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = title,
+                                overflow = TextOverflow.Ellipsis,
+                                maxLines = 1
+                            )
+
+                            Text(
+                                text = when (index) {
+                                    0 -> state.allFriends.size
+                                    1 -> state.incomingFriendRequests.size
+                                    else -> state.blockedUsers.size
+                                }.toString(),
+                                modifier = Modifier
+                                    .padding(SPACING_TINY.dp)
+                                    .background(
+                                        color = MaterialTheme.colors.background,
+                                        shape = CircleShape
+                                    )
+                                    .padding(6.dp)
+                                    .clip(CircleShape),
+                                overflow = TextOverflow.Ellipsis,
+                                maxLines = 1
+                            )
+                        }
                     }
                 }
             }
@@ -318,6 +350,7 @@ private fun NoItemsFoundText(label: String) {
 private fun GenericTile(
     fullName: String,
     profileImageUrl: String,
+    profileImageSize: Dp = ConstantsUi.GENERIC_IMAGE_TILE_SIZE,
     onClick: (() -> Unit)?,
     content: @Composable () -> Unit
 ) {
@@ -341,7 +374,7 @@ private fun GenericTile(
                     fullName
                 ),
                 modifier = Modifier
-                    .size(90.dp)
+                    .size(profileImageSize)
                     .circularImageWithBorder(
                         borderWidth = ConstantsUi.IMAGE_BORDER_WIDTH,
                         borderColor = MaterialTheme.customColors.genericRed
@@ -419,6 +452,7 @@ private fun IncomingFriendRequestTile(
     GenericTile(
         fullName = fullName,
         profileImageUrl = profileImageUrl,
+        profileImageSize = (ConstantsUi.GENERIC_IMAGE_TILE_SIZE.value * 1.5).dp,
         onClick = onClick
     ) {
         Column(

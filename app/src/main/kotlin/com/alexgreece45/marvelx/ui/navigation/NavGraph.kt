@@ -388,7 +388,7 @@ fun NavGraph(navController: NavHostController) {
 
                         is ProfileContract.Effect.Navigation.NavigateToProfileImageScreen -> {
                             navController.navigate(
-                                Screen.ProfileImageScreen.route
+                                Screen.ProfileImageScreen.createNavRoute(navigationEffect.profileImageUrl)
                             )
                         }
 
@@ -430,13 +430,14 @@ fun NavGraph(navController: NavHostController) {
             screen = Screen.ProfileImageScreen,
             enterTransition = { EnterTransition.BottomToTop },
             exitTransition = { ExitTransition.TopToBottom }
-        ) {
+        ) { navBackStackEntry ->
             val viewModel = koinViewModel<ProfileImageViewModel>()
             ProfileImageScreen(
                 onEventSent = viewModel::setEvent,
                 state = viewModel.uiState.collectAsStateWithLifecycle().value,
                 effect = viewModel.uiEffect,
                 navigateUp = navController::navigateUp,
+                profileImageUrl = navBackStackEntry.arguments?.getString(NavItem.ProfileImageUrl.key).orEmpty()
             )
         }
 
@@ -457,8 +458,12 @@ fun NavGraph(navController: NavHostController) {
                             navController.popBackStack()
                         }
 
-                        ProfileDetailsContract.Effect.Navigation.NavigateToProfileImageScreen -> {
-                            navController.navigate(Screen.ProfileImageScreen.route)
+                        is ProfileDetailsContract.Effect.Navigation.NavigateToProfileImageScreen -> {
+                            navController.navigate(
+                                Screen.ProfileImageScreen.createNavRoute(
+                                    navigationEffect.profileImageUrl
+                                )
+                            )
                         }
 
                         ProfileDetailsContract.Effect.Navigation.NavigateToEditProfileDetailsScreen -> {

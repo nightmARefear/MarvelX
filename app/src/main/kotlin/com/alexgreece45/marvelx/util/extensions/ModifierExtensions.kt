@@ -167,11 +167,7 @@ fun Modifier.throttledClickable(
         .filterTouchesWhenObscured(view)
         .clickable(
             interactionSource = interactionSource,
-            indication = if (showRipple) when (isIcon) {
-                true -> rememberRipple(bounded = false, radius = RippleRadius)
-                false -> if (rippleShape != null) rememberRipple(bounded = true) else indication
-                    ?: LocalIndication.current
-            } else null,
+            indication = LocalIndication.current, // TODO: To be fixed!!!!!!
             enabled = enabled,
             onClickLabel = onClickLabel,
             role = if (isIcon) role ?: Role.Button else role,
@@ -222,7 +218,8 @@ fun Modifier.clickableNoRipple(
 ): Modifier = composed {
     val interactionSource = remember { MutableInteractionSource() }
     val indication = if (rippleShape != null) {
-        rememberRipple(bounded = true)
+//        rememberRipple(bounded = true)
+        LocalIndication.current // TODO: To be fixed!
     } else {
         null
     }

@@ -11,6 +11,7 @@ import com.alexgreece45.marvelx.network_logic.clients.RefreshTokenClient
 import com.alexgreece45.marvelx.util.DateUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlin.coroutines.CoroutineContext
 
 class RefreshTokenWorker(
     context: Context,
@@ -18,9 +19,11 @@ class RefreshTokenWorker(
     private val refreshTokenClient: RefreshTokenClient,
     private val authController: AuthController,
     private val configOauth: ConfigOauth,
-    private val logger: AppLogger
+    private val logger: AppLogger,
+    private val ioDispatcher: CoroutineContext,
 ) : CoroutineWorker(context, workerParameters) {
-    override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
+
+    override suspend fun doWork(): Result = withContext(ioDispatcher) {
         try {
             authController.getRefreshToken()?.let { refreshToken ->
                 val accessTokenExpirationUnix = authController.getAccessTokenExpiration()

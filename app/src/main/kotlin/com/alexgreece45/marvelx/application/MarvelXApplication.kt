@@ -1,27 +1,24 @@
-package com.alexgreece45.marvelx
+package com.alexgreece45.marvelx.application
 
 import android.app.Application
-import android.content.Context
 import android.os.StrictMode
 import androidx.work.Configuration
-import androidx.work.ListenableWorker
-import androidx.work.WorkerFactory
-import androidx.work.WorkerParameters
-import com.alexgreece45.marvelx.configuration.ConfigOauth
+import coil.ImageLoader
+import coil.ImageLoaderFactory
+import com.alexgreece45.marvelx.application.worker.RefreshTokenWorkerFactory
 import com.alexgreece45.marvelx.configuration.ConfigSecurityLogic
 import com.alexgreece45.marvelx.controllers.AppLogger
-import com.alexgreece45.marvelx.controllers.AuthController
 import com.alexgreece45.marvelx.di.initKoin
-import com.alexgreece45.marvelx.domain.worker.RefreshTokenWorker
-import com.alexgreece45.marvelx.network_logic.clients.RefreshTokenClient
+import com.alexgreece45.marvelx.data.repository.imageLoader.AuthenticatedImageLoader
 import com.google.firebase.FirebaseApp
 import org.koin.android.ext.android.inject
 
-class MarvelXApplication : Application(), Configuration.Provider {
+class MarvelXApplication : Application(), Configuration.Provider, ImageLoaderFactory {
 
     private val appLogger: AppLogger by inject()
     private val refreshTokenWorkerFactory: RefreshTokenWorkerFactory by inject()
     private val configSecurityLogic: ConfigSecurityLogic by inject()
+    private val authenticatedImageLoader: AuthenticatedImageLoader by inject()
 
     override fun onCreate() {
         super.onCreate()
@@ -44,6 +41,10 @@ class MarvelXApplication : Application(), Configuration.Provider {
             .setWorkerFactory(refreshTokenWorkerFactory)
             .build()
 
+    override fun newImageLoader(): ImageLoader {
+        return authenticatedImageLoader.newImageLoader()
+    }
+
     /**
      * Handles strict mode if it has been enabled in the security config.
      */
@@ -65,24 +66,4 @@ class MarvelXApplication : Application(), Configuration.Provider {
             )
         }
     }
-}
-
-class RefreshTokenWorkerFactory(
-    private val refreshTokenClient: RefreshTokenClient,
-    private val authController: AuthController,
-    private val configOauth: ConfigOauth,
-    private val logger: AppLogger
-) : WorkerFactory() {
-    override fun createWorker(
-        appContext: Context,
-        workerClassName: String,
-        workerParameters: WorkerParameters
-    ): ListenableWorker = RefreshTokenWorker(
-        context = appContext,
-        workerParameters = workerParameters,
-        refreshTokenClient = refreshTokenClient,
-        authController = authController,
-        configOauth = configOauth,
-        logger = logger
-    )
 }

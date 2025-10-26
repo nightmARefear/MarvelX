@@ -1,6 +1,7 @@
 package com.alexgreece45.marvelx.ui.navigation
 
 import android.content.Intent
+import androidx.compose.runtime.key
 import androidx.navigation.NamedNavArgument
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
@@ -179,12 +180,11 @@ sealed class Screen(
 
     data object ProfileImageScreen : Screen(
         baseRoute = "profileImageScreen",
-    )
-
-    /**
-     * Friends Screen
-     */
-    data object FriendsScreen : Screen(baseRoute = "friendsScreen")
+        navArgs = listOf(NavItem.ProfileImageUrl)
+    ) {
+        fun createNavRoute(userId: String): String =
+            "$baseRoute/$userId"
+    }
 
     /**
      * Profile Screen --> Profile Details
@@ -199,6 +199,11 @@ sealed class Screen(
             userId: String,
         ): String = "$baseRoute/$userId"
     }
+
+    /**
+     * Friends Screen
+     */
+    data object FriendsScreen : Screen(baseRoute = "friendsScreen")
 
     /**
      * Profile Screen --> Profile Details --> Edit Profile Details
@@ -283,6 +288,7 @@ enum class NavItem(val key: String, val type: NavType<*>) {
     TabIndex(key = NavItemKey.tabIndex, type = NavType.IntType),
     PreviousScreenRoute(key = NavItemKey.previousScreenRoute, type = NavType.StringType),
     QrCodeScanErrorMessage(key = NavItemKey.qrCodeScanErrorMessage, type = NavType.StringType),
+    ProfileImageUrl(key = NavItemKey.profileImageUrl, type = NavType.StringType),
 }
 
 /**
@@ -313,5 +319,5 @@ private object NavItemKey {
     const val listingId = "listingId"
     const val qrCodeScanErrorMessage = "qrCodeScanErrorMessage"
     const val previousScreenRoute = "previousScreenRoute"
-    const val profileImageUri = "profileImageUri"
+    const val profileImageUrl = "profileImageUrl"
 }

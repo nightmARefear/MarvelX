@@ -38,7 +38,6 @@ import com.chuckerteam.chucker.api.Chucker
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
-import org.koin.androidx.compose.KoinAndroidContext
 import org.koin.core.annotation.KoinExperimentalAPI
 
 class MainActivity : ComponentActivity() {
@@ -58,53 +57,51 @@ class MainActivity : ComponentActivity() {
 
         setWindowSecurityFlags()
         setContent {
-            KoinAndroidContext {
-                MarvelXTheme {
-                    Surface(color = MaterialTheme.colors.background) {
-                        routerHost.StartFlow()
+            MarvelXTheme {
+                Surface(color = MaterialTheme.colors.background) {
+                    routerHost.StartFlow()
 
-                        ShouldAppDrawOverlayWindows()
-                        ChuckerPermissions()
+                    ShouldAppDrawOverlayWindows()
+                    ChuckerPermissions()
 
-                        OneTimeLaunchedEffect {
-                            viewModel.setEvent(ActivityEvent.LifecycleEvent.OnCreate)
-                        }
+                    OneTimeLaunchedEffect {
+                        viewModel.setEvent(ActivityEvent.LifecycleEvent.OnCreate)
+                    }
 
-                        LaunchedEffect(Unit) {
-                            viewModel.uiEffect.collect { effect ->
-                                when (effect) {
-                                    is ActivityEffect.Navigation.NavigateToHomeScreenWithSessionExpired -> {
-                                        NavArgHelper.setArgument(
-                                            NavArg.HomeAlertDialogErrorType,
-                                            HomeAlertDialogErrorType.SessionExpired
+                    LaunchedEffect(Unit) {
+                        viewModel.uiEffect.collect { effect ->
+                            when (effect) {
+                                is ActivityEffect.Navigation.NavigateToHomeScreenWithSessionExpired -> {
+                                    NavArgHelper.setArgument(
+                                        NavArg.HomeAlertDialogErrorType,
+                                        HomeAlertDialogErrorType.SessionExpired
+                                    )
+                                    routerHost.logout()
+                                }
+
+                                is ActivityEffect.Navigation.NavigateToSplashScreenWithSecurityViolation -> {
+                                    NavArgHelper.setArgument(
+                                        NavArg.SplashAlertDialogErrorType,
+                                        SplashContract.AlertDialogErrorType.InsecureApplication(
+                                            securityViolation = effect.securityViolation
                                         )
-                                        routerHost.logout()
-                                    }
-
-                                    is ActivityEffect.Navigation.NavigateToSplashScreenWithSecurityViolation -> {
-                                        NavArgHelper.setArgument(
-                                            NavArg.SplashAlertDialogErrorType,
-                                            SplashContract.AlertDialogErrorType.InsecureApplication(
-                                                securityViolation = effect.securityViolation
-                                            )
-                                        )
-                                        routerHost.getNavController().let { navController ->
-                                            navController.navigate(Screen.SplashScreen.route) {
-                                                popUpToTop(navController)
-                                            }
+                                    )
+                                    routerHost.getNavController().let { navController ->
+                                        navController.navigate(Screen.SplashScreen.route) {
+                                            popUpToTop(navController)
                                         }
                                     }
+                                }
 
-                                    is ActivityEffect.OpenOrCacheDeepLink -> {
-                                        logger.d("MainActivity") { "opening or caching deep link..." }
-                                        if (routerHost.canCurrentRouteRunDeepLink()) {
-                                            openDeepLinkAction(
-                                                navController = routerHost.getNavController(),
-                                                deepLinkAction = effect.deepLinkAction
-                                            )
-                                        } else {
-                                            pendingDeepLinkAction = effect.deepLinkAction
-                                        }
+                                is ActivityEffect.OpenOrCacheDeepLink -> {
+                                    logger.d("MainActivity") { "opening or caching deep link..." }
+                                    if (routerHost.canCurrentRouteRunDeepLink()) {
+                                        openDeepLinkAction(
+                                            navController = routerHost.getNavController(),
+                                            deepLinkAction = effect.deepLinkAction
+                                        )
+                                    } else {
+                                        pendingDeepLinkAction = effect.deepLinkAction
                                     }
                                 }
                             }

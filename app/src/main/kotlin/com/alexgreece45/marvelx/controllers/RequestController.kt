@@ -8,6 +8,7 @@ import okhttp3.Request
 import java.util.UUID
 
 interface RequestController {
+
     /**
      * Adds the necessary authentication headers to the given [Request.Builder] and returns the
      * finalized builder.

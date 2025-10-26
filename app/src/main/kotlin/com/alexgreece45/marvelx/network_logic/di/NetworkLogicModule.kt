@@ -20,6 +20,7 @@ import com.alexgreece45.marvelx.network_logic.authenticators.ApiAuthenticator
 import com.alexgreece45.marvelx.network_logic.authenticators.RefreshTokenAuthenticator
 import com.alexgreece45.marvelx.network_logic.clients.RefreshTokenClient
 import com.alexgreece45.marvelx.network_logic.clients.RefreshTokenClientImpl
+import com.alexgreece45.marvelx.data.repository.imageLoader.AuthenticatedImageLoader
 import com.alexgreece45.marvelx.network_logic.interceptors.ApiInterceptor
 import com.alexgreece45.marvelx.network_logic.interceptors.RefreshTokenInterceptor
 import com.alexgreece45.marvelx.network_logic.interceptors.WebsocketInterceptor
@@ -300,7 +301,18 @@ val networkKoinModule = module {
     single<Gson> { provideGson() }
     single<GsonConverterFactory> { provideGsonConverterFactory(get()) }
 
-    single<ApiAuthenticator> { ApiAuthenticator(get(), get(), get(), get(), get(), get(), get(), get(named(MarvelXDispatchers.Main))) }
+    single<ApiAuthenticator> {
+        ApiAuthenticator(
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(named(MarvelXDispatchers.Main))
+        )
+    }
     single<RefreshTokenAuthenticator> { RefreshTokenAuthenticator(get(), get(), get()) }
 
     single<HttpLoggingInterceptor> { provideHttpLoggingInterceptor(get(), get()) }

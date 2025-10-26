@@ -1,19 +1,17 @@
 package com.alexgreece45.marvelx.ui.screens.profile.image
 
 import android.content.res.Configuration
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -23,8 +21,8 @@ import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
 import com.alexgreece45.marvelx.ui.components.WrapAsyncImage
 import com.alexgreece45.marvelx.ui.components.effect.ObserveUiEffect
-import com.alexgreece45.marvelx.ui.components.effect.OneTimeLaunchedEffect
 import com.alexgreece45.marvelx.ui.components.error.ContentErrorScreen
+import com.alexgreece45.marvelx.ui.screens.profile.image.model.ProfileImageContract
 import com.alexgreece45.marvelx.ui.theme.MarvelXTheme
 import com.alexgreece45.marvelx.ui.theme.values.customColors
 import com.alexgreece45.marvelx.util.constants.ConstantsUi
@@ -38,9 +36,10 @@ fun ProfileImageScreen(
     state: ProfileImageContract.State,
     effect: Flow<ProfileImageContract.Effect>,
     navigateUp: () -> Unit,
+    profileImageUrl: String,
 ) {
-    OneTimeLaunchedEffect {
-        onEventSent(ProfileImageContract.Event.Init)
+    LaunchedEffect(Unit) {
+        onEventSent(ProfileImageContract.Event.Init(profileImageUrl))
     }
 
     ObserveUiEffect(effect) { uiEffect ->
@@ -68,7 +67,7 @@ fun ProfileImageScreen(
                 .padding(paddingValues),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            state.imageUri?.let { imageUri ->
+            state.profileImageUrl?.let { imageUri ->
                 Spacer(modifier = Modifier.weight(0.15f))
                 Row(modifier = Modifier.weight(0.85f)) {
                     WrapAsyncImage(
@@ -112,10 +111,11 @@ private fun ProfileImageScreenPreview() {
             onEventSent = {},
             state = ProfileImageContract.State(
                 isLoading = false,
-                imageUri = ""
+                profileImageUrl = ""
             ),
             effect = emptyFlow(),
-            navigateUp = {}
+            navigateUp = {},
+            profileImageUrl = "1"
         )
     }
 }

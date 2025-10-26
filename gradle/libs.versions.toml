@@ -1,66 +1,68 @@
 [versions]
-compose-bom = "2024.06.00"
-koin-bom = "3.5.6"
-
-compose-compiler = "1.5.13"
-compose-navigation = "2.7.7"
-
-plugin-agp = "8.5.1"
-plugin-kotlin = "1.9.23"
-plugin-google-mapsplatform-secrets = "2.0.1"
-plugin-ksp = "1.9.23-1.0.20"
-
 application-name = "com.alexgreece45.marvelx"
 
-airbnb-lottie-compose = "6.1.0"
+min-sdk = "26"
+target-sdk = "36"
 
-androidx-activity-compose = "1.9.0"
-androidx-appcompat = "1.7.0"
-androidx-camera = "1.3.4"
-androidx-core = "1.13.1"
-androidx-credentials = "1.2.2"
-androidx-lifecycle = "2.8.3"
-androidx-room = "2.6.1"
-androidx-security-crypto = "1.0.0"
-androidx-work = "2.9.0"
+compose-bom = "2025.10.01"
+koin-bom = "4.1.1"
 
-androidx-test-ext-junit = "1.2.1"
-androidx-test-espresso-core = "3.6.1"
+compose-navigation = "2.9.5"
 
-bouncycastle-bcprov = "1.70"
+plugin-agp = "8.13.0"
+plugin-kotlin = "2.2.21"
+plugin-google-mapsplatform-secrets = "2.0.1"
+plugin-ksp = "2.3.0"
 
-chucker = "4.0.0"
+airbnb-lottie-compose = "6.6.10"
 
-coil = "2.6.0"
+androidx-activity-compose = "1.11.0"
+androidx-appcompat = "1.7.1"
+androidx-camera = "1.5.1"
+androidx-core = "1.17.0"
+androidx-credentials = "1.5.0"
+androidx-lifecycle = "2.9.4"
+androidx-room = "2.8.3"
+androidx-security-crypto = "1.1.0"
+androidx-work = "2.11.0"
+
+androidx-test-ext-junit = "1.3.0"
+androidx-test-espresso-core = "3.7.0"
+
+bouncycastle-bcprov = "1.82"
+
+chucker = "4.2.0"
+
+coil = "2.7.0"
 
 google-accompanist = "0.34.0"
 google-android-libraries-identity = "1.1.1"
-google-code-gson = "2.10.1"
-google-firebase-bom = "33.1.2"
-google-firebase-crashlytics = "3.0.2"
-google-play-services-auth = "21.2.0"
-google-gms-google-services = "4.4.2"
-google-zxing = "3.5.2"
+google-code-gson = "2.13.2"
+google-firebase-bom = "34.4.0"
+google-firebase-crashlytics = "3.0.6"
+google-play-services-auth = "21.4.0"
+google-gms-google-services = "4.4.4"
+google-zxing = "3.5.3"
 
-hilt-navigation = "1.2.0"
+hilt-navigation = "1.3.0"
 
 java-version = "17"
 
 junit = "4.13.2"
 
-koin-annotations = "1.3.0"
+koin-annotations = "2.3.0"
 
-lambdapioneer-argon2kt = "1.4.0"
+lambdapioneer-argon2kt = "1.6.0"
 
-rootbeer = "0.1.0"
+rootbeer = "0.1.1"
 
-squareup-logcat = "0.1"
-squareup-okhttp3-logging-intereceptor = "4.12.0"
-squareup-retrofit2 = "2.11.0"
-squareup-leakcanary = "2.12"
+squareup-logcat = "0.4"
+squareup-okhttp3-logging-intereceptor = "5.2.1"
+squareup-retrofit2 = "3.0.0"
+squareup-leakcanary = "2.14"
 
-valentinilk-shimmer = "1.3.0"
-vanniktech-android-image-cropper = "4.5.0"
+valentinilk-shimmer = "1.3.3"
+vanniktech-android-image-cropper = "4.6.0"
 
 [libraries]
 airbnb-lottie-compose = { module = "com.airbnb.android:lottie-compose", version.ref = "airbnb-lottie-compose" }
@@ -152,6 +154,7 @@ google-firebase-crashlytics = { id = "com.google.firebase.crashlytics", version.
 google-mapsplatform-secrets = { id = "com.google.android.libraries.mapsplatform.secrets-gradle-plugin", version.ref = "plugin-google-mapsplatform-secrets" }
 
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "plugin-kotlin" }
+kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "plugin-kotlin" }
 kotlin-parcelize = { id = "org.jetbrains.kotlin.plugin.parcelize", version.ref = "plugin-kotlin" }
 
 ksp = { id = "com.google.devtools.ksp", version.ref = "plugin-ksp" }

@@ -1,7 +1,15 @@
 package com.alexgreece45.marvelx.util.extensions
 
+import android.graphics.Bitmap
+import android.graphics.Bitmap.CompressFormat
 import android.util.Patterns
+import androidx.core.net.toUri
+import com.alexgreece45.marvelx.util.constants.ConstantsContentTypes
+import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import java.math.BigInteger
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
 
 /**
@@ -143,3 +151,62 @@ fun String.getPortFromUrl(): Int {
  * Converts this pair to a full name.
  */
 fun Pair<String, String>.toFullName(): String = "$first $second"
+
+/**
+ * Encodes the given string to a url encoding. This is safe for navigation arguments.
+ */
+fun String.toUrlEncoding(): String = URLEncoder.encode(this, StandardCharsets.UTF_8.toString())
+
+/**
+ * Decodes this string from url encoding to UTF-8.
+ */
+fun String.decodeFromUrl(): String = this.toUri().toString()
+
+/**
+ * Checks whether this instance ends with any of the specified suffixes.
+ *
+ * @param suffixes The suffixes to check against.
+ * @param ignoreCase Whether the case should be ignored. By default it's `true`.
+ */
+fun String.endsWithAnySuffix(suffixes: List<String>, ignoreCase: Boolean = true): Boolean {
+    return suffixes.any { suffix ->
+        this.endsWith(
+            suffix = suffix,
+            ignoreCase = ignoreCase
+        )
+    }
+}
+
+/**
+ * Converts this file name into a [Bitmap.CompressFormat] based on the extension type. Only JPG and
+ * PNG images are supported.
+ */
+fun String.toCompressFormat(): CompressFormat? {
+    return when {
+        this.endsWithAnySuffix(
+            suffixes = ConstantsContentTypes.JPEG_FORMATS
+        ) -> CompressFormat.JPEG
+
+        this.endsWithAnySuffix(ConstantsContentTypes.PNG_FORMATS) -> CompressFormat.PNG
+
+        else -> null
+    }
+}
+
+/**
+ * Returns the file name extension.
+ */
+fun String.getFileNameExtension(): String =
+    this.substringAfterLast(delimiter = ".", missingDelimiterValue = "").lowercase()
+
+/**
+ * Returns the media type from the given file name. If the extension is not supported, `null` is
+ * returned instead.
+ */
+fun String.getMediaTypeFromFileName(): MediaType? {
+    return when (this.getFileNameExtension()) {
+        "jpg", "jpeg" -> "image/jpeg".toMediaTypeOrNull()
+        "png" -> "image/png".toMediaTypeOrNull()
+        else -> null
+    }
+}
