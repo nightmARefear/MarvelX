@@ -34,7 +34,6 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.graphics.drawscope.Fill
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
@@ -45,6 +44,7 @@ import androidx.navigation.compose.rememberNavController
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.ProfileDetailsDomain
 import com.alexgreece45.marvelx.domain.model_generic.ReadFileContentData
+import com.alexgreece45.marvelx.domain.model_generic.ReloadableImageUrlData
 import com.alexgreece45.marvelx.ui.components.AlertDialogError
 import com.alexgreece45.marvelx.ui.components.BottomNavigationBarData
 import com.alexgreece45.marvelx.ui.components.ContentScreen
@@ -67,6 +67,7 @@ import com.alexgreece45.marvelx.ui.components.sections.model.SectionHeaderData
 import com.alexgreece45.marvelx.ui.helper.model.DeepLinkAction
 import com.alexgreece45.marvelx.ui.navigation.getBottomNavigationBarData
 import com.alexgreece45.marvelx.ui.screens.profile.model.ProfileBottomSheetType
+import com.alexgreece45.marvelx.ui.screens.profile.model.ProfileContract
 import com.alexgreece45.marvelx.ui.theme.MarvelXTheme
 import com.alexgreece45.marvelx.ui.theme.values.customColors
 import com.alexgreece45.marvelx.ui.theme.values.customShapes
@@ -187,7 +188,11 @@ fun ProfileScreen(
 
                 val compressFormat = fileName.toCompressFormat()
                 if (compressFormat == null) {
-                    onEventSent(ProfileContract.Event.ProfileImage.OnCroppedImageFileContentRead(null))
+                    onEventSent(
+                        ProfileContract.Event.ProfileImage.OnCroppedImageFileContentRead(
+                            null
+                        )
+                    )
                     return@ObserveUiEffect
                 }
 
@@ -196,7 +201,11 @@ fun ProfileScreen(
                         compressFormat = compressFormat
                     )
                 if (fileContent == null) {
-                    onEventSent(ProfileContract.Event.ProfileImage.OnCroppedImageFileContentRead(null))
+                    onEventSent(
+                        ProfileContract.Event.ProfileImage.OnCroppedImageFileContentRead(
+                            null
+                        )
+                    )
                     return@ObserveUiEffect
                 }
 
@@ -283,9 +292,10 @@ fun ProfileScreen(
                 // Banner.
                 ProfileBanner(
                     welcomeMessageLabel = state.profileBannerLabel,
-                    imageUrl = state.profileDetails?.profileImageUrl.orEmpty(),
+                    reloadableImageUrlData = state.profileDetails?.profileImageUrlData
+                        ?: ReloadableImageUrlData(imageUrl = ""),
                     onSeeYourProfileClicked = { onEventSent(ProfileContract.Event.OnSeeYourProfileClicked) },
-                    onProfileImageEventSent = { onEventSent(it) }
+                    onProfileImageEventSent = onEventSent
                 )
 
 //            VSpacer.Custom(height = 100) // todo: to be replaced with weights
@@ -388,7 +398,6 @@ private fun CroppedImage(
                 modifier = Modifier
                     .size(ConstantsUi.PROFILE_IMAGE_FULL_SIZE)
                     .clip(CircleShape),
-                contentScale = ContentScale.Fit,
             )
         }
     }
@@ -400,7 +409,7 @@ private fun CroppedImage(
 @Composable
 private fun ProfileBanner(
     welcomeMessageLabel: String,
-    imageUrl: String,
+    reloadableImageUrlData: ReloadableImageUrlData, // TODO: To be fixed.
     onSeeYourProfileClicked: () -> Unit,
     onProfileImageEventSent: (ProfileContract.Event.ProfileImage) -> Unit
 ) {
@@ -418,8 +427,9 @@ private fun ProfileBanner(
                 onClick = { onProfileImageEventSent(ProfileContract.Event.ProfileImage.OnClicked) }
             )
         ) {
+            // TODO: Reload image after profile image upload.
             WrapAsyncImage(
-                imageUrl = imageUrl,
+                imageUrl = reloadableImageUrlData.imageUrl,
                 contentDescription = stringResource(R.string.content_description_your_profile_image),
                 modifier = Modifier
                     .size(ConstantsUi.PROFILE_IMAGE_NORMAL_SIZE)
@@ -431,14 +441,14 @@ private fun ProfileBanner(
                 error = painterResource(R.drawable.ic_person),
                 onSuccess = { onProfileImageEventSent(ProfileContract.Event.ProfileImage.OnLoaded) },
                 onError = { onProfileImageEventSent(ProfileContract.Event.ProfileImage.OnLoaded) },
-                contentScale = ContentScale.Fit,
                 shadowData = ShadowData(
                     elevation = ConstantsUi.ProfileScreen.PROFILE_IMAGE_ELEVATION,
                     shape = CircleShape,
                     clip = true,
                     ambientColor = MaterialTheme.customColors.genericRed,
                     spotColor = MaterialTheme.customColors.genericRed
-                )
+                ),
+                isCacheDisabled = true
             )
 
             Icon(

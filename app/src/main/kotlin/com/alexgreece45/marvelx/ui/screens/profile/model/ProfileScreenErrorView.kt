@@ -1,6 +1,6 @@
 package com.alexgreece45.marvelx.ui.screens.profile.model
 
-import com.alexgreece45.marvelx.ui.screens.profile.ProfileContract
+import com.alexgreece45.marvelx.ui.screens.profile.model.ProfileContract
 
 /**
  * Defines the error view for the `Profile` screen.

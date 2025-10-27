@@ -149,8 +149,8 @@ interface ApiService {
      * Updates the profile image of the current user.
      */
     @Multipart
-    @PUT("/api/private/marvelx/user/me/profile-image")
-    suspend fun updateUserProfileImage(@Part profileImage: MultipartBody.Part): Response<Void>
+    @PUT("/api/private/marvelx/user/me/{userId}/profile-image")
+    suspend fun updateUserProfileImage(@Path("userId") userId: String, @Part profileImage: MultipartBody.Part): Response<Void>
 
     /**
      * Retrieves the blocked users of the current one.

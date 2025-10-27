@@ -56,7 +56,10 @@ interface UserRepository {
      * @param imagePart The image data to be set as the new profile image, encapsulated in a
      * [MultipartBody.Part].
      */
-    suspend fun updateUserProfileImage(imagePart: MultipartBody.Part): Flow<RepositoryResult<String>>
+    suspend fun updateUserProfileImage(
+        userId: String,
+        imagePart: MultipartBody.Part
+    ): Flow<RepositoryResult<String>>
 
     /**
      * Gets the privacy settings of the current user.
@@ -161,9 +164,12 @@ class UserRepositoryImpl(
         }
     }
 
-    override suspend fun updateUserProfileImage(imagePart: MultipartBody.Part): Flow<RepositoryResult<String>> =
+    override suspend fun updateUserProfileImage(
+        userId: String,
+        imagePart: MultipartBody.Part
+    ): Flow<RepositoryResult<String>> =
         flow {
-            handleApiResultNoTransformation(apiClient.updateUserProfileImage(imagePart)).collect {
+            handleApiResultNoTransformation(apiClient.updateUserProfileImage(userId, imagePart)).collect {
                 emit(it)
             }
         }
@@ -235,10 +241,10 @@ class UserRepositoryImpl(
                 emit(
                     BlockUserRepositoryResult.Failed(
                         repositoryUserBlockResult =
-                        Gson().fromJson(
-                            response.errorBody()?.byteString()?.utf8(),
-                            ResponseUserBlockResult::class.java
-                        ).toRepositoryUserBlock()
+                            Gson().fromJson(
+                                response.errorBody()?.byteString()?.utf8(),
+                                ResponseUserBlockResult::class.java
+                            ).toRepositoryUserBlock()
                     )
                 )
             }

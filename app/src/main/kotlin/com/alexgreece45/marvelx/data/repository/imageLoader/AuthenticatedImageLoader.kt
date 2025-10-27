@@ -14,7 +14,6 @@ class AuthenticatedImageLoader(
         return ImageLoader.Builder(context)
             .okHttpClient(okHttpClient)
             .crossfade(true)
-            .respectCacheHeaders(false)
             .build()
     }
 }

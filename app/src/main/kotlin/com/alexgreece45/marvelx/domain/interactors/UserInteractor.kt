@@ -214,7 +214,7 @@ class UserInteractorImpl(
                 filename = "profile_image." + profileImageReadFileContentData.fileName.getFileNameExtension(),
                 body = imageRequestBody
             )
-            repository.updateUserProfileImage(imagePart).collect { repositoryResult ->
+            repository.updateUserProfileImage(prefKeys.getUserId(), imagePart).collect { repositoryResult ->
                 emitAll(handleRepositoryResultNoTransformation(repositoryResult))
             }
         }.catch {

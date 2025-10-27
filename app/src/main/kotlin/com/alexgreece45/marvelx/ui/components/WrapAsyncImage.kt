@@ -13,6 +13,7 @@ import coil.compose.AsyncImagePainter
 import coil.request.ImageRequest
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.ui.components.model.ShadowData
+import com.alexgreece45.marvelx.util.extensions.noCache
 
 /**
  * A wrapper composable for [AsyncImage] providing custom styling options, including optional
@@ -30,6 +31,7 @@ import com.alexgreece45.marvelx.ui.components.model.ShadowData
  * @param onError               Callback invoked when the image request fails.
  * @param contentScale          How to scale the image content.
  * @param shadowData            Optional [ShadowData] to apply a shadow effect to the image.
+ * @param isCacheDisabled       Whether the cache is disabled.
  */
 @Composable
 fun WrapAsyncImage(
@@ -43,6 +45,7 @@ fun WrapAsyncImage(
     onError: ((AsyncImagePainter.State.Error) -> Unit)? = null,
     contentScale: ContentScale = ContentScale.Fit,
     shadowData: ShadowData? = null,
+    isCacheDisabled: Boolean = false,
 ) {
     val boxModifier = if (shadowData != null) {
         Modifier
@@ -60,6 +63,11 @@ fun WrapAsyncImage(
             model = ImageRequest.Builder(LocalContext.current)
                 .data(imageUrl)
                 .crossfade(true)
+                .apply {
+                    if (isCacheDisabled) {
+                        noCache()
+                    }
+                }
                 .build(),
             contentDescription = contentDescription,
             modifier = modifier,

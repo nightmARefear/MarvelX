@@ -73,7 +73,11 @@ interface ApiClient {
     suspend fun forgotPasswordValidateOtp(body: RequestForgotPasswordValidateOtp): Response<ResponseForgotPasswordValidateOtp>
     suspend fun getCurrentUserProfileDetails(): Response<ResponseBasicProfileDetails>
     suspend fun updateCurrentUserProfileDetails(requestProfileDetailsUpdate: RequestProfileDetailsUpdate): ApiResult<String>
-    suspend fun updateUserProfileImage(profileImage: MultipartBody.Part): ApiResult<String>
+    suspend fun updateUserProfileImage(
+        userId: String,
+        profileImage: MultipartBody.Part
+    ): ApiResult<String>
+
     suspend fun getUserProfileDetails(userId: String): Response<ResponseProfileDetails>
     suspend fun getUserPrivacySettings(): ApiResult<ResponsePrivacySettings>
     suspend fun updateUserPrivacySettings(requestPrivacySettings: RequestPrivacySettings): ApiResult<String>

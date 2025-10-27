@@ -2,6 +2,7 @@ package com.alexgreece45.marvelx.domain.model_api.user.profileDetails
 
 import com.alexgreece45.marvelx.domain.model_api.user.privacySettings.PrivacySettingsDomain
 import com.alexgreece45.marvelx.domain.model_api.user.privacySettings.toPrivacySettingsDomain
+import com.alexgreece45.marvelx.domain.model_generic.ReloadableImageUrlData
 import com.alexgreece45.marvelx.network_logic.models_api.user.Gender
 import com.alexgreece45.marvelx.network_logic.models_api.user.profileDetails.ResponseProfileDetails
 
@@ -38,8 +39,7 @@ data class ProfileDetailsDomain(
                 lastName = "Voliotis",
                 gender = Gender.Male,
                 email = "alexandrosv@domain.com",
-                profileImageUrl = "alexandros_voliotis_profile_image.jpeg",
-                fullName = "Alexandros Voliotis"
+                profileImageUrlData = ReloadableImageUrlData(imageUrl = "https://www.domain.com/api/private/images/alexandros_voliotis_profile_image.jpeg"),
             ),
             isDifferentUser = false,
             relationshipStatus = null,
@@ -64,8 +64,7 @@ data class ProfileDetailsDomain(
                 lastName = "Doe",
                 gender = Gender.Female,
                 email = "jill.d@domain.com",
-                profileImageUrl = "jill_d_profile_image.jpg",
-                fullName = "Jill Doe"
+                profileImageUrlData = ReloadableImageUrlData(imageUrl = "https://www.domain.com/api/private/images/jill_d_profile_image.jpg"),
             ),
             isDifferentUser = true,
             relationshipStatus = RelationshipStatusDomain.None,

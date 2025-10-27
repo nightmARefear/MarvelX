@@ -259,7 +259,7 @@ fun ProfileDetailsScreen(
                             ) {
                                 // Profile image.
                                 WrapAsyncImage(
-                                    imageUrl = profileDetails.basicProfileDetails.profileImageUrl,
+                                    imageUrl = profileDetails.basicProfileDetails.profileImageUrlData.imageUrl,
                                     contentDescription = stringResource(R.string.content_description_your_profile_image),
                                     modifier = Modifier
                                         .size(ConstantsUi.PROFILE_IMAGE_SMALL_SIZE)
@@ -271,8 +271,8 @@ fun ProfileDetailsScreen(
                                             borderWidth = ConstantsUi.IMAGE_BORDER_WIDTH,
                                             borderColor = MaterialTheme.customColors.genericRed
                                         ),
-                                    error = painterResource(R.drawable.ic_person),
                                     placeholder = painterResource(R.drawable.ic_person),
+                                    error = painterResource(R.drawable.ic_person),
                                     contentScale = ContentScale.FillBounds
                                 )
 

@@ -2,15 +2,19 @@ package com.alexgreece45.marvelx.domain.model_api.user.profileDetails
 
 import com.alexgreece45.marvelx.network_logic.models_api.user.Gender
 import com.alexgreece45.marvelx.network_logic.models_api.user.profileDetails.ResponseBasicProfileDetails
+import com.alexgreece45.marvelx.domain.model_generic.ReloadableImageUrlData
+import com.alexgreece45.marvelx.util.extensions.toFullName
 
 data class BasicProfileDetailsDomain(
     val firstName: String,
     val lastName: String,
     val gender: Gender,
     val email: String,
-    val profileImageUrl: String,
-    val fullName: String,
-)
+    val profileImageUrlData: ReloadableImageUrlData,
+) {
+
+    val fullName: String get() = Pair(firstName, lastName).toFullName()
+}
 
 /**
  * Converts this instance to [BasicProfileDetailsDomain]. If [isGenderVisible] is `true` then the
@@ -22,6 +26,5 @@ fun ResponseBasicProfileDetails.toBasicProfileDetailsDomain(isGenderVisible: Boo
         lastName = this.lastName,
         gender = if (isGenderVisible) Gender.of(this.gender) else Gender.Other,
         email = this.email,
-        profileImageUrl = this.profileImageUrl.orEmpty(),
-        fullName = "${this.firstName} ${this.lastName}"
+        profileImageUrlData = ReloadableImageUrlData(this.profileImageUrl.orEmpty())
     )

@@ -3,6 +3,7 @@ package com.alexgreece45.marvelx.ui.screens.profile.profileDetails.model
 import androidx.annotation.StringRes
 import androidx.compose.ui.text.input.KeyboardType
 import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.BasicProfileDetailsDomain
+import com.alexgreece45.marvelx.domain.model_generic.ReloadableImageUrlData
 import com.alexgreece45.marvelx.network_logic.models_api.user.Gender
 import com.alexgreece45.marvelx.ui.screens.profile.editProfileDetails.EditProfileDetailsContract
 import com.alexgreece45.marvelx.util.FormValidationResult
@@ -23,8 +24,7 @@ fun ProfileDetailsUi.toBasicProfileDetailsDomain(): BasicProfileDetailsDomain =
         lastName = this.lastName.currentValue,
         gender = this.gender.currentValue,
         email = this.email.currentValue,
-        profileImageUrl = "", // Doesn't matter for this transformation.
-        fullName = "" // Doesn't matter for this transformation.
+        profileImageUrlData = ReloadableImageUrlData(imageUrl = ""), // Doesn't matter for this transformation.
     )
 
 /**
@@ -43,7 +43,7 @@ fun ProfileDetailsUi.toBasicProfileDetailsDomain(): BasicProfileDetailsDomain =
 data class EditProfileDetailsItemUi<T>(
     val initialValue: T,
     val currentValue: T,
-    @StringRes val label: Int,
+    @StringRes val label: Int, // TODO: To be reviewed.
     val keyboardType: KeyboardType = KeyboardType.Text,
     val onValueChanged: (T) -> EditProfileDetailsContract.Event,
     val onResetIconClicked: EditProfileDetailsContract.Event,

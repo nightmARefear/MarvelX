@@ -119,8 +119,8 @@ class ApiClientImpl(
             )
         }
 
-    override suspend fun updateUserProfileImage(profileImage: MultipartBody.Part): ApiResult<String> =
-        executeApiServiceCallNoTransformation { apiService.updateUserProfileImage(profileImage) }
+    override suspend fun updateUserProfileImage(userId: String, profileImage: MultipartBody.Part): ApiResult<String> =
+        executeApiServiceCallNoTransformation { apiService.updateUserProfileImage(userId, profileImage) }
 
     override suspend fun getUserProfileDetails(userId: String): Response<ResponseProfileDetails> =
         apiService.getUserProfileDetails(userId = userId)

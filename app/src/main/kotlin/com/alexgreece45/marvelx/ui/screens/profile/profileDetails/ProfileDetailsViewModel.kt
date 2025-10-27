@@ -216,7 +216,8 @@ class ProfileDetailsViewModel(
             ProfileDetailsContract.Event.ProfileBanner.OnProfileImageClicked -> {
                 setEffect {
                     ProfileDetailsContract.Effect.Navigation.NavigateToProfileImageScreen(
-                        profileImageUrl = currentState.profileDetails?.basicProfileDetails?.profileImageUrl.orEmpty().toUrlEncoding()
+                        profileImageUrl = currentState.profileDetails?.basicProfileDetails?.profileImageUrlData?.imageUrl.orEmpty()
+                            .toUrlEncoding()
                     )
                 }
             }
