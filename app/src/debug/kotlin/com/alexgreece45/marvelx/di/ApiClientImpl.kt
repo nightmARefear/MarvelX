@@ -2,8 +2,10 @@ package com.alexgreece45.marvelx.di
 
 import com.alexgreece45.marvelx.network_logic.api.ApiClient
 import com.alexgreece45.marvelx.network_logic.api.ApiService
+import com.alexgreece45.marvelx.network_logic.models_api.authorize.ResponseAuthorize
 import com.alexgreece45.marvelx.network_logic.models_api.character.CharacterDataWrapper
 import com.alexgreece45.marvelx.network_logic.models_api.character.comic.ComicDataWrapper
+import com.alexgreece45.marvelx.network_logic.models_api.faq.ResponseFaq
 import com.alexgreece45.marvelx.network_logic.models_api.forgotPassword.email.RequestForgotPasswordOtpBlockedEmail
 import com.alexgreece45.marvelx.network_logic.models_api.forgotPassword.email.RequestForgotPasswordSendOtp
 import com.alexgreece45.marvelx.network_logic.models_api.forgotPassword.email.RequestForgotPasswordValidateOtp
@@ -21,14 +23,26 @@ import com.alexgreece45.marvelx.network_logic.models_api.resendOtp.ResponseResen
 import com.alexgreece45.marvelx.network_logic.models_api.sensitiveUserData.RequestSensitiveUserData
 import com.alexgreece45.marvelx.network_logic.models_api.sensitiveUserData.ResponseSensitiveUserData
 import com.alexgreece45.marvelx.network_logic.models_api.token.ResponseToken
+import com.alexgreece45.marvelx.network_logic.models_api.user.BodyUserId
+import com.alexgreece45.marvelx.network_logic.models_api.user.block.ResponseBlockedUser
+import com.alexgreece45.marvelx.network_logic.models_api.user.friend.ResponseFriend
+import com.alexgreece45.marvelx.network_logic.models_api.user.incomingFriendRequest.ResponseIncomingFriendRequest
 import com.alexgreece45.marvelx.network_logic.models_api.user.login.RequestUserLogin
 import com.alexgreece45.marvelx.network_logic.models_api.user.login.ResponseLogin
 import com.alexgreece45.marvelx.network_logic.models_api.user.loginWithToken.ResponseLoginWithToken
 import com.alexgreece45.marvelx.network_logic.models_api.user.postLogin.RequestPostLogin
 import com.alexgreece45.marvelx.network_logic.models_api.user.postLogin.ResponsePostLogin
+import com.alexgreece45.marvelx.network_logic.models_api.user.privacySettings.RequestPrivacySettings
+import com.alexgreece45.marvelx.network_logic.models_api.user.privacySettings.ResponsePrivacySettings
+import com.alexgreece45.marvelx.network_logic.models_api.user.profileDetails.RequestProfileDetailsUpdate
+import com.alexgreece45.marvelx.network_logic.models_api.user.profileDetails.ResponseBasicProfileDetails
 import com.alexgreece45.marvelx.network_logic.models_api.user.profileDetails.ResponseProfileDetails
 import com.alexgreece45.marvelx.network_logic.models_api.user.signup.RequestUserSignup
 import com.alexgreece45.marvelx.network_logic.models_api.user.signup.ResponseSignup
+import com.alexgreece45.marvelx.network_logic.models_generic.ApiResult
+import com.alexgreece45.marvelx.network_logic.util.executeApiServiceCall
+import com.alexgreece45.marvelx.network_logic.util.executeApiServiceCallNoTransformation
+import okhttp3.MultipartBody
 import retrofit2.Response
 
 class ApiClientImpl(
@@ -59,17 +73,20 @@ class ApiClientImpl(
     override suspend fun postLogin(accessToken: String): Response<ResponsePostLogin> =
         apiService.postLogin(RequestPostLogin(accessToken))
 
-    override suspend fun grantNewAccessToken(
+    override suspend fun authorize(
+        tempAuthCode: String,
         clientId: String,
-        clientSecret: String,
+        codeChallenge: String,
+        codeChallengeMethod: String
+    ): Response<ResponseAuthorize> =
+        apiService.authorize(tempAuthCode, clientId, codeChallenge, codeChallengeMethod)
+
+    override suspend fun grandNewAccessToken(
+        clientId: String,
+        codeVerifier: String,
         code: String,
         uri: String
-    ): Response<ResponseToken> = apiService.grantNewAccessToken(clientId, clientSecret, code, uri)
-
-    override suspend fun refreshAccessToken(
-        clientId: String,
-        refreshToken: String
-    ): Response<ResponseToken> = apiService.refreshAccessToken(clientId, refreshToken)
+    ): Response<ResponseToken> = apiService.grandNewAccessToken(clientId, codeVerifier, code, uri)
 
     override suspend fun logout(clientId: String, refreshToken: String): Response<Void> =
         apiService.logout(clientId, refreshToken)
@@ -92,8 +109,91 @@ class ApiClientImpl(
     override suspend fun forgotPasswordValidateOtp(body: RequestForgotPasswordValidateOtp): Response<ResponseForgotPasswordValidateOtp> =
         apiService.forgotPasswordValidateOtp(body)
 
-    override suspend fun getUserProfileDetails(userId: Int): Response<ResponseProfileDetails> =
+    override suspend fun getCurrentUserProfileDetails(): Response<ResponseBasicProfileDetails> =
+        apiService.getCurrentUserProfileDetails()
+
+    override suspend fun updateCurrentUserProfileDetails(requestProfileDetailsUpdate: RequestProfileDetailsUpdate): ApiResult<String> =
+        executeApiServiceCallNoTransformation {
+            apiService.updateCurrentUserProfileDetails(
+                requestProfileDetailsUpdate
+            )
+        }
+
+    override suspend fun updateUserProfileImage(userId: String, profileImage: MultipartBody.Part): ApiResult<String> =
+        executeApiServiceCallNoTransformation { apiService.updateUserProfileImage(userId, profileImage) }
+
+    override suspend fun getUserProfileDetails(userId: String): Response<ResponseProfileDetails> =
         apiService.getUserProfileDetails(userId = userId)
+
+    override suspend fun getUserPrivacySettings(): ApiResult<ResponsePrivacySettings> =
+        executeApiServiceCall { apiService.getUserPrivacySettings() }
+
+    override suspend fun updateUserPrivacySettings(requestPrivacySettings: RequestPrivacySettings): ApiResult<String> =
+        executeApiServiceCallNoTransformation {
+            apiService.updateUserPrivacySettings(
+                requestPrivacySettings
+            )
+        }
+
+    override suspend fun getUserFriends(userId: String): ApiResult<List<ResponseFriend>> {
+        return executeApiServiceCall {
+            apiService.getUserFriends(userId)
+        }
+    }
+
+    override suspend fun getIncomingFriendRequests(): ApiResult<List<ResponseIncomingFriendRequest>> {
+        return executeApiServiceCall {
+            apiService.getIncomingFriendRequests()
+        }
+    }
+
+    override suspend fun sendFriendRequest(userId: String): ApiResult<String> {
+        return executeApiServiceCallNoTransformation {
+            apiService.sendFriendRequest(BodyUserId(userId))
+        }
+    }
+
+    override suspend fun acceptFriendRequest(userId: String): ApiResult<String> {
+        return executeApiServiceCallNoTransformation {
+            apiService.acceptFriendRequest(BodyUserId(userId))
+        }
+    }
+
+    override suspend fun deleteFriendRequest(userId: String): ApiResult<String> {
+        return executeApiServiceCallNoTransformation {
+            apiService.deleteFriendRequest(userId)
+        }
+    }
+
+    override suspend fun getFriends(): ApiResult<List<ResponseFriend>> {
+        return executeApiServiceCall {
+            apiService.getFriends()
+        }
+    }
+
+    override suspend fun deleteFriend(userId: String): ApiResult<String> {
+        return executeApiServiceCallNoTransformation {
+            apiService.deleteFriend(userId)
+        }
+    }
+
+    override suspend fun getBlockedUsers(): ApiResult<List<ResponseBlockedUser>> {
+        return executeApiServiceCall {
+            apiService.getBlockedUsers()
+        }
+    }
+
+    override suspend fun blockUser(userId: String): Response<Void> {
+        return apiService.blockUser(BodyUserId(userId))
+    }
+
+    override suspend fun unblockUser(userId: String): ApiResult<String> =
+        executeApiServiceCallNoTransformation {
+            apiService.unblockUser(userId)
+        }
+
+    override suspend fun getFaqs(): ApiResult<ResponseFaq> =
+        executeApiServiceCall { apiService.getFaqs() }
 
     override suspend fun getJwtForSensitiveUserData(requestJwtSensitiveUserData: RequestJwtSensitiveUserData): Response<ResponseJwtSensitiveUserData> =
         apiService.getJwtForSensitiveUserData(requestJwtSensitiveUserData)

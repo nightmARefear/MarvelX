@@ -28,9 +28,10 @@ interface ApplicationPackageController {
 
 class ApplicationPackageControllerImpl(
     private val resourceProvider: ResourceProvider,
-    private val logger: AppLoggerController
+    private val logger: AppLogger
 ) : ApplicationPackageController {
-    override fun getApplicationSignatures(): List<String> {
+
+    override fun getApplicationSignatures(): List<String> { // TODO: To be updated.
         try {
             val packageInfo: PackageInfo
             val signatures: List<String>
@@ -39,31 +40,31 @@ class ApplicationPackageControllerImpl(
                     resourceProvider.getContext().packageName,
                     PackageManager.GET_SIGNATURES
                 )
-                signatures = packageInfo.signatures.map {
+                signatures = packageInfo.signatures?.map {
                     val messageDigest = MessageDigest.getInstance("SHA-256").apply {
                         update(it.toByteArray())
                     }
                     Base64.encodeToString(messageDigest.digest(), Base64.DEFAULT).trim()
-                }
+                } ?: emptyList()
             } else {
                 packageInfo = resourceProvider.getContext().packageManager.getPackageInfo(
                     resourceProvider.getContext().packageName,
                     PackageManager.GET_SIGNING_CERTIFICATES
                 )
-                signatures = if (packageInfo.signingInfo.hasMultipleSigners()) {
-                    packageInfo.signingInfo.apkContentsSigners.map {
+                signatures = if (packageInfo.signingInfo?.hasMultipleSigners() == true) {
+                    packageInfo.signingInfo?.apkContentsSigners?.map {
                         val messageDigest = MessageDigest.getInstance("SHA-256").apply {
                             update(it.toByteArray())
                         }
                         Base64.encodeToString(messageDigest.digest(), Base64.DEFAULT).trim()
-                    }
+                    } ?: emptyList()
                 } else {
-                    packageInfo.signingInfo.signingCertificateHistory.map {
+                    packageInfo.signingInfo?.signingCertificateHistory?.map {
                         val messageDigest = MessageDigest.getInstance("SHA-256").apply {
                             update(it.toByteArray())
                         }
                         Base64.encodeToString(messageDigest.digest(), Base64.DEFAULT).trim()
-                    }
+                    } ?: emptyList()
                 }
             }
             return signatures

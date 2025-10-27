@@ -54,7 +54,7 @@ sealed interface IntroLoadingContract {
                 Navigation
 
             data class NavigateToOtpScreen(
-                val userId: Int,
+                val userId: String,
                 val otpFlowType: String,
                 val verificationStep: String,
                 val shouldRememberUserSession: Boolean
@@ -81,9 +81,17 @@ class IntroLoadingViewModel(
     override fun handleEvents(event: IntroLoadingContract.Event) {
         when (event) {
             IntroLoadingContract.Event.Init -> {
+                resetFailedAuthenticationValues()
                 loginFlow()
             }
         }
+    }
+
+    /**
+     * Resets the failed authentication related values.
+     */
+    private fun resetFailedAuthenticationValues() {
+        authController.currentConsecutiveFailedAuthenticationData = null
     }
 
     /**
@@ -98,14 +106,14 @@ class IntroLoadingViewModel(
             )
         }
 
-        if (prefKeys.isUserLoggedIn().not()) {
+        if (!prefKeys.isUserLoggedIn()) {
             setEffect {
                 IntroLoadingContract.Effect.Navigation.NavigateToHomeScreenWithErrorMessage()
             }
             return
         }
 
-        if (prefKeys.containsUserCredentials().not()) {
+        if (!prefKeys.containsUserCredentials()) {
             setEffect {
                 IntroLoadingContract.Effect.Navigation.NavigateToHomeScreenWithErrorMessage()
             }
@@ -173,24 +181,25 @@ class IntroLoadingViewModel(
                                 // been generated in the `loginFlow` function.
                                 VerificationStep.None -> {
                                     // Retrieve sign data.
-                                    loginInteractor.postLogin(authController.getAccessToken()).collect { postLoginPartialState ->
-                                        when (postLoginPartialState) {
-                                            PostLoginPartialState.Success -> {
-                                                refreshTokenController.startWorker()
-                                                websocketController.init()
-                                                prefKeys.autoLogoutTimestamp =
-                                                    DateUtil.getUTCInstant()
+                                    loginInteractor.postLogin(authController.getAccessToken())
+                                        .collect { postLoginPartialState ->
+                                            when (postLoginPartialState) {
+                                                PostLoginPartialState.Success -> {
+                                                    refreshTokenController.startWorker()
+                                                    websocketController.init()
+                                                    prefKeys.autoLogoutTimestamp =
+                                                        DateUtil.getUTCInstant()
 
-                                                setEffect {
-                                                    IntroLoadingContract.Effect.Navigation.NavigateToAllCharactersScreen
+                                                    setEffect {
+                                                        IntroLoadingContract.Effect.Navigation.NavigateToAllCharactersScreen
+                                                    }
+                                                }
+
+                                                is PostLoginPartialState.Failed -> {
+                                                    errorActions(postLoginPartialState.errorMessage)
                                                 }
                                             }
-
-                                            is PostLoginPartialState.Failed -> {
-                                                errorActions(postLoginPartialState.errorMessage)
-                                            }
                                         }
-                                    }
                                 }
 
                                 VerificationStep.OtpEmail -> {

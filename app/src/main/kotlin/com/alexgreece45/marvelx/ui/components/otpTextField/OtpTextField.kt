@@ -1,5 +1,6 @@
 package com.alexgreece45.marvelx.ui.components.otpTextField
 
+import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -27,6 +28,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.alexgreece45.marvelx.ui.theme.MarvelXTheme
+import com.alexgreece45.marvelx.ui.theme.values.customColors
 import com.alexgreece45.marvelx.util.HSpacer
 import com.alexgreece45.marvelx.util.constants.ConstantsSecurity
 
@@ -97,14 +100,14 @@ private fun CharView(
     }
 
     val lineColor = when (isFocused) {
-        true -> MaterialTheme.colors.primaryVariant
+        true -> MaterialTheme.customColors.genericRed
         false -> MaterialTheme.colors.onBackground
     }
 
     Box(
         modifier = Modifier
             .size(45.dp)
-            .background(MaterialTheme.colors.secondaryVariant)
+            .background(MaterialTheme.colors.surface.copy(alpha = 0.6f))
             /*  .border(
                   width = 2.dp,
                   color = when {
@@ -141,19 +144,24 @@ private fun CharView(
     }
 }
 
-@Preview
+@Preview(
+    apiLevel = 34,
+    uiMode = Configuration.UI_MODE_NIGHT_YES
+)
 @Composable
 private fun OtpTextFieldPreview() {
     var otp by remember { mutableStateOf("") }
-    OtpTextField(
-        modifier = Modifier
-            .fillMaxWidth(),
-        enabled = true,
-        otp = otp,
-        onValueChange = { value, _ ->
-            otp = value
-        },
-        onDoneClick = {
-        }
-    )
+    MarvelXTheme {
+        OtpTextField(
+            modifier = Modifier
+                .fillMaxWidth(),
+            enabled = true,
+            otp = otp,
+            onValueChange = { value, _ ->
+                otp = value
+            },
+            onDoneClick = {
+            }
+        )
+    }
 }

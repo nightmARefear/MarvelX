@@ -33,12 +33,12 @@ import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.network_logic.models_api.user.Gender
 import com.alexgreece45.marvelx.ui.components.AlertDialogButton
 import com.alexgreece45.marvelx.ui.components.AlertDialogError
-import com.alexgreece45.marvelx.ui.components.ContainedButton
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.ExposedDropdownMenu
 import com.alexgreece45.marvelx.ui.components.OutlinedTextFieldValidation
 import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
-import com.alexgreece45.marvelx.ui.components.models.ErrorButtonType
+import com.alexgreece45.marvelx.ui.components.WrapButton
+import com.alexgreece45.marvelx.ui.components.model.ErrorButtonType
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.VSpacer
 import com.alexgreece45.marvelx.util.extensions.autofill
@@ -47,11 +47,11 @@ import kotlinx.coroutines.flow.Flow
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun SignUpScreen(
-    state: SignupState,
     onEventSent: (SignupEvent) -> Unit,
+    state: SignupState,
     effect: Flow<SignupEffect>,
     navigateToAllCharactersScreen: () -> Unit,
-    navigateToOtpScreen: (Int, String, String, Boolean) -> Unit,
+    navigateToOtpScreen: (String, String, String, Boolean) -> Unit,
     popBackStack: () -> Unit,
 ) {
     val focusManager = LocalFocusManager.current
@@ -109,9 +109,9 @@ fun SignUpScreen(
                 AlertDialogError(
                     isVisible = state.isAlertDialogVisible,
                     title = state.alertDialogTitle,
-                    errorMessage = state.alertDialogErrorMessage,
+                    errorMessage = { Text(text = state.alertDialogErrorMessage) },
                     confirmButton = AlertDialogButton(
-                        value = stringResource(R.string.generic_ok_button),
+                        label = stringResource(R.string.generic_ok_button),
                         buttonType = ErrorButtonType.Text,
                         onClick = { onEventSent(SignupEvent.AlertDialogError.OnOkClick) }
                     )
@@ -126,15 +126,15 @@ fun SignUpScreen(
                 ) {
                     // First Name.
                     OutlinedTextFieldValidation(
-                        modifier = Modifier.weight(1f),
                         value = state.firstName,
-                        label = stringResource(R.string.sign_up_screen_input_field_label_first_name),
                         onValueChange = { newValue ->
                             onEventSent(SignupEvent.FieldValueChange.FirstName(firstName = newValue))
                         },
+                        modifier = Modifier.weight(1f),
+                        label = stringResource(R.string.generic_label_first_name),
                         errorMessage = state.firstNameValidationResult.messages.firstOrNull()
                             .orEmpty(),
-                        isError = state.firstNameValidationResult.isValid.not() &&
+                        isError = !state.firstNameValidationResult.isValid &&
                                 state.firstNameValidationResult.messages.firstOrNull() != null,
                         keyboardOptions = KeyboardOptions(
                             imeAction = ImeAction.Next
@@ -148,15 +148,15 @@ fun SignUpScreen(
 
                     // Last Name.
                     OutlinedTextFieldValidation(
-                        modifier = Modifier.weight(1f),
                         value = state.lastName,
-                        label = stringResource(R.string.sign_up_screen_input_field_label_last_name),
                         onValueChange = { newValue ->
                             onEventSent(SignupEvent.FieldValueChange.LastName(lastName = newValue))
                         },
+                        modifier = Modifier.weight(1f),
+                        label = stringResource(R.string.generic_label_last_name),
                         errorMessage = state.lastNameValidationResult.messages.firstOrNull()
                             .orEmpty(),
-                        isError = state.lastNameValidationResult.isValid.not() &&
+                        isError = !state.lastNameValidationResult.isValid &&
                                 state.lastNameValidationResult.messages.firstOrNull() != null,
                         keyboardOptions = KeyboardOptions(
                             imeAction = ImeAction.Next
@@ -173,10 +173,10 @@ fun SignUpScreen(
             // Gender
             item {
                 ExposedDropdownMenu(
-                    modifier = Modifier.fillMaxWidth(),
+                    label = stringResource(R.string.generic_label_gender),
                     expanded = state.isGenderDropdownMenuVisible,
+                    modifier = Modifier.fillMaxWidth(),
                     value = state.gender?.label?.let { stringResource(it) },
-                    label = stringResource(R.string.sign_up_screen_input_field_label_gender),
                     onDismissRequest = { onEventSent(SignupEvent.GenderDropdownMenu.OnDismiss) },
                     onExpandedChange = { onEventSent(SignupEvent.GenderDropdownMenu.OnClick) }
                 ) {
@@ -185,7 +185,7 @@ fun SignUpScreen(
                             modifier = Modifier.fillMaxWidth(),
                             onClick = {
                                 onEventSent(
-                                    SignupEvent.FieldValueChange.Gender(
+                                    SignupEvent.FieldValueChange.GenderDropDown(
                                         gender = gender
                                     )
                                 )
@@ -203,6 +203,14 @@ fun SignUpScreen(
             // Email
             item {
                 OutlinedTextFieldValidation(
+                    value = state.email,
+                    onValueChange = { newEmail ->
+                        onEventSent(
+                            SignupEvent.FieldValueChange.Email(
+                                email = newEmail
+                            )
+                        )
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .autofill(
@@ -211,17 +219,9 @@ fun SignUpScreen(
                                 onEventSent(SignupEvent.FieldValueChange.Email(email = suggestionValue))
                             }
                         ),
-                    value = state.email,
-                    label = stringResource(R.string.sign_up_screen_input_field_label_email),
-                    onValueChange = { newEmail ->
-                        onEventSent(
-                            SignupEvent.FieldValueChange.Email(
-                                email = newEmail
-                            )
-                        )
-                    },
+                    label = stringResource(R.string.generic_label_email),
                     errorMessage = state.emailValidationResult.messages.firstOrNull().orEmpty(),
-                    isError = state.emailValidationResult.isValid.not() &&
+                    isError = !state.emailValidationResult.isValid &&
                             state.emailValidationResult.messages.firstOrNull() != null,
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Email,
@@ -238,6 +238,14 @@ fun SignUpScreen(
             // Password
             item {
                 OutlinedTextFieldValidation(
+                    value = state.password,
+                    onValueChange = { newPassword ->
+                        onEventSent(
+                            SignupEvent.FieldValueChange.Password(
+                                password = newPassword
+                            )
+                        )
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .autofill(
@@ -246,15 +254,7 @@ fun SignUpScreen(
                                 onEventSent(SignupEvent.FieldValueChange.Password(password = suggestionValue))
                             }
                         ),
-                    value = state.password,
-                    label = stringResource(R.string.sign_up_screen_input_field_label_password),
-                    onValueChange = { newPassword ->
-                        onEventSent(
-                            SignupEvent.FieldValueChange.Password(
-                                password = newPassword
-                            )
-                        )
-                    },
+                    label = stringResource(R.string.generic_label_password),
                     trailingIcon = {
                         IconButton(onClick = { onEventSent(SignupEvent.OnPasswordVisibilityIconClick) }) {
                             if (state.isPasswordVisible) {
@@ -272,7 +272,7 @@ fun SignUpScreen(
                     },
                     errorMessage = state.passwordValidationResult.messages.firstOrNull()
                         .orEmpty(),
-                    isError = state.passwordValidationResult.isValid.not() &&
+                    isError = !state.passwordValidationResult.isValid &&
                             state.passwordValidationResult.messages.firstOrNull() != null,
                     visualTransformation = if (state.isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                     keyboardOptions = KeyboardOptions(
@@ -291,7 +291,7 @@ fun SignUpScreen(
 
             // Signup button
             item {
-                ContainedButton(
+                WrapButton(
                     modifier = Modifier.fillMaxWidth(),
                     enabled = state.signupButton,
                     onClick = { onEventSent(SignupEvent.OnSignupButtonClick) }

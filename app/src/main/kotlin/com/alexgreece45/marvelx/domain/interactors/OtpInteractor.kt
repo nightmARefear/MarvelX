@@ -1,20 +1,19 @@
 package com.alexgreece45.marvelx.domain.interactors
 
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.controllers.AppLoggerController
-import com.alexgreece45.marvelx.domain.model_api.otp.OtpDomain
-import com.alexgreece45.marvelx.domain.model_api.otp.OtpErrorCause
-import com.alexgreece45.marvelx.domain.model_api.otp.OtpResponseErrorDomain
-import com.alexgreece45.marvelx.domain.model_api.resendOtp.ResponseResendOtpFailedDomain
-import com.alexgreece45.marvelx.domain.model_api.user.VerificationStep
-import com.alexgreece45.marvelx.network_logic.models_api.otp.OtpRequest
-import com.alexgreece45.marvelx.network_logic.models_api.otp.toOtpDomain
-import com.alexgreece45.marvelx.network_logic.models_api.otp.toOtpResponseErrorDomain
-import com.alexgreece45.marvelx.network_logic.models_api.resendOtp.RequestResendOtp
-import com.alexgreece45.marvelx.network_logic.models_api.resendOtp.toResponseResendOtpFailedDomain
+import com.alexgreece45.marvelx.controllers.AppLogger
 import com.alexgreece45.marvelx.data.repository.OtpRepository
 import com.alexgreece45.marvelx.data.repository.ResendOtpRepositoryResponse
 import com.alexgreece45.marvelx.data.repository.ValidateOtpRepositoryResponse
+import com.alexgreece45.marvelx.domain.model_api.otp.OtpDomain
+import com.alexgreece45.marvelx.domain.model_api.otp.OtpErrorCause
+import com.alexgreece45.marvelx.domain.model_api.otp.OtpResponseErrorDomain
+import com.alexgreece45.marvelx.domain.model_api.otp.toOtpDomain
+import com.alexgreece45.marvelx.domain.model_api.resendOtp.ResponseResendOtpFailedDomain
+import com.alexgreece45.marvelx.domain.model_api.user.VerificationStep
+import com.alexgreece45.marvelx.network_logic.models_api.otp.toOtpResponseErrorDomain
+import com.alexgreece45.marvelx.network_logic.models_api.resendOtp.RequestResendOtp
+import com.alexgreece45.marvelx.network_logic.models_api.resendOtp.toResponseResendOtpFailedDomain
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.extensions.safeAsync
 import kotlinx.coroutines.flow.Flow
@@ -22,9 +21,9 @@ import kotlinx.coroutines.flow.flow
 import okio.IOException
 
 interface OtpInteractor {
-    suspend fun validateOtp(otp: String, userId: Int): Flow<ValidateOtpPartialState>
+    suspend fun validateOtp(userId: String, otp: String): Flow<ValidateOtpPartialState>
     suspend fun resendOtp(
-        userId: Int,
+        userId: String,
         verificationStep: VerificationStep
     ): Flow<ResendOtpPartialState>
 }
@@ -32,15 +31,11 @@ interface OtpInteractor {
 class OtpInteractorImpl(
     private val repository: OtpRepository,
     private val resourceProvider: ResourceProvider,
-    private val logger: AppLoggerController
+    private val logger: AppLogger
 ) : OtpInteractor {
-    override suspend fun validateOtp(otp: String, userId: Int): Flow<ValidateOtpPartialState> =
+    override suspend fun validateOtp(userId: String, otp: String): Flow<ValidateOtpPartialState> =
         flow {
-            val otpRequest = OtpRequest(
-                userId = userId.toString(),
-                otp = otp
-            )
-            repository.validateOtp(otpRequest).collect {
+            repository.validateOtp(userId.toString(), otp).collect {
                 when (it) {
                     is ValidateOtpRepositoryResponse.Failed -> {
                         val otpResponseErrorDomain = it.otpResponseError.toOtpResponseErrorDomain()
@@ -117,7 +112,7 @@ class OtpInteractorImpl(
         }
 
     override suspend fun resendOtp(
-        userId: Int,
+        userId: String,
         verificationStep: VerificationStep
     ): Flow<ResendOtpPartialState> = flow {
         val genericErrorMessage = resourceProvider.getGenericErrorMessage()

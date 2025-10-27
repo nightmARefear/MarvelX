@@ -4,14 +4,14 @@ import androidx.activity.compose.BackHandler
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.background
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
@@ -37,6 +37,9 @@ import androidx.compose.material.BottomSheetScaffold
 import androidx.compose.material.BottomSheetScaffoldDefaults
 import androidx.compose.material.BottomSheetScaffoldState
 import androidx.compose.material.Button
+import androidx.compose.material.ButtonColors
+import androidx.compose.material.ButtonDefaults
+import androidx.compose.material.ButtonElevation
 import androidx.compose.material.ContentAlpha
 import androidx.compose.material.DropdownMenu
 import androidx.compose.material.ExperimentalMaterialApi
@@ -49,12 +52,10 @@ import androidx.compose.material.LocalContentAlpha
 import androidx.compose.material.LocalContentColor
 import androidx.compose.material.LocalTextStyle
 import androidx.compose.material.MaterialTheme
-import androidx.compose.material.ModalBottomSheetDefaults
-import androidx.compose.material.ModalBottomSheetLayout
-import androidx.compose.material.ModalBottomSheetState
 import androidx.compose.material.OutlinedButton
 import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Scaffold
+import androidx.compose.material.SnackbarHostState
 import androidx.compose.material.Text
 import androidx.compose.material.TextButton
 import androidx.compose.material.TextField
@@ -62,6 +63,7 @@ import androidx.compose.material.TextFieldDefaults
 import androidx.compose.material.TopAppBar
 import androidx.compose.material.contentColorFor
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
@@ -69,7 +71,7 @@ import androidx.compose.material.primarySurface
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
-import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -78,6 +80,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -97,6 +100,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -105,13 +109,11 @@ import androidx.compose.ui.zIndex
 import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
-import com.airbnb.lottie.compose.LottieAnimation
-import com.airbnb.lottie.compose.LottieCompositionSpec
-import com.airbnb.lottie.compose.LottieConstants
-import com.airbnb.lottie.compose.animateLottieCompositionAsState
-import com.airbnb.lottie.compose.rememberLottieComposition
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.ui.components.models.ErrorButtonType
+import com.alexgreece45.marvelx.ui.components.model.AutofillData
+import com.alexgreece45.marvelx.ui.components.model.ErrorButtonType
+import com.alexgreece45.marvelx.ui.components.model.SnackbarStateData
+import com.alexgreece45.marvelx.ui.theme.values.customColors
 import com.alexgreece45.marvelx.util.BOTTOM_NAVIGATION_BAR_ITEM_LABEL_MAX_LENGTH
 import com.alexgreece45.marvelx.util.BOTTOM_NAVIGATION_BAR_MAX_ITEMS
 import com.alexgreece45.marvelx.util.BOTTOM_NAVIGATION_BAR_MIN_ITEMS
@@ -120,16 +122,20 @@ import com.alexgreece45.marvelx.util.HSpacer
 import com.alexgreece45.marvelx.util.SPACING_LARGE
 import com.alexgreece45.marvelx.util.SPACING_MEDIUM
 import com.alexgreece45.marvelx.util.SPACING_SMALL
-import com.alexgreece45.marvelx.util.STICKY_BOTTOM_Z_INDEX
+import com.alexgreece45.marvelx.util.SPACING_TINY
 import com.alexgreece45.marvelx.util.THROTTLE_CLICKABLE_DEFAULT_DELAY
 import com.alexgreece45.marvelx.util.VSpacer
+import com.alexgreece45.marvelx.util.constants.ConstantsZIndex
 import com.alexgreece45.marvelx.util.extensions.ClickState
 import com.alexgreece45.marvelx.util.extensions.applyPadding
+import com.alexgreece45.marvelx.util.extensions.applyPaddingValues
+import com.alexgreece45.marvelx.util.extensions.autofill
+import com.alexgreece45.marvelx.util.extensions.filterTouchesWhenObscured
 import com.alexgreece45.marvelx.util.extensions.screenPaddingsNone
-import com.alexgreece45.marvelx.util.extensions.throttledClickable
 import com.alexgreece45.marvelx.util.extensions.throttledClickableIcon
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.launch
 
 // ======== START OF ========
 //     PRIVATE COMPOSABLES
@@ -180,7 +186,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
  * [Icon].
  * */
 @Composable
-private fun ThrottledIconButton(
+fun ThrottledIconButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
@@ -190,10 +196,10 @@ private fun ThrottledIconButton(
     Box(
         modifier = modifier
             .throttledClickableIcon(
-                onClick = onClick,
                 view = LocalView.current,
+                interactionSource = interactionSource,
                 enabled = enabled,
-                interactionSource = interactionSource
+                onClick = onClick,
             ),
         contentAlignment = Alignment.Center
     ) {
@@ -305,7 +311,7 @@ private fun BottomBar(
                         Icon(
                             painter = painterResource(bottomBarAction.iconData.iconResource),
                             contentDescription = stringResource(bottomBarAction.iconData.contentDescription),
-                            tint = bottomBarAction.iconData.colorTint
+                            tint = bottomBarAction.iconData.tint
                                 ?: LocalContentColor.current.copy(
                                     alpha = LocalContentAlpha.current
                                 )
@@ -327,7 +333,7 @@ private fun BottomBar(
  * @param selectedItemTopHorizontalColor the [Color] of the top horizontal axis of the selected item
  * */
 @Composable
-fun BottomNavigationBar(
+private fun BottomNavigationBar(
     navController: NavController,
     items: List<BottomBarItem>,
     backgroundColor: Color? = null,
@@ -410,7 +416,7 @@ fun BottomNavigationBar(
                             modifier = Modifier.size(24.dp),
                             painter = painterResource(item.iconData.iconResource),
                             contentDescription = stringResource(item.iconData.contentDescription),
-                            tint = item.iconData.colorTint
+                            tint = item.iconData.tint
                                 ?: LocalContentColor.current.copy(alpha = LocalContentAlpha.current)
                         )
                     },
@@ -433,7 +439,7 @@ fun BottomNavigationBar(
                             }
                         }
                     },
-                    selectedContentColor = MaterialTheme.colors.primaryVariant,
+                    selectedContentColor = MaterialTheme.colors.error,
                     unselectedContentColor = MaterialTheme.colors.primary.copy(alpha = ContentAlpha.medium)
                 )
             }
@@ -441,14 +447,22 @@ fun BottomNavigationBar(
     }
 }
 
+/**
+ * Defines the required data to draw an icon.
+ *
+ * @param iconResource The resource ID of the icon.
+ * @param contentDescription The resource ID of the content description of the icon.
+ * @param tint The color to paint this icon.
+ * @param enabled Whether the icon is enabled.
+ */
 data class IconData(
     @DrawableRes val iconResource: Int,
     @StringRes val contentDescription: Int,
-    val colorTint: Color? = null,
+    val tint: Color? = null,
     val enabled: Boolean = true
 )
 
-sealed class ScreenNavigableAction() {
+sealed class ScreenNavigableAction {
     /**
      * Indicates that the toolbar has no icon button at all.
      */
@@ -495,7 +509,16 @@ data class ExtendedFabData(
 // ======== START OF ========
 //        Generic Screens
 // ==========================
-
+/**
+ * Base builder screen responsible for creating consistent UI layout screens throughout the application.
+ *
+ * @param toolbarActions The list of toolbar actions to display. [toolbarActionsContent] must be
+ * `null`.
+ * @param toolbarActionsContent The composable function to display as the toolbar actions.
+ * [toolbarActions] must be `null`.
+ * @param paddingValues The padding values to apply on top of the scaffold's ones. Provide a non-null
+ * value to override the default padding values that are provided within this composable.
+ */
 @Composable
 fun ContentScreen(
     isLoading: Boolean,
@@ -504,19 +527,39 @@ fun ContentScreen(
     showToolbar: Boolean = false,
     toolbarTitle: String? = null,
     toolbarActions: List<ToolbarAction>? = null,
+    toolbarActionsContent: (@Composable RowScope.() -> Unit)? = null,
     bottomBarData: BottomBarData? = null,
     bottomNavigationBarData: BottomNavigationBarData? = null,
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
+    snackbarStateData: SnackbarStateData? = null,
     fabData: FabData? = null,
-    stickyBottom: @Composable (() -> Unit)? = null,
+    stickyBottom: @Composable (BoxScope.() -> Unit)? = null,
+    paddingValues: PaddingValues? = null,
     content: @Composable (PaddingValues) -> Unit
 ) {
+    if (toolbarActions != null && toolbarActionsContent != null) {
+        throw IllegalArgumentException("You cannot use `toolbarActions` and `toolbarActionsContent` at the same time. Set either argument.")
+    }
+
+    LaunchedEffect(snackbarStateData) {
+        snackbarStateData?.let {
+            snackbarHostState.showSnackbar(
+                message = it.message,
+                actionLabel = it.actionLabel,
+                duration = it.duration
+            )
+        }
+    }
+
     Scaffold(
+        scaffoldState = rememberScaffoldState(snackbarHostState = snackbarHostState),
         topBar = {
             if (showToolbar) {
                 Toolbar(
                     navigableAction = navigableAction,
                     toolbarTitle = toolbarTitle,
-                    toolbarActions = toolbarActions
+                    toolbarActions = if (!isLoading) toolbarActions else emptyList(),
+                    toolbarActionsContent = toolbarActionsContent
                 )
             }
         },
@@ -570,7 +613,6 @@ fun ContentScreen(
             }
         },
         floatingActionButton = {
-            // Display FAB only when loading is false.
             if (!isLoading) {
                 fabData?.let { fabData ->
                     when (fabData) {
@@ -585,13 +627,17 @@ fun ContentScreen(
                 }
             }
         }
-    ) { paddingValues ->
+    ) { scaffoldPaddingValues ->
         Column(modifier = Modifier.fillMaxSize()) {
             Box(modifier = Modifier.weight(1f)) {
                 if (isLoading) {
                     LoadingScreen()
                 }
-                content(paddingValues.applyPadding())
+                content(
+                    if (paddingValues != null) scaffoldPaddingValues.applyPaddingValues(
+                        paddingValues = paddingValues
+                    ) else scaffoldPaddingValues.applyPadding()
+                )
             }
 
             // Sticky bottom.
@@ -599,9 +645,13 @@ fun ContentScreen(
                 if (!isLoading) {
                     Box(
                         modifier = Modifier
-                            .zIndex(STICKY_BOTTOM_Z_INDEX)
-                            .padding(paddingValues.applyPadding())
                             .fillMaxWidth()
+                            .zIndex(ConstantsZIndex.STICKY_BOTTOM)
+                            .padding(
+                                if (paddingValues != null) scaffoldPaddingValues.applyPaddingValues(
+                                    paddingValues = paddingValues
+                                ) else scaffoldPaddingValues.applyPadding()
+                            )
                     ) {
                         stickyBottom()
                     }
@@ -619,76 +669,89 @@ fun ContentScreen(
  * A wrapper [Composable] for native [TopAppBar]. It offers additional functionality and custom
  * styling options.
  */
-@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 private fun Toolbar(
     navigableAction: ScreenNavigableAction,
     toolbarTitle: String? = null,
     toolbarActions: List<ToolbarAction>? = null,
+    toolbarActionsContent: (@Composable RowScope.() -> Unit)? = null,
 ) {
     val keyboard = LocalSoftwareKeyboardController.current
 
     TopAppBar(
-        modifier = Modifier.fillMaxWidth(),
         backgroundColor = MaterialTheme.colors.background,
         elevation = 0.dp,
         contentPadding = screenPaddingsNone()
     ) {
         CompositionLocalProvider(LocalContentAlpha provides ContentAlpha.high) {
-            // Navigable action button; either `Close` or `Back`.
-            if (navigableAction !is ScreenNavigableAction.None) {
-                ThrottledIconButton(
-                    onClick = {
-                        keyboard?.hide()
-                        when (navigableAction) {
-                            is ScreenNavigableAction.Closeable -> navigableAction.onClose.invoke()
-                            is ScreenNavigableAction.Backable -> navigableAction.onBack.invoke()
-                            else -> {}
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                // Navigable action button; either `Close` or `Back`.
+                if (navigableAction !is ScreenNavigableAction.None) {
+                    ThrottledIconButton(
+                        onClick = {
+                            keyboard?.hide()
+                            when (navigableAction) {
+                                is ScreenNavigableAction.Closeable -> navigableAction.onClose()
+                                is ScreenNavigableAction.Backable -> navigableAction.onBack()
+                                else -> {}
+                            }
                         }
+                    ) {
+                        Icon(
+                            imageVector = when (navigableAction) {
+                                is ScreenNavigableAction.Closeable -> Icons.Filled.Close
+                                else -> Icons.AutoMirrored.Filled.ArrowBack
+                            },
+                            contentDescription = when (navigableAction) {
+                                is ScreenNavigableAction.Closeable -> stringResource(R.string.content_description_close)
+                                else -> stringResource(R.string.content_description_back)
+                            }
+                        )
                     }
-                ) {
-                    Icon(
-                        imageVector = when (navigableAction) {
-                            is ScreenNavigableAction.Closeable -> Icons.Filled.Close
-                            else -> Icons.Filled.ArrowBack
-                        },
-                        contentDescription = when (navigableAction) {
-                            is ScreenNavigableAction.Closeable -> stringResource(R.string.content_description_close)
-                            else -> stringResource(R.string.content_description_back)
+                    HSpacer.Tiny()
+                }
+
+                when (toolbarTitle == null) {
+                    true -> {
+                        // Ensures that the toolbar actions are pinned to the right-most of the screen.
+                        Box(modifier = Modifier.weight(1f))
+                    }
+
+                    false -> {
+                        if (navigableAction is ScreenNavigableAction.None) {
+                            HSpacer.Custom(DEFAULT_SCREEN_PADDING)
                         }
-                    )
+
+                        Text(
+                            text = toolbarTitle,
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(end = if (toolbarActions?.isEmpty() == true) SPACING_TINY.dp else 0.dp),
+                            overflow = TextOverflow.Ellipsis,
+                            maxLines = 1,
+                            style = MaterialTheme.typography.h5
+                        )
+                    }
                 }
-                HSpacer.Medium()
-            }
 
-            toolbarTitle?.let { toolbarTitle ->
-                if (navigableAction is ScreenNavigableAction.None) {
-                    HSpacer.Custom(DEFAULT_SCREEN_PADDING)
-                }
+                toolbarActionsContent?.let { content -> content() }
 
-                Text(
-                    modifier = Modifier.weight(1f),
-                    text = toolbarTitle,
-                    maxLines = 1,
-                    style = MaterialTheme.typography.h5
-                )
-            }
-
-            toolbarActions?.sortedBy { it.order }?.forEach { toolbarAction ->
-                IconButton(
-                    onClick = { toolbarAction.onClick() },
-                    enabled = toolbarAction.iconData.enabled
-                ) {
-                    val iconTintAlpha =
-                        if (toolbarAction.iconData.enabled) LocalContentAlpha.current else ContentAlpha.disabled
-                    Icon(
-                        modifier = Modifier.size(SPACING_LARGE.dp),
-                        painter = painterResource(toolbarAction.iconData.iconResource),
-                        contentDescription = stringResource(toolbarAction.iconData.contentDescription),
-                        // TODO: To be reviewed.
-                        tint = toolbarAction.iconData.colorTint?.copy(alpha = iconTintAlpha)
-                            ?: LocalContentColor.current.copy(alpha = iconTintAlpha)
-                    )
+                toolbarActions?.sortedBy { it.order }?.forEach { toolbarAction ->
+                    IconButton(
+                        onClick = toolbarAction.onClick,
+                        enabled = toolbarAction.iconData.enabled
+                    ) {
+                        val iconTintAlpha =
+                            if (toolbarAction.iconData.enabled) LocalContentAlpha.current else ContentAlpha.disabled
+                        Icon(
+                            painter = painterResource(toolbarAction.iconData.iconResource),
+                            contentDescription = stringResource(toolbarAction.iconData.contentDescription),
+                            modifier = Modifier.size(SPACING_LARGE.dp),
+                            // TODO: To be reviewed.
+                            tint = toolbarAction.iconData.tint?.copy(alpha = iconTintAlpha)
+                                ?: LocalContentColor.current.copy(alpha = iconTintAlpha)
+                        )
+                    }
                 }
             }
         }
@@ -712,7 +775,7 @@ fun StickyBottom(
         Spacer(modifier = Modifier.weight(1f))
         Box(
             modifier = Modifier
-                .zIndex(STICKY_BOTTOM_Z_INDEX)
+                .zIndex(ConstantsZIndex.STICKY_BOTTOM)
                 .padding(paddingValues)
                 .fillMaxWidth()
         ) {
@@ -726,12 +789,12 @@ fun StickyBottom(
  * [ContentScreen].
  *
  * @param title        The title of the header.
- * @param subtitle     The subtitle of the header.
+ * @param subtitle     The subtitle of the header. It is optional.
  */
 @Composable
 fun ContentScreenHeader(
     title: String,
-    subtitle: String,
+    subtitle: String? = null,
 ) {
     Column(
         modifier = Modifier.fillMaxWidth()
@@ -739,15 +802,17 @@ fun ContentScreenHeader(
         // Title.
         Text(
             text = title,
-            style = MaterialTheme.typography.h4
+            style = MaterialTheme.typography.h5
         )
         VSpacer.Large()
 
         // Subtitle.
-        Text(
-            text = subtitle,
-            style = MaterialTheme.typography.h6.copy(fontSize = 18.sp)
-        )
+        subtitle?.let {
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.h6.copy(fontSize = 18.sp)
+            )
+        }
     }
 }
 
@@ -786,13 +851,13 @@ fun CollapsibleExtendedFloatingActionButton(
     val extendedFabTextPadding = 20.dp
 
     FloatingActionButton(
+        onClick = fabData.onClick,
         modifier = Modifier.sizeIn(
             minWidth = extendedFabSize,
             minHeight = extendedFabSize
         ),
         backgroundColor = backgroundColor,
-        contentColor = fabData.contentColor ?: contentColorFor(backgroundColor = backgroundColor),
-        onClick = { fabData.onClick() }
+        contentColor = fabData.contentColor ?: contentColorFor(backgroundColor = backgroundColor)
     ) {
         val startPadding =
             if (fabData.iconResource == null) extendedFabIconPadding else extendedFabTextPadding
@@ -805,9 +870,9 @@ fun CollapsibleExtendedFloatingActionButton(
         ) {
             fabData.iconResource?.let { iconResource ->
                 Icon(
-                    modifier = Modifier.size(SPACING_LARGE.dp),
                     painter = painterResource(iconResource),
-                    contentDescription = fabData.iconLabel
+                    contentDescription = fabData.iconLabel,
+                    modifier = Modifier.size(SPACING_LARGE.dp)
                 )
                 // Apply horizontal padding only if the label is visible.
                 if (extendedFabData.extended) {
@@ -840,8 +905,8 @@ fun SearchBar(
         placeholder = {
             Text(
                 text = hint,
-                style = MaterialTheme.typography.h6,
-                fontStyle = FontStyle.Italic
+                fontStyle = FontStyle.Italic,
+                style = MaterialTheme.typography.h6
             )
         },
         trailingIcon = {
@@ -885,30 +950,6 @@ fun SearchBar(
     )
 }
 
-@OptIn(ExperimentalMaterialApi::class)
-@Composable
-fun ModalBottomSheet(
-    sheetState: ModalBottomSheetState,
-    sheetShape: Shape = MaterialTheme.shapes.large,
-    sheetElevation: Dp = ModalBottomSheetDefaults.Elevation,
-    scrimColor: Color = ModalBottomSheetDefaults.scrimColor,
-    sheetContent: @Composable () -> Unit,
-    content: @Composable () -> Unit
-) {
-    ModalBottomSheetLayout(
-        modifier = Modifier
-            .fillMaxWidth()
-            .wrapContentHeight(),
-        sheetContent = { sheetContent() },
-        sheetState = sheetState,
-        sheetShape = sheetShape,
-        sheetElevation = sheetElevation,
-        scrimColor = scrimColor,
-    ) {
-        content()
-    }
-}
-
 /**
  * Pull-to-refresh functionality. This [Composable] is used in scrollable lists where if you pull at
  * the top of the list, the items refresh.
@@ -943,7 +984,7 @@ fun PullRefreshable(
             modifier = Modifier.align(
                 Alignment.TopCenter
             ),
-            contentColor = MaterialTheme.colors.primaryVariant
+            contentColor = MaterialTheme.customColors.genericRed
         )
     }
 }
@@ -998,7 +1039,7 @@ fun ModalBottomSheetScaffold(
                                 Icon(
                                     painter = painterResource(toolbarAction.iconData.iconResource),
                                     contentDescription = stringResource(toolbarAction.iconData.contentDescription),
-                                    tint = toolbarAction.iconData.colorTint
+                                    tint = toolbarAction.iconData.tint
                                         ?: LocalContentColor.current.copy(alpha = LocalContentAlpha.current)
                                 )
                             }
@@ -1023,45 +1064,18 @@ fun ModalBottomSheetScaffold(
 
 @Composable
 fun LoadingScreen() {
-    val composition by rememberLottieComposition(
-        spec = LottieCompositionSpec.RawRes(
-            resId = R.raw.loading_animation
-        )
-    )
-    val progress by animateLottieCompositionAsState(
-        composition = composition,
-        iterations = LottieConstants.IterateForever
-    )
-
-    Box(
+    LottieComposable(
+        resourceId = R.raw.loading_animation,
+        size = 140.dp,
         modifier = Modifier
             .fillMaxSize()
-            .zIndex(10f)
+            .zIndex(ConstantsZIndex.LOADING_SCREEN),
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colors.background)
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null,
-                    onClick = {}
-                ),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            LottieAnimation(
-                modifier = Modifier.size(140.dp),
-                composition = composition,
-                progress = { progress }
-            )
-
-            Text(
-                text = stringResource(R.string.loading),
-                textAlign = TextAlign.Center,
-                style = MaterialTheme.typography.h4,
-            )
-        }
+        Text(
+            text = stringResource(R.string.loading),
+            textAlign = TextAlign.Center,
+            style = MaterialTheme.typography.h4
+        )
     }
 }
 
@@ -1089,13 +1103,17 @@ fun ItemDescription(
     }
 }
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun OutlinedTextFieldValidation(
-    modifier: Modifier = Modifier,
     value: String,
     onValueChange: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    readOnly: Boolean = false,
     label: String = "",
     placeholder: String? = null,
+    autofillData: AutofillData? = null,
     leadingIcon: @Composable (() -> Unit)? = null,
     trailingIcon: @Composable (() -> Unit)? = null,
     errorMessage: String = "",
@@ -1108,17 +1126,25 @@ fun OutlinedTextFieldValidation(
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     shape: Shape = MaterialTheme.shapes.medium
 ) {
-    Box(
-        modifier = modifier
-    ) {
+    Column {
         OutlinedTextField(
-            modifier = modifier,
             value = value,
             onValueChange = { newValue ->
                 if (newValue != value) {
                     onValueChange(newValue)
                 }
             },
+            modifier = when (autofillData) {
+                null -> modifier
+                else -> modifier.then(
+                    Modifier.autofill(
+                        autofillTypes = autofillData.autofillTypes,
+                        onFill = autofillData.onFill
+                    )
+                )
+            },
+            enabled = enabled,
+            readOnly = readOnly,
             label = {
                 Text(
                     text = label,
@@ -1146,20 +1172,13 @@ fun OutlinedTextFieldValidation(
             shape = shape
         )
 
-        AnimatedVisibility(
-            modifier = Modifier.align(Alignment.BottomStart),
-            visible = isError && errorMessage.isNotBlank(),
-            enter = fadeIn(),
-            exit = fadeOut()
-        ) {
-            Text(
-                modifier = Modifier
-                    .padding(start = 10.dp, top = 66.dp),
-                text = errorMessage,
-                color = MaterialTheme.colors.error,
-                style = MaterialTheme.typography.body2
-            )
-        }
+        // Error.
+        Text(
+            text = errorMessage,
+            modifier = modifier.padding(start = 10.dp, top = SPACING_TINY.dp),
+            color = MaterialTheme.colors.error,
+            style = MaterialTheme.typography.body2
+        )
     }
 }
 
@@ -1169,10 +1188,10 @@ fun OutlinedTextFieldValidation(
  * since the native [ExposedDropdownMenuBox] does not provide an implementation for the
  * [OutlinedTextField], nor the [ExposedDropdownMenu].
  *
- * @param modifier          The modifier to be applied.
- * @param expanded          Indicates if the dropdown menu is visible.
- * @param value             The currently selected value.
  * @param label             A placeholder text when no item has been selected.
+ * @param expanded          Indicates if the dropdown menu is visible.
+ * @param modifier          The modifier to be applied.
+ * @param value             The currently selected value.
  * @param maxLines          The maximum number of lines that [value] can be displayed to; set to `1`
  * by default.
  * @param onDismissRequest  The action(s) to invoke when the dropdown menu is expanded, and the user
@@ -1183,25 +1202,26 @@ fun OutlinedTextFieldValidation(
 @OptIn(ExperimentalMaterialApi::class, ExperimentalMaterialApi::class)
 @Composable
 fun ExposedDropdownMenu(
-    modifier: Modifier = Modifier,
-    expanded: Boolean,
-    value: String? = "",
     label: String,
+    expanded: Boolean,
+    modifier: Modifier = Modifier,
+    value: String? = "",
     maxLines: Int = 1,
     onDismissRequest: (() -> Unit)? = null,
     onExpandedChange: (() -> Unit)? = null,
-    content: @Composable () -> Unit
+    content: @Composable ColumnScope.() -> Unit
 ) {
     ExposedDropdownMenuBox(
-        modifier = modifier,
         expanded = expanded,
         onExpandedChange = { onExpandedChange?.invoke() },
+        modifier = modifier
     ) {
         OutlinedTextField(
             value = TextFieldValue(
                 text = value.orEmpty()
             ),
             onValueChange = {},
+            modifier = Modifier.fillMaxWidth(),
             readOnly = true,
             label = {
                 Text(
@@ -1216,31 +1236,71 @@ fun ExposedDropdownMenu(
             maxLines = maxLines
         )
         ExposedDropdownMenu(
-            modifier = Modifier.fillMaxWidth(),
             expanded = expanded,
-            onDismissRequest = { onDismissRequest?.invoke() }
-        ) {
-            content()
-        }
+            onDismissRequest = { onDismissRequest?.invoke() },
+            modifier = Modifier.fillMaxWidth(),
+            content = content
+        )
     }
 }
 
 /**
- * A simple composable button. Avoid using the native [Button]. Use this wrapper instead
- * as it provides custom padding and multiple clicks protection.
+ * A simple composable button. Avoid using the native [Button]. Use this wrapper instead as it
+ * provides custom padding if none has been specified, multiple-clicks protection, and UI overlay
+ * attack protection.
  */
 @Composable
-fun ContainedButton(
+fun WrapButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    throttleClicks: Boolean = true,
+    throttleDuration: Long = THROTTLE_CLICKABLE_DEFAULT_DELAY,
     enabled: Boolean = true,
+    interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
+    elevation: ButtonElevation? = ButtonDefaults.elevation(),
+    shape: Shape = MaterialTheme.shapes.small,
+    border: BorderStroke? = null,
+    colors: ButtonColors = ButtonDefaults.buttonColors(),
+    contentPadding: PaddingValues = ButtonDefaults.ContentPadding,
     content: @Composable RowScope.() -> Unit
 ) {
+    var lastClicked by remember { mutableLongStateOf(0L) }
+    val coroutineScope = rememberCoroutineScope()
+    val debounceState = remember {
+        MutableSharedFlow<Long>(
+            replay = 0,
+            extraBufferCapacity = 1,
+            onBufferOverflow = BufferOverflow.DROP_OLDEST
+        )
+    }
+
+    LaunchedEffect(Unit) {
+        debounceState.collect { currentTime ->
+            if (currentTime - lastClicked >= throttleDuration) {
+                onClick()
+                lastClicked = currentTime
+            }
+        }
+    }
+
     Button(
-        onClick = onClick,
-        modifier = modifier.throttledClickable(view = LocalView.current, onClick = onClick),
+        onClick = {
+            if (throttleClicks) {
+                coroutineScope.launch {
+                    debounceState.emit(System.currentTimeMillis())
+                }
+            } else {
+                onClick()
+            }
+        },
+        modifier = modifier.filterTouchesWhenObscured(LocalView.current),
         enabled = enabled,
-        contentPadding = PaddingValues(vertical = 12.dp, horizontal = 32.dp),
+        interactionSource = interactionSource,
+        elevation = elevation,
+        shape = shape,
+        border = border,
+        colors = colors,
+        contentPadding = contentPadding,
         content = content
     )
 }
@@ -1253,14 +1313,27 @@ fun ContainedButton(
 fun WrapOutlinedButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    throttleClicks: Boolean = true,
+    throttleDuration: Long = THROTTLE_CLICKABLE_DEFAULT_DELAY,
     enabled: Boolean = true,
+    elevation: ButtonElevation? = null,
+    shape: Shape = MaterialTheme.shapes.small,
+    border: BorderStroke? = ButtonDefaults.outlinedBorder,
+    colors: ButtonColors = ButtonDefaults.outlinedButtonColors(),
+    contentPadding: PaddingValues = ButtonDefaults.ContentPadding,
     content: @Composable RowScope.() -> Unit
 ) {
-    OutlinedButton(
+    WrapButton(
         onClick = onClick,
-        modifier = modifier.throttledClickable(view = LocalView.current, onClick = onClick),
+        modifier = modifier,
+        throttleClicks = throttleClicks,
+        throttleDuration = throttleDuration,
         enabled = enabled,
-        contentPadding = PaddingValues(vertical = 12.dp, horizontal = 32.dp),
+        elevation = elevation,
+        shape = shape,
+        border = border,
+        colors = colors,
+        contentPadding = contentPadding,
         content = content
     )
 }
@@ -1273,24 +1346,42 @@ fun WrapOutlinedButton(
 fun WrapTextButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    throttleClicks: Boolean = true,
+    throttleDuration: Long = THROTTLE_CLICKABLE_DEFAULT_DELAY,
     enabled: Boolean = true,
+    elevation: ButtonElevation? = null,
+    shape: Shape = MaterialTheme.shapes.small,
+    border: BorderStroke? = null,
+    colors: ButtonColors = ButtonDefaults.textButtonColors(),
+    contentPadding: PaddingValues = ButtonDefaults.TextButtonContentPadding,
     content: @Composable RowScope.() -> Unit
 ) {
-    TextButton(
+    WrapButton(
         onClick = onClick,
-        modifier = modifier.throttledClickable(view = LocalView.current, onClick = onClick),
+        modifier = modifier,
+        throttleClicks = throttleClicks,
+        throttleDuration = throttleDuration,
         enabled = enabled,
+        elevation = elevation,
+        shape = shape,
+        border = border,
+        colors = colors,
+        contentPadding = contentPadding,
         content = content
     )
 }
 
 
 /**
- * @param buttonType The button type. For the dismiss button, the type is
- * always [ErrorButtonType.Text].
+ * The button to be used in [AlertDialogError].
+ *
+ * @param label The text label of the button.
+ * @param buttonType The button type. For the dismiss button, the type is always
+ * [ErrorButtonType.Text].
+ * @param onClick Callback to be invoked when the button is clicked.
  */
 data class AlertDialogButton(
-    val value: String,
+    val label: String,
     val buttonType: ErrorButtonType = ErrorButtonType.defaultType,
     val onClick: () -> Unit
 )
@@ -1299,7 +1390,6 @@ data class AlertDialogButton(
  * A wrapper for [AlertDialog] providing additional functionality and custom styling. Avoid using the
  * native one. Use this wrapper instead.
  *
- * @param modifier          The modifier to be applied.
  * @param isVisible         Defines whether this alert is visible.
  * @param title             The title of this dialog.
  * @param errorMessage      The error message of this dialog.
@@ -1317,10 +1407,9 @@ data class AlertDialogButton(
  */
 @Composable
 fun AlertDialogError(
-    modifier: Modifier = Modifier,
     isVisible: Boolean,
     title: String,
-    errorMessage: String,
+    errorMessage: @Composable () -> Unit,
     dismissButton: AlertDialogButton? = null,
     confirmButton: AlertDialogButton,
     shape: Shape = MaterialTheme.shapes.medium,
@@ -1331,7 +1420,6 @@ fun AlertDialogError(
 ) {
     if (!isVisible) return
     AlertDialog(
-        modifier = modifier,
         title = {
             Text(
                 text = title,
@@ -1341,19 +1429,17 @@ fun AlertDialogError(
         text = {
             // Overrides the provided content alpha of "ContentAlpha.medium".
             CompositionLocalProvider(
-                LocalContentAlpha provides ContentAlpha.high
+                LocalContentAlpha provides ContentAlpha.high,
+                LocalTextStyle provides MaterialTheme.typography.body1 // Overrides the provided style of "body2".
             ) {
-                Text(
-                    text = errorMessage,
-                    style = MaterialTheme.typography.body1 // Overrides the provided style of "body2".
-                )
+                errorMessage()
             }
         },
         dismissButton = {
             dismissButton?.let { button ->
                 WrapTextButton(onClick = button.onClick) {
                     Text(
-                        text = button.value
+                        text = button.label
                     )
                 }
             }
@@ -1362,9 +1448,9 @@ fun AlertDialogError(
             confirmButton.let { button ->
                 when (button.buttonType) {
                     ErrorButtonType.Contained -> {
-                        ContainedButton(onClick = button.onClick) {
+                        WrapButton(onClick = button.onClick) {
                             Text(
-                                text = button.value
+                                text = button.label
                             )
                         }
                     }
@@ -1372,7 +1458,7 @@ fun AlertDialogError(
                     ErrorButtonType.Outlined -> {
                         WrapOutlinedButton(onClick = button.onClick) {
                             Text(
-                                text = button.value
+                                text = button.label
                             )
                         }
                     }
@@ -1380,7 +1466,7 @@ fun AlertDialogError(
                     ErrorButtonType.Text -> {
                         WrapTextButton(onClick = button.onClick) {
                             Text(
-                                text = button.value
+                                text = button.label
                             )
                         }
                     }
@@ -1429,7 +1515,7 @@ fun SortingItems(
                 // Disables the on tap ripple effect for both single and long clicks.
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
-                    indication = rememberRipple(radius = 0.dp)
+                    indication = null
                 ) {
                     onItemClick(sortingType)
                 },
@@ -1494,9 +1580,7 @@ fun SortingModalBottomSheetContent(
                 style = MaterialTheme.typography.h4
             )
 
-            IconButton(
-                onClick = { onCloseClick() }
-            ) {
+            IconButton(onClick = onCloseClick) {
                 Icon(
                     modifier = Modifier
                         .size(SPACING_LARGE.dp)

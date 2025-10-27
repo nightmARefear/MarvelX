@@ -46,15 +46,16 @@ import com.alexgreece45.marvelx.ui.components.IconData
 import com.alexgreece45.marvelx.ui.components.ItemDescription
 import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
 import com.alexgreece45.marvelx.ui.components.ToolbarAction
-import com.alexgreece45.marvelx.util.IMAGE_BORDER_WIDTH
+import com.alexgreece45.marvelx.ui.theme.values.customColors
+import com.alexgreece45.marvelx.util.constants.ConstantsUi.IMAGE_BORDER_WIDTH
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.VSpacer
 import kotlinx.coroutines.flow.Flow
 
 @Composable
 fun CharacterScreen(
-    state: CharacterState,
     onEventSent: (event: CharacterEvent) -> Unit,
+    state: CharacterState,
     effect: Flow<CharacterEffect>,
     characterId: Int,
     popBackStack: () -> Unit,
@@ -109,7 +110,7 @@ fun CharacterScreen(
                             IconData(
                                 iconResource = R.drawable.ic_favorite_filled,
                                 contentDescription = R.string.ic_favorite_content_description,
-                                colorTint = MaterialTheme.colors.primaryVariant
+                                tint = MaterialTheme.customColors.genericRed
                             )
                         }
 
@@ -117,7 +118,7 @@ fun CharacterScreen(
                             IconData(
                                 iconResource = R.drawable.ic_favorite_empty,
                                 contentDescription = R.string.ic_not_favorite_content_description,
-                                colorTint = MaterialTheme.colors.primaryVariant
+                                tint = MaterialTheme.customColors.genericRed
                             )
                         }
                     }
@@ -195,7 +196,7 @@ private fun CharacterItem(
                 .border(
                     BorderStroke(
                         width = IMAGE_BORDER_WIDTH,
-                        color = MaterialTheme.colors.primaryVariant
+                        color = MaterialTheme.customColors.genericRed
                     ),
                     CircleShape
                 )

@@ -7,5 +7,6 @@ import kotlinx.parcelize.Parcelize
 @Parcelize
 data class RequestUserLogin(
     @SerializedName("email") val email: String,
-    @SerializedName("password") val password: String
+    @SerializedName("password") val password: String,
+    @SerializedName("isLoggedInWithFirebase") val isLoggedInWithFirebase: Boolean
 ) : Parcelable

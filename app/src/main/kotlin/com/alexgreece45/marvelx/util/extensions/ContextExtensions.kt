@@ -1,9 +1,13 @@
 package com.alexgreece45.marvelx.util.extensions
 
 import android.content.Context
+import android.content.Intent
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
-import androidx.core.content.ContextCompat.getSystemService
+import android.net.Uri
+import android.provider.Settings
+import com.alexgreece45.marvelx.ui.helper.model.DeepLinkAction
+import com.alexgreece45.marvelx.ui.screens.mainActivity.MainActivity
 
 /**
  * Detects if this device has internet connection and returns `true` if it has otherwise `false`.
@@ -22,4 +26,56 @@ fun Context.hasInternetConnectivity(): Boolean {
         }
     }
     return false
+}
+
+/**
+ * Attempts to retrieve the pending deep link action. If it wasn't found, `null` is returned.
+ */
+private fun Context.getPendingDeepLinkAction(): DeepLinkAction? =
+    this.getActivity()?.pendingDeepLinkAction
+
+/**
+ * Sets the given [deepLinkAction].
+ */
+fun Context.setPendingDeepLinkAction(deepLinkAction: DeepLinkAction) {
+    this.getActivity()?.pendingDeepLinkAction = deepLinkAction
+}
+
+/**
+ * Clears the pending deep link action.
+ */
+private fun Context.clearPendingDeepLinkAction() {
+    this.getActivity()?.pendingDeepLinkAction = null
+}
+
+/**
+ * Retrieves the pending deep link action and removes it from cache as well. If no deep link was
+ * found, `null` is returned instead.
+ */
+fun Context.getAndRemovePendingDeepLinkAction(): DeepLinkAction? {
+    val pendingDeepLinkAction = this.getActivity()?.getPendingDeepLinkAction()
+    clearPendingDeepLinkAction()
+    return pendingDeepLinkAction
+}
+
+/**
+ * Attempts to retrieve [MainActivity] from the [Context]. If it fails to do so, `null` is returned.
+ */
+fun Context.getActivity(): MainActivity? = (this as? MainActivity)
+
+/**
+ * Closes the [MainActivity].
+ */
+fun Context.finish() {
+    this.getActivity()?.finish()
+}
+
+/**
+ * Opens the application settings for this app.
+ */
+fun Context.openAppSettings() {
+    val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+        data = Uri.fromParts("package", packageName, null)
+    }
+    startActivity(intent)
 }

@@ -3,31 +3,39 @@ package com.alexgreece45.marvelx.di
 import androidx.room.Room
 import androidx.work.WorkerFactory
 import com.alexgreece45.marvelx.BuildConfig
-import com.alexgreece45.marvelx.MarvelXApplication
-import com.alexgreece45.marvelx.RefreshTokenWorkerFactory
+import com.alexgreece45.marvelx.application.MarvelXApplication
+import com.alexgreece45.marvelx.application.worker.RefreshTokenWorkerFactory
 import com.alexgreece45.marvelx.configuration.AppBuildType
 import com.alexgreece45.marvelx.configuration.ConfigLogic
 import com.alexgreece45.marvelx.configuration.ConfigLogicImpl
+import com.alexgreece45.marvelx.configuration.ConfigOauth
+import com.alexgreece45.marvelx.configuration.ConfigOauthImpl
 import com.alexgreece45.marvelx.configuration.ConfigSecurityLogic
 import com.alexgreece45.marvelx.configuration.ConfigSecurityLogicImpl
 import com.alexgreece45.marvelx.controllers.AntiHookController
 import com.alexgreece45.marvelx.controllers.AntiHookControllerImpl
 import com.alexgreece45.marvelx.controllers.AntiReverseEngineeringController
 import com.alexgreece45.marvelx.controllers.AntiReverseEngineeringControllerImpl
-import com.alexgreece45.marvelx.controllers.AppLoggerController
-import com.alexgreece45.marvelx.controllers.AppLoggerControllerImpl
+import com.alexgreece45.marvelx.controllers.AppLogger
+import com.alexgreece45.marvelx.controllers.AppLoggerImpl
 import com.alexgreece45.marvelx.controllers.ApplicationPackageController
 import com.alexgreece45.marvelx.controllers.ApplicationPackageControllerImpl
 import com.alexgreece45.marvelx.controllers.AuthController
 import com.alexgreece45.marvelx.controllers.AuthControllerImpl
 import com.alexgreece45.marvelx.controllers.CryptoController
 import com.alexgreece45.marvelx.controllers.CryptoControllerImpl
+import com.alexgreece45.marvelx.controllers.DeepLinkController
+import com.alexgreece45.marvelx.controllers.DeepLinkControllerImpl
+import com.alexgreece45.marvelx.controllers.MarvelXBackendRequestController
+import com.alexgreece45.marvelx.controllers.MarvelXBackendRequestControllerImpl
 import com.alexgreece45.marvelx.controllers.PrefKeys
 import com.alexgreece45.marvelx.controllers.PrefKeysImpl
 import com.alexgreece45.marvelx.controllers.PreferencesController
 import com.alexgreece45.marvelx.controllers.PreferencesControllerImpl
 import com.alexgreece45.marvelx.controllers.RefreshTokenController
 import com.alexgreece45.marvelx.controllers.RefreshTokenControllerImpl
+import com.alexgreece45.marvelx.controllers.RequestController
+import com.alexgreece45.marvelx.controllers.RequestControllerImpl
 import com.alexgreece45.marvelx.controllers.RootController
 import com.alexgreece45.marvelx.controllers.RootControllerImpl
 import com.alexgreece45.marvelx.controllers.SecurityController
@@ -38,26 +46,37 @@ import com.alexgreece45.marvelx.data.repository.ChangePasswordRepository
 import com.alexgreece45.marvelx.data.repository.ChangePasswordRepositoryImpl
 import com.alexgreece45.marvelx.data.repository.CharacterRepository
 import com.alexgreece45.marvelx.data.repository.CharacterRepositoryImpl
+import com.alexgreece45.marvelx.data.repository.ConfigRepository
+import com.alexgreece45.marvelx.data.repository.ConfigRepositoryImpl
 import com.alexgreece45.marvelx.data.repository.FavoriteCharactersRepository
 import com.alexgreece45.marvelx.data.repository.FavoriteCharactersRepositoryImpl
 import com.alexgreece45.marvelx.data.repository.ForgotPasswordRepository
 import com.alexgreece45.marvelx.data.repository.ForgotPasswordRepositoryImpl
+import com.alexgreece45.marvelx.data.repository.FriendRequestsRepository
+import com.alexgreece45.marvelx.data.repository.FriendRequestsRepositoryImpl
 import com.alexgreece45.marvelx.data.repository.LoginRepository
 import com.alexgreece45.marvelx.data.repository.LoginRepositoryImpl
 import com.alexgreece45.marvelx.data.repository.OtpRepository
 import com.alexgreece45.marvelx.data.repository.OtpRepositoryImpl
+import com.alexgreece45.marvelx.data.repository.RefreshTokenRepository
+import com.alexgreece45.marvelx.data.repository.RefreshTokenRepositoryImpl
 import com.alexgreece45.marvelx.data.repository.RegisterRepository
 import com.alexgreece45.marvelx.data.repository.RegisterRepositoryImpl
 import com.alexgreece45.marvelx.data.repository.UserRepository
 import com.alexgreece45.marvelx.data.repository.UserRepositoryImpl
+import com.alexgreece45.marvelx.data.repository.imageLoader.AuthenticatedImageLoader
 import com.alexgreece45.marvelx.database.FavoriteCharactersDao
 import com.alexgreece45.marvelx.database.FavoriteCharactersDatabase
+import com.alexgreece45.marvelx.dispatchers.MarvelXDispatchers
+import com.alexgreece45.marvelx.dispatchers.dispatchersModule
 import com.alexgreece45.marvelx.domain.interactors.ChangePasswordInteractor
 import com.alexgreece45.marvelx.domain.interactors.ChangePasswordInteractorImpl
 import com.alexgreece45.marvelx.domain.interactors.CharacterInteractor
 import com.alexgreece45.marvelx.domain.interactors.CharacterInteractorImpl
 import com.alexgreece45.marvelx.domain.interactors.ComicInteractor
 import com.alexgreece45.marvelx.domain.interactors.ComicInteractorImpl
+import com.alexgreece45.marvelx.domain.interactors.ConfigInteractor
+import com.alexgreece45.marvelx.domain.interactors.ConfigInteractorImpl
 import com.alexgreece45.marvelx.domain.interactors.ForgotPasswordInteractor
 import com.alexgreece45.marvelx.domain.interactors.ForgotPasswordInteractorImpl
 import com.alexgreece45.marvelx.domain.interactors.LoginInteractor
@@ -71,9 +90,10 @@ import com.alexgreece45.marvelx.domain.interactors.SplashInteractorImpl
 import com.alexgreece45.marvelx.domain.interactors.UserInteractor
 import com.alexgreece45.marvelx.domain.interactors.UserInteractorImpl
 import com.alexgreece45.marvelx.domain.worker.RefreshTokenWorker
-import com.alexgreece45.marvelx.network_logic.interceptors.ApiInterceptor
-import com.alexgreece45.marvelx.network_logic.interceptors.WebsocketInterceptor
-import com.alexgreece45.marvelx.network_logic.networkKoinModule
+import com.alexgreece45.marvelx.network_logic.di.networkKoinModule
+import com.alexgreece45.marvelx.network_logic.di.provideOkHttpClient
+import com.alexgreece45.marvelx.ui.helper.FieldValidationRules
+import com.alexgreece45.marvelx.ui.helper.FieldValidationRulesImpl
 import com.alexgreece45.marvelx.ui.navigation.router.RouterHost
 import com.alexgreece45.marvelx.ui.navigation.router.RouterHostImpl
 import com.alexgreece45.marvelx.ui.screens.allCharacters.AllCharactersViewModel
@@ -84,12 +104,21 @@ import com.alexgreece45.marvelx.ui.screens.character.allCharacterComicsScreen.Al
 import com.alexgreece45.marvelx.ui.screens.comic.ComicViewModel
 import com.alexgreece45.marvelx.ui.screens.forgotPasswordScreen.ForgotPasswordViewModel
 import com.alexgreece45.marvelx.ui.screens.forgotPasswordScreen.forgotPasswordValidateEmailScreen.ForgotPasswordValidateEmailViewModel
+import com.alexgreece45.marvelx.ui.screens.friends.FriendsViewModel
 import com.alexgreece45.marvelx.ui.screens.home.HomeViewModel
 import com.alexgreece45.marvelx.ui.screens.introLoading.IntroLoadingViewModel
 import com.alexgreece45.marvelx.ui.screens.login.LoginViewModel
 import com.alexgreece45.marvelx.ui.screens.mainActivity.ActivityViewModel
 import com.alexgreece45.marvelx.ui.screens.otp.OtpViewModel
 import com.alexgreece45.marvelx.ui.screens.profile.ProfileViewModel
+import com.alexgreece45.marvelx.ui.screens.profile.editProfileDetails.EditProfileDetailsViewModel
+import com.alexgreece45.marvelx.ui.screens.profile.image.ProfileImageViewModel
+import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.ProfileDetailsViewModel
+import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.stats.ProfileDetailsStatsViewModel
+import com.alexgreece45.marvelx.ui.screens.qrCode.QrCodeScanViewModel
+import com.alexgreece45.marvelx.ui.screens.settings.SettingsViewModel
+import com.alexgreece45.marvelx.ui.screens.settings.faq.FaqViewModel
+import com.alexgreece45.marvelx.ui.screens.settings.privacySettings.PrivacySettingsViewModel
 import com.alexgreece45.marvelx.ui.screens.signup.SignupViewModel
 import com.alexgreece45.marvelx.ui.screens.splash.SplashViewModel
 import com.alexgreece45.marvelx.util.FormValidator
@@ -99,11 +128,13 @@ import com.alexgreece45.marvelx.util.ResourceProviderImpl
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.androidx.viewmodel.dsl.viewModel
+import org.koin.androidx.viewmodel.dsl.viewModelOf
 import org.koin.androidx.workmanager.dsl.worker
 import org.koin.androidx.workmanager.koin.workManagerFactory
 import org.koin.core.context.startKoin
 import org.koin.core.logger.Level
 import org.koin.core.module.Module
+import org.koin.core.qualifier.named
 import org.koin.dsl.module
 
 /**
@@ -120,8 +151,7 @@ fun initKoin(marvelXApplication: MarvelXApplication) {
         modules(
             navigationModule,
             databaseModule,
-            interceptorModule,
-            networkModule,
+            networkKoinModule,
             repositoryModule,
             interactorModule,
             controllerModule,
@@ -129,7 +159,8 @@ fun initKoin(marvelXApplication: MarvelXApplication) {
             resourceProviderModule,
             configModule,
             viewModelModule,
-            workerModule
+            workerModule,
+            dispatchersModule
         )
     }
 }
@@ -153,38 +184,36 @@ private val databaseModule = module {
     }
 }
 
-private val interceptorModule = module {
-    single<ApiInterceptor> {
-        ApiInterceptor(
-            get(),
-            get(),
-            get(),
-            get(),
-            get()
-        )
-    }
-
-    single<WebsocketInterceptor> {
-        WebsocketInterceptor(get())
-    }
-}
-
-//private val networkModule: Module = defaultModule
-private val networkModule: Module = networkKoinModule
-
 private val repositoryModule = module {
     single<CharacterRepository> { CharacterRepositoryImpl(get()) }
     single<FavoriteCharactersRepository> { FavoriteCharactersRepositoryImpl(get()) }
+    single<RefreshTokenRepository> { RefreshTokenRepositoryImpl(get()) }
     single<LoginRepository> { LoginRepositoryImpl(get(), get(), get()) }
-    single<UserRepository> { UserRepositoryImpl(get()) }
+    single<UserRepository> { UserRepositoryImpl(get(), get(named(MarvelXDispatchers.IO))) }
+    single<ConfigRepository> { ConfigRepositoryImpl(get()) }
     single<ForgotPasswordRepository> { ForgotPasswordRepositoryImpl(get(), get()) }
     single<ChangePasswordRepository> { ChangePasswordRepositoryImpl(get()) }
     single<OtpRepository> { OtpRepositoryImpl(get(), get()) }
     single<RegisterRepository> { RegisterRepositoryImpl(get()) }
+    single<FriendRequestsRepository> {
+        FriendRequestsRepositoryImpl(
+            get(),
+            get(named(MarvelXDispatchers.IO))
+        )
+    }
+
+    // Image loader.
+    single<AuthenticatedImageLoader> {
+        AuthenticatedImageLoader(
+            context = get(),
+            okHttpClient = provideOkHttpClient(get(), get(), get(), get(), get(), get())
+        )
+    }
 }
 
 private val interactorModule = module {
     factory<CharacterInteractor> { CharacterInteractorImpl(get(), get(), get(), get()) }
+    factory<ConfigInteractor> { ConfigInteractorImpl(get()) }
     factory<ComicInteractor> { ComicInteractorImpl(get(), get(), get()) }
     factory<LoginInteractor> {
         LoginInteractorImpl(
@@ -195,10 +224,12 @@ private val interactorModule = module {
             get(),
             get(),
             get(),
+            get(),
+            get(),
             get()
         )
     }
-    factory<UserInteractor> { UserInteractorImpl(get(), get(), get(), get()) }
+    factory<UserInteractor> { UserInteractorImpl(get(), get(), get(), get(), get()) }
     factory<ForgotPasswordInteractor> { ForgotPasswordInteractorImpl(get(), get()) }
     factory<ChangePasswordInteractor> { ChangePasswordInteractorImpl() }
     factory<OtpInteractor> { OtpInteractorImpl(get(), get(), get()) }
@@ -209,19 +240,29 @@ private val interactorModule = module {
 private val controllerModule = module {
     single<PreferencesController> { PreferencesControllerImpl(get()) }
     single<PrefKeys> { PrefKeysImpl(get(), get()) }
-    single<CryptoController> { CryptoControllerImpl(get(), get(), get()) }
-    single<AuthController> { AuthControllerImpl(get(), get()) }
+    single<CryptoController> { CryptoControllerImpl(get(), get()) }
+    single<AuthController> { AuthControllerImpl(get(), get(), get(), get()) }
     single<RefreshTokenController> { RefreshTokenControllerImpl(get(), get(), get()) }
     single<TimerController> { TimerControllerImpl() }
     single<RootController> { RootControllerImpl(get()) }
     single<SecurityController> { SecurityControllerImpl(get(), get(), get(), get(), get()) }
     single<ApplicationPackageController> { ApplicationPackageControllerImpl(get(), get()) }
-    single<AppLoggerController> { AppLoggerControllerImpl(get()) }
+    single<AppLogger> { AppLoggerImpl(get()) }
     single<AntiReverseEngineeringController> { AntiReverseEngineeringControllerImpl(get(), get()) }
     single<AntiHookController> { AntiHookControllerImpl() }
+    single<RequestController> { RequestControllerImpl(get(), get(), get()) }
+    single<MarvelXBackendRequestController> {
+        MarvelXBackendRequestControllerImpl(
+            get(),
+            get(),
+            get()
+        )
+    }
+    single<DeepLinkController> { DeepLinkControllerImpl(get(), get()) }
 }
 
 private val formValidatorModule = module {
+    single<FieldValidationRules> { FieldValidationRulesImpl(get()) }
     factory<FormValidator> { FormValidatorImpl() }
 }
 
@@ -232,6 +273,7 @@ private val resourceProviderModule = module {
 private val configModule = module {
     single<ConfigLogic> { ConfigLogicImpl() }
     single<ConfigSecurityLogic> { ConfigSecurityLogicImpl() }
+    single<ConfigOauth> { ConfigOauthImpl() }
 }
 
 private val viewModelModule = module {
@@ -240,9 +282,22 @@ private val viewModelModule = module {
     viewModel { SplashViewModel(get(), get()) }
     viewModel { IntroLoadingViewModel(get(), get(), get(), get(), get(), get(), get()) }
 
-    viewModel { HomeViewModel(get()) }
-    viewModel { LoginViewModel(get(), get(), get(), get()) }
-    viewModel { SignupViewModel(get(), get(), get(), get(), get(), get(), get(), get()) }
+    viewModel { HomeViewModel(get(), get()) }
+    viewModel { LoginViewModel(get(), get(), get(), get(), get(named(MarvelXDispatchers.Main))) }
+    viewModel {
+        SignupViewModel(
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(named(MarvelXDispatchers.Main))
+        )
+    }
 
     viewModel { OtpViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
 
@@ -250,15 +305,46 @@ private val viewModelModule = module {
     viewModel { ForgotPasswordViewModel(get(), get(), get(), get()) }
     viewModel { ChangePasswordViewModel(get(), get()) }
 
-    viewModel { AllCharactersViewModel(get(), get()) }
+    viewModel { AllCharactersViewModel(get(), get(), get()) }
     viewModel { AllCharacterComicsViewModel(get()) }
     viewModel { AllFavoriteCharactersViewModel(get()) }
     viewModel { CharacterViewModel(get(), get()) }
-    viewModel { ComicViewModel(get()) }
-    viewModel { ProfileViewModel(get(), get(), get(), get()) }
+    viewModelOf(::ComicViewModel)
+
+    viewModelOf(::FriendsViewModel)
+
+    viewModelOf(::ProfileViewModel)
+    viewModelOf(::ProfileImageViewModel)
+    viewModelOf(::ProfileDetailsViewModel)
+
+    viewModel { EditProfileDetailsViewModel(get(), get(), get(), get()) }
+    viewModel { ProfileDetailsStatsViewModel(get(), get()) }
+    viewModel { PrivacySettingsViewModel(get(), get()) }
+    viewModel { FaqViewModel(get(), get()) }
+    viewModel { QrCodeScanViewModel() }
+
+    viewModelOf(::SettingsViewModel)
 }
 
 private val workerModule = module {
-    worker<RefreshTokenWorker> { RefreshTokenWorker(get(), get(), get(), get(), get(), get()) }
-    factory<WorkerFactory> { RefreshTokenWorkerFactory(get(), get(), get(), get()) }
+    worker<RefreshTokenWorker> {
+        RefreshTokenWorker(
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(named(MarvelXDispatchers.IO))
+        )
+    }
+    factory<WorkerFactory> {
+        RefreshTokenWorkerFactory(
+            get(),
+            get(),
+            get(),
+            get(),
+            get(named(MarvelXDispatchers.IO))
+        )
+    }
 }

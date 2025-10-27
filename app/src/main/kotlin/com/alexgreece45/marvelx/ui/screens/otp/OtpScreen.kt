@@ -23,9 +23,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.ui.components.ContainedButton
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
+import com.alexgreece45.marvelx.ui.components.WrapButton
 import com.alexgreece45.marvelx.ui.components.effect.OneTimeLaunchedEffect
 import com.alexgreece45.marvelx.ui.components.error.ContentErrorScreen
 import com.alexgreece45.marvelx.ui.components.otpTextField.OtpTextField
@@ -44,13 +44,13 @@ import kotlinx.coroutines.flow.Flow
  */
 @Composable
 fun OtpScreen(
-    state: OtpState,
     onEventSent: (event: OtpEvent) -> Unit,
+    state: OtpState,
     effect: Flow<OtpEffect>,
     popBackStack: () -> Unit,
     navigateToAllCharactersScreen: () -> Unit,
     navigateToChangePasswordScreen: (String, String?) -> Unit,
-    userId: Int?,
+    userId: String?,
     otpFlowType: String?,
     verificationStep: String?,
     shouldRememberUserSession: Boolean?,
@@ -107,9 +107,11 @@ fun OtpScreen(
 
     ContentScreen(
         isLoading = state.isLoading,
-        navigableAction = ScreenNavigableAction.Backable {
-            onEventSent(OtpEvent.OnBackClick)
-        },
+        navigableAction = if (!state.isLoading) {
+            ScreenNavigableAction.Backable {
+                onEventSent(OtpEvent.OnBackClick)
+            }
+        } else ScreenNavigableAction.None,
         showToolbar = true
     ) { paddingValues ->
         Column(
@@ -211,7 +213,7 @@ fun OtpScreen(
             Spacer(modifier = Modifier.weight(1f))
 
             // "Verify" button.
-            ContainedButton(
+            WrapButton(
                 onClick = { onEventSent(OtpEvent.OnVerifyButtonClicked) },
                 modifier = Modifier.fillMaxWidth(),
                 enabled = state.isVerifyButtonEnabled

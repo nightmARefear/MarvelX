@@ -1,12 +1,14 @@
 package com.alexgreece45.marvelx.controllers
 
 import com.alexgreece45.marvelx.util.DateUtil
+import com.alexgreece45.marvelx.util.SecurityUtil
 import com.alexgreece45.marvelx.util.constants.ConstantsSecurity
 import com.alexgreece45.marvelx.util.extensions.toJsonString
 import okhttp3.Request
 import java.util.UUID
 
 interface RequestController {
+
     /**
      * Adds the necessary authentication headers to the given [Request.Builder] and returns the
      * finalized builder.
@@ -15,15 +17,16 @@ interface RequestController {
 }
 
 class RequestControllerImpl(
-    private val logger: AppLoggerController,
+    private val logger: AppLogger,
     private val cryptoController: CryptoController,
     private val prefKeys: PrefKeys
 ) : RequestController {
+
     override fun addAuthenticationHeaders(
         requestBuilder: Request.Builder
     ): Request.Builder {
         val request = requestBuilder.build()
-        val nonce = UUID.randomUUID()
+        val nonce = SecurityUtil.createNonce()
         val timestamp = DateUtil.getSecondsFromEpoch()
 
         val xAuthSignature = prefKeys.signData?.let { signData ->
@@ -43,7 +46,7 @@ class RequestControllerImpl(
         return requestBuilder
             .addHeader(
                 name = ConstantsSecurity.HeaderName.XAuthNonce.name,
-                value = nonce.toString()
+                value = nonce
             )
             .addHeader(
                 name = ConstantsSecurity.HeaderName.XAuthTimestamp.name,

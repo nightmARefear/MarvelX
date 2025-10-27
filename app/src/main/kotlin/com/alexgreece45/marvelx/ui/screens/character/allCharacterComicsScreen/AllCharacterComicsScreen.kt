@@ -10,22 +10,17 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Icon
-import androidx.compose.material.LocalContentAlpha
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.ModalBottomSheetValue
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.rememberModalBottomSheetState
-import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -33,33 +28,32 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.domain.model_api.comic.ComicDomain
 import com.alexgreece45.marvelx.ui.components.ContentErrorScreen
 import com.alexgreece45.marvelx.ui.components.ContentScreen
-import com.alexgreece45.marvelx.ui.components.ModalBottomSheet
 import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
 import com.alexgreece45.marvelx.ui.components.SortingModalBottomSheetContent
-import com.alexgreece45.marvelx.ui.navigation.Screen
+import com.alexgreece45.marvelx.ui.components.WrapModalBottomSheetLayout
 import com.alexgreece45.marvelx.util.DEFAULT_SCREEN_PADDING
 import com.alexgreece45.marvelx.util.HSpacer
-import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.VSpacer
 import kotlinx.coroutines.coroutineScope
-import org.koin.androidx.compose.koinViewModel
+import kotlinx.coroutines.flow.Flow
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun AllCharacterComicsScreen(
-    navController: NavController,
-    viewModel: AllCharacterComicsViewModel = koinViewModel(),
+    onEventSent: (AllCharacterComicsEvent) -> Unit,
+    state: AllCharacterComicsState,
+    effect: Flow<AllCharacterComicsEffect>,
+    popBackStack: () -> Unit,
+    navigateToComicScreen: (Int) -> Unit,
     characterId: Int,
-    toolbarTitlePrefix: String
+    toolbarTitlePrefix: String,
 ) {
-    val state by viewModel.uiState.collectAsState()
     val modalBottomSheetState =
         rememberModalBottomSheetState(
             initialValue = ModalBottomSheetValue.Hidden,
@@ -68,22 +62,16 @@ fun AllCharacterComicsScreen(
         )
 
     LaunchedEffect(Unit) {
-        viewModel.setEvent(AllCharacterComicsEvent.Init(characterId = characterId))
+        onEventSent(AllCharacterComicsEvent.Init(characterId = characterId))
 
-        viewModel.uiEffect.collect { effect ->
+        effect.collect { effect ->
             when (effect) {
                 AllCharacterComicsEffect.NavigateToCharacterScreen -> {
-                    navController.popBackStack()
+                    popBackStack()
                 }
 
                 is AllCharacterComicsEffect.NavigateToComicScreen -> {
-                    navController.navigate(
-                        Screen.ComicScreen.createNavRoute(
-                            comicId = effect.comicId
-                        )
-                    ) {
-                        launchSingleTop = true
-                    }
+                    navigateToComicScreen(effect.comicId)
                 }
 
                 AllCharacterComicsEffect.BottomSheet.Hide -> {
@@ -101,29 +89,27 @@ fun AllCharacterComicsScreen(
         }
     }
 
-    ModalBottomSheet(
-        sheetState = modalBottomSheetState,
-        sheetShape = RoundedCornerShape(topStart = SPACING_SMALL.dp, topEnd = SPACING_SMALL.dp),
-        scrimColor = MaterialTheme.colors.background.copy(
-            alpha = LocalContentAlpha.current.minus(0.5f)
-        ),
+    WrapModalBottomSheetLayout(
         sheetContent = {
             SortingModalBottomSheetContent(
                 contentPadding = DEFAULT_SCREEN_PADDING,
                 selectedItem = state.sortingType,
                 onItemClick = { sortingType ->
-                    viewModel.setEvent(AllCharacterComicsEvent.Sorting.OnItemClick(sortingType))
+                    onEventSent(AllCharacterComicsEvent.Sorting.OnItemClick(sortingType))
                 },
                 onCloseClick = {
-                    viewModel.setEvent(AllCharacterComicsEvent.Sorting.OnCloseClick)
+                    onEventSent(AllCharacterComicsEvent.Sorting.OnCloseClick)
                 }
             )
-        }
+        },
+        sheetState = modalBottomSheetState,
     ) {
         ContentScreen(
             isLoading = state.isLoading,
             navigableAction = ScreenNavigableAction.Backable {
-                navController.popBackStack()
+                onEventSent(
+                    AllCharacterComicsEvent.OnBackClick
+                )
             },
             showToolbar = true,
             toolbarTitle = stringResource(
@@ -138,7 +124,7 @@ fun AllCharacterComicsScreen(
                 state.error?.let {
                     item {
                         ContentErrorScreen(errorMessage = it.errorMessage) {
-                            it.onRetryClick.invoke()
+                            it.onRetryClick()
                         }
                     }
                 }
@@ -146,7 +132,7 @@ fun AllCharacterComicsScreen(
                 if (!state.hasInternetConnection) {
                     item {
                         ContentErrorScreen(errorMessage = stringResource(R.string.no_internet_connection_error_message)) {
-                            viewModel.setEvent(AllCharacterComicsEvent.Init(characterId = characterId))
+                            onEventSent(AllCharacterComicsEvent.Init(characterId = characterId))
                         }
                     }
                 }
@@ -164,10 +150,11 @@ fun AllCharacterComicsScreen(
                             // Disables the on tap ripple effect for both single and long clicks. It also removes the background color.
                             .clickable(
                                 interactionSource = remember { MutableInteractionSource() },
-                                indication = rememberRipple(radius = 0.dp)
-                            ) {
-                                viewModel.setEvent(AllCharacterComicsEvent.OnDropDownArrowClick)
-                            },
+                                indication = null,
+                                onClick = {
+                                    onEventSent(AllCharacterComicsEvent.OnDropDownArrowClick)
+                                }
+                            ),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
@@ -192,7 +179,7 @@ fun AllCharacterComicsScreen(
                     }
                 ) { index, comicDomain ->
                     ComicItem(comic = comicDomain) {
-                        viewModel.setEvent(AllCharacterComicsEvent.OnComicClick(comicId = comicDomain.id))
+                        onEventSent(AllCharacterComicsEvent.OnComicClick(comicId = comicDomain.id))
                     }
 
                     // Adds vertical padding at the bottom of each item (except for the last item).
@@ -213,7 +200,7 @@ private fun ComicItem(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick() },
+            .clickable(onClick = onClick),
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -221,14 +208,14 @@ private fun ComicItem(
             verticalAlignment = Alignment.CenterVertically
         ) {
             AsyncImage(
+                model = ImageRequest.Builder(context)
+                    .data(comic.thumbnail.downloadUrl)
+                    .crossfade(true).build(),
+                contentDescription = comic.thumbnail.contentDescription,
                 modifier = Modifier
                     .width(85.dp)
                     .aspectRatio(ratio = 0.66f)
                     .clip(MaterialTheme.shapes.medium),
-                model = ImageRequest.Builder(context)
-                    .data(comic.thumbnail.downloadUrl)
-                    .crossfade(true).build(),
-                contentDescription = comic.thumbnail.contentDescription
             )
 
             HSpacer.Small()

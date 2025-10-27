@@ -31,7 +31,7 @@ interface AntiReverseEngineeringController {
 
 internal class AntiReverseEngineeringControllerImpl(
     private val resourceProvider: ResourceProvider,
-    private val appLoggerController: AppLoggerController
+    private val appLogger: AppLogger
 ) : AntiReverseEngineeringController {
     override fun isApplicationDexCrcValid(): Boolean {
         return try {
@@ -53,7 +53,7 @@ internal class AntiReverseEngineeringControllerImpl(
             val signature = java.util.Base64.getEncoder().encodeToString(blake2Hash)
             signature == resourceProvider.getString(R.string.dex_crc)
         } catch (e: Exception) {
-            appLoggerController.e("AntiReverseEngineeringController") { "e: $e" }
+            appLogger.e("AntiReverseEngineeringController") { "e: $e" }
             false
         }
     }

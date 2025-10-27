@@ -1,24 +1,23 @@
 package com.alexgreece45.marvelx.domain.interactors
 
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.controllers.AppLoggerController
-import com.alexgreece45.marvelx.network_logic.models_api.jwtSensitiveUserData.RequestJwtSensitiveUserData
-import com.alexgreece45.marvelx.network_logic.models_api.jwtSensitiveUserData.toJwtSensitiveUserDataDomain
-import com.alexgreece45.marvelx.network_logic.models_api.user.login.RequestUserLogin
-import com.alexgreece45.marvelx.network_logic.models_api.user.login.toUserLoginResponseDomain
-import com.alexgreece45.marvelx.network_logic.models_api.user.loginWithToken.toUserLoginWithTokenResponseDomain
-import com.alexgreece45.marvelx.network_logic.models_api.user.signup.RequestUserSignup
+import com.alexgreece45.marvelx.controllers.AppLogger
+import com.alexgreece45.marvelx.data.repository.GetJwtForSensitiveUserDataRepositoryResponse
+import com.alexgreece45.marvelx.data.repository.LoginRepositoryResponse
+import com.alexgreece45.marvelx.data.repository.PostLoginWithTokenRepositoryResponse
+import com.alexgreece45.marvelx.data.repository.RegisterRepository
+import com.alexgreece45.marvelx.data.repository.SignupRepositoryPartialState
 import com.alexgreece45.marvelx.domain.model_api.jwtSensitiveUserData.JwtSensitiveUserDataDomain
 import com.alexgreece45.marvelx.domain.model_api.user.VerificationStep
 import com.alexgreece45.marvelx.domain.model_api.user.login.LoginResponseDomain
 import com.alexgreece45.marvelx.domain.model_api.user.loginWithToken.LoginWithTokenResponseDomain
 import com.alexgreece45.marvelx.domain.model_api.user.signup.SignupDomain
 import com.alexgreece45.marvelx.domain.model_api.user.signup.toSignupDomain
-import com.alexgreece45.marvelx.data.repository.GetJwtForSensitiveUserDataRepositoryResponse
-import com.alexgreece45.marvelx.data.repository.LoginRepositoryResponse
-import com.alexgreece45.marvelx.data.repository.PostLoginWithTokenRepositoryResponse
-import com.alexgreece45.marvelx.data.repository.RegisterRepository
-import com.alexgreece45.marvelx.data.repository.SignupRepositoryPartialState
+import com.alexgreece45.marvelx.network_logic.models_api.jwtSensitiveUserData.RequestJwtSensitiveUserData
+import com.alexgreece45.marvelx.network_logic.models_api.jwtSensitiveUserData.toJwtSensitiveUserDataDomain
+import com.alexgreece45.marvelx.network_logic.models_api.user.login.toUserLoginResponseDomain
+import com.alexgreece45.marvelx.network_logic.models_api.user.loginWithToken.toUserLoginWithTokenResponseDomain
+import com.alexgreece45.marvelx.network_logic.models_api.user.signup.RequestUserSignup
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.extensions.safeAsync
 import kotlinx.coroutines.flow.Flow
@@ -29,20 +28,25 @@ interface RegisterInteractor {
     suspend fun signup(requestUserSignup: RequestUserSignup): Flow<SignupPartialState>
 
     /**
-     * The login call. Attempts to login the user by sending the given [email] and [password].
+     * The login call. Attempts to login the user by sending the given [email], [password], and
+     * [isLoggedInWithFirebase].
      */
-    suspend fun login(email: String, password: String): Flow<LoginPartialState>
+    suspend fun login(
+        email: String,
+        password: String,
+        isLoggedInWithFirebase: Boolean
+    ): Flow<LoginPartialState>
 
     suspend fun loginWithToken(): Flow<LoginWithTokenPartialState>
 
     suspend fun getJwtForSensitiveUserData(
-        userId: Int,
+        userId: String,
         verificationStep: VerificationStep
     ): Flow<GetJwtForSensitiveUserDataPartialState>
 }
 
 class RegisterInteractorImpl(
-    private val logger: AppLoggerController,
+    private val logger: AppLogger,
     private val repository: RegisterRepository,
     private val resourceProvider: ResourceProvider
 ) : RegisterInteractor {
@@ -72,7 +76,7 @@ class RegisterInteractorImpl(
 
                         val signupDomain = signupResponse.toSignupDomain()
                         if (signupDomain.verificationStep is VerificationStep.None
-                            && signupDomain.authCode.isBlank()
+                            && signupDomain.tempAuthCode.isBlank()
                         ) {
                             emit(
                                 SignupPartialState.Failed(
@@ -107,14 +111,14 @@ class RegisterInteractorImpl(
             }
         }
 
-    override suspend fun login(email: String, password: String): Flow<LoginPartialState> =
+    override suspend fun login(
+        email: String,
+        password: String,
+        isLoggedInWithFirebase: Boolean
+    ): Flow<LoginPartialState> =
         flow {
             val genericErrorMessage = resourceProvider.getGenericErrorMessage()
-            val requestUserLogin = RequestUserLogin(
-                email = email,
-                password = password
-            )
-            repository.login(requestUserLogin).collect {
+            repository.login(email, password, isLoggedInWithFirebase).collect {
                 when (it) {
                     is LoginRepositoryResponse.Failed -> {
                         emit(LoginPartialState.Failed(errorMessage = it.responseUserError.errorMessage))
@@ -199,7 +203,7 @@ class RegisterInteractorImpl(
         }
 
     override suspend fun getJwtForSensitiveUserData(
-        userId: Int,
+        userId: String,
         verificationStep: VerificationStep
     ): Flow<GetJwtForSensitiveUserDataPartialState> = flow {
         val genericErrorMessage = resourceProvider.getGenericErrorMessage()

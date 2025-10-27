@@ -18,7 +18,6 @@ import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Icon
@@ -29,7 +28,6 @@ import androidx.compose.material.Text
 import androidx.compose.material.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -40,7 +38,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -54,29 +51,35 @@ import com.alexgreece45.marvelx.ui.components.BottomNavigationBarData
 import com.alexgreece45.marvelx.ui.components.ContentErrorScreen
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.ExtendedFabData
-import com.alexgreece45.marvelx.ui.components.ModalBottomSheet
 import com.alexgreece45.marvelx.ui.components.NormalFabData
 import com.alexgreece45.marvelx.ui.components.PullRefreshable
 import com.alexgreece45.marvelx.ui.components.SearchBar
 import com.alexgreece45.marvelx.ui.components.SortingModalBottomSheetContent
+import com.alexgreece45.marvelx.ui.components.WrapModalBottomSheetLayout
 import com.alexgreece45.marvelx.ui.components.effect.DisposableEffectWithLifecycle
+import com.alexgreece45.marvelx.ui.components.effect.ObserveUiEffect
 import com.alexgreece45.marvelx.ui.components.effect.OneTimeLaunchedEffect
 import com.alexgreece45.marvelx.ui.components.isScrollingUp
-import com.alexgreece45.marvelx.ui.screens.allCharacters.uiModels.CharacterCardUi
+import com.alexgreece45.marvelx.ui.helper.openDeepLinkAction
+import com.alexgreece45.marvelx.ui.screens.allCharacters.uiModel.CharacterCardUi
+import com.alexgreece45.marvelx.ui.theme.values.customColors
 import com.alexgreece45.marvelx.util.DEFAULT_SCREEN_PADDING
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.SPACING_TINY
+import com.alexgreece45.marvelx.util.extensions.getAndRemovePendingDeepLinkAction
+import com.alexgreece45.marvelx.util.extensions.hideIfVisible
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
-import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun AllCharactersScreen(
+    onEventSent: (AllCharactersEvent) -> Unit,
+    state: AllCharactersState,
+    effect: Flow<AllCharactersEffect>,
     navigateToCharacterScreen: (characterId: Int) -> Unit,
     bottomNavigationBarData: @Composable () -> BottomNavigationBarData,
-    viewModel: AllCharactersViewModel = koinViewModel()
 ) {
-    val state by viewModel.uiState.collectAsState()
     val modalBottomSheetState = rememberModalBottomSheetState(
         initialValue = ModalBottomSheetValue.Hidden,
         confirmValueChange = { it != ModalBottomSheetValue.Hidden },
@@ -92,16 +95,17 @@ fun AllCharactersScreen(
     val keyboard = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
 
+    LaunchedEffect(Unit) {
+        onEventSent(AllCharactersEvent.Init(context.getAndRemovePendingDeepLinkAction()))
+    }
+
     LaunchedEffect(initLock) {
         if (!state.isFirstLaunch) {
-            viewModel.setEvent(AllCharactersEvent.LoadFavoriteCharacters)
+            onEventSent(AllCharactersEvent.LoadFavoriteCharacters)
         }
     }
 
-    DisposableEffectWithLifecycle(
-        lifecycleOwner = LocalLifecycleOwner.current,
-        lifecycleEvent = Lifecycle.Event.ON_START
-    ) {
+    DisposableEffectWithLifecycle(lifecycleEvent = Lifecycle.Event.ON_START) {
         // Hides the bottom sheet when the screen initializes. This allows the previously opened
         // bottom sheet to be hidden.
         coroutineScope.launch {
@@ -109,75 +113,66 @@ fun AllCharactersScreen(
         }
     }
 
-    OneTimeLaunchedEffect {
-        viewModel.setEvent(AllCharactersEvent.Init)
-    }
+    ObserveUiEffect(flow = effect) { uiEffect ->
+        when (uiEffect) {
+            is AllCharactersEffect.Navigation.NavigateToCharacterScreen -> {
+                initLock = Unit
+                navigateToCharacterScreen(uiEffect.characterId)
+            }
 
-    LaunchedEffect(Unit) {
-        viewModel.uiEffect.collect { effect ->
-            when (effect) {
-                is AllCharactersEffect.Navigation.NavigateToCharacterScreen -> {
-                    initLock = Unit
-                    navigateToCharacterScreen(effect.characterId)
-                }
+            is AllCharactersEffect.FavoriteCharacter.Success -> {
+                Toast.makeText(context, uiEffect.successMessage, Toast.LENGTH_SHORT).show()
+            }
 
-                is AllCharactersEffect.FavoriteCharacter.Success -> {
-                    Toast.makeText(context, effect.successMessage, Toast.LENGTH_SHORT).show()
-                }
+            is AllCharactersEffect.FavoriteCharacter.Error -> {
+                Toast.makeText(context, uiEffect.errorMessage, Toast.LENGTH_SHORT).show()
+            }
 
-                is AllCharactersEffect.FavoriteCharacter.Error -> {
-                    Toast.makeText(context, effect.errorMessage, Toast.LENGTH_SHORT).show()
-                }
+            is AllCharactersEffect.UnFavoriteCharacter.Error -> {
+                Toast.makeText(context, uiEffect.errorMessage, Toast.LENGTH_SHORT).show()
+            }
 
-                is AllCharactersEffect.UnFavoriteCharacter.Error -> {
-                    Toast.makeText(context, effect.errorMessage, Toast.LENGTH_SHORT).show()
-                }
+            is AllCharactersEffect.UnFavoriteCharacter.Success -> {
+                Toast.makeText(context, uiEffect.successMessage, Toast.LENGTH_SHORT).show()
+            }
 
-                is AllCharactersEffect.UnFavoriteCharacter.Success -> {
-                    Toast.makeText(context, effect.successMessage, Toast.LENGTH_SHORT).show()
+            AllCharactersEffect.SortingBottomSheet.Hide -> {
+                coroutineScope.launch {
+                    modalBottomSheetState.hideIfVisible()
                 }
+            }
 
-                AllCharactersEffect.SortingBottomSheet.Hide -> {
-                    coroutineScope.launch {
-                        modalBottomSheetState.hide()
-                    }
+            AllCharactersEffect.SortingBottomSheet.Show -> {
+                coroutineScope.launch {
+                    modalBottomSheetState.show()
                 }
+            }
 
-                AllCharactersEffect.SortingBottomSheet.Show -> {
-                    coroutineScope.launch {
-                        modalBottomSheetState.show()
-                    }
-                }
+            AllCharactersEffect.CloseKeyboardAndRemoveFocus -> {
+                keyboard?.hide()
+                focusManager.clearFocus()
+            }
 
-                AllCharactersEffect.CloseKeyboardAndRemoveFocus -> {
-                    keyboard?.hide()
-                    focusManager.clearFocus()
-                }
+            is AllCharactersEffect.Navigation.OpenDeepLinkAction -> {
+                openDeepLinkAction(uiEffect.navController, uiEffect.deepLinkAction)
             }
         }
     }
 
-    ModalBottomSheet(
-        sheetState = modalBottomSheetState,
-        sheetShape = RoundedCornerShape(
-            topStart = SPACING_SMALL.dp,
-            topEnd = SPACING_SMALL.dp
-        ),
-        scrimColor = MaterialTheme.colors.background.copy(
-            alpha = 0.5f
-        ),
+    WrapModalBottomSheetLayout(
         sheetContent = {
             SortingModalBottomSheetContent(
                 contentPadding = DEFAULT_SCREEN_PADDING,
                 selectedItem = state.sortingType,
                 onItemClick = { sortingType ->
-                    viewModel.setEvent(AllCharactersEvent.Sorting.OnItemClick(sortingType))
+                    onEventSent(AllCharactersEvent.Sorting.OnItemClick(sortingType))
                 },
                 onCloseClick = {
-                    viewModel.setEvent(AllCharactersEvent.Sorting.OnCloseClick)
+                    onEventSent(AllCharactersEvent.Sorting.OnCloseClick)
                 }
             )
-        }
+        },
+        sheetState = modalBottomSheetState,
     ) {
         ContentScreen(
             isLoading = state.isLoading,
@@ -192,7 +187,7 @@ fun AllCharactersScreen(
                         iconResource = R.drawable.ic_filter,
                         backgroundColor = null,
                         contentColor = null,
-                        onClick = { viewModel.setEvent(AllCharactersEvent.OnFabClick) }
+                        onClick = { onEventSent(AllCharactersEvent.OnFabClick) }
                     )
                 )
             } else null
@@ -205,75 +200,74 @@ fun AllCharactersScreen(
                     item {
                         ContentErrorScreen(
                             errorMessage = error.errorMessage,
-                            onRetryClick = {
-                                error.onRetryClick.invoke()
-                            }
+                            onRetryClick = error.onRetryClick
                         )
                     }
                 }
-            } ?: run {
-                PullRefreshable(
-                    onRefresh = { viewModel.setEvent(AllCharactersEvent.OnRefresh) },
-                    isRefreshing = state.isLoading
+                return@ContentScreen
+            }
+
+            PullRefreshable(
+                onRefresh = { onEventSent(AllCharactersEvent.OnRefresh) },
+                isRefreshing = state.isLoading
+            ) {
+                LazyVerticalGrid(
+                    modifier = Modifier.fillMaxSize(),
+                    columns = GridCells.Fixed(2),
+                    state = lazyGridState,
+                    contentPadding = contentPadding,
+                    verticalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp),
+                    horizontalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp)
                 ) {
-                    LazyVerticalGrid(
-                        modifier = Modifier.fillMaxSize(),
-                        columns = GridCells.Fixed(2),
-                        state = lazyGridState,
-                        contentPadding = contentPadding,
-                        verticalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp),
-                        horizontalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp)
-                    ) {
-                        item(span = { GridItemSpan(2) }) {
-                            SearchBar(
-                                searchTerm = state.searchBarTerm,
-                                hint = stringResource(R.string.all_characters_screen_search_bar_hint),
-                                onValueChange = { newSearchTerm ->
-                                    viewModel.setEvent(
-                                        AllCharactersEvent.SearchBar.OnKeyboardType(
-                                            searchTerm = newSearchTerm
-                                        )
+                    item(span = { GridItemSpan(2) }) {
+                        SearchBar(
+                            searchTerm = state.searchBarTerm,
+                            hint = stringResource(R.string.all_characters_screen_search_bar_hint),
+                            onValueChange = { newSearchTerm ->
+                                onEventSent(
+                                    AllCharactersEvent.SearchBar.OnKeyboardType(
+                                        searchTerm = newSearchTerm
                                     )
-                                },
-                                onCloseClick = {
-                                    viewModel.setEvent(AllCharactersEvent.SearchBar.OnCloseClick)
-                                }
+                                )
+                            },
+                            onCloseClick = {
+                                onEventSent(AllCharactersEvent.SearchBar.OnCloseClick)
+                            }
+                        )
+                    }
+
+                    // If the search term does not match any character's name.
+                    if (state.filteredCharacters.isEmpty()) {
+                        item(span = { GridItemSpan(2) }) {
+                            Text(
+                                text = stringResource(R.string.all_characters_screen_error_no_characters_found_search),
+                                style = MaterialTheme.typography.h6
                             )
                         }
+                    }
 
-                        // If the search term does not match any character's name.
-                        if (state.filteredCharacters.isEmpty()) {
-                            item(span = { GridItemSpan(2) }) {
-                                Text(
-                                    text = stringResource(R.string.all_characters_screen_error_no_characters_found_search),
-                                    style = MaterialTheme.typography.h6
+                    items(
+                        items = state.filteredCharacters,
+                        key = { characterCardUi ->
+                            characterCardUi.id
+                        }
+                    ) { characterCardUi ->
+                        CharacterItem(
+                            character = characterCardUi,
+                            context = context,
+                            onClick = {
+                                onEventSent(
+                                    AllCharactersEvent.OnCharacterClick(characterId = characterCardUi.id)
+                                )
+                            },
+                            onFavoriteClick = {
+                                onEventSent(
+                                    AllCharactersEvent.OnHeartClick(
+                                        characterId = characterCardUi.id
+                                    )
                                 )
                             }
-                        }
-
-                        items(
-                            items = state.filteredCharacters,
-                            key = { characterCardUi ->
-                                characterCardUi.id
-                            }
-                        ) { characterCardUi ->
-                            CharacterItem(
-                                character = characterCardUi,
-                                context = context,
-                                onClick = {
-                                    viewModel.setEvent(
-                                        AllCharactersEvent.OnCharacterClick(characterId = characterCardUi.id)
-                                    )
-                                },
-                                onFavoriteClick = {
-                                    viewModel.setEvent(
-                                        AllCharactersEvent.OnHeartClick(
-                                            characterId = characterCardUi.id
-                                        )
-                                    )
-                                }
-                            )
-                        }
+                        )
                     }
                 }
             }
@@ -312,15 +306,15 @@ private fun CharacterItem(
 
             // Favorite icon.
             IconButton(
-                modifier = Modifier.align(Alignment.TopEnd),
-                onClick = onFavoriteClick
+                onClick = onFavoriteClick,
+                modifier = Modifier.align(Alignment.TopEnd)
             ) {
                 when (character.isFavorite) {
                     true -> {
                         Icon(
                             painter = painterResource(R.drawable.ic_favorite_filled),
                             contentDescription = stringResource(R.string.all_characters_screen_favorite_character_icon_description),
-                            tint = MaterialTheme.colors.primaryVariant
+                            tint = MaterialTheme.customColors.genericRed
                         )
                     }
 
@@ -328,7 +322,7 @@ private fun CharacterItem(
                         Icon(
                             painter = painterResource(R.drawable.ic_favorite_empty),
                             contentDescription = stringResource(R.string.all_characters_screen_not_favorite_character_icon_description),
-                            tint = MaterialTheme.colors.primaryVariant
+                            tint = MaterialTheme.customColors.genericRed
                         )
                     }
                 }

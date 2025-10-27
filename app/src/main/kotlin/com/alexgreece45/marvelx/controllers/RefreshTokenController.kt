@@ -26,7 +26,7 @@ interface RefreshTokenController {
 class RefreshTokenControllerImpl(
     private val resourceProvider: ResourceProvider,
     private val configLogic: ConfigLogic,
-    private val logger: AppLoggerController
+    private val logger: AppLogger
 ) : RefreshTokenController {
     override fun startWorker() {
         try {

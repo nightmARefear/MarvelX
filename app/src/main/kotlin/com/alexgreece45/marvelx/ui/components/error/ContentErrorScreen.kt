@@ -1,5 +1,6 @@
 package com.alexgreece45.marvelx.ui.components.error
 
+import android.content.res.Configuration
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -24,11 +25,11 @@ import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.ui.components.ContainedButton
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
+import com.alexgreece45.marvelx.ui.components.WrapButton
 import com.alexgreece45.marvelx.ui.components.WrapOutlinedButton
-import com.alexgreece45.marvelx.ui.components.models.ErrorButtonLayout
+import com.alexgreece45.marvelx.ui.components.model.ErrorButtonLayout
 import com.alexgreece45.marvelx.util.SPACING_MEDIUM
 import com.alexgreece45.marvelx.util.VSpacer
 
@@ -71,15 +72,12 @@ fun ContentErrorScreen(
         } ?: ScreenNavigableAction.None,
         showToolbar = true,
         stickyBottom = {
-            Column(
-                verticalArrangement = Arrangement.spacedBy(SPACING_MEDIUM.dp)
-            ) {
+            Column(verticalArrangement = Arrangement.spacedBy(SPACING_MEDIUM.dp)) {
                 when (errorButtonLayout) {
                     is ErrorButtonLayout.Single -> {
-                        ContainedButton(
+                        WrapButton(
                             onClick = errorButtonLayout.onPrimaryButtonClicked,
-                            modifier = Modifier
-                                .fillMaxWidth(),
+                            modifier = Modifier.fillMaxWidth(),
                             enabled = true
                         ) {
                             Text(
@@ -91,10 +89,9 @@ fun ContentErrorScreen(
                     }
 
                     is ErrorButtonLayout.Double -> {
-                        ContainedButton(
+                        WrapButton(
                             onClick = errorButtonLayout.onPrimaryButtonClicked,
-                            modifier = Modifier
-                                .fillMaxWidth(),
+                            modifier = Modifier.fillMaxWidth(),
                             enabled = true
                         ) {
                             Text(
@@ -148,7 +145,7 @@ fun ContentErrorScreen(
 }
 
 @Composable
-private fun ContentErrorScreenHeader(
+fun ContentErrorScreenHeader(
     title: String,
     subtitle: String
 ) {
@@ -176,7 +173,8 @@ private fun ContentErrorScreenHeader(
 @Preview(
     apiLevel = 34,
     showBackground = true,
-    showSystemUi = true
+    showSystemUi = true,
+    uiMode = Configuration.UI_MODE_NIGHT_YES or Configuration.UI_MODE_TYPE_NORMAL
 )
 @Composable
 private fun ContentErrorScreenPreview() {

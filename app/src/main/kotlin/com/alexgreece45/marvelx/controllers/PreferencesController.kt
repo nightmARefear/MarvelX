@@ -4,9 +4,9 @@ import android.content.SharedPreferences
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKeys
 import com.alexgreece45.marvelx.BuildConfig
-import com.alexgreece45.marvelx.util.constants.ConstantsPrefs
 import com.alexgreece45.marvelx.domain.model_api.user.postLogin.SignData
 import com.alexgreece45.marvelx.util.ResourceProvider
+import com.alexgreece45.marvelx.util.constants.ConstantsPrefs
 import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException
 import java.time.Instant
@@ -106,7 +106,7 @@ interface PrefKeys {
     fun containsUserCredentials(): Boolean
     fun containsUserAuthData(): Boolean
 
-    fun getUserId(): Int
+    fun getUserId(): String
     fun getUserAuthData(): String
 
     /**
@@ -120,7 +120,7 @@ interface PrefKeys {
      */
     fun isUserLoggedIn(): Boolean
 
-    fun setUserId(userId: Int)
+    fun setUserId(userId: String)
     fun setUserAuthData(userAuthData: String)
 
     /**
@@ -159,7 +159,7 @@ interface PrefKeys {
 
 class PrefKeysImpl(
     private val preferencesController: PreferencesController,
-    private val logger: AppLoggerController
+    private val logger: AppLogger
 ) : PrefKeys {
 
     override fun containsUserId(): Boolean =
@@ -169,8 +169,8 @@ class PrefKeysImpl(
     override fun containsUserAuthData(): Boolean =
         preferencesController.containsKey("UserAuthData")
 
-    override fun getUserId(): Int =
-        preferencesController.getInt(BuildConfig.ENCRYPTED_SHARED_PREFERENCES_KEY_USER_ID, -1)
+    override fun getUserId(): String =
+        preferencesController.getString(BuildConfig.ENCRYPTED_SHARED_PREFERENCES_KEY_USER_ID, "")
 
     override fun getUserAuthData(): String =
         preferencesController.getString("UserAuthData", "{}")
@@ -181,10 +181,10 @@ class PrefKeysImpl(
     override fun isUserLoggedIn(): Boolean =
         preferencesController.getBoolean("isUserLoggedIn", false)
 
-    override fun setUserId(userId: Int) =
-        preferencesController.setInt(
-            BuildConfig.ENCRYPTED_SHARED_PREFERENCES_KEY_USER_ID,
-            userId
+    override fun setUserId(userId: String) =
+        preferencesController.setString(
+            key = BuildConfig.ENCRYPTED_SHARED_PREFERENCES_KEY_USER_ID,
+            value = userId
         ).also { logger.d { "(setUserId) user_id = $userId" } }
 
     override fun setUserAuthData(userAuthData: String) =
@@ -214,7 +214,7 @@ class PrefKeysImpl(
                 )
             )
         } catch (e: DateTimeParseException) {
-            logger.e("PrefKeys") { "Auto logout timestamp is null." }
+            logger.e("PrefKeys") { "Auto logout timestamp could not be parsed." }
             null
         }
         set(value) {

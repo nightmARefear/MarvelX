@@ -1,6 +1,7 @@
 package com.alexgreece45.marvelx.ui.screens.allCharacters
 
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.NavController
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.database.FavoriteCharacterEntity
 import com.alexgreece45.marvelx.domain.interactors.CharacterInteractor
@@ -15,14 +16,16 @@ import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
 import com.alexgreece45.marvelx.mvi.BaseViewModel
 import com.alexgreece45.marvelx.ui.components.SortingType
-import com.alexgreece45.marvelx.ui.screens.allCharacters.uiModels.CharacterCardUi
-import com.alexgreece45.marvelx.ui.screens.allCharacters.uiModels.toFavoriteCharacterEntity
+import com.alexgreece45.marvelx.ui.helper.model.DeepLinkAction
+import com.alexgreece45.marvelx.ui.navigation.router.RouterHost
+import com.alexgreece45.marvelx.ui.screens.allCharacters.model.AllCharactersScreenErrorView
+import com.alexgreece45.marvelx.ui.screens.allCharacters.uiModel.CharacterCardUi
+import com.alexgreece45.marvelx.ui.screens.allCharacters.uiModel.toFavoriteCharacterEntity
 import com.alexgreece45.marvelx.util.ResourceProvider
-import com.alexgreece45.marvelx.ui.screens.allCharacters.models.AllCharactersScreenErrorView
 import kotlinx.coroutines.launch
 
 sealed interface AllCharactersEvent : BaseEvent {
-    data object Init : AllCharactersEvent
+    data class Init(val deepLinkAction: DeepLinkAction?) : AllCharactersEvent
 
     /**
      * Pull to refresh.
@@ -50,6 +53,10 @@ sealed interface AllCharactersEvent : BaseEvent {
 sealed interface AllCharactersEffect : BaseEffect {
     sealed interface Navigation : AllCharactersEffect {
         data class NavigateToCharacterScreen(val characterId: Int) : Navigation
+        data class OpenDeepLinkAction(
+            val navController: NavController,
+            val deepLinkAction: DeepLinkAction
+        ) : Navigation
     }
 
     sealed interface FavoriteCharacter : AllCharactersEffect {
@@ -98,7 +105,8 @@ data class AllCharactersState(
 
 class AllCharactersViewModel(
     private val interactor: CharacterInteractor,
-    private val resourceProvider: ResourceProvider
+    private val resourceProvider: ResourceProvider,
+    private val routerHost: RouterHost,
 ) : BaseViewModel<AllCharactersEvent, AllCharactersState, AllCharactersEffect>() {
     override fun setInitialState(): AllCharactersState =
         AllCharactersState(
@@ -113,8 +121,17 @@ class AllCharactersViewModel(
 
     override fun handleEvents(event: AllCharactersEvent) {
         when (event) {
-            AllCharactersEvent.Init -> {
-                initView()
+            is AllCharactersEvent.Init -> {
+                if (event.deepLinkAction != null) {
+                    setEffect {
+                        AllCharactersEffect.Navigation.OpenDeepLinkAction(
+                            navController = routerHost.getNavController(),
+                            deepLinkAction = event.deepLinkAction
+                        )
+                    }
+                } else {
+                    initView()
+                }
             }
 
             AllCharactersEvent.OnRefresh -> {

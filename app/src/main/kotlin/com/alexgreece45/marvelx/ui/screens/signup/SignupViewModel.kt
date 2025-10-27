@@ -6,28 +6,29 @@ import com.alexgreece45.marvelx.controllers.AuthController
 import com.alexgreece45.marvelx.controllers.PrefKeys
 import com.alexgreece45.marvelx.controllers.RefreshTokenController
 import com.alexgreece45.marvelx.controllers.WebsocketController
-import com.alexgreece45.marvelx.domain.model_api.otp.OtpFlowType
-import com.alexgreece45.marvelx.domain.model_api.user.VerificationStep
-import com.alexgreece45.marvelx.network_logic.models_api.user.Gender
-import com.alexgreece45.marvelx.network_logic.models_api.user.signup.RequestUserSignup
+import com.alexgreece45.marvelx.domain.interactors.AuthorizePartialState
 import com.alexgreece45.marvelx.domain.interactors.GrandNewAccessTokenPartialState
 import com.alexgreece45.marvelx.domain.interactors.LoginInteractor
 import com.alexgreece45.marvelx.domain.interactors.PostLoginPartialState
-import com.alexgreece45.marvelx.domain.interactors.SignupPartialState
 import com.alexgreece45.marvelx.domain.interactors.RegisterInteractor
-import com.alexgreece45.marvelx.domain.model_api.user.signup.SignupDomain
+import com.alexgreece45.marvelx.domain.interactors.SignupPartialState
+import com.alexgreece45.marvelx.domain.model_api.otp.OtpFlowType
+import com.alexgreece45.marvelx.domain.model_api.user.VerificationStep
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
 import com.alexgreece45.marvelx.mvi.BaseViewModel
+import com.alexgreece45.marvelx.network_logic.models_api.user.Gender
+import com.alexgreece45.marvelx.network_logic.models_api.user.signup.RequestUserSignup
+import com.alexgreece45.marvelx.ui.helper.FieldValidationRules
 import com.alexgreece45.marvelx.util.Form
 import com.alexgreece45.marvelx.util.FormValidator
 import com.alexgreece45.marvelx.util.FormsValidationResult
 import com.alexgreece45.marvelx.util.ResourceProvider
-import com.alexgreece45.marvelx.util.Rule
 import com.alexgreece45.marvelx.util.SecurityUtil
 import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.launch
+import kotlin.coroutines.CoroutineContext
 
 sealed class SignupEvent : BaseEvent {
     sealed class GenderDropdownMenu : SignupEvent() {
@@ -42,12 +43,12 @@ sealed class SignupEvent : BaseEvent {
 
         data class LastName(val lastName: String) : FieldValueChange()
 
-        data class Gender(val gender: com.alexgreece45.marvelx.network_logic.models_api.user.Gender) :
+        data class GenderDropDown(val gender: Gender) :
             FieldValueChange()
 
-        data class Email(val email: String?) : FieldValueChange()
+        data class Email(val email: String) : FieldValueChange()
 
-        data class Password(val password: String?) : FieldValueChange()
+        data class Password(val password: String) : FieldValueChange()
     }
 
     sealed class AlertDialogError : SignupEvent() {
@@ -105,7 +106,7 @@ sealed class SignupEffect : BaseEffect {
     sealed class Navigation : SignupEffect() {
         data object NavigateToAllCharactersScreen : Navigation()
         data class NavigateToOtpScreen(
-            val userId: Int,
+            val userId: String,
             val otpFlowType: String = OtpFlowType.Register.key,
             val verificationStep: String,
             val shouldRememberUserSession: Boolean
@@ -127,7 +128,9 @@ class SignupViewModel(
     private val websocketController: WebsocketController,
     private val refreshTokenController: RefreshTokenController,
     private val loginInteractor: LoginInteractor,
-    private val authController: AuthController
+    private val authController: AuthController,
+    private val fieldValidationRules: FieldValidationRules,
+    private val defaultDispatcher: CoroutineContext,
 ) : BaseViewModel<SignupEvent, SignupState, SignupEffect>() {
 
     override fun setInitialState(): SignupState =
@@ -171,7 +174,7 @@ class SignupViewModel(
                 validateLastName(lastName = event.lastName)
             }
 
-            is SignupEvent.FieldValueChange.Gender -> {
+            is SignupEvent.FieldValueChange.GenderDropDown -> {
                 setState {
                     copy(
                         gender = event.gender,
@@ -184,7 +187,7 @@ class SignupViewModel(
             is SignupEvent.FieldValueChange.Email -> {
                 setState {
                     copy(
-                        email = event.email.orEmpty()
+                        email = event.email
                     )
                 }
                 validateEmail(email = event.email)
@@ -193,7 +196,7 @@ class SignupViewModel(
             is SignupEvent.FieldValueChange.Password -> {
                 setState {
                     copy(
-                        password = event.password.orEmpty()
+                        password = event.password
                     )
                 }
                 validatePassword(password = event.password)
@@ -247,7 +250,7 @@ class SignupViewModel(
 
     private fun validateFirstName(firstName: String) {
         viewModelScope.launch {
-            formValidator.validateForms(listOf(Form(mapOf(getFirstNameValidationRules() to firstName))))
+            formValidator.validateForms(listOf(Form(mapOf(fieldValidationRules.getFirstNameValidationRules() to firstName))))
                 .collect { formsValidationResult ->
                     setState {
                         copy(
@@ -266,7 +269,7 @@ class SignupViewModel(
 
     private fun validateLastName(lastName: String) {
         viewModelScope.launch {
-            formValidator.validateForms(listOf(Form(mapOf(getLastNameValidationRules() to lastName))))
+            formValidator.validateForms(listOf(Form(mapOf(fieldValidationRules.getLastNameValidationRules() to lastName))))
                 .collect { formsValidationResult ->
                     setState {
                         copy(
@@ -287,7 +290,7 @@ class SignupViewModel(
     private fun validateGender(gender: Gender?) {
         gender?.let {
             viewModelScope.launch {
-                formValidator.validateForms(listOf(Form(mapOf(getGenderValidationRules() to gender.key))))
+                formValidator.validateForms(listOf(Form(mapOf(fieldValidationRules.getGenderValidationRules() to gender.key))))
                     .collect { formsValidationResult ->
                         setState {
                             copy(
@@ -308,7 +311,7 @@ class SignupViewModel(
     private fun validateEmail(email: String?) {
         email?.let {
             viewModelScope.launch {
-                formValidator.validateForms(listOf(Form(mapOf(getEmailValidationRules() to email))))
+                formValidator.validateForms(listOf(Form(mapOf(fieldValidationRules.getEmailValidationRules() to email))))
                     .collect { formsValidationResult ->
                         setState {
                             copy(
@@ -329,7 +332,7 @@ class SignupViewModel(
     private fun validatePassword(password: String?) {
         password?.let {
             viewModelScope.launch {
-                formValidator.validateForms(listOf(Form(mapOf(getPasswordValidationRules() to password))))
+                formValidator.validateForms(listOf(Form(mapOf(fieldValidationRules.getPasswordValidationRules() to password))))
                     .collect { formsValidationResult ->
                         setState {
                             copy(
@@ -393,7 +396,7 @@ class SignupViewModel(
                                         }
 
                                         VerificationStep.None -> {
-                                            postSuccessfulSignup(signupResponseDomain)
+                                            postSuccessfulSignup(signupResponseDomain.tempAuthCode)
                                         }
 
                                         VerificationStep.OtpEmail -> {
@@ -433,132 +436,36 @@ class SignupViewModel(
         }
     }
 
-    private fun areAllFieldsValid(): Boolean {
-        if (currentState.firstName.isBlank()) return false
-        if (currentState.lastName.isBlank()) return false
-        if (currentState.gender == null) return false
-        if (currentState.email.isBlank()) return false
-        if (currentState.password.isBlank()) return false
-
-        if (!currentState.firstNameValidationResult.isValid) return false
-        if (!currentState.lastNameValidationResult.isValid) return false
-        if (!currentState.genderValidationResult.isValid) return false
-        if (!currentState.emailValidationResult.isValid) return false
-        if (!currentState.passwordValidationResult.isValid) return false
-
-        return true
-    }
-
-    private fun getFirstNameValidationRules(): List<Rule> {
-        val minLength = 2
-        val maxLength = 50
-        return listOf(
-            Rule.ValidateNotBlank(errorMessage = resourceProvider.getString(R.string.sign_up_screen_input_field_error_blank_first_name)),
-            Rule.ValidateStringMinLength(
-                length = minLength,
-                errorMessage = resourceProvider.getString(
-                    R.string.sign_up_screen_input_field_error_min_length_first_name,
-                    minLength
-                )
-            ),
-            Rule.ValidateStringMaxLength(
-                length = maxLength,
-                errorMessage = resourceProvider.getString(
-                    R.string.sign_up_screen_input_field_error_max_length_first_name,
-                    maxLength
-                )
-            )
-        )
-    }
-
-    private fun getLastNameValidationRules(): List<Rule> {
-        val minLength = 2
-        val maxLength = 50
-        return listOf(
-            Rule.ValidateNotBlank(errorMessage = resourceProvider.getString(R.string.sign_up_screen_input_field_error_blank_last_name)),
-            Rule.ValidateStringMinLength(
-                length = minLength,
-                errorMessage = resourceProvider.getString(
-                    R.string.sign_up_screen_input_field_error_min_length_last_name,
-                    minLength
-                )
-            ),
-            Rule.ValidateStringMaxLength(
-                length = maxLength,
-                errorMessage = resourceProvider.getString(
-                    R.string.sign_up_screen_input_field_error_max_length_last_name,
-                    maxLength
-                )
-            )
-        )
-    }
-
-    private fun getGenderValidationRules(): List<Rule> =
-        listOf(
-            Rule.ValidateGender(
-                errorMessage = resourceProvider.getString(R.string.sign_up_screen_input_field_error_blank_gender)
-            )
-        )
-
-    private fun getEmailValidationRules(): List<Rule> {
-        val minLength = 5
-        val maxLength = 100
-        return listOf(
-            Rule.ValidateNotBlank(
-                errorMessage = resourceProvider.getString(R.string.sign_up_screen_input_field_error_blank_email)
-            ),
-            Rule.ValidateStringMinLength(
-                length = minLength,
-                errorMessage = resourceProvider.getString(
-                    R.string.sign_up_screen_input_field_error_min_length_email,
-                    minLength
-                )
-            ),
-            Rule.ValidateStringMaxLength(
-                length = maxLength,
-                errorMessage = resourceProvider.getString(
-                    R.string.sign_up_screen_input_field_error_max_length_email,
-                    maxLength
-                )
-            ),
-            Rule.ValidateEmail(
-                errorMessage = resourceProvider.getString(R.string.sign_up_screen_input_field_error_validate_email_email)
-            )
-        )
-    }
-
-    private fun getPasswordValidationRules(): List<Rule> {
-        val minLength = 10
-        val maxLength = 30
-        return listOf(
-            Rule.ValidateNotBlank(errorMessage = resourceProvider.getString(R.string.sign_up_screen_input_field_error_blank_password)),
-            Rule.ValidateStringMinLength(
-                length = minLength,
-                errorMessage = resourceProvider.getString(
-                    R.string.sign_up_screen_input_field_error_min_length_password,
-                    minLength
-                )
-            ),
-            Rule.ValidateStringMaxLength(
-                length = maxLength,
-                errorMessage = resourceProvider.getString(
-                    R.string.sign_up_screen_input_field_error_max_length_password,
-                    maxLength
-                )
-            )
-        )
-    }
-
     /**
      * The operations to perform after successful signup, and when the [VerificationStep] is
      * [VerificationStep.None].
      *
      * It retrieves the user tokens, signing data, and logins the user.
      */
-    private fun postSuccessfulSignup(signupDomain: SignupDomain) {
+    private fun postSuccessfulSignup(tempAuthCode: String) {
         viewModelScope.launch {
-            // Retrieve tokens.
-            loginInteractor.grandNewAccessToken(signupDomain.authCode).collect {
+            // Retrieve authorization code.
+            loginInteractor.authorize(tempAuthCode).collect {
+                when (it) {
+                    is AuthorizePartialState.Failed -> {
+                        setEffect {
+                            SignupEffect.ShowAlertDialogError(
+                                errorMessage = it.errorMessage
+                            )
+                        }
+                    }
+
+                    is AuthorizePartialState.Success -> {
+                        getAccessToken(it.authCode)
+                    }
+                }
+            }
+        }
+    }
+
+    private fun getAccessToken(authCode: String) {
+        viewModelScope.launch {
+            loginInteractor.grandNewAccessToken(authCode).collect {
                 when (it) {
                     is GrandNewAccessTokenPartialState.Failed -> {
                         setEffect {
@@ -571,7 +478,7 @@ class SignupViewModel(
                     is GrandNewAccessTokenPartialState.Success -> {
                         // Retrieve sign data.
                         loginInteractor.postLogin(authController.getAccessToken())
-                            .collect{ postLoginPartialState ->
+                            .collect { postLoginPartialState ->
                                 when (postLoginPartialState) {
                                     PostLoginPartialState.Success -> {
                                         // User is logged in.
@@ -606,13 +513,32 @@ class SignupViewModel(
         }
     }
 
+    private fun areAllFieldsValid(): Boolean {
+        if (currentState.firstName.isBlank()) return false
+        if (currentState.lastName.isBlank()) return false
+        if (currentState.gender == null) return false
+        if (currentState.email.isBlank()) return false
+        if (currentState.password.isBlank()) return false
+
+        if (!currentState.firstNameValidationResult.isValid) return false
+        if (!currentState.lastNameValidationResult.isValid) return false
+        if (!currentState.genderValidationResult.isValid) return false
+        if (!currentState.emailValidationResult.isValid) return false
+        if (!currentState.passwordValidationResult.isValid) return false
+
+        return true
+    }
+
     private suspend fun getUserSignupRequest(): RequestUserSignup =
         RequestUserSignup(
             firstName = currentState.firstName,
             lastName = currentState.lastName,
             gender = currentState.gender?.key.orEmpty(),
             email = currentState.email,
-            password = SecurityUtil.getHashedPasswordFromString(currentState.password).single()
+            password = SecurityUtil.getHashedPasswordFromString(
+                defaultDispatcher = defaultDispatcher,
+                password = currentState.password
+            ).single()
         )
 
     /**

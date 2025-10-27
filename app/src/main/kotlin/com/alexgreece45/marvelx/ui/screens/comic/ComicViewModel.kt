@@ -1,51 +1,33 @@
 package com.alexgreece45.marvelx.ui.screens.comic
 
 import androidx.lifecycle.viewModelScope
-import com.alexgreece45.marvelx.domain.model_api.comic.ComicDomain
 import com.alexgreece45.marvelx.domain.interactors.ComicInteractor
 import com.alexgreece45.marvelx.domain.interactors.GetComicPartialState
-import com.alexgreece45.marvelx.mvi.BaseEffect
-import com.alexgreece45.marvelx.mvi.BaseEvent
-import com.alexgreece45.marvelx.mvi.BaseState
 import com.alexgreece45.marvelx.mvi.BaseViewModel
+import com.alexgreece45.marvelx.ui.screens.comic.model.ComicContract
 import kotlinx.coroutines.launch
-
-sealed interface ComicEvent : BaseEvent {
-    data class InitView(val comicId: Int) : ComicEvent
-}
-
-data class ComicState(
-    val isLoading: Boolean = true,
-    val hasInternetConnection: Boolean = true,
-    val errorMessage: String? = null,
-
-    // Data.
-    val comic: ComicDomain? = null
-
-) : BaseState
-
-sealed interface ComicEffect : BaseEffect
 
 class ComicViewModel(
     private val interactor: ComicInteractor
-) : BaseViewModel<ComicEvent, ComicState, ComicEffect>() {
-    override fun setInitialState(): ComicState =
-        ComicState(
-            isLoading = true,
-            hasInternetConnection = true,
-            errorMessage = null,
-            comic = null
-        )
+) : BaseViewModel<ComicContract.Event, ComicContract.State, ComicContract.Effect>() {
+    override fun setInitialState(): ComicContract.State =
+        ComicContract.State()
 
-    override fun handleEvents(event: ComicEvent) {
+    override fun handleEvents(event: ComicContract.Event) {
         when (event) {
-            is ComicEvent.InitView -> {
+            is ComicContract.Event.Init -> {
                 setState {
                     copy(
                         isLoading = true
                     )
                 }
                 initView(comicId = event.comicId)
+            }
+
+            ComicContract.Event.OnBackClicked -> {
+                setEffect {
+                    ComicContract.Effect.PopBackStack
+                }
             }
         }
     }

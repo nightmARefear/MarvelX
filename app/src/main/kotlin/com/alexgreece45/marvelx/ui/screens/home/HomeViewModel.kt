@@ -1,6 +1,9 @@
 package com.alexgreece45.marvelx.ui.screens.home
 
+import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.domain.interactors.LoginInteractor
+import com.alexgreece45.marvelx.domain.interactors.LogoutPartialState
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
@@ -8,9 +11,10 @@ import com.alexgreece45.marvelx.mvi.BaseViewModel
 import com.alexgreece45.marvelx.ui.navigation.NavArgHelper
 import com.alexgreece45.marvelx.ui.navigation.models.NavArg
 import com.alexgreece45.marvelx.ui.navigation.models.NavArgStatus
-import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.ui.screens.home.models.HomeAlertDialogErrorType
 import com.alexgreece45.marvelx.ui.screens.home.models.HomeAlertDialogErrorView
+import com.alexgreece45.marvelx.util.ResourceProvider
+import kotlinx.coroutines.launch
 
 sealed class HomeEvent : BaseEvent {
     data object Init : HomeEvent()
@@ -20,6 +24,7 @@ sealed class HomeEvent : BaseEvent {
 }
 
 data class HomeState(
+    val isLoading: Boolean = false,
     val hasInternetConnection: Boolean = true,
     val alertDialogError: HomeAlertDialogErrorView? = null,
 ) : BaseState
@@ -30,7 +35,7 @@ sealed interface HomeEffect : BaseEffect {
         data object NavigateToLoginScreen : Navigation()
         data object NavigateToSignupScreen : Navigation()
         data class NavigateToOtpScreen(
-            val userId: Int,
+            val userId: String,
             val otpFlowType: String,
             val verificationStep: String,
             val shouldRememberUserSession: Boolean
@@ -42,19 +47,46 @@ sealed interface HomeEffect : BaseEffect {
 
 class HomeViewModel(
     private val resourceProvider: ResourceProvider,
+    private val loginInteractor: LoginInteractor
 ) : BaseViewModel<HomeEvent, HomeState, HomeEffect>() {
     override fun setInitialState(): HomeState = HomeState()
 
     override fun handleEvents(event: HomeEvent) {
         when (event) {
             is HomeEvent.Init -> {
-                when (val homeAlertDialogErrorTypeNavArg =
-                    NavArgHelper.getArgument<HomeAlertDialogErrorType>(NavArg.HomeAlertDialogErrorType)) {
+                when (NavArgHelper.getArgument<NavArg.HomeLogout>(NavArg.HomeLogout)) {
                     is NavArgStatus.Exists -> {
-                        showAlertDialog(homeAlertDialogErrorTypeNavArg.value)
+                        setState {
+                            copy(
+                                isLoading = true
+                            )
+                        }
+                        viewModelScope.launch {
+                            loginInteractor.logout().collect {
+                                when (it) {
+                                    is LogoutPartialState.Failed -> {
+                                        setState {
+                                            copy(
+                                                isLoading = false
+                                            )
+                                        }
+                                    }
+
+                                    LogoutPartialState.Success -> {
+                                        setState {
+                                            copy(
+                                                isLoading = false
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
 
-                    NavArgStatus.NotExists -> {}
+                    NavArgStatus.NotExists -> {
+                        performHomeAlertDialogErrorTypeNavArgOperations()
+                    }
                 }
             }
 
@@ -75,6 +107,17 @@ class HomeViewModel(
                     HomeEffect.Navigation.NavigateToSignupScreen
                 }
             }
+        }
+    }
+
+    private fun performHomeAlertDialogErrorTypeNavArgOperations() {
+        when (val homeAlertDialogErrorTypeNavArg =
+            NavArgHelper.getArgument<HomeAlertDialogErrorType>(NavArg.HomeAlertDialogErrorType)) {
+            is NavArgStatus.Exists -> {
+                showAlertDialog(homeAlertDialogErrorTypeNavArg.value)
+            }
+
+            NavArgStatus.NotExists -> {}
         }
     }
 

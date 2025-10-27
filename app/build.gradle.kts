@@ -4,34 +4,46 @@ import java.util.Properties
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.google.mapsplatform.secrets)
     alias(libs.plugins.ksp)
     alias(libs.plugins.kotlin.parcelize)
+    alias(libs.plugins.google.gms.google.services)
+    alias(libs.plugins.google.firebase.crashlytics)
 }
 
-// Load keystore credentials.
 val keystoreProperties = Properties()
 keystoreProperties.load(FileInputStream(rootProject.file("keystore.properties")))
 
+val deeplinkProperties = Properties()
+deeplinkProperties.load(FileInputStream(rootProject.file("deeplink.properties")))
+
 android {
-    namespace = "com.alexgreece45.marvelx"
-    compileSdk = 34
+    namespace = libs.versions.application.name.get()
+    compileSdk = libs.versions.target.sdk.get().toInt()
 
     signingConfigs {
         create("release") {
-            keyAlias = keystoreProperties["keyAlias"].toString()
-            keyPassword = keystoreProperties["keyPassword"].toString()
-            storeFile = file(keystoreProperties["storeFile"].toString())
-            storePassword = keystoreProperties["storePassword"].toString()
+            keyAlias = keystoreProperties["releaseKeyAlias"].toString()
+            keyPassword = keystoreProperties["releaseKeyPassword"].toString()
+            storeFile = file(keystoreProperties["releaseStoreFile"].toString())
+            storePassword = keystoreProperties["releaseStorePassword"].toString()
             enableV1Signing = true
             enableV2Signing = true
+        }
+
+        getByName("debug") {
+            keyAlias = keystoreProperties["debugKeyAlias"].toString()
+            keyPassword = keystoreProperties["debugKeyPassword"].toString()
+            storeFile = file(keystoreProperties["debugStoreFile"].toString())
+            storePassword = keystoreProperties["debugStorePassword"].toString()
         }
     }
 
     defaultConfig {
-        applicationId = "com.alexgreece45.marvelx"
-        minSdk = 26
-        targetSdk = 34
+        applicationId = libs.versions.application.name.get()
+        minSdk = libs.versions.min.sdk.get().toInt()
+        targetSdk = libs.versions.target.sdk.get().toInt()
         versionCode = 1
         versionName = "1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -43,17 +55,27 @@ android {
 
     buildTypes {
         getByName("release") {
-            enableUnitTestCoverage = false
             enableAndroidTestCoverage = false
+            enableUnitTestCoverage = false
             isJniDebuggable = false
             isMinifyEnabled = true
             isShrinkResources = true
 
-            manifestPlaceholders["appNameSuffix"] = ""
+            manifestPlaceholders.putAll(
+                mapOf(
+                    "appNameSuffix" to "",
+                    "deeplinkScheme" to deeplinkProperties["deeplinkScheme"].toString(),
+                    "deeplinkHost" to deeplinkProperties["releaseHost"].toString(),
+                    "deeplinkPort" to deeplinkProperties["releasePort"].toString(),
+                    "deeplinkPathAdvancedPattern" to deeplinkProperties["deeplinkPathAdvancedPattern.regexp"].toString(),
+                )
+            )
+
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+
             signingConfig = signingConfigs.getByName("release")
         }
 
@@ -62,8 +84,19 @@ android {
             isMinifyEnabled = false
             enableUnitTestCoverage = true
 
-            manifestPlaceholders["appNameSuffix"] = "[DEBUG]"
+            manifestPlaceholders.putAll(
+                mapOf(
+                    "appNameSuffix" to "[DEBUG]",
+                    "deeplinkScheme" to deeplinkProperties["deeplinkScheme"].toString(),
+                    "deeplinkHost" to deeplinkProperties["debugHost"].toString(),
+                    "deeplinkPort" to deeplinkProperties["debugPort"].toString(),
+                    "deeplinkPathAdvancedPattern" to deeplinkProperties["deeplinkPathAdvancedPattern.regexp"].toString(),
+                )
+            )
+
             versionNameSuffix = "-DEBUG"
+
+            signingConfig = signingConfigs.getByName("debug")
         }
 
         create("mock") {
@@ -71,7 +104,16 @@ android {
             isMinifyEnabled = false
             enableUnitTestCoverage = true
 
-            manifestPlaceholders["appNameSuffix"] = "[MOCK]"
+            manifestPlaceholders.putAll(
+                mapOf(
+                    "appNameSuffix" to "[MOCK]",
+                    "deeplinkScheme" to deeplinkProperties["deeplinkScheme"].toString(),
+                    "deeplinkHost" to deeplinkProperties["debugHost"].toString(),
+                    "deeplinkPort" to deeplinkProperties["debugPort"].toString(),
+                    "deeplinkPathAdvancedPattern" to deeplinkProperties["deeplinkPathAdvancedPattern.regexp"].toString(),
+                )
+            )
+
             versionNameSuffix = "-MOCK"
         }
     }
@@ -88,10 +130,6 @@ android {
 
     kotlinOptions {
         jvmTarget = JavaVersion.toVersion(libs.versions.java.version.get()).toString()
-    }
-
-    composeOptions {
-        kotlinCompilerExtensionVersion = libs.versions.compose.compiler.get()
     }
 
     packaging {
@@ -134,12 +172,18 @@ tasks.register("buildDebugApk") {
 }*/
 
 dependencies {
+    // Kotlin reflection.
     implementation(libs.kotlin.reflect)
 
+    // Compose.
     implementation(project.dependencies.platform(libs.androidx.compose.bom))
     implementation(libs.bundles.app.ui)
     debugImplementation(libs.bundles.app.ui.debug)
 
+    // QR code.
+    implementation(libs.google.zxing)
+
+    // Testing.
     testImplementation(libs.bundles.test.implementation)
     androidTestImplementation(libs.bundles.android.test.implementation)
 
@@ -178,4 +222,21 @@ dependencies {
 
     // Bouncycastle. Contains Blake2 algorithm.
     implementation(libs.bouncycastle.bcprov)
+
+    // Firebase.
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.play.services.auth)
+    implementation(platform(libs.google.firebase.bom))
+    implementation(libs.google.android.libraries.identity)
+    implementation(libs.google.firebase.analytics)
+    implementation(libs.google.firebase.crashlytics)
+    implementation(libs.google.play.services.auth)
+    implementation(libs.google.firebase.auth)
+    implementation(libs.google.firebase.firestore)
+
+    // Shimmer.
+    implementation(libs.valentinilk.shimmer)
+
+    // Image cropper.
+    implementation(libs.vanniktech.android.image.cropper)
 }

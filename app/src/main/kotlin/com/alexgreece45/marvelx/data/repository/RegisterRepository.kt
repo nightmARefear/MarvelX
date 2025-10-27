@@ -9,12 +9,12 @@ import com.alexgreece45.marvelx.network_logic.models_api.user.login.RequestUserL
 import com.alexgreece45.marvelx.network_logic.models_api.user.loginWithToken.ResponseLoginWithToken
 import com.alexgreece45.marvelx.network_logic.models_api.user.signup.ResponseSignup
 import com.alexgreece45.marvelx.network_logic.models_api.user.signup.RequestUserSignup
-import com.alexgreece45.marvelx.data.repository.helper.parseError
+import com.alexgreece45.marvelx.data.repository.helper.parseUserError
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
 interface RegisterRepository {
-    suspend fun login(requestUserLogin: RequestUserLogin): Flow<LoginRepositoryResponse>
+    suspend fun login(email: String, password: String, isLoggedInWithFirebase: Boolean): Flow<LoginRepositoryResponse>
     suspend fun loginWithToken(): Flow<PostLoginWithTokenRepositoryResponse>
     suspend fun postSignup(requestUserSignup: RequestUserSignup): Flow<SignupRepositoryPartialState>
 
@@ -28,8 +28,13 @@ interface RegisterRepository {
 class RegisterRepositoryImpl(
     private val apiClient: ApiClient
 ) : RegisterRepository {
-    override suspend fun login(requestUserLogin: RequestUserLogin): Flow<LoginRepositoryResponse> =
+    override suspend fun login(email: String, password: String, isLoggedInWithFirebase: Boolean): Flow<LoginRepositoryResponse> =
         flow {
+            val requestUserLogin = RequestUserLogin(
+                email = email,
+                password = password,
+                isLoggedInWithFirebase = isLoggedInWithFirebase
+            )
             apiClient.login(requestUserLogin).let { response ->
                 if (response.isSuccessful) {
                     emit(
@@ -40,7 +45,7 @@ class RegisterRepositoryImpl(
                 } else {
                     emit(
                         LoginRepositoryResponse.Failed(
-                            responseUserError = parseError(response)
+                            responseUserError = parseUserError(response)
                         )
                     )
                 }
@@ -59,7 +64,7 @@ class RegisterRepositoryImpl(
                 } else {
                     emit(
                         PostLoginWithTokenRepositoryResponse.Failed(
-                            responseUserError = parseError(
+                            responseUserError = parseUserError(
                                 response
                             )
                         )
@@ -80,7 +85,7 @@ class RegisterRepositoryImpl(
                 } else {
                     emit(
                         SignupRepositoryPartialState.Failed(
-                            responseUserError = parseError(response)
+                            responseUserError = parseUserError(response)
                         )
                     )
                 }
@@ -99,7 +104,7 @@ class RegisterRepositoryImpl(
                 } else {
                     emit(
                         GetJwtForSensitiveUserDataRepositoryResponse.Failed(
-                            responseUserError = parseError(response)
+                            responseUserError = parseUserError(response)
                         )
                     )
                 }

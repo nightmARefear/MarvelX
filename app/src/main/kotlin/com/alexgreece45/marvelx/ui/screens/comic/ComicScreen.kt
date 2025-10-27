@@ -10,15 +10,12 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.alexgreece45.marvelx.R
@@ -26,37 +23,38 @@ import com.alexgreece45.marvelx.domain.model_api.comic.ComicDomain
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.ItemDescription
 import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
+import com.alexgreece45.marvelx.ui.components.effect.ObserveUiEffect
+import com.alexgreece45.marvelx.ui.screens.comic.model.ComicContract
 import com.alexgreece45.marvelx.util.HSpacer
 import com.alexgreece45.marvelx.util.SPACING_TINY
 import com.alexgreece45.marvelx.util.VSpacer
-import org.koin.androidx.compose.koinViewModel
+import kotlinx.coroutines.flow.Flow
 
 @Composable
 fun ComicScreen(
-    navController: NavController,
-    viewModel: ComicViewModel = koinViewModel(),
+    onEventSent: (event: ComicContract.Event) -> Unit,
+    state: ComicContract.State,
+    effect: Flow<ComicContract.Effect>,
+    popBackStack: () -> Unit,
     comicId: Int
 ) {
-    val state by viewModel.uiState.collectAsState()
-
     LaunchedEffect(Unit) {
-        viewModel.setEvent(
-            ComicEvent.InitView(
-                comicId = comicId
-            )
-        )
+        onEventSent(ComicContract.Event.Init(comicId))
+    }
 
-        viewModel.uiEffect.collect { comicEffect ->
-            when (comicEffect) {
-                else -> TODO("to be implemented")
-            }
+    ObserveUiEffect(effect) { uiEffect ->
+        when (uiEffect) {
+            ComicContract.Effect.PopBackStack -> popBackStack()
         }
     }
 
     ContentScreen(
         isLoading = state.isLoading,
+        onBack = {
+            onEventSent(ComicContract.Event.OnBackClicked)
+        },
         navigableAction = ScreenNavigableAction.Backable {
-            navController.popBackStack()
+            onEventSent(ComicContract.Event.OnBackClicked)
         },
         showToolbar = true,
         toolbarTitle = state.comic?.title.orEmpty(),
@@ -75,20 +73,18 @@ fun ComicScreen(
 
 @Composable
 private fun ComicItem(comic: ComicDomain) {
-    Column(
-        modifier = Modifier.fillMaxSize()
-    ) {
+    Column(modifier = Modifier.fillMaxSize()) {
         // Image.
         AsyncImage(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(200.dp),
             model = ImageRequest.Builder(LocalContext.current)
                 .data(comic.thumbnail.path + "." + comic.thumbnail.extension).crossfade(true)
                 .build(),
             contentDescription = "${comic.title} image",
-            contentScale = ContentScale.Fit,
-            error = painterResource(R.drawable.ic_broken_image)
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(200.dp),
+            error = painterResource(R.drawable.ic_broken_image),
+            contentScale = ContentScale.Fit
         )
 
         VSpacer.Medium()
@@ -102,36 +98,39 @@ private fun ComicItem(comic: ComicDomain) {
         VSpacer.Medium()
 
         // Pricing
-        Section(title = "Pricing Details") {
+        Section(title = stringResource(R.string.comic_screen_label_section_pricing_details)) {
             Column(
                 modifier = Modifier
                     .padding(SPACING_TINY.dp)
                     .fillMaxWidth()
             ) {
-                comic.prices.forEach { comicPriceDomain ->
+                comic.prices.forEachIndexed { index, comicPriceDomain ->
                     SectionItem(
-                        rowItem = Pair(
-                            comicPriceDomain.type.formattedName,
-                            comicPriceDomain.price.toString()
-                        )
+                        prefix = comicPriceDomain.type.formattedName,
+                        suffix = comicPriceDomain.price.toString()
                     )
-                    HSpacer.Medium() // todo: do not place in the last element
+                    if (index != comic.prices.size - 1) {
+                        HSpacer.Medium()
+                    }
                 }
             }
         }
 
         // Creators.
-        Section(title = "Creators") {
+        Section(title = stringResource(R.string.comic_screen_label_section_creators)) {
             Column(
                 modifier = Modifier
                     .padding(SPACING_TINY.dp)
                     .fillMaxWidth()
             ) {
-                comic.creators.items.forEach { creatorSummary ->
+                comic.creators.items.forEachIndexed { index, creatorSummary ->
                     SectionItem(
-                        rowItem = Pair(creatorSummary.name, creatorSummary.role)
+                        prefix = creatorSummary.name,
+                        suffix = creatorSummary.role
                     )
-                    HSpacer.Medium() // todo: do not place in the last element
+                    if (index != comic.creators.items.size - 1) {
+                        HSpacer.Medium()
+                    }
                 }
             }
         }
@@ -139,7 +138,7 @@ private fun ComicItem(comic: ComicDomain) {
 }
 
 @Composable
-fun Section(
+private fun Section(
     title: String,
     content: @Composable () -> Unit
 ) {
@@ -157,9 +156,9 @@ fun Section(
 }
 
 @Composable
-fun SectionItem(
-    rowItem: Pair<String, String>,
+private fun SectionItem(
+    prefix: String,
+    suffix: String
 ) {
-    Text(text = "${rowItem.first}: ${rowItem.second}")
-
+    Text(text = "$prefix: $suffix")
 }

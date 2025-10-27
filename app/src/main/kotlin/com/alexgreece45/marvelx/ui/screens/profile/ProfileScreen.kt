@@ -1,216 +1,548 @@
 package com.alexgreece45.marvelx.ui.screens.profile
 
+import android.content.res.Configuration
+import android.net.Uri
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Surface
 import androidx.compose.material.Text
-import androidx.compose.material.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.drawOutline
+import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.compose.rememberNavController
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.ProfileDetailsDomain
+import com.alexgreece45.marvelx.domain.model_generic.ReadFileContentData
+import com.alexgreece45.marvelx.domain.model_generic.ReloadableImageUrlData
+import com.alexgreece45.marvelx.ui.components.AlertDialogError
 import com.alexgreece45.marvelx.ui.components.BottomNavigationBarData
-import com.alexgreece45.marvelx.ui.components.ContainedButton
-import com.alexgreece45.marvelx.ui.components.ContentErrorScreen
 import com.alexgreece45.marvelx.ui.components.ContentScreen
-import com.alexgreece45.marvelx.ui.screens.login.LoginEffect
-import com.alexgreece45.marvelx.ui.screens.login.LoginEvent
-import com.alexgreece45.marvelx.ui.screens.login.LoginState
+import com.alexgreece45.marvelx.ui.components.IconData
+import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
+import com.alexgreece45.marvelx.ui.components.ToolbarAction
+import com.alexgreece45.marvelx.ui.components.WrapAsyncImage
+import com.alexgreece45.marvelx.ui.components.WrapModalBottomSheetLayout
+import com.alexgreece45.marvelx.ui.components.WrapTextButton
+import com.alexgreece45.marvelx.ui.components.effect.ObserveUiEffect
+import com.alexgreece45.marvelx.ui.components.error.ContentErrorScreen
+import com.alexgreece45.marvelx.ui.components.icons.NavigateIcon
+import com.alexgreece45.marvelx.ui.components.modalBottomSheetContents.ModalBottomSheetContentItems
+import com.alexgreece45.marvelx.ui.components.model.BottomSheetContentItem
+import com.alexgreece45.marvelx.ui.components.model.ErrorButtonLayout
+import com.alexgreece45.marvelx.ui.components.model.ShadowData
+import com.alexgreece45.marvelx.ui.components.rememberWrapModalBottomSheetState
+import com.alexgreece45.marvelx.ui.components.sections.SectionListHeader
+import com.alexgreece45.marvelx.ui.components.sections.model.SectionHeaderData
+import com.alexgreece45.marvelx.ui.helper.model.DeepLinkAction
+import com.alexgreece45.marvelx.ui.navigation.getBottomNavigationBarData
+import com.alexgreece45.marvelx.ui.screens.profile.model.ProfileBottomSheetType
+import com.alexgreece45.marvelx.ui.screens.profile.model.ProfileContract
+import com.alexgreece45.marvelx.ui.theme.MarvelXTheme
+import com.alexgreece45.marvelx.ui.theme.values.customColors
+import com.alexgreece45.marvelx.ui.theme.values.customShapes
+import com.alexgreece45.marvelx.util.FileUtil
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.VSpacer
+import com.alexgreece45.marvelx.util.constants.ConstantsUi
+import com.alexgreece45.marvelx.util.extensions.applyPadding
+import com.alexgreece45.marvelx.util.extensions.circularImageWithBorder
+import com.alexgreece45.marvelx.util.extensions.compressImage
+import com.alexgreece45.marvelx.util.extensions.getAndRemovePendingDeepLinkAction
+import com.alexgreece45.marvelx.util.extensions.hideIfVisible
+import com.alexgreece45.marvelx.util.extensions.screenPaddingsNone
+import com.alexgreece45.marvelx.util.extensions.throttledClickable
+import com.alexgreece45.marvelx.util.extensions.toCompressFormat
+import com.canhub.cropper.CropImageContract
+import com.canhub.cropper.CropImageContractOptions
+import com.canhub.cropper.CropImageOptions
+import com.canhub.cropper.CropImageView
 import kotlinx.coroutines.flow.Flow
-import org.koin.androidx.compose.koinViewModel
+import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun ProfileScreen(
-    state: ProfileState,
-    onEventSent: (event: ProfileEvent) -> Unit,
-    effect: Flow<ProfileEffect>,
-    navigateToHomeScreen: () -> Unit,
-    bottomNavigationBarData: @Composable () -> BottomNavigationBarData
+    onEventSent: (ProfileContract.Event) -> Unit,
+    state: ProfileContract.State,
+    effect: Flow<ProfileContract.Effect>,
+    bottomNavigationBarData: @Composable () -> BottomNavigationBarData,
+    onNavigation: (ProfileContract.Effect.Navigation) -> Unit,
+    openDeepLinkAction: (DeepLinkAction) -> Unit
 ) {
     val context = LocalContext.current
 
-    LaunchedEffect(Unit) {
-        onEventSent(ProfileEvent.InitView)
+    val waveShape = MaterialTheme.customShapes.waveShape
+    val waveColor = MaterialTheme.colors.surface
 
-        effect.collect { effect ->
-            when (effect) {
-                ProfileEffect.Navigation.NavigateToHomeScreen -> {
-                    navigateToHomeScreen()
-                }
+    val cropImageCoroutineScope = rememberCoroutineScope()
+    val modalBottomSheetCoroutineScope = rememberCoroutineScope()
+    val modalBottomSheetState = rememberWrapModalBottomSheetState()
 
-                is ProfileEffect.ShowToast -> {
-                    Toast.makeText(context, effect.toastMessage, Toast.LENGTH_LONG).show()
-                }
+    val singlePhotoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia(),
+        onResult = { uri ->
+            onEventSent(
+                ProfileContract.Event.ProfileImage.OnImageSelected(
+                    imageFileContentData = FileUtil.getFileContentData(
+                        uri = uri,
+                        context = context
+                    )
+                )
+            )
+        }
+    )
+
+    val cropImageLauncher = rememberLauncherForActivityResult(
+        contract = CropImageContract(),
+        onResult = { result ->
+            if (result.isSuccessful) {
+                onEventSent(
+                    ProfileContract.Event.ProfileImage.OnImageCropped(
+                        imageFileContentData = FileUtil.getFileContentData(
+                            uri = result.uriContent,
+                            context = context
+                        )
+                    )
+                )
+            } else {
+                onEventSent(ProfileContract.Event.ProfileImage.OnImageCropped(null))
             }
         }
+    )
+
+    LaunchedEffect(Unit) {
+        onEventSent(ProfileContract.Event.Init(context.getAndRemovePendingDeepLinkAction()))
     }
 
-    ContentScreen(
-        isLoading = state.isLoading,
-        showToolbar = true,
-        toolbarTitle = stringResource(R.string.profile_screen_toolbar_title),
-        bottomNavigationBarData = bottomNavigationBarData()
-    ) { paddingValues ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.Blue),
-            contentPadding = paddingValues
-        ) {
-            state.error?.let { error ->
-                item {
-                    ContentErrorScreen(
-                        errorMessage = error.errorMessage,
-                        onRetryClick = {
-                            onEventSent(error.profileEvent)
-                        }
+    ObserveUiEffect(effect) { uiEffect ->
+        when (uiEffect) {
+            is ProfileContract.Effect.Navigation -> {
+                onNavigation(uiEffect)
+            }
+
+            is ProfileContract.Effect.OpenDeepLinkAction -> {
+                openDeepLinkAction(uiEffect.deepLinkAction)
+            }
+
+            is ProfileContract.Effect.OpenPhotoPicker -> {
+                singlePhotoPickerLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+            }
+
+            is ProfileContract.Effect.OpenImageCropper -> {
+                cropImageCoroutineScope.launch {
+                    cropImageLauncher.launch(
+                        CropImageContractOptions(
+                            uri = uiEffect.imageUri,
+                            cropImageOptions = CropImageOptions(
+                                cropShape = CropImageView.CropShape.OVAL,
+                                guidelines = CropImageView.Guidelines.ON_TOUCH,
+                                autoZoomEnabled = false,
+                                multiTouchEnabled = true,
+                                maxZoom = 3,
+                                minCropResultWidth = uiEffect.imageSize,
+                                minCropResultHeight = uiEffect.imageSize,
+                                maxCropResultWidth = uiEffect.imageSize,
+                                maxCropResultHeight = uiEffect.imageSize,
+                                activityTitle = uiEffect.toolbarTitle,
+                                outputCompressQuality = 100,
+                            )
+                        )
                     )
                 }
             }
 
-            // Profile details (under construction).
-            state.profileDetails?.let { profileDetails ->
-                val N = 1
-                // Profile details (times N).
-                (1..N).forEach { _ ->
-                    item {
-                        // TODO: TO BE REMOVED!
-                        // userId
-                        Text(
-                            text = "userId: ".plus(state.userId),
-                            style = MaterialTheme.typography.h4
+            is ProfileContract.Effect.ReadCroppedImageFileContent -> {
+                val fileName = uiEffect.fileName
+
+                val compressFormat = fileName.toCompressFormat()
+                if (compressFormat == null) {
+                    onEventSent(
+                        ProfileContract.Event.ProfileImage.OnCroppedImageFileContentRead(
+                            null
                         )
-
-                        // user's token
-                        Text(
-                            text = "token: ".plus(state.accessToken.take(10).plus("...")),
-                            style = MaterialTheme.typography.h4
-                        )
-
-                        // Profile picture.
-                        // todo: add call to retrieve profile picture
-
-                        Section(title = "Personal Information", shimmer = state.isLoading) {
-                            Item(
-                                label = "Full Name",
-                                value = profileDetails.fullName,
-                                shimmer = state.isLoading
-                            )
-
-                            VSpacer.Large()
-
-                            Item(
-                                label = "Email",
-                                value = profileDetails.email,
-                                shimmer = state.isLoading
-                            )
-
-                            VSpacer.Large()
-
-                            Item(
-                                label = "Gender",
-                                value = stringResource(profileDetails.gender.label),
-                                shimmer = state.isLoading
-                            )
-                        }
-                    }
+                    )
+                    return@ObserveUiEffect
                 }
 
-                // Logout button.
-                item {
-                    Box(
-                        modifier = Modifier
-//                                .fillMaxSize()
-                            .background(Color.Red),
-                        contentAlignment = Alignment.BottomCenter
-                    ) {
-                        ContainedButton(
-                            modifier = Modifier.fillMaxWidth(),
-                            onClick = { onEventSent(ProfileEvent.OnLogoutButtonPressed) }
-                        ) {
-                            Text(
-                                text = stringResource(R.string.profile_screen_button_label_logout)
-                            )
-                        }
-                    }
+                val fileContent = FileUtil.decodeBitmapFromFileUri(context, uiEffect.fileUri)
+                    ?.compressImage(
+                        compressFormat = compressFormat
+                    )
+                if (fileContent == null) {
+                    onEventSent(
+                        ProfileContract.Event.ProfileImage.OnCroppedImageFileContentRead(
+                            null
+                        )
+                    )
+                    return@ObserveUiEffect
                 }
+
+                onEventSent(
+                    ProfileContract.Event.ProfileImage.OnCroppedImageFileContentRead(
+                        croppedImageFileReadContentData = ReadFileContentData(
+                            fileName = fileName,
+                            fileContent = fileContent
+                        )
+                    )
+                )
+            }
+
+            ProfileContract.Effect.BottomSheet.Show -> {
+                modalBottomSheetCoroutineScope.launch {
+                    modalBottomSheetState.show()
+                }
+            }
+
+            ProfileContract.Effect.BottomSheet.Hide -> {
+                modalBottomSheetCoroutineScope.launch {
+                    modalBottomSheetState.hideIfVisible()
+                }
+            }
+
+            is ProfileContract.Effect.ShowToastMessage -> {
+                Toast.makeText(context, uiEffect.message, Toast.LENGTH_SHORT).show()
             }
         }
     }
+
+    WrapModalBottomSheetLayout(
+        sheetContent = {
+            when (state.bottomSheetType) {
+                ProfileBottomSheetType.ProfileImage -> {
+                    BottomSheetProfileImage(
+                        bottomSheetContentItems = state.profileImageBottomSheetContentItems,
+                        onEventSent = onEventSent
+                    )
+                }
+
+                null -> {}
+            }
+        },
+        sheetState = modalBottomSheetState
+    ) {
+        ContentScreen(
+            isLoading = state.isLoading,
+            showToolbar = true,
+            toolbarTitle = stringResource(id = R.string.profile_screen_toolbar_title),
+            toolbarActions = listOf(
+                ToolbarAction(
+                    label = stringResource(id = R.string.content_description_settings),
+                    order = 1,
+                    iconData = IconData(
+                        iconResource = R.drawable.ic_settings,
+                        contentDescription = R.string.content_description_settings,
+                    ),
+                    onClick = {
+                        onEventSent(ProfileContract.Event.OnSettingsIconButtonClicked)
+                    }
+                )
+            ),
+            bottomNavigationBarData = bottomNavigationBarData(),
+            paddingValues = PaddingValues.Absolute()
+        ) { paddingValues ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(paddingValues)
+                    .drawBehind {
+                        drawOutline(
+                            outline = waveShape.createOutline(
+                                size = Size(width = size.width, height = size.height * 0.6f),
+                                layoutDirection = layoutDirection,
+                                density = this
+                            ),
+                            color = waveColor,
+                            style = Fill
+                        )
+                    }
+            ) {
+                // Banner.
+                ProfileBanner(
+                    welcomeMessageLabel = state.profileBannerLabel,
+                    reloadableImageUrlData = state.profileDetails?.profileImageUrlData
+                        ?: ReloadableImageUrlData(imageUrl = ""),
+                    onSeeYourProfileClicked = { onEventSent(ProfileContract.Event.OnSeeYourProfileClicked) },
+                    onProfileImageEventSent = onEventSent
+                )
+
+//            VSpacer.Custom(height = 100) // todo: to be replaced with weights
+
+                // Sections.
+                SectionListHeader(
+                    paddingValues = screenPaddingsNone().applyPadding(),
+                    sectionHeadersData = state.sections
+                )
+            }
+        }
+    }
+
+    // Cropped image result screen.
+    state.croppedImageFileContentData?.let { fileContentData ->
+        CroppedImage(
+            isLoading = state.croppedImageIsLoading,
+            imageUri = fileContentData.uri,
+            onCloseClicked = { onEventSent(ProfileContract.Event.ProfileImage.CroppedImage.OnCloseClicked) },
+            onSaveClicked = { onEventSent(ProfileContract.Event.ProfileImage.CroppedImage.OnSaveClicked) }
+        )
+    }
+
+    // Error screen.
+    state.error?.let { error ->
+        ContentErrorScreen(
+            errorTitle = error.errorTitle,
+            errorSubtitle = error.errorSubtitle,
+            onClose = { onEventSent(ProfileContract.Event.OnErrorClose) },
+            errorButtonLayout = ErrorButtonLayout.Single(
+                primaryButtonLabel = stringResource(R.string.generic_retry_button),
+                onPrimaryButtonClicked = { onEventSent(error.event) }
+            )
+        )
+    }
+
+    // Alert Dialog error.
+    state.errorAlertDialog?.let { errorAlertDialog ->
+        AlertDialogError(
+            isVisible = true,
+            title = errorAlertDialog.errorTitle,
+            errorMessage = { Text(text = errorAlertDialog.errorSubtitle) },
+            confirmButton = errorAlertDialog.alertDialogButtonPositive,
+            dismissButton = errorAlertDialog.alertDialogButtonNegative
+        )
+    }
+
+    BackHandler {
+        onEventSent(ProfileContract.Event.OnSystemBack)
+    }
 }
 
+/**
+ * The profile image bottom sheet.
+ */
 @Composable
-private fun Section(
-    title: String,
-    shimmer: Boolean,
-    content: @Composable () -> Unit
+private fun BottomSheetProfileImage(
+    bottomSheetContentItems: List<BottomSheetContentItem>,
+    onEventSent: (ProfileContract.Event) -> Unit,
+) = ModalBottomSheetContentItems(
+    bottomSheetContentItems = bottomSheetContentItems,
+    onEventSent = onEventSent
+)
+
+/**
+ * Displays the cropped version of the user-selected image. The user through this composable
+ * function can set the cropped image as their current profile image.
+ */
+@Composable
+private fun CroppedImage(
+    isLoading: Boolean,
+    imageUri: Uri,
+    onCloseClicked: () -> Unit,
+    onSaveClicked: () -> Unit
 ) {
-    Surface(
-        modifier = Modifier
-            .fillMaxWidth(),
-        shape = MaterialTheme.shapes.medium
-    ) {
+    ContentScreen(
+        isLoading = isLoading,
+        showToolbar = true,
+        toolbarTitle = stringResource(R.string.profile_screen_cropped_cropped_image_toolbar_title),
+        navigableAction = ScreenNavigableAction.Closeable(onClose = onCloseClicked),
+        toolbarActionsContent = {
+            WrapTextButton(onClick = onSaveClicked) {
+                Text(
+                    text = stringResource(R.string.profile_screen_cropped_cropped_image_label_button_save),
+                    style = MaterialTheme.typography.h6
+                )
+            }
+        }
+    ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(SPACING_SMALL.dp),
+                .padding(paddingValues),
+            verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(
-//                modifier = Modifier.shimmer(shimmer),
-                text = title,
-                textAlign = TextAlign.Center,
-                style = MaterialTheme.typography.h5
+            WrapAsyncImage(
+                imageUrl = imageUri.toString(),
+                contentDescription = stringResource(R.string.profile_screen_content_description_cropped_image_new_profile_image),
+                modifier = Modifier
+                    .size(ConstantsUi.PROFILE_IMAGE_FULL_SIZE)
+                    .clip(CircleShape),
             )
-            VSpacer.Medium()
-            content()
         }
     }
 }
 
+/**
+ * Displays the profile banner that includes the first name of the user, and their profile image.
+ */
 @Composable
-private fun Item(
-    label: String,
-    value: String,
-    shimmer: Boolean
+private fun ProfileBanner(
+    welcomeMessageLabel: String,
+    reloadableImageUrlData: ReloadableImageUrlData, // TODO: To be fixed.
+    onSeeYourProfileClicked: () -> Unit,
+    onProfileImageEventSent: (ProfileContract.Event.ProfileImage) -> Unit
 ) {
-    Column {
-        // Label.
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = ConstantsUi.PROFILE_IMAGE_NORMAL_SIZE * 0.3f),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        // Profile image.
+        Box(
+            modifier = Modifier.throttledClickable(
+                view = LocalView.current,
+                showRipple = false,
+                onClick = { onProfileImageEventSent(ProfileContract.Event.ProfileImage.OnClicked) }
+            )
+        ) {
+            // TODO: Reload image after profile image upload.
+            WrapAsyncImage(
+                imageUrl = reloadableImageUrlData.imageUrl,
+                contentDescription = stringResource(R.string.content_description_your_profile_image),
+                modifier = Modifier
+                    .size(ConstantsUi.PROFILE_IMAGE_NORMAL_SIZE)
+                    .circularImageWithBorder(
+                        borderWidth = ConstantsUi.IMAGE_BORDER_WIDTH,
+                        borderColor = MaterialTheme.customColors.genericRed
+                    ),
+                placeholder = painterResource(R.drawable.ic_person),
+                error = painterResource(R.drawable.ic_person),
+                onSuccess = { onProfileImageEventSent(ProfileContract.Event.ProfileImage.OnLoaded) },
+                onError = { onProfileImageEventSent(ProfileContract.Event.ProfileImage.OnLoaded) },
+                shadowData = ShadowData(
+                    elevation = ConstantsUi.ProfileScreen.PROFILE_IMAGE_ELEVATION,
+                    shape = CircleShape,
+                    clip = true,
+                    ambientColor = MaterialTheme.customColors.genericRed,
+                    spotColor = MaterialTheme.customColors.genericRed
+                ),
+                isCacheDisabled = true
+            )
+
+            Icon(
+                painter = painterResource(R.drawable.ic_add),
+                contentDescription = stringResource(R.string.content_description_upload_profile_image),
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(SPACING_SMALL.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colors.background)
+            )
+        }
+
+        VSpacer.Small()
+
+        // Welcome message label.
         Text(
-//            modifier = Modifier.shimmer(shimmer),
-            text = label,
-            style = MaterialTheme.typography.h6
+            text = welcomeMessageLabel,
+            style = MaterialTheme.typography.h5
         )
-        Text(
-//            modifier = Modifier.shimmer(shimmer),
-            text = value,
-            style = MaterialTheme.typography.subtitle1
-        )
+
+        // See your profile text button.
+        Row(
+            modifier = Modifier.throttledClickable(
+                view = LocalView.current,
+                onClick = onSeeYourProfileClicked,
+                showRipple = false
+            ),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = stringResource(R.string.profile_screen_profile_banner_label_see_your_profile),
+                color = MaterialTheme.customColors.genericRed,
+                style = MaterialTheme.typography.subtitle2
+            )
+
+            NavigateIcon(
+                modifier = Modifier.size(18.dp),
+                tint = MaterialTheme.customColors.genericRed
+            )
+        }
     }
 }
 
+@Preview(
+    apiLevel = 34,
+    uiMode = Configuration.UI_MODE_NIGHT_YES or Configuration.UI_MODE_TYPE_NORMAL
+)
 @Composable
-fun WrapTextField(value:String, enabled: Boolean) {
-    TextField(value = value, onValueChange = {})
+private fun ProfileScreenPreview() {
+    val profileDetails = ProfileDetailsDomain.mockSameUser()
+    MarvelXTheme {
+        ProfileScreen(
+            onEventSent = {},
+            state = ProfileContract.State(
+                isLoading = false,
+                sections = listOf(
+                    SectionHeaderData(
+                        title = stringResource(R.string.screen_settings_section_label_privacy_settings),
+                        iconData = IconData(
+                            iconResource = R.drawable.ic_privacy,
+                            contentDescription = R.string.content_description_privacy
+                        ),
+                        onClick = { }
+                    ),
+                    SectionHeaderData(
+                        title = stringResource(R.string.screen_settings_section_label_faq),
+                        iconData = IconData(
+                            iconResource = R.drawable.ic_faq,
+                            contentDescription = R.string.content_description_faq
+                        ),
+                        onClick = { }
+                    ),
+                    SectionHeaderData(
+                        title = stringResource(R.string.profile_screen_section_label_logout),
+                        iconData = IconData(
+                            iconResource = R.drawable.ic_logout,
+                            contentDescription = R.string.content_description_ic_logout
+                        ),
+                        isNavigable = false,
+                        onClick = { }
+                    ),
+                ),
+                profileBannerLabel = stringResource(
+                    R.string.profile_screen_profile_banner_label_welcome_back,
+                    profileDetails.basicProfileDetails.firstName
+                ),
+                profileDetails = profileDetails.basicProfileDetails
+            ),
+            effect = emptyFlow(),
+            bottomNavigationBarData = { getBottomNavigationBarData(navController = rememberNavController()) },
+            onNavigation = {},
+            openDeepLinkAction = {},
+        )
+    }
 }

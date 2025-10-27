@@ -38,14 +38,4 @@ object ConstantsSecurity {
     object HeaderValue {
         const val APP_USER_AGENT = "mobile"
     }
-
-    /**
-     * OAuth - related constants.
-     */
-    object OAuth {
-        const val TOKEN_CLIENT_ID = "mobile"
-        private const val TOKEN_REDIRECT_SCHEME = "marvelxbackend"
-        private const val TOKEN_REDIRECT_HOST = "oauth"
-        const val TOKEN_REDIRECT_URI = "$TOKEN_REDIRECT_SCHEME//$TOKEN_REDIRECT_HOST"
-    }
 }

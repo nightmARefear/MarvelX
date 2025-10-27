@@ -12,7 +12,7 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.alexgreece45.marvelx.ui.components.ContainedButton
+import com.alexgreece45.marvelx.ui.components.WrapButton
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.ContentScreenHeader
 import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
@@ -61,7 +61,7 @@ fun ForgotPasswordValidateEmailScreen(
         },
         showToolbar = true,
         stickyBottom = {
-            ContainedButton(
+            WrapButton(
                 onClick = { viewModel.setEvent(ForgotPasswordValidateEmailEvent.OnVerifyOtpButtonClicked) },
                 modifier = Modifier.fillMaxWidth(),
                 enabled = state.isVerifyOtpButtonEnabled

@@ -3,24 +3,27 @@ package com.alexgreece45.marvelx.domain.worker
 import android.content.Context
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import com.alexgreece45.marvelx.configuration.ConfigLogic
-import com.alexgreece45.marvelx.controllers.AppLoggerController
+import com.alexgreece45.marvelx.configuration.ConfigOauth
+import com.alexgreece45.marvelx.controllers.AppLogger
 import com.alexgreece45.marvelx.controllers.AuthController
-import com.alexgreece45.marvelx.network_logic.api.ApiClient
 import com.alexgreece45.marvelx.domain.model_api.userAuthData.UserAuthData
+import com.alexgreece45.marvelx.network_logic.clients.RefreshTokenClient
 import com.alexgreece45.marvelx.util.DateUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlin.coroutines.CoroutineContext
 
 class RefreshTokenWorker(
     context: Context,
     workerParameters: WorkerParameters,
-    private val apiClient: ApiClient,
+    private val refreshTokenClient: RefreshTokenClient,
     private val authController: AuthController,
-    private val configLogic: ConfigLogic,
-    private val logger: AppLoggerController
+    private val configOauth: ConfigOauth,
+    private val logger: AppLogger,
+    private val ioDispatcher: CoroutineContext,
 ) : CoroutineWorker(context, workerParameters) {
-    override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
+
+    override suspend fun doWork(): Result = withContext(ioDispatcher) {
         try {
             authController.getRefreshToken()?.let { refreshToken ->
                 val accessTokenExpirationUnix = authController.getAccessTokenExpiration()
@@ -35,7 +38,7 @@ class RefreshTokenWorker(
                     var result: Result
 
                     // Access token will expire within the next 20 seconds. Thus, refresh it.
-                    apiClient.refreshAccessToken(configLogic.clientId, refreshToken)
+                    refreshTokenClient.refreshAccessToken(configOauth.clientId, refreshToken)
                         .let { response ->
                             result = if (response.isSuccessful) {
                                 response.body()?.let { tokenResponse ->

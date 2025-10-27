@@ -1,8 +1,11 @@
 package com.alexgreece45.marvelx.ui.screens.mainActivity
 
+import android.net.Uri
 import androidx.lifecycle.viewModelScope
 import androidx.work.WorkManager
-import com.alexgreece45.marvelx.controllers.AppLoggerController
+import com.alexgreece45.marvelx.controllers.AppLogger
+import com.alexgreece45.marvelx.controllers.DeepLinkController
+import com.alexgreece45.marvelx.controllers.HandleDeepLinkActionResult
 import com.alexgreece45.marvelx.controllers.PrefKeys
 import com.alexgreece45.marvelx.controllers.SecurityController
 import com.alexgreece45.marvelx.controllers.WebsocketController
@@ -18,6 +21,7 @@ import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
 import com.alexgreece45.marvelx.mvi.BaseViewModel
 import com.alexgreece45.marvelx.network_logic.models_websocket.ResponseWebsocket
+import com.alexgreece45.marvelx.ui.helper.model.DeepLinkAction
 import com.alexgreece45.marvelx.ui.navigation.router.RouterHost
 import com.alexgreece45.marvelx.ui.screens.mainActivity.model.CoroutineWebSocketListener
 import com.alexgreece45.marvelx.ui.screens.mainActivity.model.WebSocketEvent
@@ -43,7 +47,15 @@ sealed class ActivityEvent : BaseEvent {
         data object OnCreate : LifecycleEvent()
         data object OnPause : LifecycleEvent()
         data object OnResume : LifecycleEvent()
-        data object OnDestroy : LifecycleEvent()
+
+        /**
+         * This event is executed when the activity is destroyed. [willBeRecreated] defines whether
+         * the activity will be recreated indicating that the onDestroy function was called due to a
+         * configuration change, and not because the user/OS closed/killed the app.
+         *
+         * If [willBeRecreated] is `true`, then the user isn't logged out.
+         */
+        data class OnDestroy(val willBeRecreated: Boolean) : LifecycleEvent()
     }
 
     /**
@@ -62,11 +74,16 @@ sealed class ActivityEvent : BaseEvent {
      * window mode, but in fact it is.
      */
     data object ApplicationInMultiWindowModeViolation : ActivityEvent()
+
+    data class OnDeepLinkReceived(val uri: Uri) : ActivityEvent()
 }
 
 data class ActivityState(val flowStarted: Boolean = false) : BaseState
 
 sealed class ActivityEffect : BaseEffect {
+    data class OpenOrCacheDeepLink(val deepLinkAction: DeepLinkAction) :
+        ActivityEffect()
+
     sealed class Navigation : ActivityEffect() {
         data class NavigateToHomeScreenWithSessionExpired(val showErrorDialog: Boolean) :
             Navigation()
@@ -79,13 +96,13 @@ sealed class ActivityEffect : BaseEffect {
 class ActivityViewModel : BaseViewModel<ActivityEvent, ActivityState, ActivityEffect>() {
 
     private val prefKeys: PrefKeys by inject()
-    private val logger: AppLoggerController by inject()
+    private val logger: AppLogger by inject()
     private val loginInteractor: LoginInteractor by inject()
     private val resourceProvider: ResourceProvider by inject()
-    private val appLoggerController: AppLoggerController by inject()
     private val websocketController: WebsocketController by inject()
     private val securityController: SecurityController by inject()
     private val routerHost: RouterHost by inject()
+    private val deepLinkController: DeepLinkController by inject()
 
     override fun setInitialState(): ActivityState = ActivityState()
 
@@ -93,7 +110,7 @@ class ActivityViewModel : BaseViewModel<ActivityEvent, ActivityState, ActivityEf
         when (event) {
             ActivityEvent.LifecycleEvent.OnCreate -> {
                 prefKeys.autoLogoutTimestamp = null
-                init()
+                setWebsocketListener()
             }
 
             ActivityEvent.LifecycleEvent.OnPause -> {
@@ -116,8 +133,10 @@ class ActivityViewModel : BaseViewModel<ActivityEvent, ActivityState, ActivityEf
                 }
             }
 
-            ActivityEvent.LifecycleEvent.OnDestroy -> {
-                onDestroy()
+            is ActivityEvent.LifecycleEvent.OnDestroy -> {
+                if (!event.willBeRecreated) {
+                    onDestroy()
+                }
             }
 
             ActivityEvent.OnUserInteraction -> {
@@ -141,13 +160,29 @@ class ActivityViewModel : BaseViewModel<ActivityEvent, ActivityState, ActivityEf
                     )
                 }
             }
+
+            is ActivityEvent.OnDeepLinkReceived -> {
+                viewModelScope.launch {
+                    deepLinkController.handleDeepLinkUri(event.uri).collect {
+                        when (it) {
+                            is HandleDeepLinkActionResult.Success -> {
+                                setEffect {
+                                    ActivityEffect.OpenOrCacheDeepLink(it.deepLinkAction)
+                                }
+                            }
+
+                            HandleDeepLinkActionResult.Failed -> {}
+                        }
+                    }
+                }
+            }
         }
     }
 
     /**
      * The actions to perform when the viewModel is instantiated.
      */
-    private fun init() {
+    private fun setWebsocketListener() {
         viewModelScope.launch {
             logger.d { "authData: ${prefKeys.getUserAuthData()}" }
             websocketController.setWebSocketListener(getWebSocketListener())
@@ -235,7 +270,7 @@ class ActivityViewModel : BaseViewModel<ActivityEvent, ActivityState, ActivityEf
     }
 
     /**
-     * Returns the websocket client responsible for handling connections, terminations, and more.
+     * Returns the websocket listener responsible for handling connections, terminations, and more.
      */
     private suspend fun getWebSocketListener(): WebSocketListener {
         val listener = CoroutineWebSocketListener()
@@ -244,11 +279,11 @@ class ActivityViewModel : BaseViewModel<ActivityEvent, ActivityState, ActivityEf
             listener.eventChannel.consumeEach { webSocketEvent ->
                 when (webSocketEvent) {
                     is WebSocketEvent.OnOpen -> {
-                        appLoggerController.d("ActivityViewModel") { "The websocket connection has been opened." }
+                        appLogger.d("ActivityViewModel") { "The websocket connection has been opened." }
                     }
 
                     is WebSocketEvent.OnMessage -> {
-                        appLoggerController.d("ActivityViewModel") { "Received message: ${webSocketEvent.text}" }
+                        appLogger.d("ActivityViewModel") { "Received message: ${webSocketEvent.text}" }
 
                         try {
                             val websocketDomain =
@@ -257,9 +292,9 @@ class ActivityViewModel : BaseViewModel<ActivityEvent, ActivityState, ActivityEf
                             websocketController.onMessageReceived(
                                 WebsocketOnMessageReceivedPartialState.Success(websocketDomain)
                             )
-                            appLoggerController.d("ActivityViewModel") { "(onMessage) websocketDomain: $websocketDomain" }
+                            appLogger.d("ActivityViewModel") { "(onMessage) websocketDomain: $websocketDomain" }
                         } catch (e: Exception) {
-                            appLoggerController.e("ActivityViewModel") { "(onMessage) Error parsing websocket response: $e" }
+                            appLogger.e("ActivityViewModel") { "(onMessage) Error parsing websocket response: $e" }
                             websocketController.onMessageReceived(
                                 WebsocketOnMessageReceivedPartialState.Failed(e.message.orEmpty())
                             )
@@ -267,7 +302,7 @@ class ActivityViewModel : BaseViewModel<ActivityEvent, ActivityState, ActivityEf
                     }
 
                     is WebSocketEvent.OnClosing -> {
-                        appLoggerController.d("ActivityViewModel") { "(onClosing): The websocket server has decided to close the websocket connection.\tcode: ${webSocketEvent.code}" }
+                        appLogger.d("ActivityViewModel") { "(onClosing): The websocket server has decided to close the websocket connection.\tcode: ${webSocketEvent.code}" }
 
                         if (prefKeys.isUserLoggedIn()) {
                             onLogoutUser()
@@ -276,14 +311,14 @@ class ActivityViewModel : BaseViewModel<ActivityEvent, ActivityState, ActivityEf
 
                     is WebSocketEvent.OnClosed -> {
                         if (prefKeys.isUserLoggedIn()) {
-                            appLoggerController.d("ActivityViewModel") { "(onClosed): isUserLoggedIn: true" }
+                            appLogger.d("ActivityViewModel") { "(onClosed): isUserLoggedIn: true" }
                             onLogoutUser()
                         }
-                        appLoggerController.d("ActivityViewModel") { "(onClosed): Both the websocket client and server have decided to end this websocket connection.\tcode: ${webSocketEvent.code}" }
+                        appLogger.d("ActivityViewModel") { "(onClosed): Both the websocket client and server have decided to end this websocket connection.\tcode: ${webSocketEvent.code}" }
                     }
 
                     is WebSocketEvent.OnFailure -> {
-                        appLoggerController.d("ActivityViewModel") { "(onFailure): The websocket server has decided to close this websocket connection." }
+                        appLogger.d("ActivityViewModel") { "(onFailure): The websocket server has decided to close this websocket connection." }
                         onLogoutUser()
                     }
                 }
