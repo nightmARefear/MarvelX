@@ -87,15 +87,9 @@
     <string name="validation_rule_error_blank_email">Email cannot be blank.</string>
     <string name="validation_rule_error_blank_password">Password cannot be blank.</string>
 
-    <string name="validation_rule_error_min_length_first_name">First name\'s length cannot be less than %1$s characters.</string>
-    <string name="validation_rule_error_min_length_last_name">Last name\'s length cannot be less than %1$s characters.</string>
-    <string name="validation_rule_error_min_length_email">Email\'s length cannot be less than %1$s characters.</string>
-    <string name="validation_rule_error_min_length_password">Password\'s length cannot be less than %1$s characters.</string>
+    <string name="validation_rule_error_min_length">Must be more than %1$s characters.</string>
 
-    <string name="validation_rule_error_max_length_first_name">First name\'s length cannot be more than %1$s characters.</string>
-    <string name="validation_rule_error_max_length_last_name">Last name\'s length cannot be more than %1$s characters.</string>
-    <string name="validation_rule_error_max_length_email">Email\'s length cannot be more than %1$s characters.</string>
-    <string name="validation_rule_error_max_length_password">Password\'s length cannot be more than %1$s characters.</string>
+    <string name="validation_rule_error_max_length">Cannot be more than %1$s characters.</string>
 
     <string name="validation_rule_error_validate_email">Email is invalid.</string>
 

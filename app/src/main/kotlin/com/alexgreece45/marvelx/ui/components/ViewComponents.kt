@@ -4,6 +4,8 @@ import androidx.activity.compose.BackHandler
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -21,6 +23,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.grid.LazyGridState
@@ -79,6 +82,7 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -88,9 +92,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
@@ -104,13 +111,13 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.unit.toSize
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.zIndex
 import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.ui.components.model.AutofillData
 import com.alexgreece45.marvelx.ui.components.model.ErrorButtonType
 import com.alexgreece45.marvelx.ui.components.model.SnackbarStateData
 import com.alexgreece45.marvelx.ui.theme.values.customColors
@@ -129,7 +136,6 @@ import com.alexgreece45.marvelx.util.constants.ConstantsZIndex
 import com.alexgreece45.marvelx.util.extensions.ClickState
 import com.alexgreece45.marvelx.util.extensions.applyPadding
 import com.alexgreece45.marvelx.util.extensions.applyPaddingValues
-import com.alexgreece45.marvelx.util.extensions.autofill
 import com.alexgreece45.marvelx.util.extensions.filterTouchesWhenObscured
 import com.alexgreece45.marvelx.util.extensions.screenPaddingsNone
 import com.alexgreece45.marvelx.util.extensions.throttledClickableIcon
@@ -1113,7 +1119,6 @@ fun OutlinedTextFieldValidation(
     readOnly: Boolean = false,
     label: String = "",
     placeholder: String? = null,
-    autofillData: AutofillData? = null,
     leadingIcon: @Composable (() -> Unit)? = null,
     trailingIcon: @Composable (() -> Unit)? = null,
     errorMessage: String = "",
@@ -1126,7 +1131,7 @@ fun OutlinedTextFieldValidation(
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     shape: Shape = MaterialTheme.shapes.medium
 ) {
-    Column {
+    Box(modifier) {
         OutlinedTextField(
             value = value,
             onValueChange = { newValue ->
@@ -1134,15 +1139,7 @@ fun OutlinedTextFieldValidation(
                     onValueChange(newValue)
                 }
             },
-            modifier = when (autofillData) {
-                null -> modifier
-                else -> modifier.then(
-                    Modifier.autofill(
-                        autofillTypes = autofillData.autofillTypes,
-                        onFill = autofillData.onFill
-                    )
-                )
-            },
+            modifier = modifier,
             enabled = enabled,
             readOnly = readOnly,
             label = {
@@ -1172,13 +1169,21 @@ fun OutlinedTextFieldValidation(
             shape = shape
         )
 
-        // Error.
-        Text(
-            text = errorMessage,
-            modifier = modifier.padding(start = 10.dp, top = SPACING_TINY.dp),
-            color = MaterialTheme.colors.error,
-            style = MaterialTheme.typography.body2
-        )
+        // Error
+        AnimatedVisibility(
+            visible = isError && errorMessage.isNotBlank(),
+            modifier = Modifier.align(Alignment.BottomStart),
+            enter = fadeIn(),
+            exit = fadeOut()
+        ) {
+            Text(
+                text = errorMessage,
+                modifier = Modifier
+                    .padding(start = 10.dp, top = 66.dp),
+                color = MaterialTheme.colors.error,
+                style = MaterialTheme.typography.body2
+            )
+        }
     }
 }
 
@@ -1211,6 +1216,9 @@ fun ExposedDropdownMenu(
     onExpandedChange: (() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit
 ) {
+    var outlinedTextFieldSize by remember { mutableStateOf(Size.Zero) }
+    val density = LocalDensity.current
+
     ExposedDropdownMenuBox(
         expanded = expanded,
         onExpandedChange = { onExpandedChange?.invoke() },
@@ -1221,7 +1229,11 @@ fun ExposedDropdownMenu(
                 text = value.orEmpty()
             ),
             onValueChange = {},
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .onGloballyPositioned { coordinates ->
+                    outlinedTextFieldSize = coordinates.size.toSize()
+                },
             readOnly = true,
             label = {
                 Text(
@@ -1235,10 +1247,10 @@ fun ExposedDropdownMenu(
             },
             maxLines = maxLines
         )
-        ExposedDropdownMenu(
+        DropdownMenu(
             expanded = expanded,
             onDismissRequest = { onDismissRequest?.invoke() },
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.width(with(density) { outlinedTextFieldSize.width.toDp() }),
             content = content
         )
     }

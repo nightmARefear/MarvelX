@@ -35,14 +35,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.autofill.AutofillType
+import androidx.compose.ui.autofill.ContentType
 import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.platform.LocalAutofillManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentType
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -50,6 +52,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.coroutineScope
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.ui.components.ContentScreen
@@ -61,7 +64,6 @@ import com.alexgreece45.marvelx.ui.components.WrapOutlinedButton
 import com.alexgreece45.marvelx.ui.components.effect.ObserveUiEffect
 import com.alexgreece45.marvelx.ui.components.error.ContentErrorScreen
 import com.alexgreece45.marvelx.ui.components.line.HorizontalLine
-import com.alexgreece45.marvelx.ui.components.model.AutofillData
 import com.alexgreece45.marvelx.ui.components.model.ClickableString
 import com.alexgreece45.marvelx.ui.screens.login.model.LoginWithGoogleResult
 import com.alexgreece45.marvelx.ui.screens.login.model.LoginWithIntentWithGoogleResult
@@ -86,9 +88,11 @@ fun LoginScreen(
     navigateToForgotPasswordScreen: () -> Unit,
     popBackStack: () -> Unit
 ) {
+
     val context = LocalContext.current
     val keyboard = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
+    val autofillManager = LocalAutofillManager.current
 
     LaunchedEffect(Unit) {
         onEventSent(LoginEvent.Init)
@@ -124,20 +128,16 @@ fun LoginScreen(
                 popBackStack()
             }
 
-            LoginEffect.OnDoneClick -> {
-                onEventSent(LoginEvent.OnLoginButtonClick)
-            }
-
             LoginEffect.Navigation.NavigateToForgotPasswordScreen -> {
                 navigateToForgotPasswordScreen()
             }
 
-            is LoginEffect.ExecuteEvent -> {
-                onEventSent(uiEffect.event)
-            }
-
             is LoginEffect.ShowToast -> {
                 Toast.makeText(context, uiEffect.text, Toast.LENGTH_SHORT).show()
+            }
+
+            LoginEffect.SaveAutoFilledData -> {
+                autofillManager?.commit()
             }
         }
     }
@@ -190,13 +190,9 @@ fun LoginScreen(
                 onValueChange = { newEmail ->
                     onEventSent(LoginEvent.FieldValueChange.Email(email = newEmail))
                 },
-                modifier = Modifier.fillMaxWidth(),
-                autofillData = AutofillData(
-                    autofillTypes = listOf(AutofillType.EmailAddress),
-                    onFill = { suggestionValue ->
-                        onEventSent(LoginEvent.FieldValueChange.Email(email = suggestionValue))
-                    }
-                ),
+                modifier = Modifier
+                    .semantics { contentType = ContentType.EmailAddress }
+                    .fillMaxWidth(),
                 label = stringResource(R.string.generic_label_email),
                 leadingIcon = {
                     Icon(
@@ -225,13 +221,9 @@ fun LoginScreen(
                 onValueChange = { newPassword ->
                     onEventSent(LoginEvent.FieldValueChange.Password(password = newPassword))
                 },
-                modifier = Modifier.fillMaxWidth(),
-                autofillData = AutofillData(
-                    autofillTypes = listOf(AutofillType.Password),
-                    onFill = { suggestionValue ->
-                        onEventSent(LoginEvent.FieldValueChange.Password(password = suggestionValue))
-                    }
-                ),
+                modifier = Modifier
+                    .semantics { contentType = ContentType.Password }
+                    .fillMaxWidth(),
                 label = stringResource(R.string.generic_label_password),
                 leadingIcon = {
                     Icon(

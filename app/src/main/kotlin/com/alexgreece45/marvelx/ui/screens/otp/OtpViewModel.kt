@@ -179,6 +179,8 @@ sealed class OtpEffect : BaseEffect {
     }
 
     data object OnUserSensitiveDataReceived : OtpEffect()
+
+    data object SaveAutoFilledData : OtpEffect()
 }
 
 class OtpViewModel(
@@ -694,6 +696,7 @@ class OtpViewModel(
                             otpFlowType = OtpFlowType.Register
                         )
                     }
+
                     is AuthorizePartialState.Success -> {
                         // Proceed to retrieve access token.
                         grandNewAccessToken(authCode = it.authCode)
@@ -728,6 +731,11 @@ class OtpViewModel(
                                 .collect { postLoginPartialState ->
                                     when (postLoginPartialState) {
                                         PostLoginPartialState.Success -> {
+                                            // Show auto-fill data save prompt (it saves the data from the login screen).
+                                            setEffect {
+                                                OtpEffect.SaveAutoFilledData
+                                            }
+
                                             // Save token info in device.
                                             authController.setData(accessTokenPartialState.userAuthData)
 

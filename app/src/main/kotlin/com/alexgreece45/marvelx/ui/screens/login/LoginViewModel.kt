@@ -55,13 +55,6 @@ sealed class LoginEvent : BaseEvent {
         LoginEvent()
 
     data object OnSignupTextClicked : LoginEvent()
-
-    sealed class ErrorView : LoginEvent() {
-        /**
-         * Hides the error view.
-         */
-        data object Hide : ErrorView()
-    }
 }
 
 data class LoginState(
@@ -128,14 +121,9 @@ sealed class LoginEffect : BaseEffect {
      */
     data object CloseKeyboardAndClearFocus : LoginEffect()
 
-    /**
-     * The [LoginEvent] to be executed. This effect ***must*** be solely used when an error occurs.
-     */
-    data class ExecuteEvent(val event: LoginEvent) : LoginEffect()
-
-    data object OnDoneClick : LoginEffect()
-
     data class ShowToast(val text: String) : LoginEffect()
+
+    data object SaveAutoFilledData : LoginEffect()
 }
 
 class LoginViewModel(
@@ -184,9 +172,7 @@ class LoginViewModel(
                 // occurs, it will be because a field's validation was
                 // incorrectly calculated, etc.)
                 if (currentState.isLoginButtonEnabled) {
-                    setEffect {
-                        LoginEffect.OnDoneClick
-                    }
+                    setEvent(LoginEvent.OnLoginButtonClick)
                 }
             }
 
@@ -220,10 +206,6 @@ class LoginViewModel(
                         isRememberMeCheckboxChecked = currentState.isRememberMeCheckboxChecked.not()
                     )
                 }
-            }
-
-            is LoginEvent.ErrorView.Hide -> {
-                hideErrorView()
             }
 
             is LoginEvent.OnLoginWithGoogleResult -> {
@@ -305,17 +287,9 @@ class LoginViewModel(
 
             showErrorView(
                 errorMessage = resourceProvider.getGenericErrorMessage(),
-                onClose = {
-                    setEffect {
-                        LoginEffect.ExecuteEvent(LoginEvent.ErrorView.Hide)
-                    }
-                },
+                onClose = ::hideErrorView,
                 primaryButtonLabel = resourceProvider.getString(R.string.login_screen_back_to_login_button),
-                onPrimaryButtonClicked = {
-                    setEffect {
-                        LoginEffect.ExecuteEvent(LoginEvent.ErrorView.Hide)
-                    }
-                }
+                onPrimaryButtonClicked = ::hideErrorView
             )
             return
         }
@@ -343,16 +317,12 @@ class LoginViewModel(
                             errorMessage = userPartialStatePostLogIn.errorMessage,
                             onClose = {
                                 resetUiFieldStates()
-                                setEffect {
-                                    LoginEffect.ExecuteEvent(LoginEvent.ErrorView.Hide)
-                                }
+                                hideErrorView()
                             },
                             primaryButtonLabel = resourceProvider.getString(R.string.login_screen_back_to_login_button),
                             onPrimaryButtonClicked = {
                                 resetUiFieldStates()
-                                setEffect {
-                                    LoginEffect.ExecuteEvent(LoginEvent.ErrorView.Hide)
-                                }
+                                hideErrorView()
                             }
                         )
                     }
@@ -365,16 +335,8 @@ class LoginViewModel(
                                     resetUiFieldStates()
                                     showErrorView(
                                         errorMessage = resourceProvider.getGenericErrorMessage(),
-                                        onClose = {
-                                            setEffect {
-                                                LoginEffect.ExecuteEvent(LoginEvent.ErrorView.Hide)
-                                            }
-                                        },
-                                        onPrimaryButtonClicked = {
-                                            setEffect {
-                                                LoginEffect.ExecuteEvent(LoginEvent.ErrorView.Hide)
-                                            }
-                                        }
+                                        onClose = ::hideErrorView,
+                                        onPrimaryButtonClicked = ::hideErrorView
                                     )
                                 }
 
@@ -525,7 +487,7 @@ class LoginViewModel(
      * @param primaryButtonLabel        The label of the primary button. It has a default of `blank`.
      * If you wish to change the label, you ***must*** provide a value.
      * @param onPrimaryButtonClicked    The action(s) to be invoked when the `primary` button is
-     * clicked. If you wish to execute an event, set an effect to [LoginEffect.ExecuteEvent].
+     * clicked.
      */
     private fun showErrorView(
         errorMessage: String,

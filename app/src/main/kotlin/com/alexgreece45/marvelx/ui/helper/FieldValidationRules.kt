@@ -27,14 +27,14 @@ class FieldValidationRulesImpl(
             Rule.ValidateStringMinLength(
                 length = minLength,
                 errorMessage = resourceProvider.getString(
-                    R.string.validation_rule_error_min_length_first_name,
+                    R.string.validation_rule_error_min_length,
                     minLength
                 )
             ),
             Rule.ValidateStringMaxLength(
                 length = maxLength,
                 errorMessage = resourceProvider.getString(
-                    R.string.validation_rule_error_max_length_first_name,
+                    R.string.validation_rule_error_max_length,
                     maxLength
                 )
             )
@@ -49,14 +49,14 @@ class FieldValidationRulesImpl(
             Rule.ValidateStringMinLength(
                 length = minLength,
                 errorMessage = resourceProvider.getString(
-                    R.string.validation_rule_error_min_length_last_name,
+                    R.string.validation_rule_error_min_length,
                     minLength
                 )
             ),
             Rule.ValidateStringMaxLength(
                 length = maxLength,
                 errorMessage = resourceProvider.getString(
-                    R.string.validation_rule_error_max_length_last_name,
+                    R.string.validation_rule_error_max_length,
                     maxLength
                 )
             )
@@ -81,14 +81,14 @@ class FieldValidationRulesImpl(
             Rule.ValidateStringMinLength(
                 length = minLength,
                 errorMessage = resourceProvider.getString(
-                    R.string.validation_rule_error_min_length_email,
+                    R.string.validation_rule_error_min_length,
                     minLength
                 )
             ),
             Rule.ValidateStringMaxLength(
                 length = maxLength,
                 errorMessage = resourceProvider.getString(
-                    R.string.validation_rule_error_max_length_email,
+                    R.string.validation_rule_error_max_length,
                     maxLength
                 )
             ),
@@ -106,14 +106,14 @@ class FieldValidationRulesImpl(
             Rule.ValidateStringMinLength(
                 length = minLength,
                 errorMessage = resourceProvider.getString(
-                    R.string.validation_rule_error_min_length_password,
+                    R.string.validation_rule_error_min_length,
                     minLength
                 )
             ),
             Rule.ValidateStringMaxLength(
                 length = maxLength,
                 errorMessage = resourceProvider.getString(
-                    R.string.validation_rule_error_max_length_password,
+                    R.string.validation_rule_error_max_length,
                     maxLength
                 )
             )

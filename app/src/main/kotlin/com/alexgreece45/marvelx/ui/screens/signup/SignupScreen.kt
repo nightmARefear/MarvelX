@@ -1,7 +1,6 @@
 package com.alexgreece45.marvelx.ui.screens.signup
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.wrapContentWidth
@@ -19,11 +18,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.autofill.AutofillType
+import androidx.compose.ui.autofill.ContentType
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentType
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -40,8 +41,6 @@ import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
 import com.alexgreece45.marvelx.ui.components.WrapButton
 import com.alexgreece45.marvelx.ui.components.model.ErrorButtonType
 import com.alexgreece45.marvelx.util.SPACING_SMALL
-import com.alexgreece45.marvelx.util.VSpacer
-import com.alexgreece45.marvelx.util.extensions.autofill
 import kotlinx.coroutines.flow.Flow
 
 @OptIn(ExperimentalComposeUiApi::class)
@@ -118,56 +117,52 @@ fun SignUpScreen(
                 )
             }
 
-            // First name & Last name
+            // First Name.
             item {
-                Row(
+                OutlinedTextFieldValidation(
+                    value = state.firstName,
+                    onValueChange = { newValue ->
+                        onEventSent(SignupEvent.FieldValueChange.FirstName(firstName = newValue))
+                    },
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp)
-                ) {
-                    // First Name.
-                    OutlinedTextFieldValidation(
-                        value = state.firstName,
-                        onValueChange = { newValue ->
-                            onEventSent(SignupEvent.FieldValueChange.FirstName(firstName = newValue))
-                        },
-                        modifier = Modifier.weight(1f),
-                        label = stringResource(R.string.generic_label_first_name),
-                        errorMessage = state.firstNameValidationResult.messages.firstOrNull()
-                            .orEmpty(),
-                        isError = !state.firstNameValidationResult.isValid &&
-                                state.firstNameValidationResult.messages.firstOrNull() != null,
-                        keyboardOptions = KeyboardOptions(
-                            imeAction = ImeAction.Next
-                        ),
-                        keyboardActions = KeyboardActions(
-                            onNext = {
-                                focusManager.moveFocus(FocusDirection.Next)
-                            }
-                        )
+                    label = stringResource(R.string.generic_label_first_name),
+                    errorMessage = state.firstNameValidationResult.messages.firstOrNull()
+                        .orEmpty(),
+                    isError = !state.firstNameValidationResult.isValid &&
+                            state.firstNameValidationResult.messages.firstOrNull() != null,
+                    keyboardOptions = KeyboardOptions(
+                        imeAction = ImeAction.Next
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onNext = {
+                            focusManager.moveFocus(FocusDirection.Next)
+                        }
                     )
+                )
+            }
 
-                    // Last Name.
-                    OutlinedTextFieldValidation(
-                        value = state.lastName,
-                        onValueChange = { newValue ->
-                            onEventSent(SignupEvent.FieldValueChange.LastName(lastName = newValue))
-                        },
-                        modifier = Modifier.weight(1f),
-                        label = stringResource(R.string.generic_label_last_name),
-                        errorMessage = state.lastNameValidationResult.messages.firstOrNull()
-                            .orEmpty(),
-                        isError = !state.lastNameValidationResult.isValid &&
-                                state.lastNameValidationResult.messages.firstOrNull() != null,
-                        keyboardOptions = KeyboardOptions(
-                            imeAction = ImeAction.Next
-                        ),
-                        keyboardActions = KeyboardActions(
-                            onNext = {
-                                focusManager.moveFocus(FocusDirection.Next)
-                            }
-                        )
+            // Last name
+            item {
+                OutlinedTextFieldValidation(
+                    value = state.lastName,
+                    onValueChange = { newValue ->
+                        onEventSent(SignupEvent.FieldValueChange.LastName(lastName = newValue))
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    label = stringResource(R.string.generic_label_last_name),
+                    errorMessage = state.lastNameValidationResult.messages.firstOrNull()
+                        .orEmpty(),
+                    isError = !state.lastNameValidationResult.isValid &&
+                            state.lastNameValidationResult.messages.firstOrNull() != null,
+                    keyboardOptions = KeyboardOptions(
+                        imeAction = ImeAction.Next
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onNext = {
+                            focusManager.moveFocus(FocusDirection.Next)
+                        }
                     )
-                }
+                )
             }
 
             // Gender
@@ -213,12 +208,7 @@ fun SignUpScreen(
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .autofill(
-                            autofillTypes = listOf(AutofillType.EmailAddress),
-                            onFill = { suggestionValue ->
-                                onEventSent(SignupEvent.FieldValueChange.Email(email = suggestionValue))
-                            }
-                        ),
+                        .semantics { contentType = ContentType.EmailAddress },
                     label = stringResource(R.string.generic_label_email),
                     errorMessage = state.emailValidationResult.messages.firstOrNull().orEmpty(),
                     isError = !state.emailValidationResult.isValid &&
@@ -248,12 +238,7 @@ fun SignUpScreen(
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .autofill(
-                            autofillTypes = listOf(AutofillType.Password),
-                            onFill = { suggestionValue ->
-                                onEventSent(SignupEvent.FieldValueChange.Password(password = suggestionValue))
-                            }
-                        ),
+                        .semantics { contentType = ContentType.NewPassword },
                     label = stringResource(R.string.generic_label_password),
                     trailingIcon = {
                         IconButton(onClick = { onEventSent(SignupEvent.OnPasswordVisibilityIconClick) }) {
@@ -283,10 +268,6 @@ fun SignUpScreen(
                         onDone = { onEventSent(SignupEvent.OnDoneClick) }
                     )
                 )
-            }
-
-            item {
-                VSpacer.Small()
             }
 
             // Signup button

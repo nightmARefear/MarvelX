@@ -17,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalAutofillManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -59,6 +60,7 @@ fun OtpScreen(
 ) {
     val focusRequester = remember { FocusRequester() }
     val keyboardController = LocalSoftwareKeyboardController.current
+    val autofillManager = LocalAutofillManager.current
 
     OneTimeLaunchedEffect {
         onEventSent(
@@ -100,6 +102,10 @@ fun OtpScreen(
                 OtpEffect.CloseKeyboardAndRemoveFocus -> {
                     keyboardController?.hide()
                     focusRequester.freeFocus()
+                }
+
+                OtpEffect.SaveAutoFilledData -> {
+                    autofillManager?.commit()
                 }
             }
         }

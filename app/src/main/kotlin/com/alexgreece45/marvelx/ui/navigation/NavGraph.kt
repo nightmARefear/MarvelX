@@ -132,7 +132,7 @@ fun NavGraph(navController: NavHostController) {
                         )
                     )
                 },
-                popBackStack = navController::popBackStack
+                popBackStack = navController::navigateUp
             )
         }
 
@@ -165,20 +165,20 @@ fun NavGraph(navController: NavHostController) {
                 navigateToForgotPasswordScreen = {
                     navController.navigate(Screen.ForgotPasswordScreen.route)
                 },
-                popBackStack = navController::popBackStack
+                popBackStack = navController::navigateUp
             )
         }
 
         composable(Screen.ForgotPasswordScreen) {
             ForgotPasswordScreen(
-                popUpToLoginScreen = navController::popBackStack,
+                popUpToLoginScreen = navController::navigateUp,
                 navController = navController
             )
         }
 
         composable(Screen.ForgotPasswordValidateEmailScreen) { navBackStackEntry ->
             ForgotPasswordValidateEmailScreen(
-                popBackStack = navController::popBackStack,
+                popBackStack = navController::navigateUp,
                 navigateToForgotPasswordEnterPhoneNumberScreen = { requestIdEmail ->
                     navController.navigate(
                         Screen.ForgotPasswordEnterPhoneNumberScreen.createNavRoute(
@@ -192,7 +192,7 @@ fun NavGraph(navController: NavHostController) {
 
         composable(Screen.ChangePasswordScreen) { entry ->
             ChangePasswordScreen(
-                popBackStack = navController::popBackStack,
+                popBackStack = navController::navigateUp,
                 otpFlowType = entry.arguments?.getString(NavItem.OtpFlowType.key),
                 requestIdEmail = entry.arguments?.getString(NavItem.RequestIdEmail.key).orEmpty(),
                 requestIdPhoneNumber = entry.arguments?.getString(NavItem.RequestIdPhoneNumber.key)
@@ -220,7 +220,7 @@ fun NavGraph(navController: NavHostController) {
                         )
                     )
                 },
-                popBackStack = navController::popBackStack
+                popBackStack = navController::navigateUp
             )
         }
 
@@ -230,7 +230,7 @@ fun NavGraph(navController: NavHostController) {
                 onEventSent = viewModel::setEvent,
                 state = viewModel.uiState.collectAsStateWithLifecycle().value,
                 effect = viewModel.uiEffect,
-                popBackStack = navController::popBackStack,
+                popBackStack = navController::navigateUp,
                 navigateToAllCharactersScreen = {
                     navController.navigate(Screen.AllCharactersScreen.route) {
                         popUpToTop(navController)
@@ -285,7 +285,7 @@ fun NavGraph(navController: NavHostController) {
                 effect = viewModel.uiEffect,
                 characterId = navBackStackEntry.arguments?.getInt(NavItem.CharacterId.key)
                     ?: -1,
-                popBackStack = navController::popBackStack,
+                popBackStack = navController::navigateUp,
                 navigateToComicsScreen = { comicId ->
                     navController.navigate(
                         Screen.ComicScreen.createNavRoute(
@@ -314,7 +314,7 @@ fun NavGraph(navController: NavHostController) {
                 onEventSent = viewModel::setEvent,
                 state = viewModel.uiState.collectAsStateWithLifecycle().value,
                 effect = viewModel.uiEffect,
-                popBackStack = navController::popBackStack,
+                popBackStack = navController::navigateUp,
                 comicId = navBackStackEntry.arguments?.getInt(NavItem.ComicId.key) ?: -1
             )
         }
@@ -327,7 +327,7 @@ fun NavGraph(navController: NavHostController) {
                 onEventSent = viewModel::setEvent,
                 state = viewModel.uiState.collectAsStateWithLifecycle().value,
                 effect = viewModel.uiEffect,
-                popBackStack = navController::popBackStack,
+                popBackStack = navController::navigateUp,
                 navigateToComicScreen = { comicId ->
                     navController.navigate(
                         Screen.ComicScreen.createNavRoute(
@@ -455,7 +455,7 @@ fun NavGraph(navController: NavHostController) {
                 onNavigation = { navigationEffect ->
                     when (navigationEffect) {
                         ProfileDetailsContract.Effect.Navigation.PopBackStack -> {
-                            navController.popBackStack()
+                            navController.navigateUp()
                         }
 
                         is ProfileDetailsContract.Effect.Navigation.NavigateToProfileImageScreen -> {
@@ -566,7 +566,7 @@ fun NavGraph(navController: NavHostController) {
                 onEventSent = viewModel::setEvent,
                 state = viewModel.uiState.collectAsStateWithLifecycle().value,
                 effect = viewModel.uiEffect,
-                popBackStack = navController::popBackStack,
+                popBackStack = navController::navigateUp,
             )
         }
 

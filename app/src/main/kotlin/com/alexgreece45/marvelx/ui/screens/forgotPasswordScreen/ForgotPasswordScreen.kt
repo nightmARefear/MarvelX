@@ -13,10 +13,12 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.autofill.AutofillType
+import androidx.compose.ui.autofill.ContentType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentType
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -24,14 +26,13 @@ import androidx.navigation.NavController
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.domain.model_api.otp.OtpFlowType
 import com.alexgreece45.marvelx.domain.model_api.user.VerificationStep
-import com.alexgreece45.marvelx.ui.components.WrapButton
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.ContentScreenHeader
 import com.alexgreece45.marvelx.ui.components.OutlinedTextFieldValidation
 import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
+import com.alexgreece45.marvelx.ui.components.WrapButton
 import com.alexgreece45.marvelx.ui.navigation.Screen
 import com.alexgreece45.marvelx.util.VSpacer
-import com.alexgreece45.marvelx.util.extensions.autofill
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -151,13 +152,8 @@ fun ForgotPasswordScreenContent(
             onEventSent(ForgotPasswordEvent.OnEmailValueChange(email = newEmail))
         },
         modifier = Modifier
-            .fillMaxWidth()
-            .autofill(
-                autofillTypes = listOf(AutofillType.EmailAddress),
-                onFill = { suggestionValue ->
-                    onEventSent(ForgotPasswordEvent.OnEmailValueChange(email = suggestionValue))
-                }
-            ),
+            .semantics { contentType = ContentType.EmailAddress }
+            .fillMaxWidth(),
         label = stringResource(R.string.forgot_password_screen_input_field_label_email),
         errorMessage = state.emailValidationResult.message,
         isError = state.emailValidationResult.isValid.not() && state.emailValidationResult.message.isNotBlank(),
