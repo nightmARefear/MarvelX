@@ -32,7 +32,7 @@ import com.alexgreece45.marvelx.ui.components.effect.OneTimeLaunchedEffect
 import com.alexgreece45.marvelx.ui.components.error.ContentErrorScreen
 import com.alexgreece45.marvelx.ui.components.model.ErrorButtonLayout
 import com.alexgreece45.marvelx.ui.components.sections.SectionHeader
-import com.alexgreece45.marvelx.ui.screens.settings.faq.model.FaqSectionUi
+import com.alexgreece45.marvelx.ui.screens.settings.faq.model.FaqUi
 import com.alexgreece45.marvelx.ui.theme.MarvelXTheme
 import com.alexgreece45.marvelx.util.SPACING_LARGE
 import com.alexgreece45.marvelx.util.SPACING_MEDIUM
@@ -119,7 +119,7 @@ fun FaqScreen(
  * expansion.
  */
 @Composable
-private fun FaqSection(section: FaqSectionUi, onToggleExpansion: () -> Unit) {
+private fun FaqSection(section: FaqUi, onToggleExpansion: () -> Unit) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.medium
@@ -203,28 +203,28 @@ private fun FaqScreenPreview() {
             state = FaqContract.State(
                 isLoading = false,
                 sections = listOf(
-                    FaqSectionUi(
+                    FaqUi(
                         id = "1",
                         title = "1. Title",
                         description = "Description",
                         order = 0,
                         isExpanded = false
                     ),
-                    FaqSectionUi(
+                    FaqUi(
                         id = "2",
                         title = "2. Title 2",
                         description = "Description 2",
                         order = 0,
                         isExpanded = false
                     ),
-                    FaqSectionUi(
+                    FaqUi(
                         id = "3",
                         title = "3. Title 3",
                         description = "Description 3",
                         order = 0,
                         isExpanded = false
                     ),
-                    FaqSectionUi(
+                    FaqUi(
                         id = "4",
                         title = "4. Title 4",
                         description = "Description 4" +
@@ -233,7 +233,7 @@ private fun FaqScreenPreview() {
                         order = 0,
                         isExpanded = false
                     ),
-                    FaqSectionUi(
+                    FaqUi(
                         id = "5",
                         title = "5. Title 5",
                         description = "Description 5" +
@@ -243,7 +243,7 @@ private fun FaqScreenPreview() {
                         order = 0,
                         isExpanded = false
                     ),
-                    FaqSectionUi(
+                    FaqUi(
                         id = "6",
                         title = "6. Titlqewewqeqweqweqwqweeweqwqeweqwewqqweewqewe 6",
                         description = "Description 6" +

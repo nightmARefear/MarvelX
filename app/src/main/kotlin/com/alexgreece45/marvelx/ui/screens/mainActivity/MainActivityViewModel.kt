@@ -1,10 +1,11 @@
 package com.alexgreece45.marvelx.ui.screens.mainActivity
 
-import android.net.Uri
 import androidx.lifecycle.viewModelScope
 import androidx.work.WorkManager
 import com.alexgreece45.marvelx.controllers.AppLogger
 import com.alexgreece45.marvelx.controllers.DeepLinkController
+import com.alexgreece45.marvelx.controllers.DeviceController
+import com.alexgreece45.marvelx.controllers.FcmController
 import com.alexgreece45.marvelx.controllers.HandleDeepLinkActionResult
 import com.alexgreece45.marvelx.controllers.PrefKeys
 import com.alexgreece45.marvelx.controllers.SecurityController
@@ -13,17 +14,20 @@ import com.alexgreece45.marvelx.controllers.model.security.SecurityViolation
 import com.alexgreece45.marvelx.controllers.model.websocket.WebsocketOnMessageReceivedPartialState
 import com.alexgreece45.marvelx.controllers.model.websocket.WebsocketRequestType
 import com.alexgreece45.marvelx.controllers.model.websocket.WebsocketSendRequestPartialState
+import com.alexgreece45.marvelx.data.repository.UserRepository
+import com.alexgreece45.marvelx.dispatchers.IoDispatcher
 import com.alexgreece45.marvelx.domain.interactors.LoginInteractor
 import com.alexgreece45.marvelx.domain.interactors.LogoutPartialState
 import com.alexgreece45.marvelx.domain.model_websocket.toWebsocketDomain
-import com.alexgreece45.marvelx.mvi.BaseEffect
-import com.alexgreece45.marvelx.mvi.BaseEvent
-import com.alexgreece45.marvelx.mvi.BaseState
 import com.alexgreece45.marvelx.mvi.BaseViewModel
 import com.alexgreece45.marvelx.network_logic.models_websocket.ResponseWebsocket
-import com.alexgreece45.marvelx.ui.helper.model.DeepLinkAction
 import com.alexgreece45.marvelx.ui.navigation.router.RouterHost
 import com.alexgreece45.marvelx.ui.screens.mainActivity.model.CoroutineWebSocketListener
+import com.alexgreece45.marvelx.ui.screens.mainActivity.model.MainActivityEffect
+import com.alexgreece45.marvelx.ui.screens.mainActivity.model.MainActivityEffect.Navigation.NavigateToSplashScreenWithSecurityViolation
+import com.alexgreece45.marvelx.ui.screens.mainActivity.model.MainActivityEffect.OpenOrCacheDeepLink
+import com.alexgreece45.marvelx.ui.screens.mainActivity.model.MainActivityEvent
+import com.alexgreece45.marvelx.ui.screens.mainActivity.model.MainActivityState
 import com.alexgreece45.marvelx.ui.screens.mainActivity.model.WebSocketEvent
 import com.alexgreece45.marvelx.util.DateUtil
 import com.alexgreece45.marvelx.util.ResourceProvider
@@ -31,69 +35,19 @@ import com.alexgreece45.marvelx.util.constants.ConstantsSecurity
 import com.alexgreece45.marvelx.util.constants.ConstantsWorker
 import com.alexgreece45.marvelx.util.extensions.differenceInMinutes
 import com.google.gson.Gson
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.launch
 import okhttp3.WebSocketListener
 import org.koin.core.component.inject
+import org.koin.core.qualifier.qualifier
 import java.time.Instant
 import java.time.format.DateTimeParseException
+import javax.inject.Inject
+import kotlin.coroutines.CoroutineContext
 
-sealed class ActivityEvent : BaseEvent {
-    /**
-     * Events triggered by the application lifecycle.
-     */
-    sealed class LifecycleEvent : ActivityEvent() {
-        data object OnCreate : LifecycleEvent()
-        data object OnPause : LifecycleEvent()
-        data object OnResume : LifecycleEvent()
+class MainActivityViewModel: BaseViewModel<MainActivityEvent, MainActivityState, MainActivityEffect>() {
 
-        /**
-         * This event is executed when the activity is destroyed. [willBeRecreated] defines whether
-         * the activity will be recreated indicating that the onDestroy function was called due to a
-         * configuration change, and not because the user/OS closed/killed the app.
-         *
-         * If [willBeRecreated] is `true`, then the user isn't logged out.
-         */
-        data class OnDestroy(val willBeRecreated: Boolean) : LifecycleEvent()
-    }
-
-    /**
-     * This event is triggered every time the user interacts within the application view.
-     */
-    data object OnUserInteraction : ActivityEvent()
-
-    /**
-     * This event is triggered when this application shouldn't have the ability to draw itself as an
-     * overlay window over other applications, but in fact it does.
-     */
-    data object ApplicationDrawOverlayWindowsViolation : ActivityEvent()
-
-    /**
-     * This event is triggered when this application shouldn't have the ability to be in multi
-     * window mode, but in fact it is.
-     */
-    data object ApplicationInMultiWindowModeViolation : ActivityEvent()
-
-    data class OnDeepLinkReceived(val uri: Uri) : ActivityEvent()
-}
-
-data class ActivityState(val flowStarted: Boolean = false) : BaseState
-
-sealed class ActivityEffect : BaseEffect {
-    data class OpenOrCacheDeepLink(val deepLinkAction: DeepLinkAction) :
-        ActivityEffect()
-
-    sealed class Navigation : ActivityEffect() {
-        data class NavigateToHomeScreenWithSessionExpired(val showErrorDialog: Boolean) :
-            Navigation()
-
-        data class NavigateToSplashScreenWithSecurityViolation(val securityViolation: SecurityViolation) :
-            Navigation()
-    }
-}
-
-class ActivityViewModel : BaseViewModel<ActivityEvent, ActivityState, ActivityEffect>() {
+    override fun setInitialState(): MainActivityState = MainActivityState()
 
     private val prefKeys: PrefKeys by inject()
     private val logger: AppLogger by inject()
@@ -103,24 +57,26 @@ class ActivityViewModel : BaseViewModel<ActivityEvent, ActivityState, ActivityEf
     private val securityController: SecurityController by inject()
     private val routerHost: RouterHost by inject()
     private val deepLinkController: DeepLinkController by inject()
+    private val userRepository: UserRepository by inject()
+    @IoDispatcher private val ioDispatcher: CoroutineContext by inject(qualifier<IoDispatcher>())
+    private val fcmController: FcmController by inject()
+    private val deviceController: DeviceController by inject()
 
-    override fun setInitialState(): ActivityState = ActivityState()
-
-    override fun handleEvents(event: ActivityEvent) {
+    override fun handleEvents(event: MainActivityEvent) {
         when (event) {
-            ActivityEvent.LifecycleEvent.OnCreate -> {
+            MainActivityEvent.LifecycleEvent.OnCreate -> {
                 prefKeys.autoLogoutTimestamp = null
-                setWebsocketListener()
+                onCreateOperations()
             }
 
-            ActivityEvent.LifecycleEvent.OnPause -> {
-                if (prefKeys.isUserLoggedIn() && securityController.isAutoLogoutEnabled()) {
+            MainActivityEvent.LifecycleEvent.OnPause -> {
+                if (userRepository.isUserLoggedIn && securityController.isAutoLogoutEnabled()) {
                     prefKeys.autoLogoutTimestamp = DateUtil.getUTCInstant()
                 }
             }
 
-            ActivityEvent.LifecycleEvent.OnResume -> {
-                if (prefKeys.isUserLoggedIn()) {
+            MainActivityEvent.LifecycleEvent.OnResume -> {
+                if (userRepository.isUserLoggedIn) { // TODO: To be reviewed.
                     when (prefKeys.shouldRememberUserSession()) {
                         false -> {
                             if (securityController.isAutoLogoutEnabled()) {
@@ -133,47 +89,70 @@ class ActivityViewModel : BaseViewModel<ActivityEvent, ActivityState, ActivityEf
                 }
             }
 
-            is ActivityEvent.LifecycleEvent.OnDestroy -> {
+            is MainActivityEvent.LifecycleEvent.OnDestroy -> {
                 if (!event.willBeRecreated) {
                     onDestroy()
                 }
             }
 
-            ActivityEvent.OnUserInteraction -> {
+            MainActivityEvent.OnUserInteraction -> {
                 performAutoLogoutOperations()
             }
 
-            ActivityEvent.ApplicationDrawOverlayWindowsViolation -> {
+            MainActivityEvent.ApplicationDrawOverlayWindowsViolation -> {
                 onLogoutUser(showErrorDialog = false)
                 setEffect {
-                    ActivityEffect.Navigation.NavigateToSplashScreenWithSecurityViolation(
+                    NavigateToSplashScreenWithSecurityViolation(
                         SecurityViolation.ApplicationDrawOverlayWindows
                     )
                 }
             }
 
-            ActivityEvent.ApplicationInMultiWindowModeViolation -> {
+            MainActivityEvent.ApplicationInMultiWindowModeViolation -> {
                 onLogoutUser(showErrorDialog = false)
                 setEffect {
-                    ActivityEffect.Navigation.NavigateToSplashScreenWithSecurityViolation(
+                    NavigateToSplashScreenWithSecurityViolation(
                         SecurityViolation.ApplicationInMultiWindowMode
                     )
                 }
             }
 
-            is ActivityEvent.OnDeepLinkReceived -> {
+            is MainActivityEvent.OnDeepLinkReceived -> {
                 viewModelScope.launch {
                     deepLinkController.handleDeepLinkUri(event.uri).collect {
                         when (it) {
                             is HandleDeepLinkActionResult.Success -> {
                                 setEffect {
-                                    ActivityEffect.OpenOrCacheDeepLink(it.deepLinkAction)
+                                    OpenOrCacheDeepLink(it.deepLinkAction)
                                 }
                             }
 
                             HandleDeepLinkActionResult.Failed -> {}
                         }
                     }
+                }
+            }
+
+            is MainActivityEvent.OnFcmTokenReceived -> {
+                fcmController.setFcmToken(event.fcmToken)
+
+                if (userRepository.isUserLoggedIn) {
+                    registerOrUpdateDevice()
+                }
+            }
+        }
+    }
+
+    /**
+     * The operations to perform when the app gets initialized.
+     */
+    private fun onCreateOperations() {
+        setWebsocketListener()
+
+        viewModelScope.launch {
+            userRepository.getUserLoggedInFlow().collect { isUserLoggedIn ->
+                if (isUserLoggedIn) {
+                    registerOrUpdateDevice()
                 }
             }
         }
@@ -183,9 +162,20 @@ class ActivityViewModel : BaseViewModel<ActivityEvent, ActivityState, ActivityEf
      * The actions to perform when the viewModel is instantiated.
      */
     private fun setWebsocketListener() {
+        logger.d { "authData: ${prefKeys.getUserAuthData()}" }
+        websocketController.setWebSocketListener(getWebSocketListener())
+    }
+
+    private fun registerOrUpdateDevice() {
         viewModelScope.launch {
-            logger.d { "authData: ${prefKeys.getUserAuthData()}" }
-            websocketController.setWebSocketListener(getWebSocketListener())
+            deviceController.registerOrUpdateDevice(fcmController.getFcmToken())
+                .collect { wasDeviceRegistered ->
+                    if (wasDeviceRegistered) {
+                        appLogger.e("MainActivityViewModel") { "(registerOrUpdateDevice) An error occurred whilst registering the device." }
+                    } else {
+                        appLogger.d("MainActivityViewModel") { "(registerOrUpdateDevice) Device was successfully registered!" }
+                    }
+                }
         }
     }
 
@@ -198,7 +188,7 @@ class ActivityViewModel : BaseViewModel<ActivityEvent, ActivityState, ActivityEf
      */
     private fun onLogoutUser(showErrorDialog: Boolean = true) {
         setEffect {
-            ActivityEffect.Navigation.NavigateToHomeScreenWithSessionExpired(showErrorDialog = showErrorDialog)
+            MainActivityEffect.Navigation.NavigateToHomeScreenWithSessionExpired(showErrorDialog = showErrorDialog)
         }
         viewModelScope.launch {
             loginInteractor.logout().collect {
@@ -230,41 +220,42 @@ class ActivityViewModel : BaseViewModel<ActivityEvent, ActivityState, ActivityEf
     private fun performAutoLogoutOperations() {
         if (securityController.isAutoLogoutEnabled() && routerHost.isCurrentRouteIncludedInAutoLogout()) {
             viewModelScope.launch {
-                websocketController.sendRequest(WebsocketRequestType.GetTimestamp).collect {
-                    val currentTimestamp =
-                        when (it) {
-                            is WebsocketSendRequestPartialState.Failed -> {
-                                logger.d("ActivityViewModel") { "(performAutoLogoutOperations#sendRequest#Failed) errorMessage: ${it.errorMessage}" }
-                                DateUtil.getUTCInstant()
+                websocketController.sendRequest(WebsocketRequestType.GetTimestamp)
+                    .collect { partialState ->
+                        val currentTimestamp =
+                            when (partialState) {
+                                is WebsocketSendRequestPartialState.Failed -> {
+                                    logger.d("ActivityViewModel") { "(performAutoLogoutOperations#sendRequest#Failed) errorMessage: ${partialState.errorMessage}" }
+                                    DateUtil.getUTCInstant()
+                                }
+
+                                is WebsocketSendRequestPartialState.Success -> {
+                                    try {
+                                        logger.d("ActivityViewModel") { "(performAutoLogoutOperations#sendRequest#Success) timestamp: ${partialState.websocketDomain.data}" }
+                                        Instant.parse(partialState.websocketDomain.data)
+                                    } catch (e: DateTimeParseException) {
+                                        logger.e("ActivityViewModel") { "(performAutoLogoutOperations#sendRequest#Success) parsing error: $e" }
+                                        DateUtil.getUTCInstant()
+                                    }
+                                }
                             }
 
-                            is WebsocketSendRequestPartialState.Success -> {
-                                try {
-                                    logger.d("ActivityViewModel") { "(performAutoLogoutOperations#sendRequest#Success) timestamp: ${it.websocketDomain.data}" }
-                                    Instant.parse(it.websocketDomain.data)
-                                } catch (e: DateTimeParseException) {
-                                    logger.e("ActivityViewModel") { "(performAutoLogoutOperations#sendRequest#Success) parsing error: $e" }
-                                    DateUtil.getUTCInstant()
+                        when (val storedTimestamp = prefKeys.autoLogoutTimestamp) {
+                            null -> {
+                                prefKeys.autoLogoutTimestamp = currentTimestamp
+                            }
+
+                            else -> {
+                                if (currentTimestamp.differenceInMinutes(storedTimestamp)
+                                        .also { logger.d("ActivityViewModel") { "difference in time: $it" } } >= ConstantsSecurity.AutoLogout.TIMEOUT_PERIOD
+                                ) {
+                                    onLogoutUser()
+                                } else {
+                                    prefKeys.autoLogoutTimestamp = currentTimestamp
                                 }
                             }
                         }
-
-                    when (val storedTimestamp = prefKeys.autoLogoutTimestamp) {
-                        null -> {
-                            prefKeys.autoLogoutTimestamp = currentTimestamp
-                        }
-
-                        else -> {
-                            if (currentTimestamp.differenceInMinutes(storedTimestamp)
-                                    .also { logger.d("ActivityViewModel") { "difference in time: $it" } } >= ConstantsSecurity.AutoLogout.TIMEOUT_PERIOD
-                            ) {
-                                onLogoutUser()
-                            } else {
-                                prefKeys.autoLogoutTimestamp = currentTimestamp
-                            }
-                        }
                     }
-                }
             }
         }
     }
@@ -272,10 +263,10 @@ class ActivityViewModel : BaseViewModel<ActivityEvent, ActivityState, ActivityEf
     /**
      * Returns the websocket listener responsible for handling connections, terminations, and more.
      */
-    private suspend fun getWebSocketListener(): WebSocketListener {
+    private fun getWebSocketListener(): WebSocketListener {
         val listener = CoroutineWebSocketListener()
 
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(ioDispatcher) {
             listener.eventChannel.consumeEach { webSocketEvent ->
                 when (webSocketEvent) {
                     is WebSocketEvent.OnOpen -> {
@@ -304,13 +295,13 @@ class ActivityViewModel : BaseViewModel<ActivityEvent, ActivityState, ActivityEf
                     is WebSocketEvent.OnClosing -> {
                         appLogger.d("ActivityViewModel") { "(onClosing): The websocket server has decided to close the websocket connection.\tcode: ${webSocketEvent.code}" }
 
-                        if (prefKeys.isUserLoggedIn()) {
+                        if (userRepository.isUserLoggedIn) {
                             onLogoutUser()
                         }
                     }
 
                     is WebSocketEvent.OnClosed -> {
-                        if (prefKeys.isUserLoggedIn()) {
+                        if (userRepository.isUserLoggedIn) {
                             appLogger.d("ActivityViewModel") { "(onClosed): isUserLoggedIn: true" }
                             onLogoutUser()
                         }

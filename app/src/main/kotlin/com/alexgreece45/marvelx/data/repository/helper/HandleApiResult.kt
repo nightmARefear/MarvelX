@@ -17,10 +17,12 @@ import kotlin.coroutines.CoroutineContext
  *
  * @param apiResult         The API result.
  * @param transformation    The transformation to apply to [A] in order to transform it into [B].
+ * @param ioDispatcher      The IO dispatcher.
  */
 internal suspend fun <A : Any, B : Any> handleApiResult(
     apiResult: ApiResult<A>,
-    transformation: A.() -> B
+    transformation: A.() -> B,
+    ioDispatcher: CoroutineContext
 ): Flow<RepositoryResult<B>> =
     flow {
         when (apiResult) {
@@ -29,7 +31,7 @@ internal suspend fun <A : Any, B : Any> handleApiResult(
             is ApiResult.Failed -> emit(RepositoryResult.Failed(apiResult.failureMessage))
             ApiResult.NetworkError -> emit(RepositoryResult.NetworkError)
         }
-    }.safeAsync {
+    }.safeAsync(ioDispatcher = ioDispatcher) {
         RepositoryResult.Failed(it.message.orEmpty())
     }
 
@@ -42,9 +44,11 @@ internal suspend fun <A : Any, B : Any> handleApiResult(
  * #### Note: In order for this function to work properly, the generic of [ApiResult] __must__ be [String].
  *
  * @param apiResult The API result.
+ * @param ioDispatcher The IO dispatcher.
  */
 internal suspend fun handleApiResultNoTransformation(
-    apiResult: ApiResult<String>
+    apiResult: ApiResult<String>,
+    ioDispatcher: CoroutineContext
 ): Flow<RepositoryResult<String>> =
     flow {
         when (apiResult) {
@@ -53,7 +57,7 @@ internal suspend fun handleApiResultNoTransformation(
             is ApiResult.Failed -> emit(RepositoryResult.Failed(apiResult.failureMessage))
             ApiResult.NetworkError -> emit(RepositoryResult.NetworkError)
         }
-    }.safeAsync {
+    }.safeAsync(ioDispatcher) {
         RepositoryResult.Failed(it.message.orEmpty())
     }
 

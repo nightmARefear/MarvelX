@@ -2,7 +2,7 @@ package com.alexgreece45.marvelx.data.repository
 
 import com.alexgreece45.marvelx.controllers.AppLogger
 import com.alexgreece45.marvelx.data.repository.helper.parseUserError
-import com.alexgreece45.marvelx.network_logic.api.ApiClient
+import com.alexgreece45.marvelx.network_logic.clients.ApiClient
 import com.alexgreece45.marvelx.network_logic.models_api.authorize.ResponseAuthorize
 import com.alexgreece45.marvelx.network_logic.models_api.sensitiveUserData.RequestSensitiveUserData
 import com.alexgreece45.marvelx.network_logic.models_api.sensitiveUserData.ResponseSensitiveUserData

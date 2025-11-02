@@ -62,6 +62,16 @@
             android:authorities="${applicationId}.androidx-startup"
             android:exported="false"
             tools:node="remove" />
+
+        <service
+            android:name=".notifications.MarvelXFirebaseService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+
+        <receiver android:name=".notifications.NotificationsReceiver" />
     </application>
 
 </manifest>

@@ -3,6 +3,7 @@ package com.alexgreece45.marvelx.ui.screens.login
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.controllers.PrefKeys
+import com.alexgreece45.marvelx.dispatchers.DefaultDispatcher
 import com.alexgreece45.marvelx.domain.interactors.LoginPartialState
 import com.alexgreece45.marvelx.domain.interactors.RegisterInteractor
 import com.alexgreece45.marvelx.domain.model_api.otp.OtpFlowType
@@ -131,7 +132,7 @@ class LoginViewModel(
     private val formValidator: FormValidator,
     private val registerInteractor: RegisterInteractor,
     private val prefKeys: PrefKeys,
-    private val defaultDispatcher: CoroutineContext,
+    @DefaultDispatcher private val defaultDispatcher: CoroutineContext,
 ) : BaseViewModel<LoginEvent, LoginState, LoginEffect>() {
 
     override fun setInitialState(): LoginState = LoginState()

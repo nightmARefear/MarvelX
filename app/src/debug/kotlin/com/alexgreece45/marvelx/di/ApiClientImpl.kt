@@ -1,11 +1,12 @@
 package com.alexgreece45.marvelx.di
 
-import com.alexgreece45.marvelx.network_logic.api.ApiClient
-import com.alexgreece45.marvelx.network_logic.api.ApiService
+import com.alexgreece45.marvelx.network_logic.clients.ApiClient
 import com.alexgreece45.marvelx.network_logic.models_api.authorize.ResponseAuthorize
 import com.alexgreece45.marvelx.network_logic.models_api.character.CharacterDataWrapper
 import com.alexgreece45.marvelx.network_logic.models_api.character.comic.ComicDataWrapper
-import com.alexgreece45.marvelx.network_logic.models_api.faq.ResponseFaq
+import com.alexgreece45.marvelx.network_logic.models_api.device.RequestRegisterDevice
+import com.alexgreece45.marvelx.network_logic.models_api.device.RequestUpdateDevice
+import com.alexgreece45.marvelx.network_logic.models_api.faq.ResponseFaqs
 import com.alexgreece45.marvelx.network_logic.models_api.forgotPassword.email.RequestForgotPasswordOtpBlockedEmail
 import com.alexgreece45.marvelx.network_logic.models_api.forgotPassword.email.RequestForgotPasswordSendOtp
 import com.alexgreece45.marvelx.network_logic.models_api.forgotPassword.email.RequestForgotPasswordValidateOtp
@@ -40,6 +41,7 @@ import com.alexgreece45.marvelx.network_logic.models_api.user.profileDetails.Res
 import com.alexgreece45.marvelx.network_logic.models_api.user.signup.RequestUserSignup
 import com.alexgreece45.marvelx.network_logic.models_api.user.signup.ResponseSignup
 import com.alexgreece45.marvelx.network_logic.models_generic.ApiResult
+import com.alexgreece45.marvelx.network_logic.services.ApiService
 import com.alexgreece45.marvelx.network_logic.util.executeApiServiceCall
 import com.alexgreece45.marvelx.network_logic.util.executeApiServiceCallNoTransformation
 import okhttp3.MultipartBody
@@ -88,6 +90,12 @@ class ApiClientImpl(
         uri: String
     ): Response<ResponseToken> = apiService.grandNewAccessToken(clientId, codeVerifier, code, uri)
 
+    override suspend fun registerDevice(requestRegisterDevice: RequestRegisterDevice): ApiResult<String> =
+        executeApiServiceCallNoTransformation { apiService.registerDevice(requestRegisterDevice) }
+
+    override suspend fun updateDevice(requestUpdateDevice: RequestUpdateDevice): ApiResult<String> =
+        executeApiServiceCallNoTransformation { apiService.updateDevice(requestUpdateDevice) }
+
     override suspend fun logout(clientId: String, refreshToken: String): Response<Void> =
         apiService.logout(clientId, refreshToken)
 
@@ -119,8 +127,16 @@ class ApiClientImpl(
             )
         }
 
-    override suspend fun updateUserProfileImage(userId: String, profileImage: MultipartBody.Part): ApiResult<String> =
-        executeApiServiceCallNoTransformation { apiService.updateUserProfileImage(userId, profileImage) }
+    override suspend fun updateUserProfileImage(
+        userId: String,
+        profileImage: MultipartBody.Part
+    ): ApiResult<String> =
+        executeApiServiceCallNoTransformation {
+            apiService.updateUserProfileImage(
+                userId,
+                profileImage
+            )
+        }
 
     override suspend fun getUserProfileDetails(userId: String): Response<ResponseProfileDetails> =
         apiService.getUserProfileDetails(userId = userId)
@@ -192,7 +208,7 @@ class ApiClientImpl(
             apiService.unblockUser(userId)
         }
 
-    override suspend fun getFaqs(): ApiResult<ResponseFaq> =
+    override suspend fun getFaqs(): ApiResult<ResponseFaqs> =
         executeApiServiceCall { apiService.getFaqs() }
 
     override suspend fun getJwtForSensitiveUserData(requestJwtSensitiveUserData: RequestJwtSensitiveUserData): Response<ResponseJwtSensitiveUserData> =

@@ -2,9 +2,11 @@ package com.alexgreece45.marvelx.ui.screens.friends
 
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.data.repository.FriendRequestsRepository
 import com.alexgreece45.marvelx.domain.helper.InteractorPartialState
 import com.alexgreece45.marvelx.domain.interactors.UserInteractor
+import com.alexgreece45.marvelx.domain.interactors.user.BlockedUserInteractor
+import com.alexgreece45.marvelx.domain.interactors.user.FriendInteractor
+import com.alexgreece45.marvelx.domain.interactors.user.IncomingFriendRequestInteractor
 import com.alexgreece45.marvelx.domain.model_api.user.block.BlockedUserDomain
 import com.alexgreece45.marvelx.domain.model_api.user.friend.FriendDomain
 import com.alexgreece45.marvelx.mvi.BaseViewModel
@@ -19,7 +21,9 @@ import java.time.Instant
 class FriendsViewModel(
     private val resourceProvider: ResourceProvider,
     private val userInteractor: UserInteractor,
-    private val friendRequestsRepository: FriendRequestsRepository,
+    private val friendInteractor: FriendInteractor,
+    private val incomingFriendRequestInteractor: IncomingFriendRequestInteractor,
+    private val blockedUserInteractor: BlockedUserInteractor
 ) : BaseViewModel<FriendsContract.Event, FriendsContract.State, FriendsContract.Effect>() {
 
     override fun setInitialState(): FriendsContract.State = FriendsContract.State()
@@ -228,7 +232,7 @@ class FriendsViewModel(
         }
 
         viewModelScope.launch {
-            userInteractor.getCurrentUserFriends().collect { result ->
+            friendInteractor.getCurrentUserFriends().collect { result ->
                 when (result) {
                     is InteractorPartialState.Error,
                     is InteractorPartialState.Failed -> {
@@ -290,7 +294,7 @@ class FriendsViewModel(
         }
 
         viewModelScope.launch {
-            userInteractor.getIncomingFriendRequests().collect { result ->
+            incomingFriendRequestInteractor.getIncomingFriendRequests().collect { result ->
                 when (result) {
                     is InteractorPartialState.Error,
                     is InteractorPartialState.Failed -> {
@@ -352,7 +356,7 @@ class FriendsViewModel(
         }
 
         viewModelScope.launch {
-            userInteractor.getBlockedUsers().collect { result ->
+            blockedUserInteractor.getBlockedUsers().collect { result ->
                 when (result) {
                     is InteractorPartialState.Error,
                     is InteractorPartialState.Failed -> {
@@ -400,7 +404,7 @@ class FriendsViewModel(
 
     private fun removeFriend(userId: String) {
         viewModelScope.launch {
-            userInteractor.deleteFriend(userId).collect { wasFriendDeleted ->
+            friendInteractor.deleteFriend(userId).collect { wasFriendDeleted ->
                 if (wasFriendDeleted) {
                     setEffect {
                         FriendsContract.Effect.ShowToastMessage(
@@ -435,7 +439,7 @@ class FriendsViewModel(
 
     private fun acceptFriendRequest(incomingFriendRequest: IncomingFriendRequestDomain) {
         viewModelScope.launch {
-            friendRequestsRepository.acceptFriendRequest(userId = incomingFriendRequest.userId)
+            incomingFriendRequestInteractor.acceptFriendRequest(userId = incomingFriendRequest.userId)
                 .collect { wasFriendRequestAccepted ->
                     if (wasFriendRequestAccepted) {
                         setEffect {
@@ -484,7 +488,7 @@ class FriendsViewModel(
 
     private fun removeFriendRequest(userId: String) {
         viewModelScope.launch {
-            friendRequestsRepository.deleteFriendRequest(userId)
+            incomingFriendRequestInteractor.deleteFriendRequest(userId)
                 .collect { wasFriendRequestDeleted ->
                     if (wasFriendRequestDeleted) {
                         setEffect {
@@ -520,7 +524,7 @@ class FriendsViewModel(
 
     private fun unblockUser(userId: String) {
         viewModelScope.launch {
-            userInteractor.unblockUser(userId)
+            blockedUserInteractor.unblockUser(userId)
                 .collect { result ->
                     when (result) {
                         is InteractorPartialState.Error,

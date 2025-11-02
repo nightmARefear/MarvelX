@@ -26,6 +26,10 @@ import com.alexgreece45.marvelx.controllers.CryptoController
 import com.alexgreece45.marvelx.controllers.CryptoControllerImpl
 import com.alexgreece45.marvelx.controllers.DeepLinkController
 import com.alexgreece45.marvelx.controllers.DeepLinkControllerImpl
+import com.alexgreece45.marvelx.controllers.DeviceController
+import com.alexgreece45.marvelx.controllers.DeviceControllerImpl
+import com.alexgreece45.marvelx.controllers.FcmController
+import com.alexgreece45.marvelx.controllers.FcmControllerImpl
 import com.alexgreece45.marvelx.controllers.MarvelXBackendRequestController
 import com.alexgreece45.marvelx.controllers.MarvelXBackendRequestControllerImpl
 import com.alexgreece45.marvelx.controllers.PrefKeys
@@ -46,14 +50,12 @@ import com.alexgreece45.marvelx.data.repository.ChangePasswordRepository
 import com.alexgreece45.marvelx.data.repository.ChangePasswordRepositoryImpl
 import com.alexgreece45.marvelx.data.repository.CharacterRepository
 import com.alexgreece45.marvelx.data.repository.CharacterRepositoryImpl
-import com.alexgreece45.marvelx.data.repository.ConfigRepository
-import com.alexgreece45.marvelx.data.repository.ConfigRepositoryImpl
+import com.alexgreece45.marvelx.data.repository.FaqsRepository
+import com.alexgreece45.marvelx.data.repository.FaqsRepositoryImpl
 import com.alexgreece45.marvelx.data.repository.FavoriteCharactersRepository
 import com.alexgreece45.marvelx.data.repository.FavoriteCharactersRepositoryImpl
 import com.alexgreece45.marvelx.data.repository.ForgotPasswordRepository
 import com.alexgreece45.marvelx.data.repository.ForgotPasswordRepositoryImpl
-import com.alexgreece45.marvelx.data.repository.FriendRequestsRepository
-import com.alexgreece45.marvelx.data.repository.FriendRequestsRepositoryImpl
 import com.alexgreece45.marvelx.data.repository.LoginRepository
 import com.alexgreece45.marvelx.data.repository.LoginRepositoryImpl
 import com.alexgreece45.marvelx.data.repository.OtpRepository
@@ -65,9 +67,16 @@ import com.alexgreece45.marvelx.data.repository.RegisterRepositoryImpl
 import com.alexgreece45.marvelx.data.repository.UserRepository
 import com.alexgreece45.marvelx.data.repository.UserRepositoryImpl
 import com.alexgreece45.marvelx.data.repository.imageLoader.AuthenticatedImageLoader
+import com.alexgreece45.marvelx.data.repository.user.BlockedUserRepository
+import com.alexgreece45.marvelx.data.repository.user.BlockedUserRepositoryImpl
+import com.alexgreece45.marvelx.data.repository.user.FriendRepository
+import com.alexgreece45.marvelx.data.repository.user.FriendRepositoryImpl
+import com.alexgreece45.marvelx.data.repository.user.IncomingFriendRequestRepository
+import com.alexgreece45.marvelx.data.repository.user.IncomingFriendRequestRepositoryImpl
 import com.alexgreece45.marvelx.database.FavoriteCharactersDao
 import com.alexgreece45.marvelx.database.FavoriteCharactersDatabase
-import com.alexgreece45.marvelx.dispatchers.MarvelXDispatchers
+import com.alexgreece45.marvelx.dispatchers.DefaultDispatcher
+import com.alexgreece45.marvelx.dispatchers.IoDispatcher
 import com.alexgreece45.marvelx.dispatchers.dispatchersModule
 import com.alexgreece45.marvelx.domain.interactors.ChangePasswordInteractor
 import com.alexgreece45.marvelx.domain.interactors.ChangePasswordInteractorImpl
@@ -75,8 +84,6 @@ import com.alexgreece45.marvelx.domain.interactors.CharacterInteractor
 import com.alexgreece45.marvelx.domain.interactors.CharacterInteractorImpl
 import com.alexgreece45.marvelx.domain.interactors.ComicInteractor
 import com.alexgreece45.marvelx.domain.interactors.ComicInteractorImpl
-import com.alexgreece45.marvelx.domain.interactors.ConfigInteractor
-import com.alexgreece45.marvelx.domain.interactors.ConfigInteractorImpl
 import com.alexgreece45.marvelx.domain.interactors.ForgotPasswordInteractor
 import com.alexgreece45.marvelx.domain.interactors.ForgotPasswordInteractorImpl
 import com.alexgreece45.marvelx.domain.interactors.LoginInteractor
@@ -89,6 +96,12 @@ import com.alexgreece45.marvelx.domain.interactors.SplashInteractor
 import com.alexgreece45.marvelx.domain.interactors.SplashInteractorImpl
 import com.alexgreece45.marvelx.domain.interactors.UserInteractor
 import com.alexgreece45.marvelx.domain.interactors.UserInteractorImpl
+import com.alexgreece45.marvelx.domain.interactors.user.BlockedUserInteractor
+import com.alexgreece45.marvelx.domain.interactors.user.BlockedUserInteractorImpl
+import com.alexgreece45.marvelx.domain.interactors.user.FriendInteractor
+import com.alexgreece45.marvelx.domain.interactors.user.FriendInteractorImpl
+import com.alexgreece45.marvelx.domain.interactors.user.IncomingFriendRequestInteractor
+import com.alexgreece45.marvelx.domain.interactors.user.IncomingFriendRequestInteractorImpl
 import com.alexgreece45.marvelx.domain.worker.RefreshTokenWorker
 import com.alexgreece45.marvelx.network_logic.di.networkKoinModule
 import com.alexgreece45.marvelx.network_logic.di.provideOkHttpClient
@@ -108,7 +121,7 @@ import com.alexgreece45.marvelx.ui.screens.friends.FriendsViewModel
 import com.alexgreece45.marvelx.ui.screens.home.HomeViewModel
 import com.alexgreece45.marvelx.ui.screens.introLoading.IntroLoadingViewModel
 import com.alexgreece45.marvelx.ui.screens.login.LoginViewModel
-import com.alexgreece45.marvelx.ui.screens.mainActivity.ActivityViewModel
+import com.alexgreece45.marvelx.ui.screens.mainActivity.MainActivityViewModel
 import com.alexgreece45.marvelx.ui.screens.otp.OtpViewModel
 import com.alexgreece45.marvelx.ui.screens.profile.ProfileViewModel
 import com.alexgreece45.marvelx.ui.screens.profile.editProfileDetails.EditProfileDetailsViewModel
@@ -134,7 +147,7 @@ import org.koin.androidx.workmanager.koin.workManagerFactory
 import org.koin.core.context.startKoin
 import org.koin.core.logger.Level
 import org.koin.core.module.Module
-import org.koin.core.qualifier.named
+import org.koin.core.qualifier.qualifier
 import org.koin.dsl.module
 
 /**
@@ -189,18 +202,12 @@ private val repositoryModule = module {
     single<FavoriteCharactersRepository> { FavoriteCharactersRepositoryImpl(get()) }
     single<RefreshTokenRepository> { RefreshTokenRepositoryImpl(get()) }
     single<LoginRepository> { LoginRepositoryImpl(get(), get(), get()) }
-    single<UserRepository> { UserRepositoryImpl(get(), get(named(MarvelXDispatchers.IO))) }
-    single<ConfigRepository> { ConfigRepositoryImpl(get()) }
+    single<UserRepository> { UserRepositoryImpl(get(), get(qualifier = qualifier<IoDispatcher>())) }
+    single<FaqsRepository> { FaqsRepositoryImpl(get(), get(qualifier = qualifier<IoDispatcher>())) }
     single<ForgotPasswordRepository> { ForgotPasswordRepositoryImpl(get(), get()) }
     single<ChangePasswordRepository> { ChangePasswordRepositoryImpl(get()) }
     single<OtpRepository> { OtpRepositoryImpl(get(), get()) }
     single<RegisterRepository> { RegisterRepositoryImpl(get()) }
-    single<FriendRequestsRepository> {
-        FriendRequestsRepositoryImpl(
-            get(),
-            get(named(MarvelXDispatchers.IO))
-        )
-    }
 
     // Image loader.
     single<AuthenticatedImageLoader> {
@@ -209,11 +216,30 @@ private val repositoryModule = module {
             okHttpClient = provideOkHttpClient(get(), get(), get(), get(), get(), get())
         )
     }
+
+    // User repositories.
+    single<FriendRepository> {
+        FriendRepositoryImpl(
+            get(),
+            get(qualifier = qualifier<IoDispatcher>())
+        )
+    }
+    single<IncomingFriendRequestRepository> {
+        IncomingFriendRequestRepositoryImpl(
+            get(),
+            get(qualifier = qualifier<IoDispatcher>())
+        )
+    }
+    single<BlockedUserRepository> {
+        BlockedUserRepositoryImpl(
+            get(),
+            get(qualifier = qualifier<IoDispatcher>())
+        )
+    }
 }
 
 private val interactorModule = module {
     factory<CharacterInteractor> { CharacterInteractorImpl(get(), get(), get(), get()) }
-    factory<ConfigInteractor> { ConfigInteractorImpl(get()) }
     factory<ComicInteractor> { ComicInteractorImpl(get(), get(), get()) }
     factory<LoginInteractor> {
         LoginInteractorImpl(
@@ -226,15 +252,21 @@ private val interactorModule = module {
             get(),
             get(),
             get(),
+            get(),
             get()
         )
     }
-    factory<UserInteractor> { UserInteractorImpl(get(), get(), get(), get(), get()) }
+    factory<UserInteractor> { UserInteractorImpl(get(), get(), get(), get()) }
     factory<ForgotPasswordInteractor> { ForgotPasswordInteractorImpl(get(), get()) }
     factory<ChangePasswordInteractor> { ChangePasswordInteractorImpl() }
     factory<OtpInteractor> { OtpInteractorImpl(get(), get(), get()) }
     factory<RegisterInteractor> { RegisterInteractorImpl(get(), get(), get()) }
     factory<SplashInteractor> { SplashInteractorImpl(get()) }
+
+    // User interactors.
+    factory<FriendInteractor> { FriendInteractorImpl(get()) }
+    factory<IncomingFriendRequestInteractor> { IncomingFriendRequestInteractorImpl(get()) }
+    factory<BlockedUserInteractor> { BlockedUserInteractorImpl(get(), get(), get(), get()) }
 }
 
 private val controllerModule = module {
@@ -245,7 +277,11 @@ private val controllerModule = module {
     single<RefreshTokenController> { RefreshTokenControllerImpl(get(), get(), get()) }
     single<TimerController> { TimerControllerImpl() }
     single<RootController> { RootControllerImpl(get()) }
-    single<SecurityController> { SecurityControllerImpl(get(), get(), get(), get(), get()) }
+    single<SecurityController> {
+        SecurityControllerImpl(
+            get(), get(), get(), get(), get(), get(qualifier = qualifier<IoDispatcher>())
+        )
+    }
     single<ApplicationPackageController> { ApplicationPackageControllerImpl(get(), get()) }
     single<AppLogger> { AppLoggerImpl(get()) }
     single<AntiReverseEngineeringController> { AntiReverseEngineeringControllerImpl(get(), get()) }
@@ -259,6 +295,14 @@ private val controllerModule = module {
         )
     }
     single<DeepLinkController> { DeepLinkControllerImpl(get(), get()) }
+    single<FcmController> { FcmControllerImpl(get()) }
+    single<DeviceController> {
+        DeviceControllerImpl(
+            get(),
+            get(),
+            get(qualifier = qualifier<IoDispatcher>())
+        )
+    }
 }
 
 private val formValidatorModule = module {
@@ -277,13 +321,21 @@ private val configModule = module {
 }
 
 private val viewModelModule = module {
-    viewModel { ActivityViewModel() }
+    viewModelOf(::MainActivityViewModel)
 
     viewModel { SplashViewModel(get(), get()) }
     viewModel { IntroLoadingViewModel(get(), get(), get(), get(), get(), get(), get()) }
 
     viewModel { HomeViewModel(get(), get()) }
-    viewModel { LoginViewModel(get(), get(), get(), get(), get(named(MarvelXDispatchers.Main))) }
+    viewModel {
+        LoginViewModel(
+            get(),
+            get(),
+            get(),
+            get(),
+            get(qualifier = qualifier<DefaultDispatcher>())
+        )
+    }
     viewModel {
         SignupViewModel(
             get(),
@@ -294,12 +346,12 @@ private val viewModelModule = module {
             get(),
             get(),
             get(),
-            get(),
-            get(named(MarvelXDispatchers.Main))
+            get(qualifier = qualifier<DefaultDispatcher>()),
+            get()
         )
     }
 
-    viewModel { OtpViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
+    viewModelOf(::OtpViewModel)
 
     viewModel { ForgotPasswordValidateEmailViewModel(get()) }
     viewModel { ForgotPasswordViewModel(get(), get(), get(), get()) }
@@ -335,7 +387,7 @@ private val workerModule = module {
             get(),
             get(),
             get(),
-            get(named(MarvelXDispatchers.IO))
+            get(qualifier = qualifier<IoDispatcher>())
         )
     }
     factory<WorkerFactory> {
@@ -344,7 +396,7 @@ private val workerModule = module {
             get(),
             get(),
             get(),
-            get(named(MarvelXDispatchers.IO))
+            get(qualifier = qualifier<IoDispatcher>())
         )
     }
 }

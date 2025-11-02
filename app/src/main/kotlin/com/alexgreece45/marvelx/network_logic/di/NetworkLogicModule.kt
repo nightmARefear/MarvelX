@@ -14,13 +14,15 @@ import com.alexgreece45.marvelx.di.ApiClientImpl
 import com.alexgreece45.marvelx.dispatchers.MarvelXDispatchers
 import com.alexgreece45.marvelx.domain.model_api.comic.ComicPriceType
 import com.alexgreece45.marvelx.domain.model_api.user.VerificationStep
-import com.alexgreece45.marvelx.network_logic.api.ApiClient
-import com.alexgreece45.marvelx.network_logic.api.ApiService
+import com.alexgreece45.marvelx.network_logic.clients.ApiClient
+import com.alexgreece45.marvelx.network_logic.services.ApiService
 import com.alexgreece45.marvelx.network_logic.authenticators.ApiAuthenticator
 import com.alexgreece45.marvelx.network_logic.authenticators.RefreshTokenAuthenticator
 import com.alexgreece45.marvelx.network_logic.clients.RefreshTokenClient
 import com.alexgreece45.marvelx.network_logic.clients.RefreshTokenClientImpl
 import com.alexgreece45.marvelx.data.repository.imageLoader.AuthenticatedImageLoader
+import com.alexgreece45.marvelx.dispatchers.IoDispatcher
+import com.alexgreece45.marvelx.dispatchers.MainDispatcher
 import com.alexgreece45.marvelx.network_logic.interceptors.ApiInterceptor
 import com.alexgreece45.marvelx.network_logic.interceptors.RefreshTokenInterceptor
 import com.alexgreece45.marvelx.network_logic.interceptors.WebsocketInterceptor
@@ -44,6 +46,7 @@ import org.koin.core.annotation.Factory
 import org.koin.core.annotation.Module
 import org.koin.core.annotation.Single
 import org.koin.core.qualifier.named
+import org.koin.core.qualifier.qualifier
 import org.koin.dsl.module
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -310,7 +313,7 @@ val networkKoinModule = module {
             get(),
             get(),
             get(),
-            get(named(MarvelXDispatchers.Main))
+            get(qualifier = qualifier<MainDispatcher>())
         )
     }
     single<RefreshTokenAuthenticator> { RefreshTokenAuthenticator(get(), get(), get()) }

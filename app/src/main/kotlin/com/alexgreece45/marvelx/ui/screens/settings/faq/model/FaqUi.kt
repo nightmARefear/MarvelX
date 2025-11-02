@@ -1,9 +1,9 @@
 package com.alexgreece45.marvelx.ui.screens.settings.faq.model
 
-import com.alexgreece45.marvelx.domain.model_api.faq.FaqSectionDomain
+import com.alexgreece45.marvelx.data.model.RepositoryFaq
 
 /**
- * The UI model of [FaqSectionDomain].
+ * The UI model of [RepositoryFaq].
  *
  * @param id            The unique ID of this section.
  * @param title         The title of this section.
@@ -11,7 +11,7 @@ import com.alexgreece45.marvelx.domain.model_api.faq.FaqSectionDomain
  * @param order         The order of this section.
  * @param isExpanded    Whether this section is expanded. It has the default value of `false`.
  */
-data class FaqSectionUi(
+data class FaqUi(
     val id: String,
     val title: String,
     val description: String,
@@ -19,11 +19,8 @@ data class FaqSectionUi(
     val isExpanded: Boolean = false
 )
 
-fun List<FaqSectionDomain>.toFaqSectionUiList(): List<FaqSectionUi> =
-    this.map { it.toFaqSectionUi() }
-
-private fun FaqSectionDomain.toFaqSectionUi(): FaqSectionUi =
-    FaqSectionUi(
+fun RepositoryFaq.toFaqUi(): FaqUi =
+    FaqUi(
         id = this.id,
         title = "${this.order}. ${this.title}",
         description = this.description,

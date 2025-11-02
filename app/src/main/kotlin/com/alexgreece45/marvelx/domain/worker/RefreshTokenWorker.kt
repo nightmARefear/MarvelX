@@ -6,6 +6,7 @@ import androidx.work.WorkerParameters
 import com.alexgreece45.marvelx.configuration.ConfigOauth
 import com.alexgreece45.marvelx.controllers.AppLogger
 import com.alexgreece45.marvelx.controllers.AuthController
+import com.alexgreece45.marvelx.dispatchers.IoDispatcher
 import com.alexgreece45.marvelx.domain.model_api.userAuthData.UserAuthData
 import com.alexgreece45.marvelx.network_logic.clients.RefreshTokenClient
 import com.alexgreece45.marvelx.util.DateUtil
@@ -20,7 +21,7 @@ class RefreshTokenWorker(
     private val authController: AuthController,
     private val configOauth: ConfigOauth,
     private val logger: AppLogger,
-    private val ioDispatcher: CoroutineContext,
+    @IoDispatcher private val ioDispatcher: CoroutineContext,
 ) : CoroutineWorker(context, workerParameters) {
 
     override suspend fun doWork(): Result = withContext(ioDispatcher) {

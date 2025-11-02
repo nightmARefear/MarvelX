@@ -130,6 +130,7 @@ android {
 
     kotlinOptions {
         jvmTarget = JavaVersion.toVersion(libs.versions.java.version.get()).toString()
+        freeCompilerArgs = listOf("-XXLanguage:+PropertyParamAnnotationDefaultTargetMode")
     }
 
     packaging {
@@ -233,6 +234,7 @@ dependencies {
     implementation(libs.google.play.services.auth)
     implementation(libs.google.firebase.auth)
     implementation(libs.google.firebase.firestore)
+    implementation(libs.google.firebase.cloud.messaging)
 
     // Shimmer.
     implementation(libs.valentinilk.shimmer)

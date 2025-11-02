@@ -31,6 +31,7 @@ import com.alexgreece45.marvelx.ui.screens.friends.model.FriendsContract
 import com.alexgreece45.marvelx.ui.screens.home.HomeScreen
 import com.alexgreece45.marvelx.ui.screens.home.HomeViewModel
 import com.alexgreece45.marvelx.ui.screens.introLoading.IntroLoadingScreen
+import com.alexgreece45.marvelx.ui.screens.introLoading.IntroLoadingViewModel
 import com.alexgreece45.marvelx.ui.screens.login.LoginScreen
 import com.alexgreece45.marvelx.ui.screens.login.LoginViewModel
 import com.alexgreece45.marvelx.ui.screens.otp.OtpScreen
@@ -98,7 +99,13 @@ fun NavGraph(navController: NavHostController) {
         }
 
         composable(Screen.IntroLoadingScreen) {
-            IntroLoadingScreen(navController = navController)
+            val viewModel  =koinViewModel<IntroLoadingViewModel>()
+            IntroLoadingScreen(
+                navController = navController,
+                onEventSent = viewModel::setEvent,
+                state = viewModel.uiState.collectAsStateWithLifecycle().value,
+                effect = viewModel.uiEffect
+            )
         }
 
         composable(Screen.HomeScreen) {

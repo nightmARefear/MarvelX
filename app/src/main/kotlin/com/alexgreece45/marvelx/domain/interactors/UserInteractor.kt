@@ -1,23 +1,14 @@
 package com.alexgreece45.marvelx.domain.interactors
 
-import com.alexgreece45.marvelx.configuration.ConfigLogic
 import com.alexgreece45.marvelx.controllers.AppLogger
 import com.alexgreece45.marvelx.controllers.PrefKeys
 import com.alexgreece45.marvelx.data.model.RepositoryPrivacySettings
-import com.alexgreece45.marvelx.data.repository.BlockUserRepositoryResult
 import com.alexgreece45.marvelx.data.repository.GetCurrentUserProfileDetailsRepositoryResponse
 import com.alexgreece45.marvelx.data.repository.GetProfileDetailsRepositoryResponse
 import com.alexgreece45.marvelx.data.repository.UserRepository
-import com.alexgreece45.marvelx.data.repository.helper.RepositoryResult
 import com.alexgreece45.marvelx.domain.helper.InteractorPartialState
 import com.alexgreece45.marvelx.domain.helper.handleRepositoryResult
 import com.alexgreece45.marvelx.domain.helper.handleRepositoryResultNoTransformation
-import com.alexgreece45.marvelx.domain.model_api.user.block.BlockedUserDomain
-import com.alexgreece45.marvelx.domain.model_api.user.block.UserBlockResultType
-import com.alexgreece45.marvelx.domain.model_api.user.block.toBlockedUserDomainList
-import com.alexgreece45.marvelx.domain.model_api.user.block.toUserBlockResultDomain
-import com.alexgreece45.marvelx.domain.model_api.user.friend.FriendDomain
-import com.alexgreece45.marvelx.domain.model_api.user.friend.toFriendDomainList
 import com.alexgreece45.marvelx.domain.model_api.user.privacySettings.PrivacySettingsDomain
 import com.alexgreece45.marvelx.domain.model_api.user.privacySettings.toPrivacySettingsDomain
 import com.alexgreece45.marvelx.domain.model_api.user.privacySettings.toRequestPrivacySettings
@@ -28,11 +19,6 @@ import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.toBasicProf
 import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.toProfileDetailsDomain
 import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.toProfileDetailsErrorDomain
 import com.alexgreece45.marvelx.domain.model_generic.ReadFileContentData
-import com.alexgreece45.marvelx.network_logic.models_api.user.block.ResponseBlockedUser
-import com.alexgreece45.marvelx.network_logic.models_api.user.friend.ResponseFriend
-import com.alexgreece45.marvelx.network_logic.models_api.user.incomingFriendRequest.ResponseIncomingFriendRequest
-import com.alexgreece45.marvelx.ui.screens.friends.model.IncomingFriendRequestDomain
-import com.alexgreece45.marvelx.ui.screens.friends.model.toIncomingFriendRequestList
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.extensions.getFileNameExtension
 import com.alexgreece45.marvelx.util.extensions.getMediaTypeFromFileName
@@ -78,48 +64,12 @@ interface UserInteractor {
      * Updates the privacy settings of the current user.
      */
     suspend fun updatePrivacySettings(privacySettingsDomain: PrivacySettingsDomain): Flow<InteractorPartialState<String>>
-
-    /**
-     * Returns the friends of the given user ID.
-     */
-    suspend fun getFriends(userId: String): Flow<InteractorPartialState<List<FriendDomain>>>
-
-    /**
-     *  Returns the friends of the current user.
-     */
-    suspend fun getCurrentUserFriends(): Flow<InteractorPartialState<List<FriendDomain>>>
-
-    /**
-     * Deletes the friend with the given ID.
-     */
-    suspend fun deleteFriend(userId: String): Flow<Boolean>
-
-    /**
-     * Returns the incoming friend requests of the current user.
-     */
-    suspend fun getIncomingFriendRequests(): Flow<InteractorPartialState<List<IncomingFriendRequestDomain>>>
-
-    /**
-     * Returns the blocked users.
-     */
-    suspend fun getBlockedUsers(): Flow<InteractorPartialState<List<BlockedUserDomain>>>
-
-    /**
-     * Blocks the user with the given [userId].
-     */
-    suspend fun blockUser(userId: String): Flow<BlockUserPartialState>
-
-    /**
-     * Blocks the user with the given [userId].
-     */
-    suspend fun unblockUser(userId: String): Flow<InteractorPartialState<String>>
 }
 
 class UserInteractorImpl(
     private val logger: AppLogger,
     private val resourceProvider: ResourceProvider,
     private val repository: UserRepository,
-    private val configLogic: ConfigLogic,
     private val prefKeys: PrefKeys
 ) : UserInteractor {
 
@@ -214,9 +164,10 @@ class UserInteractorImpl(
                 filename = "profile_image." + profileImageReadFileContentData.fileName.getFileNameExtension(),
                 body = imageRequestBody
             )
-            repository.updateUserProfileImage(prefKeys.getUserId(), imagePart).collect { repositoryResult ->
-                emitAll(handleRepositoryResultNoTransformation(repositoryResult))
-            }
+            repository.updateUserProfileImage(prefKeys.getUserId(), imagePart)
+                .collect { repositoryResult ->
+                    emitAll(handleRepositoryResultNoTransformation(repositoryResult))
+                }
         }.catch {
             logger.e("UserInteractor") { "(updateUserProfileImage) e: ${it.localizedMessage.orEmpty()}" }
             when (it) {
@@ -246,96 +197,6 @@ class UserInteractorImpl(
                     }
                 }
         }
-
-    override suspend fun deleteFriend(userId: String): Flow<Boolean> = flow {
-        repository.deleteFriend(userId).collect {
-            emit(
-                when (it) {
-                    is RepositoryResult.Success -> true
-                    else -> false
-                }
-            )
-        }
-    }
-
-    override suspend fun getIncomingFriendRequests(): Flow<InteractorPartialState<List<IncomingFriendRequestDomain>>> =
-        flow {
-            repository.getIncomingFriendRequests().collect { repositoryResult ->
-                handleRepositoryResult(
-                    result = repositoryResult,
-                    transformation = List<ResponseIncomingFriendRequest>::toIncomingFriendRequestList
-                ).collect { emit(it) }
-            }
-        }
-
-    override suspend fun getFriends(userId: String): Flow<InteractorPartialState<List<FriendDomain>>> =
-        flow {
-            repository.getFriends(userId).collect { repositoryResult ->
-                handleRepositoryResult(
-                    result = repositoryResult,
-                    transformation = List<ResponseFriend>::toFriendDomainList
-                ).collect { emit(it) }
-            }
-        }
-
-    override suspend fun getCurrentUserFriends(): Flow<InteractorPartialState<List<FriendDomain>>> =
-        flow {
-            repository.getCurrentUserFriends().collect { repositoryResult ->
-                handleRepositoryResult(
-                    result = repositoryResult,
-                    transformation = List<ResponseFriend>::toFriendDomainList
-                ).collect { emit(it) }
-            }
-        }
-
-    override suspend fun getBlockedUsers(): Flow<InteractorPartialState<List<BlockedUserDomain>>> =
-        flow {
-            repository.getBlockedUsers().collect { repositoryResult ->
-                handleRepositoryResult(
-                    result = repositoryResult,
-                    transformation = List<ResponseBlockedUser>::toBlockedUserDomainList
-                ).collect { emit(it) }
-            }
-        }
-
-    override suspend fun blockUser(userId: String): Flow<BlockUserPartialState> =
-        flow {
-            if (userId == prefKeys.getUserId()) {
-                emit(BlockUserPartialState.Failed(UserBlockResultType.SameUser))
-                return@flow
-            }
-
-            repository.blockUser(userId).collect { repositoryResult ->
-                when (repositoryResult) {
-                    BlockUserRepositoryResult.Success -> {
-                        emit(BlockUserPartialState.Success)
-                    }
-
-                    is BlockUserRepositoryResult.Failed -> {
-                        emit(BlockUserPartialState.Failed(repositoryResult.repositoryUserBlockResult.toUserBlockResultDomain().userBlockResultType))
-                    }
-                }
-            }
-        }.safeAsync {
-            logger.e("UserInteractor") { "(blockUser) e: ${it.localizedMessage.orEmpty()}" }
-            when (it) {
-                is IOException -> {
-                    BlockUserPartialState.Error(errorMessage = resourceProvider.getNoInternetConnectionMessage())
-                }
-
-                else -> {
-                    BlockUserPartialState.Error(errorMessage = resourceProvider.getGenericErrorMessage())
-                }
-            }
-        }
-
-    override suspend fun unblockUser(userId: String): Flow<InteractorPartialState<String>> = flow {
-        repository.unblockUser(userId).collect { repositoryResult ->
-            handleRepositoryResultNoTransformation(repositoryResult).collect {
-                emit(it)
-            }
-        }
-    }
 }
 
 sealed class GetCurrentUserProfileDetailsPartialState {
@@ -357,10 +218,4 @@ sealed class GetProfileDetailsPartialState {
     data class Error(val errorMessage: String) : GetProfileDetailsPartialState()
 
     data object NoInternetConnection : GetProfileDetailsPartialState()
-}
-
-sealed interface BlockUserPartialState {
-    data object Success : BlockUserPartialState
-    data class Failed(val userBlockResultType: UserBlockResultType) : BlockUserPartialState
-    data class Error(val errorMessage: String) : BlockUserPartialState
 }

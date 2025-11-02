@@ -33,17 +33,27 @@ sealed interface ProfileContract {
              */
             data object OnClicked : ProfileImage
 
-            /**
-             * Triggered when an image is selected in the `photo picker`.
-             */
-            data class OnImageSelected(val imageFileContentData: AttachedFileContentData?) :
-                ProfileImage
+            sealed interface ImageSelectionEvent : ProfileImage {
+                /**
+                 * Triggered when an image is selected in the `photo picker`.
+                 */
+                data class OnSuccess(val imageFileContentData: AttachedFileContentData?) : ImageSelectionEvent
 
-            /**
-             * Triggered when a selected image has been cropped.
-             */
-            data class OnImageCropped(val imageFileContentData: AttachedFileContentData?) :
-                ProfileImage
+                /**
+                 * Triggered when no image was selected.
+                 */
+                data object NoSelection : ImageSelectionEvent
+            }
+
+            sealed interface ImageCropEvent : ProfileImage {
+                /**
+                 * Triggered when a selected image has been successfully cropped.
+                 */
+                data class OnSuccess(val imageFileContentData: AttachedFileContentData?) :
+                    ImageCropEvent
+
+                data class OnFailure(val errorMessage: String?) : ImageCropEvent
+            }
 
             /**
              * Triggered when the cropped image's content is read.
@@ -131,7 +141,8 @@ sealed interface ProfileContract {
          */
         data class OpenImageCropper(
             val toolbarTitle: String,
-            val imageSize: Int,
+            val minImageSize: Int,
+            val maxImageSize: Int,
             val imageUri: Uri
         ) : Effect()
 
