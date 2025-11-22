@@ -38,7 +38,7 @@ class RefreshTokenAuthenticator(
 
         // If the path is the token path then logout.
         if (path == configOauth.tokenPath) {
-            appLogger.e("RefreshTokenAuthenticator") { "(authenticate) An authorization occurred whilst trying to refresh the access token." }
+            appLogger.e("RefreshTokenAuthenticator") { "(authenticate) An authorization error occurred whilst trying to refresh the access token." }
             performLogoutOperations()
         }
         return null

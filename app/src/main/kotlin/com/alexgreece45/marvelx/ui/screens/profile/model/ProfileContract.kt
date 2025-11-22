@@ -9,7 +9,7 @@ import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
 import com.alexgreece45.marvelx.ui.components.model.BottomSheetContentItem
 import com.alexgreece45.marvelx.ui.components.sections.model.SectionHeaderData
-import com.alexgreece45.marvelx.ui.helper.model.DeepLinkAction
+import com.alexgreece45.marvelx.data.model.deepLink.DeepLinkAction
 
 sealed interface ProfileContract {
     sealed interface Event : BaseEvent {

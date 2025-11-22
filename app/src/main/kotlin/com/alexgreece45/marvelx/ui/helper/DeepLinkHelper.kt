@@ -8,8 +8,8 @@ import androidx.navigation.NavController
 import androidx.navigation.NavDeepLinkRequest
 import androidx.navigation.navOptions
 import com.alexgreece45.marvelx.BuildConfig
-import com.alexgreece45.marvelx.ui.helper.model.DeepLinkAction
-import com.alexgreece45.marvelx.ui.helper.model.DeepLinkActionType
+import com.alexgreece45.marvelx.data.model.deepLink.DeepLinkAction
+import com.alexgreece45.marvelx.data.model.deepLink.DeepLinkActionType
 import com.alexgreece45.marvelx.ui.navigation.NavItem
 import com.alexgreece45.marvelx.ui.screens.mainActivity.MainActivity
 import com.alexgreece45.marvelx.util.extensions.getPortFromUrl
@@ -69,7 +69,7 @@ private fun generateNewTaskDeepLink(
         context,
         MainActivity::class.java
     ).apply {
-        setFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
     }
 
 /**
@@ -106,9 +106,8 @@ fun createUriPatternForDeepLink(baseRoute: String, deepLinkArgs: List<NavItem>):
         append("${BuildConfig.DEEPLINK_SCHEME}://")
         append("${BuildConfig.MARVELX_BACKEND_DOMAIN}:")
         append("${BuildConfig.MARVELX_BACKEND_BASE_URL.getPortFromUrl()}/")
-        append("$baseRoute/")
+        append(baseRoute)
         deepLinkArgs.forEach { navDeepLinkItem ->
-            append("{${navDeepLinkItem.key}}")
-            append("/")
+            append("/{${navDeepLinkItem.key}}")
         }
-    }.removeSuffix("/")
+    }

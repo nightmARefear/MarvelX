@@ -39,6 +39,7 @@ import com.alexgreece45.marvelx.network_logic.models_api.user.signup.RequestUser
 import com.alexgreece45.marvelx.network_logic.models_api.user.signup.ResponseSignup
 import com.alexgreece45.marvelx.network_logic.models_generic.ApiResult
 import okhttp3.MultipartBody
+import okhttp3.ResponseBody
 import retrofit2.Response
 
 interface ApiClient {
@@ -90,7 +91,7 @@ interface ApiClient {
     suspend fun getIncomingFriendRequests(): ApiResult<List<ResponseIncomingFriendRequest>>
     suspend fun sendFriendRequest(userId: String): ApiResult<String>
     suspend fun acceptFriendRequest(userId: String): ApiResult<String>
-    suspend fun deleteFriendRequest(userId: String): ApiResult<String>
+    suspend fun deleteFriendRequest(userId: String, type: String): ApiResult<String>
 
     suspend fun getFriends(): ApiResult<List<ResponseFriend>>
     suspend fun deleteFriend(userId: String): ApiResult<String>
@@ -102,4 +103,8 @@ interface ApiClient {
     suspend fun getFaqs(): ApiResult<ResponseFaqs>
     suspend fun getJwtForSensitiveUserData(requestJwtSensitiveUserData: RequestJwtSensitiveUserData): Response<ResponseJwtSensitiveUserData>
     suspend fun getSensitiveUserData(requestSensitiveUserData: RequestSensitiveUserData): Response<ResponseSensitiveUserData>
+
+    suspend fun getImage(imageUrl: String): ApiResult<ResponseBody>
+
+    suspend fun markNotificationAsOpened(notificationId: Int): ApiResult<String>
 }

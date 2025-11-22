@@ -45,11 +45,11 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
 
-                <data android:scheme="${deeplinkScheme}" />
                 <data
                     android:host="${deeplinkHost}"
-                    android:port="${deeplinkPort}" />
-                <data android:pathAdvancedPattern="${deeplinkPathAdvancedPattern}" />
+                    android:pathAdvancedPattern="${deeplinkPathAdvancedPattern}"
+                    android:port="${deeplinkPort}"
+                    android:scheme="${deeplinkScheme}" />
             </intent-filter>
         </activity>
 
@@ -64,14 +64,13 @@
             tools:node="remove" />
 
         <service
-            android:name=".notifications.MarvelXFirebaseService"
+            android:name=".notifications.firebaseService.MarvelXFirebaseService"
             android:exported="false">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
 
-        <receiver android:name=".notifications.NotificationsReceiver" />
     </application>
 
 </manifest>

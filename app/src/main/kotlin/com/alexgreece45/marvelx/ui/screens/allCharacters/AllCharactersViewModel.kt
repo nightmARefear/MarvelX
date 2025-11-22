@@ -16,7 +16,7 @@ import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
 import com.alexgreece45.marvelx.mvi.BaseViewModel
 import com.alexgreece45.marvelx.ui.components.SortingType
-import com.alexgreece45.marvelx.ui.helper.model.DeepLinkAction
+import com.alexgreece45.marvelx.data.model.deepLink.DeepLinkAction
 import com.alexgreece45.marvelx.ui.navigation.router.RouterHost
 import com.alexgreece45.marvelx.ui.screens.allCharacters.model.AllCharactersScreenErrorView
 import com.alexgreece45.marvelx.ui.screens.allCharacters.uiModel.CharacterCardUi

@@ -9,8 +9,8 @@ import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
 import com.alexgreece45.marvelx.mvi.BaseViewModel
-import com.alexgreece45.marvelx.ui.helper.model.DeepLinkAction
-import com.alexgreece45.marvelx.ui.helper.model.DeepLinkActionType
+import com.alexgreece45.marvelx.data.model.deepLink.DeepLinkAction
+import com.alexgreece45.marvelx.data.model.deepLink.DeepLinkActionType
 import com.alexgreece45.marvelx.ui.navigation.NavDeepLinkItem
 import com.alexgreece45.marvelx.ui.navigation.Screen
 import com.alexgreece45.marvelx.ui.screens.qrCode.model.QrCodeErrorData
@@ -173,34 +173,34 @@ class QrCodeScanViewModel :
             is QrCodeScanContract.Event.OnCameraBindFailed -> {
                 appLogger.e("QrCodeScanViewModel") { "(OnCameraBindFailed) failure message: ${event.failureMessage}" }
                 viewModelScope.launch {
-                    deepLinkController.createDeepLinkAction(
-                        actionType = DeepLinkActionType.View,
-                        screenRoute = currentState.previousScreen?.route.orEmpty(),
-                        deepLinkMap = mapOf(
-                            Pair(
-                                first = NavDeepLinkItem.QrCodeScanErrorMessage,
-                                second = resourceProvider.getString(R.string.qr_code_screen_label_error_camera_binding_failed)
+                    when (
+                        val result = deepLinkController.createDeepLinkAction(
+                            actionType = DeepLinkActionType.View,
+                            screenRoute = currentState.previousScreen?.route.orEmpty(),
+                            deepLinkMap = mapOf(
+                                Pair(
+                                    first = NavDeepLinkItem.QrCodeScanErrorMessage,
+                                    second = resourceProvider.getString(R.string.qr_code_screen_label_error_camera_binding_failed)
+                                )
                             )
                         )
-                    ).collect {
-                        when (it) {
-                            CreateDeepLinkActionResult.Failed -> {
-                                setEffect {
-                                    QrCodeScanContract.Effect.ShowToastAndNavigateUp(
-                                        message = resourceProvider.getGenericErrorMessage()
-                                    )
-                                }
+                    ) {
+                        CreateDeepLinkActionResult.Failed -> {
+                            setEffect {
+                                QrCodeScanContract.Effect.ShowToastAndNavigateUp(
+                                    message = resourceProvider.getGenericErrorMessage()
+                                )
                             }
+                        }
 
-                            is CreateDeepLinkActionResult.Success -> {
-                                setEffect {
-                                    QrCodeScanContract.Effect.CacheDeepLinkAction(
-                                        deepLinkAction = it.deepLinkAction
-                                    )
-                                }
-                                setEffect {
-                                    QrCodeScanContract.Effect.Navigation.NavigateUp
-                                }
+                        is CreateDeepLinkActionResult.Success -> {
+                            setEffect {
+                                QrCodeScanContract.Effect.CacheDeepLinkAction(
+                                    deepLinkAction = result.deepLinkAction
+                                )
+                            }
+                            setEffect {
+                                QrCodeScanContract.Effect.Navigation.NavigateUp
                             }
                         }
                     }
@@ -219,7 +219,7 @@ class QrCodeScanViewModel :
      * Handles the given QR Code webURL and emits whether the QR code processing job should be
      * stopped.
      */
-    private suspend fun handleQrCodeWebUrl(qrCode: String): Flow<Boolean> = flow {
+    private fun handleQrCodeWebUrl(qrCode: String): Flow<Boolean> = flow {
         deepLinkController.handleQrCodeWebUrl(qrCode)
             .collect { handleQrCodeWebUrlResult ->
                 when (handleQrCodeWebUrlResult) {

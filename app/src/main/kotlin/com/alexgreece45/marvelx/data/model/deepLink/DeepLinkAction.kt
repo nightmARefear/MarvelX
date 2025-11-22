@@ -1,4 +1,4 @@
-package com.alexgreece45.marvelx.ui.helper.model
+package com.alexgreece45.marvelx.data.model.deepLink
 
 import com.google.gson.annotations.SerializedName
 

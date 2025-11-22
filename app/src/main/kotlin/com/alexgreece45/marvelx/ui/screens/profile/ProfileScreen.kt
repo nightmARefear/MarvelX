@@ -64,7 +64,7 @@ import com.alexgreece45.marvelx.ui.components.model.ShadowData
 import com.alexgreece45.marvelx.ui.components.rememberWrapModalBottomSheetState
 import com.alexgreece45.marvelx.ui.components.sections.SectionListHeader
 import com.alexgreece45.marvelx.ui.components.sections.model.SectionHeaderData
-import com.alexgreece45.marvelx.ui.helper.model.DeepLinkAction
+import com.alexgreece45.marvelx.data.model.deepLink.DeepLinkAction
 import com.alexgreece45.marvelx.ui.navigation.getBottomNavigationBarData
 import com.alexgreece45.marvelx.ui.screens.profile.model.ProfileBottomSheetType
 import com.alexgreece45.marvelx.ui.screens.profile.model.ProfileContract

@@ -69,7 +69,7 @@ class AuthControllerImpl(
     private val userAuthData: UserAuthData?
         get() {
             return try {
-                Gson().fromJson(
+                gson.fromJson(
                     prefKeys.getUserAuthData(),
                     UserAuthData::class.java
                 )
@@ -98,14 +98,14 @@ class AuthControllerImpl(
 
     override fun isAccessTokenExpired(): Boolean =
         if (userAuthData != null) {
-            DateUtil.getSecondsFromEpoch() >= getAccessTokenExpiration()
+            DateUtil.getEpochSeconds() >= getAccessTokenExpiration()
         } else {
             true
         }
 
     override fun isRefreshTokenExpired(): Boolean =
         if (userAuthData != null) {
-            DateUtil.getSecondsFromEpoch() >= getRefreshTokenExpiration()
+            DateUtil.getEpochSeconds() >= getRefreshTokenExpiration()
         } else {
             true
         }

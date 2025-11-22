@@ -6,6 +6,8 @@ import com.alexgreece45.marvelx.domain.model_websocket.WebsocketDomain
  * Used by the websocket listener for the onMessage event.
  */
 sealed interface WebsocketOnMessageReceivedPartialState {
-    data class Success(val websocketDomain: WebsocketDomain) : WebsocketOnMessageReceivedPartialState
+    data class Success(val websocketDomain: WebsocketDomain) :
+        WebsocketOnMessageReceivedPartialState
+
     data class Failed(val errorMessage: String) : WebsocketOnMessageReceivedPartialState
 }

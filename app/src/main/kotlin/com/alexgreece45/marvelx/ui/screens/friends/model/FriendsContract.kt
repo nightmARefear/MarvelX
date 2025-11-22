@@ -2,6 +2,7 @@ package com.alexgreece45.marvelx.ui.screens.friends.model
 
 import com.alexgreece45.marvelx.domain.model_api.user.block.BlockedUserDomain
 import com.alexgreece45.marvelx.domain.model_api.user.friend.FriendDomain
+import com.alexgreece45.marvelx.domain.model_api.user.friendRequest.IncomingFriendRequestDomain
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState

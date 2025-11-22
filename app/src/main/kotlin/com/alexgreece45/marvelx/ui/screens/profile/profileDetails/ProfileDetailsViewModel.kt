@@ -8,12 +8,13 @@ import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.configuration.models.DeepLinkWebUrl
 import com.alexgreece45.marvelx.data.repository.user.FriendRepository
-import com.alexgreece45.marvelx.data.repository.user.IncomingFriendRequestRepository
 import com.alexgreece45.marvelx.domain.interactors.GetProfileDetailsPartialState
 import com.alexgreece45.marvelx.domain.interactors.UserInteractor
 import com.alexgreece45.marvelx.domain.interactors.user.BlockUserPartialState
 import com.alexgreece45.marvelx.domain.interactors.user.BlockedUserInteractor
+import com.alexgreece45.marvelx.domain.interactors.user.FriendRequestInteractor
 import com.alexgreece45.marvelx.domain.model_api.user.block.UserBlockResultType
+import com.alexgreece45.marvelx.domain.model_api.user.friendRequest.DeleteFriendRequestType
 import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.ProfileDetailsDomain
 import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.ProfileDetailsErrorType
 import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.RelationshipStatusDomain
@@ -146,7 +147,7 @@ class ProfileDetailsViewModel(
     private val userInteractor: UserInteractor,
     private val resourceProvider: ResourceProvider,
     private val friendRepository: FriendRepository,
-    private val incomingFriendRequestRepository: IncomingFriendRequestRepository,
+    private val friendRequestInteractor: FriendRequestInteractor,
     private val blockedUserInteractor: BlockedUserInteractor,
 ) : BaseViewModel<ProfileDetailsContract.Event, ProfileDetailsContract.State, ProfileDetailsContract.Effect>() {
 
@@ -303,7 +304,7 @@ class ProfileDetailsViewModel(
                                     )
                                 }
 
-                                incomingFriendRequestRepository.sendFriendRequest(currentState.userId)
+                                friendRequestInteractor.sendFriendRequest(currentState.userId)
                                     .collect { wasSent ->
                                         setState {
                                             copy(
@@ -653,30 +654,32 @@ class ProfileDetailsViewModel(
         hideAlertDialogError()
 
         viewModelScope.launch {
-            incomingFriendRequestRepository.deleteFriendRequest(currentState.userId)
-                .collect { wasDeleted ->
-                    when (wasDeleted) {
-                        true -> {
-                            setState {
-                                copy(
-                                    isRelationshipStatusChipLoading = false,
-                                    profileDetails = profileDetails?.copy(
-                                        relationshipStatus = RelationshipStatusDomain.None
-                                    )
+            friendRequestInteractor.deleteFriendRequest(
+                userId = currentState.userId,
+                deleteFriendRequestType = DeleteFriendRequestType.SENDER
+            ).collect { wasDeleted ->
+                when (wasDeleted) {
+                    true -> {
+                        setState {
+                            copy(
+                                isRelationshipStatusChipLoading = false,
+                                profileDetails = profileDetails?.copy(
+                                    relationshipStatus = RelationshipStatusDomain.None
                                 )
-                            }
-                        }
-
-                        false -> {
-                            setState {
-                                copy(
-                                    isRelationshipStatusChipLoading = false
-                                )
-                            }
-                            showSnackbar(message = resourceProvider.getString(R.string.profile_details_screen_error_deleting_friend_request))
+                            )
                         }
                     }
+
+                    false -> {
+                        setState {
+                            copy(
+                                isRelationshipStatusChipLoading = false
+                            )
+                        }
+                        showSnackbar(message = resourceProvider.getString(R.string.profile_details_screen_error_deleting_friend_request))
+                    }
                 }
+            }
         }
     }
 
@@ -692,7 +695,7 @@ class ProfileDetailsViewModel(
         hideAlertDialogError()
 
         viewModelScope.launch {
-            incomingFriendRequestRepository.acceptFriendRequest(currentState.userId)
+            friendRequestInteractor.acceptFriendRequest(currentState.userId)
                 .collect { wasAccepted ->
                     when (wasAccepted) {
                         true -> {

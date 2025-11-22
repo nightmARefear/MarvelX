@@ -201,6 +201,7 @@ class LoginInteractorImpl(
                     }
 
                     prefKeys.signData = SignData(key = sign.key, algorithm = sign.algorithm)
+                    userRepository.setUserLoggedIn(true)
                     emit(PostLoginPartialState.Success)
                 }
 

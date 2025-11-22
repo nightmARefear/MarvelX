@@ -56,8 +56,12 @@ import com.alexgreece45.marvelx.data.repository.FavoriteCharactersRepository
 import com.alexgreece45.marvelx.data.repository.FavoriteCharactersRepositoryImpl
 import com.alexgreece45.marvelx.data.repository.ForgotPasswordRepository
 import com.alexgreece45.marvelx.data.repository.ForgotPasswordRepositoryImpl
+import com.alexgreece45.marvelx.data.repository.ImageRepository
+import com.alexgreece45.marvelx.data.repository.ImageRepositoryImpl
 import com.alexgreece45.marvelx.data.repository.LoginRepository
 import com.alexgreece45.marvelx.data.repository.LoginRepositoryImpl
+import com.alexgreece45.marvelx.data.repository.NotificationRepository
+import com.alexgreece45.marvelx.data.repository.NotificationRepositoryImpl
 import com.alexgreece45.marvelx.data.repository.OtpRepository
 import com.alexgreece45.marvelx.data.repository.OtpRepositoryImpl
 import com.alexgreece45.marvelx.data.repository.RefreshTokenRepository
@@ -71,8 +75,8 @@ import com.alexgreece45.marvelx.data.repository.user.BlockedUserRepository
 import com.alexgreece45.marvelx.data.repository.user.BlockedUserRepositoryImpl
 import com.alexgreece45.marvelx.data.repository.user.FriendRepository
 import com.alexgreece45.marvelx.data.repository.user.FriendRepositoryImpl
-import com.alexgreece45.marvelx.data.repository.user.IncomingFriendRequestRepository
-import com.alexgreece45.marvelx.data.repository.user.IncomingFriendRequestRepositoryImpl
+import com.alexgreece45.marvelx.data.repository.user.FriendRequestRepository
+import com.alexgreece45.marvelx.data.repository.user.FriendRequestRepositoryImpl
 import com.alexgreece45.marvelx.database.FavoriteCharactersDao
 import com.alexgreece45.marvelx.database.FavoriteCharactersDatabase
 import com.alexgreece45.marvelx.dispatchers.DefaultDispatcher
@@ -100,8 +104,8 @@ import com.alexgreece45.marvelx.domain.interactors.user.BlockedUserInteractor
 import com.alexgreece45.marvelx.domain.interactors.user.BlockedUserInteractorImpl
 import com.alexgreece45.marvelx.domain.interactors.user.FriendInteractor
 import com.alexgreece45.marvelx.domain.interactors.user.FriendInteractorImpl
-import com.alexgreece45.marvelx.domain.interactors.user.IncomingFriendRequestInteractor
-import com.alexgreece45.marvelx.domain.interactors.user.IncomingFriendRequestInteractorImpl
+import com.alexgreece45.marvelx.domain.interactors.user.FriendRequestInteractor
+import com.alexgreece45.marvelx.domain.interactors.user.FriendRequestInteractorImpl
 import com.alexgreece45.marvelx.domain.worker.RefreshTokenWorker
 import com.alexgreece45.marvelx.network_logic.di.networkKoinModule
 import com.alexgreece45.marvelx.network_logic.di.provideOkHttpClient
@@ -173,7 +177,7 @@ fun initKoin(marvelXApplication: MarvelXApplication) {
             configModule,
             viewModelModule,
             workerModule,
-            dispatchersModule
+            dispatchersModule,
         )
     }
 }
@@ -224,8 +228,8 @@ private val repositoryModule = module {
             get(qualifier = qualifier<IoDispatcher>())
         )
     }
-    single<IncomingFriendRequestRepository> {
-        IncomingFriendRequestRepositoryImpl(
+    single<FriendRequestRepository> {
+        FriendRequestRepositoryImpl(
             get(),
             get(qualifier = qualifier<IoDispatcher>())
         )
@@ -234,6 +238,14 @@ private val repositoryModule = module {
         BlockedUserRepositoryImpl(
             get(),
             get(qualifier = qualifier<IoDispatcher>())
+        )
+    }
+
+    single<ImageRepository> { ImageRepositoryImpl(get(), get(qualifier<IoDispatcher>())) }
+    single<NotificationRepository> {
+        NotificationRepositoryImpl(
+            get(),
+            get(qualifier<IoDispatcher>())
         )
     }
 }
@@ -265,7 +277,7 @@ private val interactorModule = module {
 
     // User interactors.
     factory<FriendInteractor> { FriendInteractorImpl(get()) }
-    factory<IncomingFriendRequestInteractor> { IncomingFriendRequestInteractorImpl(get()) }
+    factory<FriendRequestInteractor> { FriendRequestInteractorImpl(get()) }
     factory<BlockedUserInteractor> { BlockedUserInteractorImpl(get(), get(), get(), get()) }
 }
 
@@ -279,7 +291,12 @@ private val controllerModule = module {
     single<RootController> { RootControllerImpl(get()) }
     single<SecurityController> {
         SecurityControllerImpl(
-            get(), get(), get(), get(), get(), get(qualifier = qualifier<IoDispatcher>())
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(qualifier<IoDispatcher>())
         )
     }
     single<ApplicationPackageController> { ApplicationPackageControllerImpl(get(), get()) }

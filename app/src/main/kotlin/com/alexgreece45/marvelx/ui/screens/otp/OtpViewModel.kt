@@ -741,9 +741,6 @@ class OtpViewModel(
                                             // Save token info in device.
                                             authController.setData(accessTokenPartialState.userAuthData)
 
-                                            // User is now logged in. Save the flag.
-                                            userRepository.setUserLoggedIn(true)
-
                                             // Start refresh token worker since the access token was successfully retrieved.
                                             refreshTokenController.startWorker()
 

@@ -16,6 +16,7 @@ import com.alexgreece45.marvelx.network_logic.models_api.forgotPassword.phoneNum
 import com.alexgreece45.marvelx.network_logic.models_api.forgotPassword.phoneNumber.ResponseForgotPasswordOtpBlockedPhoneNumber
 import com.alexgreece45.marvelx.network_logic.models_api.jwtSensitiveUserData.RequestJwtSensitiveUserData
 import com.alexgreece45.marvelx.network_logic.models_api.jwtSensitiveUserData.ResponseJwtSensitiveUserData
+import com.alexgreece45.marvelx.network_logic.models_api.notification.BodyNotificationId
 import com.alexgreece45.marvelx.network_logic.models_api.otp.OtpRequest
 import com.alexgreece45.marvelx.network_logic.models_api.otp.OtpResponseSuccess
 import com.alexgreece45.marvelx.network_logic.models_api.resendOtp.RequestResendOtp
@@ -40,6 +41,7 @@ import com.alexgreece45.marvelx.network_logic.models_api.user.profileDetails.Res
 import com.alexgreece45.marvelx.network_logic.models_api.user.signup.RequestUserSignup
 import com.alexgreece45.marvelx.network_logic.models_api.user.signup.ResponseSignup
 import okhttp3.MultipartBody
+import okhttp3.ResponseBody
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -53,6 +55,8 @@ import retrofit2.http.PUT
 import retrofit2.http.Part
 import retrofit2.http.Path
 import retrofit2.http.Query
+import retrofit2.http.Streaming
+import retrofit2.http.Url
 
 interface ApiService {
 
@@ -97,7 +101,7 @@ interface ApiService {
         @Field("redirect_uri") redirectUri: String,
         @Field("grant_type") grantType: String = "authorization_code"
     ): Response<ResponseToken>
-    
+
     @POST("/api/private/marvelx/device/register")
     suspend fun registerDevice(@Body requestRegisterDevice: RequestRegisterDevice): Response<Void>
 
@@ -209,7 +213,10 @@ interface ApiService {
      * Deletes the friend request of another user.
      */
     @DELETE("/api/private/marvelx/user/{userId}/friend-requests")
-    suspend fun deleteFriendRequest(@Path("userId") userId: String): Response<Void>
+    suspend fun deleteFriendRequest(
+        @Path("userId") userId: String,
+        @Query("deleteFriendRequestType") deleteFriendRequestType: String
+    ): Response<Void>
 
     @DELETE("/api/private/marvelx/user/{userId}/friend")
     suspend fun deleteFriend(@Path("userId") userId: String): Response<Void>
@@ -237,4 +244,11 @@ interface ApiService {
 
     @POST("/api/private/marvelx/user/sensitive_data")
     suspend fun getSensitiveUserData(@Body requestSensitiveUserData: RequestSensitiveUserData): Response<ResponseSensitiveUserData>
+
+    @GET
+    @Streaming
+    suspend fun getImage(@Url url: String): Response<ResponseBody>
+
+    @PATCH("/api/private/marvelx/notifications")
+    suspend fun markNotificationAsOpened(@Body bodyNotificationID: BodyNotificationId): Response<Void>
 }

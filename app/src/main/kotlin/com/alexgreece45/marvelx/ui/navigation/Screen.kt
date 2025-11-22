@@ -1,7 +1,5 @@
 package com.alexgreece45.marvelx.ui.navigation
 
-import android.content.Intent
-import androidx.compose.runtime.key
 import androidx.navigation.NamedNavArgument
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
@@ -51,7 +49,6 @@ sealed class Screen(
         listOf(
             navDeepLink {
                 uriPattern = createUriPatternForDeepLink(baseRoute, navArgs)
-                action = Intent.ACTION_VIEW
             }
         )
     } else emptyList()

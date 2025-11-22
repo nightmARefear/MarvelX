@@ -2,8 +2,15 @@ package com.alexgreece45.marvelx.ui.screens.mainActivity
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
@@ -16,16 +23,22 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.controllers.AppLogger
 import com.alexgreece45.marvelx.controllers.PrefKeys
 import com.alexgreece45.marvelx.controllers.SecurityController
 import com.alexgreece45.marvelx.data.repository.UserRepository
+import com.alexgreece45.marvelx.notifications.constants.ConstantsNotifications
+import com.alexgreece45.marvelx.notifications.model.NotificationChannelData
+import com.alexgreece45.marvelx.notifications.model.NotificationChannelType
+import com.alexgreece45.marvelx.notifications.model.NotificationData
 import com.alexgreece45.marvelx.ui.components.effect.OneTimeLaunchedEffect
-import com.alexgreece45.marvelx.ui.helper.model.DeepLinkAction
+import com.alexgreece45.marvelx.data.model.deepLink.DeepLinkAction
 import com.alexgreece45.marvelx.ui.helper.openDeepLinkAction
 import com.alexgreece45.marvelx.ui.navigation.NavArgHelper
 import com.alexgreece45.marvelx.ui.navigation.Screen
@@ -34,11 +47,13 @@ import com.alexgreece45.marvelx.ui.navigation.router.RouterHost
 import com.alexgreece45.marvelx.ui.screens.home.models.HomeAlertDialogErrorType
 import com.alexgreece45.marvelx.ui.screens.mainActivity.model.MainActivityEffect
 import com.alexgreece45.marvelx.ui.screens.mainActivity.model.MainActivityEvent
-import com.alexgreece45.marvelx.ui.screens.splash.SplashContract
+import com.alexgreece45.marvelx.ui.screens.splash.SplashContract.AlertDialogErrorType.InsecureApplication
 import com.alexgreece45.marvelx.ui.theme.MarvelXTheme
+import com.alexgreece45.marvelx.util.DateUtil
 import com.alexgreece45.marvelx.util.extensions.popUpToTop
 import com.chuckerteam.chucker.api.Chucker
 import com.google.firebase.messaging.FirebaseMessaging
+import com.google.gson.Gson
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
@@ -46,19 +61,22 @@ import org.koin.core.annotation.KoinExperimentalAPI
 
 class MainActivity : ComponentActivity() {
 
+    private val loggerTag = "MainActivity"
+
     private val appLogger: AppLogger by inject()
     private val routerHost: RouterHost by inject()
     private val securityController: SecurityController by inject()
     private val viewModel: MainActivityViewModel by viewModels()
     private val prefKeys: PrefKeys by inject()
     private val userRepository: UserRepository by inject()
+    private val gson: Gson by inject()
 
     var pendingDeepLinkAction: DeepLinkAction? = null
 
     @OptIn(KoinExperimentalAPI::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        appLogger.d("MainActivity") { "onCreate called." }
+        appLogger.d(loggerTag) { "onCreate called." }
 
         setWindowSecurityFlags()
         setContent {
@@ -66,7 +84,6 @@ class MainActivity : ComponentActivity() {
                 Surface(color = MaterialTheme.colors.background) {
                     routerHost.StartFlow()
 
-                    ShouldAppDrawOverlayWindows()
                     ChuckerPermissions()
 
                     OneTimeLaunchedEffect {
@@ -87,7 +104,7 @@ class MainActivity : ComponentActivity() {
                                 is MainActivityEffect.Navigation.NavigateToSplashScreenWithSecurityViolation -> {
                                     NavArgHelper.setArgument(
                                         NavArg.SplashAlertDialogErrorType,
-                                        SplashContract.AlertDialogErrorType.InsecureApplication(
+                                        InsecureApplication(
                                             securityViolation = effect.securityViolation
                                         )
                                     )
@@ -99,7 +116,7 @@ class MainActivity : ComponentActivity() {
                                 }
 
                                 is MainActivityEffect.OpenOrCacheDeepLink -> {
-                                    appLogger.d("MainActivity") { "opening or caching deep link..." }
+                                    appLogger.d(loggerTag) { "opening or caching deep link..." }
                                     if (routerHost.canCurrentRouteRunDeepLink()) {
                                         openDeepLinkAction(
                                             navController = routerHost.getNavController(),
@@ -109,15 +126,23 @@ class MainActivity : ComponentActivity() {
                                         pendingDeepLinkAction = effect.deepLinkAction
                                     }
                                 }
+
+                                is MainActivityEffect.ShowNotification -> {
+                                    showFcmNotification(effect.notificationData, this@MainActivity)
+                                }
                             }
                         }
                     }
+
+                    ShouldAppDrawOverlayWindows()
 
                     RetrieveFcmToken(
                         onFcmTokenReceived = {
                             viewModel.setEvent(MainActivityEvent.OnFcmTokenReceived(it))
                         }
                     )
+
+                    registerNotificationChannels()
                 }
             }
         }
@@ -127,14 +152,14 @@ class MainActivity : ComponentActivity() {
     override fun onPause() {
         super.onPause()
 
-        appLogger.d("MainActivity") { "onPause called." }
+        appLogger.d(loggerTag) { "onPause called." }
         viewModel.setEvent(MainActivityEvent.LifecycleEvent.OnPause)
     }
 
     override fun onResume() {
         super.onResume()
 
-        appLogger.d("MainActivity") { "onResume called." }
+        appLogger.d(loggerTag) { "onResume called." }
         if (routerHost.flowStarted) {
             viewModel.setEvent(MainActivityEvent.LifecycleEvent.OnResume)
         }
@@ -143,21 +168,21 @@ class MainActivity : ComponentActivity() {
     override fun onDestroy() {
         super.onDestroy()
 
-        appLogger.d("MainActivity") { "onDestroy called." }
+        appLogger.d(loggerTag) { "onDestroy called." }
         viewModel.setEvent(MainActivityEvent.LifecycleEvent.OnDestroy(willBeRecreated = !isFinishing))
     }
 
     override fun onUserInteraction() {
         super.onUserInteraction()
 
-        appLogger.d("MainActivity") { "onUserInteraction called." }
+        appLogger.d(loggerTag) { "onUserInteraction called." }
         if (userRepository.isUserLoggedIn && prefKeys.shouldRememberUserSession()) {
             viewModel.setEvent(MainActivityEvent.OnUserInteraction)
         }
     }
 
     override fun isInMultiWindowMode(): Boolean {
-        appLogger.d("MainActivity") { "isInMultiWindowMode called." }
+        appLogger.d(loggerTag) { "isInMultiWindowMode called." }
 
         val isInMultiWindowMode = super.isInMultiWindowMode()
         if (isInMultiWindowMode && !securityController.shouldApplicationBeInMultiWindowMode()) {
@@ -183,20 +208,120 @@ class MainActivity : ComponentActivity() {
             try {
                 FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
                     try {
-                        appLogger.d("MainActivity") { "Retrieved FCM token: ${task.result}." }
+                        appLogger.d(loggerTag) { "Retrieved FCM token: ${task.result}." }
 
                         onFcmTokenReceived(task.result)
                     } catch (e: Exception) {
-                        appLogger.e("MainActivity") { "Failed to get FCM token:\n" + e.message.toString() }
+                        appLogger.e(loggerTag) { "Failed to get FCM token:\n" + e.message.toString() }
                     }
                 }.addOnFailureListener { _ ->
                     onFcmTokenReceived(null)
                 }
             } catch (e: Exception) {
-                appLogger.e("MainActivity") { "Failed to get FCM token:\n" + e.message.toString() }
+                appLogger.e(loggerTag) { "Failed to get FCM token:\n" + e.message.toString() }
                 onFcmTokenReceived(null)
             }
         }
+    }
+
+    /**
+     * Registers all the notification channels.
+     */
+    private fun registerNotificationChannels() {
+        val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+        val allChannelsData = NotificationChannelData.getAllChannels()
+
+        val channels = allChannelsData.map { channelData ->
+            NotificationChannel(
+                channelData.id,
+                channelData.name,
+                NotificationManager.IMPORTANCE_HIGH
+            ).apply {
+                lockscreenVisibility = Notification.VISIBILITY_PUBLIC
+                setShowBadge(true)
+            }
+        }
+
+        // Deletes nonexistent channels.
+        val allChannelIds = allChannelsData.map { it.id }
+        notificationManager.notificationChannels.forEach { notificationChannel ->
+            val notificationChannelId = notificationChannel.id
+            if (notificationChannelId !in allChannelIds) {
+                notificationManager.deleteNotificationChannel(notificationChannel.id)
+            }
+        }
+
+        // Adds channels.
+        notificationManager.createNotificationChannels(channels)
+    }
+
+    private fun showFcmNotification(notificationData: NotificationData, context: Context) {
+        val intent = Intent(
+            context,
+            MainActivity::class.java
+        ).apply {
+            flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
+
+            putExtra(
+                ConstantsNotifications.STRINGIFIED_FCM_DEEP_LINK_ACTION,
+                notificationData.getStringifiedFcmDeepLinkAction(gson)
+            )
+        }
+
+        val requestCode = DateUtil.getEpochSeconds().toInt()
+        val pendingIntent = PendingIntent.getActivity(
+            context,
+            requestCode,
+            intent,
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
+
+        val notification =
+            NotificationCompat.Builder(context, notificationData.channelType.channelData.id)
+                .setSmallIcon(R.mipmap.ic_launcher)
+                .setContentTitle(notificationData.title)
+                .setContentText(notificationData.body)
+                .apply {
+                    val imageBytes = notificationData.imageBytes
+
+                    if (imageBytes != null) {
+                        val bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+
+                        setLargeIcon(bitmap)
+                        setStyle(
+                            NotificationCompat.BigPictureStyle()
+                                .setBigContentTitle(notificationData.title)
+                                .setSummaryText(notificationData.body)
+                                .bigPicture(bitmap)
+                                .bigLargeIcon(null as Bitmap?)
+                        )
+                    } else {
+                        setStyle(
+                            NotificationCompat.BigTextStyle()
+                                .setBigContentTitle(notificationData.title)
+                                .bigText(notificationData.body)
+                        )
+                    }
+                }
+                .setShowWhen(true)
+                .setWhen(DateUtil.getEpochMillis())
+                .setAutoCancel(true)
+                .setCategory(NotificationCompat.CATEGORY_SOCIAL)
+                .apply {
+                    setPriority(
+                        when (notificationData.channelType) {
+                            NotificationChannelType.AcceptFriendRequest -> NotificationCompat.PRIORITY_LOW
+                            NotificationChannelType.IncomingFriendRequest -> NotificationCompat.PRIORITY_HIGH
+                            NotificationChannelType.ListingPurchase -> NotificationCompat.PRIORITY_MAX
+                        }
+                    )
+                }
+                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+                .setContentIntent(pendingIntent)
+                .build()
+
+        val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.notify(notificationData.notificationId, notification)
     }
 
     /**
@@ -282,9 +407,22 @@ class MainActivity : ComponentActivity() {
      * Handles the received deep link.
      */
     private fun handleDeepLink(intent: Intent?) {
-        appLogger.d("MainActivity") { "(handleDeepLink) triggered." }
-        intent?.data?.let { uri ->
-            viewModel.setEvent(MainActivityEvent.OnDeepLinkReceived(uri))
+        appLogger.d(loggerTag) { "(handleDeepLink) triggered." }
+
+        intent?.let {
+            val stringifiedFcmDeepLinkAction =
+                intent.getStringExtra(ConstantsNotifications.STRINGIFIED_FCM_DEEP_LINK_ACTION)
+            stringifiedFcmDeepLinkAction?.let {
+                viewModel.setEvent(
+                    MainActivityEvent.OnFcmDeepLinkActionReceived(
+                        stringifiedFcmDeepLinkAction
+                    )
+                )
+            }
+
+            intent.data?.let { uri ->
+                viewModel.setEvent(MainActivityEvent.OnDeepLinkReceived(uri))
+            }
         }
     }
 }

@@ -49,4 +49,7 @@ sealed class MainActivityEvent : BaseEvent {
      * When the FCM token has been received.
      */
     data class OnFcmTokenReceived(val fcmToken: String?) : MainActivityEvent()
+
+    data class OnFcmDeepLinkActionReceived(val stringifiedFcmDeepLinkAction: String) :
+        MainActivityEvent()
 }

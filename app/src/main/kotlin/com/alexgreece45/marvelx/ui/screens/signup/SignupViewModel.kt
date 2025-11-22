@@ -482,9 +482,6 @@ class SignupViewModel(
                             .collect { postLoginPartialState ->
                                 when (postLoginPartialState) {
                                     PostLoginPartialState.Success -> {
-                                        // User is logged in.
-                                        userRepository.setUserLoggedIn(true)
-
                                         // ONLY for signup, set the remember user session to `true` by default.
                                         prefKeys.setRememberUserSession(shouldRemember = true)
 

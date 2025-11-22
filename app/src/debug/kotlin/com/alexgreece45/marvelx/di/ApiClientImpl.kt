@@ -17,6 +17,7 @@ import com.alexgreece45.marvelx.network_logic.models_api.forgotPassword.phoneNum
 import com.alexgreece45.marvelx.network_logic.models_api.forgotPassword.phoneNumber.ResponseForgotPasswordOtpBlockedPhoneNumber
 import com.alexgreece45.marvelx.network_logic.models_api.jwtSensitiveUserData.RequestJwtSensitiveUserData
 import com.alexgreece45.marvelx.network_logic.models_api.jwtSensitiveUserData.ResponseJwtSensitiveUserData
+import com.alexgreece45.marvelx.network_logic.models_api.notification.BodyNotificationId
 import com.alexgreece45.marvelx.network_logic.models_api.otp.OtpRequest
 import com.alexgreece45.marvelx.network_logic.models_api.otp.OtpResponseSuccess
 import com.alexgreece45.marvelx.network_logic.models_api.resendOtp.RequestResendOtp
@@ -45,6 +46,7 @@ import com.alexgreece45.marvelx.network_logic.services.ApiService
 import com.alexgreece45.marvelx.network_logic.util.executeApiServiceCall
 import com.alexgreece45.marvelx.network_logic.util.executeApiServiceCallNoTransformation
 import okhttp3.MultipartBody
+import okhttp3.ResponseBody
 import retrofit2.Response
 
 class ApiClientImpl(
@@ -175,9 +177,9 @@ class ApiClientImpl(
         }
     }
 
-    override suspend fun deleteFriendRequest(userId: String): ApiResult<String> {
+    override suspend fun deleteFriendRequest(userId: String, type: String): ApiResult<String> {
         return executeApiServiceCallNoTransformation {
-            apiService.deleteFriendRequest(userId)
+            apiService.deleteFriendRequest(userId, type)
         }
     }
 
@@ -216,4 +218,16 @@ class ApiClientImpl(
 
     override suspend fun getSensitiveUserData(requestSensitiveUserData: RequestSensitiveUserData): Response<ResponseSensitiveUserData> =
         apiService.getSensitiveUserData(requestSensitiveUserData)
+
+    override suspend fun getImage(imageUrl: String): ApiResult<ResponseBody> {
+        return executeApiServiceCall {
+            apiService.getImage(imageUrl)
+        }
+    }
+
+    override suspend fun markNotificationAsOpened(notificationId: Int): ApiResult<String> {
+        return executeApiServiceCallNoTransformation {
+            apiService.markNotificationAsOpened(BodyNotificationId(notificationId))
+        }
+    }
 }

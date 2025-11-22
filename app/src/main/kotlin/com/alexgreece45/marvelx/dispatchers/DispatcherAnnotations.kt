@@ -1,15 +1,12 @@
 package com.alexgreece45.marvelx.dispatchers
 
-import javax.inject.Qualifier
+import org.koin.core.annotation.Named
 
-@Qualifier
-@Retention(AnnotationRetention.BINARY)
+@Named
 annotation class MainDispatcher
 
-@Qualifier
-@Retention(AnnotationRetention.BINARY)
+@Named
 annotation class DefaultDispatcher
 
-@Qualifier
-@Retention(AnnotationRetention.BINARY)
+@Named
 annotation class IoDispatcher

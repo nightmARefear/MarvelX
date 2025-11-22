@@ -1,9 +1,11 @@
-package com.alexgreece45.marvelx.ui.helper.model
+package com.alexgreece45.marvelx.data.model.deepLink
 
+// TODO: To be removed.
 /**
  * Defines a deep link action type by [name].
  */
 sealed class DeepLinkActionType(open val name: String) {
+
     /**
      * Refers to viewing a screen.
      */

@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlin.coroutines.CoroutineContext
 
-interface IncomingFriendRequestRepository {
+interface FriendRequestRepository {
 
     /**
      * Returns the incoming friend requests of the current user.
@@ -19,13 +19,13 @@ interface IncomingFriendRequestRepository {
     suspend fun getIncomingFriendRequests(): Flow<RepositoryResult<List<ResponseIncomingFriendRequest>>>
     suspend fun sendFriendRequest(userId: String): Flow<Boolean>
     suspend fun acceptFriendRequest(userId: String): Flow<Boolean>
-    suspend fun deleteFriendRequest(userId: String): Flow<Boolean>
+    suspend fun deleteFriendRequest(userId: String, type: String): Flow<Boolean>
 }
 
-class IncomingFriendRequestRepositoryImpl(
+class FriendRequestRepositoryImpl(
     private val apiClient: ApiClient,
     @IoDispatcher private val ioDispatcher: CoroutineContext
-) : IncomingFriendRequestRepository {
+) : FriendRequestRepository {
 
     override suspend fun getIncomingFriendRequests(): Flow<RepositoryResult<List<ResponseIncomingFriendRequest>>> =
         flow {
@@ -55,9 +55,9 @@ class IncomingFriendRequestRepositoryImpl(
         }
     }
 
-    override suspend fun deleteFriendRequest(userId: String): Flow<Boolean> = flow {
+    override suspend fun deleteFriendRequest(userId: String, type: String): Flow<Boolean> = flow {
         handleApiResultNoTransformation(
-            apiResult = apiClient.deleteFriendRequest(userId),
+            apiResult = apiClient.deleteFriendRequest(userId, type),
             ioDispatcher = ioDispatcher
         ).collect { result ->
             emit(result is RepositoryResult.Success)

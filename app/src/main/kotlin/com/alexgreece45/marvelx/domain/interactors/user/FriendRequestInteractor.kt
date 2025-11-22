@@ -1,16 +1,17 @@
 package com.alexgreece45.marvelx.domain.interactors.user
 
-import com.alexgreece45.marvelx.data.repository.user.IncomingFriendRequestRepository
+import com.alexgreece45.marvelx.data.repository.user.FriendRequestRepository
 import com.alexgreece45.marvelx.domain.helper.InteractorPartialState
 import com.alexgreece45.marvelx.domain.helper.handleRepositoryResult
+import com.alexgreece45.marvelx.domain.model_api.user.friendRequest.DeleteFriendRequestType
+import com.alexgreece45.marvelx.domain.model_api.user.friendRequest.IncomingFriendRequestDomain
+import com.alexgreece45.marvelx.domain.model_api.user.friendRequest.toIncomingFriendRequestList
 import com.alexgreece45.marvelx.network_logic.models_api.user.incomingFriendRequest.ResponseIncomingFriendRequest
-import com.alexgreece45.marvelx.ui.screens.friends.model.IncomingFriendRequestDomain
-import com.alexgreece45.marvelx.ui.screens.friends.model.toIncomingFriendRequestList
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 
-interface IncomingFriendRequestInteractor {
+interface FriendRequestInteractor {
 
     /**
      * Retrieves all the incoming friend requests of the currently logged in user.
@@ -18,12 +19,15 @@ interface IncomingFriendRequestInteractor {
     suspend fun getIncomingFriendRequests(): Flow<InteractorPartialState<List<IncomingFriendRequestDomain>>>
     suspend fun sendFriendRequest(userId: String): Flow<Boolean>
     suspend fun acceptFriendRequest(userId: String): Flow<Boolean>
-    suspend fun deleteFriendRequest(userId: String): Flow<Boolean>
+    suspend fun deleteFriendRequest(
+        userId: String,
+        deleteFriendRequestType: DeleteFriendRequestType
+    ): Flow<Boolean>
 }
 
-class IncomingFriendRequestInteractorImpl(
-    private val repository: IncomingFriendRequestRepository
-) : IncomingFriendRequestInteractor {
+class FriendRequestInteractorImpl(
+    private val repository: FriendRequestRepository
+) : FriendRequestInteractor {
 
     override suspend fun getIncomingFriendRequests(): Flow<InteractorPartialState<List<IncomingFriendRequestDomain>>> =
         flow {
@@ -43,6 +47,9 @@ class IncomingFriendRequestInteractorImpl(
     override suspend fun acceptFriendRequest(userId: String): Flow<Boolean> =
         repository.acceptFriendRequest(userId)
 
-    override suspend fun deleteFriendRequest(userId: String): Flow<Boolean> =
-        repository.deleteFriendRequest(userId)
+    override suspend fun deleteFriendRequest(
+        userId: String,
+        deleteFriendRequestType: DeleteFriendRequestType
+    ): Flow<Boolean> =
+        repository.deleteFriendRequest(userId, deleteFriendRequestType.id)
 }
