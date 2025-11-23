@@ -5,12 +5,11 @@ import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.controllers.CreateDeepLinkActionResult
 import com.alexgreece45.marvelx.controllers.DeepLinkController
 import com.alexgreece45.marvelx.controllers.HandleQrCodeWebUrlResult
+import com.alexgreece45.marvelx.data.model.deepLink.DeepLinkAction
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
 import com.alexgreece45.marvelx.mvi.BaseViewModel
-import com.alexgreece45.marvelx.data.model.deepLink.DeepLinkAction
-import com.alexgreece45.marvelx.data.model.deepLink.DeepLinkActionType
 import com.alexgreece45.marvelx.ui.navigation.NavDeepLinkItem
 import com.alexgreece45.marvelx.ui.navigation.Screen
 import com.alexgreece45.marvelx.ui.screens.qrCode.model.QrCodeErrorData
@@ -175,7 +174,6 @@ class QrCodeScanViewModel :
                 viewModelScope.launch {
                     when (
                         val result = deepLinkController.createDeepLinkAction(
-                            actionType = DeepLinkActionType.View,
                             screenRoute = currentState.previousScreen?.route.orEmpty(),
                             deepLinkMap = mapOf(
                                 Pair(

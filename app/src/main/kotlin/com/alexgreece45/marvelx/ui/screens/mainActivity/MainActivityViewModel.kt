@@ -14,7 +14,7 @@ import com.alexgreece45.marvelx.controllers.model.security.SecurityViolation
 import com.alexgreece45.marvelx.controllers.model.websocket.WebsocketOnMessageReceivedPartialState
 import com.alexgreece45.marvelx.controllers.model.websocket.WebsocketRequestType
 import com.alexgreece45.marvelx.controllers.model.websocket.WebsocketSendRequestPartialState
-import com.alexgreece45.marvelx.data.repository.NotificationRepository
+import com.alexgreece45.marvelx.data.model.deepLink.DeepLinkAction
 import com.alexgreece45.marvelx.data.repository.UserRepository
 import com.alexgreece45.marvelx.dispatchers.IoDispatcher
 import com.alexgreece45.marvelx.domain.interactors.LoginInteractor
@@ -24,7 +24,6 @@ import com.alexgreece45.marvelx.mvi.BaseViewModel
 import com.alexgreece45.marvelx.network_logic.models_websocket.ResponseWebSocketDeleteNotification
 import com.alexgreece45.marvelx.network_logic.models_websocket.ResponseWebsocket
 import com.alexgreece45.marvelx.notifications.PushNotificationsController
-import com.alexgreece45.marvelx.notifications.model.FcmDeepLinkAction
 import com.alexgreece45.marvelx.ui.navigation.router.RouterHost
 import com.alexgreece45.marvelx.ui.screens.mainActivity.model.CoroutineWebSocketListener
 import com.alexgreece45.marvelx.ui.screens.mainActivity.model.MainActivityEffect
@@ -69,7 +68,6 @@ class MainActivityViewModel :
     private val fcmController: FcmController by inject()
     private val deviceController: DeviceController by inject()
     private val gson: Gson by inject()
-    private val notificationRepository: NotificationRepository by inject()
 
     override fun setInitialState(): MainActivityState = MainActivityState()
 
@@ -154,21 +152,14 @@ class MainActivityViewModel :
 
             is MainActivityEvent.OnFcmDeepLinkActionReceived -> {
                 try {
-                    val fcmDeepLinkAction =
+                    val deepLinkAction =
                         gson.fromJson(
                             event.stringifiedFcmDeepLinkAction,
-                            FcmDeepLinkAction::class.java
+                            DeepLinkAction::class.java
                         )
 
-                    if (routerHost.canCurrentRouteRunDeepLink()) {
-                        // Notify backend about notification opening.
-                        viewModelScope.launch {
-                            notificationRepository.markAsOpened(fcmDeepLinkAction.notificationId)
-                        }
-                    }
-
                     setEffect {
-                        OpenOrCacheDeepLink(fcmDeepLinkAction.deepLinkAction)
+                        OpenOrCacheDeepLink(deepLinkAction)
                     }
                 } catch (e: Exception) {
                     appLogger.e(loggerTag) { "(OnFcmDeepLinkActionReceived) An error occurred whilst parsing the fcm deeplink action.\n ${e.localizedMessage}" }

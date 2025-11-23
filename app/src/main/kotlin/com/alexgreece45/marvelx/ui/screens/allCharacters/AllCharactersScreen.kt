@@ -47,6 +47,7 @@ import androidx.lifecycle.Lifecycle
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.data.model.deepLink.DeepLinkAction
 import com.alexgreece45.marvelx.ui.components.BottomNavigationBarData
 import com.alexgreece45.marvelx.ui.components.ContentErrorScreen
 import com.alexgreece45.marvelx.ui.components.ContentScreen
@@ -58,9 +59,7 @@ import com.alexgreece45.marvelx.ui.components.SortingModalBottomSheetContent
 import com.alexgreece45.marvelx.ui.components.WrapModalBottomSheetLayout
 import com.alexgreece45.marvelx.ui.components.effect.DisposableEffectWithLifecycle
 import com.alexgreece45.marvelx.ui.components.effect.ObserveUiEffect
-import com.alexgreece45.marvelx.ui.components.effect.OneTimeLaunchedEffect
 import com.alexgreece45.marvelx.ui.components.isScrollingUp
-import com.alexgreece45.marvelx.ui.helper.openDeepLinkAction
 import com.alexgreece45.marvelx.ui.screens.allCharacters.uiModel.CharacterCardUi
 import com.alexgreece45.marvelx.ui.theme.values.customColors
 import com.alexgreece45.marvelx.util.DEFAULT_SCREEN_PADDING
@@ -78,6 +77,7 @@ fun AllCharactersScreen(
     state: AllCharactersState,
     effect: Flow<AllCharactersEffect>,
     navigateToCharacterScreen: (characterId: Int) -> Unit,
+    openDeepLinkAction: (DeepLinkAction) -> Unit,
     bottomNavigationBarData: @Composable () -> BottomNavigationBarData,
 ) {
     val modalBottomSheetState = rememberModalBottomSheetState(
@@ -154,7 +154,7 @@ fun AllCharactersScreen(
             }
 
             is AllCharactersEffect.Navigation.OpenDeepLinkAction -> {
-                openDeepLinkAction(uiEffect.navController, uiEffect.deepLinkAction)
+                openDeepLinkAction(uiEffect.deepLinkAction)
             }
         }
     }

@@ -78,5 +78,5 @@ class RouterHostImpl : RouterHost {
         Screen.fromRoute(navController.currentDestination?.route.orEmpty())?.isIncludedInAutoLogout
             ?: false
 
-    override fun canCurrentRouteRunDeepLink(): Boolean = isCurrentRouteIncludedInAutoLogout()
+    override fun canCurrentRouteRunDeepLink(): Boolean = _flowStarted && isCurrentRouteIncludedInAutoLogout()
 }

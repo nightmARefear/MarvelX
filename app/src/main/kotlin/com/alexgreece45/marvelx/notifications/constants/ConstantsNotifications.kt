@@ -9,6 +9,4 @@ object ConstantsNotifications {
     const val IMAGE_URL = "imageUrl"
     const val USER_ID = "userId"
     const val DEEP_LINK_ACTION = "deepLinkAction"
-
-    const val STRINGIFIED_FCM_DEEP_LINK_ACTION = "STRINGIFIED_FCM_DEEP_LINK_ACTION"
 }

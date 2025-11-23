@@ -9,7 +9,7 @@ import kotlin.coroutines.CoroutineContext
 
 interface NotificationRepository {
 
-    suspend fun markAsOpened(notificationId: Int): Boolean
+    suspend fun markIncomingFriendRequestAsRead(): Boolean
 }
 
 class NotificationRepositoryImpl(
@@ -17,9 +17,9 @@ class NotificationRepositoryImpl(
     @IoDispatcher private val ioDispatcher: CoroutineContext
 ) : NotificationRepository {
 
-    override suspend fun markAsOpened(notificationId: Int): Boolean {
+    override suspend fun markIncomingFriendRequestAsRead(): Boolean {
         return handleApiResultNoTransformation(
-            apiResult = apiClient.markNotificationAsOpened(notificationId),
+            apiResult = apiClient.markNotificationAsOpened(),
             ioDispatcher = ioDispatcher
         ).first() is RepositoryResult.Success
     }

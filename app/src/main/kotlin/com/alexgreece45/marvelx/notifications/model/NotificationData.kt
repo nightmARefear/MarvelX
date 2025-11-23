@@ -24,8 +24,8 @@ data class NotificationData(
     val deepLinkAction: DeepLinkAction
 ) {
 
-    fun getStringifiedFcmDeepLinkAction(gson: Gson): String =
-        gson.toJson(FcmDeepLinkAction(notificationId, deepLinkAction))
+    fun getStringifiedDeepLinkAction(gson: Gson): String =
+        gson.toJson(deepLinkAction)
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

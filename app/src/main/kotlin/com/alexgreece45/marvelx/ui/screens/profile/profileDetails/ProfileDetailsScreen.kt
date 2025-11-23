@@ -99,6 +99,7 @@ fun ProfileDetailsScreen(
     state: ProfileDetailsContract.State,
     effect: Flow<ProfileDetailsContract.Effect>,
     userId: String,
+    shouldShowAcceptFriendRequestDialog: Boolean,
     onNavigation: (ProfileDetailsContract.Effect.Navigation) -> Unit
 ) {
     val context = LocalContext.current
@@ -122,7 +123,7 @@ fun ProfileDetailsScreen(
     var shouldEnforceMaxBrightness by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
-        onEventSent(ProfileDetailsContract.Event.Init(userId))
+        onEventSent(ProfileDetailsContract.Event.Init(userId, shouldShowAcceptFriendRequestDialog))
     }
 
     LaunchedEffect(modalBottomSheetState.currentValue, state.bottomSheetType) {
@@ -628,6 +629,7 @@ private fun ProfileDetailsScreenPreview() {
             ),
             effect = emptyFlow(),
             userId = "",
+            shouldShowAcceptFriendRequestDialog = false,
             onNavigation = {}
         )
     }
@@ -653,6 +655,7 @@ private fun ProfileDetailsScreenNestedErrorViewPreview() {
             ),
             effect = emptyFlow(),
             userId = "100",
+            shouldShowAcceptFriendRequestDialog = false,
             onNavigation = {}
         )
     }
@@ -690,6 +693,7 @@ private fun ProfileDetailsScreenMoreActionBottomSheetPreview() {
             ),
             effect = emptyFlow(),
             userId = "101",
+            shouldShowAcceptFriendRequestDialog = false,
             onNavigation = {}
         )
     }

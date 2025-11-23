@@ -9,7 +9,6 @@ import androidx.navigation.NavDeepLinkRequest
 import androidx.navigation.navOptions
 import com.alexgreece45.marvelx.BuildConfig
 import com.alexgreece45.marvelx.data.model.deepLink.DeepLinkAction
-import com.alexgreece45.marvelx.data.model.deepLink.DeepLinkActionType
 import com.alexgreece45.marvelx.ui.navigation.NavItem
 import com.alexgreece45.marvelx.ui.screens.mainActivity.MainActivity
 import com.alexgreece45.marvelx.util.extensions.getPortFromUrl
@@ -19,40 +18,23 @@ import com.alexgreece45.marvelx.util.extensions.getPortFromUrl
  * is preserved, otherwise not.
  */
 fun openDeepLinkAction(navController: NavController, deepLinkAction: DeepLinkAction) {
-    when (deepLinkAction.actionType) {
-        is DeepLinkActionType.Invalid -> {}
-        DeepLinkActionType.Action -> {
-            // TODO: REVIEW CASE
-//            navController.setGraph(navController.graph.id)
-            navController.handleDeepLink(
-                intent = generateNewTaskDeepLink(
-                    context = navController.context,
-                    screenRoute = deepLinkAction.screenRoute,
-                    arguments = generateComposableArguments(deepLinkAction.data)
-                )
+    val deepLinkRequest = NavDeepLinkRequest.Builder
+        .fromUri(
+            generateComposableDeepLinkUri(
+                deepLinkAction.screenRoute,
+                generateComposableArguments(deepLinkAction.data)
             )
-        }
+        )
+        .build()
 
-        DeepLinkActionType.View -> {
-            val deepLinkRequest = NavDeepLinkRequest.Builder
-                .fromUri(
-                    generateComposableDeepLinkUri(
-                        deepLinkAction.screenRoute,
-                        generateComposableArguments(deepLinkAction.data)
-                    )
-                )
-                .build()
-
-            val navOptions = navOptions {
-                popUpTo(navController.graph.startDestinationId) {
-                    saveState = true
-                }
-                launchSingleTop = true
-                restoreState = true
-            }
-            navController.navigate(deepLinkRequest, navOptions)
+    val navOptions = navOptions {
+        popUpTo(navController.graph.startDestinationId) {
+            saveState = true
         }
+        launchSingleTop = true
+        restoreState = true
     }
+    navController.navigate(deepLinkRequest, navOptions)
 }
 
 /**
@@ -78,12 +60,8 @@ private fun generateNewTaskDeepLink(
 fun generateComposableArguments(arguments: Map<String, Any>): String {
     if (arguments.isEmpty()) return ""
     return buildString {
-        append("/")
-        arguments.forEach { entry ->
-            append(entry.value)
-            append("/")
-        }
-    }.removeSuffix("/")
+        arguments.forEach { append("/${it.value}") }
+    }
 }
 
 /**

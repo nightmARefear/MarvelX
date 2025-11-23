@@ -44,12 +44,18 @@
 
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
+                <category android:name="android.intent.category." />
 
                 <data
                     android:host="${deeplinkHost}"
                     android:pathAdvancedPattern="${deeplinkPathAdvancedPattern}"
                     android:port="${deeplinkPort}"
                     android:scheme="${deeplinkScheme}" />
+            </intent-filter>
+
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
 

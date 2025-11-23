@@ -374,7 +374,7 @@ private val viewModelModule = module {
     viewModel { ForgotPasswordViewModel(get(), get(), get(), get()) }
     viewModel { ChangePasswordViewModel(get(), get()) }
 
-    viewModel { AllCharactersViewModel(get(), get(), get()) }
+    viewModel { AllCharactersViewModel(get(), get()) }
     viewModel { AllCharacterComicsViewModel(get()) }
     viewModel { AllFavoriteCharactersViewModel(get()) }
     viewModel { CharacterViewModel(get(), get()) }

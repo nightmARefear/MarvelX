@@ -7,6 +7,7 @@ import androidx.core.graphics.createBitmap
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.configuration.models.DeepLinkWebUrl
+import com.alexgreece45.marvelx.data.repository.NotificationRepository
 import com.alexgreece45.marvelx.data.repository.user.FriendRepository
 import com.alexgreece45.marvelx.domain.interactors.GetProfileDetailsPartialState
 import com.alexgreece45.marvelx.domain.interactors.UserInteractor
@@ -43,7 +44,9 @@ import kotlinx.coroutines.launch
 
 sealed interface ProfileDetailsContract {
     sealed interface Event : BaseEvent {
-        data class Init(val userId: String) : Event
+        data class Init(val userId: String, val shouldShowAcceptFriendRequestDialog: Boolean) :
+            Event
+
         data object OnBackClicked : Event
         data object OnEditProfileDetailsIconClicked : Event
 
@@ -149,6 +152,7 @@ class ProfileDetailsViewModel(
     private val friendRepository: FriendRepository,
     private val friendRequestInteractor: FriendRequestInteractor,
     private val blockedUserInteractor: BlockedUserInteractor,
+    private val notificationRepository: NotificationRepository,
 ) : BaseViewModel<ProfileDetailsContract.Event, ProfileDetailsContract.State, ProfileDetailsContract.Effect>() {
 
     override fun setInitialState(): ProfileDetailsContract.State =
@@ -328,7 +332,6 @@ class ProfileDetailsViewModel(
                                         errorSubtitle = resourceProvider.getString(R.string.profile_details_screen_label_alert_dialog_subtitle_delete_friend_request),
                                         dismissAlertDialogButton = AlertDialogButton(
                                             label = resourceProvider.getString(R.string.profile_details_screen_label_alert_dialog_button_negative_delete_friend_request),
-                                            buttonType = ErrorButtonType.defaultType,
                                             onClick = ::hideAlertDialogError
                                         ),
                                         confirmAlertDialogButton = AlertDialogButton(
@@ -341,22 +344,7 @@ class ProfileDetailsViewModel(
                             }
 
                             RelationshipStatusDomain.PendingFriendRequestReceiver -> {
-                                showAlertDialogError(
-                                    ProfileDetailsAlertDialogErrorData(
-                                        errorTitle = resourceProvider.getString(R.string.profile_details_screen_label_alert_dialog_title_accept_friend_request),
-                                        errorSubtitle = resourceProvider.getString(R.string.profile_details_screen_label_alert_dialog_subtitle_accept_friend_request),
-                                        dismissAlertDialogButton = AlertDialogButton(
-                                            label = resourceProvider.getString(R.string.profile_details_screen_label_alert_dialog_button_negative_accept_friend_request),
-                                            buttonType = ErrorButtonType.defaultType,
-                                            onClick = ::hideAlertDialogError
-                                        ),
-                                        confirmAlertDialogButton = AlertDialogButton(
-                                            label = resourceProvider.getString(R.string.profile_details_screen_label_alert_dialog_button_positive_accept_friend_request),
-                                            buttonType = ErrorButtonType.Contained,
-                                            onClick = ::acceptFriendRequest
-                                        )
-                                    )
-                                )
+                                showAcceptFriendRequestDialog()
                             }
 
                             RelationshipStatusDomain.Friends -> {
@@ -366,7 +354,6 @@ class ProfileDetailsViewModel(
                                         errorSubtitle = resourceProvider.getString(R.string.profile_details_screen_label_alert_dialog_subtitle_delete_friend),
                                         dismissAlertDialogButton = AlertDialogButton(
                                             label = resourceProvider.getString(R.string.profile_details_screen_label_alert_dialog_button_negative_delete_friend),
-                                            buttonType = ErrorButtonType.defaultType,
                                             onClick = ::hideAlertDialogError
                                         ),
                                         confirmAlertDialogButton = AlertDialogButton(
@@ -428,6 +415,15 @@ class ProfileDetailsViewModel(
                                 isGenderHidden = it.profileDetailsDomain.isDifferentUser && it.profileDetailsDomain.privacySettings != null && !it.profileDetailsDomain.privacySettings.isGenderVisible,
                                 isEmailHidden = it.profileDetailsDomain.isDifferentUser && it.profileDetailsDomain.privacySettings != null && !it.profileDetailsDomain.privacySettings.isEmailVisible,
                             )
+                        }
+
+                        if (event.shouldShowAcceptFriendRequestDialog) {
+                            // Notify backend about notification opening.
+                            viewModelScope.launch {
+                                notificationRepository.markIncomingFriendRequestAsRead()
+                            }
+
+                            showAcceptFriendRequestDialog()
                         }
                     }
 
@@ -860,5 +856,23 @@ class ProfileDetailsViewModel(
                 tab = tab
             )
         }
+    }
+
+    private fun showAcceptFriendRequestDialog() {
+        showAlertDialogError(
+            ProfileDetailsAlertDialogErrorData(
+                errorTitle = resourceProvider.getString(R.string.profile_details_screen_label_alert_dialog_title_accept_friend_request),
+                errorSubtitle = resourceProvider.getString(R.string.profile_details_screen_label_alert_dialog_subtitle_accept_friend_request),
+                dismissAlertDialogButton = AlertDialogButton(
+                    label = resourceProvider.getString(R.string.profile_details_screen_label_alert_dialog_button_negative_accept_friend_request),
+                    onClick = ::hideAlertDialogError
+                ),
+                confirmAlertDialogButton = AlertDialogButton(
+                    label = resourceProvider.getString(R.string.profile_details_screen_label_alert_dialog_button_positive_accept_friend_request),
+                    buttonType = ErrorButtonType.Contained,
+                    onClick = ::acceptFriendRequest
+                )
+            )
+        )
     }
 }

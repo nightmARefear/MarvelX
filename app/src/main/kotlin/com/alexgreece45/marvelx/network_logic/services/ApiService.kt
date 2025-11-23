@@ -16,7 +16,6 @@ import com.alexgreece45.marvelx.network_logic.models_api.forgotPassword.phoneNum
 import com.alexgreece45.marvelx.network_logic.models_api.forgotPassword.phoneNumber.ResponseForgotPasswordOtpBlockedPhoneNumber
 import com.alexgreece45.marvelx.network_logic.models_api.jwtSensitiveUserData.RequestJwtSensitiveUserData
 import com.alexgreece45.marvelx.network_logic.models_api.jwtSensitiveUserData.ResponseJwtSensitiveUserData
-import com.alexgreece45.marvelx.network_logic.models_api.notification.BodyNotificationId
 import com.alexgreece45.marvelx.network_logic.models_api.otp.OtpRequest
 import com.alexgreece45.marvelx.network_logic.models_api.otp.OtpResponseSuccess
 import com.alexgreece45.marvelx.network_logic.models_api.resendOtp.RequestResendOtp
@@ -250,5 +249,5 @@ interface ApiService {
     suspend fun getImage(@Url url: String): Response<ResponseBody>
 
     @PATCH("/api/private/marvelx/notifications")
-    suspend fun markNotificationAsOpened(@Body bodyNotificationID: BodyNotificationId): Response<Void>
+    suspend fun markIncomingFriendRequestNotificationAsOpened(): Response<Void>
 }

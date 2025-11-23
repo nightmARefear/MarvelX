@@ -32,13 +32,13 @@ import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.controllers.AppLogger
 import com.alexgreece45.marvelx.controllers.PrefKeys
 import com.alexgreece45.marvelx.controllers.SecurityController
+import com.alexgreece45.marvelx.data.model.deepLink.DeepLinkAction
 import com.alexgreece45.marvelx.data.repository.UserRepository
 import com.alexgreece45.marvelx.notifications.constants.ConstantsNotifications
 import com.alexgreece45.marvelx.notifications.model.NotificationChannelData
 import com.alexgreece45.marvelx.notifications.model.NotificationChannelType
 import com.alexgreece45.marvelx.notifications.model.NotificationData
 import com.alexgreece45.marvelx.ui.components.effect.OneTimeLaunchedEffect
-import com.alexgreece45.marvelx.data.model.deepLink.DeepLinkAction
 import com.alexgreece45.marvelx.ui.helper.openDeepLinkAction
 import com.alexgreece45.marvelx.ui.navigation.NavArgHelper
 import com.alexgreece45.marvelx.ui.navigation.Screen
@@ -116,13 +116,14 @@ class MainActivity : ComponentActivity() {
                                 }
 
                                 is MainActivityEffect.OpenOrCacheDeepLink -> {
-                                    appLogger.d(loggerTag) { "opening or caching deep link..." }
                                     if (routerHost.canCurrentRouteRunDeepLink()) {
+                                        appLogger.d(loggerTag) { "opening deep link..." }
                                         openDeepLinkAction(
                                             navController = routerHost.getNavController(),
                                             deepLinkAction = effect.deepLinkAction
                                         )
                                     } else {
+                                        appLogger.d(loggerTag) { "caching deep link..." }
                                         pendingDeepLinkAction = effect.deepLinkAction
                                     }
                                 }
@@ -263,8 +264,8 @@ class MainActivity : ComponentActivity() {
             flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
 
             putExtra(
-                ConstantsNotifications.STRINGIFIED_FCM_DEEP_LINK_ACTION,
-                notificationData.getStringifiedFcmDeepLinkAction(gson)
+                ConstantsNotifications.DEEP_LINK_ACTION,
+                notificationData.getStringifiedDeepLinkAction(gson)
             )
         }
 
@@ -410,17 +411,17 @@ class MainActivity : ComponentActivity() {
         appLogger.d(loggerTag) { "(handleDeepLink) triggered." }
 
         intent?.let {
-            val stringifiedFcmDeepLinkAction =
-                intent.getStringExtra(ConstantsNotifications.STRINGIFIED_FCM_DEEP_LINK_ACTION)
-            stringifiedFcmDeepLinkAction?.let {
+            // FCM handling.
+            intent.getStringExtra(ConstantsNotifications.DEEP_LINK_ACTION)?.let { deepLinkAction ->
                 viewModel.setEvent(
                     MainActivityEvent.OnFcmDeepLinkActionReceived(
-                        stringifiedFcmDeepLinkAction
+                        deepLinkAction
                     )
                 )
             }
 
-            intent.data?.let { uri ->
+            // External URL handling.
+            it.data?.let { uri ->
                 viewModel.setEvent(MainActivityEvent.OnDeepLinkReceived(uri))
             }
         }

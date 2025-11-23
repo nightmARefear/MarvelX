@@ -17,7 +17,6 @@ import com.alexgreece45.marvelx.network_logic.models_api.forgotPassword.phoneNum
 import com.alexgreece45.marvelx.network_logic.models_api.forgotPassword.phoneNumber.ResponseForgotPasswordOtpBlockedPhoneNumber
 import com.alexgreece45.marvelx.network_logic.models_api.jwtSensitiveUserData.RequestJwtSensitiveUserData
 import com.alexgreece45.marvelx.network_logic.models_api.jwtSensitiveUserData.ResponseJwtSensitiveUserData
-import com.alexgreece45.marvelx.network_logic.models_api.notification.BodyNotificationId
 import com.alexgreece45.marvelx.network_logic.models_api.otp.OtpRequest
 import com.alexgreece45.marvelx.network_logic.models_api.otp.OtpResponseSuccess
 import com.alexgreece45.marvelx.network_logic.models_api.resendOtp.RequestResendOtp
@@ -225,9 +224,9 @@ class ApiClientImpl(
         }
     }
 
-    override suspend fun markNotificationAsOpened(notificationId: Int): ApiResult<String> {
+    override suspend fun markNotificationAsOpened(): ApiResult<String> {
         return executeApiServiceCallNoTransformation {
-            apiService.markNotificationAsOpened(BodyNotificationId(notificationId))
+            apiService.markIncomingFriendRequestNotificationAsOpened()
         }
     }
 }

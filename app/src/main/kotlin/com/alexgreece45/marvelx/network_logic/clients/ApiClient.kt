@@ -106,5 +106,5 @@ interface ApiClient {
 
     suspend fun getImage(imageUrl: String): ApiResult<ResponseBody>
 
-    suspend fun markNotificationAsOpened(notificationId: Int): ApiResult<String>
+    suspend fun markNotificationAsOpened(): ApiResult<String>
 }

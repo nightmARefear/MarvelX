@@ -276,6 +276,9 @@ fun NavGraph(navController: NavHostController) {
                         launchSingleTop = true
                     }
                 },
+                openDeepLinkAction = {
+                    openDeepLinkAction(navController, it)
+                },
                 bottomNavigationBarData = { getBottomNavigationBarData(navController = navController) }
             )
         }
@@ -460,6 +463,9 @@ fun NavGraph(navController: NavHostController) {
                 state = viewModel.uiState.collectAsStateWithLifecycle().value,
                 effect = viewModel.uiEffect,
                 userId = navBackStackEntry.arguments?.getString(NavItem.UserId.key).orEmpty(),
+                shouldShowAcceptFriendRequestDialog = navBackStackEntry.arguments?.getBoolean(
+                    NavItem.ShouldShowAcceptFriendRequestDialog.key
+                ) ?: false,
                 onNavigation = { navigationEffect ->
                     when (navigationEffect) {
                         ProfileDetailsContract.Effect.Navigation.PopBackStack -> {

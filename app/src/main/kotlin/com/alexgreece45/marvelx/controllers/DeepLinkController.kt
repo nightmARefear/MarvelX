@@ -3,7 +3,6 @@ package com.alexgreece45.marvelx.controllers
 import android.net.Uri
 import com.alexgreece45.marvelx.configuration.models.DeepLinkWebUrl
 import com.alexgreece45.marvelx.data.model.deepLink.DeepLinkAction
-import com.alexgreece45.marvelx.data.model.deepLink.DeepLinkActionType
 import com.alexgreece45.marvelx.ui.navigation.NavDeepLinkItem
 import com.alexgreece45.marvelx.ui.navigation.Screen
 import com.google.gson.Gson
@@ -36,7 +35,6 @@ interface DeepLinkController {
      * Attempts to create a [DeepLinkAction] based on the given arguments.
      */
     fun createDeepLinkAction(
-        actionType: DeepLinkActionType,
         screenRoute: String,
         deepLinkMap: Map<NavDeepLinkItem, String>
     ): CreateDeepLinkActionResult
@@ -107,7 +105,6 @@ class DeepLinkControllerImpl(
 
                 when (
                     val result = createDeepLinkAction(
-                        actionType = DeepLinkActionType.View,
                         screenRoute = deepLinkWebUrl.screenBaseRoute,
                         deepLinkMap = mapOf(
                             Pair(NavDeepLinkItem.UserId, userId)
@@ -143,7 +140,6 @@ class DeepLinkControllerImpl(
         }
 
     override fun createDeepLinkAction(
-        actionType: DeepLinkActionType,
         screenRoute: String,
         deepLinkMap: Map<NavDeepLinkItem, String>
     ): CreateDeepLinkActionResult {
@@ -168,7 +164,6 @@ class DeepLinkControllerImpl(
         return (
                 CreateDeepLinkActionResult.Success(
                     deepLinkAction = DeepLinkAction(
-                        actionType = actionType,
                         screenRoute = screenRoute,
                         data = stringifiedMap
                     )
@@ -196,11 +191,6 @@ class DeepLinkControllerImpl(
      */
     private fun validateDeepLinkAction(deepLinkAction: DeepLinkAction): Flow<ValidateDeepLinkActionResult> =
         flow {
-            if (deepLinkAction.actionType is DeepLinkActionType.Invalid) {
-                appLogger.e("DeepLinkController") { "(handleDeepLinkAction) Invalid deep link action type: ${deepLinkAction.actionType.name}" }
-                emit(ValidateDeepLinkActionResult.Failed)
-            }
-
             when (val screen = Screen.matchDeepLinkScreenRoute(deepLinkAction.screenRoute)) {
                 null -> {
                     appLogger.e("DeepLinkController") { "(handleDeepLinkAction) No deep link supported screen name \"${deepLinkAction.screenRoute}\" was found." }
