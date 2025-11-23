@@ -110,9 +110,10 @@ google-accompanist-placeholder = { group = "com.google.accompanist", name = "acc
 google-android-libraries-identity = { module = "com.google.android.libraries.identity.googleid:googleid", version.ref = "google-android-libraries-identity" }
 google-code-gson = { module = "com.google.code.gson:gson", version.ref = "google-code-gson" }
 google-firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "google-firebase-bom" }
-google-firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
+google-firebase-analytics = { group = "com.google.firebase", name = "firebase-analytics" }
 google-firebase-auth = { group = "com.google.firebase", name = "firebase-auth" }
-google-firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics" }
+google-firebase-cloud-messaging = { group = "com.google.firebase", name = "firebase-messaging" }
+google-firebase-crashlytics = { group = "com.google.firebase", name = "firebase-crashlytics" }
 google-firebase-firestore = { group = "com.google.firebase", name = "firebase-firestore" }
 google-play-services-auth = { group = "com.google.android.gms", name = "play-services-auth", version.ref = "google-play-services-auth" }
 google-zxing = { module = "com.google.zxing:core", version.ref = "google-zxing" }

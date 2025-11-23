@@ -1,20 +1,14 @@
 package com.alexgreece45.marvelx.data.repository
 
 import com.alexgreece45.marvelx.data.model.RepositoryPrivacySettings
-import com.alexgreece45.marvelx.data.model.RepositoryUserBlockResult
 import com.alexgreece45.marvelx.data.model.toRepositoryPrivacySettings
-import com.alexgreece45.marvelx.data.model.toRepositoryUserBlock
 import com.alexgreece45.marvelx.data.repository.helper.RepositoryResult
 import com.alexgreece45.marvelx.data.repository.helper.handleApiResult
 import com.alexgreece45.marvelx.data.repository.helper.handleApiResultNoTransformation
-import com.alexgreece45.marvelx.data.repository.helper.handleApiResultNoTransformationWithData
 import com.alexgreece45.marvelx.data.repository.helper.parseUserError
-import com.alexgreece45.marvelx.network_logic.api.ApiClient
+import com.alexgreece45.marvelx.dispatchers.IoDispatcher
+import com.alexgreece45.marvelx.network_logic.clients.ApiClient
 import com.alexgreece45.marvelx.network_logic.models_api.user.ResponseUserError
-import com.alexgreece45.marvelx.network_logic.models_api.user.block.ResponseBlockedUser
-import com.alexgreece45.marvelx.network_logic.models_api.user.block.ResponseUserBlockResult
-import com.alexgreece45.marvelx.network_logic.models_api.user.friend.ResponseFriend
-import com.alexgreece45.marvelx.network_logic.models_api.user.incomingFriendRequest.ResponseIncomingFriendRequest
 import com.alexgreece45.marvelx.network_logic.models_api.user.privacySettings.RequestPrivacySettings
 import com.alexgreece45.marvelx.network_logic.models_api.user.privacySettings.ResponsePrivacySettings
 import com.alexgreece45.marvelx.network_logic.models_api.user.profileDetails.RequestProfileDetailsUpdate
@@ -22,8 +16,10 @@ import com.alexgreece45.marvelx.network_logic.models_api.user.profileDetails.Res
 import com.alexgreece45.marvelx.network_logic.models_api.user.profileDetails.ResponseProfileDetails
 import com.alexgreece45.marvelx.network_logic.models_api.user.profileDetails.ResponseProfileDetailsError
 import com.alexgreece45.marvelx.network_logic.util.extensions.toSerialized
-import com.google.gson.Gson
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import okhttp3.MultipartBody
 import kotlin.coroutines.CoroutineContext
@@ -72,45 +68,27 @@ interface UserRepository {
     suspend fun updatePrivacySettings(requestPrivacySettings: RequestPrivacySettings): Flow<RepositoryResult<String>>
 
     /**
-     * Retrieves the friends of the given user ID.
+     * Tracks whether the user is logged in via a reactive way.
      */
-    suspend fun getFriends(userId: String): Flow<RepositoryResult<List<ResponseFriend>>>
+    suspend fun getUserLoggedInFlow(): StateFlow<Boolean>
 
     /**
-     * Retrieves the friends of the current user.
+     * Tracks whether the user is logged in.
      */
-    suspend fun getCurrentUserFriends(): Flow<RepositoryResult<List<ResponseFriend>>>
+    val isUserLoggedIn: Boolean
 
     /**
-     * Deletes the friend with the given ID.
+     * Sets the user logged in value.
      */
-    suspend fun deleteFriend(userId: String): Flow<RepositoryResult<String>>
-
-    /**
-     * Returns the incoming friend requests of the current user.
-     */
-    suspend fun getIncomingFriendRequests(): Flow<RepositoryResult<List<ResponseIncomingFriendRequest>>>
-
-    /**
-     * Returns the blocked users of the current user.
-     */
-    suspend fun getBlockedUsers(): Flow<RepositoryResult<List<ResponseBlockedUser>>>
-
-    /**
-     * Blocks the user with [userId].
-     */
-    suspend fun blockUser(userId: String): Flow<BlockUserRepositoryResult>
-
-    /**
-     * Unblocks the user with [userId].
-     */
-    suspend fun unblockUser(userId: String): Flow<RepositoryResult<String>>
+    suspend fun setUserLoggedIn(loggedIn: Boolean)
 }
 
 class UserRepositoryImpl(
     private val apiClient: ApiClient,
-    private val ioDispatcher: CoroutineContext
+    @IoDispatcher private val ioDispatcher: CoroutineContext
 ) : UserRepository {
+
+    private var _isUserLoggedIn: MutableStateFlow<Boolean> = MutableStateFlow(false)
 
     override suspend fun getProfileDetails(
         userId: String
@@ -159,9 +137,12 @@ class UserRepositoryImpl(
             gender = gender,
             email = email
         )
-        handleApiResultNoTransformation(apiClient.updateCurrentUserProfileDetails(request)).collect {
-            emit(it)
-        }
+        emitAll(
+            handleApiResultNoTransformation(
+                apiResult = apiClient.updateCurrentUserProfileDetails(request),
+                ioDispatcher = ioDispatcher
+            )
+        )
     }
 
     override suspend fun updateUserProfileImage(
@@ -169,92 +150,47 @@ class UserRepositoryImpl(
         imagePart: MultipartBody.Part
     ): Flow<RepositoryResult<String>> =
         flow {
-            handleApiResultNoTransformation(apiClient.updateUserProfileImage(userId, imagePart)).collect {
-                emit(it)
-            }
+            emitAll(
+                handleApiResultNoTransformation(
+                    apiResult = apiClient.updateUserProfileImage(
+                        userId,
+                        imagePart
+                    ),
+                    ioDispatcher = ioDispatcher
+                )
+            )
         }
 
     override suspend fun getPrivacySettings(): Flow<RepositoryResult<RepositoryPrivacySettings>> =
         flow {
-            handleApiResult(
-                apiClient.getUserPrivacySettings(),
-                ResponsePrivacySettings::toRepositoryPrivacySettings
-            ).collect {
-                emit(it)
-            }
+            emitAll(
+                handleApiResult(
+                    apiResult = apiClient.getUserPrivacySettings(),
+                    transformation = ResponsePrivacySettings::toRepositoryPrivacySettings,
+                    ioDispatcher = ioDispatcher
+                )
+            )
         }
 
     override suspend fun updatePrivacySettings(requestPrivacySettings: RequestPrivacySettings): Flow<RepositoryResult<String>> =
         flow {
-            handleApiResultNoTransformation(
-                apiClient.updateUserPrivacySettings(
-                    requestPrivacySettings
+            emitAll(
+                handleApiResultNoTransformation(
+                    apiResult = apiClient.updateUserPrivacySettings(
+                        requestPrivacySettings
+                    ),
+                    ioDispatcher = ioDispatcher
                 )
-            ).collect {
-                emit(it)
-            }
+            )
         }
 
-    override suspend fun getFriends(userId: String): Flow<RepositoryResult<List<ResponseFriend>>> =
-        flow {
-            handleApiResultNoTransformationWithData(
-                apiResult = apiClient.getUserFriends(userId),
-                ioDispatcher = ioDispatcher
-            ).collect { emit(it) }
-        }
+    override suspend fun getUserLoggedInFlow(): StateFlow<Boolean> = _isUserLoggedIn
 
-    override suspend fun getCurrentUserFriends(): Flow<RepositoryResult<List<ResponseFriend>>> =
-        flow {
-            handleApiResultNoTransformationWithData(
-                apiResult = apiClient.getFriends(),
-                ioDispatcher = ioDispatcher
-            ).collect { emit(it) }
-        }
+    override val isUserLoggedIn: Boolean
+        get() = _isUserLoggedIn.value
 
-    override suspend fun deleteFriend(userId: String): Flow<RepositoryResult<String>> = flow {
-        handleApiResultNoTransformation(
-            apiClient.deleteFriend(userId)
-        ).collect { emit(it) }
-    }
-
-    override suspend fun getIncomingFriendRequests(): Flow<RepositoryResult<List<ResponseIncomingFriendRequest>>> =
-        flow {
-            handleApiResultNoTransformationWithData(
-                apiResult = apiClient.getIncomingFriendRequests(),
-                ioDispatcher = ioDispatcher
-            ).collect { emit(it) }
-        }
-
-    override suspend fun getBlockedUsers(): Flow<RepositoryResult<List<ResponseBlockedUser>>> =
-        flow {
-            handleApiResultNoTransformationWithData(
-                apiResult = apiClient.getBlockedUsers(),
-                ioDispatcher = ioDispatcher
-            ).collect { emit(it) }
-        }
-
-    override suspend fun blockUser(userId: String): Flow<BlockUserRepositoryResult> = flow {
-        apiClient.blockUser(userId).let { response ->
-            if (response.isSuccessful) {
-                emit(BlockUserRepositoryResult.Success)
-            } else {
-                emit(
-                    BlockUserRepositoryResult.Failed(
-                        repositoryUserBlockResult =
-                            Gson().fromJson(
-                                response.errorBody()?.byteString()?.utf8(),
-                                ResponseUserBlockResult::class.java
-                            ).toRepositoryUserBlock()
-                    )
-                )
-            }
-        }
-    }
-
-    override suspend fun unblockUser(userId: String): Flow<RepositoryResult<String>> = flow {
-        handleApiResultNoTransformation(
-            apiClient.unblockUser(userId)
-        ).collect { emit(it) }
+    override suspend fun setUserLoggedIn(loggedIn: Boolean) {
+        _isUserLoggedIn.value = loggedIn
     }
 }
 
@@ -272,10 +208,4 @@ sealed class GetProfileDetailsRepositoryResponse {
 
     data class Failed(val responseProfileDetailsError: ResponseProfileDetailsError) :
         GetProfileDetailsRepositoryResponse()
-}
-
-sealed interface BlockUserRepositoryResult {
-    data object Success : BlockUserRepositoryResult
-    data class Failed(val repositoryUserBlockResult: RepositoryUserBlockResult) :
-        BlockUserRepositoryResult
 }

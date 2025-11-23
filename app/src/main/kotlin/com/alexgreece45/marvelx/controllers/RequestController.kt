@@ -5,7 +5,6 @@ import com.alexgreece45.marvelx.util.SecurityUtil
 import com.alexgreece45.marvelx.util.constants.ConstantsSecurity
 import com.alexgreece45.marvelx.util.extensions.toJsonString
 import okhttp3.Request
-import java.util.UUID
 
 interface RequestController {
 
@@ -27,12 +26,13 @@ class RequestControllerImpl(
     ): Request.Builder {
         val request = requestBuilder.build()
         val nonce = SecurityUtil.createNonce()
-        val timestamp = DateUtil.getSecondsFromEpoch()
+        val timestamp = DateUtil.getEpochSeconds()
 
         val xAuthSignature = prefKeys.signData?.let { signData ->
+            val requestUrl = request.url
             cryptoController.createSessionSignature(
                 requestMethod = request.method,
-                requestUrl = request.url,
+                requestUrl = requestUrl,
                 requestBody = request.body.toJsonString(),
                 requestHeaders = request.headers,
                 nonce = nonce,

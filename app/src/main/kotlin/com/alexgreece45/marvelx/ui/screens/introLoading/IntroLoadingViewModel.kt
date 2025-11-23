@@ -106,13 +106,6 @@ class IntroLoadingViewModel(
             )
         }
 
-        if (!prefKeys.isUserLoggedIn()) {
-            setEffect {
-                IntroLoadingContract.Effect.Navigation.NavigateToHomeScreenWithErrorMessage()
-            }
-            return
-        }
-
         if (!prefKeys.containsUserCredentials()) {
             setEffect {
                 IntroLoadingContract.Effect.Navigation.NavigateToHomeScreenWithErrorMessage()

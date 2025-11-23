@@ -6,6 +6,7 @@ import androidx.work.WorkerParameters
 import com.alexgreece45.marvelx.configuration.ConfigOauth
 import com.alexgreece45.marvelx.controllers.AppLogger
 import com.alexgreece45.marvelx.controllers.AuthController
+import com.alexgreece45.marvelx.dispatchers.IoDispatcher
 import com.alexgreece45.marvelx.domain.model_api.userAuthData.UserAuthData
 import com.alexgreece45.marvelx.network_logic.clients.RefreshTokenClient
 import com.alexgreece45.marvelx.util.DateUtil
@@ -20,14 +21,16 @@ class RefreshTokenWorker(
     private val authController: AuthController,
     private val configOauth: ConfigOauth,
     private val logger: AppLogger,
-    private val ioDispatcher: CoroutineContext,
+    @IoDispatcher private val ioDispatcher: CoroutineContext, // TODO: Causes the worker to never actually run.
 ) : CoroutineWorker(context, workerParameters) {
 
-    override suspend fun doWork(): Result = withContext(ioDispatcher) {
+    private val loggerTag = "RefreshTokenWorker"
+
+    override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
         try {
             authController.getRefreshToken()?.let { refreshToken ->
                 val accessTokenExpirationUnix = authController.getAccessTokenExpiration()
-                val currentUnix = DateUtil.getSecondsFromEpoch()
+                val currentUnix = DateUtil.getEpochSeconds()
                 val totalSecondsRemainingFromExpiration = accessTokenExpirationUnix - currentUnix
                 val minutesRemainingFromExpiration = totalSecondsRemainingFromExpiration / 60
                 val secondsRemainingFromExpiration =
@@ -55,7 +58,7 @@ class RefreshTokenWorker(
                                         )
                                     )
 
-                                    logger.d("RefreshTokenWorker") { "Access token was successfully refreshed." }
+                                    logger.d(loggerTag) { "Access token was successfully refreshed." }
                                     Result.success()
                                 } ?: failure("Refresh access token body is null.")
                             } else {
@@ -75,7 +78,7 @@ class RefreshTokenWorker(
     }
 
     private fun failure(errorMessage: String): Result {
-        logger.e("RefreshTokenWorker") { "(RefreshTokenWorker#doWork) error message: $errorMessage" }
+        logger.e(loggerTag) { "(RefreshTokenWorker#doWork) error message: $errorMessage" }
         return Result.failure()
     }
 }

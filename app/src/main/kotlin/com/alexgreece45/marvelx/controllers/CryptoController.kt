@@ -74,6 +74,12 @@ class CryptoControllerImpl(
             pathAndParameters = pathAndParameters.replaceFirst(":", "")
         }
 
+        val queryParameters = when (val query = requestUrl.query) {
+            null -> ""
+            else -> "?$query"
+        }
+        pathAndParameters += queryParameters // TODO: Change in future to support "|" separator. Temporary solution since backend cannot implement this change yet.
+
         val headerSeparator = "\n"
         var headers = requestHeaders.toMultimap().toList()
             .joinToString(separator = headerSeparator) { header ->

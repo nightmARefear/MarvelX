@@ -31,17 +31,18 @@ import com.alexgreece45.marvelx.ui.screens.friends.model.FriendsContract
 import com.alexgreece45.marvelx.ui.screens.home.HomeScreen
 import com.alexgreece45.marvelx.ui.screens.home.HomeViewModel
 import com.alexgreece45.marvelx.ui.screens.introLoading.IntroLoadingScreen
+import com.alexgreece45.marvelx.ui.screens.introLoading.IntroLoadingViewModel
 import com.alexgreece45.marvelx.ui.screens.login.LoginScreen
 import com.alexgreece45.marvelx.ui.screens.login.LoginViewModel
 import com.alexgreece45.marvelx.ui.screens.otp.OtpScreen
 import com.alexgreece45.marvelx.ui.screens.otp.OtpViewModel
-import com.alexgreece45.marvelx.ui.screens.profile.model.ProfileContract
 import com.alexgreece45.marvelx.ui.screens.profile.ProfileScreen
 import com.alexgreece45.marvelx.ui.screens.profile.ProfileViewModel
 import com.alexgreece45.marvelx.ui.screens.profile.editProfileDetails.EditProfileDetailsScreen
 import com.alexgreece45.marvelx.ui.screens.profile.editProfileDetails.EditProfileDetailsViewModel
 import com.alexgreece45.marvelx.ui.screens.profile.image.ProfileImageScreen
 import com.alexgreece45.marvelx.ui.screens.profile.image.ProfileImageViewModel
+import com.alexgreece45.marvelx.ui.screens.profile.model.ProfileContract
 import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.ProfileDetailsContract
 import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.ProfileDetailsScreen
 import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.ProfileDetailsViewModel
@@ -98,7 +99,13 @@ fun NavGraph(navController: NavHostController) {
         }
 
         composable(Screen.IntroLoadingScreen) {
-            IntroLoadingScreen(navController = navController)
+            val viewModel = koinViewModel<IntroLoadingViewModel>()
+            IntroLoadingScreen(
+                navController = navController,
+                onEventSent = viewModel::setEvent,
+                state = viewModel.uiState.collectAsStateWithLifecycle().value,
+                effect = viewModel.uiEffect
+            )
         }
 
         composable(Screen.HomeScreen) {
@@ -269,6 +276,9 @@ fun NavGraph(navController: NavHostController) {
                         launchSingleTop = true
                     }
                 },
+                openDeepLinkAction = {
+                    openDeepLinkAction(navController, it)
+                },
                 bottomNavigationBarData = { getBottomNavigationBarData(navController = navController) }
             )
         }
@@ -437,7 +447,8 @@ fun NavGraph(navController: NavHostController) {
                 state = viewModel.uiState.collectAsStateWithLifecycle().value,
                 effect = viewModel.uiEffect,
                 navigateUp = navController::navigateUp,
-                profileImageUrl = navBackStackEntry.arguments?.getString(NavItem.ProfileImageUrl.key).orEmpty()
+                profileImageUrl = navBackStackEntry.arguments?.getString(NavItem.ProfileImageUrl.key)
+                    .orEmpty()
             )
         }
 
@@ -452,6 +463,9 @@ fun NavGraph(navController: NavHostController) {
                 state = viewModel.uiState.collectAsStateWithLifecycle().value,
                 effect = viewModel.uiEffect,
                 userId = navBackStackEntry.arguments?.getString(NavItem.UserId.key).orEmpty(),
+                shouldShowAcceptFriendRequestDialog = navBackStackEntry.arguments?.getBoolean(
+                    NavItem.ShouldShowAcceptFriendRequestDialog.key
+                ) ?: false,
                 onNavigation = { navigationEffect ->
                     when (navigationEffect) {
                         ProfileDetailsContract.Effect.Navigation.PopBackStack -> {

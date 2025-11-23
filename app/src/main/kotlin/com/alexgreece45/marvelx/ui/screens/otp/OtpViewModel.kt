@@ -9,6 +9,7 @@ import com.alexgreece45.marvelx.controllers.RefreshTokenController
 import com.alexgreece45.marvelx.controllers.TimerController
 import com.alexgreece45.marvelx.controllers.TimerStatus
 import com.alexgreece45.marvelx.controllers.WebsocketController
+import com.alexgreece45.marvelx.data.repository.UserRepository
 import com.alexgreece45.marvelx.domain.interactors.AuthorizePartialState
 import com.alexgreece45.marvelx.domain.interactors.ForgotPasswordInteractor
 import com.alexgreece45.marvelx.domain.interactors.ForgotPasswordValidateOtpPartialState
@@ -193,7 +194,8 @@ class OtpViewModel(
     private val timerController: TimerController,
     private val websocketController: WebsocketController,
     private val authController: AuthController,
-    private val refreshTokenController: RefreshTokenController
+    private val refreshTokenController: RefreshTokenController,
+    private val userRepository: UserRepository,
 ) : BaseViewModel<OtpEvent, OtpState, OtpEffect>() {
 
     /**
@@ -738,9 +740,6 @@ class OtpViewModel(
 
                                             // Save token info in device.
                                             authController.setData(accessTokenPartialState.userAuthData)
-
-                                            // User is now logged in. Save the flag.
-                                            prefKeys.setUserLoggedIn(isLoggedIn = true)
 
                                             // Start refresh token worker since the access token was successfully retrieved.
                                             refreshTokenController.startWorker()

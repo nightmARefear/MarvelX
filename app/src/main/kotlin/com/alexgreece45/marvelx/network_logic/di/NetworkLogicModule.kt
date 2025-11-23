@@ -11,28 +11,25 @@ import com.alexgreece45.marvelx.controllers.WebsocketController
 import com.alexgreece45.marvelx.controllers.WebsocketControllerImpl
 import com.alexgreece45.marvelx.controllers.model.websocket.WebsocketRequestType
 import com.alexgreece45.marvelx.di.ApiClientImpl
-import com.alexgreece45.marvelx.dispatchers.MarvelXDispatchers
+import com.alexgreece45.marvelx.dispatchers.MainDispatcher
 import com.alexgreece45.marvelx.domain.model_api.comic.ComicPriceType
 import com.alexgreece45.marvelx.domain.model_api.user.VerificationStep
-import com.alexgreece45.marvelx.network_logic.api.ApiClient
-import com.alexgreece45.marvelx.network_logic.api.ApiService
 import com.alexgreece45.marvelx.network_logic.authenticators.ApiAuthenticator
 import com.alexgreece45.marvelx.network_logic.authenticators.RefreshTokenAuthenticator
+import com.alexgreece45.marvelx.network_logic.clients.ApiClient
 import com.alexgreece45.marvelx.network_logic.clients.RefreshTokenClient
 import com.alexgreece45.marvelx.network_logic.clients.RefreshTokenClientImpl
-import com.alexgreece45.marvelx.data.repository.imageLoader.AuthenticatedImageLoader
 import com.alexgreece45.marvelx.network_logic.interceptors.ApiInterceptor
 import com.alexgreece45.marvelx.network_logic.interceptors.RefreshTokenInterceptor
 import com.alexgreece45.marvelx.network_logic.interceptors.WebsocketInterceptor
+import com.alexgreece45.marvelx.network_logic.services.ApiService
 import com.alexgreece45.marvelx.network_logic.services.RefreshTokenService
 import com.alexgreece45.marvelx.network_logic.typeAdapters.ComicPriceTypeAdapter
-import com.alexgreece45.marvelx.network_logic.typeAdapters.DeepLinkActionTypeTypeAdapter
 import com.alexgreece45.marvelx.network_logic.typeAdapters.InstantTypeAdapter
 import com.alexgreece45.marvelx.network_logic.typeAdapters.OffsetDateTimeAdapter
 import com.alexgreece45.marvelx.network_logic.typeAdapters.UUIDAdapter
 import com.alexgreece45.marvelx.network_logic.typeAdapters.VerificationStepAdapter
 import com.alexgreece45.marvelx.network_logic.typeAdapters.WebsocketRequestTypeAdapter
-import com.alexgreece45.marvelx.ui.helper.model.DeepLinkActionType
 import com.chuckerteam.chucker.api.ChuckerInterceptor
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
@@ -43,7 +40,7 @@ import org.koin.core.annotation.ComponentScan
 import org.koin.core.annotation.Factory
 import org.koin.core.annotation.Module
 import org.koin.core.annotation.Single
-import org.koin.core.qualifier.named
+import org.koin.core.qualifier.qualifier
 import org.koin.dsl.module
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -87,10 +84,6 @@ fun provideGson(): Gson = GsonBuilder()
     .registerTypeAdapter(
         UUID::class.java,
         UUIDAdapter()
-    )
-    .registerTypeAdapter(
-        DeepLinkActionType::class.java,
-        DeepLinkActionTypeTypeAdapter()
     )
     .registerTypeAdapter(
         Instant::class.java,
@@ -310,7 +303,7 @@ val networkKoinModule = module {
             get(),
             get(),
             get(),
-            get(named(MarvelXDispatchers.Main))
+            get(qualifier = qualifier<MainDispatcher>())
         )
     }
     single<RefreshTokenAuthenticator> { RefreshTokenAuthenticator(get(), get(), get()) }

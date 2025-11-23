@@ -4,6 +4,8 @@ import com.alexgreece45.marvelx.configuration.ConfigLogic
 import com.alexgreece45.marvelx.controllers.model.websocket.WebsocketOnMessageReceivedPartialState
 import com.alexgreece45.marvelx.controllers.model.websocket.WebsocketRequestType
 import com.alexgreece45.marvelx.controllers.model.websocket.WebsocketSendRequestPartialState
+import com.alexgreece45.marvelx.controllers.model.websocket.WebsocketSendRequestPartialState.Failed
+import com.alexgreece45.marvelx.controllers.model.websocket.WebsocketSendRequestPartialState.Success
 import com.alexgreece45.marvelx.controllers.model.websocket.WebsocketTerminationCode
 import com.alexgreece45.marvelx.network_logic.models_websocket.RequestWebsocket
 import com.alexgreece45.marvelx.util.constants.ConstantsSecurity
@@ -121,7 +123,7 @@ class WebsocketControllerImpl(
                     when (it) {
                         is WebsocketOnMessageReceivedPartialState.Failed -> {
                             emit(
-                                WebsocketSendRequestPartialState.Failed(
+                                Failed(
                                     errorMessage = it.errorMessage
                                 )
                             )
@@ -130,7 +132,7 @@ class WebsocketControllerImpl(
                         is WebsocketOnMessageReceivedPartialState.Success -> {
                             if (it.websocketDomain.requestId == requestId) {
                                 emit(
-                                    WebsocketSendRequestPartialState.Success(
+                                    Success(
                                         websocketDomain = it.websocketDomain
                                     )
                                 )

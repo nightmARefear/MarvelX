@@ -9,6 +9,7 @@ import com.alexgreece45.marvelx.controllers.MarvelXBackendRequestController
 import com.alexgreece45.marvelx.controllers.model.auth.CurrentConsecutiveFailedAuthenticationData
 import com.alexgreece45.marvelx.data.repository.RefreshTokenRepository
 import com.alexgreece45.marvelx.data.repository.TokenRefreshRepositoryResult
+import com.alexgreece45.marvelx.dispatchers.MainDispatcher
 import com.alexgreece45.marvelx.network_logic.models_api.token.ResponseToken
 import com.alexgreece45.marvelx.network_logic.models_api.token.toUserAuthData
 import com.alexgreece45.marvelx.ui.navigation.NavArgHelper
@@ -40,7 +41,7 @@ class ApiAuthenticator(
     private val authController: AuthController,
     private val marvelXBackendRequestController: MarvelXBackendRequestController,
     private val routerHost: RouterHost,
-    private val mainDispatcher: CoroutineContext,
+    @MainDispatcher private val mainDispatcher: CoroutineContext,
 ) : Authenticator {
 
     /**
@@ -158,7 +159,7 @@ class ApiAuthenticator(
                         }
                     }
                 }
-            } catch (e: TimeoutCancellationException) {
+            } catch (_: TimeoutCancellationException) {
                 timeoutExceeded = true
             }
         }
@@ -179,7 +180,7 @@ class ApiAuthenticator(
         }
 
         // Save token info in device.
-        authController.setData(responseRefreshAccessToken!!.toUserAuthData())
+        authController.setData(responseRefreshAccessToken.toUserAuthData())
 
         // Re-construct initial request with the new token.
         return marvelXBackendRequestController.applyMarvelXBackendTransformations(

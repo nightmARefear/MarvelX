@@ -1,6 +1,7 @@
 package com.alexgreece45.marvelx.controllers
 
 import android.content.SharedPreferences
+import androidx.core.content.edit
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKeys
 import com.alexgreece45.marvelx.BuildConfig
@@ -19,6 +20,7 @@ interface PreferencesController {
     fun containsKey(key: String): Boolean
 
     fun getString(key: String, defaultValue: String): String
+    fun getStringOrNull(key: String): String?
     fun getInt(key: String, defaultValue: Int): Int
     fun getLong(key: String, defaultValue: Long): Long
     fun getBoolean(key: String, defaultValue: Boolean): Boolean
@@ -55,6 +57,9 @@ class PreferencesControllerImpl(
     override fun getString(key: String, defaultValue: String): String =
         sharedPreferences.getString(key, defaultValue) ?: defaultValue
 
+    override fun getStringOrNull(key: String): String? =
+        sharedPreferences.getString(key, null)
+
     override fun getInt(key: String, defaultValue: Int): Int =
         sharedPreferences.getInt(key, defaultValue)
 
@@ -66,22 +71,22 @@ class PreferencesControllerImpl(
 
 
     override fun setString(key: String, value: String) =
-        sharedPreferences.edit().putString(key, value).apply()
+        sharedPreferences.edit { putString(key, value) }
 
     override fun setInt(key: String, value: Int) =
-        sharedPreferences.edit().putInt(key, value).apply()
+        sharedPreferences.edit { putInt(key, value) }
 
     override fun setLong(key: String, value: Long) =
-        sharedPreferences.edit().putLong(key, value).apply()
+        sharedPreferences.edit { putLong(key, value) }
 
     override fun setBoolean(key: String, value: Boolean) =
-        sharedPreferences.edit().putBoolean(key, value).apply()
+        sharedPreferences.edit { putBoolean(key, value) }
 
     override fun remove(key: String) =
-        sharedPreferences.edit().remove(key).apply()
+        sharedPreferences.edit { remove(key) }
 
     override fun removeAll() =
-        sharedPreferences.edit().clear().apply()
+        sharedPreferences.edit { clear() }
 
     /**
      * Returns an instance of [SharedPreferences], with the appropriate
@@ -115,11 +120,6 @@ interface PrefKeys {
      */
     fun shouldRememberUserSession(): Boolean
 
-    /**
-     * Retrieves whether the user is logged in. It has a default value of `false`.
-     */
-    fun isUserLoggedIn(): Boolean
-
     fun setUserId(userId: String)
     fun setUserAuthData(userAuthData: String)
 
@@ -129,13 +129,6 @@ interface PrefKeys {
      * ### Note: During logout, this value is set to `false`.
      */
     fun setRememberUserSession(shouldRemember: Boolean)
-
-    /**
-     * Sets whether the user is logged in.
-     *
-     * ### Note: During logout, this value is set to `false`.
-     */
-    fun setUserLoggedIn(isLoggedIn: Boolean)
 
     fun removeUserId()
 
@@ -178,9 +171,6 @@ class PrefKeysImpl(
     override fun shouldRememberUserSession(): Boolean =
         preferencesController.getBoolean("rememberMe", false)
 
-    override fun isUserLoggedIn(): Boolean =
-        preferencesController.getBoolean("isUserLoggedIn", false)
-
     override fun setUserId(userId: String) =
         preferencesController.setString(
             key = BuildConfig.ENCRYPTED_SHARED_PREFERENCES_KEY_USER_ID,
@@ -195,9 +185,6 @@ class PrefKeysImpl(
 
     override fun setRememberUserSession(shouldRemember: Boolean) =
         preferencesController.setBoolean("rememberMe", shouldRemember)
-
-    override fun setUserLoggedIn(isLoggedIn: Boolean) =
-        preferencesController.setBoolean("isUserLoggedIn", isLoggedIn)
 
     override fun removeUserId() =
         preferencesController.remove(BuildConfig.ENCRYPTED_SHARED_PREFERENCES_KEY_USER_ID)

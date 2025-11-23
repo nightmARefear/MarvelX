@@ -1,5 +1,6 @@
 package com.alexgreece45.marvelx.util.extensions
 
+import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
@@ -31,8 +32,8 @@ fun NavGraphBuilder.composable(
     popExitTransition: (@JvmSuppressWildcards
     AnimatedContentTransitionScope<NavBackStackEntry>.() -> ExitTransition?)? =
         exitTransition,
-    content: @Composable (NavBackStackEntry) -> Unit
-) {
+    content: @Composable AnimatedContentScope.(NavBackStackEntry) -> Unit
+) =
     composable(
         route = screen.route,
         arguments = screen.navigationArguments,
@@ -41,7 +42,6 @@ fun NavGraphBuilder.composable(
         exitTransition = exitTransition,
         popEnterTransition = popEnterTransition,
         popExitTransition = popExitTransition,
-    ) {
-        content(it)
-    }
-}
+        content = content
+    )
+

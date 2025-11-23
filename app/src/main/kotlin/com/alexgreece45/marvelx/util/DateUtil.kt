@@ -14,7 +14,12 @@ object DateUtil {
      *
      * @return the seconds from the epoch of 1970-01-01T00:00:00Z
      * */
-    fun getSecondsFromEpoch(): Long = getUTCInstant().epochSecond
+    fun getEpochSeconds(): Long = getUTCInstant().epochSecond
+
+    /**
+     * Returns the epoch milliseconds.
+     */
+    fun getEpochMillis() = getUTCInstant().toEpochMilli()
 
     /**
      * Converts the given [minutes] and [seconds] into a human readable format.

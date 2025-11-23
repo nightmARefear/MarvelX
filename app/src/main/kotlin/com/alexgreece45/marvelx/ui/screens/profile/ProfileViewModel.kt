@@ -22,11 +22,11 @@ import com.alexgreece45.marvelx.ui.screens.profile.model.ProfileErrorAlertDialog
 import com.alexgreece45.marvelx.ui.screens.profile.model.ProfileScreenErrorView
 import com.alexgreece45.marvelx.util.FileUtil
 import com.alexgreece45.marvelx.util.ResourceProvider
-import com.alexgreece45.marvelx.util.constants.ConstantsUi
 import com.alexgreece45.marvelx.util.extensions.endsWithAnySuffix
 import com.alexgreece45.marvelx.util.extensions.toUrlEncoding
 import kotlinx.coroutines.launch
 import java.util.UUID
+import kotlin.math.max
 
 
 class ProfileViewModel(
@@ -112,7 +112,7 @@ class ProfileViewModel(
                 }
             }
 
-            is ProfileContract.Event.ProfileImage.OnImageSelected -> {
+            is ProfileContract.Event.ProfileImage.ImageSelectionEvent.OnSuccess -> {
                 val imageFileContentData = event.imageFileContentData
                 if (imageFileContentData == null) {
                     showToastMessage(message = resourceProvider.getString(R.string.screen_profile_error_image_select_reading))
@@ -138,13 +138,16 @@ class ProfileViewModel(
                 setEffect {
                     ProfileContract.Effect.OpenImageCropper(
                         toolbarTitle = resourceProvider.getString(R.string.profile_screen_cropped_cropped_image_toolbar_title),
-                        imageSize = ConstantsUi.PROFILE_IMAGE_FULL_SIZE.value.toInt(),
+                        minImageSize = 350,
+                        maxImageSize = 1250,
                         imageUri = imageFileContentData.uri
                     )
                 }
             }
 
-            is ProfileContract.Event.ProfileImage.OnImageCropped -> {
+            is ProfileContract.Event.ProfileImage.ImageSelectionEvent.NoSelection -> {}
+
+            is ProfileContract.Event.ProfileImage.ImageCropEvent.OnSuccess -> {
                 if (event.imageFileContentData == null) {
                     appLogger.e("ProfileViewModel") { "Error cropping image!" }
 
@@ -163,6 +166,20 @@ class ProfileViewModel(
                     copy(
                         croppedImageFileContentData = event.imageFileContentData
                     )
+                }
+            }
+
+            is ProfileContract.Event.ProfileImage.ImageCropEvent.OnFailure -> {
+                if (event.errorMessage?.contains("cancelled") == false) {
+                    appLogger.e("ProfileViewModel") { "Error cropping image!" }
+
+                    showToastMessage(message = resourceProvider.getString(R.string.screen_profile_error_image_crop))
+                    setState {
+                        copy(
+                            croppedImageIsLoading = false,
+                            croppedImageFileContentData = null
+                        )
+                    }
                 }
             }
 

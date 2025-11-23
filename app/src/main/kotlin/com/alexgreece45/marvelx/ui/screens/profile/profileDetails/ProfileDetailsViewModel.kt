@@ -3,14 +3,19 @@ package com.alexgreece45.marvelx.ui.screens.profile.profileDetails
 import android.graphics.Bitmap
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.core.graphics.createBitmap
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.configuration.models.DeepLinkWebUrl
-import com.alexgreece45.marvelx.data.repository.FriendRequestsRepository
-import com.alexgreece45.marvelx.domain.interactors.BlockUserPartialState
+import com.alexgreece45.marvelx.data.repository.NotificationRepository
+import com.alexgreece45.marvelx.data.repository.user.FriendRepository
 import com.alexgreece45.marvelx.domain.interactors.GetProfileDetailsPartialState
 import com.alexgreece45.marvelx.domain.interactors.UserInteractor
+import com.alexgreece45.marvelx.domain.interactors.user.BlockUserPartialState
+import com.alexgreece45.marvelx.domain.interactors.user.BlockedUserInteractor
+import com.alexgreece45.marvelx.domain.interactors.user.FriendRequestInteractor
 import com.alexgreece45.marvelx.domain.model_api.user.block.UserBlockResultType
+import com.alexgreece45.marvelx.domain.model_api.user.friendRequest.DeleteFriendRequestType
 import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.ProfileDetailsDomain
 import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.ProfileDetailsErrorType
 import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.RelationshipStatusDomain
@@ -39,7 +44,9 @@ import kotlinx.coroutines.launch
 
 sealed interface ProfileDetailsContract {
     sealed interface Event : BaseEvent {
-        data class Init(val userId: String) : Event
+        data class Init(val userId: String, val shouldShowAcceptFriendRequestDialog: Boolean) :
+            Event
+
         data object OnBackClicked : Event
         data object OnEditProfileDetailsIconClicked : Event
 
@@ -55,6 +62,10 @@ sealed interface ProfileDetailsContract {
             data object OnFriendsListClicked : ProfileBanner
             data object OnListingsListClicked : ProfileBanner
             data object OnFavoritesListClicked : ProfileBanner
+
+            data object OnGenderLongClick : ProfileBanner
+            data object OnEmailLongClick : ProfileBanner
+
             data object OnRelationshipStatusChipClicked : ProfileBanner
         }
 
@@ -116,6 +127,8 @@ sealed interface ProfileDetailsContract {
 
         data class ShareProfileUrl(val url: String, val intentTitle: String) : Effect
 
+        data class SetClipboardText(val toastMessage: String, val text: String) : Effect
+
         sealed interface Navigation : Effect {
             data object PopBackStack : Navigation
             data class NavigateToProfileImageScreen(val profileImageUrl: String) : Navigation
@@ -136,7 +149,10 @@ sealed interface ProfileDetailsContract {
 class ProfileDetailsViewModel(
     private val userInteractor: UserInteractor,
     private val resourceProvider: ResourceProvider,
-    private val friendRequestsRepository: FriendRequestsRepository,
+    private val friendRepository: FriendRepository,
+    private val friendRequestInteractor: FriendRequestInteractor,
+    private val blockedUserInteractor: BlockedUserInteractor,
+    private val notificationRepository: NotificationRepository,
 ) : BaseViewModel<ProfileDetailsContract.Event, ProfileDetailsContract.State, ProfileDetailsContract.Effect>() {
 
     override fun setInitialState(): ProfileDetailsContract.State =
@@ -253,6 +269,34 @@ class ProfileDetailsViewModel(
                 }
             }
 
+            ProfileDetailsContract.Event.ProfileBanner.OnGenderLongClick -> {
+                currentState.profileDetails?.let { profileDetails ->
+                    setEffect {
+                        ProfileDetailsContract.Effect.SetClipboardText(
+                            toastMessage = resourceProvider.getString(
+                                R.string.generic_successfully_copied,
+                                resourceProvider.getString(R.string.profile_details_screen_label_gender_field)
+                            ),
+                            text = resourceProvider.getString(profileDetails.basicProfileDetails.gender.label)
+                        )
+                    }
+                }
+            }
+
+            ProfileDetailsContract.Event.ProfileBanner.OnEmailLongClick -> {
+                currentState.profileDetails?.let { profileDetails ->
+                    setEffect {
+                        ProfileDetailsContract.Effect.SetClipboardText(
+                            toastMessage = resourceProvider.getString(
+                                R.string.generic_successfully_copied,
+                                resourceProvider.getString(R.string.profile_details_screen_label_email_field)
+                            ),
+                            text = profileDetails.basicProfileDetails.email
+                        )
+                    }
+                }
+            }
+
             ProfileDetailsContract.Event.ProfileBanner.OnRelationshipStatusChipClicked -> {
                 currentState.profileDetails?.let { profileDetails ->
                     viewModelScope.launch {
@@ -264,7 +308,7 @@ class ProfileDetailsViewModel(
                                     )
                                 }
 
-                                friendRequestsRepository.sendFriendRequest(currentState.userId)
+                                friendRequestInteractor.sendFriendRequest(currentState.userId)
                                     .collect { wasSent ->
                                         setState {
                                             copy(
@@ -288,7 +332,6 @@ class ProfileDetailsViewModel(
                                         errorSubtitle = resourceProvider.getString(R.string.profile_details_screen_label_alert_dialog_subtitle_delete_friend_request),
                                         dismissAlertDialogButton = AlertDialogButton(
                                             label = resourceProvider.getString(R.string.profile_details_screen_label_alert_dialog_button_negative_delete_friend_request),
-                                            buttonType = ErrorButtonType.defaultType,
                                             onClick = ::hideAlertDialogError
                                         ),
                                         confirmAlertDialogButton = AlertDialogButton(
@@ -301,22 +344,7 @@ class ProfileDetailsViewModel(
                             }
 
                             RelationshipStatusDomain.PendingFriendRequestReceiver -> {
-                                showAlertDialogError(
-                                    ProfileDetailsAlertDialogErrorData(
-                                        errorTitle = resourceProvider.getString(R.string.profile_details_screen_label_alert_dialog_title_accept_friend_request),
-                                        errorSubtitle = resourceProvider.getString(R.string.profile_details_screen_label_alert_dialog_subtitle_accept_friend_request),
-                                        dismissAlertDialogButton = AlertDialogButton(
-                                            label = resourceProvider.getString(R.string.profile_details_screen_label_alert_dialog_button_negative_accept_friend_request),
-                                            buttonType = ErrorButtonType.defaultType,
-                                            onClick = ::hideAlertDialogError
-                                        ),
-                                        confirmAlertDialogButton = AlertDialogButton(
-                                            label = resourceProvider.getString(R.string.profile_details_screen_label_alert_dialog_button_positive_accept_friend_request),
-                                            buttonType = ErrorButtonType.Contained,
-                                            onClick = ::acceptFriendRequest
-                                        )
-                                    )
-                                )
+                                showAcceptFriendRequestDialog()
                             }
 
                             RelationshipStatusDomain.Friends -> {
@@ -326,7 +354,6 @@ class ProfileDetailsViewModel(
                                         errorSubtitle = resourceProvider.getString(R.string.profile_details_screen_label_alert_dialog_subtitle_delete_friend),
                                         dismissAlertDialogButton = AlertDialogButton(
                                             label = resourceProvider.getString(R.string.profile_details_screen_label_alert_dialog_button_negative_delete_friend),
-                                            buttonType = ErrorButtonType.defaultType,
                                             onClick = ::hideAlertDialogError
                                         ),
                                         confirmAlertDialogButton = AlertDialogButton(
@@ -388,6 +415,15 @@ class ProfileDetailsViewModel(
                                 isGenderHidden = it.profileDetailsDomain.isDifferentUser && it.profileDetailsDomain.privacySettings != null && !it.profileDetailsDomain.privacySettings.isGenderVisible,
                                 isEmailHidden = it.profileDetailsDomain.isDifferentUser && it.profileDetailsDomain.privacySettings != null && !it.profileDetailsDomain.privacySettings.isEmailVisible,
                             )
+                        }
+
+                        if (event.shouldShowAcceptFriendRequestDialog) {
+                            // Notify backend about notification opening.
+                            viewModelScope.launch {
+                                notificationRepository.markIncomingFriendRequestAsRead()
+                            }
+
+                            showAcceptFriendRequestDialog()
                         }
                     }
 
@@ -537,7 +573,7 @@ class ProfileDetailsViewModel(
                 }
             }
 
-            Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888).apply {
+            createBitmap(width, height).apply {
                 setPixels(pixels, 0, width, 0, 0, width, height)
             }
         } catch (e: WriterException) {
@@ -558,7 +594,7 @@ class ProfileDetailsViewModel(
             )
         }
         viewModelScope.launch {
-            userInteractor.blockUser(currentState.userId).collect {
+            blockedUserInteractor.blockUser(currentState.userId).collect {
                 when (it) {
                     is BlockUserPartialState.Success -> {
                         showSnackbar(message = resourceProvider.getString(R.string.profile_details_screen_label_success_block_user))
@@ -614,30 +650,32 @@ class ProfileDetailsViewModel(
         hideAlertDialogError()
 
         viewModelScope.launch {
-            friendRequestsRepository.deleteFriendRequest(currentState.userId)
-                .collect { wasDeleted ->
-                    when (wasDeleted) {
-                        true -> {
-                            setState {
-                                copy(
-                                    isRelationshipStatusChipLoading = false,
-                                    profileDetails = profileDetails?.copy(
-                                        relationshipStatus = RelationshipStatusDomain.None
-                                    )
+            friendRequestInteractor.deleteFriendRequest(
+                userId = currentState.userId,
+                deleteFriendRequestType = DeleteFriendRequestType.SENDER
+            ).collect { wasDeleted ->
+                when (wasDeleted) {
+                    true -> {
+                        setState {
+                            copy(
+                                isRelationshipStatusChipLoading = false,
+                                profileDetails = profileDetails?.copy(
+                                    relationshipStatus = RelationshipStatusDomain.None
                                 )
-                            }
-                        }
-
-                        false -> {
-                            setState {
-                                copy(
-                                    isRelationshipStatusChipLoading = false
-                                )
-                            }
-                            showSnackbar(message = resourceProvider.getString(R.string.profile_details_screen_error_deleting_friend_request))
+                            )
                         }
                     }
+
+                    false -> {
+                        setState {
+                            copy(
+                                isRelationshipStatusChipLoading = false
+                            )
+                        }
+                        showSnackbar(message = resourceProvider.getString(R.string.profile_details_screen_error_deleting_friend_request))
+                    }
                 }
+            }
         }
     }
 
@@ -653,7 +691,7 @@ class ProfileDetailsViewModel(
         hideAlertDialogError()
 
         viewModelScope.launch {
-            friendRequestsRepository.acceptFriendRequest(currentState.userId)
+            friendRequestInteractor.acceptFriendRequest(currentState.userId)
                 .collect { wasAccepted ->
                     when (wasAccepted) {
                         true -> {
@@ -695,7 +733,7 @@ class ProfileDetailsViewModel(
         hideAlertDialogError()
 
         viewModelScope.launch {
-            userInteractor.deleteFriend(currentState.userId).collect { wasDeleted ->
+            friendRepository.deleteFriend(currentState.userId).collect { wasDeleted ->
                 when (wasDeleted) {
                     true -> {
                         setState {
@@ -818,5 +856,23 @@ class ProfileDetailsViewModel(
                 tab = tab
             )
         }
+    }
+
+    private fun showAcceptFriendRequestDialog() {
+        showAlertDialogError(
+            ProfileDetailsAlertDialogErrorData(
+                errorTitle = resourceProvider.getString(R.string.profile_details_screen_label_alert_dialog_title_accept_friend_request),
+                errorSubtitle = resourceProvider.getString(R.string.profile_details_screen_label_alert_dialog_subtitle_accept_friend_request),
+                dismissAlertDialogButton = AlertDialogButton(
+                    label = resourceProvider.getString(R.string.profile_details_screen_label_alert_dialog_button_negative_accept_friend_request),
+                    onClick = ::hideAlertDialogError
+                ),
+                confirmAlertDialogButton = AlertDialogButton(
+                    label = resourceProvider.getString(R.string.profile_details_screen_label_alert_dialog_button_positive_accept_friend_request),
+                    buttonType = ErrorButtonType.Contained,
+                    onClick = ::acceptFriendRequest
+                )
+            )
+        )
     }
 }

@@ -16,6 +16,7 @@
     <string name="is_password_not_visible_content_description">Show Password</string>
     <string name="ic_favorite_content_description">favorite</string>
     <string name="favorite_message">This %1$s is now favorite.</string>
+    <string name="generic_successfully_copied">%1$s successfully copied!</string>
 
     <string name="ic_not_favorite_content_description">not favorite</string>
     <string name="not_favorite_message">This %1$s was removed from your favorites.</string>
@@ -229,8 +230,12 @@
     <string name="profile_details_screen_label_profile_banner_tile_listings">listings</string>
     <string name="profile_details_screen_label_profile_banner_tile_favorites">favorites</string>
     <string name="profile_details_screen_label_share_profile_intent_title">Sharing Profile of %1$s</string>
+    <string name="profile_details_screen_label_gender_field">Gender field</string>
     <string name="profile_details_screen_label_gender_hidden">Gender is hidden</string>
+    <string name="screen_profile_details_label_gender_copy">Copy gender</string>
+    <string name="profile_details_screen_label_email_field">Email field</string>
     <string name="profile_details_screen_label_email_hidden">Email is hidden</string>
+    <string name="screen_profile_details_label_email_copy">Copy email</string>
     <string name="profile_details_screen_label_scan_qr_code">Scan the QR code below</string>
     <string name="profile_details_screen_label_success_block_user">This user has been blocked.</string>
     <string name="profile_details_screen_label_full_screen_error_view_button_go_back">Go back</string>

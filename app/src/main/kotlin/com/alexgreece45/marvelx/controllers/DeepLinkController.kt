@@ -2,8 +2,7 @@ package com.alexgreece45.marvelx.controllers
 
 import android.net.Uri
 import com.alexgreece45.marvelx.configuration.models.DeepLinkWebUrl
-import com.alexgreece45.marvelx.ui.helper.model.DeepLinkAction
-import com.alexgreece45.marvelx.ui.helper.model.DeepLinkActionType
+import com.alexgreece45.marvelx.data.model.deepLink.DeepLinkAction
 import com.alexgreece45.marvelx.ui.navigation.NavDeepLinkItem
 import com.alexgreece45.marvelx.ui.navigation.Screen
 import com.google.gson.Gson
@@ -35,11 +34,10 @@ interface DeepLinkController {
     /**
      * Attempts to create a [DeepLinkAction] based on the given arguments.
      */
-    suspend fun createDeepLinkAction(
-        actionType: DeepLinkActionType,
+    fun createDeepLinkAction(
         screenRoute: String,
         deepLinkMap: Map<NavDeepLinkItem, String>
-    ): Flow<CreateDeepLinkActionResult>
+    ): CreateDeepLinkActionResult
 }
 
 class DeepLinkControllerImpl(
@@ -99,28 +97,27 @@ class DeepLinkControllerImpl(
                 }
                 val userId = try {
                     Integer.parseInt(parameterValues.last()).toString()
-                } catch (e: NumberFormatException) {
+                } catch (_: NumberFormatException) {
                     appLogger.e("DeepLinkController") { "(handleQrCodeWebUrl) The parsed userId \"${parameterValues.last()}\" is not of type Int!" }
                     emit(HandleQrCodeWebUrlResult.InvalidUrl)
                     return@flow
                 }
 
-                createDeepLinkAction(
-                    actionType = DeepLinkActionType.View,
-                    screenRoute = deepLinkWebUrl.screenBaseRoute,
-                    deepLinkMap = mapOf(
-                        Pair(NavDeepLinkItem.UserId, userId)
-                    )
-                ).collect {
-                    when (it) {
-                        is CreateDeepLinkActionResult.Success -> emit(
-                            HandleQrCodeWebUrlResult.Success(
-                                it.deepLinkAction
-                            )
+                when (
+                    val result = createDeepLinkAction(
+                        screenRoute = deepLinkWebUrl.screenBaseRoute,
+                        deepLinkMap = mapOf(
+                            Pair(NavDeepLinkItem.UserId, userId)
                         )
+                    )
+                ) {
+                    is CreateDeepLinkActionResult.Success -> emit(
+                        HandleQrCodeWebUrlResult.Success(
+                            result.deepLinkAction
+                        )
+                    )
 
-                        CreateDeepLinkActionResult.Failed -> emit(HandleQrCodeWebUrlResult.ErrorCreatingDeepLinkAction)
-                    }
+                    CreateDeepLinkActionResult.Failed -> emit(HandleQrCodeWebUrlResult.ErrorCreatingDeepLinkAction)
                 }
             }
 
@@ -137,27 +134,24 @@ class DeepLinkControllerImpl(
                 val json = gson.toJson(deepLinkAction.data)
                 val extractedData = gson.fromJson(json, dataType::class.java)
                 emit(ExtractDataFromDeepLinkAction.Success(extractedData))
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 emit(ExtractDataFromDeepLinkAction.Failed)
             }
         }
 
-    override suspend fun createDeepLinkAction(
-        actionType: DeepLinkActionType,
+    override fun createDeepLinkAction(
         screenRoute: String,
         deepLinkMap: Map<NavDeepLinkItem, String>
-    ): Flow<CreateDeepLinkActionResult> = flow {
+    ): CreateDeepLinkActionResult {
         val screen = Screen.matchDeepLinkScreenRoute(screenRoute)
         if (screen == null) {
             appLogger.e("DeepLinkController") { "(createDeepLinkAction) The provided $screenRoute does not match a deep-link supported screen." }
-            emit(CreateDeepLinkActionResult.Failed)
-            return@flow
+            return (CreateDeepLinkActionResult.Failed)
         }
         val doDeepLinkArgsMatch = Screen.doDeepLinkArgsMatch(screen, deepLinkMap.keys.toList())
         if (!doDeepLinkArgsMatch) {
             appLogger.e("DeepLinkController") { "(createDeepLinkAction) The provided deep-link arguments do not match the ones of $screenRoute." }
-            emit(CreateDeepLinkActionResult.Failed)
-            return@flow
+            return (CreateDeepLinkActionResult.Failed)
         }
 
         // We can now safely create the corresponding deep link action.
@@ -167,15 +161,14 @@ class DeepLinkControllerImpl(
             }
         }
 
-        emit(
-            CreateDeepLinkActionResult.Success(
-                deepLinkAction = DeepLinkAction(
-                    actionType = actionType,
-                    screenRoute = screenRoute,
-                    data = stringifiedMap
+        return (
+                CreateDeepLinkActionResult.Success(
+                    deepLinkAction = DeepLinkAction(
+                        screenRoute = screenRoute,
+                        data = stringifiedMap
+                    )
                 )
-            )
-        )
+                )
     }
 
     /**
@@ -198,11 +191,6 @@ class DeepLinkControllerImpl(
      */
     private fun validateDeepLinkAction(deepLinkAction: DeepLinkAction): Flow<ValidateDeepLinkActionResult> =
         flow {
-            if (deepLinkAction.actionType is DeepLinkActionType.Invalid) {
-                appLogger.e("DeepLinkController") { "(handleDeepLinkAction) Invalid deep link action type: ${deepLinkAction.actionType.name}" }
-                emit(ValidateDeepLinkActionResult.Failed)
-            }
-
             when (val screen = Screen.matchDeepLinkScreenRoute(deepLinkAction.screenRoute)) {
                 null -> {
                     appLogger.e("DeepLinkController") { "(handleDeepLinkAction) No deep link supported screen name \"${deepLinkAction.screenRoute}\" was found." }

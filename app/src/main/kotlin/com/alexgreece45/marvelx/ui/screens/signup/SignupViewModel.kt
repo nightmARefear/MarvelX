@@ -2,10 +2,11 @@ package com.alexgreece45.marvelx.ui.screens.signup
 
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.controllers.AuthController
 import com.alexgreece45.marvelx.controllers.PrefKeys
 import com.alexgreece45.marvelx.controllers.RefreshTokenController
 import com.alexgreece45.marvelx.controllers.WebsocketController
+import com.alexgreece45.marvelx.data.repository.UserRepository
+import com.alexgreece45.marvelx.dispatchers.DefaultDispatcher
 import com.alexgreece45.marvelx.domain.interactors.AuthorizePartialState
 import com.alexgreece45.marvelx.domain.interactors.GrandNewAccessTokenPartialState
 import com.alexgreece45.marvelx.domain.interactors.LoginInteractor
@@ -128,9 +129,9 @@ class SignupViewModel(
     private val websocketController: WebsocketController,
     private val refreshTokenController: RefreshTokenController,
     private val loginInteractor: LoginInteractor,
-    private val authController: AuthController,
     private val fieldValidationRules: FieldValidationRules,
-    private val defaultDispatcher: CoroutineContext,
+    @DefaultDispatcher private val defaultDispatcher: CoroutineContext,
+    private val userRepository: UserRepository,
 ) : BaseViewModel<SignupEvent, SignupState, SignupEffect>() {
 
     override fun setInitialState(): SignupState =
@@ -477,13 +478,10 @@ class SignupViewModel(
 
                     is GrandNewAccessTokenPartialState.Success -> {
                         // Retrieve sign data.
-                        loginInteractor.postLogin(authController.getAccessToken())
+                        loginInteractor.postLogin(it.userAuthData.accessToken)
                             .collect { postLoginPartialState ->
                                 when (postLoginPartialState) {
                                     PostLoginPartialState.Success -> {
-                                        // User is logged in.
-                                        prefKeys.setUserLoggedIn(isLoggedIn = true)
-
                                         // ONLY for signup, set the remember user session to `true` by default.
                                         prefKeys.setRememberUserSession(shouldRemember = true)
 

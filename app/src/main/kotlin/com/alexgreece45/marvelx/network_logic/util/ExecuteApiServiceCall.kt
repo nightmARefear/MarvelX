@@ -19,7 +19,7 @@ internal suspend fun <T : Any> executeApiServiceCall(apiCall: suspend () -> Resp
         } else {
             ApiResult.Failed(response.errorBody().toString())
         }
-    } catch (e: IOException) {
+    } catch (_: IOException) {
         ApiResult.NetworkError
     } catch (e: Exception) {
         ApiResult.Error(e.message.orEmpty())
@@ -43,7 +43,7 @@ internal suspend fun executeApiServiceCallNoTransformation(apiCall: suspend () -
         } else {
             ApiResult.Failed(response.errorBody().toString())
         }
-    } catch (e: IOException) {
+    } catch (_: IOException) {
         ApiResult.NetworkError
     } catch (e: Exception) {
         ApiResult.Error(e.message.orEmpty())

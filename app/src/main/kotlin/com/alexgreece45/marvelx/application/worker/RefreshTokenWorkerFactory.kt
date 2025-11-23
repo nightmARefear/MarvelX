@@ -7,6 +7,7 @@ import androidx.work.WorkerParameters
 import com.alexgreece45.marvelx.configuration.ConfigOauth
 import com.alexgreece45.marvelx.controllers.AppLogger
 import com.alexgreece45.marvelx.controllers.AuthController
+import com.alexgreece45.marvelx.dispatchers.IoDispatcher
 import com.alexgreece45.marvelx.domain.worker.RefreshTokenWorker
 import com.alexgreece45.marvelx.network_logic.clients.RefreshTokenClient
 import kotlin.coroutines.CoroutineContext
@@ -16,7 +17,7 @@ class RefreshTokenWorkerFactory(
     private val authController: AuthController,
     private val configOauth: ConfigOauth,
     private val logger: AppLogger,
-    private val ioDispatcher: CoroutineContext,
+    @IoDispatcher private val ioDispatcher: CoroutineContext,
 ) : WorkerFactory() {
 
     override fun createWorker(

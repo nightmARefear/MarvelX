@@ -13,6 +13,7 @@ import com.google.gson.JsonSyntaxException
  */
 
 interface AuthController {
+
     /**
      * Returns the access token with its type.
      * */
@@ -51,7 +52,7 @@ interface AuthController {
     var currentConsecutiveFailedAuthenticationData: CurrentConsecutiveFailedAuthenticationData?
 
     /**
-     * Removes the stored user credentials: userId, and UserAuthData.
+     * Removes the stored user credentials: userId, [UserAuthData], and SignData.
      *
      * ### Note: This operation is irreversible, and it MUST be used with caution.
      * */
@@ -64,14 +65,15 @@ class AuthControllerImpl(
     private val preferencesController: PreferencesController,
     private val gson: Gson
 ) : AuthController {
+
     private val userAuthData: UserAuthData?
         get() {
             return try {
-                Gson().fromJson(
+                gson.fromJson(
                     prefKeys.getUserAuthData(),
                     UserAuthData::class.java
                 )
-            } catch (e: JsonSyntaxException) {
+            } catch (_: JsonSyntaxException) {
                 logger.e("AuthController") { "User authentication data is null." }
                 null
             }
@@ -96,14 +98,14 @@ class AuthControllerImpl(
 
     override fun isAccessTokenExpired(): Boolean =
         if (userAuthData != null) {
-            DateUtil.getSecondsFromEpoch() >= getAccessTokenExpiration()
+            DateUtil.getEpochSeconds() >= getAccessTokenExpiration()
         } else {
             true
         }
 
     override fun isRefreshTokenExpired(): Boolean =
         if (userAuthData != null) {
-            DateUtil.getSecondsFromEpoch() >= getRefreshTokenExpiration()
+            DateUtil.getEpochSeconds() >= getRefreshTokenExpiration()
         } else {
             true
         }
@@ -111,7 +113,10 @@ class AuthControllerImpl(
     override var currentConsecutiveFailedAuthenticationData: CurrentConsecutiveFailedAuthenticationData?
         get() = try {
             gson.fromJson(
-                preferencesController.getString(ConstantsPrefs.CURRENT_CONSECUTIVE_FAILED_AUTHENTICATION_DATA, null.toString()),
+                preferencesController.getString(
+                    ConstantsPrefs.CURRENT_CONSECUTIVE_FAILED_AUTHENTICATION_DATA,
+                    null.toString()
+                ),
                 CurrentConsecutiveFailedAuthenticationData::class.java
             )
         } catch (e: Exception) {
@@ -132,5 +137,6 @@ class AuthControllerImpl(
     override fun removeUserCredentials() {
         prefKeys.removeUserId()
         prefKeys.removeUserAuthData()
+        prefKeys.signData = null
     }
 }

@@ -2,14 +2,14 @@ package com.alexgreece45.marvelx.ui.screens.settings.faq
 
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.domain.helper.InteractorPartialState
-import com.alexgreece45.marvelx.domain.interactors.ConfigInteractor
+import com.alexgreece45.marvelx.data.repository.FaqsRepository
+import com.alexgreece45.marvelx.data.repository.helper.RepositoryResult
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
 import com.alexgreece45.marvelx.mvi.BaseViewModel
-import com.alexgreece45.marvelx.ui.screens.settings.faq.model.FaqSectionUi
-import com.alexgreece45.marvelx.ui.screens.settings.faq.model.toFaqSectionUiList
+import com.alexgreece45.marvelx.ui.screens.settings.faq.model.FaqUi
+import com.alexgreece45.marvelx.ui.screens.settings.faq.model.toFaqUi
 import com.alexgreece45.marvelx.util.ResourceProvider
 import kotlinx.coroutines.launch
 
@@ -22,7 +22,7 @@ sealed interface FaqContract {
 
     data class State(
         val isLoading: Boolean = true,
-        val sections: List<FaqSectionUi> = emptyList(),
+        val sections: List<FaqUi> = emptyList(),
         val error: FaqScreenErrorView? = null
     ) : BaseState
 
@@ -35,7 +35,7 @@ sealed interface FaqContract {
 
 class FaqViewModel(
     private val resourceProvider: ResourceProvider,
-    private val configInteractor: ConfigInteractor
+    private val faqsRepository: FaqsRepository
 ) : BaseViewModel<FaqContract.Event, FaqContract.State, FaqContract.Effect>() {
     override fun setInitialState(): FaqContract.State =
         FaqContract.State()
@@ -72,18 +72,18 @@ class FaqViewModel(
 
     private fun init(event: FaqContract.Event) {
         viewModelScope.launch {
-            configInteractor.getFaqs().collect {
-                when (it) {
-                    is InteractorPartialState.Success -> {
+            faqsRepository.getFaqs().collect { result ->
+                when (result) {
+                    is RepositoryResult.Success -> {
                         setState {
                             copy(
                                 isLoading = false,
-                                sections = it.data.sections.toFaqSectionUiList()
+                                sections = result.data.map { it.toFaqUi() }
                             )
                         }
                     }
 
-                    InteractorPartialState.NoInternetConnection -> {
+                    RepositoryResult.NetworkError -> {
                         setState {
                             copy(
                                 isLoading = false
@@ -95,19 +95,7 @@ class FaqViewModel(
                         )
                     }
 
-                    is InteractorPartialState.Error -> {
-                        setState {
-                            copy(
-                                isLoading = false
-                            )
-                        }
-                        showError(
-                            subTitle = resourceProvider.getString(R.string.generic_unknown_error),
-                            event = event
-                        )
-                    }
-
-                    is InteractorPartialState.Failed -> {
+                    is RepositoryResult.Failed -> {
                         setState {
                             copy(
                                 isLoading = false

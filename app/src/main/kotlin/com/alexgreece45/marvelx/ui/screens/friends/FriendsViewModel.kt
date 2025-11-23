@@ -2,25 +2,38 @@ package com.alexgreece45.marvelx.ui.screens.friends
 
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.data.repository.FriendRequestsRepository
 import com.alexgreece45.marvelx.domain.helper.InteractorPartialState
+import com.alexgreece45.marvelx.domain.interactors.GetProfileDetailsPartialState
 import com.alexgreece45.marvelx.domain.interactors.UserInteractor
+import com.alexgreece45.marvelx.domain.interactors.user.BlockedUserInteractor
+import com.alexgreece45.marvelx.domain.interactors.user.FriendInteractor
+import com.alexgreece45.marvelx.domain.interactors.user.FriendRequestInteractor
 import com.alexgreece45.marvelx.domain.model_api.user.block.BlockedUserDomain
 import com.alexgreece45.marvelx.domain.model_api.user.friend.FriendDomain
+import com.alexgreece45.marvelx.domain.model_api.user.friendRequest.DeleteFriendRequestType
+import com.alexgreece45.marvelx.domain.model_api.user.friendRequest.IncomingFriendRequestDomain
 import com.alexgreece45.marvelx.mvi.BaseViewModel
+import com.alexgreece45.marvelx.notifications.PushNotificationsController
+import com.alexgreece45.marvelx.notifications.model.NotificationChannelType
 import com.alexgreece45.marvelx.ui.screens.friends.model.FriendsContract
 import com.alexgreece45.marvelx.ui.screens.friends.model.FriendsDialogView
 import com.alexgreece45.marvelx.ui.screens.friends.model.FriendsErrorView
-import com.alexgreece45.marvelx.ui.screens.friends.model.IncomingFriendRequestDomain
+import com.alexgreece45.marvelx.util.DateUtil
 import com.alexgreece45.marvelx.util.ResourceProvider
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
 import java.time.Instant
 
 class FriendsViewModel(
     private val resourceProvider: ResourceProvider,
     private val userInteractor: UserInteractor,
-    private val friendRequestsRepository: FriendRequestsRepository,
+    private val friendInteractor: FriendInteractor,
+    private val friendRequestInteractor: FriendRequestInteractor,
+    private val blockedUserInteractor: BlockedUserInteractor,
 ) : BaseViewModel<FriendsContract.Event, FriendsContract.State, FriendsContract.Effect>() {
+
+    private val LOGGER_TAG = "FriendsViewModel"
 
     override fun setInitialState(): FriendsContract.State = FriendsContract.State()
 
@@ -83,6 +96,8 @@ class FriendsViewModel(
         getFriends(isFromRefresh = false)
         getIncomingFriendRequests(isFromRefresh = false)
         getBlockedUsers(isFromRefresh = false)
+
+        setupNotificationsListener()
     }
 
     private fun onBackClicked() {
@@ -228,7 +243,7 @@ class FriendsViewModel(
         }
 
         viewModelScope.launch {
-            userInteractor.getCurrentUserFriends().collect { result ->
+            friendInteractor.getCurrentUserFriends().collect { result ->
                 when (result) {
                     is InteractorPartialState.Error,
                     is InteractorPartialState.Failed -> {
@@ -290,7 +305,7 @@ class FriendsViewModel(
         }
 
         viewModelScope.launch {
-            userInteractor.getIncomingFriendRequests().collect { result ->
+            friendRequestInteractor.getIncomingFriendRequests().collect { result ->
                 when (result) {
                     is InteractorPartialState.Error,
                     is InteractorPartialState.Failed -> {
@@ -352,7 +367,7 @@ class FriendsViewModel(
         }
 
         viewModelScope.launch {
-            userInteractor.getBlockedUsers().collect { result ->
+            blockedUserInteractor.getBlockedUsers().collect { result ->
                 when (result) {
                     is InteractorPartialState.Error,
                     is InteractorPartialState.Failed -> {
@@ -398,9 +413,110 @@ class FriendsViewModel(
         }
     }
 
+    private fun setupNotificationsListener() {
+        viewModelScope.launch {
+            PushNotificationsController.notification
+                .filterNotNull()
+                .collect { notificationData ->
+                    when (notificationData.channelType) {
+                        NotificationChannelType.AcceptFriendRequest -> {
+                            val userId = notificationData.userId
+                            val friendsSince = DateUtil.getUTCInstant() // Pretty much.
+
+                            userInteractor.getProfileDetails(userId)
+                                .collect { result ->
+                                    when (result) {
+                                        is GetProfileDetailsPartialState.Error,
+                                        is GetProfileDetailsPartialState.Failed,
+                                        GetProfileDetailsPartialState.NoInternetConnection -> {
+                                            appLogger.e(LOGGER_TAG) { "(setupNotificationsListener) An error occurred whilst retrieving the details for user w/ID: $userId" }
+
+                                            setState {
+                                                copy(
+                                                    incomingFriendRequests = incomingFriendRequests.filterNot { it.userId == notificationData.userId }
+                                                )
+                                            }
+                                        }
+
+                                        is GetProfileDetailsPartialState.Success -> {
+                                            setState {
+                                                copy(
+                                                    allFriends = buildList {
+                                                        if (!allFriends.map { it.userId }
+                                                                .contains(userId)) {
+                                                            add(
+                                                                with(result.profileDetailsDomain.basicProfileDetails) {
+                                                                    FriendDomain(
+                                                                        userId = userId,
+                                                                        fullName = fullName,
+                                                                        profileImageUrl = profileImageUrlData.imageUrl,
+                                                                        friendsSince = friendsSince
+                                                                    )
+                                                                }
+                                                            )
+                                                        }
+
+                                                        addAll(allFriends)
+                                                    },
+                                                    incomingFriendRequests = incomingFriendRequests.filterNot { it.userId == notificationData.userId }
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                        }
+
+                        NotificationChannelType.IncomingFriendRequest -> {
+                            val userId = notificationData.userId
+                            val receivedAt = DateUtil.getUTCInstant() // Pretty much.
+
+                            userInteractor.getProfileDetails(userId)
+                                .collect { result ->
+                                    when (result) {
+                                        is GetProfileDetailsPartialState.Error,
+                                        is GetProfileDetailsPartialState.Failed,
+                                        GetProfileDetailsPartialState.NoInternetConnection -> {
+                                            appLogger.e(LOGGER_TAG) { "(setupNotificationsListener) An error occurred whilst retrieving the details for user w/ID: $userId" }
+
+                                        }
+
+                                        is GetProfileDetailsPartialState.Success -> {
+                                            setState {
+                                                copy(
+                                                    incomingFriendRequests = buildList {
+                                                        if (!incomingFriendRequests.map { it.userId }
+                                                                .contains(userId)) {
+                                                            add(
+                                                                with(result.profileDetailsDomain.basicProfileDetails) {
+                                                                    IncomingFriendRequestDomain(
+                                                                        userId = userId,
+                                                                        fullName = fullName,
+                                                                        profileImageUrl = profileImageUrlData.imageUrl,
+                                                                        receivedAt = receivedAt
+                                                                    )
+                                                                }
+                                                            )
+                                                        }
+                                                        addAll(incomingFriendRequests)
+                                                    }
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                        }
+
+                        NotificationChannelType.ListingPurchase -> {
+                            // No need for implementation.
+                        }
+                    }
+                }
+        }
+    }
+
     private fun removeFriend(userId: String) {
         viewModelScope.launch {
-            userInteractor.deleteFriend(userId).collect { wasFriendDeleted ->
+            friendInteractor.deleteFriend(userId).collect { wasFriendDeleted ->
                 if (wasFriendDeleted) {
                     setEffect {
                         FriendsContract.Effect.ShowToastMessage(
@@ -435,7 +551,7 @@ class FriendsViewModel(
 
     private fun acceptFriendRequest(incomingFriendRequest: IncomingFriendRequestDomain) {
         viewModelScope.launch {
-            friendRequestsRepository.acceptFriendRequest(userId = incomingFriendRequest.userId)
+            friendRequestInteractor.acceptFriendRequest(userId = incomingFriendRequest.userId)
                 .collect { wasFriendRequestAccepted ->
                     if (wasFriendRequestAccepted) {
                         setEffect {
@@ -484,43 +600,45 @@ class FriendsViewModel(
 
     private fun removeFriendRequest(userId: String) {
         viewModelScope.launch {
-            friendRequestsRepository.deleteFriendRequest(userId)
-                .collect { wasFriendRequestDeleted ->
-                    if (wasFriendRequestDeleted) {
-                        setEffect {
-                            FriendsContract.Effect.ShowToastMessage(
-                                message = resourceProvider.getString(
-                                    R.string.screen_friends_success_declining_friend_request
-                                )
+            friendRequestInteractor.deleteFriendRequest(
+                userId = userId,
+                deleteFriendRequestType = DeleteFriendRequestType.RECEIVER
+            ).collect { wasFriendRequestDeleted ->
+                if (wasFriendRequestDeleted) {
+                    setEffect {
+                        FriendsContract.Effect.ShowToastMessage(
+                            message = resourceProvider.getString(
+                                R.string.screen_friends_success_declining_friend_request
                             )
-                        }
+                        )
+                    }
 
-                        setState {
-                            copy(
-                                isTabRefreshing = true
-                            )
-                        }
+                    setState {
+                        copy(
+                            isTabRefreshing = true
+                        )
+                    }
 
-                        setState {
-                            copy(
-                                isTabRefreshing = false,
-                                incomingFriendRequests = incomingFriendRequests.filterNot { incomingFriendRequest -> incomingFriendRequest.userId == userId }
-                            )
-                        }
-                    } else {
-                        setEffect {
-                            FriendsContract.Effect.ShowToastMessage(
-                                message = resourceProvider.getString(R.string.screen_friends_error_declining_friend_request)
-                            )
-                        }
+                    setState {
+                        copy(
+                            isTabRefreshing = false,
+                            incomingFriendRequests = incomingFriendRequests.filterNot { incomingFriendRequest -> incomingFriendRequest.userId == userId }
+                        )
+                    }
+                } else {
+                    setEffect {
+                        FriendsContract.Effect.ShowToastMessage(
+                            message = resourceProvider.getString(R.string.screen_friends_error_declining_friend_request)
+                        )
                     }
                 }
+            }
         }
     }
 
     private fun unblockUser(userId: String) {
         viewModelScope.launch {
-            userInteractor.unblockUser(userId)
+            blockedUserInteractor.unblockUser(userId)
                 .collect { result ->
                     when (result) {
                         is InteractorPartialState.Error,

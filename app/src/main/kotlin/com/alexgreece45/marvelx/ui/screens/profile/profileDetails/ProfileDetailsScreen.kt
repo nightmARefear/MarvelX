@@ -1,12 +1,15 @@
 package com.alexgreece45.marvelx.ui.screens.profile.profileDetails
 
+import android.content.ClipData
 import android.content.Intent
 import android.content.res.Configuration
 import android.graphics.Bitmap
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -37,10 +40,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -94,11 +99,12 @@ fun ProfileDetailsScreen(
     state: ProfileDetailsContract.State,
     effect: Flow<ProfileDetailsContract.Effect>,
     userId: String,
+    shouldShowAcceptFriendRequestDialog: Boolean,
     onNavigation: (ProfileDetailsContract.Effect.Navigation) -> Unit
 ) {
     val context = LocalContext.current
-
     val coroutineScope = rememberCoroutineScope()
+    val clipboard = LocalClipboard.current
 
     val modalBottomSheetState =
         rememberModalBottomSheetState(
@@ -117,7 +123,7 @@ fun ProfileDetailsScreen(
     var shouldEnforceMaxBrightness by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
-        onEventSent(ProfileDetailsContract.Event.Init(userId))
+        onEventSent(ProfileDetailsContract.Event.Init(userId, shouldShowAcceptFriendRequestDialog))
     }
 
     LaunchedEffect(modalBottomSheetState.currentValue, state.bottomSheetType) {
@@ -154,6 +160,13 @@ fun ProfileDetailsScreen(
                     type = "text/plain"
                 }, uiEffect.intentTitle)
                 context.startActivity(share)
+            }
+
+            is ProfileDetailsContract.Effect.SetClipboardText -> {
+                clipboard.nativeClipboard.setPrimaryClip(
+                    ClipData.newPlainText("copied text", uiEffect.text)
+                )
+                Toast.makeText(context, uiEffect.toastMessage, Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -358,7 +371,11 @@ fun ProfileDetailsScreen(
                                                     )
                                                 }
                                             }
-                                            VisibleField(label = stringResource(profileDetails.basicProfileDetails.gender.label))
+                                            VisibleField(
+                                                label = stringResource(profileDetails.basicProfileDetails.gender.label),
+                                                onLongClickLabel = stringResource(R.string.screen_profile_details_label_gender_copy),
+                                                onLongClick = { onEventSent(ProfileDetailsContract.Event.ProfileBanner.OnGenderLongClick) }
+                                            )
                                         }
                                     }
 
@@ -375,7 +392,11 @@ fun ProfileDetailsScreen(
                                             // Hidden email.
                                             HiddenField(label = stringResource(R.string.profile_details_screen_label_email_hidden))
                                         } else {
-                                            VisibleField(label = profileDetails.basicProfileDetails.email)
+                                            VisibleField(
+                                                label = profileDetails.basicProfileDetails.email,
+                                                onLongClickLabel = stringResource(R.string.screen_profile_details_label_email_copy),
+                                                onLongClick = { onEventSent(ProfileDetailsContract.Event.ProfileBanner.OnEmailLongClick) }
+                                            )
                                         }
                                     }
                                 }
@@ -447,7 +468,7 @@ fun ProfileDetailsScreen(
         AlertDialogError(
             isVisible = true,
             title = alertDialogData.errorTitle,
-            errorMessage = { Text(text=alertDialogData.errorSubtitle) },
+            errorMessage = { Text(text = alertDialogData.errorSubtitle) },
             dismissButton = alertDialogData.dismissAlertDialogButton,
             confirmButton = alertDialogData.confirmAlertDialogButton
         )
@@ -514,9 +535,17 @@ private fun HiddenField(label: String) {
  * the user. The text to show is set through [label].
  */
 @Composable
-private fun VisibleField(label: String) {
+private fun VisibleField(label: String, onLongClickLabel: String, onLongClick: () -> Unit) {
     Text(
         text = label,
+        modifier = Modifier.combinedClickable(
+            interactionSource = null,
+            indication = null,
+            role = Role.Button,
+            onLongClickLabel = onLongClickLabel,
+            onLongClick = onLongClick,
+            onClick = {}
+        ),
         style = MaterialTheme.typography.subtitle1
     )
 }
@@ -600,6 +629,7 @@ private fun ProfileDetailsScreenPreview() {
             ),
             effect = emptyFlow(),
             userId = "",
+            shouldShowAcceptFriendRequestDialog = false,
             onNavigation = {}
         )
     }
@@ -625,6 +655,7 @@ private fun ProfileDetailsScreenNestedErrorViewPreview() {
             ),
             effect = emptyFlow(),
             userId = "100",
+            shouldShowAcceptFriendRequestDialog = false,
             onNavigation = {}
         )
     }
@@ -662,6 +693,7 @@ private fun ProfileDetailsScreenMoreActionBottomSheetPreview() {
             ),
             effect = emptyFlow(),
             userId = "101",
+            shouldShowAcceptFriendRequestDialog = false,
             onNavigation = {}
         )
     }

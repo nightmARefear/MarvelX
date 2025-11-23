@@ -64,7 +64,7 @@ import com.alexgreece45.marvelx.ui.components.model.ShadowData
 import com.alexgreece45.marvelx.ui.components.rememberWrapModalBottomSheetState
 import com.alexgreece45.marvelx.ui.components.sections.SectionListHeader
 import com.alexgreece45.marvelx.ui.components.sections.model.SectionHeaderData
-import com.alexgreece45.marvelx.ui.helper.model.DeepLinkAction
+import com.alexgreece45.marvelx.data.model.deepLink.DeepLinkAction
 import com.alexgreece45.marvelx.ui.navigation.getBottomNavigationBarData
 import com.alexgreece45.marvelx.ui.screens.profile.model.ProfileBottomSheetType
 import com.alexgreece45.marvelx.ui.screens.profile.model.ProfileContract
@@ -113,14 +113,18 @@ fun ProfileScreen(
     val singlePhotoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia(),
         onResult = { uri ->
-            onEventSent(
-                ProfileContract.Event.ProfileImage.OnImageSelected(
-                    imageFileContentData = FileUtil.getFileContentData(
-                        uri = uri,
-                        context = context
+            if (uri == null) {
+                onEventSent(ProfileContract.Event.ProfileImage.ImageSelectionEvent.NoSelection)
+            } else {
+                onEventSent(
+                    ProfileContract.Event.ProfileImage.ImageSelectionEvent.OnSuccess(
+                        imageFileContentData = FileUtil.getFileContentData(
+                            uri = uri,
+                            context = context
+                        )
                     )
                 )
-            )
+            }
         }
     )
 
@@ -129,7 +133,7 @@ fun ProfileScreen(
         onResult = { result ->
             if (result.isSuccessful) {
                 onEventSent(
-                    ProfileContract.Event.ProfileImage.OnImageCropped(
+                    ProfileContract.Event.ProfileImage.ImageCropEvent.OnSuccess(
                         imageFileContentData = FileUtil.getFileContentData(
                             uri = result.uriContent,
                             context = context
@@ -137,7 +141,7 @@ fun ProfileScreen(
                     )
                 )
             } else {
-                onEventSent(ProfileContract.Event.ProfileImage.OnImageCropped(null))
+                onEventSent(ProfileContract.Event.ProfileImage.ImageCropEvent.OnFailure(errorMessage = result.error?.message))
             }
         }
     )
@@ -166,15 +170,15 @@ fun ProfileScreen(
                         CropImageContractOptions(
                             uri = uiEffect.imageUri,
                             cropImageOptions = CropImageOptions(
-                                cropShape = CropImageView.CropShape.OVAL,
+                                cropShape = CropImageView.CropShape.RECTANGLE,
                                 guidelines = CropImageView.Guidelines.ON_TOUCH,
                                 autoZoomEnabled = false,
                                 multiTouchEnabled = true,
                                 maxZoom = 3,
-                                minCropResultWidth = uiEffect.imageSize,
-                                minCropResultHeight = uiEffect.imageSize,
-                                maxCropResultWidth = uiEffect.imageSize,
-                                maxCropResultHeight = uiEffect.imageSize,
+                                minCropResultWidth = uiEffect.minImageSize,
+                                minCropResultHeight = uiEffect.minImageSize,
+                                maxCropResultWidth = uiEffect.maxImageSize,
+                                maxCropResultHeight = uiEffect.maxImageSize,
                                 activityTitle = uiEffect.toolbarTitle,
                                 outputCompressQuality = 100,
                             )

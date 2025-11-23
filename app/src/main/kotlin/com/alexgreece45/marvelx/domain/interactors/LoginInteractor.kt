@@ -16,6 +16,7 @@ import com.alexgreece45.marvelx.data.repository.LogoutRepositoryResponse
 import com.alexgreece45.marvelx.data.repository.PostLoginRepositoryResponse
 import com.alexgreece45.marvelx.data.repository.RefreshTokenRepository
 import com.alexgreece45.marvelx.data.repository.TokenRefreshRepositoryResult
+import com.alexgreece45.marvelx.data.repository.UserRepository
 import com.alexgreece45.marvelx.domain.model_api.sensitiveUserData.SensitiveUserDataDomain
 import com.alexgreece45.marvelx.domain.model_api.user.postLogin.SignData
 import com.alexgreece45.marvelx.domain.model_api.userAuthData.UserAuthData
@@ -29,6 +30,7 @@ import kotlinx.coroutines.flow.flow
 import okio.IOException
 
 interface LoginInteractor {
+
     /**
      * Authorization call for the OAuth 2.0 Grant flow. It sends the code challenge and challenge
      * method and receives a `code` that is used to correlate the code challenge to this device. The
@@ -72,7 +74,8 @@ class LoginInteractorImpl(
     private val prefKeys: PrefKeys,
     private val logger: AppLogger,
     private val websocketController: WebsocketController,
-    private val cryptoController: CryptoController
+    private val cryptoController: CryptoController,
+    private val userRepository: UserRepository,
 ) : LoginInteractor {
 
     private val codeVerifier by lazy {
@@ -129,13 +132,10 @@ class LoginInteractorImpl(
         websocketController.close()
 
         // Disable user logged in flag.
-        prefKeys.setUserLoggedIn(false)
+        userRepository.setUserLoggedIn(false)
 
         // Disable remember user session functionality.
         prefKeys.setRememberUserSession(false)
-
-        // Remove signing data.
-        prefKeys.signData = null
 
         // Remove auto-logout timestamp.
         prefKeys.autoLogoutTimestamp = null
@@ -192,16 +192,16 @@ class LoginInteractorImpl(
             when (it) {
                 is PostLoginRepositoryResponse.Success -> {
                     val sign = it.response?.sign
-                    if (sign == null) {
-                        emit(PostLoginPartialState.Failed(genericErrorMessage))
-                        return@collect
-                    }
-                    if (sign.key.isNullOrBlank() || sign.algorithm.isNullOrBlank()) {
+                    if (sign == null
+                        || sign.key.isNullOrBlank()
+                        || sign.algorithm.isNullOrBlank()
+                    ) {
                         emit(PostLoginPartialState.Failed(genericErrorMessage))
                         return@collect
                     }
 
                     prefKeys.signData = SignData(key = sign.key, algorithm = sign.algorithm)
+                    userRepository.setUserLoggedIn(true)
                     emit(PostLoginPartialState.Success)
                 }
 

@@ -7,10 +7,11 @@ import com.alexgreece45.marvelx.configuration.ConfigSecurityLogic
 import com.alexgreece45.marvelx.controllers.model.security.ApplicationSecurity
 import com.alexgreece45.marvelx.controllers.model.security.SecurityCheck
 import com.alexgreece45.marvelx.controllers.model.security.SecurityViolation
-import kotlinx.coroutines.Dispatchers
+import com.alexgreece45.marvelx.dispatchers.IoDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
+import kotlin.coroutines.CoroutineContext
 
 interface SecurityController {
     /**
@@ -114,8 +115,10 @@ class SecurityControllerImpl(
     private val rootController: RootController,
     private val applicationPackageController: ApplicationPackageController,
     private val antiReverseEngineeringController: AntiReverseEngineeringController,
-    private val antiHookController: AntiHookController
+    private val antiHookController: AntiHookController,
+    @IoDispatcher private val ioDispatcher: CoroutineContext,
 ) : SecurityController {
+
     /**
      * All the security checks to perform.
      */
@@ -217,9 +220,7 @@ class SecurityControllerImpl(
         configSecurityLogic.applicationMultiWindowMode
                 && configSecurityLogic.appBuildType is AppBuildType.RELEASE
 
-    override fun isAutoLogoutEnabled(): Boolean =
-        configSecurityLogic.isAutoLogoutEnabled
-                && configSecurityLogic.appBuildType is AppBuildType.RELEASE
+    override fun isAutoLogoutEnabled(): Boolean = configSecurityLogic.isAutoLogoutEnabled
 
     override fun isApplicationSecure(): Flow<ApplicationSecurity> = flow {
         if (configSecurityLogic.appBuildType !is AppBuildType.RELEASE) {
@@ -234,5 +235,5 @@ class SecurityControllerImpl(
                 else -> ApplicationSecurity.Insecure((failedSecurityCheck as SecurityCheck.Failed).securityViolation)
             }
         )
-    }.flowOn(Dispatchers.IO)
+    }.flowOn(ioDispatcher)
 }

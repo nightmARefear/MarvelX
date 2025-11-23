@@ -19,7 +19,7 @@ sealed class DeepLinkWebUrl(
         /**
          * The base URL for generating a web url that redirects to a specific deep link.
          */
-        val WEB_BASE_URL: String = BuildConfig.DEEPLINK_BASE_URL
+        const val WEB_BASE_URL: String = BuildConfig.DEEPLINK_BASE_URL
 
         /**
          * Returns all the [DeepLinkWebUrl]s.

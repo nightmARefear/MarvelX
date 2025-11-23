@@ -84,6 +84,7 @@ fun ProfileImageScreen(
                         onSuccess = { onEventSent(ProfileImageContract.Event.ProfileImage.OnLoadedSuccess) },
                         onError = { onEventSent(ProfileImageContract.Event.ProfileImage.OnLoadedError) },
                         contentScale = ContentScale.FillBounds,
+                        isCacheDisabled = true
                     )
                 }
             }

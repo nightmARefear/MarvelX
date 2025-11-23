@@ -1,9 +1,11 @@
-package com.alexgreece45.marvelx.network_logic.api
+package com.alexgreece45.marvelx.network_logic.services
 
 import com.alexgreece45.marvelx.network_logic.models_api.authorize.ResponseAuthorize
 import com.alexgreece45.marvelx.network_logic.models_api.character.CharacterDataWrapper
 import com.alexgreece45.marvelx.network_logic.models_api.character.comic.ComicDataWrapper
-import com.alexgreece45.marvelx.network_logic.models_api.faq.ResponseFaq
+import com.alexgreece45.marvelx.network_logic.models_api.device.RequestRegisterDevice
+import com.alexgreece45.marvelx.network_logic.models_api.device.RequestUpdateDevice
+import com.alexgreece45.marvelx.network_logic.models_api.faq.ResponseFaqs
 import com.alexgreece45.marvelx.network_logic.models_api.forgotPassword.email.RequestForgotPasswordOtpBlockedEmail
 import com.alexgreece45.marvelx.network_logic.models_api.forgotPassword.email.RequestForgotPasswordSendOtp
 import com.alexgreece45.marvelx.network_logic.models_api.forgotPassword.email.RequestForgotPasswordValidateOtp
@@ -12,7 +14,6 @@ import com.alexgreece45.marvelx.network_logic.models_api.forgotPassword.email.Re
 import com.alexgreece45.marvelx.network_logic.models_api.forgotPassword.email.ResponseForgotPasswordValidateOtp
 import com.alexgreece45.marvelx.network_logic.models_api.forgotPassword.phoneNumber.RequestForgotPasswordOtpBlockedPhoneNumber
 import com.alexgreece45.marvelx.network_logic.models_api.forgotPassword.phoneNumber.ResponseForgotPasswordOtpBlockedPhoneNumber
-import com.alexgreece45.marvelx.network_logic.models_api.user.friend.ResponseFriend
 import com.alexgreece45.marvelx.network_logic.models_api.jwtSensitiveUserData.RequestJwtSensitiveUserData
 import com.alexgreece45.marvelx.network_logic.models_api.jwtSensitiveUserData.ResponseJwtSensitiveUserData
 import com.alexgreece45.marvelx.network_logic.models_api.otp.OtpRequest
@@ -24,6 +25,7 @@ import com.alexgreece45.marvelx.network_logic.models_api.sensitiveUserData.Respo
 import com.alexgreece45.marvelx.network_logic.models_api.token.ResponseToken
 import com.alexgreece45.marvelx.network_logic.models_api.user.BodyUserId
 import com.alexgreece45.marvelx.network_logic.models_api.user.block.ResponseBlockedUser
+import com.alexgreece45.marvelx.network_logic.models_api.user.friend.ResponseFriend
 import com.alexgreece45.marvelx.network_logic.models_api.user.incomingFriendRequest.ResponseIncomingFriendRequest
 import com.alexgreece45.marvelx.network_logic.models_api.user.login.RequestUserLogin
 import com.alexgreece45.marvelx.network_logic.models_api.user.login.ResponseLogin
@@ -38,6 +40,7 @@ import com.alexgreece45.marvelx.network_logic.models_api.user.profileDetails.Res
 import com.alexgreece45.marvelx.network_logic.models_api.user.signup.RequestUserSignup
 import com.alexgreece45.marvelx.network_logic.models_api.user.signup.ResponseSignup
 import okhttp3.MultipartBody
+import okhttp3.ResponseBody
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -51,6 +54,8 @@ import retrofit2.http.PUT
 import retrofit2.http.Part
 import retrofit2.http.Path
 import retrofit2.http.Query
+import retrofit2.http.Streaming
+import retrofit2.http.Url
 
 interface ApiService {
 
@@ -95,6 +100,12 @@ interface ApiService {
         @Field("redirect_uri") redirectUri: String,
         @Field("grant_type") grantType: String = "authorization_code"
     ): Response<ResponseToken>
+
+    @POST("/api/private/marvelx/device/register")
+    suspend fun registerDevice(@Body requestRegisterDevice: RequestRegisterDevice): Response<Void>
+
+    @POST("/api/private/marvelx/device/update")
+    suspend fun updateDevice(@Body requestUpdateDevice: RequestUpdateDevice): Response<Void>
 
     @POST("/api/private/marvelx/user/logout")
     @FormUrlEncoded
@@ -150,7 +161,10 @@ interface ApiService {
      */
     @Multipart
     @PUT("/api/private/marvelx/user/me/{userId}/profile-image")
-    suspend fun updateUserProfileImage(@Path("userId") userId: String, @Part profileImage: MultipartBody.Part): Response<Void>
+    suspend fun updateUserProfileImage(
+        @Path("userId") userId: String,
+        @Part profileImage: MultipartBody.Part
+    ): Response<Void>
 
     /**
      * Retrieves the blocked users of the current one.
@@ -198,7 +212,10 @@ interface ApiService {
      * Deletes the friend request of another user.
      */
     @DELETE("/api/private/marvelx/user/{userId}/friend-requests")
-    suspend fun deleteFriendRequest(@Path("userId") userId: String): Response<Void>
+    suspend fun deleteFriendRequest(
+        @Path("userId") userId: String,
+        @Query("deleteFriendRequestType") deleteFriendRequestType: String
+    ): Response<Void>
 
     @DELETE("/api/private/marvelx/user/{userId}/friend")
     suspend fun deleteFriend(@Path("userId") userId: String): Response<Void>
@@ -219,11 +236,18 @@ interface ApiService {
      * Retrieves the FAQs.
      */
     @GET("/api/private/marvelx/faqs")
-    suspend fun getFaqs(): Response<ResponseFaq>
+    suspend fun getFaqs(): Response<ResponseFaqs>
 
     @POST("/api/private/marvelx/user/jwt_sensitive_data")
     suspend fun getJwtForSensitiveUserData(@Body requestJwtSensitiveUserData: RequestJwtSensitiveUserData): Response<ResponseJwtSensitiveUserData>
 
     @POST("/api/private/marvelx/user/sensitive_data")
     suspend fun getSensitiveUserData(@Body requestSensitiveUserData: RequestSensitiveUserData): Response<ResponseSensitiveUserData>
+
+    @GET
+    @Streaming
+    suspend fun getImage(@Url url: String): Response<ResponseBody>
+
+    @PATCH("/api/private/marvelx/notifications")
+    suspend fun markIncomingFriendRequestNotificationAsOpened(): Response<Void>
 }

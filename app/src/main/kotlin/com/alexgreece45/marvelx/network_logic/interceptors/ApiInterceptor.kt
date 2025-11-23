@@ -58,7 +58,7 @@ class ApiInterceptor(
      * Applies the necessary transformations for the Marvel API.
      */
     private fun applyMarvelApiTransformations(chain: Interceptor.Chain): Response {
-        val timestamp = DateUtil.getSecondsFromEpoch().toString()
+        val timestamp = DateUtil.getEpochSeconds().toString()
         val hash =
             "$timestamp${BuildConfig.API_PRIVATE_KEY}${BuildConfig.API_PUBLIC_KEY}".toMd5()
 

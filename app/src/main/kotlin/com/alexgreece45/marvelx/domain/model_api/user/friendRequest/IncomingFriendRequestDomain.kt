@@ -1,4 +1,4 @@
-package com.alexgreece45.marvelx.ui.screens.friends.model
+package com.alexgreece45.marvelx.domain.model_api.user.friendRequest
 
 import com.alexgreece45.marvelx.network_logic.models_api.user.incomingFriendRequest.ResponseIncomingFriendRequest
 import com.alexgreece45.marvelx.util.DateUtil
@@ -13,6 +13,7 @@ data class IncomingFriendRequestDomain(
     val receivedAt: Instant
 ) {
 
+    // TODO: Wrong duration is displayed. backend issue.
     val receivedAtFormatted: String = formatDuration(receivedAt, DateUtil.getUTCInstant())
 }
 

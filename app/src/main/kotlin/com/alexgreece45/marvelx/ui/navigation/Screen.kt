@@ -1,7 +1,5 @@
 package com.alexgreece45.marvelx.ui.navigation
 
-import android.content.Intent
-import androidx.compose.runtime.key
 import androidx.navigation.NamedNavArgument
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
@@ -51,7 +49,6 @@ sealed class Screen(
         listOf(
             navDeepLink {
                 uriPattern = createUriPatternForDeepLink(baseRoute, navArgs)
-                action = Intent.ACTION_VIEW
             }
         )
     } else emptyList()
@@ -192,12 +189,15 @@ sealed class Screen(
     data object ProfileDetailsScreen :
         Screen(
             baseRoute = "profileDetailsScreen",
-            navArgs = listOf(NavItem.UserId),
-            deepLinkArgs = listOf(NavDeepLinkItem.UserId)
+            navArgs = listOf(NavItem.UserId, NavItem.ShouldShowAcceptFriendRequestDialog),
+            deepLinkArgs = listOf(
+                NavDeepLinkItem.UserId,
+                NavDeepLinkItem.ShouldShowAcceptFriendRequestDialog
+            )
         ) {
         fun createNavRoute(
             userId: String,
-        ): String = "$baseRoute/$userId"
+        ): String = "$baseRoute/$userId/false"
     }
 
     /**
@@ -289,6 +289,10 @@ enum class NavItem(val key: String, val type: NavType<*>) {
     PreviousScreenRoute(key = NavItemKey.previousScreenRoute, type = NavType.StringType),
     QrCodeScanErrorMessage(key = NavItemKey.qrCodeScanErrorMessage, type = NavType.StringType),
     ProfileImageUrl(key = NavItemKey.profileImageUrl, type = NavType.StringType),
+    ShouldShowAcceptFriendRequestDialog(
+        key = NavItemKey.shouldShowAcceptFriendRequestDialog,
+        type = NavType.BoolType
+    ),
 }
 
 /**
@@ -297,7 +301,8 @@ enum class NavItem(val key: String, val type: NavType<*>) {
 enum class NavDeepLinkItem(val key: String) {
     UserId(key = NavItemKey.userId),
     ListingId(key = NavItemKey.listingId),
-    QrCodeScanErrorMessage(key = NavItemKey.qrCodeScanErrorMessage)
+    QrCodeScanErrorMessage(key = NavItemKey.qrCodeScanErrorMessage),
+    ShouldShowAcceptFriendRequestDialog(key = NavItemKey.shouldShowAcceptFriendRequestDialog),
 }
 
 /**
@@ -320,4 +325,5 @@ private object NavItemKey {
     const val qrCodeScanErrorMessage = "qrCodeScanErrorMessage"
     const val previousScreenRoute = "previousScreenRoute"
     const val profileImageUrl = "profileImageUrl"
+    const val shouldShowAcceptFriendRequestDialog = "shouldShowAcceptFriendRequestDialog"
 }
