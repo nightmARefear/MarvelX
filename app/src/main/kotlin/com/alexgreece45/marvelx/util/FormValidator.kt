@@ -4,23 +4,25 @@ import com.alexgreece45.marvelx.network_logic.models_api.user.Gender
 import com.alexgreece45.marvelx.util.extensions.isEmail
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import java.math.BigDecimal
 
 interface FormValidator {
-    fun validateForm(form: Form): Flow<FormValidationResult>
+
+    fun validateForm(form: Form): FormValidationResult
     fun validateForms(forms: List<Form>): Flow<FormsValidationResult>
 }
 
 class FormValidatorImpl : FormValidator {
-    override fun validateForm(form: Form): Flow<FormValidationResult> = flow {
+
+    override fun validateForm(form: Form): FormValidationResult {
         form.inputs.forEach { (rules, value) ->
             rules.forEach { rule ->
                 validateRule(rule, value)?.let {
-                    emit(it)
-                    return@flow
+                    return it
                 }
             }
         }
-        emit(FormValidationResult(isValid = true))
+        return (FormValidationResult(isValid = true))
     }
 
     override fun validateForms(forms: List<Form>): Flow<FormsValidationResult> = flow {
@@ -91,6 +93,50 @@ class FormValidatorImpl : FormValidator {
                 ),
                 rule.errorMessage
             )
+
+            is Rule.ValidateIntegerValue -> checkValidationResult(
+                isValid = isIntegerValid(value),
+                errorMessage = rule.errorMessage
+            )
+
+            is Rule.ValidateOverMinIntegerValue -> checkValidationResult(
+                isValid = isIntegerOverMinValue(
+                    value = value,
+                    minValue = rule.minValue
+                ),
+                errorMessage = rule.errorMessage
+            )
+
+            is Rule.ValidateUnderMaxIntegerValue -> checkValidationResult(
+                isValid = isIntegerBelowMaxValue(
+                    value = value,
+                    maxValue = rule.maxValue
+                ),
+                errorMessage = rule.errorMessage
+            )
+
+            is Rule.ValidateBigDecimal -> checkValidationResult(
+                isValid = isBigDecimalValid(value),
+                errorMessage = rule.errorMessage
+            )
+
+            is Rule.ValidateOverMinimumBigDecimalValue -> checkValidationResult(
+                isValid = isBigDecimalOverMinValue(
+                    value = value,
+                    scale = rule.scale,
+                    minValue = rule.minValue
+                ),
+                errorMessage = rule.errorMessage
+            )
+
+            is Rule.ValidateUnderMaximumBigDecimalValue -> checkValidationResult(
+                isValid = isBigDecimalBelowMaxValue(
+                    value,
+                    scale = rule.scale,
+                    maxValue = rule.maxValue
+                ),
+                errorMessage = rule.errorMessage
+            )
         }
     }
 
@@ -139,6 +185,30 @@ class FormValidatorImpl : FormValidator {
     )
 
     private fun isGenderValid(value: String): Boolean = Gender.isStringValidGender(value = value)
+
+    private fun isIntegerValid(value: String): Boolean = value.toIntOrNull() != null
+
+    private fun isIntegerOverMinValue(value: String, minValue: Int): Boolean =
+        value.toIntOrNull()?.let { it >= minValue } ?: false
+
+    private fun isIntegerBelowMaxValue(value: String, maxValue: Int): Boolean =
+        value.toIntOrNull()?.let { it <= maxValue } ?: false
+
+    private fun isBigDecimalValid(value: String): Boolean = value.toBigDecimalOrNull() != null
+
+    private fun isBigDecimalOverMinValue(
+        value: String,
+        scale: Int,
+        minValue: BigDecimal
+    ): Boolean =
+        value.toBigDecimalOrNull()?.takeIf { it.scale() <= scale }?.let { it >= minValue } ?: false
+
+    private fun isBigDecimalBelowMaxValue(
+        value: String,
+        scale: Int,
+        maxValue: BigDecimal
+    ): Boolean =
+        value.toBigDecimalOrNull()?.takeIf { it.scale() <= scale }?.let { it <= maxValue } ?: false
 }
 
 data class Form(val inputs: Map<List<Rule>, String>)
@@ -179,4 +249,35 @@ sealed class Rule(val errorMsg: String) {
     ) : Rule(errorMessage)
 
     data class ValidateGender(val errorMessage: String) : Rule(errorMessage)
+
+    data class ValidateIntegerValue(
+        val errorMessage: String
+    ) : Rule(errorMessage)
+
+    data class ValidateOverMinIntegerValue(
+        val minValue: Int,
+        val errorMessage: String
+    ) : Rule(errorMessage)
+
+    data class ValidateUnderMaxIntegerValue(
+        val maxValue: Int,
+        val errorMessage: String
+    ) : Rule(errorMessage)
+
+    data class ValidateBigDecimal(
+        val scale: Int,
+        val errorMessage: String
+    ) : Rule(errorMessage)
+
+    data class ValidateOverMinimumBigDecimalValue(
+        val scale: Int,
+        val minValue: BigDecimal,
+        val errorMessage: String
+    ) : Rule(errorMessage)
+
+    data class ValidateUnderMaximumBigDecimalValue(
+        val scale: Int,
+        val maxValue: BigDecimal,
+        val errorMessage: String
+    ) : Rule(errorMessage)
 }

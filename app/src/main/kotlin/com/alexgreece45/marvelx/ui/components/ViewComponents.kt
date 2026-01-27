@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyItemScope
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -823,7 +824,7 @@ fun ContentScreenHeader(
 }
 
 @Composable
-fun NormalFloatingActionButton(
+private fun NormalFloatingActionButton(
     normalFabData: NormalFabData
 ) {
     val backgroundColor = normalFabData.backgroundColor ?: MaterialTheme.colors.secondary
@@ -845,7 +846,7 @@ fun NormalFloatingActionButton(
 }
 
 @Composable
-fun CollapsibleExtendedFloatingActionButton(
+private fun CollapsibleExtendedFloatingActionButton(
     extendedFabData: ExtendedFabData
 ) {
     val fabData = extendedFabData.normalFabData
@@ -1128,6 +1129,7 @@ fun OutlinedTextFieldValidation(
     keyboardActions: KeyboardActions = KeyboardActions.Default,
     singleLine: Boolean = true,
     maxLines: Int = if (singleLine) 1 else Int.MAX_VALUE,
+    minLines: Int = 1,
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     shape: Shape = MaterialTheme.shapes.medium
 ) {
@@ -1165,6 +1167,7 @@ fun OutlinedTextFieldValidation(
             keyboardActions = keyboardActions,
             singleLine = singleLine,
             maxLines = maxLines,
+            minLines = minLines,
             interactionSource = interactionSource,
             shape = shape
         )
@@ -1211,6 +1214,7 @@ fun ExposedDropdownMenu(
     expanded: Boolean,
     modifier: Modifier = Modifier,
     value: String? = "",
+    enabled: Boolean = true,
     maxLines: Int = 1,
     onDismissRequest: (() -> Unit)? = null,
     onExpandedChange: (() -> Unit)? = null,
@@ -1234,6 +1238,7 @@ fun ExposedDropdownMenu(
                 .onGloballyPositioned { coordinates ->
                     outlinedTextFieldSize = coordinates.size.toSize()
                 },
+            enabled = enabled,
             readOnly = true,
             label = {
                 Text(
@@ -1623,6 +1628,33 @@ fun SortingModalBottomSheetContent(
 //        Error Screens
 // ==========================
 @Composable
+fun GenericErrorScreen(
+    errorMessage: String,
+    onRetryClick: () -> Unit
+) {
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.spacedBy(SPACING_MEDIUM.dp, Alignment.CenterVertically),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = errorMessage,
+            textAlign = TextAlign.Center,
+            style = MaterialTheme.typography.h4.copy(
+                color = MaterialTheme.colors.error
+            )
+        )
+
+        WrapButton(onClick = onRetryClick) {
+            Text(
+                text = stringResource(R.string.generic_retry_button),
+                style = MaterialTheme.typography.h5
+            )
+        }
+    }
+}
+
+@Composable
 fun LazyItemScope.ContentErrorScreen(
     errorMessage: String,
     onRetryClick: () -> Unit
@@ -1643,7 +1675,7 @@ fun LazyItemScope.ContentErrorScreen(
         VSpacer.Medium()
 
         Button(
-            onClick = { onRetryClick() }
+            onClick = onRetryClick
         ) {
             Text(
                 text = stringResource(R.string.generic_retry_button).uppercase(),
@@ -1688,10 +1720,32 @@ fun LazyItemScope.NoInternetErrorScreen(
 // ==========================
 
 /**
- * Detects scrolling up motion in a [LazyColumn]. Returns `true` if detected, otherwise `false`.
+ * Detects scrolling up motion in a [LazyGrid]. Returns `true` if detected, otherwise `false`.
  */
 @Composable
 fun LazyGridState.isScrollingUp(): Boolean {
+    var previousIndex by remember(this) {
+        mutableIntStateOf(firstVisibleItemIndex)
+    }
+    var previousScrollOffset by remember(this) {
+        mutableIntStateOf(firstVisibleItemScrollOffset)
+    }
+    return remember(this) {
+        derivedStateOf {
+            if (previousIndex != firstVisibleItemIndex) {
+                previousIndex > firstVisibleItemIndex
+            } else {
+                previousScrollOffset >= firstVisibleItemScrollOffset
+            }.also {
+                previousIndex = firstVisibleItemIndex
+                previousScrollOffset = firstVisibleItemScrollOffset
+            }
+        }
+    }.value
+}
+
+@Composable
+fun LazyListState.isScrollingUp(): Boolean {
     var previousIndex by remember(this) {
         mutableIntStateOf(firstVisibleItemIndex)
     }

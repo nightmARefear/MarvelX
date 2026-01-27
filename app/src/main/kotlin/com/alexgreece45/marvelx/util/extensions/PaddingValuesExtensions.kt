@@ -23,6 +23,19 @@ fun PaddingValues.applyPadding(padding: Dp = DEFAULT_SCREEN_PADDING): PaddingVal
 }
 
 /**
+ * Applies **only** top and bottom paddings.
+ */
+@Composable
+fun PaddingValues.applyTBPadding(padding: Dp = DEFAULT_SCREEN_PADDING): PaddingValues {
+    return PaddingValues(
+        start = 0.dp,
+        top = padding + this.calculateTopPadding(),
+        end = 0.dp,
+        bottom = padding + this.calculateBottomPadding()
+    )
+}
+
+/**
  * Returns a new [PaddingValues] object with the padding values of this instance added to the
  * padding values of the provided [paddingValues] object.
  *

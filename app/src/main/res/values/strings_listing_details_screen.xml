@@ -1,0 +1,50 @@
+<resources>
+
+    <string name="screen_listing_details_toolbar_action_label_favorite_listing">Add listing to favorites</string>
+    <string name="screen_listing_details_toolbar_action_label_unfavorite_listing">Remove listing from favorites</string>
+    <string name="screen_listing_details_toolbar_action_label_share_listing">Share listing</string>
+    <string name="screen_listing_details_toolbar_action_label_edit_listing">Edit listing</string>
+
+    <string name="screen_listing_details_listing_description">Description</string>
+    <string name="screen_listing_details_listing_posted_at">Posted at: </string>
+    <string name="screen_listing_details_listing_updated_at">Updated at: </string>
+    <string name="screen_listing_details_share_intent_title">Sharing listing %1$s</string>
+    <string name="screen_listing_details_sticky_bottom_button_add_to_basket">Add to basket</string>
+    <string name="screen_listing_details_sticky_bottom_label_reserved_listing">This item is currently reserved by another buyer.</string>
+
+    <string name="screen_listing_details_listing_details_label_color">Color: %1$s</string>
+    <string name="screen_listing_details_listing_details_label_dimensions">Dimensions\nWidth: %1$scm\nHeight: %2$scm</string>
+    <string name="screen_listing_details_listing_details_label_collectible_scale">Scale: %1$s</string>
+    <string name="screen_listing_details_listing_details_label_box_condition">Box Condition: %1$s</string>
+    <string name="screen_listing_details_listing_details_label_apparel_size">Apparel Size: %1$s</string>
+    <string name="screen_listing_details_listing_details_label_material">Material: %1$s</string>
+    <string name="screen_listing_details_listing_details_label_drinkware_capacity">Capacity: %1$sML</string>
+    <string name="screen_listing_details_listing_details_label_grade">Grade: %1$s</string>
+    <string name="screen_listing_details_listing_details_label_card_rarity">Card Rarity: %1$s</string>
+    <string name="screen_listing_details_listing_details_label_card_variant">Card Variant: %1$s</string>
+    <string name="screen_listing_details_listing_details_label_dishwasher_safe">Dishwasher Safe</string>
+    <string name="screen_listing_details_listing_details_label_not_dishwasher_safe">Not Dishwasher Safe</string>
+    <string name="screen_listing_details_listing_details_label_framed">Framed</string>
+    <string name="screen_listing_details_listing_details_label_not_framed">Not Framed</string>
+
+    <string name="screen_listing_details_error_loading_listing">An error occurred whilst loading this listing.</string>
+    <string name="screen_listing_details_error_adding_to_favorites">An error occurred whilst adding this listing to your favorites.</string>
+    <string name="screen_listing_details_error_removing_from_favorites">An error occurred whilst removing this listing from your favorites.</string>
+
+    <string name="screen_listing_details_content_description_seller_profile_image">seller\'s profile image</string>
+    <string name="screen_listing_details_content_description_info_icon">info icon</string>
+    <string name="screen_listing_details_content_description_not_applicable">not applicable icon</string>
+    <string name="screen_listing_details_content_description_checkmark">checkmark</string>
+    <string name="screen_listing_details_content_description_material">material icon</string>
+    <string name="screen_listing_details_content_description_liquid_capacity">liquid capacity icon</string>
+    <string name="screen_listing_details_content_description_color_palette">color palette icon</string>
+    <string name="screen_listing_details_content_description_apparel_size">apparel size icon</string>
+    <string name="screen_listing_details_content_description_grade">grade icon</string>
+    <string name="screen_listing_details_content_description_person">person icon</string>
+    <string name="screen_listing_details_content_description_calendar">calendar icon</string>
+    <string name="screen_listing_details_content_description_rarity">rarity icon</string>
+    <string name="screen_listing_details_content_description_variant">variant icon</string>
+    <string name="screen_listing_details_content_description_collectible_scale">scale icon</string>
+    <string name="screen_listing_details_content_description_quality">quality icon</string>
+    <string name="screen_listing_details_content_description_dimensions">dimensions icon</string>
+</resources>

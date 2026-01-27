@@ -11,7 +11,6 @@ import com.alexgreece45.marvelx.BuildConfig
 import com.alexgreece45.marvelx.data.model.deepLink.DeepLinkAction
 import com.alexgreece45.marvelx.ui.navigation.NavItem
 import com.alexgreece45.marvelx.ui.screens.mainActivity.MainActivity
-import com.alexgreece45.marvelx.util.extensions.getPortFromUrl
 
 /**
  * Opens the given deep link action and if the deep link action type is view then the backstack
@@ -70,8 +69,7 @@ fun generateComposableArguments(arguments: Map<String, Any>): String {
 private fun generateComposableDeepLinkUri(screenRoute: String, arguments: String): Uri =
     buildString {
         append("${BuildConfig.DEEPLINK_SCHEME}://")
-        append("${BuildConfig.MARVELX_BACKEND_DOMAIN}:")
-        append("${BuildConfig.MARVELX_BACKEND_BASE_URL.getPortFromUrl()}/")
+        append("${BuildConfig.MARVELX_BACKEND_DOMAIN}/")
         append(screenRoute)
         append(arguments)
     }.toUri()
@@ -82,8 +80,7 @@ private fun generateComposableDeepLinkUri(screenRoute: String, arguments: String
 fun createUriPatternForDeepLink(baseRoute: String, deepLinkArgs: List<NavItem>): String =
     buildString {
         append("${BuildConfig.DEEPLINK_SCHEME}://")
-        append("${BuildConfig.MARVELX_BACKEND_DOMAIN}:")
-        append("${BuildConfig.MARVELX_BACKEND_BASE_URL.getPortFromUrl()}/")
+        append("${BuildConfig.MARVELX_BACKEND_DOMAIN}/")
         append(baseRoute)
         deepLinkArgs.forEach { navDeepLinkItem ->
             append("/{${navDeepLinkItem.key}}")

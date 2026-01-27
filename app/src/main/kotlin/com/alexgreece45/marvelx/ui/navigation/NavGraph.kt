@@ -12,6 +12,7 @@ import com.alexgreece45.marvelx.ui.components.BottomBarItem
 import com.alexgreece45.marvelx.ui.components.BottomNavigationBarData
 import com.alexgreece45.marvelx.ui.components.IconData
 import com.alexgreece45.marvelx.ui.helper.openDeepLinkAction
+import com.alexgreece45.marvelx.ui.navigation.marketplace.marketplaceNavigation
 import com.alexgreece45.marvelx.ui.screens.allCharacters.AllCharactersScreen
 import com.alexgreece45.marvelx.ui.screens.allCharacters.AllCharactersViewModel
 import com.alexgreece45.marvelx.ui.screens.allFavoriteCharacters.AllFavoriteCharactersScreen
@@ -34,6 +35,9 @@ import com.alexgreece45.marvelx.ui.screens.introLoading.IntroLoadingScreen
 import com.alexgreece45.marvelx.ui.screens.introLoading.IntroLoadingViewModel
 import com.alexgreece45.marvelx.ui.screens.login.LoginScreen
 import com.alexgreece45.marvelx.ui.screens.login.LoginViewModel
+import com.alexgreece45.marvelx.ui.screens.myListings.MyListingsScreen
+import com.alexgreece45.marvelx.ui.screens.myListings.MyListingsViewModel
+import com.alexgreece45.marvelx.ui.screens.myListings.model.MyListingsContract
 import com.alexgreece45.marvelx.ui.screens.otp.OtpScreen
 import com.alexgreece45.marvelx.ui.screens.otp.OtpViewModel
 import com.alexgreece45.marvelx.ui.screens.profile.ProfileScreen
@@ -261,6 +265,45 @@ fun NavGraph(navController: NavHostController) {
         }
 
         // Main screens.
+        marketplaceNavigation(
+            navController,
+            bottomNavigationBarData = { getBottomNavigationBarData(navController) })
+
+        composable(screen = Screen.MyListingsScreen) {
+            val viewModel = koinViewModel<MyListingsViewModel>()
+            MyListingsScreen(
+                onEvent = viewModel::setEvent,
+                state = viewModel.uiState.collectAsStateWithLifecycle().value,
+                effect = viewModel.uiEffect,
+                onNavigationEffect = { navigationEffect ->
+                    when (navigationEffect) {
+                        MyListingsContract.Effect.Navigation.GoBack -> navController.navigateUp()
+                        MyListingsContract.Effect.Navigation.GoToCreateListingScreen -> {
+                            navController.navigate(
+                                Screen.CreateListingWizardScreen.createNavRoute()
+                            )
+                        }
+
+                        is MyListingsContract.Effect.Navigation.GoToEditListingScreen -> {
+                            navController.navigate(
+                                Screen.CreateListingWizardScreen.createNavRoute(
+                                    navigationEffect.listingId
+                                )
+                            )
+                        }
+
+                        is MyListingsContract.Effect.Navigation.GoToListingDetailsScreen -> {
+                            navController.navigate(
+                                Screen.ListingDetailsScreen.createNavRoute(
+                                    navigationEffect.listingId
+                                )
+                            )
+                        }
+                    }
+                }
+            )
+        }
+
         composable(screen = Screen.AllCharactersScreen) {
             val viewModel = koinViewModel<AllCharactersViewModel>()
             AllCharactersScreen(
@@ -424,6 +467,10 @@ fun NavGraph(navController: NavHostController) {
 
                         ProfileContract.Effect.Navigation.NavigateToFriendsScreen -> {
                             navController.navigate(Screen.FriendsScreen.route)
+                        }
+
+                        ProfileContract.Effect.Navigation.NavigateToMyListingsScreen -> {
+                            navController.navigate(Screen.MyListingsScreen.route)
                         }
                     }
                 },
@@ -648,6 +695,14 @@ fun getBottomNavigationBarData(navController: NavController): BottomNavigationBa
  * Returns the bottom navigation items.
  */
 private fun getBottomNavigationItems(): List<BottomBarItem> = listOf(
+    BottomBarItem(
+        route = Screen.MarketplaceScreen.route,
+        label = R.string.bottom_navigation_label_marketplace,
+        iconData = IconData(
+            iconResource = R.drawable.ic_marketplace,
+            contentDescription = R.string.bottom_navigation_label_marketplace
+        )
+    ),
     BottomBarItem(
         route = Screen.AllCharactersScreen.route,
         label = R.string.bottom_navigation_label_characters,

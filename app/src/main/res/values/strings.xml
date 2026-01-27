@@ -77,6 +77,7 @@
 
     // Bottom Navigation (Root Screen: AllCharactersScreen, Other Screens:
     AllFavoriteCharactersScreen, ProfileScreen)
+    <string name="bottom_navigation_label_marketplace">Marketplace</string>
     <string name="bottom_navigation_label_characters">Characters</string>
     <string name="bottom_navigation_label_favorites">Favorites</string>
     <string name="bottom_navigation_label_profile">Profile</string>
@@ -187,6 +188,7 @@
     <string name="profile_screen_profile_banner_label_see_your_profile">See your profile</string>
     <string name="profile_screen_section_label_scan_qr_code">Scan QR Code</string>
     <string name="profile_screen_section_label_friends">Friends</string>
+    <string name="profile_screen_section_label_my_listings">My listings</string>
     <string name="profile_screen_section_label_logout">Logout</string>
     <string name="profile_screen_bottom_sheet_label_view_profile_image">View profile image</string>
     <string name="profile_screen_bottom_sheet_label_upload_profile_image">Upload profile image</string>
@@ -420,6 +422,23 @@
     <string name="qr_code_screen_label_error_invalid_qr_code_type">Invalid QR code type. Try scanning another QR.</string>
     <string name="qr_code_screen_label_error_camera_binding_failed">Camera binding failed.</string>
 
+    // MyListingsScreen
+    <string name="screen_my_listings_header_title">My Listings</string>
+
+
+    <string name="screen_my_listings_fab_label">Create Listing</string>
+    <string name="screen_my_listings_bottom_sheet_item_edit">Edit listing</string>
+    <string name="screen_my_listings_bottom_sheet_item_delete">Delete listing</string>
+
+    <string name="screen_my_listings_success_deleting_listing">Successfully deleted the listing \"%1$s\"</string>
+
+    <string name="screen_my_listings_error_fetching_additional_listings">An error occurred whilst fetching additional listings.</string>
+    <string name="screen_my_listings_error_deleting_listing">An error occurred whilst deleting the listing \"%1$s\"</string>
+
+    <string name="screen_my_listings_content_description_more_actions_listing">more actions listing icon</string>
+    <string name="screen_my_listings_content_description_edit_listing">edit listing icon</string>
+    <string name="screen_my_listings_content_description_delete_listing">delete listing icon</string>
+
     // `OtpErrorCause` sealed class strings
     <string name="otp_error_cause_not_match">OTP is incorrect.</string>
     <string name="otp_error_cause_invalid_length">OTP must be 6 characters.</string>
@@ -466,8 +485,10 @@
     <string name="content_description_your_profile_image">Your profile image</string>
     <string name="content_description_add_friend">Add friend</string>
     <string name="content_description_unfriend">Unfriend</string>
-    <string name="content_description_friends">Friends</string>
+    <string name="content_description_friends">Friends icon</string>
+    <string name="content_description_listings">Listings icon</string>
     <string name="content_description_view_profile_image">View profile image</string>
     <string name="content_description_upload_profile_image">Upload profile image</string>
+    <string name="content_description_delete_search_term">Delete search term</string>
 
 </resources>

@@ -39,8 +39,11 @@ sealed class DeepLinkWebUrl(
     )
 
     /**
-     * The web URL that redirects to the `ViewListing` deep link.
+     * The web URL that redirects to the `ListingDetails` deep link.
      */
-    data object ViewListing :
-        DeepLinkWebUrl(suffix = "/listing/", screenBaseRoute = "to be added")
+    data object ListingDetails :
+        DeepLinkWebUrl(
+            suffix = "/listing/",
+            screenBaseRoute = Screen.ListingDetailsScreen.baseRoute
+        )
 }

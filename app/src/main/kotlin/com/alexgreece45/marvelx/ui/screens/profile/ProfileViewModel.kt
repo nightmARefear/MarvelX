@@ -26,7 +26,6 @@ import com.alexgreece45.marvelx.util.extensions.endsWithAnySuffix
 import com.alexgreece45.marvelx.util.extensions.toUrlEncoding
 import kotlinx.coroutines.launch
 import java.util.UUID
-import kotlin.math.max
 
 
 class ProfileViewModel(
@@ -309,7 +308,20 @@ class ProfileViewModel(
                                 ProfileContract.Effect.Navigation.NavigateToFriendsScreen
                             }
                         }
-                    )
+                    ),
+                    SectionHeaderData(
+                        title = resourceProvider.getString(R.string.profile_screen_section_label_my_listings),
+                        iconData = IconData(
+                            iconResource = R.drawable.ic_listings,
+                            contentDescription = R.string.content_description_friends
+                        ),
+                        isNavigable = true,
+                        onClick = {
+                            setEffect {
+                                ProfileContract.Effect.Navigation.NavigateToMyListingsScreen
+                            }
+                        }
+                    ),
                 )
             )
         }
@@ -331,7 +343,7 @@ class ProfileViewModel(
                             ),
                             showBackgroundColor = true,
                         ),
-                        onClick = ProfileContract.Event.ProfileImage.BottomSheet.OnViewImageClicked
+                        onClickEvent = ProfileContract.Event.ProfileImage.BottomSheet.OnViewImageClicked
                     ),
                     BottomSheetContentItem(
                         title = resourceProvider.getString(R.string.profile_screen_bottom_sheet_label_upload_profile_image),
@@ -342,7 +354,7 @@ class ProfileViewModel(
                             ),
                             showBackgroundColor = true,
                         ),
-                        onClick = ProfileContract.Event.ProfileImage.BottomSheet.OnUploadImageClicked
+                        onClickEvent = ProfileContract.Event.ProfileImage.BottomSheet.OnUploadImageClicked
                     ),
                 )
             )

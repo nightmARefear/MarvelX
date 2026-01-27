@@ -83,6 +83,7 @@ sealed class Screen(
             when (screenRoute) {
                 ProfileScreen.baseRoute -> ProfileScreen
                 ProfileDetailsScreen.baseRoute -> ProfileDetailsScreen
+                ListingDetailsScreen.baseRoute -> ListingDetailsScreen
                 else -> null
             }
 
@@ -164,6 +165,30 @@ sealed class Screen(
     }
 
     // Main screens --> Bottom Navigation
+
+    // Marketplace.
+    data object MarketplaceScreen : Screen(baseRoute = "marketplaceScreen")
+    data object ListingsByCategoryScreen : Screen(baseRoute = "listingsByCategoryScreen")
+    data object ListingDetailsScreen : Screen(
+        baseRoute = "listingDetailsScreen",
+        navArgs = listOf(
+            NavItem.ListingId
+        ),
+        deepLinkArgs = listOf(NavDeepLinkItem.ListingId)
+    ) {
+        fun createNavRoute(listingId: String): String = "$baseRoute/$listingId"
+    }
+
+    data object CreateListingWizardScreen :
+        Screen(baseRoute = "createListingWizardScreen", navArgs = listOf(NavItem.ListingId)) {
+        fun createNavRoute(listingId: String? = ""): String = "$baseRoute/$listingId"
+    }
+
+    data object CreateListingBasicDetailsScreen :
+        Screen(baseRoute = "createListingBasicDetailsScreen", navArgs = listOf())
+
+    data object MyListingsScreen : Screen(baseRoute = "myListingsScreen")
+
     data object AllCharactersScreen : Screen(baseRoute = "allCharactersScreen")
     data object AllFavoriteCharactersScreen : Screen(baseRoute = "allFavoriteCharactersScreen")
     data object ProfileScreen : Screen(
@@ -293,6 +318,7 @@ enum class NavItem(val key: String, val type: NavType<*>) {
         key = NavItemKey.shouldShowAcceptFriendRequestDialog,
         type = NavType.BoolType
     ),
+    ListingId(key = NavItemKey.listingId, type = NavType.StringType),
 }
 
 /**

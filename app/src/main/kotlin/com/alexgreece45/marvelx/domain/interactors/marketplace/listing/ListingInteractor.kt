@@ -1,0 +1,101 @@
+package com.alexgreece45.marvelx.domain.interactors.marketplace.listing
+
+import com.alexgreece45.marvelx.data.repository.marketplace.listing.ListingRepository
+import com.alexgreece45.marvelx.domain.helper.InteractorPartialState
+import com.alexgreece45.marvelx.domain.helper.handleRepositoryResultNoFlow
+import com.alexgreece45.marvelx.domain.helper.handleRepositoryResultNoTransformationNoFlow
+import com.alexgreece45.marvelx.domain.mappers.marketplace.listing.ListingDomainMapper
+import com.alexgreece45.marvelx.domain.mappers.marketplace.listing.toRequest
+import com.alexgreece45.marvelx.domain.mappers.marketplace.toDomain
+import com.alexgreece45.marvelx.domain.model_api.marketplace.listing.CreateListingDomain
+import com.alexgreece45.marvelx.domain.model_api.marketplace.listing.ListingDomain
+import com.alexgreece45.marvelx.domain.model_api.marketplace.listing.ListingPreviewDomain
+import com.alexgreece45.marvelx.domain.model_api.marketplace.listing.UpdateListingDomain
+
+interface ListingInteractor {
+
+    suspend fun getAllListingsByCategory(categoryCode: String): InteractorPartialState<List<ListingDomain>>
+
+    suspend fun getUserListings(
+        userId: String,
+        page: Int
+    ): InteractorPartialState<List<ListingDomain>>
+
+    suspend fun getListing(listingId: String): InteractorPartialState<ListingDomain>
+    suspend fun createListing(createListingDomain: CreateListingDomain): InteractorPartialState<String>
+    suspend fun updateListing(
+        listingId: String,
+        updateListingDomain: UpdateListingDomain
+    ): Boolean
+
+    suspend fun deleteListing(listingId: String): Boolean
+
+    suspend fun addToFavorites(listingId: String): Boolean
+    suspend fun removeFromFavorites(listingId: String): Boolean
+
+    suspend fun getFavoriteListings(): InteractorPartialState<List<ListingPreviewDomain>>
+}
+
+class ListingInteractorImpl(
+    private val listingRepository: ListingRepository,
+    private val listingDomainMapper: ListingDomainMapper
+) : ListingInteractor {
+
+    override suspend fun getAllListingsByCategory(categoryCode: String): InteractorPartialState<List<ListingDomain>> {
+        return handleRepositoryResultNoFlow(
+            repositoryResult = listingRepository.getAllListingsByCategory(categoryCode),
+            transformation = { this.map { listingDomainMapper.toDomain(it) } }
+        )
+    }
+
+    override suspend fun getUserListings(
+        userId: String,
+        page: Int
+    ): InteractorPartialState<List<ListingDomain>> {
+        return handleRepositoryResultNoFlow(
+            repositoryResult = listingRepository.getUserListings(userId, page),
+            transformation = { this.map { listingDomainMapper.toDomain(it) } }
+        )
+    }
+
+    override suspend fun getListing(listingId: String): InteractorPartialState<ListingDomain> {
+        return handleRepositoryResultNoFlow(
+            repositoryResult = listingRepository.getListing(listingId),
+            transformation = listingDomainMapper::toDomain
+        )
+    }
+
+    override suspend fun createListing(createListingDomain: CreateListingDomain): InteractorPartialState<String> {
+        return handleRepositoryResultNoTransformationNoFlow(
+            listingRepository.createListing(
+                createListingDomain.toRequest()
+            )
+        )
+    }
+
+    override suspend fun updateListing(
+        listingId: String,
+        updateListingDomain: UpdateListingDomain
+    ): Boolean {
+        return listingRepository.updateListing(listingId, updateListingDomain.toRequest())
+    }
+
+    override suspend fun deleteListing(listingId: String): Boolean {
+        return listingRepository.deleteListing(listingId)
+    }
+
+    override suspend fun addToFavorites(listingId: String): Boolean {
+        return listingRepository.addToFavorites(listingId)
+    }
+
+    override suspend fun removeFromFavorites(listingId: String): Boolean {
+        return listingRepository.removeFromFavorites(listingId)
+    }
+
+    override suspend fun getFavoriteListings(): InteractorPartialState<List<ListingPreviewDomain>> {
+        return handleRepositoryResultNoFlow(
+            repositoryResult = listingRepository.getFavoriteListings(),
+            transformation = { this.map { it.toDomain() } }
+        )
+    }
+}

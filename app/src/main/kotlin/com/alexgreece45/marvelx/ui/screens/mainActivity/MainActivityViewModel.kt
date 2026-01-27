@@ -16,6 +16,8 @@ import com.alexgreece45.marvelx.controllers.model.websocket.WebsocketRequestType
 import com.alexgreece45.marvelx.controllers.model.websocket.WebsocketSendRequestPartialState
 import com.alexgreece45.marvelx.data.model.deepLink.DeepLinkAction
 import com.alexgreece45.marvelx.data.repository.UserRepository
+import com.alexgreece45.marvelx.data.repository.marketplace.listing.ListingCategoryRepository
+import com.alexgreece45.marvelx.data.repository.marketplace.listing.details.ListingDetailsRepository
 import com.alexgreece45.marvelx.dispatchers.IoDispatcher
 import com.alexgreece45.marvelx.domain.interactors.LoginInteractor
 import com.alexgreece45.marvelx.domain.interactors.LogoutPartialState
@@ -68,6 +70,10 @@ class MainActivityViewModel :
     private val fcmController: FcmController by inject()
     private val deviceController: DeviceController by inject()
     private val gson: Gson by inject()
+
+    // Listing enum-related values.
+    private val listingCategoryRepository: ListingCategoryRepository by inject()
+    private val listingDetailsRepository: ListingDetailsRepository by inject()
 
     override fun setInitialState(): MainActivityState = MainActivityState()
 
@@ -192,6 +198,12 @@ class MainActivityViewModel :
                         )
                     }
                 }
+        }
+
+        viewModelScope.launch {
+            // Initialize listing enum related values.
+            listingCategoryRepository.init()
+            listingDetailsRepository.init()
         }
     }
 

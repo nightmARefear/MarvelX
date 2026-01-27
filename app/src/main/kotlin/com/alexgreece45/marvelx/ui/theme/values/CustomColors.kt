@@ -27,6 +27,9 @@ data class CustomColors(
     val buttonContentWhite: Color,
     val genericRed: Color,
     val friendsDateColor: Color,
+    val white: Color,
+    val greenCheckmark: Color,
+    val transparent: Color,
 )
 
 /**
@@ -61,6 +64,9 @@ internal fun customLightColors() = CustomColors(
     buttonContentWhite = Color(0xFFF1F1F1),
     genericRed = Color(0xFFD50000),
     friendsDateColor = Color(0xFF2196F3),
+    white = Color(0xFFFFFFFF),
+    greenCheckmark = Color(0xFF21F33D),
+    transparent = Color(0x00000000),
 )
 
 /**
@@ -83,6 +89,9 @@ internal fun customDarkColors() = CustomColors(
     buttonContentWhite = Color(0xFFF1F1F1),
     genericRed = Color(0xFFD50000),
     friendsDateColor = Color(0xFF2196F3),
+    white = Color(0xFFFFFFFF),
+    greenCheckmark = Color(0xFF21F33D),
+    transparent = Color(0x00000000),
 )
 
 internal val LocalCustomColors = staticCompositionLocalOf { customLightColors() }

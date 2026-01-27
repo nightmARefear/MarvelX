@@ -11,18 +11,22 @@ import com.alexgreece45.marvelx.controllers.WebsocketController
 import com.alexgreece45.marvelx.controllers.WebsocketControllerImpl
 import com.alexgreece45.marvelx.controllers.model.websocket.WebsocketRequestType
 import com.alexgreece45.marvelx.di.ApiClientImpl
+import com.alexgreece45.marvelx.di.ListingClientImpl
+import com.alexgreece45.marvelx.dispatchers.IoDispatcher
 import com.alexgreece45.marvelx.dispatchers.MainDispatcher
 import com.alexgreece45.marvelx.domain.model_api.comic.ComicPriceType
 import com.alexgreece45.marvelx.domain.model_api.user.VerificationStep
 import com.alexgreece45.marvelx.network_logic.authenticators.ApiAuthenticator
 import com.alexgreece45.marvelx.network_logic.authenticators.RefreshTokenAuthenticator
 import com.alexgreece45.marvelx.network_logic.clients.ApiClient
+import com.alexgreece45.marvelx.network_logic.clients.ListingClient
 import com.alexgreece45.marvelx.network_logic.clients.RefreshTokenClient
 import com.alexgreece45.marvelx.network_logic.clients.RefreshTokenClientImpl
 import com.alexgreece45.marvelx.network_logic.interceptors.ApiInterceptor
 import com.alexgreece45.marvelx.network_logic.interceptors.RefreshTokenInterceptor
 import com.alexgreece45.marvelx.network_logic.interceptors.WebsocketInterceptor
 import com.alexgreece45.marvelx.network_logic.services.ApiService
+import com.alexgreece45.marvelx.network_logic.services.ListingService
 import com.alexgreece45.marvelx.network_logic.services.RefreshTokenService
 import com.alexgreece45.marvelx.network_logic.typeAdapters.ComicPriceTypeAdapter
 import com.alexgreece45.marvelx.network_logic.typeAdapters.InstantTypeAdapter
@@ -44,10 +48,12 @@ import org.koin.core.qualifier.qualifier
 import org.koin.dsl.module
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.time.Duration
 import java.time.Instant
 import java.time.OffsetDateTime
 import java.util.UUID
 import java.util.concurrent.TimeUnit
+import kotlin.coroutines.CoroutineContext
 
 @Module
 @ComponentScan("com.alexgreece45.marvelx.network_logic")
@@ -60,7 +66,6 @@ class NetworkLogicModule
  *  - [VerificationStep]
  *  - [WebsocketRequestType]
  *  - [UUID]
- *  - [DeepLinkActionType]
  *  - [Instant]
  */
 @Single
@@ -214,6 +219,9 @@ fun provideOkHttpClientForWebsocketClient(
     okHttpClient.connectTimeout(configLogic.websocketTimeoutData.connectTimeout, TimeUnit.SECONDS)
     okHttpClient.readTimeout(configLogic.websocketTimeoutData.readTimeout, TimeUnit.SECONDS)
 
+    // Add ping interval.
+    okHttpClient.pingInterval(Duration.ofSeconds(30))
+
     // Add certificate pins.
     val certificatePinner = CertificatePinner.Builder()
         .add(
@@ -273,6 +281,10 @@ fun provideApiService(retrofit: Retrofit): ApiService =
 fun provideRefreshTokenService(retrofit: Retrofit): RefreshTokenService =
     retrofit.create(RefreshTokenService::class.java)
 
+@Single(binds = [ListingClientImpl::class])
+fun provideListingService(retrofit: Retrofit): ListingService =
+    retrofit.create(ListingService::class.java)
+
 @Single
 fun provideApiClient(apiService: ApiService): ApiClient = ApiClientImpl(apiService)
 
@@ -281,14 +293,26 @@ fun provideRefreshTokenClient(refreshTokenService: RefreshTokenService): Refresh
     RefreshTokenClientImpl(refreshTokenService)
 
 @Single
+fun provideListingClient(listingService: ListingService): ListingClient =
+    ListingClientImpl(listingService)
+
+@Single
 fun provideWebsocketController(
     configLogic: ConfigLogic,
     okHttpClient: OkHttpClient,
     authController: AuthController,
     appLogger: AppLogger,
-    gson: Gson
+    gson: Gson,
+    @IoDispatcher ioDispatcher: CoroutineContext
 ): WebsocketController =
-    WebsocketControllerImpl(configLogic, okHttpClient, authController, appLogger, gson)
+    WebsocketControllerImpl(
+        configLogic,
+        okHttpClient,
+        authController,
+        appLogger,
+        gson,
+        ioDispatcher
+    )
 
 val networkKoinModule = module {
     single<Gson> { provideGson() }
@@ -319,16 +343,22 @@ val networkKoinModule = module {
         val retrofit: Retrofit = provideRetrofit(okHttpClient, get(), get())
         provideApiService(retrofit)
     }
-
     single<RefreshTokenService> {
         val okHttpClient: OkHttpClient =
             provideOkHttpClientForRefreshTokenClient(get(), get(), get(), get(), get(), get())
         val retrofit: Retrofit = provideRetrofitForRefreshTokenService(okHttpClient, get(), get())
         provideRefreshTokenService(retrofit)
     }
+    single<ListingService> {
+        val okHttpClient =
+            provideOkHttpClient(get(), get(), get(), get(), get(), get())
+        val retrofit = provideRetrofit(okHttpClient, get(), get())
+        provideListingService(retrofit)
+    }
 
     single<ApiClient> { provideApiClient(get()) }
     single<RefreshTokenClient> { provideRefreshTokenClient(get()) }
+    single<ListingClient> { ListingClientImpl(get()) }
 
     // Websocket client.
     single<WebsocketController> {
@@ -337,7 +367,8 @@ val networkKoinModule = module {
             provideOkHttpClientForWebsocketClient(get(), get(), get(), get(), get()),
             get(),
             get(),
-            get()
+            get(),
+            get(qualifier<IoDispatcher>())
         )
     }
 }

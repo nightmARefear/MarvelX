@@ -37,7 +37,7 @@ coil = "2.7.0"
 
 google-accompanist = "0.34.0"
 google-android-libraries-identity = "1.1.1"
-google-code-gson = "2.13.2"
+google-gson = "2.13.2"
 google-firebase-bom = "34.4.0"
 google-firebase-crashlytics = "3.0.6"
 google-play-services-auth = "21.4.0"
@@ -51,6 +51,8 @@ java-version = "17"
 junit = "4.13.2"
 
 koin-annotations = "2.3.0"
+
+kotlin-collections-immutable = "0.4.0"
 
 lambdapioneer-argon2kt = "1.6.0"
 
@@ -108,7 +110,7 @@ google-accompanist-permissions = { group = "com.google.accompanist", name = "acc
 google-accompanist-systemuicontroller = { group = "com.google.accompanist", name = "accompanist-systemuicontroller", version.ref = "google-accompanist" }
 google-accompanist-placeholder = { group = "com.google.accompanist", name = "accompanist-placeholder", version.ref = "google-accompanist" }
 google-android-libraries-identity = { module = "com.google.android.libraries.identity.googleid:googleid", version.ref = "google-android-libraries-identity" }
-google-code-gson = { module = "com.google.code.gson:gson", version.ref = "google-code-gson" }
+google-gson = { module = "com.google.code.gson:gson", version.ref = "google-gson" }
 google-firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "google-firebase-bom" }
 google-firebase-analytics = { group = "com.google.firebase", name = "firebase-analytics" }
 google-firebase-auth = { group = "com.google.firebase", name = "firebase-auth" }
@@ -132,6 +134,7 @@ koin-android-test = { module = "io.insert-koin:koin-android-test" }
 koin-test-junit4 = { module = "io.insert-koin:koin-test-junit4" }
 
 kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect" }
+kotlin-collections-immutable = { group = "org.jetbrains.kotlinx", name = "kotlinx-collections-immutable", version.ref = "kotlin-collections-immutable" }
 
 lambdapioneer-argon2kt = { module = "com.lambdapioneer.argon2kt:argon2kt", version.ref = "lambdapioneer-argon2kt" }
 
@@ -216,7 +219,7 @@ koin-test-implementation = [
 ]
 
 networking = [
-    "google-code-gson",
+    "google-gson",
     "squareup-okhttp3-logging-interceptor",
     "squareup-retrofit2",
     "squareup-retrofit2-converter-gson"

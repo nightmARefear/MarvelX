@@ -138,16 +138,6 @@ fun String.getSchemeFromUrl(): String =
     }
 
 /**
- * Returns the port for this [String] if it could be located, otherwise `-1`. The returned value is
- * of type [Int].
- */
-fun String.getPortFromUrl(): Int {
-    val parts = this.split(":")
-    if (parts.isEmpty()) return -1
-    return parts.last().toInt()
-}
-
-/**
  * Converts this pair to a full name.
  */
 fun Pair<String, String>.toFullName(): String = "$first $second"

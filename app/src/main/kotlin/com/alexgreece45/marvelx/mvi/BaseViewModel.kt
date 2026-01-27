@@ -56,7 +56,7 @@ abstract class BaseViewModel<Event : BaseEvent, State : BaseState, Effect : Base
     /**
      * Sets an effect.
      */
-    fun setEffect(builder: () -> Effect) {
+    protected fun setEffect(builder: () -> Effect) {
         val effectValue = builder()
         viewModelScope.launch {
             _effect.send(effectValue)
@@ -66,7 +66,7 @@ abstract class BaseViewModel<Event : BaseEvent, State : BaseState, Effect : Base
     /**
      * Sets the initial state value.
      */
-    abstract fun setInitialState(): State
+    protected abstract fun setInitialState(): State
 
     protected fun setState(reducer: State.() -> State) {
         val newState = uiState.value.reducer()
@@ -92,5 +92,5 @@ abstract class BaseViewModel<Event : BaseEvent, State : BaseState, Effect : Base
         viewModelScope.launch { _viewStateHistory.send(state) }
     }
 
-    abstract fun handleEvents(event: Event)
+    protected abstract fun handleEvents(event: Event)
 }

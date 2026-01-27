@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Icon
+import androidx.compose.material.LocalContentAlpha
 import androidx.compose.material.LocalContentColor
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
@@ -50,10 +51,10 @@ fun <T : BaseEvent> ModalBottomSheetContentItems(
                             LocalView.current,
                             onClick = {
                                 @Suppress("UNCHECKED_CAST")
-                                onEventSent(bottomSheetContentItem.onClick as T)
+                                onEventSent(bottomSheetContentItem.onClickEvent as T)
                             }
                         )
-                        .padding(horizontal = 12.dp, vertical = 12.dp),
+                        .padding(all = 12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     bottomSheetContentItem.leadingIconData?.let {
@@ -70,6 +71,8 @@ fun <T : BaseEvent> ModalBottomSheetContentItems(
                             Icon(
                                 painter = painterResource(it.iconData.iconResource),
                                 contentDescription = stringResource(it.iconData.contentDescription),
+                                tint = it.iconData.tint
+                                    ?: LocalContentColor.current.copy(alpha = LocalContentAlpha.current)
                             )
                         }
 

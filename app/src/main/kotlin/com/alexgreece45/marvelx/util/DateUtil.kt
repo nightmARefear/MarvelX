@@ -2,8 +2,10 @@ package com.alexgreece45.marvelx.util
 
 import com.alexgreece45.marvelx.util.extensions.pad
 import java.time.Instant
+import java.time.LocalDate
 
 object DateUtil {
+
     /**
      * Returns the current UTC [Instant].
      */
@@ -20,6 +22,11 @@ object DateUtil {
      * Returns the epoch milliseconds.
      */
     fun getEpochMillis() = getUTCInstant().toEpochMilli()
+
+    /**
+     * Returns the current local date.
+     */
+    fun getCurrentLocalDate(): LocalDate = LocalDate.now()
 
     /**
      * Converts the given [minutes] and [seconds] into a human readable format.

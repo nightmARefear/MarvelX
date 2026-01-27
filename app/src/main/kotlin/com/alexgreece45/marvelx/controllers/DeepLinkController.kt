@@ -121,7 +121,7 @@ class DeepLinkControllerImpl(
                 }
             }
 
-            DeepLinkWebUrl.ViewListing -> TODO("Not implemented yet.")
+            DeepLinkWebUrl.ListingDetails -> TODO("Not implemented yet.")
         }
     }
 

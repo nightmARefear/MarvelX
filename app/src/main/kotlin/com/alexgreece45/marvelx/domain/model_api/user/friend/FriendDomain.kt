@@ -1,6 +1,7 @@
 package com.alexgreece45.marvelx.domain.model_api.user.friend
 
 import com.alexgreece45.marvelx.network_logic.models_api.user.friend.ResponseFriend
+import com.alexgreece45.marvelx.util.extensions.defaultFormat
 import com.alexgreece45.marvelx.util.extensions.toFullName
 import java.time.Instant
 import java.time.ZoneId
@@ -19,9 +20,7 @@ data class FriendDomain(
     /**
      * When the friendship started.
      */
-    val friendsSinceFormatted: String = friendsSince
-        .atZone(ZoneId.systemDefault())
-        .format(DateTimeFormatter.ofPattern("MMMM d, yyyy"))
+    val friendsSinceFormatted: String = friendsSince.defaultFormat()
 }
 
 fun List<ResponseFriend>.toFriendDomainList(): List<FriendDomain> =

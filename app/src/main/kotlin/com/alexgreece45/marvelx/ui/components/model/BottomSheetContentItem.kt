@@ -14,14 +14,14 @@ import com.alexgreece45.marvelx.ui.components.IconData
  * material `onBackground` color will be used.
  * @param leadingIconData   The leading icon data for this item. It is optional.
  * @param trailingIconData  The trailing icon data for this item. It is optional.
- * @param onClick           The [BaseEvent] to execute when this item is clicked.
+ * @param onClickEvent      The [BaseEvent] to execute when this item is clicked.
  */
 data class BottomSheetContentItem(
     val title: String,
     val titleColor: Color? = null,
     val leadingIconData: BottomSheetContentItemIconData? = null,
     val trailingIconData: BottomSheetContentItemIconData? = null,
-    val onClick: BaseEvent
+    val onClickEvent: BaseEvent
 )
 
 /**

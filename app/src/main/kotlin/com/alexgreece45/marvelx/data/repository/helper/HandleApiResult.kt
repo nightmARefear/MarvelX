@@ -2,7 +2,6 @@ package com.alexgreece45.marvelx.data.repository.helper
 
 import com.alexgreece45.marvelx.network_logic.models_generic.ApiResult
 import com.alexgreece45.marvelx.util.extensions.safeAsync
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlin.coroutines.CoroutineContext
@@ -19,7 +18,7 @@ import kotlin.coroutines.CoroutineContext
  * @param transformation    The transformation to apply to [A] in order to transform it into [B].
  * @param ioDispatcher      The IO dispatcher.
  */
-internal suspend fun <A : Any, B : Any> handleApiResult(
+internal fun <A : Any, B : Any> handleApiResult(
     apiResult: ApiResult<A>,
     transformation: A.() -> B,
     ioDispatcher: CoroutineContext
@@ -46,7 +45,7 @@ internal suspend fun <A : Any, B : Any> handleApiResult(
  * @param apiResult The API result.
  * @param ioDispatcher The IO dispatcher.
  */
-internal suspend fun handleApiResultNoTransformation(
+internal fun handleApiResultNoTransformation(
     apiResult: ApiResult<String>,
     ioDispatcher: CoroutineContext
 ): Flow<RepositoryResult<String>> =
@@ -68,9 +67,9 @@ internal suspend fun handleApiResultNoTransformation(
  *
  * @param apiResult The API result.
  */
-internal suspend fun <A : Any> handleApiResultNoTransformationWithData(
+internal fun <A : Any> handleApiResultNoTransformationWithData(
     apiResult: ApiResult<A>,
-    ioDispatcher: CoroutineContext = Dispatchers.IO
+    ioDispatcher: CoroutineContext
 ): Flow<RepositoryResult<A>> =
     flow {
         when (apiResult) {

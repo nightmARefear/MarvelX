@@ -12,9 +12,9 @@ import com.alexgreece45.marvelx.mvi.BaseState
 import com.alexgreece45.marvelx.mvi.BaseViewModel
 import com.alexgreece45.marvelx.network_logic.models_api.user.Gender
 import com.alexgreece45.marvelx.ui.components.AlertDialogButton
-import com.alexgreece45.marvelx.ui.components.model.SnackbarStateData
 import com.alexgreece45.marvelx.ui.components.model.ErrorButtonLayout
 import com.alexgreece45.marvelx.ui.components.model.ErrorButtonType
+import com.alexgreece45.marvelx.ui.components.model.SnackbarStateData
 import com.alexgreece45.marvelx.ui.helper.FieldValidationRules
 import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.model.EditProfileDetailsItemUi
 import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.model.ProfileDetailsUi
@@ -24,8 +24,6 @@ import com.alexgreece45.marvelx.util.FormValidationResult
 import com.alexgreece45.marvelx.util.FormValidator
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.Rule
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 
 sealed interface EditProfileDetailsContract {
@@ -118,78 +116,66 @@ class EditProfileDetailsViewModel(
             }
 
             is EditProfileDetailsContract.Event.FirstNameField.OnValueChanged -> {
-                viewModelScope.launch {
-                    validateField(
-                        value = event.value,
-                        validationRules = fieldValidationRules.getFirstNameValidationRules()
-                    ).collect {
-                        setState {
-                            copy(
-                                profileDetailsUi = profileDetailsUi?.copy(
-                                    firstName = profileDetailsUi.firstName.copy(
-                                        currentValue = event.value,
-                                        validationResult = it
-                                    )
+                setState {
+                    copy(
+                        profileDetailsUi = profileDetailsUi?.copy(
+                            firstName = profileDetailsUi.firstName.copy(
+                                currentValue = event.value,
+                                validationResult = validateField(
+                                    value = event.value,
+                                    validationRules = fieldValidationRules.getFirstNameValidationRules()
                                 )
                             )
-                        }
-                        setState {
-                            copy(
-                                isSaveChangesButtonEnabled = shouldEnableSaveChangesButton()
-                            )
-                        }
-                    }
+                        )
+                    )
+                }
+                setState {
+                    copy(
+                        isSaveChangesButtonEnabled = shouldEnableSaveChangesButton()
+                    )
                 }
             }
 
             is EditProfileDetailsContract.Event.LastNameField.OnValueChanged -> {
-                viewModelScope.launch {
-                    validateField(
-                        value = event.value,
-                        validationRules = fieldValidationRules.getLastNameValidationRules()
-                    ).collect {
-                        setState {
-                            copy(
-                                profileDetailsUi = profileDetailsUi?.copy(
-                                    lastName = profileDetailsUi.lastName.copy(
-                                        currentValue = event.value,
-                                        validationResult = it
-                                    )
+                setState {
+                    copy(
+                        profileDetailsUi = profileDetailsUi?.copy(
+                            lastName = profileDetailsUi.lastName.copy(
+                                currentValue = event.value,
+                                validationResult = validateField(
+                                    value = event.value,
+                                    validationRules = fieldValidationRules.getLastNameValidationRules()
                                 )
                             )
-                        }
-                        setState {
-                            copy(
-                                isSaveChangesButtonEnabled = shouldEnableSaveChangesButton()
-                            )
-                        }
-                    }
+                        )
+                    )
+                }
+                setState {
+                    copy(
+                        isSaveChangesButtonEnabled = shouldEnableSaveChangesButton()
+                    )
                 }
             }
 
             is EditProfileDetailsContract.Event.GenderField.OnGenderSelected -> {
-                viewModelScope.launch {
-                    validateField(
-                        value = event.value.key,
-                        validationRules = fieldValidationRules.getGenderValidationRules()
-                    ).collect {
-                        setState {
-                            copy(
-                                profileDetailsUi = profileDetailsUi?.copy(
-                                    gender = profileDetailsUi.gender.copy(
-                                        currentValue = event.value,
-                                        validationResult = it
-                                    )
-                                ),
-                                isGenderDropDownExpanded = !isGenderDropDownExpanded
+                setState {
+                    copy(
+                        profileDetailsUi = profileDetailsUi?.copy(
+                            gender = profileDetailsUi.gender.copy(
+                                currentValue = event.value,
+                                validationResult = validateField(
+                                    value = event.value.key,
+                                    validationRules = fieldValidationRules.getGenderValidationRules()
+                                )
                             )
-                        }
-                        setState {
-                            copy(
-                                isSaveChangesButtonEnabled = shouldEnableSaveChangesButton()
-                            )
-                        }
-                    }
+                        ),
+                        isGenderDropDownExpanded = !isGenderDropDownExpanded
+                    )
+                }
+                setState {
+                    copy(
+                        isSaveChangesButtonEnabled = shouldEnableSaveChangesButton()
+                    )
                 }
             }
 
@@ -210,27 +196,23 @@ class EditProfileDetailsViewModel(
             }
 
             is EditProfileDetailsContract.Event.EmailField.OnValueChanged -> {
-                viewModelScope.launch {
-                    validateField(
-                        value = event.value,
-                        validationRules = fieldValidationRules.getEmailValidationRules()
-                    ).collect {
-                        setState {
-                            copy(
-                                profileDetailsUi = profileDetailsUi?.copy(
-                                    email = profileDetailsUi.email.copy(
-                                        currentValue = event.value,
-                                        validationResult = it
-                                    )
+                setState {
+                    copy(
+                        profileDetailsUi = profileDetailsUi?.copy(
+                            email = profileDetailsUi.email.copy(
+                                currentValue = event.value,
+                                validationResult = validateField(
+                                    value = event.value,
+                                    validationRules = fieldValidationRules.getEmailValidationRules()
                                 )
                             )
-                        }
-                        setState {
-                            copy(
-                                isSaveChangesButtonEnabled = shouldEnableSaveChangesButton()
-                            )
-                        }
-                    }
+                        )
+                    )
+                }
+                setState {
+                    copy(
+                        isSaveChangesButtonEnabled = shouldEnableSaveChangesButton()
+                    )
                 }
             }
 
@@ -459,13 +441,11 @@ class EditProfileDetailsViewModel(
      * Validates the given [value] against the [validationRules] and emits the result as a
      * [FormValidationResult].
      */
-    private suspend fun validateField(
+    private fun validateField(
         value: String,
         validationRules: List<Rule>
-    ): Flow<FormValidationResult> = flow {
-        formValidator.validateForm(Form(mapOf(validationRules to value))).collect {
-            emit(it)
-        }
+    ): FormValidationResult {
+        return formValidator.validateForm(Form(mapOf(validationRules to value)))
     }
 
     /**

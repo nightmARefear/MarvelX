@@ -274,7 +274,7 @@ fun ProfileScreen(
                 )
             ),
             bottomNavigationBarData = bottomNavigationBarData(),
-            paddingValues = PaddingValues.Absolute()
+            paddingValues = PaddingValues()
         ) { paddingValues ->
             Column(
                 modifier = Modifier

@@ -25,6 +25,7 @@ import kotlinx.coroutines.flow.flow
 import okio.IOException
 
 interface RegisterInteractor {
+
     suspend fun signup(requestUserSignup: RequestUserSignup): Flow<SignupPartialState>
 
     /**
@@ -50,6 +51,7 @@ class RegisterInteractorImpl(
     private val repository: RegisterRepository,
     private val resourceProvider: ResourceProvider
 ) : RegisterInteractor {
+
     override suspend fun signup(requestUserSignup: RequestUserSignup): Flow<SignupPartialState> =
         flow {
             val genericErrorMessage = resourceProvider.getGenericErrorMessage()

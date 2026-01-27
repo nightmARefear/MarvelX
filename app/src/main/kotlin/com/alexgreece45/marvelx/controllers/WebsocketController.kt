@@ -7,6 +7,7 @@ import com.alexgreece45.marvelx.controllers.model.websocket.WebsocketSendRequest
 import com.alexgreece45.marvelx.controllers.model.websocket.WebsocketSendRequestPartialState.Failed
 import com.alexgreece45.marvelx.controllers.model.websocket.WebsocketSendRequestPartialState.Success
 import com.alexgreece45.marvelx.controllers.model.websocket.WebsocketTerminationCode
+import com.alexgreece45.marvelx.dispatchers.IoDispatcher
 import com.alexgreece45.marvelx.network_logic.models_websocket.RequestWebsocket
 import com.alexgreece45.marvelx.util.constants.ConstantsSecurity
 import com.google.gson.Gson
@@ -19,6 +20,7 @@ import okhttp3.Request
 import okhttp3.WebSocket
 import okhttp3.WebSocketListener
 import java.util.UUID
+import kotlin.coroutines.CoroutineContext
 
 
 /**
@@ -59,7 +61,8 @@ class WebsocketControllerImpl(
     private val okHttpClient: OkHttpClient,
     private val authController: AuthController,
     private val appLogger: AppLogger,
-    private val gson: Gson
+    private val gson: Gson,
+    @IoDispatcher private val ioDispatcher: CoroutineContext,
 ) : WebsocketController {
     /**
      * The websocket client listener.

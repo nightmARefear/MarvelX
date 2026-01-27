@@ -131,6 +131,18 @@ android {
     kotlinOptions {
         jvmTarget = JavaVersion.toVersion(libs.versions.java.version.get()).toString()
         freeCompilerArgs = listOf("-XXLanguage:+PropertyParamAnnotationDefaultTargetMode")
+
+        // Compose metrics.
+        freeCompilerArgs += listOf(
+            "-P",
+            "plugin:androidx.compose.compiler.plugins.kotlin:reportsDestination=" +
+                    project.buildDir.absolutePath + "/compose_metrics"
+        )
+        freeCompilerArgs += listOf(
+            "-P",
+            "plugin:androidx.compose.compiler.plugins.kotlin:metricsDestination=" +
+                    project.buildDir.absolutePath + "/compose_metrics"
+        )
     }
 
     packaging {
@@ -175,6 +187,9 @@ tasks.register("buildDebugApk") {
 dependencies {
     // Kotlin reflection.
     implementation(libs.kotlin.reflect)
+
+    // Kotlin immutable lists.
+    implementation(libs.kotlin.collections.immutable)
 
     // Compose.
     implementation(project.dependencies.platform(libs.androidx.compose.bom))

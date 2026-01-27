@@ -5,7 +5,6 @@ import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.controllers.PrefKeys
 import com.alexgreece45.marvelx.controllers.RefreshTokenController
 import com.alexgreece45.marvelx.controllers.WebsocketController
-import com.alexgreece45.marvelx.data.repository.UserRepository
 import com.alexgreece45.marvelx.dispatchers.DefaultDispatcher
 import com.alexgreece45.marvelx.domain.interactors.AuthorizePartialState
 import com.alexgreece45.marvelx.domain.interactors.GrandNewAccessTokenPartialState
@@ -131,7 +130,6 @@ class SignupViewModel(
     private val loginInteractor: LoginInteractor,
     private val fieldValidationRules: FieldValidationRules,
     @DefaultDispatcher private val defaultDispatcher: CoroutineContext,
-    private val userRepository: UserRepository,
 ) : BaseViewModel<SignupEvent, SignupState, SignupEffect>() {
 
     override fun setInitialState(): SignupState =

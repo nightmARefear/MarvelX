@@ -528,15 +528,15 @@ class ProfileDetailsViewModel(
             BottomSheetContentItem(
                 title = resourceProvider.getString(R.string.profile_details_screen_label_more_actions_block),
                 titleColor = getErrorColor(),
-                onClick = ProfileDetailsContract.Event.MoreActions.OnBlockClicked
+                onClickEvent = ProfileDetailsContract.Event.MoreActions.OnBlockClicked
             ),
             BottomSheetContentItem(
                 title = resourceProvider.getString(R.string.profile_details_screen_label_more_actions_share_profile),
-                onClick = ProfileDetailsContract.Event.MoreActions.OnShareProfileClicked
+                onClickEvent = ProfileDetailsContract.Event.MoreActions.OnShareProfileClicked
             ),
             BottomSheetContentItem(
                 title = resourceProvider.getString(R.string.profile_details_screen_label_more_actions_show_qr_code),
-                onClick = ProfileDetailsContract.Event.MoreActions.OnShowQrCodeClicked
+                onClickEvent = ProfileDetailsContract.Event.MoreActions.OnShowQrCodeClicked
             ),
         )
         setState {

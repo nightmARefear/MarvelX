@@ -1,7 +1,6 @@
 package com.alexgreece45.marvelx.ui.screens.profile.profileDetails
 
 import android.content.ClipData
-import android.content.Intent
 import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.widget.Toast
@@ -87,6 +86,7 @@ import com.alexgreece45.marvelx.util.VSpacer
 import com.alexgreece45.marvelx.util.constants.ConstantsUi
 import com.alexgreece45.marvelx.util.extensions.circularImageWithBorder
 import com.alexgreece45.marvelx.util.extensions.hideIfVisible
+import com.alexgreece45.marvelx.util.extensions.shareContentUrl
 import com.alexgreece45.marvelx.util.extensions.throttledClickable
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
@@ -102,6 +102,7 @@ fun ProfileDetailsScreen(
     shouldShowAcceptFriendRequestDialog: Boolean,
     onNavigation: (ProfileDetailsContract.Effect.Navigation) -> Unit
 ) {
+
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     val clipboard = LocalClipboard.current
@@ -150,16 +151,10 @@ fun ProfileDetailsScreen(
             }
 
             is ProfileDetailsContract.Effect.ShareProfileUrl -> {
-                val share = Intent.createChooser(Intent().apply {
-                    action = Intent.ACTION_SEND
-//                    addCategory(Intent.CATEGORY_DEFAULT)
-//                    addCategory(Intent.CATEGORY_APP_MESSAGING)
-//                    addCategory(Intent.CATEGORY_BROWSABLE)
-                    putExtra(Intent.EXTRA_TEXT, uiEffect.url)
-                    putExtra(Intent.EXTRA_TITLE, uiEffect.intentTitle)
-                    type = "text/plain"
-                }, uiEffect.intentTitle)
-                context.startActivity(share)
+                context.shareContentUrl(
+                    url = uiEffect.url,
+                    title = uiEffect.intentTitle
+                )
             }
 
             is ProfileDetailsContract.Effect.SetClipboardText -> {
@@ -678,15 +673,15 @@ private fun ProfileDetailsScreenMoreActionBottomSheetPreview() {
                     BottomSheetContentItem(
                         title = stringResource(R.string.profile_details_screen_label_more_actions_block),
                         titleColor = MaterialTheme.customColors.genericRed,
-                        onClick = ProfileDetailsContract.Event.MoreActions.OnBlockClicked
+                        onClickEvent = ProfileDetailsContract.Event.MoreActions.OnBlockClicked
                     ),
                     BottomSheetContentItem(
                         title = stringResource(R.string.profile_details_screen_label_more_actions_share_profile),
-                        onClick = ProfileDetailsContract.Event.MoreActions.OnShareProfileClicked
+                        onClickEvent = ProfileDetailsContract.Event.MoreActions.OnShareProfileClicked
                     ),
                     BottomSheetContentItem(
                         title = stringResource(R.string.profile_details_screen_label_more_actions_show_qr_code),
-                        onClick = ProfileDetailsContract.Event.MoreActions.OnShowQrCodeClicked
+                        onClickEvent = ProfileDetailsContract.Event.MoreActions.OnShowQrCodeClicked
                     ),
                 ),
                 bottomSheetType = ProfileDetailsBottomSheetType.MoreActions

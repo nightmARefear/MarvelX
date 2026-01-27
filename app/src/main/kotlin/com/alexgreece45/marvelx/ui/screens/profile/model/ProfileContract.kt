@@ -1,6 +1,7 @@
 package com.alexgreece45.marvelx.ui.screens.profile.model
 
 import android.net.Uri
+import com.alexgreece45.marvelx.data.model.deepLink.DeepLinkAction
 import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.BasicProfileDetailsDomain
 import com.alexgreece45.marvelx.domain.model_generic.AttachedFileContentData
 import com.alexgreece45.marvelx.domain.model_generic.ReadFileContentData
@@ -9,7 +10,6 @@ import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
 import com.alexgreece45.marvelx.ui.components.model.BottomSheetContentItem
 import com.alexgreece45.marvelx.ui.components.sections.model.SectionHeaderData
-import com.alexgreece45.marvelx.data.model.deepLink.DeepLinkAction
 
 sealed interface ProfileContract {
     sealed interface Event : BaseEvent {
@@ -37,7 +37,8 @@ sealed interface ProfileContract {
                 /**
                  * Triggered when an image is selected in the `photo picker`.
                  */
-                data class OnSuccess(val imageFileContentData: AttachedFileContentData?) : ImageSelectionEvent
+                data class OnSuccess(val imageFileContentData: AttachedFileContentData?) :
+                    ImageSelectionEvent
 
                 /**
                  * Triggered when no image was selected.
@@ -129,6 +130,7 @@ sealed interface ProfileContract {
             data class NavigateToQrCodeScreen(val previousScreenRoute: String) : Navigation()
             data class NavigateToProfileImageScreen(val profileImageUrl: String) : Navigation()
             data class NavigateToProfileDetailsScreen(val userId: String) : Navigation()
+            data object NavigateToMyListingsScreen : Navigation()
         }
 
         /**

@@ -172,7 +172,7 @@ class UserInteractorImpl(
             logger.e("UserInteractor") { "(updateUserProfileImage) e: ${it.localizedMessage.orEmpty()}" }
             when (it) {
                 is IllegalArgumentException -> InteractorPartialState.Error<String>(it.localizedMessage.orEmpty()) // Can be thrown from `.toRequestBody`.
-                else -> InteractorPartialState.Error<String>(resourceProvider.getGenericErrorMessage())
+                else -> InteractorPartialState.Error(resourceProvider.getGenericErrorMessage())
             }
         }
 

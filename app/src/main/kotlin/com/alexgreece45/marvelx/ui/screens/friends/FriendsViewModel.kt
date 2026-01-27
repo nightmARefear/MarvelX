@@ -20,7 +20,6 @@ import com.alexgreece45.marvelx.ui.screens.friends.model.FriendsDialogView
 import com.alexgreece45.marvelx.ui.screens.friends.model.FriendsErrorView
 import com.alexgreece45.marvelx.util.DateUtil
 import com.alexgreece45.marvelx.util.ResourceProvider
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
 import java.time.Instant
@@ -33,7 +32,7 @@ class FriendsViewModel(
     private val blockedUserInteractor: BlockedUserInteractor,
 ) : BaseViewModel<FriendsContract.Event, FriendsContract.State, FriendsContract.Effect>() {
 
-    private val LOGGER_TAG = "FriendsViewModel"
+    private val loggerTag = "FriendsViewModel"
 
     override fun setInitialState(): FriendsContract.State = FriendsContract.State()
 
@@ -429,7 +428,7 @@ class FriendsViewModel(
                                         is GetProfileDetailsPartialState.Error,
                                         is GetProfileDetailsPartialState.Failed,
                                         GetProfileDetailsPartialState.NoInternetConnection -> {
-                                            appLogger.e(LOGGER_TAG) { "(setupNotificationsListener) An error occurred whilst retrieving the details for user w/ID: $userId" }
+                                            appLogger.e(loggerTag) { "(setupNotificationsListener) An error occurred whilst retrieving the details for user w/ID: $userId" }
 
                                             setState {
                                                 copy(
@@ -476,8 +475,7 @@ class FriendsViewModel(
                                         is GetProfileDetailsPartialState.Error,
                                         is GetProfileDetailsPartialState.Failed,
                                         GetProfileDetailsPartialState.NoInternetConnection -> {
-                                            appLogger.e(LOGGER_TAG) { "(setupNotificationsListener) An error occurred whilst retrieving the details for user w/ID: $userId" }
-
+                                            appLogger.e(loggerTag) { "(setupNotificationsListener) An error occurred whilst retrieving the details for user w/ID: $userId" }
                                         }
 
                                         is GetProfileDetailsPartialState.Success -> {
@@ -506,8 +504,8 @@ class FriendsViewModel(
                                 }
                         }
 
-                        NotificationChannelType.ListingPurchase -> {
-                            // No need for implementation.
+                        else -> {
+                            // We do not care about other cases.
                         }
                     }
                 }

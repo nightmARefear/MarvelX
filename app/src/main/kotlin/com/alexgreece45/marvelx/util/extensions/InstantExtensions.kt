@@ -1,6 +1,8 @@
 package com.alexgreece45.marvelx.util.extensions
 
 import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 /**
  * Returns the difference in milliseconds between this instance and the given [instant].
@@ -18,3 +20,17 @@ fun Instant.differenceInSeconds(instant: Instant): Long = this.epochSecond - ins
  */
 fun Instant.differenceInMinutes(instant: Instant): Long =
     (this.epochSecond / 60) - (instant.epochSecond / 60)
+
+/**
+ * Returns the default formatted instant.
+ */
+fun Instant.defaultFormat(): String = this
+    .atZone(ZoneId.systemDefault())
+    .format(DateTimeFormatter.ofPattern("MMMM d, yyyy"))
+
+/**
+ * Converts this to a listing format.
+ */
+fun Instant.toListingFormat(): String = this
+    .atZone(ZoneId.systemDefault())
+    .format(DateTimeFormatter.ofPattern("MMMM d, yyyy HH:mm:ss"))

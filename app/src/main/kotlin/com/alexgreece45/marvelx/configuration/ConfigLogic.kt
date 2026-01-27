@@ -4,7 +4,6 @@ import com.alexgreece45.marvelx.BuildConfig
 import com.alexgreece45.marvelx.configuration.models.MarvelApiConfig
 import com.alexgreece45.marvelx.configuration.models.TimeoutData
 import com.alexgreece45.marvelx.util.constants.ConstantsContentTypes
-import com.alexgreece45.marvelx.util.extensions.getPortFromUrl
 import com.alexgreece45.marvelx.util.extensions.getSchemeFromUrl
 
 interface ConfigLogic {
@@ -22,11 +21,6 @@ interface ConfigLogic {
      * Returns the host.
      */
     val host: String
-
-    /**
-     * Extracts and returns the port (i.e., `XXXXX`, where `X` integer) from the base URL.
-     */
-    val port: Int
 
     /**
      * The MarvelX backend URL.
@@ -96,8 +90,6 @@ class ConfigLogicImpl : ConfigLogic {
     override val scheme: String
         get() = BuildConfig.MARVELX_BACKEND_BASE_URL.getSchemeFromUrl()
     override val host: String get() = BuildConfig.MARVELX_BACKEND_DOMAIN
-    override val port: Int
-        get() = BuildConfig.MARVELX_BACKEND_BASE_URL.getPortFromUrl()
 
     override val serverUrl: String
         get() = BuildConfig.MARVELX_BACKEND_BASE_URL

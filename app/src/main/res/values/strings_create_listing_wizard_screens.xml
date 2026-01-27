@@ -1,0 +1,72 @@
+<resources>
+    <string name="screen_create_listing_wizard_screen_toolbar_title_create">Create listing:</string>
+    <string name="screen_create_listing_wizard_screen_toolbar_title_update">Update listing:</string>
+
+    <string name="screen_create_listing_wizard_screen_step_label_basic">Basic details</string>
+    <string name="screen_create_listing_wizard_screen_step_label_advanced">Advanced details</string>
+    <string name="screen_create_listing_wizard_screen_step_label_logistics">Logistics</string>
+
+    <string name="screen_create_listing_wizard_screen_button_next">Next</string>
+
+    <string name="screen_create_listing_wizard_screen_alert_dialog_title_create">Exit listing creation</string>
+    <string name="screen_create_listing_wizard_screen_alert_dialog_title_update">Exit listing update</string>
+    <string name="screen_create_listing_wizard_screen_alert_dialog_message_create">Are you sure that you want to exit the listing creation? If you do so, all unsaved changes will be lost.</string>
+    <string name="screen_create_listing_wizard_screen_alert_dialog_message_update">Are you sure that you want to exit the listing update? If you do so, all unsaved changes will be lost.</string>
+    <string name="screen_create_listing_wizard_screen_alert_dialog_button_negative">Cancel</string>
+    <string name="screen_create_listing_wizard_screen_alert_dialog_button_positive">Exit</string>
+
+    // Create Listing Wizard --> BasicDetails
+    <string name="screen_create_listing_basic_details_label_title">Title</string>
+    <string name="screen_create_listing_basic_details_label_description">Description</string>
+    <string name="screen_create_listing_basic_details_label_category">Category</string>
+    <string name="screen_create_listing_basic_details_label_subcategory">Subcategory</string>
+
+    <string name="screen_create_listing_basic_details_placeholder_title">Title placeholder</string>
+    <string name="screen_create_listing_basic_details_placeholder_description">Description placeholder</string>
+
+    <string name="screen_create_listing_basic_details_error_field_blank_title">Title cannot be blank.</string>
+    <string name="screen_create_listing_basic_details_error_field_blank_description">Description cannot be blank.</string>
+
+    // Create Listing Wizard --> AdvancedDetails
+    <string name="screen_create_listing_advanced_details_label_condition">Condition</string>
+    <string name="screen_create_listing_advanced_details_label_price">Price</string>
+    <string name="screen_create_listing_advanced_details_label_apparel_size">Apparel size</string>
+    <string name="screen_create_listing_advanced_details_label_color">Color</string>
+    <string name="screen_create_listing_advanced_details_label_material">Material</string>
+    <string name="screen_create_listing_advanced_details_label_capacity">Capacity</string>
+    <string name="screen_create_listing_advanced_details_label_dishwasher_safe">Dishwasher safe</string>
+    <string name="screen_create_listing_advanced_details_label_scale">Scale</string>
+    <string name="screen_create_listing_advanced_details_label_box_condition">Box Condition</string>
+    <string name="screen_create_listing_advanced_details_label_width">Width</string>
+    <string name="screen_create_listing_advanced_details_label_height">Height</string>
+    <string name="screen_create_listing_advanced_details_label_framed">Framed</string>
+    <string name="screen_create_listing_advanced_details_label_publisher">Publisher</string>
+    <string name="screen_create_listing_advanced_details_label_year">Year</string>
+    <string name="screen_create_listing_advanced_details_label_grade">Grade</string>
+    <string name="screen_create_listing_advanced_details_label_rarity">Rarity</string>
+    <string name="screen_create_listing_advanced_details_label_variant">Variant</string>
+
+    <string name="screen_create_listing_advanced_details_placeholder_price">Price of listing</string>
+    <string name="screen_create_listing_advanced_details_placeholder_color">Enter the color</string>
+    <string name="screen_create_listing_advanced_details_placeholder_capacity">Capacity Ml</string>
+    <string name="screen_create_listing_advanced_details_placeholder_width">Enter the width</string>
+    <string name="screen_create_listing_advanced_details_placeholder_height">Enter the height</string>
+    <string name="screen_create_listing_advanced_details_placeholder_publisher">Enter the publisher</string>
+    <string name="screen_create_listing_advanced_details_placeholder_year">Enter the year</string>
+
+    <string name="screen_create_listing_advanced_details_content_description_euro">Euro icon</string>
+
+    <string name="screen_create_listing_advanced_details_error_blank_color">Color cannot be blank</string>
+    <string name="screen_create_listing_advanced_details_error_blank_publisher">Publisher cannot be blank</string>
+    <string name="screen_create_listing_advanced_details_error_blank_year">Year cannot be blank</string>
+    <string name="screen_create_listing_advanced_details_error_invalid_price">Invalid price</string>
+    <string name="screen_create_listing_advanced_details_error_invalid_year">Invalid year</string>
+    <string name="screen_create_listing_advanced_details_error_below_minimum_ml_capacity">The minimum allowed capacity is %1$sMl</string>
+    <string name="screen_create_listing_advanced_details_error_over_maximum_ml_capacity">The minimum allowed capacity is %1$sMl</string>
+    <string name="screen_create_listing_advanced_details_error_below_min_price">The minimum allowed price is %1$s</string>
+    <string name="screen_create_listing_advanced_details_error_over_max_price">The maximum allowed price is %1$s</string>
+    <string name="screen_create_listing_advanced_details_error_below_min_year">The minimum allowed year is %1$s</string>
+    <string name="screen_create_listing_advanced_details_error_over_max_year">The maximum allowed year is %1$s</string>
+    <string name="screen_create_listing_advanced_details_error_generic_min_allowed_characters">The minimum allowed characters are %1$s</string>
+    <string name="screen_create_listing_advanced_details_error_generic_max_allowed_characters">The minimum allowed characters are %1$s</string>
+</resources>
