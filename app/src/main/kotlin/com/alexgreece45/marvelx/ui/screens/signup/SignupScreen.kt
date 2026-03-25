@@ -1,12 +1,16 @@
 package com.alexgreece45.marvelx.ui.screens.signup
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentWidth
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.DropdownMenuItem
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
@@ -39,8 +43,8 @@ import com.alexgreece45.marvelx.ui.components.ExposedDropdownMenu
 import com.alexgreece45.marvelx.ui.components.OutlinedTextFieldValidation
 import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
 import com.alexgreece45.marvelx.ui.components.WrapButton
-import com.alexgreece45.marvelx.ui.components.model.ErrorButtonType
 import com.alexgreece45.marvelx.util.SPACING_SMALL
+import com.alexgreece45.marvelx.util.SPACING_TINY
 import kotlinx.coroutines.flow.Flow
 
 @OptIn(ExperimentalComposeUiApi::class)
@@ -98,33 +102,35 @@ fun SignUpScreen(
         showToolbar = true,
         toolbarTitle = stringResource(R.string.sign_up_screen_toolbar_title)
     ) { paddingValues ->
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = paddingValues,
-            verticalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp)
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(paddingValues),
+            verticalArrangement = Arrangement.spacedBy(SPACING_TINY.dp)
         ) {
-            // Alert Dialog Error
-            item {
-                AlertDialogError(
-                    isVisible = state.isAlertDialogVisible,
-                    title = state.alertDialogTitle,
-                    errorMessage = { Text(text = state.alertDialogErrorMessage) },
-                    confirmButton = AlertDialogButton(
-                        label = stringResource(R.string.generic_ok_button),
-                        buttonType = ErrorButtonType.Text,
-                        onClick = { onEventSent(SignupEvent.AlertDialogError.OnOkClick) }
-                    )
+            AlertDialogError(
+                isVisible = state.isAlertDialogVisible,
+                title = state.alertDialogTitle,
+                errorMessage = { Text(text = state.alertDialogErrorMessage) },
+                confirmButton = AlertDialogButton(
+                    label = stringResource(R.string.generic_ok_button),
+                    onClick = { onEventSent(SignupEvent.AlertDialogError.OnOkClick) }
                 )
-            }
+            )
 
-            // First Name.
-            item {
+            // First Name & Last Name
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp)
+            ) {
+                // First Name.
                 OutlinedTextFieldValidation(
                     value = state.firstName,
                     onValueChange = { newValue ->
                         onEventSent(SignupEvent.FieldValueChange.FirstName(firstName = newValue))
                     },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.weight(1f),
                     label = stringResource(R.string.generic_label_first_name),
                     errorMessage = state.firstNameValidationResult.messages.firstOrNull()
                         .orEmpty(),
@@ -139,16 +145,14 @@ fun SignUpScreen(
                         }
                     )
                 )
-            }
 
-            // Last name
-            item {
+                // Last name
                 OutlinedTextFieldValidation(
                     value = state.lastName,
                     onValueChange = { newValue ->
                         onEventSent(SignupEvent.FieldValueChange.LastName(lastName = newValue))
                     },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.weight(1f),
                     label = stringResource(R.string.generic_label_last_name),
                     errorMessage = state.lastNameValidationResult.messages.firstOrNull()
                         .orEmpty(),
@@ -166,121 +170,113 @@ fun SignUpScreen(
             }
 
             // Gender
-            item {
-                ExposedDropdownMenu(
-                    label = stringResource(R.string.generic_label_gender),
-                    expanded = state.isGenderDropdownMenuVisible,
-                    modifier = Modifier.fillMaxWidth(),
-                    value = state.gender?.label?.let { stringResource(it) },
-                    onDismissRequest = { onEventSent(SignupEvent.GenderDropdownMenu.OnDismiss) },
-                    onExpandedChange = { onEventSent(SignupEvent.GenderDropdownMenu.OnClick) }
-                ) {
-                    Gender.asList().forEach { gender ->
-                        DropdownMenuItem(
-                            modifier = Modifier.fillMaxWidth(),
-                            onClick = {
-                                onEventSent(
-                                    SignupEvent.FieldValueChange.GenderDropDown(
-                                        gender = gender
-                                    )
+            ExposedDropdownMenu(
+                label = stringResource(R.string.generic_label_gender),
+                expanded = state.isGenderDropdownMenuVisible,
+                modifier = Modifier.fillMaxWidth(),
+                value = state.gender?.label?.let { stringResource(it) },
+                onDismissRequest = { onEventSent(SignupEvent.GenderDropdownMenu.OnDismiss) },
+                onExpandedChange = { onEventSent(SignupEvent.GenderDropdownMenu.OnClick) }
+            ) {
+                Gender.asList().forEach { gender ->
+                    DropdownMenuItem(
+                        modifier = Modifier.fillMaxWidth(),
+                        onClick = {
+                            onEventSent(
+                                SignupEvent.FieldValueChange.GenderDropDown(
+                                    gender = gender
                                 )
-                            }
-                        ) {
-                            Text(
-                                text = stringResource(gender.label),
-                                modifier = Modifier.wrapContentWidth()
                             )
                         }
+                    ) {
+                        Text(
+                            text = stringResource(gender.label),
+                            modifier = Modifier.wrapContentWidth()
+                        )
                     }
                 }
             }
 
             // Email
-            item {
-                OutlinedTextFieldValidation(
-                    value = state.email,
-                    onValueChange = { newEmail ->
-                        onEventSent(
-                            SignupEvent.FieldValueChange.Email(
-                                email = newEmail
-                            )
+            OutlinedTextFieldValidation(
+                value = state.email,
+                onValueChange = { newEmail ->
+                    onEventSent(
+                        SignupEvent.FieldValueChange.Email(
+                            email = newEmail
                         )
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .semantics { contentType = ContentType.EmailAddress },
-                    label = stringResource(R.string.generic_label_email),
-                    errorMessage = state.emailValidationResult.messages.firstOrNull().orEmpty(),
-                    isError = !state.emailValidationResult.isValid &&
-                            state.emailValidationResult.messages.firstOrNull() != null,
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Email,
-                        imeAction = ImeAction.Next
-                    ),
-                    keyboardActions = KeyboardActions(
-                        onNext = {
-                            focusManager.moveFocus(FocusDirection.Next)
-                        }
                     )
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .semantics { contentType = ContentType.EmailAddress },
+                label = stringResource(R.string.generic_label_email),
+                errorMessage = state.emailValidationResult.messages.firstOrNull().orEmpty(),
+                isError = !state.emailValidationResult.isValid &&
+                        state.emailValidationResult.messages.firstOrNull() != null,
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Email,
+                    imeAction = ImeAction.Next
+                ),
+                keyboardActions = KeyboardActions(
+                    onNext = {
+                        focusManager.moveFocus(FocusDirection.Next)
+                    }
                 )
-            }
+            )
 
             // Password
-            item {
-                OutlinedTextFieldValidation(
-                    value = state.password,
-                    onValueChange = { newPassword ->
-                        onEventSent(
-                            SignupEvent.FieldValueChange.Password(
-                                password = newPassword
-                            )
+            OutlinedTextFieldValidation(
+                value = state.password,
+                onValueChange = { newPassword ->
+                    onEventSent(
+                        SignupEvent.FieldValueChange.Password(
+                            password = newPassword
                         )
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .semantics { contentType = ContentType.NewPassword },
-                    label = stringResource(R.string.generic_label_password),
-                    trailingIcon = {
-                        IconButton(onClick = { onEventSent(SignupEvent.OnPasswordVisibilityIconClick) }) {
-                            if (state.isPasswordVisible) {
-                                Icon(
-                                    imageVector = Icons.Filled.VisibilityOff,
-                                    contentDescription = stringResource(R.string.is_password_visible_content_description)
-                                )
-                            } else {
-                                Icon(
-                                    imageVector = Icons.Filled.Visibility,
-                                    contentDescription = stringResource(R.string.is_password_not_visible_content_description)
-                                )
-                            }
-                        }
-                    },
-                    errorMessage = state.passwordValidationResult.messages.firstOrNull()
-                        .orEmpty(),
-                    isError = !state.passwordValidationResult.isValid &&
-                            state.passwordValidationResult.messages.firstOrNull() != null,
-                    visualTransformation = if (state.isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Password,
-                        imeAction = ImeAction.Done
-                    ),
-                    keyboardActions = KeyboardActions(
-                        onDone = { onEventSent(SignupEvent.OnDoneClick) }
                     )
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .semantics { contentType = ContentType.NewPassword },
+                label = stringResource(R.string.generic_label_password),
+                trailingIcon = {
+                    IconButton(onClick = { onEventSent(SignupEvent.OnPasswordVisibilityIconClick) }) {
+                        if (state.isPasswordVisible) {
+                            Icon(
+                                imageVector = Icons.Filled.VisibilityOff,
+                                contentDescription = stringResource(R.string.is_password_visible_content_description)
+                            )
+                        } else {
+                            Icon(
+                                imageVector = Icons.Filled.Visibility,
+                                contentDescription = stringResource(R.string.is_password_not_visible_content_description)
+                            )
+                        }
+                    }
+                },
+                errorMessage = state.passwordValidationResult.messages.firstOrNull()
+                    .orEmpty(),
+                isError = !state.passwordValidationResult.isValid &&
+                        state.passwordValidationResult.messages.firstOrNull() != null,
+                visualTransformation = if (state.isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Password,
+                    imeAction = ImeAction.Done
+                ),
+                keyboardActions = KeyboardActions(
+                    onDone = { onEventSent(SignupEvent.OnDoneClick) }
                 )
-            }
+            )
 
             // Signup button
-            item {
-                WrapButton(
-                    modifier = Modifier.fillMaxWidth(),
-                    enabled = state.signupButton,
-                    onClick = { onEventSent(SignupEvent.OnSignupButtonClick) }
-                ) {
-                    Text(
-                        text = stringResource(R.string.sign_up_screen_signup_button)
-                    )
-                }
+            WrapButton(
+                modifier = Modifier.fillMaxWidth(),
+                enabled = state.signupButton,
+                onClick = { onEventSent(SignupEvent.OnSignupButtonClick) }
+            ) {
+                Text(
+                    text = stringResource(R.string.sign_up_screen_signup_button)
+                )
             }
         }
     }

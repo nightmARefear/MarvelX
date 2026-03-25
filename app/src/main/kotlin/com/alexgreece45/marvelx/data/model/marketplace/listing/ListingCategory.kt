@@ -6,18 +6,22 @@ import com.alexgreece45.marvelx.network_logic.models_api.marketplace.listing.Res
 import com.alexgreece45.marvelx.network_logic.models_api.marketplace.listing.ResponseListingSubcategory
 
 data class ListingCategory(
+    val id: Int,
     val code: String,
     val label: String,
     val subcategories: List<ListingSubcategory>
 )
 
 data class ListingSubcategory(
-    val code: String,
+    val id: Int,
+    val categoryId: Int,
+    val categoryCode: String,
     val label: String
 )
 
 fun ResponseListingCategory.toData(): ListingCategory =
     ListingCategory(
+        id = id,
         code = categoryCode,
         label = label,
         subcategories = subcategories.map { it.toData() }
@@ -25,12 +29,15 @@ fun ResponseListingCategory.toData(): ListingCategory =
 
 private fun ResponseListingSubcategory.toData(): ListingSubcategory =
     ListingSubcategory(
-        code = subcategoryCode,
+        id = id,
+        categoryId = categoryId,
+        categoryCode = categoryCode,
         label = label
     )
 
 fun ListingCategoryWithSubcategoriesEntity.toData(): ListingCategory =
     ListingCategory(
+        id = category.id,
         code = category.categoryCode,
         label = category.label,
         subcategories = subcategories.map { it.toData() }
@@ -38,6 +45,8 @@ fun ListingCategoryWithSubcategoriesEntity.toData(): ListingCategory =
 
 private fun ListingSubcategoryEntity.toData(): ListingSubcategory =
     ListingSubcategory(
-        code = subcategoryCode,
+        id = id,
+        categoryId = categoryId,
+        categoryCode = categoryCode,
         label = label
     )

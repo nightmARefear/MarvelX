@@ -1,17 +1,17 @@
 package com.alexgreece45.marvelx.ui.screens.marketplace.model
 
-import com.alexgreece45.marvelx.data.model.marketplace.listing.ListingEnumGeneric
+import com.alexgreece45.marvelx.data.model.marketplace.listing.EnumGeneric
 import com.alexgreece45.marvelx.domain.model_api.marketplace.listing.ListingDimensions
-import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.model.CreateListingFieldUi
+import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.model.WizardInputFieldUi
 
 sealed interface ListingDetailsUi {
     val isValid: Boolean
 
     data class ApparelDetailsUi(
-        val size: CreateListingFieldUi.Enum = CreateListingFieldUi.Enum(),
-        val color: CreateListingFieldUi.Text = CreateListingFieldUi.Text(),
+        val size: WizardInputFieldUi.Enum = WizardInputFieldUi.Enum(),
+        val color: WizardInputFieldUi.Text = WizardInputFieldUi.Text(),
 
-        val sizes: List<ListingEnumGeneric> = emptyList()
+        val sizes: List<EnumGeneric> = emptyList()
     ) : ListingDetailsUi {
 
         override val isValid: Boolean
@@ -20,11 +20,11 @@ sealed interface ListingDetailsUi {
     }
 
     data class DrinkwareDetailsUi(
-        val material: CreateListingFieldUi.Enum = CreateListingFieldUi.Enum(),
-        val capacityMl: CreateListingFieldUi.Integer = CreateListingFieldUi.Integer(),
+        val material: WizardInputFieldUi.Enum = WizardInputFieldUi.Enum(),
+        val capacityMl: WizardInputFieldUi.Integer = WizardInputFieldUi.Integer(),
         val dishwasherSafe: Boolean = false,
 
-        val materials: List<ListingEnumGeneric> = emptyList()
+        val materials: List<EnumGeneric> = emptyList()
     ) : ListingDetailsUi {
 
         override val isValid: Boolean
@@ -33,11 +33,11 @@ sealed interface ListingDetailsUi {
     }
 
     data class CollectibleDetailsUi(
-        val scale: CreateListingFieldUi.Enum = CreateListingFieldUi.Enum(),
-        val boxCondition: CreateListingFieldUi.Enum = CreateListingFieldUi.Enum(),
+        val scale: WizardInputFieldUi.Enum = WizardInputFieldUi.Enum(),
+        val boxCondition: WizardInputFieldUi.Enum = WizardInputFieldUi.Enum(),
 
-        val scales: List<ListingEnumGeneric> = emptyList(),
-        val boxConditions: List<ListingEnumGeneric> = emptyList()
+        val scales: List<EnumGeneric> = emptyList(),
+        val boxConditions: List<EnumGeneric> = emptyList()
     ) : ListingDetailsUi {
 
         override val isValid: Boolean
@@ -55,10 +55,10 @@ sealed interface ListingDetailsUi {
     }
 
     data class AccessoryDetailsUi(
-        val material: CreateListingFieldUi.Enum = CreateListingFieldUi.Enum(),
-        val color: CreateListingFieldUi.Text = CreateListingFieldUi.Text(),
+        val material: WizardInputFieldUi.Enum = WizardInputFieldUi.Enum(),
+        val color: WizardInputFieldUi.Text = WizardInputFieldUi.Text(),
 
-        val materials: List<ListingEnumGeneric> = emptyList()
+        val materials: List<EnumGeneric> = emptyList()
     ) : ListingDetailsUi {
 
         override val isValid: Boolean
@@ -75,11 +75,11 @@ sealed interface ListingDetailsUi {
     }
 
     data class ComicDetailsUi(
-        val grade: CreateListingFieldUi.Enum = CreateListingFieldUi.Enum(),
-        val publisher: CreateListingFieldUi.Text = CreateListingFieldUi.Text(),
-        val year: CreateListingFieldUi.Integer = CreateListingFieldUi.Integer(),
+        val grade: WizardInputFieldUi.Enum = WizardInputFieldUi.Enum(),
+        val publisher: WizardInputFieldUi.Text = WizardInputFieldUi.Text(),
+        val year: WizardInputFieldUi.Integer = WizardInputFieldUi.Integer(),
 
-        val grades: List<ListingEnumGeneric> = emptyList()
+        val grades: List<EnumGeneric> = emptyList()
     ) : ListingDetailsUi {
 
         override val isValid: Boolean
@@ -89,13 +89,13 @@ sealed interface ListingDetailsUi {
     }
 
     data class CardDetailsUi(
-        val grade: CreateListingFieldUi.Enum = CreateListingFieldUi.Enum(),
-        val rarity: CreateListingFieldUi.Enum = CreateListingFieldUi.Enum(),
-        val variant: CreateListingFieldUi.Enum = CreateListingFieldUi.Enum(),
+        val grade: WizardInputFieldUi.Enum = WizardInputFieldUi.Enum(),
+        val rarity: WizardInputFieldUi.Enum = WizardInputFieldUi.Enum(),
+        val variant: WizardInputFieldUi.Enum = WizardInputFieldUi.Enum(),
 
-        val grades: List<ListingEnumGeneric> = emptyList(),
-        val rarities: List<ListingEnumGeneric> = emptyList(),
-        val variants: List<ListingEnumGeneric> = emptyList(),
+        val grades: List<EnumGeneric> = emptyList(),
+        val rarities: List<EnumGeneric> = emptyList(),
+        val variants: List<EnumGeneric> = emptyList(),
     ) : ListingDetailsUi {
 
         override val isValid: Boolean

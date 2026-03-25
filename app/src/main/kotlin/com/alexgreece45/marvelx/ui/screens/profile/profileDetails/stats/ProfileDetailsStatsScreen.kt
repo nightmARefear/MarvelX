@@ -78,9 +78,8 @@ fun ProfileDetailsStatsScreen(
         toolbarTitle = fullName + "'s " + stringResource(state.selectedTab.title)
     ) { paddingValues ->
         LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues),
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = paddingValues,
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             if (state.items.isEmpty()) {

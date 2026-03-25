@@ -1,0 +1,50 @@
+package com.alexgreece45.marvelx.ui.screens.orders.orderDetails.model
+
+import com.alexgreece45.marvelx.mvi.BaseEffect
+import com.alexgreece45.marvelx.mvi.BaseEvent
+import com.alexgreece45.marvelx.mvi.BaseState
+import com.alexgreece45.marvelx.ui.model_generic.UiState
+import com.alexgreece45.marvelx.ui.screens.orders.model.OrderUi
+import com.alexgreece45.marvelx.ui.screens.orders.model.item.OrderItemUi
+
+sealed interface OrderDetailsContract {
+
+    sealed interface Event : BaseEvent {
+        data class Init(val orderId: String) : Event
+        data object OnBack : Event
+        data object OnErrorButtonClicked : Event
+
+        data object OnOrderStatusBannerClicked : Event
+
+        sealed interface OrderItemEvents : Event {
+            data class OnTrackButtonClicked(val orderItem: OrderItemUi) : OrderItemEvents
+        }
+    }
+
+    data class State(
+        val uiState: UiState<OrderUi, Unit> = UiState.Loading,
+
+        val orderId: String = "",
+
+        val bottomSheetType: OrderDetailsBottomSheetType? = null,
+    ) : BaseState
+
+    sealed interface Effect : BaseEffect {
+
+        sealed interface Navigation : Effect {
+
+            data object GoBack : Navigation
+            data class NavigateToOrderItemTrackingHistoryScreen(
+                val orderId: String,
+                val sellerUserId: String,
+                val orderItemId: String,
+                val orderItemTitle: String,
+                val orderItemCoverImageUrl: String,
+                val orderItemPriceLabel: String
+            ) : Navigation
+        }
+
+        data object ShowBottomSheet : Effect
+        data object HideBottomSheet : Effect
+    }
+}

@@ -76,6 +76,7 @@ interface ApiClient {
     suspend fun forgotPasswordIsOtpBlockedEmail(body: RequestForgotPasswordOtpBlockedEmail): Response<ResponseForgotPasswordOtpBlockedEmail>
     suspend fun forgotPasswordIsOtpBlockedPhoneNumber(body: RequestForgotPasswordOtpBlockedPhoneNumber): Response<ResponseForgotPasswordOtpBlockedPhoneNumber>
     suspend fun forgotPasswordValidateOtp(body: RequestForgotPasswordValidateOtp): Response<ResponseForgotPasswordValidateOtp>
+    suspend fun getBasicProfileDetails(userId: String): ApiResult<ResponseBasicProfileDetails>
     suspend fun getCurrentUserProfileDetails(): Response<ResponseBasicProfileDetails>
     suspend fun updateCurrentUserProfileDetails(requestProfileDetailsUpdate: RequestProfileDetailsUpdate): ApiResult<String>
     suspend fun updateUserProfileImage(

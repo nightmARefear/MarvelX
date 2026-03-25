@@ -14,27 +14,24 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.data.model.marketplace.listing.ListingEnumGeneric
+import com.alexgreece45.marvelx.data.model.marketplace.listing.EnumGeneric
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.ExposedDropdownMenu
 import com.alexgreece45.marvelx.ui.components.OutlinedTextFieldValidation
-import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
 import com.alexgreece45.marvelx.ui.components.WrapCheckbox
 import com.alexgreece45.marvelx.ui.components.effect.ObserveUiEffect
-import com.alexgreece45.marvelx.ui.screens.marketplace.components.CreateListingTextInputFieldView
+import com.alexgreece45.marvelx.ui.screens.marketplace.components.WizardTextInputField
 import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.advancedDetails.model.CreateListingAdvancedDetailsContract
 import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.advancedDetails.model.CreateListingAdvancedDetailsScreenData
 import com.alexgreece45.marvelx.ui.screens.marketplace.model.ListingDetailsUi
 import com.alexgreece45.marvelx.util.SPACING_MEDIUM
 import com.alexgreece45.marvelx.util.VSpacer
-import com.alexgreece45.marvelx.util.extensions.showToast
 import kotlinx.coroutines.flow.Flow
 
 @Composable
@@ -42,12 +39,11 @@ fun CreateListingAdvancedDetailsScreen(
     onEvent: (CreateListingAdvancedDetailsContract.Event) -> Unit,
     state: CreateListingAdvancedDetailsContract.State,
     effect: Flow<CreateListingAdvancedDetailsContract.Effect>,
+    showToastMessage: (String) -> Unit,
     goToPreviousStep: () -> Unit,
     setNextButtonEnabled: (Boolean) -> Unit,
     createListingAdvancedDetailsScreenData: CreateListingAdvancedDetailsScreenData
 ) {
-
-    val context = LocalContext.current
 
     ObserveUiEffect(effect) { uiEffect ->
         when (uiEffect) {
@@ -57,7 +53,7 @@ fun CreateListingAdvancedDetailsScreen(
             )
 
             is CreateListingAdvancedDetailsContract.Effect.ShowToast -> {
-                context.showToast(uiEffect.message)
+                showToastMessage(uiEffect.message)
             }
         }
     }
@@ -398,7 +394,7 @@ private fun ApparelDetailsView(
     canEdit: Boolean,
     onDismissRequest: () -> Unit,
     onExpandedChange: () -> Unit,
-    onDropDownMenuItemSelected: (ListingEnumGeneric) -> Unit,
+    onDropDownMenuItemSelected: (EnumGeneric) -> Unit,
     onColorChanged: (String) -> Unit
 ) {
     ExposedDropdownMenu(
@@ -424,10 +420,10 @@ private fun ApparelDetailsView(
         }
     }
 
-    CreateListingTextInputFieldView(
+    WizardTextInputField(
         label = stringResource(R.string.screen_create_listing_advanced_details_label_color),
         placeholder = stringResource(R.string.screen_create_listing_advanced_details_placeholder_color),
-        listingFieldUi = apparelDetails.color,
+        wizardInputField = apparelDetails.color,
         onValueChanged = onColorChanged
     )
 }
@@ -438,7 +434,7 @@ private fun DrinkwareDetailsView(
     canEdit: Boolean,
     onDismissRequest: () -> Unit,
     onExpandedChange: () -> Unit,
-    onDropDownMenuItemSelected: (ListingEnumGeneric) -> Unit,
+    onDropDownMenuItemSelected: (EnumGeneric) -> Unit,
     onCapacityMlChanged: (String) -> Unit,
     onDishwasherSafeCheckboxChanged: () -> Unit
 ) {
@@ -465,11 +461,11 @@ private fun DrinkwareDetailsView(
         }
     }
 
-    CreateListingTextInputFieldView(
+    WizardTextInputField(
         label = stringResource(R.string.screen_create_listing_advanced_details_label_capacity),
         placeholder = stringResource(R.string.screen_create_listing_advanced_details_placeholder_capacity),
         enabled = canEdit,
-        listingFieldUi = drinkwareDetails.capacityMl,
+        wizardInputField = drinkwareDetails.capacityMl,
         onValueChanged = onCapacityMlChanged,
         keyboardOptions = KeyboardOptions(
             keyboardType = KeyboardType.Number,
@@ -491,10 +487,10 @@ private fun CollectibleDetailsView(
     canEdit: Boolean,
     onScaleDropDownDismissed: () -> Unit,
     onScaleDropDownExpandedChange: () -> Unit,
-    onScaleDropDownItemSelected: (ListingEnumGeneric) -> Unit,
+    onScaleDropDownItemSelected: (EnumGeneric) -> Unit,
     onBoxConditionDropDownDismissed: () -> Unit,
     onBoxConditionDropDownExpandedChange: () -> Unit,
-    onBoxConditionDropDownItemSelected: (ListingEnumGeneric) -> Unit,
+    onBoxConditionDropDownItemSelected: (EnumGeneric) -> Unit,
 ) {
     ExposedDropdownMenu(
         label = stringResource(R.string.screen_create_listing_advanced_details_label_scale),
@@ -551,11 +547,11 @@ private fun ArtDetailsView(
     onHeightChanged: (String) -> Unit,
     onFramedCheckedChanged: () -> Unit
 ) {
-    CreateListingTextInputFieldView(
+    WizardTextInputField(
         label = stringResource(R.string.screen_create_listing_advanced_details_label_width),
         placeholder = stringResource(R.string.screen_create_listing_advanced_details_placeholder_width),
         enabled = canEdit,
-        listingFieldUi = artDetails.dimensions.width,
+        wizardInputField = artDetails.dimensions.width,
         onValueChanged = onWidthChanged,
         keyboardOptions = KeyboardOptions(
             keyboardType = KeyboardType.Number,
@@ -563,11 +559,11 @@ private fun ArtDetailsView(
         )
     )
 
-    CreateListingTextInputFieldView(
+    WizardTextInputField(
         label = stringResource(R.string.screen_create_listing_advanced_details_label_height),
         placeholder = stringResource(R.string.screen_create_listing_advanced_details_placeholder_height),
         enabled = canEdit,
-        listingFieldUi = artDetails.dimensions.height,
+        wizardInputField = artDetails.dimensions.height,
         onValueChanged = onHeightChanged,
         keyboardOptions = KeyboardOptions(
             keyboardType = KeyboardType.Number,
@@ -588,7 +584,7 @@ private fun AccessoryDetailsView(
     canEdit: Boolean,
     onMaterialDropDownDismissed: () -> Unit,
     onMaterialDropDownExpandedChange: () -> Unit,
-    onMaterialDropDownItemSelected: (ListingEnumGeneric) -> Unit,
+    onMaterialDropDownItemSelected: (EnumGeneric) -> Unit,
     onColorChanged: (String) -> Unit
 ) {
     ExposedDropdownMenu(
@@ -614,11 +610,11 @@ private fun AccessoryDetailsView(
         }
     }
 
-    CreateListingTextInputFieldView(
+    WizardTextInputField(
         label = stringResource(R.string.screen_create_listing_advanced_details_label_color),
         placeholder = stringResource(R.string.screen_create_listing_advanced_details_placeholder_color),
         enabled = canEdit,
-        listingFieldUi = accessoryDetails.color,
+        wizardInputField = accessoryDetails.color,
         onValueChanged = onColorChanged,
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
     )
@@ -631,11 +627,11 @@ private fun HomeDetailsView(
     onWidthChanged: (String) -> Unit,
     onHeightChanged: (String) -> Unit,
 ) {
-    CreateListingTextInputFieldView(
+    WizardTextInputField(
         label = stringResource(R.string.screen_create_listing_advanced_details_label_width),
         placeholder = stringResource(R.string.screen_create_listing_advanced_details_placeholder_width),
         enabled = canEdit,
-        listingFieldUi = homeDetails.dimensions.width,
+        wizardInputField = homeDetails.dimensions.width,
         onValueChanged = onWidthChanged,
         keyboardOptions = KeyboardOptions(
             keyboardType = KeyboardType.Number,
@@ -643,11 +639,11 @@ private fun HomeDetailsView(
         )
     )
 
-    CreateListingTextInputFieldView(
+    WizardTextInputField(
         label = stringResource(R.string.screen_create_listing_advanced_details_label_height),
         placeholder = stringResource(R.string.screen_create_listing_advanced_details_placeholder_height),
         enabled = canEdit,
-        listingFieldUi = homeDetails.dimensions.height,
+        wizardInputField = homeDetails.dimensions.height,
         onValueChanged = onHeightChanged,
         keyboardOptions = KeyboardOptions(
             keyboardType = KeyboardType.Number,
@@ -662,7 +658,7 @@ private fun ComicDetailsView(
     canEdit: Boolean,
     onGradeDropDownDismissed: () -> Unit,
     onGradeDropDownExpandedChange: () -> Unit,
-    onGradeDropDownItemSelected: (ListingEnumGeneric) -> Unit,
+    onGradeDropDownItemSelected: (EnumGeneric) -> Unit,
     onPublisherChanged: (String) -> Unit,
     onYearChanged: (String) -> Unit
 ) {
@@ -689,22 +685,22 @@ private fun ComicDetailsView(
         }
     }
 
-    CreateListingTextInputFieldView(
+    WizardTextInputField(
         label = stringResource(R.string.screen_create_listing_advanced_details_label_publisher),
         placeholder = stringResource(R.string.screen_create_listing_advanced_details_placeholder_publisher),
         enabled = canEdit,
-        listingFieldUi = comicDetails.publisher,
+        wizardInputField = comicDetails.publisher,
         onValueChanged = onPublisherChanged,
         keyboardOptions = KeyboardOptions(
             imeAction = ImeAction.Next
         )
     )
 
-    CreateListingTextInputFieldView(
+    WizardTextInputField(
         label = stringResource(R.string.screen_create_listing_advanced_details_label_year),
         placeholder = stringResource(R.string.screen_create_listing_advanced_details_placeholder_year),
         enabled = canEdit,
-        listingFieldUi = comicDetails.year,
+        wizardInputField = comicDetails.year,
         onValueChanged = onYearChanged,
         keyboardOptions = KeyboardOptions(
             imeAction = ImeAction.Next
@@ -718,13 +714,13 @@ private fun CardDetailsView(
     canEdit: Boolean,
     onGradeDropDownDismissed: () -> Unit,
     onGradeDropDownExpandedChange: () -> Unit,
-    onGradeDropDownItemSelected: (ListingEnumGeneric) -> Unit,
+    onGradeDropDownItemSelected: (EnumGeneric) -> Unit,
     onRarityDropDownDismissed: () -> Unit,
     onRarityDropDownExpandedChange: () -> Unit,
-    onRarityDropDownItemSelected: (ListingEnumGeneric) -> Unit,
+    onRarityDropDownItemSelected: (EnumGeneric) -> Unit,
     onVariantDropDownDismissed: () -> Unit,
     onVariantDropDownExpandedChange: () -> Unit,
-    onVariantDropDownItemSelected: (ListingEnumGeneric) -> Unit,
+    onVariantDropDownItemSelected: (EnumGeneric) -> Unit,
 ) {
     ExposedDropdownMenu(
         label = stringResource(R.string.screen_create_listing_advanced_details_label_grade),

@@ -1,24 +1,31 @@
 package com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.advancedDetails
 
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.data.model.marketplace.listing.ListingEnumGeneric
+import com.alexgreece45.marvelx.configuration.ConfigPriceLogic
+import com.alexgreece45.marvelx.controllers.createListingWizard.CreateListingWizardController
+import com.alexgreece45.marvelx.data.model.marketplace.listing.EnumGeneric
 import com.alexgreece45.marvelx.data.repository.marketplace.listing.details.ListingDetailsRepository
 import com.alexgreece45.marvelx.mvi.BaseViewModel
 import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.advancedDetails.model.CreateListingAdvancedDetailsContract
 import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.advancedDetails.model.CreateListingAdvancedDetailsScreenData
+import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.model.WizardInputFieldUi
 import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.model.CreateListingWizardMode
 import com.alexgreece45.marvelx.ui.screens.marketplace.mappers.ListingDetailsUiMapper
 import com.alexgreece45.marvelx.ui.screens.marketplace.model.ListingDetailsUi
 import com.alexgreece45.marvelx.util.Form
+import com.alexgreece45.marvelx.util.FormValidationResult
 import com.alexgreece45.marvelx.util.FormValidator
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.Rule
+import com.alexgreece45.marvelx.util.extensions.formatPrice
 
 class CreateListingAdvancedDetailsViewModel(
     private val listingDetailsUiMapper: ListingDetailsUiMapper,
     private val resourceProvider: ResourceProvider,
     private val formValidator: FormValidator,
     private val listingDetailsRepository: ListingDetailsRepository,
+    private val createListingWizardController: CreateListingWizardController,
+    private val configPriceLogic: ConfigPriceLogic,
 ) :
     BaseViewModel<CreateListingAdvancedDetailsContract.Event, CreateListingAdvancedDetailsContract.State, CreateListingAdvancedDetailsContract.Effect>() {
     override fun setInitialState(): CreateListingAdvancedDetailsContract.State =
@@ -49,11 +56,6 @@ class CreateListingAdvancedDetailsViewModel(
     }
 
     private fun init(createListingAdvancedDetailsScreenData: CreateListingAdvancedDetailsScreenData) {
-        if (currentState.isInitialized) {
-            validateAllFields()
-            return
-        }
-
         when (createListingAdvancedDetailsScreenData) {
             is CreateListingAdvancedDetailsScreenData.Create -> {
                 if (createListingAdvancedDetailsScreenData.categoryCode == null) {
@@ -61,13 +63,37 @@ class CreateListingAdvancedDetailsViewModel(
                     return
                 }
 
-                val scale = 2
-                val minPrice = "0.99".toBigDecimalOrNull()
-                val maxPrice = "9999.99".toBigDecimalOrNull()
-                if (minPrice == null || maxPrice == null) {
-                    showErrorAndGoToPreviousStep()
+                if (currentState.isInitialized) {
+                    if (currentState.categoryCode == createListingAdvancedDetailsScreenData.categoryCode) {
+                        validateAllFields()
+                    } else {
+                        setState {
+                            copy(
+                                isLoading = true
+                            )
+                        }
+
+                        // Reset all fields.
+                        createListingWizardController.resetAllAdvancedDetailsData()
+
+                        setState {
+                            copy(
+                                condition = WizardInputFieldUi.Enum(),
+                                price = price.copy(
+                                    value = "",
+                                    validationResult = FormValidationResult(isValid = true)
+                                )
+                            )
+                        }
+
+                        getListingDetails(createListingAdvancedDetailsScreenData.categoryCode)
+                    }
                     return
                 }
+
+                val scale = configPriceLogic.priceScale
+                val minPrice = configPriceLogic.minimumPrice
+                val maxPrice = configPriceLogic.maximumPrice
 
                 setState {
                     copy(
@@ -101,36 +127,30 @@ class CreateListingAdvancedDetailsViewModel(
                     )
                 }
 
-                val listingDetails =
-                    listingDetailsUiMapper.toUi(createListingAdvancedDetailsScreenData.categoryCode)
-                if (listingDetails == null) {
-                    showErrorAndGoToPreviousStep()
-                } else {
-                    setState {
-                        copy(
-                            isInitialized = true,
-                            isLoading = false,
-                            listingDetails = listingDetails
-                        )
-                    }
+                getListingDetails(createListingAdvancedDetailsScreenData.categoryCode)
+                setState {
+                    copy(
+                        isInitialized = true
+                    )
                 }
             }
 
             is CreateListingAdvancedDetailsScreenData.Update -> {
-                val listingDetails =
+                val listingDetailsUi =
                     listingDetailsUiMapper.toUi(createListingAdvancedDetailsScreenData.listingDetails)
 
-                val stringifiedPrice = createListingAdvancedDetailsScreenData.price.toPlainString()
+                val stringifiedPrice =
+                    createListingAdvancedDetailsScreenData.price.formatPrice(configPriceLogic.priceScale)
                 setState {
                     copy(
                         isInitialized = true,
                         isLoading = false,
                         wizardMode = CreateListingWizardMode.UPDATE,
-                        listingDetails = listingDetails,
+                        listingDetails = listingDetailsUi,
                         condition = condition.copy(value = createListingAdvancedDetailsScreenData.condition),
                         price = price.copy(
                             value = stringifiedPrice,
-                            validationResult = formValidator.validateForm(Form(mapOf(price.validationRules to stringifiedPrice)))
+                            validationResult = FormValidationResult(isValid = true)
                         )
                     )
                 }
@@ -171,7 +191,7 @@ class CreateListingAdvancedDetailsViewModel(
         }
     }
 
-    private fun onConditionDropDownItemSelected(newCondition: ListingEnumGeneric) {
+    private fun onConditionDropDownItemSelected(newCondition: EnumGeneric) {
         setState {
             copy(
                 condition = condition.copy(
@@ -180,6 +200,9 @@ class CreateListingAdvancedDetailsViewModel(
                 )
             )
         }
+
+        createListingWizardController.setCondition(newCondition)
+
         validateAllFields()
     }
 
@@ -192,6 +215,9 @@ class CreateListingAdvancedDetailsViewModel(
                 )
             )
         }
+
+        createListingWizardController.setPrice(newPrice.toBigDecimalOrNull())
+
         validateAllFields()
     }
 
@@ -300,6 +326,8 @@ class CreateListingAdvancedDetailsViewModel(
             )
         }
 
+        currentState.listingDetails?.let { createListingWizardController.setListingDetails(it) }
+
         validateAllFields()
     }
 
@@ -329,7 +357,7 @@ class CreateListingAdvancedDetailsViewModel(
         }
     }
 
-    private fun onApparelSizeDropDownItemSelected(item: ListingEnumGeneric) {
+    private fun onApparelSizeDropDownItemSelected(item: EnumGeneric) {
         setState {
             copy(
                 listingDetails = if (listingDetails is ListingDetailsUi.ApparelDetailsUi) listingDetails.copy(
@@ -393,7 +421,7 @@ class CreateListingAdvancedDetailsViewModel(
         }
     }
 
-    private fun onDrinkwareMaterialDropDownItemSelected(item: ListingEnumGeneric) {
+    private fun onDrinkwareMaterialDropDownItemSelected(item: EnumGeneric) {
         setState {
             copy(
                 listingDetails = if (listingDetails is ListingDetailsUi.DrinkwareDetailsUi)
@@ -479,7 +507,7 @@ class CreateListingAdvancedDetailsViewModel(
         }
     }
 
-    private fun onCollectibleScaleDropDownItemSelected(item: ListingEnumGeneric) {
+    private fun onCollectibleScaleDropDownItemSelected(item: EnumGeneric) {
         setState {
             copy(
                 listingDetails = if (listingDetails is ListingDetailsUi.CollectibleDetailsUi)
@@ -530,7 +558,7 @@ class CreateListingAdvancedDetailsViewModel(
         }
     }
 
-    private fun onCollectibleBoxConditionDropDownItemSelected(item: ListingEnumGeneric) {
+    private fun onCollectibleBoxConditionDropDownItemSelected(item: EnumGeneric) {
         setState {
             copy(
                 listingDetails = if (listingDetails is ListingDetailsUi.CollectibleDetailsUi)
@@ -647,7 +675,7 @@ class CreateListingAdvancedDetailsViewModel(
         }
     }
 
-    private fun onAccessoryMaterialDropDownItemSelected(item: ListingEnumGeneric) {
+    private fun onAccessoryMaterialDropDownItemSelected(item: EnumGeneric) {
         setState {
             copy(
                 listingDetails = if (listingDetails is ListingDetailsUi.AccessoryDetailsUi)
@@ -761,7 +789,7 @@ class CreateListingAdvancedDetailsViewModel(
         }
     }
 
-    private fun onComicGradeDropDownItemSelected(item: ListingEnumGeneric) {
+    private fun onComicGradeDropDownItemSelected(item: EnumGeneric) {
         setState {
             copy(
                 listingDetails = if (listingDetails is ListingDetailsUi.ComicDetailsUi)
@@ -854,7 +882,7 @@ class CreateListingAdvancedDetailsViewModel(
         }
     }
 
-    private fun onCardDetailsGradeDropDownItemSelected(item: ListingEnumGeneric) {
+    private fun onCardDetailsGradeDropDownItemSelected(item: EnumGeneric) {
         setState {
             copy(
                 listingDetails = if (listingDetails is ListingDetailsUi.CardDetailsUi)
@@ -907,7 +935,7 @@ class CreateListingAdvancedDetailsViewModel(
         }
     }
 
-    private fun onCardDetailsRarityDropDownItemSelected(item: ListingEnumGeneric) {
+    private fun onCardDetailsRarityDropDownItemSelected(item: EnumGeneric) {
         setState {
             copy(
                 listingDetails = if (listingDetails is ListingDetailsUi.CardDetailsUi)
@@ -960,7 +988,7 @@ class CreateListingAdvancedDetailsViewModel(
         }
     }
 
-    private fun onCardDetailsVariantDropDownItemSelected(item: ListingEnumGeneric) {
+    private fun onCardDetailsVariantDropDownItemSelected(item: EnumGeneric) {
         setState {
             copy(
                 listingDetails = if (listingDetails is ListingDetailsUi.CardDetailsUi)
@@ -980,6 +1008,27 @@ class CreateListingAdvancedDetailsViewModel(
     /**
      * Helper functions
      */
+
+    /**
+     * Retrieves and saves the listing details.
+     */
+    private fun getListingDetails(categoryCode: String) {
+        val listingDetails =
+            listingDetailsUiMapper.toUi(categoryCode)
+        if (listingDetails == null) {
+            showErrorAndGoToPreviousStep()
+        } else {
+            setState {
+                copy(
+                    isLoading = false,
+                    categoryCode = categoryCode,
+                    listingDetails = listingDetails
+                )
+            }
+            createListingWizardController.setListingDetails(listingDetails)
+        }
+    }
+
     private fun showErrorAndGoToPreviousStep(errorMessage: String = resourceProvider.getGenericErrorMessage()) {
         setEffect {
             CreateListingAdvancedDetailsContract.Effect.ShowToast(

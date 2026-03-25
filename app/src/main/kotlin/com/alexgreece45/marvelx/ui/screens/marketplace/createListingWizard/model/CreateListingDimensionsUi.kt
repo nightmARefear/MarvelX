@@ -1,8 +1,8 @@
 package com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.model
 
 data class CreateListingDimensionsUi(
-    val width: CreateListingFieldUi.Integer,
-    val height: CreateListingFieldUi.Integer,
+    val width: WizardInputFieldUi.Integer,
+    val height: WizardInputFieldUi.Integer,
 ) {
 
     val isValid: Boolean

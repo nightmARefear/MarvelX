@@ -133,6 +133,12 @@ interface ApiService {
     suspend fun forgotPasswordValidateOtp(@Body body: RequestForgotPasswordValidateOtp): Response<ResponseForgotPasswordValidateOtp>
 
     /**
+     * Retrieves the basic __public__ profile details of another user with the ID of [userId].
+     */
+    @GET("/api/private/marvelx/user/{userId}/profile-basic")
+    suspend fun getBasicProfileDetails(@Path("userId") userId: String): Response<ResponseBasicProfileDetails>
+
+    /**
      * Retrieves the __public__ profile details of another user with the ID of [userId].
      */
     @GET("/api/private/marvelx/user/{userId}/profile")

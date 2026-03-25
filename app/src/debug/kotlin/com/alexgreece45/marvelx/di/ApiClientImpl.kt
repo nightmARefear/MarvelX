@@ -118,6 +118,9 @@ class ApiClientImpl(
     override suspend fun forgotPasswordValidateOtp(body: RequestForgotPasswordValidateOtp): Response<ResponseForgotPasswordValidateOtp> =
         apiService.forgotPasswordValidateOtp(body)
 
+    override suspend fun getBasicProfileDetails(userId: String): ApiResult<ResponseBasicProfileDetails> =
+        executeApiServiceCall { (apiService.getBasicProfileDetails(userId)) }
+
     override suspend fun getCurrentUserProfileDetails(): Response<ResponseBasicProfileDetails> =
         apiService.getCurrentUserProfileDetails()
 

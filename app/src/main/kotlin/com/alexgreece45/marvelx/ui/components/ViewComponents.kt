@@ -4,8 +4,10 @@ import androidx.activity.compose.BackHandler
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -133,6 +135,7 @@ import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.SPACING_TINY
 import com.alexgreece45.marvelx.util.THROTTLE_CLICKABLE_DEFAULT_DELAY
 import com.alexgreece45.marvelx.util.VSpacer
+import com.alexgreece45.marvelx.util.constants.ConstantsUi
 import com.alexgreece45.marvelx.util.constants.ConstantsZIndex
 import com.alexgreece45.marvelx.util.extensions.ClickState
 import com.alexgreece45.marvelx.util.extensions.applyPadding
@@ -364,91 +367,96 @@ private fun BottomNavigationBar(
         val navBackStackEntry by navController.currentBackStackEntryAsState()
         val currentRoute = navBackStackEntry?.destination?.route
 
-        items.forEach { item ->
-            val isSelected = currentRoute == item.route
-            CompositionLocalProvider(
-                LocalContentAlpha provides ContentAlpha.high
-            ) {
-                // TODO: make these values configurable
-                val topHorizontalStrokeWidth = 1.dp
-                val selectedItemTopHorizontalStrokeWidth = topHorizontalStrokeWidth + 2.dp
-                val selectedItemTopHorizontalVerticalOffset =
-                    selectedItemTopHorizontalStrokeWidth - 0.75.dp
-                BottomNavigationItem(
-                    modifier = Modifier
-                        .then(
-                            Modifier
-                                .drawWithContent {
-                                    // Draws this item.
-                                    drawContent()
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            items.forEach { item ->
+                val isSelected = currentRoute == item.route
+                CompositionLocalProvider(
+                    LocalContentAlpha provides ContentAlpha.high
+                ) {
+                    // TODO: make these values configurable
+                    val topHorizontalStrokeWidth = 1.dp
+                    val selectedItemTopHorizontalStrokeWidth = topHorizontalStrokeWidth + 2.dp
+                    val selectedItemTopHorizontalVerticalOffset =
+                        selectedItemTopHorizontalStrokeWidth - 0.75.dp
+                    BottomNavigationItem(
+                        modifier = Modifier
+                            .then(
+                                Modifier
+                                    .drawWithContent {
+                                        // Draws this item.
+                                        drawContent()
 
-                                    // Draws a horizontal line at the top of all the items.
-                                    topHorizontalColor?.let { lineColor ->
-                                        drawLine(
-                                            color = lineColor,
-                                            start = Offset(0f, 0f),
-                                            end = Offset(size.width, 0f),
-                                            strokeWidth = topHorizontalStrokeWidth.toPx(),
-                                            cap = StrokeCap.Butt
-                                        )
-                                    }
-
-                                    // Draws a horizontal line at the top of the selected item.
-                                    selectedItemTopHorizontalColor?.let { lineColor ->
-                                        // TODO: Make these values configurable.
-                                        val startPositionX = size.width / 33
-                                        val endPositionX = size.width - startPositionX
-                                        if (isSelected) {
+                                        // Draws a horizontal line at the top of all the items.
+                                        topHorizontalColor?.let { lineColor ->
                                             drawLine(
                                                 color = lineColor,
-                                                start = Offset(
-                                                    x = startPositionX.toDp()
-                                                        .toPx(), // Indent the start of the line by the 1/33th (3.3%) of the total length of the top horizontal line of the item.
-                                                    y = selectedItemTopHorizontalVerticalOffset.toPx()
-                                                ),
-                                                end = Offset(
-                                                    x = endPositionX.toDp()
-                                                        .toPx(), // Indent the end of the line by total length of the top horizontal line of the item minus the start indent.
-                                                    y = selectedItemTopHorizontalVerticalOffset.toPx()
-                                                ),
-                                                strokeWidth = selectedItemTopHorizontalStrokeWidth.toPx(),
-                                                cap = StrokeCap.Round
+                                                start = Offset(0f, 0f),
+                                                end = Offset(size.width, 0f),
+                                                strokeWidth = topHorizontalStrokeWidth.toPx(),
+                                                cap = StrokeCap.Butt
                                             )
                                         }
+
+                                        // Draws a horizontal line at the top of the selected item.
+                                        selectedItemTopHorizontalColor?.let { lineColor ->
+                                            // TODO: Make these values configurable.
+                                            val startPositionX = size.width / 33
+                                            val endPositionX = size.width - startPositionX
+                                            if (isSelected) {
+                                                drawLine(
+                                                    color = lineColor,
+                                                    start = Offset(
+                                                        x = startPositionX.toDp()
+                                                            .toPx(), // Indent the start of the line by the 1/33th (3.3%) of the total length of the top horizontal line of the item.
+                                                        y = selectedItemTopHorizontalVerticalOffset.toPx()
+                                                    ),
+                                                    end = Offset(
+                                                        x = endPositionX.toDp()
+                                                            .toPx(), // Indent the end of the line by total length of the top horizontal line of the item minus the start indent.
+                                                        y = selectedItemTopHorizontalVerticalOffset.toPx()
+                                                    ),
+                                                    strokeWidth = selectedItemTopHorizontalStrokeWidth.toPx(),
+                                                    cap = StrokeCap.Round
+                                                )
+                                            }
+                                        }
                                     }
+                            ),
+                        icon = {
+                            Icon(
+                                modifier = Modifier.size(ConstantsUi.MIN_ICON_SIZE),
+                                painter = painterResource(item.iconData.iconResource),
+                                contentDescription = stringResource(item.iconData.contentDescription),
+                                tint = item.iconData.tint
+                                    ?: LocalContentColor.current.copy(alpha = LocalContentAlpha.current)
+                            )
+                        },
+                        label = {
+                            Text(
+                                text = stringResource(item.label)
+                            )
+                        },
+                        selected = isSelected,
+                        onClick = {
+                            // Navigate to different route ONLY.
+                            if (currentRoute != item.route) {
+                                navController.navigate(item.route) {
+                                    // TODO: Make the start destination configurable either by the provided value if it's not null, otherwise by the first item's route.
+                                    popUpTo(navController.graph.findStartDestination().id) {
+                                        saveState = true
+                                    }
+                                    launchSingleTop = true
+                                    restoreState = true
                                 }
-                        ),
-                    icon = {
-                        Icon(
-                            modifier = Modifier.size(24.dp),
-                            painter = painterResource(item.iconData.iconResource),
-                            contentDescription = stringResource(item.iconData.contentDescription),
-                            tint = item.iconData.tint
-                                ?: LocalContentColor.current.copy(alpha = LocalContentAlpha.current)
-                        )
-                    },
-                    label = {
-                        Text(
-                            text = stringResource(item.label)
-                        )
-                    },
-                    selected = isSelected,
-                    onClick = {
-                        // Navigate to different route ONLY.
-                        if (currentRoute != item.route) {
-                            navController.navigate(item.route) {
-                                // TODO: Make the start destination configurable either by the provided value if it's not null, otherwise by the first item's route.
-                                popUpTo(navController.graph.findStartDestination().id) {
-                                    saveState = true
-                                }
-                                launchSingleTop = true
-                                restoreState = true
                             }
-                        }
-                    },
-                    selectedContentColor = MaterialTheme.colors.error,
-                    unselectedContentColor = MaterialTheme.colors.primary.copy(alpha = ContentAlpha.medium)
-                )
+                        },
+                        selectedContentColor = MaterialTheme.customColors.genericRed,
+                        unselectedContentColor = MaterialTheme.colors.primary.copy(alpha = ContentAlpha.medium)
+                    )
+                }
             }
         }
     }
@@ -948,10 +956,10 @@ fun SearchBar(
         colors = TextFieldDefaults.textFieldColors(
             textColor = textColor,
             backgroundColor = backgroundColor,
-            focusedIndicatorColor = Color.Transparent,
-            unfocusedIndicatorColor = Color.Transparent,
-            disabledIndicatorColor = Color.Transparent,
-            errorIndicatorColor = Color.Transparent,
+            focusedIndicatorColor = MaterialTheme.customColors.transparent,
+            unfocusedIndicatorColor = MaterialTheme.customColors.transparent,
+            disabledIndicatorColor = MaterialTheme.customColors.transparent,
+            errorIndicatorColor = MaterialTheme.customColors.transparent,
             placeholderColor = MaterialTheme.colors.onBackground.copy(alpha = 0.6f)
         )
     )
@@ -1133,7 +1141,7 @@ fun OutlinedTextFieldValidation(
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     shape: Shape = MaterialTheme.shapes.medium
 ) {
-    Box(modifier) {
+    Column(modifier) {
         OutlinedTextField(
             value = value,
             onValueChange = { newValue ->
@@ -1141,7 +1149,7 @@ fun OutlinedTextFieldValidation(
                     onValueChange(newValue)
                 }
             },
-            modifier = modifier,
+            modifier = Modifier.fillMaxWidth(),
             enabled = enabled,
             readOnly = readOnly,
             label = {
@@ -1175,14 +1183,12 @@ fun OutlinedTextFieldValidation(
         // Error
         AnimatedVisibility(
             visible = isError && errorMessage.isNotBlank(),
-            modifier = Modifier.align(Alignment.BottomStart),
-            enter = fadeIn(),
-            exit = fadeOut()
+            modifier = Modifier.padding(start = SPACING_SMALL.dp, top = SPACING_TINY.dp),
+            enter = fadeIn() + expandVertically(),
+            exit = fadeOut() + shrinkVertically()
         ) {
             Text(
                 text = errorMessage,
-                modifier = Modifier
-                    .padding(start = 10.dp, top = 66.dp),
                 color = MaterialTheme.colors.error,
                 style = MaterialTheme.typography.body2
             )
@@ -1213,6 +1219,7 @@ fun ExposedDropdownMenu(
     label: String,
     expanded: Boolean,
     modifier: Modifier = Modifier,
+    placeholder: String? = null,
     value: String? = "",
     enabled: Boolean = true,
     maxLines: Int = 1,
@@ -1244,6 +1251,11 @@ fun ExposedDropdownMenu(
                 Text(
                     text = label
                 )
+            },
+            placeholder = {
+                placeholder?.let {
+                    Text(text = placeholder)
+                }
             },
             trailingIcon = {
                 ExposedDropdownMenuDefaults.TrailingIcon(
@@ -1624,30 +1636,30 @@ fun SortingModalBottomSheetContent(
     }
 }
 
-// ======== START OF ========
-//        Error Screens
-// ==========================
 @Composable
-fun GenericErrorScreen(
-    errorMessage: String,
-    onRetryClick: () -> Unit
+fun GenericInfoScreen(
+    title: String,
+    titleColor: Color = Color.Unspecified,
+    buttonLabel: String,
+    modifier: Modifier,
+    onButtonClicked: () -> Unit
 ) {
     Column(
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(SPACING_MEDIUM.dp, Alignment.CenterVertically),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = errorMessage,
+            text = title,
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.h4.copy(
-                color = MaterialTheme.colors.error
+                color = titleColor
             )
         )
 
-        WrapButton(onClick = onRetryClick) {
+        WrapButton(onClick = onButtonClicked) {
             Text(
-                text = stringResource(R.string.generic_retry_button),
+                text = buttonLabel,
                 style = MaterialTheme.typography.h5
             )
         }
@@ -1655,34 +1667,62 @@ fun GenericErrorScreen(
 }
 
 @Composable
-fun LazyItemScope.ContentErrorScreen(
+fun LazyItemScope.GenericLazyItemInfoScreen(
+    title: String,
+    titleColor: Color = Color.Unspecified,
+    buttonLabel: String,
+    onButtonClicked: () -> Unit
+) {
+    GenericInfoScreen(
+        title = title,
+        titleColor = titleColor,
+        buttonLabel = buttonLabel,
+        modifier = Modifier.fillParentMaxSize(),
+        onButtonClicked = onButtonClicked
+    )
+}
+
+// ======== START OF ========
+//        Error Screens
+// ==========================
+@Composable
+fun GenericErrorScreen(
+    errorMessage: String,
+    modifier: Modifier,
+    onRetryClick: () -> Unit
+) {
+    GenericInfoScreen(
+        title = errorMessage,
+        titleColor = MaterialTheme.colors.error,
+        buttonLabel = stringResource(R.string.generic_retry_button),
+        modifier = modifier,
+        onButtonClicked = onRetryClick
+    )
+}
+
+@Composable
+fun LazyItemScope.LazyItemErrorScreen(
+    errorMessage: String,
+    modifier: Modifier,
+    onRetryClick: () -> Unit
+) {
+    GenericErrorScreen(
+        errorMessage = errorMessage,
+        modifier = modifier,
+        onRetryClick = onRetryClick
+    )
+}
+
+@Composable
+fun LazyItemScope.LazyItemContentErrorScreen(
     errorMessage: String,
     onRetryClick: () -> Unit
 ) {
-    Column(
+    GenericErrorScreen(
+        errorMessage = errorMessage,
         modifier = Modifier.fillParentMaxSize(),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = errorMessage,
-            textAlign = TextAlign.Center,
-            style = MaterialTheme.typography.h4.copy(
-                color = MaterialTheme.colors.error
-            )
-        )
-
-        VSpacer.Medium()
-
-        Button(
-            onClick = onRetryClick
-        ) {
-            Text(
-                text = stringResource(R.string.generic_retry_button).uppercase(),
-                style = MaterialTheme.typography.h5
-            )
-        }
-    }
+        onRetryClick = onRetryClick
+    )
 }
 
 @Composable

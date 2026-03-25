@@ -19,13 +19,13 @@ class WaveShape : Shape {
         val path = Path().apply {
             moveTo(0f, 0f)
             lineTo(0f, size.height * 0.2f)
-            quadraticBezierTo(
-                size.width * 0.25f, size.height * 0.4f,
-                size.width * 0.5f, size.height * 0.2f
+            quadraticTo(
+                x1 = size.width * 0.25f, size.height * 0.4f,
+                x2 = size.width * 0.5f, size.height * 0.2f
             )
-            quadraticBezierTo(
-                size.width * 0.75f, 0f,
-                size.width, size.height * 0.2f
+            quadraticTo(
+                x1 = size.width * 0.75f, 0f,
+                x2 = size.width, size.height * 0.2f
             )
             lineTo(size.width, 0f)
             close()

@@ -108,3 +108,26 @@ fun handleRepositoryResultNoTransformationNoFlow(
     } catch (e: Exception) {
         InteractorPartialState.Error(e.message.orEmpty())
     }
+
+/**
+ * Handles the given repository [repositoryResult] and returns the appropriate [InteractorPartialState].
+ * No data transformation is performed. If the result was successful then
+ * [InteractorPartialState.Success] is returned with the appropriate data.
+ *
+ * @param repositoryResult The repository result.
+ */
+fun <T : Any> handleRepositoryResultNoTransformationNoFlowWithData(
+    repositoryResult: RepositoryResult<T>,
+): InteractorPartialState<T> =
+    try {
+        when (repositoryResult) {
+            is RepositoryResult.Failed -> InteractorPartialState.Failed(repositoryResult.failureMessage)
+            is RepositoryResult.Success -> InteractorPartialState.Success(
+                repositoryResult.data
+            )
+
+            RepositoryResult.NetworkError -> InteractorPartialState.NoInternetConnection
+        }
+    } catch (e: Exception) {
+        InteractorPartialState.Error(e.message.orEmpty())
+    }

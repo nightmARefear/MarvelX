@@ -1,10 +1,11 @@
 package com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.model
 
-import androidx.annotation.IntRange
-
-enum class CreateListingWizardStep(@IntRange(1,10) val order: Int) {
+enum class CreateListingWizardStep(val order: Int) {
     BASIC_DETAILS(order = 1),
     ADVANCED_DETAILS(order = 2),
-    LOGISTICS(order = 3),
-    SUCCESS_CREATION(order = 4);
+    OVERVIEW(order = 3),
+    SUCCESS(order = 4);
 }
+
+val CREATE_LISTING_WIZARD_TOTAL_STEPS =
+    CreateListingWizardStep.entries.size - 1 // one less step due to the success screen being the "result"

@@ -126,11 +126,14 @@ sealed interface ProfileContract {
         sealed class Navigation : Effect() {
             data object NavigateUp : Navigation()
             data object NavigateToSettingsScreen : Navigation()
-            data object NavigateToFriendsScreen : Navigation()
+
             data class NavigateToQrCodeScreen(val previousScreenRoute: String) : Navigation()
+            data object NavigateToFriendsScreen : Navigation()
+            data object NavigateToMyListingsScreen : Navigation()
+            data object NavigateToOrdersScreen : Navigation()
+
             data class NavigateToProfileImageScreen(val profileImageUrl: String) : Navigation()
             data class NavigateToProfileDetailsScreen(val userId: String) : Navigation()
-            data object NavigateToMyListingsScreen : Navigation()
         }
 
         /**
@@ -149,8 +152,7 @@ sealed interface ProfileContract {
         ) : Effect()
 
         data class ReadCroppedImageFileContent(
-            val fileUri: Uri,
-            val fileName: String
+            val attachedFileContentData: AttachedFileContentData
         ) : Effect()
 
         data class OpenDeepLinkAction(val deepLinkAction: DeepLinkAction) : Effect()

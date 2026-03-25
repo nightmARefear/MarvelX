@@ -7,4 +7,5 @@ sealed class NavArg(val key: String) {
     data object HomeLogout : NavArg(key = "homeLogout")
     data object HomeAlertDialogErrorType : NavArg(key = "homeAlertDialogErrorType")
     data object SplashAlertDialogErrorType : NavArg(key = "splashAlertDialogErrorType")
+    data object NewListingId : NavArg(key = "newListingId")
 }

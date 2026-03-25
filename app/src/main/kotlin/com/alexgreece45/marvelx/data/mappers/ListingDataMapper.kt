@@ -78,6 +78,7 @@ class ListingDataMapper(
                 imageUrls = imageUrls,
                 details = listingDetails,
                 favorite = favorite,
+                cart = cart,
                 postedAt = postedAt,
                 updatedAt = updatedAt
             )

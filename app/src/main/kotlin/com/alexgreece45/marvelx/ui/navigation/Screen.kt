@@ -184,10 +184,43 @@ sealed class Screen(
         fun createNavRoute(listingId: String? = ""): String = "$baseRoute/$listingId"
     }
 
-    data object CreateListingBasicDetailsScreen :
-        Screen(baseRoute = "createListingBasicDetailsScreen", navArgs = listOf())
-
     data object MyListingsScreen : Screen(baseRoute = "myListingsScreen")
+
+    data object CartScreen : Screen(baseRoute = "cartScreen")
+    data object CheckoutWizardScreen : Screen(baseRoute = "checkoutWizardScreen")
+
+    data object OrdersScreen : Screen(baseRoute = "ordersScreen")
+
+    data object OrderDetailsScreen : Screen(
+        baseRoute = "orderDetailsScreen",
+        navArgs = listOf(NavItem.OrderId),
+        deepLinkArgs = listOf(NavDeepLinkItem.OrderId)
+    ) {
+        fun createNavRoute(orderId: String): String =
+            "$baseRoute/$orderId"
+    }
+
+    data object OrderItemTrackingHistoryScreen : Screen(
+        baseRoute = "orderItemTrackingHistoryScreen",
+        navArgs = listOf(
+            NavItem.OrderId,
+            NavItem.OrderItemId,
+            NavItem.SellerUserId,
+            NavItem.OrderItemTitle,
+            NavItem.OrderItemCoverImageUrl,
+            NavItem.OrderItemPriceLabel
+        ),
+    ) {
+        fun createNavRoute(
+            orderId: String,
+            orderItemId: String,
+            sellerUserId: String,
+            orderItemTitle: String,
+            orderItemCoverImageUrl: String,
+            orderItemPriceLabel: String
+        ): String =
+            "$baseRoute/$orderId/$orderItemId/$sellerUserId/$orderItemTitle/$orderItemCoverImageUrl/$orderItemPriceLabel"
+    }
 
     data object AllCharactersScreen : Screen(baseRoute = "allCharactersScreen")
     data object AllFavoriteCharactersScreen : Screen(baseRoute = "allFavoriteCharactersScreen")
@@ -319,6 +352,12 @@ enum class NavItem(val key: String, val type: NavType<*>) {
         type = NavType.BoolType
     ),
     ListingId(key = NavItemKey.listingId, type = NavType.StringType),
+    OrderId(key = NavItemKey.orderId, type = NavType.StringType),
+    OrderItemId(key = NavItemKey.orderItemId, type = NavType.StringType),
+    OrderItemTitle(key = NavItemKey.orderItemTitle, type = NavType.StringType),
+    OrderItemCoverImageUrl(key = NavItemKey.orderItemCoverImageUrl, type = NavType.StringType),
+    OrderItemPriceLabel(key = NavItemKey.orderItemPriceLabel, type = NavType.StringType),
+    SellerUserId(key = NavItemKey.sellerUserId, type = NavType.StringType),
 }
 
 /**
@@ -329,6 +368,7 @@ enum class NavDeepLinkItem(val key: String) {
     ListingId(key = NavItemKey.listingId),
     QrCodeScanErrorMessage(key = NavItemKey.qrCodeScanErrorMessage),
     ShouldShowAcceptFriendRequestDialog(key = NavItemKey.shouldShowAcceptFriendRequestDialog),
+    OrderId(key = NavItemKey.orderId),
 }
 
 /**
@@ -352,4 +392,10 @@ private object NavItemKey {
     const val previousScreenRoute = "previousScreenRoute"
     const val profileImageUrl = "profileImageUrl"
     const val shouldShowAcceptFriendRequestDialog = "shouldShowAcceptFriendRequestDialog"
+    const val orderId = "orderId"
+    const val orderItemId = "orderItemId"
+    const val orderItemTitle = "orderItemTitle"
+    const val orderItemCoverImageUrl = "orderCoverImageUrl"
+    const val orderItemPriceLabel = "orderItemPriceLabel"
+    const val sellerUserId = "sellerUserId"
 }

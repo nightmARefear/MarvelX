@@ -3,6 +3,7 @@ package com.alexgreece45.marvelx.util
 import com.alexgreece45.marvelx.util.extensions.pad
 import java.time.Instant
 import java.time.LocalDate
+import java.time.YearMonth
 
 object DateUtil {
 
@@ -27,6 +28,11 @@ object DateUtil {
      * Returns the current local date.
      */
     fun getCurrentLocalDate(): LocalDate = LocalDate.now()
+
+    /**
+     * Returns the current year and month.
+     */
+    fun getYearMonth(): YearMonth = YearMonth.now()
 
     /**
      * Converts the given [minutes] and [seconds] into a human readable format.

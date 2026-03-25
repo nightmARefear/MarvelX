@@ -6,6 +6,7 @@ import com.alexgreece45.marvelx.data.model.marketplace.listing.toData
 import com.alexgreece45.marvelx.data.repository.helper.RepositoryResult
 import com.alexgreece45.marvelx.data.repository.helper.handleApiResult
 import com.alexgreece45.marvelx.database.ListingCategoryDao
+import com.alexgreece45.marvelx.database.ListingCategoryWithSubcategoriesEntity
 import com.alexgreece45.marvelx.database.toDatabase
 import com.alexgreece45.marvelx.dispatchers.IoDispatcher
 import com.alexgreece45.marvelx.network_logic.clients.ListingClient
@@ -87,9 +88,15 @@ class ListingCategoryRepositoryImpl(
 
     private suspend fun getCachedCategories(): RepositoryResult<List<ListingCategory>> =
         try {
-            val categories = listingCategoryDao.getAllCategoriesWithSubcategories()
-                .map { it.toData() }
-            RepositoryResult.Success(categories)
+            val categories = listingCategoryDao.getAllCategories()
+            val subcategories = listingCategoryDao.getAllSubcategories()
+            val categoriesAndSubcategories = categories.map { categoryEntity ->
+                ListingCategoryWithSubcategoriesEntity(
+                    category = categoryEntity,
+                    subcategories = subcategories.filter { subcategoryEntity -> subcategoryEntity.categoryId == categoryEntity.id }
+                )
+            }
+            RepositoryResult.Success(categoriesAndSubcategories.map { it.toData() })
         } catch (e: Exception) {
             RepositoryResult.Failed(e.localizedMessage.orEmpty())
         }
@@ -107,7 +114,7 @@ class ListingCategoryRepositoryImpl(
             categories = listingCategories.map { it.toDatabase() },
             subcategories = listingCategories.flatMap { categoryData ->
                 categoryData.subcategories.map { subcategoryData ->
-                    subcategoryData.toDatabase(categoryData.code)
+                    subcategoryData.toDatabase()
                 }
             }
         )

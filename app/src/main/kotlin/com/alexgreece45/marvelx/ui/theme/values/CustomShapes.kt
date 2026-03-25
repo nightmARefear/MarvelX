@@ -1,29 +1,33 @@
 package com.alexgreece45.marvelx.ui.theme.values
 
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.unit.dp
 import com.alexgreece45.marvelx.ui.theme.customShapes.WaveShape
 
 /**
  * A collection of custom [Shape] implementations for use in Jetpack Compose layouts.
  */
 @Immutable
-data class CustomShapes (
+data class CustomShapes(
     /**
      * A [Shape] that represents a wave.
      */
-    val waveShape: Shape
+    val waveShape: Shape,
+    val chipCornerShape: RoundedCornerShape,
 )
 
 /**
  * The custom shapes.
  */
 internal fun customShapes() = CustomShapes(
-    waveShape = WaveShape()
+    waveShape = WaveShape(),
+    chipCornerShape = RoundedCornerShape(6.dp)
 )
 
 internal val LocalCustomShapes = staticCompositionLocalOf { customShapes() }

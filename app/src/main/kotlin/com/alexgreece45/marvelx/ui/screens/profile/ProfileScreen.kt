@@ -42,8 +42,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.rememberNavController
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.data.model.deepLink.DeepLinkAction
 import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.ProfileDetailsDomain
-import com.alexgreece45.marvelx.domain.model_generic.ReadFileContentData
 import com.alexgreece45.marvelx.domain.model_generic.ReloadableImageUrlData
 import com.alexgreece45.marvelx.ui.components.AlertDialogError
 import com.alexgreece45.marvelx.ui.components.BottomNavigationBarData
@@ -64,7 +64,6 @@ import com.alexgreece45.marvelx.ui.components.model.ShadowData
 import com.alexgreece45.marvelx.ui.components.rememberWrapModalBottomSheetState
 import com.alexgreece45.marvelx.ui.components.sections.SectionListHeader
 import com.alexgreece45.marvelx.ui.components.sections.model.SectionHeaderData
-import com.alexgreece45.marvelx.data.model.deepLink.DeepLinkAction
 import com.alexgreece45.marvelx.ui.navigation.getBottomNavigationBarData
 import com.alexgreece45.marvelx.ui.screens.profile.model.ProfileBottomSheetType
 import com.alexgreece45.marvelx.ui.screens.profile.model.ProfileContract
@@ -77,12 +76,10 @@ import com.alexgreece45.marvelx.util.VSpacer
 import com.alexgreece45.marvelx.util.constants.ConstantsUi
 import com.alexgreece45.marvelx.util.extensions.applyPadding
 import com.alexgreece45.marvelx.util.extensions.circularImageWithBorder
-import com.alexgreece45.marvelx.util.extensions.compressImage
 import com.alexgreece45.marvelx.util.extensions.getAndRemovePendingDeepLinkAction
 import com.alexgreece45.marvelx.util.extensions.hideIfVisible
 import com.alexgreece45.marvelx.util.extensions.screenPaddingsNone
 import com.alexgreece45.marvelx.util.extensions.throttledClickable
-import com.alexgreece45.marvelx.util.extensions.toCompressFormat
 import com.canhub.cropper.CropImageContract
 import com.canhub.cropper.CropImageContractOptions
 import com.canhub.cropper.CropImageOptions
@@ -188,23 +185,11 @@ fun ProfileScreen(
             }
 
             is ProfileContract.Effect.ReadCroppedImageFileContent -> {
-                val fileName = uiEffect.fileName
-
-                val compressFormat = fileName.toCompressFormat()
-                if (compressFormat == null) {
-                    onEventSent(
-                        ProfileContract.Event.ProfileImage.OnCroppedImageFileContentRead(
-                            null
-                        )
-                    )
-                    return@ObserveUiEffect
-                }
-
-                val fileContent = FileUtil.decodeBitmapFromFileUri(context, uiEffect.fileUri)
-                    ?.compressImage(
-                        compressFormat = compressFormat
-                    )
-                if (fileContent == null) {
+                val readFileContentData = FileUtil.getAdvancedFileContentData(
+                    file = uiEffect.attachedFileContentData,
+                    context = context
+                )
+                if (readFileContentData == null) {
                     onEventSent(
                         ProfileContract.Event.ProfileImage.OnCroppedImageFileContentRead(
                             null
@@ -215,10 +200,7 @@ fun ProfileScreen(
 
                 onEventSent(
                     ProfileContract.Event.ProfileImage.OnCroppedImageFileContentRead(
-                        croppedImageFileReadContentData = ReadFileContentData(
-                            fileName = fileName,
-                            fileContent = fileContent
-                        )
+                        croppedImageFileReadContentData = readFileContentData
                     )
                 )
             }

@@ -78,6 +78,8 @@ class WebsocketControllerImpl(
         MutableSharedFlow()
 
     override fun init() {
+        return // TODO: To be reviewed in the future.
+
         // Ensures that the websocket client doesn't get re-initialized.
         if (webSocket != null) return
 

@@ -4,39 +4,44 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
+import androidx.room.PrimaryKey
 import com.alexgreece45.marvelx.data.model.marketplace.listing.ListingSubcategory
 
 @Entity(
     tableName = "listing_subcategory",
-    primaryKeys = ["category_code", "subcategory_code"],
     foreignKeys = [
         ForeignKey(
             entity = ListingCategoryEntity::class,
-            parentColumns = ["category_code"],
-            childColumns = ["category_code"],
+            parentColumns = ["id"],
+            childColumns = ["category_id"],
             onDelete = ForeignKey.CASCADE,
             onUpdate = ForeignKey.CASCADE
         )
     ],
     indices = [
-        Index(value = ["category_code"])
+        Index(value = ["category_id", "category_code"], unique = true)
     ]
 )
 data class ListingSubcategoryEntity(
 
+    @PrimaryKey
+    @ColumnInfo(name = "id")
+    val id: Int,
+
+    @ColumnInfo(name = "category_id")
+    val categoryId: Int,
+
     @ColumnInfo(name = "category_code")
     val categoryCode: String,
-
-    @ColumnInfo(name = "subcategory_code")
-    val subcategoryCode: String,
 
     @ColumnInfo(name = "label")
     val label: String
 )
 
-fun ListingSubcategory.toDatabase(categoryCode: String): ListingSubcategoryEntity =
+fun ListingSubcategory.toDatabase(): ListingSubcategoryEntity =
     ListingSubcategoryEntity(
+        id = id,
+        categoryId = categoryId,
         categoryCode = categoryCode,
-        subcategoryCode = code,
         label = label
     )

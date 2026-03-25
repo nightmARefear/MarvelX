@@ -76,9 +76,12 @@ fun NavGraphBuilder.marketplaceNavigation(
                             )
                         )
                     }
+
+                    ListingDetailsContract.Effect.Navigation.GoToNextScreen -> {}
                 }
             },
-            listingId = navBackStackEntry.arguments?.getString(NavItem.ListingId.key, "").orEmpty()
+            listingId = navBackStackEntry.arguments?.getString(NavItem.ListingId.key, ""),
+            createListingWizardMode = null
         )
     }
 
@@ -88,7 +91,22 @@ fun NavGraphBuilder.marketplaceNavigation(
             onEvent = viewModel::setEvent,
             state = viewModel.uiState.collectAsStateWithLifecycle().value,
             effect = viewModel.uiEffect,
-            exitWizard = navController::navigateUp,
+            onNavigationEffect = { navigationEffect ->
+                when (navigationEffect) {
+                    CreateListingWizardContract.Effect.Navigation.ExitWizard -> navController.navigateUp()
+                    is CreateListingWizardContract.Effect.Navigation.NavigateToListingDetailsScreenAndExitWizard -> {
+                        navController.navigate(
+                            Screen.ListingDetailsScreen.createNavRoute(
+                                navigationEffect.listingId
+                            )
+                        ) {
+                            popUpTo(Screen.ListingDetailsScreen.route) {
+                                inclusive = true
+                            }
+                        }
+                    }
+                }
+            },
             listingId = navBackStackEntry.arguments?.getString(NavItem.ListingId.key)
         )
     }

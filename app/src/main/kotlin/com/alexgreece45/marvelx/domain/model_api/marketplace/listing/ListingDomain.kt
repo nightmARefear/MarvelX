@@ -9,7 +9,7 @@ data class ListingDomain(
     val categoryCode: String,
     val subcategoryCode: String,
     val conditionCode: String,
-    val statusCode: String,
+    val status: ListingStatusDomain,
     val title: String,
     val description: String,
     val price: BigDecimal,
@@ -17,6 +17,7 @@ data class ListingDomain(
     val imageUrls: List<String>,
     val details: ListingDetailsDomain,
     val favorite: Boolean,
+    val cart: Boolean,
     val postedAt: Instant,
     val updatedAt: Instant?
 )

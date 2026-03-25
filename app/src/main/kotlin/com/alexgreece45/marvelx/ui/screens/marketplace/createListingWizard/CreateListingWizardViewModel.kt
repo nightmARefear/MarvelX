@@ -3,14 +3,22 @@ package com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.controllers.PrefKeys
+import com.alexgreece45.marvelx.controllers.createListingWizard.CreateListingWizardController
 import com.alexgreece45.marvelx.domain.helper.InteractorPartialState
 import com.alexgreece45.marvelx.domain.interactors.marketplace.listing.ListingInteractor
+import com.alexgreece45.marvelx.domain.model_api.marketplace.listing.UpdateListingDomain
+import com.alexgreece45.marvelx.domain.model_generic.ReadFileContentData
 import com.alexgreece45.marvelx.mvi.BaseViewModel
 import com.alexgreece45.marvelx.ui.components.model.ErrorButtonLayout
+import com.alexgreece45.marvelx.ui.navigation.NavArgHelper
+import com.alexgreece45.marvelx.ui.navigation.models.NavArg
 import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.model.CreateListingWizardContract
+import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.model.CreateListingWizardContract.Effect.ShowToastMessage
 import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.model.CreateListingWizardErrorData
 import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.model.CreateListingWizardMode
 import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.model.CreateListingWizardStep
+import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.model.toDomain
+import com.alexgreece45.marvelx.ui.screens.marketplace.mappers.ListingDetailsUiMapper
 import com.alexgreece45.marvelx.ui.screens.marketplace.mappers.ListingUiMapper
 import com.alexgreece45.marvelx.ui.screens.marketplace.model.UpdateListingBasicDetails
 import com.alexgreece45.marvelx.util.ResourceProvider
@@ -20,7 +28,9 @@ class CreateListingWizardViewModel(
     private val listingInteractor: ListingInteractor,
     private val resourceProvider: ResourceProvider,
     private val listingUiMapper: ListingUiMapper,
-    private val prefKeys: PrefKeys
+    private val prefKeys: PrefKeys,
+    private val createListingWizardController: CreateListingWizardController,
+    private val listingDetailsUiMapper: ListingDetailsUiMapper,
 ) : BaseViewModel<CreateListingWizardContract.Event, CreateListingWizardContract.State, CreateListingWizardContract.Effect>() {
 
     override fun setInitialState(): CreateListingWizardContract.State =
@@ -31,11 +41,26 @@ class CreateListingWizardViewModel(
             is CreateListingWizardContract.Event.Init -> init(event.listingId)
             CreateListingWizardContract.Event.OnBackButtonClicked -> onBackButtonClicked()
             CreateListingWizardContract.Event.OnCloseButtonClicked -> onCloseButtonClicked()
-            CreateListingWizardContract.Event.OnNextButtonClicked -> onNextButtonClicked()
+            CreateListingWizardContract.Event.OnStickyBottomButtonClicked -> onStickyBottomButtonClicked()
+            is CreateListingWizardContract.Event.OnAttachedImagesContentRead -> onAttachedImagesContentRead(
+                event.readFileContentsData
+            )
+
+            is CreateListingWizardContract.Event.OnShowToastMessage -> onShowToastMessage(event.message)
             is CreateListingWizardContract.Event.SetNextButtonEnabled -> setNextButtonEnabled(event.enabled)
+
             CreateListingWizardContract.Event.AlertDialogEvents.OnNegativeButtonClicked -> onAlertDialogNegativeButtonClicked()
             CreateListingWizardContract.Event.AlertDialogEvents.OnPositiveButtonClicked -> onAlertDialogPositiveButtonClicked()
+            CreateListingWizardContract.Event.OnExitWizard -> onExitWizard()
+            is CreateListingWizardContract.Event.OnNavigateToListingDetailsScreen -> onNavigateToListingDetailsScreen(
+                event.listingId
+            )
         }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        createListingWizardController.resetAllData()
     }
 
     private fun init(listingId: String?) {
@@ -52,9 +77,14 @@ class CreateListingWizardViewModel(
                     wizardMode = wizardMode
                 )
             }
+
+            createListingWizardController.setWizardMode(wizardMode)
+
             getListing(listingId)
         } else {
             val wizardMode = CreateListingWizardMode.CREATE
+            createListingWizardController.setWizardMode(wizardMode)
+
             setState {
                 copy(
                     isLoading = false,
@@ -62,7 +92,7 @@ class CreateListingWizardViewModel(
                         wizardMode = wizardMode,
                         wizardStep = wizardStep
                     ),
-                    wizardMode = CreateListingWizardMode.CREATE
+                    wizardMode = wizardMode
                 )
             }
             setEffect {
@@ -72,7 +102,7 @@ class CreateListingWizardViewModel(
     }
 
     private fun onBackButtonClicked() {
-        if (currentState.wizardMode == null || currentState.wizardStep == CreateListingWizardStep.SUCCESS_CREATION) {
+        if (currentState.wizardMode == null || currentState.wizardStep == CreateListingWizardStep.SUCCESS) {
             setEffect {
                 CreateListingWizardContract.Effect.Navigation.ExitWizard
             }
@@ -113,18 +143,17 @@ class CreateListingWizardViewModel(
                 }
             }
 
-            CreateListingWizardStep.ADVANCED_DETAILS,
-            CreateListingWizardStep.LOGISTICS -> {
+            CreateListingWizardStep.ADVANCED_DETAILS, CreateListingWizardStep.OVERVIEW -> {
                 // Should never occur, but just in case.
                 setEffect {
-                    CreateListingWizardContract.Effect.ShowToastMessage(resourceProvider.getGenericErrorMessage())
+                    ShowToastMessage(resourceProvider.getGenericErrorMessage())
                 }
                 setEffect {
                     CreateListingWizardContract.Effect.Navigation.ExitWizard
                 }
             }
 
-            CreateListingWizardStep.SUCCESS_CREATION -> {
+            CreateListingWizardStep.SUCCESS -> {
                 setEffect {
                     CreateListingWizardContract.Effect.Navigation.ExitWizard
                 }
@@ -132,9 +161,23 @@ class CreateListingWizardViewModel(
         }
     }
 
-    private fun onNextButtonClicked() {
+    private fun onStickyBottomButtonClicked() {
         CreateListingWizardStep.entries.firstOrNull { it.order == currentState.wizardStep.order + 1 }
             ?.let { newStep ->
+                if (newStep == CreateListingWizardStep.SUCCESS) {
+                    onSuccessStepOperations(newStep)
+                    return
+                }
+
+                val isNewStepOverview = newStep == CreateListingWizardStep.OVERVIEW
+                if (isNewStepOverview) {
+                    setState {
+                        copy(
+                            createListingUi = createListingWizardController.createListingUi
+                        )
+                    }
+                }
+
                 setState {
                     copy(
                         toolbarTitle = getToolbarTitle(
@@ -142,16 +185,109 @@ class CreateListingWizardViewModel(
                             wizardStep = newStep
                         ),
                         wizardStep = newStep,
-                        isNextButtonEnabled = false
+                        isStickyBottomButtonEnabled = isNewStepOverview
                     )
                 }
             }
     }
 
+    private fun onAttachedImagesContentRead(readFileContentsData: List<ReadFileContentData>?) {
+        val createListing = currentState.createListingUi
+        if (createListing == null || createListing.listingDetails == null) {
+            setEffect {
+                ShowToastMessage(
+                    message = resourceProvider.getString(R.string.screen_create_listing_wizard_screen_error_uploading_listing)
+                )
+            }
+            return
+        }
+
+        if (readFileContentsData.isNullOrEmpty()) {
+            setState {
+                copy(
+                    isLoading = false
+                )
+            }
+            setEffect {
+                ShowToastMessage(
+                    message = resourceProvider.getString(R.string.screen_create_listing_wizard_screen_error_reading_images)
+                )
+            }
+            return
+        }
+
+        viewModelScope.launch {
+            val listingDetailsDomain = listingDetailsUiMapper.toDomain(createListing.listingDetails)
+            if (listingDetailsDomain == null) {
+                setEffect {
+                    ShowToastMessage(
+                        message = resourceProvider.getString(R.string.screen_create_listing_wizard_screen_error_uploading_listing)
+                    )
+                }
+                return@launch
+            }
+
+            when (val createListingPartialState = listingInteractor.createListing(
+                createListingDomain = createListing.toDomain(
+                    readFileContentsData,
+                    listingDetailsDomain
+                )
+            )
+            ) {
+                is InteractorPartialState.Error,
+                is InteractorPartialState.Failed,
+                InteractorPartialState.NoInternetConnection -> {
+                    setState {
+                        copy(
+                            isLoading = false
+                        )
+                    }
+
+                    setEffect {
+                        ShowToastMessage(
+                            message = resourceProvider.getString(R.string.screen_create_listing_wizard_screen_error_uploading_listing)
+                        )
+                    }
+                }
+
+                is InteractorPartialState.Success -> {
+                    createListingWizardController.resetCreateListingData()
+
+                    NavArgHelper.setArgument(NavArg.NewListingId, createListingPartialState.data)
+
+                    val newWizardStep = CreateListingWizardStep.SUCCESS
+                    setState {
+                        copy(
+                            isLoading = false,
+                            toolbarTitle = getToolbarTitle(
+                                currentState.wizardMode,
+                                newWizardStep
+                            ),
+                            wizardStep = newWizardStep
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Helper functions
+     */
+
+    /**
+     *
+     */
+    private fun onShowToastMessage(message: String) {
+        setEffect {
+            ShowToastMessage(message)
+        }
+    }
+
     private fun setNextButtonEnabled(enabled: Boolean) {
         setState {
             copy(
-                isNextButtonEnabled = enabled
+                isStickyBottomButtonEnabled = enabled
             )
         }
     }
@@ -175,10 +311,27 @@ class CreateListingWizardViewModel(
         }
     }
 
+    private fun onExitWizard() {
+        setEffect {
+            CreateListingWizardContract.Effect.Navigation.ExitWizard
+        }
+    }
+
+    private fun onNavigateToListingDetailsScreen(listingId: String) {
+        setEffect {
+            CreateListingWizardContract.Effect.Navigation.NavigateToListingDetailsScreenAndExitWizard(
+                listingId
+            )
+        }
+    }
+
     /**
      * Helper functions.
      */
 
+    /**
+     *
+     */
     private fun getListing(listingId: String) {
         setState {
             copy(
@@ -225,6 +378,8 @@ class CreateListingWizardViewModel(
                     setEffect {
                         CreateListingWizardContract.Effect.InitBasicDetailsScreen(
                             updateListingBasicDetails = listingUi?.let { listing ->
+                                createListingWizardController.setUpdateListing(listing)
+
                                 with(listing) {
                                     UpdateListingBasicDetails(
                                         listingId = listing.listingId,
@@ -232,7 +387,8 @@ class CreateListingWizardViewModel(
                                         description = description,
                                         categoryLabel = category.label,
                                         subcategoryLabel = subcategory.label,
-                                        imageUrls = allImageUrls
+                                        coverImageUrl = coverImageUrl,
+                                        imageUrls = imageUrls
                                     )
                                 }
                             }
@@ -247,6 +403,8 @@ class CreateListingWizardViewModel(
         wizardMode: CreateListingWizardMode?,
         wizardStep: CreateListingWizardStep
     ): String {
+        if (wizardStep == CreateListingWizardStep.SUCCESS) return ""
+
         return resourceProvider.getString(
             if (wizardMode == CreateListingWizardMode.CREATE) {
                 R.string.screen_create_listing_wizard_screen_toolbar_title_create
@@ -255,9 +413,85 @@ class CreateListingWizardViewModel(
             when (wizardStep) {
                 CreateListingWizardStep.BASIC_DETAILS -> R.string.screen_create_listing_wizard_screen_step_label_basic
                 CreateListingWizardStep.ADVANCED_DETAILS -> R.string.screen_create_listing_wizard_screen_step_label_advanced
-                CreateListingWizardStep.LOGISTICS -> R.string.screen_create_listing_wizard_screen_step_label_logistics
-                CreateListingWizardStep.SUCCESS_CREATION -> R.string.screen_create_listing_wizard_screen_step_label_basic // TODO: To be reviewed.
+                CreateListingWizardStep.OVERVIEW -> R.string.screen_create_listing_wizard_screen_step_label_overview
+                CreateListingWizardStep.SUCCESS -> R.string.screen_create_listing_wizard_screen_step_label_success
             }
         )
+    }
+
+    private fun onSuccessStepOperations(nextWizardStep: CreateListingWizardStep) {
+        if (currentState.wizardMode == CreateListingWizardMode.CREATE) {
+            uploadDraftListing()
+        } else {
+            uploadModifiedListing(nextWizardStep)
+        }
+    }
+
+    private fun uploadModifiedListing(nextWizardStep: CreateListingWizardStep) {
+        val listing = currentState.listingUi
+        if (listing == null) {
+            setEffect {
+                ShowToastMessage(
+                    message = resourceProvider.getString(R.string.screen_create_listing_wizard_screen_error_uploading_listing)
+                )
+            }
+            return
+        }
+
+        setState {
+            copy(
+                isLoading = true,
+                error = null
+            )
+        }
+        viewModelScope.launch {
+            val wasModifiedListingUploaded = listingInteractor.updateListing(
+                listingId = listing.listingId,
+                updateListingDomain = UpdateListingDomain(
+                    title = listing.title,
+                    description = listing.description
+                )
+            )
+
+            if (wasModifiedListingUploaded) {
+                setState {
+                    copy(
+                        isLoading = false,
+                        toolbarTitle = getToolbarTitle(
+                            currentState.wizardMode,
+                            nextWizardStep
+                        ),
+                        wizardStep = nextWizardStep
+                    )
+                }
+            } else {
+                setState {
+                    copy(
+                        isLoading = false
+                    )
+                }
+                setEffect {
+                    ShowToastMessage(
+                        message = resourceProvider.getString(R.string.screen_create_listing_wizard_screen_error_uploading_listing)
+                    )
+                }
+            }
+        }
+    }
+
+    private fun uploadDraftListing() {
+        val createListing = currentState.createListingUi
+        if (createListing == null) {
+            setEffect {
+                ShowToastMessage(
+                    message = resourceProvider.getString(R.string.screen_create_listing_wizard_screen_error_uploading_listing)
+                )
+            }
+            return
+        }
+
+        setEffect {
+            CreateListingWizardContract.Effect.ReadFileContentData(attachedImages = createListing.attachedImages)
+        }
     }
 }

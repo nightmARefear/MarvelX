@@ -1,7 +1,7 @@
 package com.alexgreece45.marvelx.data.repository.marketplace.listing.details
 
 import com.alexgreece45.marvelx.controllers.AppLogger
-import com.alexgreece45.marvelx.data.model.marketplace.listing.ListingEnumGeneric
+import com.alexgreece45.marvelx.data.model.marketplace.listing.EnumGeneric
 import com.alexgreece45.marvelx.data.model.marketplace.listing.toData
 import com.alexgreece45.marvelx.dispatchers.IoDispatcher
 import com.alexgreece45.marvelx.network_logic.clients.ListingClient
@@ -17,14 +17,14 @@ interface ListingDetailsRepository {
 
     fun init()
 
-    val listingStatuses: List<ListingEnumGeneric>
-    val listingApparelSizes: List<ListingEnumGeneric>
-    val listingMaterials: List<ListingEnumGeneric>
-    val listingCollectibleScales: List<ListingEnumGeneric>
-    val listingConditions: List<ListingEnumGeneric>
-    val listingGrades: List<ListingEnumGeneric>
-    val listingCardRarities: List<ListingEnumGeneric>
-    val listingCardVariants: List<ListingEnumGeneric>
+    val listingStatuses: List<EnumGeneric>
+    val listingApparelSizes: List<EnumGeneric>
+    val listingMaterials: List<EnumGeneric>
+    val listingCollectibleScales: List<EnumGeneric>
+    val listingConditions: List<EnumGeneric>
+    val listingGrades: List<EnumGeneric>
+    val listingCardRarities: List<EnumGeneric>
+    val listingCardVariants: List<EnumGeneric>
 }
 
 class ListingDetailsRepositoryImpl(
@@ -37,28 +37,28 @@ class ListingDetailsRepositoryImpl(
 
     private val scope = CoroutineScope(SupervisorJob() + ioDispatcher)
 
-    private var _cachedListingStatuses: MutableStateFlow<List<ListingEnumGeneric>> =
+    private var _cachedListingStatuses: MutableStateFlow<List<EnumGeneric>> =
         MutableStateFlow(emptyList())
 
-    private var _cachedListingApparelSizes: MutableStateFlow<List<ListingEnumGeneric>> =
+    private var _cachedListingApparelSizes: MutableStateFlow<List<EnumGeneric>> =
         MutableStateFlow(emptyList())
 
-    private var _cachedListingMaterials: MutableStateFlow<List<ListingEnumGeneric>> =
+    private var _cachedListingMaterials: MutableStateFlow<List<EnumGeneric>> =
         MutableStateFlow(emptyList())
 
-    private var _cachedListingCollectibleScales: MutableStateFlow<List<ListingEnumGeneric>> =
+    private var _cachedListingCollectibleScales: MutableStateFlow<List<EnumGeneric>> =
         MutableStateFlow(emptyList())
 
-    private var _cachedListingConditions: MutableStateFlow<List<ListingEnumGeneric>> =
+    private var _cachedListingConditions: MutableStateFlow<List<EnumGeneric>> =
         MutableStateFlow(emptyList())
 
-    private var _cachedListingGrades: MutableStateFlow<List<ListingEnumGeneric>> =
+    private var _cachedListingGrades: MutableStateFlow<List<EnumGeneric>> =
         MutableStateFlow(emptyList())
 
-    private var _cachedListingCardRarities: MutableStateFlow<List<ListingEnumGeneric>> =
+    private var _cachedListingCardRarities: MutableStateFlow<List<EnumGeneric>> =
         MutableStateFlow(emptyList())
 
-    private var _cachedListingCardVariants: MutableStateFlow<List<ListingEnumGeneric>> =
+    private var _cachedListingCardVariants: MutableStateFlow<List<EnumGeneric>> =
         MutableStateFlow(emptyList())
 
     private val operations = listOf(
@@ -134,33 +134,33 @@ class ListingDetailsRepositoryImpl(
         }
     }
 
-    override val listingStatuses: List<ListingEnumGeneric>
+    override val listingStatuses: List<EnumGeneric>
         get() = _cachedListingStatuses.value
 
-    override val listingApparelSizes: List<ListingEnumGeneric>
+    override val listingApparelSizes: List<EnumGeneric>
         get() = _cachedListingApparelSizes.value
 
-    override val listingMaterials: List<ListingEnumGeneric>
+    override val listingMaterials: List<EnumGeneric>
         get() = _cachedListingMaterials.value
 
-    override val listingCollectibleScales: List<ListingEnumGeneric>
+    override val listingCollectibleScales: List<EnumGeneric>
         get() = _cachedListingCollectibleScales.value
 
-    override val listingConditions: List<ListingEnumGeneric>
+    override val listingConditions: List<EnumGeneric>
         get() = _cachedListingConditions.value
 
-    override val listingGrades: List<ListingEnumGeneric>
+    override val listingGrades: List<EnumGeneric>
         get() = _cachedListingGrades.value
 
-    override val listingCardRarities: List<ListingEnumGeneric>
+    override val listingCardRarities: List<EnumGeneric>
         get() = _cachedListingCardRarities.value
 
-    override val listingCardVariants: List<ListingEnumGeneric>
+    override val listingCardVariants: List<EnumGeneric>
         get() = _cachedListingCardVariants.value
 }
 
 private data class ListingEnumOperation(
     val apiCall: suspend () -> ApiResult<List<ResponseListingEnumGeneric>>,
-    var cachedVariable: MutableStateFlow<List<ListingEnumGeneric>>,
+    var cachedVariable: MutableStateFlow<List<EnumGeneric>>,
     val operationName: String
 )

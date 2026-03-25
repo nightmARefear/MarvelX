@@ -125,5 +125,5 @@ class ConfigLogicImpl : ConfigLogic {
         get() = ConstantsContentTypes.ALL_FORMATS
 
     override val imageFileMaxSize: Long
-        get() = 5 * 8 * 1024 * 1024 // 5MB
+        get() = 5 * 1024 * 1024 // 5MB
 }

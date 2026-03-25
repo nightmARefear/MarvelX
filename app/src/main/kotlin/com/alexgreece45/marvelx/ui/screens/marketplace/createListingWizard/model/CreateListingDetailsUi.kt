@@ -1,25 +1,25 @@
 package com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.model
 
-import com.alexgreece45.marvelx.data.model.marketplace.listing.ListingEnumGeneric
+import com.alexgreece45.marvelx.data.model.marketplace.listing.EnumGeneric
 
 sealed interface CreateListingDetailsUi {
 
     data class ApparelDetailsUi(
-        val size: CreateListingFieldUi.Enum,
-        val color: CreateListingFieldUi.Text,
+        val size: WizardInputFieldUi.Enum,
+        val color: WizardInputFieldUi.Text,
 
-        val sizes: List<ListingEnumGeneric> = emptyList()
+        val sizes: List<EnumGeneric> = emptyList()
     ) : CreateListingDetailsUi {
 
         val isValid: Boolean get() = size.isValid && color.isValid
     }
 
     data class DrinkwareDetailsUi(
-        val material: CreateListingFieldUi.Enum,
-        val capacityMl: CreateListingFieldUi.Integer,
+        val material: WizardInputFieldUi.Enum,
+        val capacityMl: WizardInputFieldUi.Integer,
         val dishwasherSafe: Boolean? = null,
 
-        val materials: List<ListingEnumGeneric> = emptyList()
+        val materials: List<EnumGeneric> = emptyList()
     ) : CreateListingDetailsUi {
 
         val isValid: Boolean
@@ -30,11 +30,11 @@ sealed interface CreateListingDetailsUi {
     }
 
     data class CollectibleDetailsUi(
-        val scale: CreateListingFieldUi.Enum,
-        val boxCondition: CreateListingFieldUi.Enum,
+        val scale: WizardInputFieldUi.Enum,
+        val boxCondition: WizardInputFieldUi.Enum,
 
-        val scales: List<ListingEnumGeneric> = emptyList(),
-        val boxConditions: List<ListingEnumGeneric> = emptyList(),
+        val scales: List<EnumGeneric> = emptyList(),
+        val boxConditions: List<EnumGeneric> = emptyList(),
     ) : CreateListingDetailsUi {
 
         val isValid: Boolean
@@ -54,10 +54,10 @@ sealed interface CreateListingDetailsUi {
     }
 
     data class AccessoryDetailsUi(
-        val material: CreateListingFieldUi.Enum,
-        val color: CreateListingFieldUi.Text,
+        val material: WizardInputFieldUi.Enum,
+        val color: WizardInputFieldUi.Text,
 
-        val materials: List<ListingEnumGeneric>
+        val materials: List<EnumGeneric>
     ) : CreateListingDetailsUi {
 
         val isValid: Boolean
@@ -73,11 +73,11 @@ sealed interface CreateListingDetailsUi {
     }
 
     data class ComicDetailsUi(
-        val grade: CreateListingFieldUi.Enum,
-        val publisher: CreateListingFieldUi.Text,
-        val year: CreateListingFieldUi.Integer,
+        val grade: WizardInputFieldUi.Enum,
+        val publisher: WizardInputFieldUi.Text,
+        val year: WizardInputFieldUi.Integer,
 
-        val grades: List<ListingEnumGeneric> = emptyList()
+        val grades: List<EnumGeneric> = emptyList()
     ) : CreateListingDetailsUi {
 
         val isValid: Boolean
@@ -85,13 +85,13 @@ sealed interface CreateListingDetailsUi {
     }
 
     data class CardDetailsUi(
-        val grade: CreateListingFieldUi.Enum,
-        val rarity: CreateListingFieldUi.Enum,
-        val variant: CreateListingFieldUi.Enum,
+        val grade: WizardInputFieldUi.Enum,
+        val rarity: WizardInputFieldUi.Enum,
+        val variant: WizardInputFieldUi.Enum,
 
-        val grades: List<ListingEnumGeneric> = emptyList(),
-        val rarities: List<ListingEnumGeneric> = emptyList(),
-        val variants: List<ListingEnumGeneric> = emptyList(),
+        val grades: List<EnumGeneric> = emptyList(),
+        val rarities: List<EnumGeneric> = emptyList(),
+        val variants: List<EnumGeneric> = emptyList(),
     ) : CreateListingDetailsUi {
 
         val isValid: Boolean

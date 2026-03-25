@@ -7,14 +7,16 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.ModalBottomSheetDefaults
 import androidx.compose.material.ModalBottomSheetLayout
 import androidx.compose.material.ModalBottomSheetState
+import androidx.compose.material.ModalBottomSheetValue
 import androidx.compose.material.contentColorFor
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.alexgreece45.marvelx.ui.theme.values.customColors
 import com.alexgreece45.marvelx.util.SPACING_MEDIUM
 
 /**
@@ -40,8 +42,22 @@ fun WrapModalBottomSheetLayout(
     scrimColor: Color = if (isSystemInDarkTheme()) MaterialTheme.colors.background.copy(alpha = 0.55f) else MaterialTheme.colors.onSurface.copy(
         alpha = 0.4f
     ),
+    onDismissed: (() -> Unit)? = null,
     content: @Composable () -> Unit
 ) {
+
+    onDismissed?.let {
+        LaunchedEffect(Unit) {
+            snapshotFlow {
+                sheetState.currentValue
+            }.collect { newBottomSheetStateValue ->
+                if (newBottomSheetStateValue == ModalBottomSheetValue.Hidden) {
+                    onDismissed()
+                }
+            }
+        }
+    }
+
     ModalBottomSheetLayout(
         sheetContent = { sheetContent() },
         modifier = modifier,

@@ -10,6 +10,8 @@ import com.alexgreece45.marvelx.configuration.ConfigLogic
 import com.alexgreece45.marvelx.configuration.ConfigLogicImpl
 import com.alexgreece45.marvelx.configuration.ConfigOauth
 import com.alexgreece45.marvelx.configuration.ConfigOauthImpl
+import com.alexgreece45.marvelx.configuration.ConfigPriceLogic
+import com.alexgreece45.marvelx.configuration.ConfigPriceLogicImpl
 import com.alexgreece45.marvelx.configuration.ConfigSecurityLogic
 import com.alexgreece45.marvelx.configuration.ConfigSecurityLogicImpl
 import com.alexgreece45.marvelx.controllers.AntiHookController
@@ -46,6 +48,7 @@ import com.alexgreece45.marvelx.controllers.SecurityController
 import com.alexgreece45.marvelx.controllers.SecurityControllerImpl
 import com.alexgreece45.marvelx.controllers.TimerController
 import com.alexgreece45.marvelx.controllers.TimerControllerImpl
+import com.alexgreece45.marvelx.controllers.createListingWizard.CreateListingWizardController
 import com.alexgreece45.marvelx.data.mappers.ListingDataMapper
 import com.alexgreece45.marvelx.data.repository.ChangePasswordRepository
 import com.alexgreece45.marvelx.data.repository.ChangePasswordRepositoryImpl
@@ -71,6 +74,8 @@ import com.alexgreece45.marvelx.data.repository.RegisterRepository
 import com.alexgreece45.marvelx.data.repository.RegisterRepositoryImpl
 import com.alexgreece45.marvelx.data.repository.UserRepository
 import com.alexgreece45.marvelx.data.repository.UserRepositoryImpl
+import com.alexgreece45.marvelx.data.repository.cart.CartRepository
+import com.alexgreece45.marvelx.data.repository.cart.CartRepositoryImpl
 import com.alexgreece45.marvelx.data.repository.imageLoader.AuthenticatedImageLoader
 import com.alexgreece45.marvelx.data.repository.marketplace.MarketplaceRepository
 import com.alexgreece45.marvelx.data.repository.marketplace.MarketplaceRepositoryImpl
@@ -80,6 +85,8 @@ import com.alexgreece45.marvelx.data.repository.marketplace.listing.ListingRepos
 import com.alexgreece45.marvelx.data.repository.marketplace.listing.ListingRepositoryImpl
 import com.alexgreece45.marvelx.data.repository.marketplace.listing.details.ListingDetailsRepository
 import com.alexgreece45.marvelx.data.repository.marketplace.listing.details.ListingDetailsRepositoryImpl
+import com.alexgreece45.marvelx.data.repository.order.OrderRepository
+import com.alexgreece45.marvelx.data.repository.order.OrderRepositoryImpl
 import com.alexgreece45.marvelx.data.repository.user.BlockedUserRepository
 import com.alexgreece45.marvelx.data.repository.user.BlockedUserRepositoryImpl
 import com.alexgreece45.marvelx.data.repository.user.FriendRepository
@@ -110,16 +117,21 @@ import com.alexgreece45.marvelx.domain.interactors.SplashInteractor
 import com.alexgreece45.marvelx.domain.interactors.SplashInteractorImpl
 import com.alexgreece45.marvelx.domain.interactors.UserInteractor
 import com.alexgreece45.marvelx.domain.interactors.UserInteractorImpl
+import com.alexgreece45.marvelx.domain.interactors.cart.CartInteractor
+import com.alexgreece45.marvelx.domain.interactors.cart.CartInteractorImpl
 import com.alexgreece45.marvelx.domain.interactors.marketplace.MarketplaceInteractor
 import com.alexgreece45.marvelx.domain.interactors.marketplace.MarketplaceInteractorImpl
 import com.alexgreece45.marvelx.domain.interactors.marketplace.listing.ListingInteractor
 import com.alexgreece45.marvelx.domain.interactors.marketplace.listing.ListingInteractorImpl
+import com.alexgreece45.marvelx.domain.interactors.order.OrderInteractor
+import com.alexgreece45.marvelx.domain.interactors.order.OrderInteractorImpl
 import com.alexgreece45.marvelx.domain.interactors.user.BlockedUserInteractor
 import com.alexgreece45.marvelx.domain.interactors.user.BlockedUserInteractorImpl
 import com.alexgreece45.marvelx.domain.interactors.user.FriendInteractor
 import com.alexgreece45.marvelx.domain.interactors.user.FriendInteractorImpl
 import com.alexgreece45.marvelx.domain.interactors.user.FriendRequestInteractor
 import com.alexgreece45.marvelx.domain.interactors.user.FriendRequestInteractorImpl
+import com.alexgreece45.marvelx.domain.mappers.cart.CartSummaryDomainMapper
 import com.alexgreece45.marvelx.domain.mappers.marketplace.listing.ListingDomainMapper
 import com.alexgreece45.marvelx.domain.mappers.marketplace.listing.details.ListingDetailsDomainMapper
 import com.alexgreece45.marvelx.domain.worker.RefreshTokenWorker
@@ -131,6 +143,12 @@ import com.alexgreece45.marvelx.ui.navigation.router.RouterHost
 import com.alexgreece45.marvelx.ui.navigation.router.RouterHostImpl
 import com.alexgreece45.marvelx.ui.screens.allCharacters.AllCharactersViewModel
 import com.alexgreece45.marvelx.ui.screens.allFavoriteCharacters.AllFavoriteCharactersViewModel
+import com.alexgreece45.marvelx.ui.screens.cart.CartViewModel
+import com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.CheckoutWizardViewModel
+import com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.steps.paymentDetails.CheckoutPaymentDetailsViewModel
+import com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.steps.shippingDetails.CheckoutShippingDetailsViewModel
+import com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.steps.success.CheckoutSuccessViewModel
+import com.alexgreece45.marvelx.ui.screens.cart.mappers.CartItemUiMapper
 import com.alexgreece45.marvelx.ui.screens.changePassword.ChangePasswordViewModel
 import com.alexgreece45.marvelx.ui.screens.character.CharacterViewModel
 import com.alexgreece45.marvelx.ui.screens.character.allCharacterComicsScreen.AllCharacterComicsViewModel
@@ -146,10 +164,16 @@ import com.alexgreece45.marvelx.ui.screens.marketplace.MarketplaceViewModel
 import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.CreateListingWizardViewModel
 import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.advancedDetails.CreateListingAdvancedDetailsViewModel
 import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.basicDetails.CreateListingBasicDetailsViewModel
+import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.success.CreateListingSuccessViewModel
 import com.alexgreece45.marvelx.ui.screens.marketplace.listingDetailsScreen.ListingDetailsViewModel
 import com.alexgreece45.marvelx.ui.screens.marketplace.mappers.ListingDetailsUiMapper
+import com.alexgreece45.marvelx.ui.screens.marketplace.mappers.ListingPreviewUiMapper
 import com.alexgreece45.marvelx.ui.screens.marketplace.mappers.ListingUiMapper
+import com.alexgreece45.marvelx.ui.screens.marketplace.mappers.MarketplaceUiMapper
 import com.alexgreece45.marvelx.ui.screens.myListings.MyListingsViewModel
+import com.alexgreece45.marvelx.ui.screens.orders.OrdersViewModel
+import com.alexgreece45.marvelx.ui.screens.orders.orderDetails.OrderDetailsViewModel
+import com.alexgreece45.marvelx.ui.screens.orders.orderItemTrackingHistory.OrderItemTrackingHistoryViewModel
 import com.alexgreece45.marvelx.ui.screens.otp.OtpViewModel
 import com.alexgreece45.marvelx.ui.screens.profile.ProfileViewModel
 import com.alexgreece45.marvelx.ui.screens.profile.editProfileDetails.EditProfileDetailsViewModel
@@ -175,6 +199,7 @@ import org.koin.androidx.workmanager.koin.workManagerFactory
 import org.koin.core.context.startKoin
 import org.koin.core.logger.Level
 import org.koin.core.module.Module
+import org.koin.core.module.dsl.singleOf
 import org.koin.core.qualifier.qualifier
 import org.koin.dsl.module
 
@@ -203,6 +228,8 @@ fun initKoin(marvelXApplication: MarvelXApplication) {
             viewModelModule,
             workerModule,
             dispatchersModule,
+//            customScopesModule,
+            createListingWizardControllerModule,
         )
     }
 }
@@ -294,6 +321,10 @@ private val repositoryModule = module {
     single<ListingDetailsRepository> {
         ListingDetailsRepositoryImpl(get(), get(qualifier<IoDispatcher>()), get())
     }
+
+    single<CartRepository> { CartRepositoryImpl(get(), get(qualifier<IoDispatcher>())) }
+
+    single<OrderRepository> { OrderRepositoryImpl(get(), get(qualifier<IoDispatcher>())) }
 }
 
 private val interactorModule = module {
@@ -329,14 +360,23 @@ private val interactorModule = module {
     // Marketplace interactors.
     factory<MarketplaceInteractor> { MarketplaceInteractorImpl(get()) }
     factory<ListingInteractor> { ListingInteractorImpl(get(), get()) }
+
+    // Cart interactors.
+    factory<CartInteractor> { CartInteractorImpl(get(), get()) }
+
+    factory<OrderInteractor> { OrderInteractorImpl(get()) }
 }
 
 private val mapperModule = module {
     single<ListingDataMapper> { ListingDataMapper(get()) }
     single<ListingDomainMapper> { ListingDomainMapper(get()) }
     single<ListingDetailsDomainMapper> { ListingDetailsDomainMapper(get()) }
-    single<ListingDetailsUiMapper> { ListingDetailsUiMapper(get(), get()) }
-    single<ListingUiMapper> { ListingUiMapper(get(), get(), get()) }
+    singleOf(::ListingDetailsUiMapper)
+    singleOf(::ListingUiMapper)
+    singleOf(::ListingPreviewUiMapper)
+    singleOf(::MarketplaceUiMapper)
+    singleOf(::CartItemUiMapper)
+    singleOf(::CartSummaryDomainMapper)
 }
 
 private val controllerModule = module {
@@ -393,6 +433,7 @@ private val configModule = module {
     single<ConfigLogic> { ConfigLogicImpl() }
     single<ConfigSecurityLogic> { ConfigSecurityLogicImpl() }
     single<ConfigOauth> { ConfigOauthImpl() }
+    single<ConfigPriceLogic> { ConfigPriceLogicImpl() }
 }
 
 private val viewModelModule = module {
@@ -437,8 +478,20 @@ private val viewModelModule = module {
     viewModelOf(::CreateListingWizardViewModel)
     viewModelOf(::CreateListingBasicDetailsViewModel)
     viewModelOf(::CreateListingAdvancedDetailsViewModel)
+    viewModelOf(::CreateListingSuccessViewModel)
 
     viewModelOf(::MyListingsViewModel)
+
+    viewModelOf(::CartViewModel)
+
+    viewModelOf(::CheckoutWizardViewModel)
+    viewModelOf(::CheckoutShippingDetailsViewModel)
+    viewModelOf(::CheckoutPaymentDetailsViewModel)
+    viewModelOf(::CheckoutSuccessViewModel)
+
+    viewModelOf(::OrdersViewModel)
+    viewModelOf(::OrderDetailsViewModel)
+    viewModelOf(::OrderItemTrackingHistoryViewModel)
 
     viewModel { AllCharactersViewModel(get(), get()) }
     viewModel { AllCharacterComicsViewModel(get()) }
@@ -482,4 +535,15 @@ private val workerModule = module {
             get(qualifier = qualifier<IoDispatcher>())
         )
     }
+}
+
+// TODO: Fix module.
+//private val customScopesModule = module {
+//    scope<CreateListingWizardViewModel> {
+//        scoped<CreateListingWizardController> { CreateListingWizardController() }
+//    }
+//}
+
+private val createListingWizardControllerModule = module {
+    singleOf(::CreateListingWizardController)
 }

@@ -13,7 +13,7 @@
     <string name="screen_listing_details_sticky_bottom_label_reserved_listing">This item is currently reserved by another buyer.</string>
 
     <string name="screen_listing_details_listing_details_label_color">Color: %1$s</string>
-    <string name="screen_listing_details_listing_details_label_dimensions">Dimensions\nWidth: %1$scm\nHeight: %2$scm</string>
+    <string name="screen_listing_details_listing_details_label_dimensions">Dimensions\nWidth: %1$s cm\nHeight: %2$s cm</string>
     <string name="screen_listing_details_listing_details_label_collectible_scale">Scale: %1$s</string>
     <string name="screen_listing_details_listing_details_label_box_condition">Box Condition: %1$s</string>
     <string name="screen_listing_details_listing_details_label_apparel_size">Apparel Size: %1$s</string>
@@ -27,9 +27,14 @@
     <string name="screen_listing_details_listing_details_label_framed">Framed</string>
     <string name="screen_listing_details_listing_details_label_not_framed">Not Framed</string>
 
+    <string name="screen_listing_details_success_adding_to_cart">Successfully added to cart</string>
+    <string name="screen_listing_details_success_removing_from_cart">Successfully removed from cart</string>
+
     <string name="screen_listing_details_error_loading_listing">An error occurred whilst loading this listing.</string>
     <string name="screen_listing_details_error_adding_to_favorites">An error occurred whilst adding this listing to your favorites.</string>
     <string name="screen_listing_details_error_removing_from_favorites">An error occurred whilst removing this listing from your favorites.</string>
+    <string name="screen_listing_details_error_adding_to_cart">An error occurred whilst adding this listing to your cart.</string>
+    <string name="screen_listing_details_error_removing_from_cart">An error occurred whilst removing this listing from your cart.</string>
 
     <string name="screen_listing_details_content_description_seller_profile_image">seller\'s profile image</string>
     <string name="screen_listing_details_content_description_info_icon">info icon</string>

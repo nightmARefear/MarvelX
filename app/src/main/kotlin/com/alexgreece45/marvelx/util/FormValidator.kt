@@ -5,6 +5,7 @@ import com.alexgreece45.marvelx.util.extensions.isEmail
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import java.math.BigDecimal
+import java.time.YearMonth
 
 interface FormValidator {
 
@@ -116,7 +117,7 @@ class FormValidatorImpl : FormValidator {
             )
 
             is Rule.ValidateBigDecimal -> checkValidationResult(
-                isValid = isBigDecimalValid(value),
+                isValid = isBigDecimalValid(value, rule.scale),
                 errorMessage = rule.errorMessage
             )
 
@@ -137,6 +138,19 @@ class FormValidatorImpl : FormValidator {
                 ),
                 errorMessage = rule.errorMessage
             )
+
+            is Rule.ValidateCardNumberValue -> checkValidationResult(
+                isValid = isCardNumberValueValid(value),
+                errorMessage = rule.errorMessage
+            )
+
+            is Rule.ValidateCardNumberExpirationDate -> checkValidationResult(
+                isValid = isCardNumberExpirationDateValid(
+                    value = value,
+                    currentYearMonth = rule.currentYearMonth
+                ),
+                errorMessage = rule.errorMessage
+            )
         }
     }
 
@@ -153,7 +167,7 @@ class FormValidatorImpl : FormValidator {
     }
 
     private fun isEmailValid(value: String): Boolean =
-        value.isNotEmpty() && value.isEmail()
+        value.isNotBlank() && value.isEmail()
 
     private fun isStringMaxLengthValid(value: String, length: Int): Boolean =
         value.length <= length
@@ -194,7 +208,8 @@ class FormValidatorImpl : FormValidator {
     private fun isIntegerBelowMaxValue(value: String, maxValue: Int): Boolean =
         value.toIntOrNull()?.let { it <= maxValue } ?: false
 
-    private fun isBigDecimalValid(value: String): Boolean = value.toBigDecimalOrNull() != null
+    private fun isBigDecimalValid(value: String, scale: Int): Boolean =
+        value.toBigDecimalOrNull()?.takeIf { it.scale() <= scale } != null
 
     private fun isBigDecimalOverMinValue(
         value: String,
@@ -209,6 +224,40 @@ class FormValidatorImpl : FormValidator {
         maxValue: BigDecimal
     ): Boolean =
         value.toBigDecimalOrNull()?.takeIf { it.scale() <= scale }?.let { it <= maxValue } ?: false
+
+    private fun isCardNumberValueValid(value: String): Boolean {
+        if (value.isBlank() || value.length != 16 || value.any { !it.isDigit() }) return false
+
+        var sum = 0
+        value.forEachIndexed { index, character ->
+            val digit = character.digitToIntOrNull() ?: return false
+
+            sum += if (index % 2 == 0) {
+                val tempDigit = digit * 2
+                if (tempDigit >= 10) tempDigit - 9 else tempDigit
+            } else {
+                digit
+            }
+        }
+        return sum % 10 == 0
+    }
+
+    private fun isCardNumberExpirationDateValid(
+        value: String,
+        currentYearMonth: YearMonth
+    ): Boolean {
+        try {
+            if (value.length != 4) return false
+
+            val month = value.take(2).toInt()
+            val year = value.takeLast(2).toInt() + 2000
+
+            val providedYearMonth = YearMonth.of(year, month)
+            return providedYearMonth >= currentYearMonth
+        } catch (_: Exception) {
+            return false
+        }
+    }
 }
 
 data class Form(val inputs: Map<List<Rule>, String>)
@@ -280,4 +329,14 @@ sealed class Rule(val errorMsg: String) {
         val maxValue: BigDecimal,
         val errorMessage: String
     ) : Rule(errorMessage)
+
+    data class ValidateCardNumberValue(
+        val errorMessage: String
+    ) : Rule(errorMessage)
+
+    data class ValidateCardNumberExpirationDate(
+        val errorMessage: String,
+        val currentYearMonth: YearMonth
+    ) :
+        Rule(errorMessage)
 }

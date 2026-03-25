@@ -310,6 +310,19 @@ class ProfileViewModel(
                         }
                     ),
                     SectionHeaderData(
+                        title = resourceProvider.getString(R.string.profile_screen_section_label_orders),
+                        iconData = IconData(
+                            iconResource = R.drawable.ic_orders,
+                            contentDescription = R.string.screen_profile_content_description_orders_icon
+                        ),
+                        isNavigable = true,
+                        onClick = {
+                            setEffect {
+                                ProfileContract.Effect.Navigation.NavigateToOrdersScreen
+                            }
+                        }
+                    ),
+                    SectionHeaderData(
                         title = resourceProvider.getString(R.string.profile_screen_section_label_my_listings),
                         iconData = IconData(
                             iconResource = R.drawable.ic_listings,
@@ -466,8 +479,7 @@ class ProfileViewModel(
 
                 setEffect {
                     ProfileContract.Effect.ReadCroppedImageFileContent(
-                        fileUri = fileContentData.uri,
-                        fileName = fileContentData.name
+                        attachedFileContentData = fileContentData
                     )
                 }
             }

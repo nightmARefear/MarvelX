@@ -200,3 +200,8 @@ fun String.getMediaTypeFromFileName(): MediaType? {
         else -> null
     }
 }
+
+/**
+ * Returns this string with the euro symbol at the end.
+ */
+fun String.withEuroSymbol(): String = "$this€"

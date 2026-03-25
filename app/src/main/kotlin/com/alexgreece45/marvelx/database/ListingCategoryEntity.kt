@@ -9,6 +9,9 @@ import com.alexgreece45.marvelx.data.model.marketplace.listing.ListingCategory
 data class ListingCategoryEntity(
 
     @PrimaryKey
+    @ColumnInfo(name = "id")
+    val id: Int,
+
     @ColumnInfo(name = "category_code")
     val categoryCode: String,
 
@@ -18,6 +21,7 @@ data class ListingCategoryEntity(
 
 fun ListingCategory.toDatabase(): ListingCategoryEntity =
     ListingCategoryEntity(
+        id = id,
         categoryCode = code,
         label = label
     )

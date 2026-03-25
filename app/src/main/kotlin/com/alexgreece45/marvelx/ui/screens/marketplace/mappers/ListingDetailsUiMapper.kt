@@ -1,10 +1,11 @@
 package com.alexgreece45.marvelx.ui.screens.marketplace.mappers
 
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.controllers.AppLogger
 import com.alexgreece45.marvelx.data.model.marketplace.listing.ListingCategoryCode
 import com.alexgreece45.marvelx.data.repository.marketplace.listing.details.ListingDetailsRepository
 import com.alexgreece45.marvelx.domain.model_api.marketplace.listing.ListingDetailsDomain
-import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.model.CreateListingFieldUi
+import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.model.WizardInputFieldUi
 import com.alexgreece45.marvelx.ui.screens.marketplace.model.ListingDetailsUi
 import com.alexgreece45.marvelx.util.DateUtil
 import com.alexgreece45.marvelx.util.ResourceProvider
@@ -12,17 +13,20 @@ import com.alexgreece45.marvelx.util.Rule
 
 class ListingDetailsUiMapper(
     private val listingDetailsRepository: ListingDetailsRepository,
-    private val resourceProvider: ResourceProvider
+    private val resourceProvider: ResourceProvider,
+    private val appLogger: AppLogger,
 ) {
+
+    private val loggerTag = "ListingDetailsUiMapper"
 
     fun toUi(listingDetails: ListingDetailsDomain): ListingDetailsUi =
         when (listingDetails) {
             is ListingDetailsDomain.ApparelDetailsDomain ->
                 ListingDetailsUi.ApparelDetailsUi(
-                    size = CreateListingFieldUi.Enum(
+                    size = WizardInputFieldUi.Enum(
                         value = listingDetails.size
                     ),
-                    color = CreateListingFieldUi.Text(
+                    color = WizardInputFieldUi.Text(
                         textValidationRules = getApparelColorValidationRules(),
                         textValue = listingDetails.color
                     )
@@ -30,10 +34,10 @@ class ListingDetailsUiMapper(
 
             is ListingDetailsDomain.DrinkwareDetailsDomain ->
                 ListingDetailsUi.DrinkwareDetailsUi(
-                    material = CreateListingFieldUi.Enum(
+                    material = WizardInputFieldUi.Enum(
                         value = listingDetails.material
                     ),
-                    capacityMl = CreateListingFieldUi.Integer(
+                    capacityMl = WizardInputFieldUi.Integer(
                         integerValue = listingDetails.capacityMl.toString(),
                         integerValidationRules = getDrinkwareCapacityMlValidationRules()
                     ),
@@ -43,10 +47,10 @@ class ListingDetailsUiMapper(
 
             is ListingDetailsDomain.CollectibleDetailsDomain ->
                 ListingDetailsUi.CollectibleDetailsUi(
-                    scale = CreateListingFieldUi.Enum(
+                    scale = WizardInputFieldUi.Enum(
                         value = listingDetails.scale
                     ),
-                    boxCondition = CreateListingFieldUi.Enum(
+                    boxCondition = WizardInputFieldUi.Enum(
                         value = listingDetails.boxCondition
                     )
                 )
@@ -59,10 +63,10 @@ class ListingDetailsUiMapper(
 
             is ListingDetailsDomain.AccessoryDetailsDomain ->
                 ListingDetailsUi.AccessoryDetailsUi(
-                    material = CreateListingFieldUi.Enum(
+                    material = WizardInputFieldUi.Enum(
                         value = listingDetails.material
                     ),
-                    color = CreateListingFieldUi.Text(
+                    color = WizardInputFieldUi.Text(
                         textValidationRules = getAccessoryColorValidationRules(),
                         textValue = listingDetails.color
                     )
@@ -75,14 +79,14 @@ class ListingDetailsUiMapper(
 
             is ListingDetailsDomain.ComicDetailsDomain ->
                 ListingDetailsUi.ComicDetailsUi(
-                    grade = CreateListingFieldUi.Enum(
+                    grade = WizardInputFieldUi.Enum(
                         value = listingDetails.grade
                     ),
-                    publisher = CreateListingFieldUi.Text(
+                    publisher = WizardInputFieldUi.Text(
                         textValidationRules = getComicPublisherValidationRules(),
                         textValue = listingDetails.publisher
                     ),
-                    year = CreateListingFieldUi.Integer(
+                    year = WizardInputFieldUi.Integer(
                         integerValue = listingDetails.year.toString(),
                         integerValidationRules = getComicYearValidationRules()
                     )
@@ -90,13 +94,13 @@ class ListingDetailsUiMapper(
 
             is ListingDetailsDomain.CardDetailsDomain ->
                 ListingDetailsUi.CardDetailsUi(
-                    grade = CreateListingFieldUi.Enum(
+                    grade = WizardInputFieldUi.Enum(
                         value = listingDetails.grade
                     ),
-                    rarity = CreateListingFieldUi.Enum(
+                    rarity = WizardInputFieldUi.Enum(
                         value = listingDetails.rarity
                     ),
-                    variant = CreateListingFieldUi.Enum(
+                    variant = WizardInputFieldUi.Enum(
                         value = listingDetails.variant
                     )
                 )
@@ -106,14 +110,14 @@ class ListingDetailsUiMapper(
         when (categoryCode) {
             ListingCategoryCode.APPAREL.code -> {
                 ListingDetailsUi.ApparelDetailsUi(
-                    color = CreateListingFieldUi.Text(textValidationRules = getApparelColorValidationRules()),
+                    color = WizardInputFieldUi.Text(textValidationRules = getApparelColorValidationRules()),
                     sizes = listingDetailsRepository.listingApparelSizes
                 )
             }
 
             ListingCategoryCode.DRINKWARE.code -> {
                 ListingDetailsUi.DrinkwareDetailsUi(
-                    capacityMl = CreateListingFieldUi.Integer(integerValidationRules = getDrinkwareCapacityMlValidationRules()),
+                    capacityMl = WizardInputFieldUi.Integer(integerValidationRules = getDrinkwareCapacityMlValidationRules()),
                     materials = listingDetailsRepository.listingMaterials
                 )
             }
@@ -131,7 +135,7 @@ class ListingDetailsUiMapper(
 
             ListingCategoryCode.ACCESSORIES.code -> {
                 ListingDetailsUi.AccessoryDetailsUi(
-                    color=CreateListingFieldUi.Text(textValidationRules = getAccessoryColorValidationRules()),
+                    color = WizardInputFieldUi.Text(textValidationRules = getAccessoryColorValidationRules()),
                     materials = listingDetailsRepository.listingMaterials
                 )
             }
@@ -142,8 +146,8 @@ class ListingDetailsUiMapper(
 
             ListingCategoryCode.COMICS.code -> {
                 ListingDetailsUi.ComicDetailsUi(
-                    publisher = CreateListingFieldUi.Text(textValidationRules = getComicPublisherValidationRules()),
-                    year = CreateListingFieldUi.Integer(integerValidationRules = getComicYearValidationRules()),
+                    publisher = WizardInputFieldUi.Text(textValidationRules = getComicPublisherValidationRules()),
+                    year = WizardInputFieldUi.Integer(integerValidationRules = getComicYearValidationRules()),
                     grades = listingDetailsRepository.listingGrades
                 )
             }
@@ -157,6 +161,56 @@ class ListingDetailsUiMapper(
             }
 
             else -> null
+        }
+
+    fun toDomain(listingDetailsUi: ListingDetailsUi): ListingDetailsDomain? =
+        try {
+            when (listingDetailsUi) {
+                is ListingDetailsUi.ApparelDetailsUi -> ListingDetailsDomain.ApparelDetailsDomain(
+                    size = listingDetailsUi.size.value!!,
+                    color = listingDetailsUi.color.value
+                )
+
+                is ListingDetailsUi.DrinkwareDetailsUi -> ListingDetailsDomain.DrinkwareDetailsDomain(
+                    material = listingDetailsUi.material.value!!,
+                    capacityMl = listingDetailsUi.capacityMl.integerValue.toInt(),
+                    dishwasherSafe = listingDetailsUi.dishwasherSafe
+                )
+
+                is ListingDetailsUi.CollectibleDetailsUi -> ListingDetailsDomain.CollectibleDetailsDomain(
+                    scale = listingDetailsUi.scale.value!!,
+                    boxCondition = listingDetailsUi.boxCondition.value!!
+                )
+
+                is ListingDetailsUi.ArtDetailsUi -> ListingDetailsDomain.ArtDetailsDomain(
+                    dimensions = listingDetailsUi.dimensions,
+                    framed = listingDetailsUi.framed
+                )
+
+                is ListingDetailsUi.AccessoryDetailsUi -> ListingDetailsDomain.AccessoryDetailsDomain(
+                    material = listingDetailsUi.material.value!!,
+                    color = listingDetailsUi.color.value
+                )
+
+                is ListingDetailsUi.HomeDetailsUi -> ListingDetailsDomain.HomeDetailsDomain(
+                    dimensions = listingDetailsUi.dimensions
+                )
+
+                is ListingDetailsUi.ComicDetailsUi -> ListingDetailsDomain.ComicDetailsDomain(
+                    grade = listingDetailsUi.grade.value!!,
+                    publisher = listingDetailsUi.publisher.value,
+                    year = listingDetailsUi.year.integerValue.toInt()
+                )
+
+                is ListingDetailsUi.CardDetailsUi -> ListingDetailsDomain.CardDetailsDomain(
+                    grade = listingDetailsUi.grade.value!!,
+                    rarity = listingDetailsUi.rarity.value!!,
+                    variant = listingDetailsUi.variant.value!!
+                )
+            }
+        } catch (e: Exception) {
+            appLogger.e(loggerTag) { "An error occurred whilst converting `ListingDetailsUi` to `ListingDetailsDomain`.\n" + e.localizedMessage.orEmpty() }
+            null
         }
 
     private fun getApparelColorValidationRules(): List<Rule> {
@@ -199,7 +253,10 @@ class ListingDetailsUiMapper(
             Rule.ValidateNotBlank(errorMessage = resourceProvider.getString(R.string.screen_create_listing_advanced_details_error_blank_publisher)),
             Rule.ValidateStringMinLength(
                 length = minimumAllowedCharacters,
-                errorMessage = resourceProvider.getString(R.string.screen_create_listing_advanced_details_error_generic_min_allowed_characters, minimumAllowedCharacters)
+                errorMessage = resourceProvider.getString(
+                    R.string.screen_create_listing_advanced_details_error_generic_min_allowed_characters,
+                    minimumAllowedCharacters
+                )
             )
         )
     }
@@ -215,11 +272,17 @@ class ListingDetailsUiMapper(
             ),
             Rule.ValidateOverMinIntegerValue(
                 minValue = minYear,
-                errorMessage = resourceProvider.getString(R.string.screen_create_listing_advanced_details_error_below_min_year, minYear)
+                errorMessage = resourceProvider.getString(
+                    R.string.screen_create_listing_advanced_details_error_below_min_year,
+                    minYear
+                )
             ),
             Rule.ValidateUnderMaxIntegerValue(
                 maxValue = maxYear,
-                errorMessage = resourceProvider.getString(R.string.screen_create_listing_advanced_details_error_over_max_year, maxYear)
+                errorMessage = resourceProvider.getString(
+                    R.string.screen_create_listing_advanced_details_error_over_max_year,
+                    maxYear
+                )
             )
         )
     }

@@ -1,15 +1,17 @@
 package com.alexgreece45.marvelx.ui.screens.marketplace
 
 import androidx.lifecycle.viewModelScope
+import com.alexgreece45.marvelx.configuration.ConfigPriceLogic
 import com.alexgreece45.marvelx.domain.helper.InteractorPartialState
 import com.alexgreece45.marvelx.domain.interactors.marketplace.MarketplaceInteractor
 import com.alexgreece45.marvelx.mvi.BaseViewModel
-import com.alexgreece45.marvelx.ui.screens.marketplace.mappers.toUi
+import com.alexgreece45.marvelx.ui.screens.marketplace.mappers.MarketplaceUiMapper
 import com.alexgreece45.marvelx.ui.screens.marketplace.model.MarketplaceContract
 import kotlinx.coroutines.launch
 
 class MarketplaceViewModel(
-    private val marketplaceInteractor: MarketplaceInteractor
+    private val marketplaceInteractor: MarketplaceInteractor,
+    private val marketplaceUiMapper: MarketplaceUiMapper,
 ) : BaseViewModel<MarketplaceContract.Event, MarketplaceContract.State, MarketplaceContract.Effect>() {
 
     override fun setInitialState(): MarketplaceContract.State = MarketplaceContract.State()
@@ -20,12 +22,20 @@ class MarketplaceViewModel(
             is MarketplaceContract.Event.OnPromoCarouselScrolled -> onPromoCarouselScrolled(event.newIndex)
             is MarketplaceContract.Event.OnCategoryClicked -> onCategoryClicked(event.categoryCode)
             is MarketplaceContract.Event.OnListingClicked -> onListingClicked(event.listingId)
-            is MarketplaceContract.Event.SearchBarEvents.OnSearchTermChanged -> onSearchTermChanged(event.searchTerm)
+            is MarketplaceContract.Event.SearchBarEvents.OnSearchTermChanged -> onSearchTermChanged(
+                event.searchTerm
+            )
+
             MarketplaceContract.Event.SearchBarEvents.OnDeleteIconClicked -> onDeleteIconClicked()
         }
     }
 
     private fun init() {
+        setState {
+            copy(
+                isLoading = true
+            )
+        }
         viewModelScope.launch {
             when (val interactorResult = marketplaceInteractor.getMarketplaceInfo()) {
                 is InteractorPartialState.Error,
@@ -35,10 +45,21 @@ class MarketplaceViewModel(
                 }
 
                 is InteractorPartialState.Success -> {
+                    val marketplaceUi = marketplaceUiMapper.toUi(interactorResult.data)
+                    if (marketplaceUi == null) {
+                        setState {
+                            copy(
+                                isLoading = false,
+                            )
+                        }
+                        // TODO: show error
+                        return@launch
+                    }
+
                     setState {
                         copy(
                             isLoading = false,
-                            marketplaceUi = interactorResult.data.toUi()
+                            marketplaceUi = marketplaceUi
                         )
                     }
                 }

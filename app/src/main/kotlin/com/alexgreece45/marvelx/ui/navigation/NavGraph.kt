@@ -12,11 +12,16 @@ import com.alexgreece45.marvelx.ui.components.BottomBarItem
 import com.alexgreece45.marvelx.ui.components.BottomNavigationBarData
 import com.alexgreece45.marvelx.ui.components.IconData
 import com.alexgreece45.marvelx.ui.helper.openDeepLinkAction
+import com.alexgreece45.marvelx.ui.navigation.cart.cartNavigation
 import com.alexgreece45.marvelx.ui.navigation.marketplace.marketplaceNavigation
 import com.alexgreece45.marvelx.ui.screens.allCharacters.AllCharactersScreen
 import com.alexgreece45.marvelx.ui.screens.allCharacters.AllCharactersViewModel
 import com.alexgreece45.marvelx.ui.screens.allFavoriteCharacters.AllFavoriteCharactersScreen
 import com.alexgreece45.marvelx.ui.screens.allFavoriteCharacters.AllFavoriteCharactersViewModel
+import com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.CheckoutWizardScreen
+import com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.CheckoutWizardViewModel
+import com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.model.CheckoutWizardContract
+import com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.steps.shippingDetails.CheckoutShippingDetailsViewModel
 import com.alexgreece45.marvelx.ui.screens.changePassword.ChangePasswordScreen
 import com.alexgreece45.marvelx.ui.screens.character.CharacterScreen
 import com.alexgreece45.marvelx.ui.screens.character.CharacterViewModel
@@ -38,6 +43,15 @@ import com.alexgreece45.marvelx.ui.screens.login.LoginViewModel
 import com.alexgreece45.marvelx.ui.screens.myListings.MyListingsScreen
 import com.alexgreece45.marvelx.ui.screens.myListings.MyListingsViewModel
 import com.alexgreece45.marvelx.ui.screens.myListings.model.MyListingsContract
+import com.alexgreece45.marvelx.ui.screens.orders.OrdersScreen
+import com.alexgreece45.marvelx.ui.screens.orders.OrdersViewModel
+import com.alexgreece45.marvelx.ui.screens.orders.model.OrdersContract
+import com.alexgreece45.marvelx.ui.screens.orders.orderDetails.OrderDetailsScreen
+import com.alexgreece45.marvelx.ui.screens.orders.orderDetails.OrderDetailsViewModel
+import com.alexgreece45.marvelx.ui.screens.orders.orderDetails.model.OrderDetailsContract
+import com.alexgreece45.marvelx.ui.screens.orders.orderItemTrackingHistory.OrderItemTrackingHistoryScreen
+import com.alexgreece45.marvelx.ui.screens.orders.orderItemTrackingHistory.OrderItemTrackingHistoryViewModel
+import com.alexgreece45.marvelx.ui.screens.orders.orderItemTrackingHistory.model.OrderItemTrackingHistoryContract
 import com.alexgreece45.marvelx.ui.screens.otp.OtpScreen
 import com.alexgreece45.marvelx.ui.screens.otp.OtpViewModel
 import com.alexgreece45.marvelx.ui.screens.profile.ProfileScreen
@@ -267,7 +281,8 @@ fun NavGraph(navController: NavHostController) {
         // Main screens.
         marketplaceNavigation(
             navController,
-            bottomNavigationBarData = { getBottomNavigationBarData(navController) })
+            bottomNavigationBarData = { getBottomNavigationBarData(navController) }
+        )
 
         composable(screen = Screen.MyListingsScreen) {
             val viewModel = koinViewModel<MyListingsViewModel>()
@@ -301,6 +316,118 @@ fun NavGraph(navController: NavHostController) {
                         }
                     }
                 }
+            )
+        }
+
+        cartNavigation(
+            navController = navController,
+            bottomNavigationBarData = { getBottomNavigationBarData(navController) }
+        )
+
+        composable(screen = Screen.CheckoutWizardScreen) {
+            val viewModel = koinViewModel<CheckoutWizardViewModel>()
+            CheckoutWizardScreen(
+                onEvent = viewModel::setEvent,
+                state = viewModel.uiState.collectAsStateWithLifecycle().value,
+                effect = viewModel.uiEffect,
+                onNavigationEffect = { navigationEffect ->
+                    when (navigationEffect) {
+                        CheckoutWizardContract.Effect.Navigation.ExitWizard -> navController.navigateUp()
+                        is CheckoutWizardContract.Effect.Navigation.NavigateToExternalScreen -> {
+                            val externalScreenRoute = navigationEffect.externalScreen.route
+                            navController.navigate(externalScreenRoute) {
+                                popUpTo(externalScreenRoute) {
+                                    inclusive = true
+                                }
+                            }
+                        }
+
+                        is CheckoutWizardContract.Effect.Navigation.NavigateToOrderDetailsScreen -> {
+                            val route =
+                                Screen.OrderDetailsScreen.createNavRoute(navigationEffect.orderId)
+                            navController.navigate(route) {
+                                popUpTo(route) {
+                                    inclusive = true
+                                }
+                            }
+                        }
+                    }
+                },
+                checkoutShippingDetailsViewModel = koinViewModel<CheckoutShippingDetailsViewModel>()
+            )
+        }
+
+        composable(screen = Screen.OrdersScreen) {
+            val viewModel = koinViewModel<OrdersViewModel>()
+            OrdersScreen(
+                onEvent = viewModel::setEvent,
+                state = viewModel.uiState.collectAsStateWithLifecycle().value,
+                effect = viewModel.uiEffect,
+                onNavigationEffect = { navigationEffect ->
+                    when (navigationEffect) {
+                        OrdersContract.Effect.Navigation.GoBack -> navController.navigateUp()
+                        is OrdersContract.Effect.Navigation.GoToOrderDetailsScreen -> {
+                            navController.navigate(
+                                Screen.OrderDetailsScreen.createNavRoute(
+                                    navigationEffect.orderId
+                                )
+                            )
+                        }
+                    }
+                },
+            )
+        }
+
+        composable(screen = Screen.OrderDetailsScreen) { navBackStackEntry ->
+            val viewModel = koinViewModel<OrderDetailsViewModel>()
+            OrderDetailsScreen(
+                onEvent = viewModel::setEvent,
+                state = viewModel.uiState.collectAsStateWithLifecycle().value,
+                effect = viewModel.uiEffect,
+                onNavigationEffect = { navigationEffect ->
+                    when (navigationEffect) {
+                        OrderDetailsContract.Effect.Navigation.GoBack -> navController.navigateUp()
+                        is OrderDetailsContract.Effect.Navigation.NavigateToOrderItemTrackingHistoryScreen -> navController.navigate(
+                            Screen.OrderItemTrackingHistoryScreen.createNavRoute(
+                                orderId = navigationEffect.orderId,
+                                orderItemId = navigationEffect.orderItemId,
+                                sellerUserId = navigationEffect.sellerUserId,
+                                orderItemTitle = navigationEffect.orderItemTitle,
+                                orderItemCoverImageUrl = navigationEffect.orderItemCoverImageUrl,
+                                orderItemPriceLabel = navigationEffect.orderItemPriceLabel
+                            )
+                        )
+                    }
+                },
+                orderId = navBackStackEntry.arguments?.getString(NavItem.OrderId.key).orEmpty()
+            )
+        }
+
+        composable(screen = Screen.OrderItemTrackingHistoryScreen) { navBackStackEntry ->
+            val viewModel = koinViewModel<OrderItemTrackingHistoryViewModel>()
+            OrderItemTrackingHistoryScreen(
+                onEvent = viewModel::setEvent,
+                state = viewModel.uiState.collectAsStateWithLifecycle().value,
+                effect = viewModel.uiEffect,
+                onNavigationEffect = { navigationEffect ->
+                    when (navigationEffect) {
+                        OrderItemTrackingHistoryContract.Effect.Navigation.GoBack -> navController.navigateUp()
+                        is OrderItemTrackingHistoryContract.Effect.Navigation.GoToProfileDetailsScreen -> navController.navigate(
+                            Screen.ProfileDetailsScreen.createNavRoute(navigationEffect.userId)
+                        )
+                    }
+                },
+                orderId = navBackStackEntry.arguments?.getString(NavItem.OrderId.key).orEmpty(),
+                orderItemId = navBackStackEntry.arguments?.getString(NavItem.OrderItemId.key)
+                    .orEmpty(),
+                sellerUserId = navBackStackEntry.arguments?.getString(NavItem.SellerUserId.key)
+                    .orEmpty(),
+                orderItemTitle = navBackStackEntry.arguments?.getString(NavItem.OrderItemTitle.key)
+                    .orEmpty(),
+                orderItemCoverImageUrl = navBackStackEntry.arguments?.getString(NavItem.OrderItemCoverImageUrl.key)
+                    .orEmpty(),
+                orderItemPriceLabel = navBackStackEntry.arguments?.getString(NavItem.OrderItemPriceLabel.key)
+                    .orEmpty()
             )
         }
 
@@ -471,6 +598,10 @@ fun NavGraph(navController: NavHostController) {
 
                         ProfileContract.Effect.Navigation.NavigateToMyListingsScreen -> {
                             navController.navigate(Screen.MyListingsScreen.route)
+                        }
+
+                        ProfileContract.Effect.Navigation.NavigateToOrdersScreen -> {
+                            navController.navigate(Screen.OrdersScreen.route)
                         }
                     }
                 },
@@ -717,6 +848,14 @@ private fun getBottomNavigationItems(): List<BottomBarItem> = listOf(
         iconData = IconData(
             iconResource = R.drawable.ic_favorite_filled,
             contentDescription = R.string.bottom_navigation_label_favorites
+        )
+    ),
+    BottomBarItem(
+        route = Screen.CartScreen.route,
+        label = R.string.bottom_navigation_label_cart,
+        iconData = IconData(
+            iconResource = R.drawable.ic_cart,
+            contentDescription = R.string.bottom_navigation_label_cart
         )
     ),
     BottomBarItem(

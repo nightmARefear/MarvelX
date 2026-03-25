@@ -44,11 +44,6 @@ abstract class BaseViewModel<Event : BaseEvent, State : BaseState, Effect : Base
      */
     val uiEffect: Flow<Effect> = _effect.receiveAsFlow()
 
-    private val _viewStateHistory: Channel<State> = Channel()
-
-    val viewStateHistory: Flow<State>
-        get() = _viewStateHistory.receiveAsFlow()
-
     init {
         subscribeToEvents()
     }
@@ -71,7 +66,6 @@ abstract class BaseViewModel<Event : BaseEvent, State : BaseState, Effect : Base
     protected fun setState(reducer: State.() -> State) {
         val newState = uiState.value.reducer()
         _state.value = newState
-        notifyViewStateHistoryChanged(newState)
     }
 
     fun setEvent(event: Event) {
@@ -86,10 +80,6 @@ abstract class BaseViewModel<Event : BaseEvent, State : BaseState, Effect : Base
                 handleEvents(it)
             }
         }
-    }
-
-    private fun notifyViewStateHistoryChanged(state: State) {
-        viewModelScope.launch { _viewStateHistory.send(state) }
     }
 
     protected abstract fun handleEvents(event: Event)

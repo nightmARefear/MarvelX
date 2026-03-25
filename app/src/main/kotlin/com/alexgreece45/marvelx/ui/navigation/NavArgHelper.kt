@@ -8,6 +8,7 @@ import com.alexgreece45.marvelx.ui.navigation.models.NavArgStatus
  * navigation arguments.
  */
 object NavArgHelper {
+
     /**
      * All the user-set arguments.
      */
@@ -33,7 +34,7 @@ object NavArgHelper {
                 @Suppress("UNCHECKED_CAST")
                 NavArgStatus.Exists(arguments[navArg.key] as T)
                     .also { arguments.remove(navArg.key) }
-            } catch (e: ClassCastException) {
+            } catch (_: ClassCastException) {
                 NavArgStatus.NotExists
             }
 

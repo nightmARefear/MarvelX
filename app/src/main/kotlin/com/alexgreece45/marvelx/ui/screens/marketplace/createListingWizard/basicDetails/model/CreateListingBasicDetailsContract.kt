@@ -7,7 +7,7 @@ import com.alexgreece45.marvelx.domain.model_generic.AttachedFileContentData
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
-import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.model.CreateListingFieldUi
+import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.model.WizardInputFieldUi
 import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.model.CreateListingWizardErrorData
 import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.model.CreateListingWizardMode
 import com.alexgreece45.marvelx.ui.screens.marketplace.model.UpdateListingBasicDetails
@@ -34,24 +34,32 @@ sealed interface CreateListingBasicDetailsContract {
             data class OnItemSelected(val listingSubcategory: ListingSubcategory) : Event
         }
 
-        sealed interface ImageEvents : Event {
+        data object OnUploadPhotosButtonClicked : Event
+
+        sealed interface ImageSelectionEvents : Event {
 
             /**
              * Triggered when images are selected in the `photo picker`.
              */
-            data class OnSelectionSuccess(val imagesFileContentData: List<AttachedFileContentData>?) :
-                ImageEvents
+            data class OnSuccess(val imagesFileContentData: List<AttachedFileContentData>?) :
+                ImageSelectionEvents
+
+            /**
+             * Triggered when an error occurred in the image selection process.
+             */
+            data object OnFailure : ImageSelectionEvents
 
             /**
              * Triggered when no images were selected.
              */
-            data object OnNoSelection : ImageEvents
-
-            data class OnDeletionClicked(val uri: Uri) : ImageEvents
-            data class OnSetAsCoverClicked(val uri: Uri) : ImageEvents
+            data object OnNoSelection : ImageSelectionEvents
         }
 
-        data object OnStickyBottomButtonClicked : Event
+        sealed interface AttachedImageEvents : Event {
+            data class OnDeleteIconButtonClicked(val uri: Uri) : AttachedImageEvents
+            data class OnReordered(val from: Int, val to: Int) :
+                AttachedImageEvents // TODO: To be reviewed.
+        }
     }
 
     data class State(
@@ -63,21 +71,29 @@ sealed interface CreateListingBasicDetailsContract {
         val imageUrls: List<String> = emptyList(),
 
         // Create listing data.
+        val configurationData: CreateListingBasicDetailsAttachedImagesConfigurationData = CreateListingBasicDetailsAttachedImagesConfigurationData(
+            maxImageCount = 0,
+            maxImageSize = 0L,
+            supportedImageFileExtensions = emptyList()
+        ),
         val listingCategories: List<ListingCategory> = emptyList(),
         val listingSubcategories: List<ListingSubcategory> = emptyList(),
 
         // Input data.
-        val title: CreateListingFieldUi.Text = CreateListingFieldUi.Text(),
-        val description: CreateListingFieldUi.Text = CreateListingFieldUi.Text(),
-        val category: CreateListingFieldUi.Enum = CreateListingFieldUi.Enum(),
-        val subcategory: CreateListingFieldUi.Enum = CreateListingFieldUi.Enum(),
-        val attachedFiles: List<AttachedFileContentData> = emptyList(),
+        val title: WizardInputFieldUi.Text = WizardInputFieldUi.Text(),
+        val description: WizardInputFieldUi.Text = WizardInputFieldUi.Text(),
+        val category: WizardInputFieldUi.Enum = WizardInputFieldUi.Enum(),
+        val subcategory: WizardInputFieldUi.Enum = WizardInputFieldUi.Enum(),
+        val attachedImages: List<AttachedFileContentData> = emptyList(),
 
         val error: CreateListingWizardErrorData? = null,
     ) : BaseState
 
     sealed interface Effect : BaseEffect {
         data object GoToPreviousStep : Effect
+        data object OpenPhotoPicker : Effect
+        data class ShowToastMessage(val message: String) : Effect
+        data object OnImagesReordered : Effect
 
         data class SetNextButtonEnabled(val enabled: Boolean) : Effect
     }

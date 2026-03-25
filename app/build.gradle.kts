@@ -128,21 +128,30 @@ android {
         compose = true
     }
 
-    kotlinOptions {
-        jvmTarget = JavaVersion.toVersion(libs.versions.java.version.get()).toString()
-        freeCompilerArgs = listOf("-XXLanguage:+PropertyParamAnnotationDefaultTargetMode")
+    // TODO: To be transferred to kotlin block (kotlin {}).
+//    kotlinOptions {
+//        jvmTarget = JavaVersion.toVersion(libs.versions.java.version.get()).toString()
+//    }
 
-        // Compose metrics.
-        freeCompilerArgs += listOf(
-            "-P",
-            "plugin:androidx.compose.compiler.plugins.kotlin:reportsDestination=" +
-                    project.buildDir.absolutePath + "/compose_metrics"
-        )
-        freeCompilerArgs += listOf(
-            "-P",
-            "plugin:androidx.compose.compiler.plugins.kotlin:metricsDestination=" +
-                    project.buildDir.absolutePath + "/compose_metrics"
-        )
+    kotlin {
+        compilerOptions {
+            freeCompilerArgs.add("-XXLanguage:+PropertyParamAnnotationDefaultTargetMode")
+
+            // Compose metrics.
+            freeCompilerArgs.addAll(
+                "-P",
+                "plugin:androidx.compose.compiler.plugins.kotlin:reportsDestination=" +
+                        project.buildDir.absolutePath + "/compose_metrics"
+            )
+            freeCompilerArgs.addAll(
+                "-P",
+                "plugin:androidx.compose.compiler.plugins.kotlin:metricsDestination=" +
+                        project.buildDir.absolutePath + "/compose_metrics"
+            )
+
+            // Explicit backing fields.
+            freeCompilerArgs.add("-XXLanguage:+ExplicitBackingFields")
+        }
     }
 
     packaging {
@@ -256,4 +265,10 @@ dependencies {
 
     // Image cropper.
     implementation(libs.vanniktech.android.image.cropper)
+
+    // Reorderable composables.
+    implementation(libs.sh.calvin.reorderable)
+
+    // Stepper.
+    implementation(libs.binayshaw.kotstep)
 }

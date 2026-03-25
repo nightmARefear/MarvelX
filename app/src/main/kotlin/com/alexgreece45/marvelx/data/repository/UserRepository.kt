@@ -1,6 +1,8 @@
 package com.alexgreece45.marvelx.data.repository
 
 import com.alexgreece45.marvelx.data.model.RepositoryPrivacySettings
+import com.alexgreece45.marvelx.data.model.profileDetails.RepositoryBasicProfileDetails
+import com.alexgreece45.marvelx.data.model.profileDetails.toData
 import com.alexgreece45.marvelx.data.model.toRepositoryPrivacySettings
 import com.alexgreece45.marvelx.data.repository.helper.RepositoryResult
 import com.alexgreece45.marvelx.data.repository.helper.handleApiResult
@@ -20,6 +22,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import okhttp3.MultipartBody
 import kotlin.coroutines.CoroutineContext
@@ -30,6 +33,8 @@ interface UserRepository {
      * Gets the profile details of the given [userId].
      */
     suspend fun getProfileDetails(userId: String): GetProfileDetailsRepositoryResponse
+
+    suspend fun getBasicProfileDetails(userId: String): RepositoryResult<RepositoryBasicProfileDetails>
 
     /**
      * Get the profile details of the current user.
@@ -107,6 +112,14 @@ class UserRepositoryImpl(
                     )
                 }
             }
+
+    override suspend fun getBasicProfileDetails(userId: String): RepositoryResult<RepositoryBasicProfileDetails> {
+        return handleApiResult(
+            apiResult = apiClient.getBasicProfileDetails(userId),
+            transformation = { this.toData() },
+            ioDispatcher = ioDispatcher
+        ).first()
+    }
 
     override suspend fun getCurrentUserProfileDetails(): Flow<GetCurrentUserProfileDetailsRepositoryResponse> =
         flow {

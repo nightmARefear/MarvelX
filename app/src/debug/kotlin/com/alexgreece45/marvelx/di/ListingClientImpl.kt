@@ -1,95 +1,100 @@
 package com.alexgreece45.marvelx.di
 
 import com.alexgreece45.marvelx.network_logic.clients.ListingClient
+import com.alexgreece45.marvelx.network_logic.models_api.cart.ResponseCartInfo
+import com.alexgreece45.marvelx.network_logic.models_api.cart.ResponseCartSummary
 import com.alexgreece45.marvelx.network_logic.models_api.marketplace.ResponseMarketplace
-import com.alexgreece45.marvelx.network_logic.models_api.marketplace.listing.RequestCreateListing
 import com.alexgreece45.marvelx.network_logic.models_api.marketplace.listing.RequestUpdateListing
 import com.alexgreece45.marvelx.network_logic.models_api.marketplace.listing.ResponseListing
 import com.alexgreece45.marvelx.network_logic.models_api.marketplace.listing.ResponseListingCategory
 import com.alexgreece45.marvelx.network_logic.models_api.marketplace.listing.ResponseListingEnumGeneric
 import com.alexgreece45.marvelx.network_logic.models_api.marketplace.listing.ResponseListingId
 import com.alexgreece45.marvelx.network_logic.models_api.marketplace.listing.ResponseListingPreview
+import com.alexgreece45.marvelx.network_logic.models_api.myListing.ResponseMyListing
 import com.alexgreece45.marvelx.network_logic.models_generic.ApiResult
 import com.alexgreece45.marvelx.network_logic.services.ListingService
 import com.alexgreece45.marvelx.network_logic.util.executeApiServiceCall
 import com.alexgreece45.marvelx.network_logic.util.executeApiServiceCallNoTransformation
+import okhttp3.MultipartBody
 
 class ListingClientImpl(
-    private val apiService: ListingService
+    private val listingService: ListingService
 ) : ListingClient {
 
     override suspend fun getListingCategories(): ApiResult<List<ResponseListingCategory>> {
-        return executeApiServiceCall { apiService.getListingCategories() }
+        return executeApiServiceCall { listingService.getListingCategories() }
     }
 
     override suspend fun getListingStatuses(): ApiResult<List<ResponseListingEnumGeneric>> {
-        return executeApiServiceCall { apiService.getListingStatuses() }
+        return executeApiServiceCall { listingService.getListingStatuses() }
     }
 
     override suspend fun getListingConditions(): ApiResult<List<ResponseListingEnumGeneric>> {
-        return executeApiServiceCall { apiService.getListingConditions() }
+        return executeApiServiceCall { listingService.getListingConditions() }
     }
 
     override suspend fun getListingApparelSizes(): ApiResult<List<ResponseListingEnumGeneric>> {
-        return executeApiServiceCall { apiService.getListingApparelSizes() }
+        return executeApiServiceCall { listingService.getListingApparelSizes() }
     }
 
     override suspend fun getListingMaterials(): ApiResult<List<ResponseListingEnumGeneric>> {
-        return executeApiServiceCall { apiService.getListingMaterials() }
+        return executeApiServiceCall { listingService.getListingMaterials() }
     }
 
     override suspend fun getListingCollectibleScales(): ApiResult<List<ResponseListingEnumGeneric>> {
-        return executeApiServiceCall { apiService.getListingCollectibleScales() }
+        return executeApiServiceCall { listingService.getListingCollectibleScales() }
     }
 
     override suspend fun getListingCollectibleBoxConditions(): ApiResult<List<ResponseListingEnumGeneric>> {
-        return executeApiServiceCall { apiService.getListingCollectibleScales() }
+        return executeApiServiceCall { listingService.getListingCollectibleScales() }
     }
 
     override suspend fun getListingGrades(): ApiResult<List<ResponseListingEnumGeneric>> {
-        return executeApiServiceCall { apiService.getListingGrades() }
+        return executeApiServiceCall { listingService.getListingGrades() }
     }
 
     override suspend fun getListingCardRarities(): ApiResult<List<ResponseListingEnumGeneric>> {
-        return executeApiServiceCall { apiService.getListingCardRarities() }
+        return executeApiServiceCall { listingService.getListingCardRarities() }
     }
 
     override suspend fun getListingCardVariants(): ApiResult<List<ResponseListingEnumGeneric>> {
-        return executeApiServiceCall { apiService.getListingCardVariants() }
+        return executeApiServiceCall { listingService.getListingCardVariants() }
     }
 
     override suspend fun getMarketplaceInfo(): ApiResult<ResponseMarketplace> {
-        return executeApiServiceCall {
-            apiService.getMarketplaceScreen()
-        }
+        return executeApiServiceCall { listingService.getMarketplaceScreen() }
     }
 
     override suspend fun getAllListingsByCategory(
         categoryCode: String
     ): ApiResult<List<ResponseListing>> {
-        return executeApiServiceCall { apiService.getAllListingsByCategory(categoryCode) }
+        return executeApiServiceCall { listingService.getAllListingsByCategory(categoryCode) }
+    }
+
+    override suspend fun getCurrentUserListings(page: Int): ApiResult<List<ResponseMyListing>> {
+        return executeApiServiceCall {
+            listingService.getCurrentUserListings(page)
+        }
     }
 
     override suspend fun getUserListings(
         userId: String,
         page: Int
-    ): ApiResult<List<ResponseListing>> {
+    ): ApiResult<List<ResponseListingPreview>> {
         return executeApiServiceCall {
-            apiService.getUserListings(userId, page)
+            listingService.getUserListings(userId, page)
         }
     }
 
     override suspend fun getListing(listingId: String): ApiResult<ResponseListing> {
         return executeApiServiceCall {
-            apiService.getListing(listingId)
+            listingService.getListing(listingId)
         }
     }
 
-    override suspend fun createListing(
-        request: RequestCreateListing
-    ): ApiResult<ResponseListingId> {
+    override suspend fun createListing(body: MultipartBody): ApiResult<ResponseListingId> {
         return executeApiServiceCall {
-            apiService.createListing(request)
+            listingService.createListing(body)
         }
     }
 
@@ -98,31 +103,61 @@ class ListingClientImpl(
         request: RequestUpdateListing
     ): ApiResult<String> {
         return executeApiServiceCallNoTransformation {
-            apiService.updateListing(listingId, request)
+            listingService.updateListing(listingId, request)
         }
     }
 
     override suspend fun deleteListing(listingId: String): ApiResult<String> {
         return executeApiServiceCallNoTransformation {
-            apiService.deleteListing(listingId)
+            listingService.deleteListing(listingId)
         }
     }
 
     override suspend fun addToFavorites(listingId: String): ApiResult<String> {
         return executeApiServiceCallNoTransformation {
-            apiService.addToFavorites(listingId)
+            listingService.addToFavorites(listingId)
         }
     }
 
     override suspend fun removeFromFavorites(listingId: String): ApiResult<String> {
         return executeApiServiceCallNoTransformation {
-            apiService.removeFromFavorites(listingId)
+            listingService.removeFromFavorites(listingId)
         }
     }
 
     override suspend fun getFavoriteListings(): ApiResult<List<ResponseListingPreview>> {
         return executeApiServiceCall {
-            apiService.getFavoriteListings()
+            listingService.getFavoriteListings()
+        }
+    }
+
+    override suspend fun getCartInfo(): ApiResult<ResponseCartInfo> {
+        return executeApiServiceCall {
+            listingService.getCartInfo()
+        }
+    }
+
+    override suspend fun getCartItems(): ApiResult<List<ResponseListingPreview>> {
+        return executeApiServiceCall {
+            listingService.getCartItems()
+        }
+    }
+
+    override suspend fun getCartSummary(): ApiResult<ResponseCartSummary> {
+        return executeApiServiceCall {
+            listingService.getCartSummary()
+        }
+    }
+
+    override suspend fun addCartItem(listingId: String): ApiResult<String> {
+        return executeApiServiceCallNoTransformation {
+            listingService.addCartItem(listingId)
+        }
+    }
+
+    override suspend fun deleteCartItem(listingId: String): ApiResult<String> {
+        return executeApiServiceCallNoTransformation {
+            listingService.deleteCartItem(listingId)
         }
     }
 }

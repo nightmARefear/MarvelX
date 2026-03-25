@@ -40,7 +40,7 @@ import coil.request.ImageRequest
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.domain.model_api.character.CharacterDomain
 import com.alexgreece45.marvelx.domain.model_api.comic.ComicDomain
-import com.alexgreece45.marvelx.ui.components.ContentErrorScreen
+import com.alexgreece45.marvelx.ui.components.LazyItemContentErrorScreen
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.IconData
 import com.alexgreece45.marvelx.ui.components.ItemDescription
@@ -134,7 +134,7 @@ fun CharacterScreen(
         ) {
             state.error?.let { error ->
                 item {
-                    ContentErrorScreen(
+                    LazyItemContentErrorScreen(
                         errorMessage = error.errorMessage,
                         onRetryClick = { error.onRetryClick.invoke() })
                 }
@@ -242,7 +242,7 @@ fun <T> LazyRowTemplate(
         )
 
         IconButton(
-            onClick = { onArrowRightClick() }
+            onClick = onArrowRightClick
         ) {
             Icon(
                 painter = painterResource(R.drawable.ic_arrow_right),

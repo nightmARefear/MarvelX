@@ -38,6 +38,7 @@ fun WrapAsyncImage(
     imageUrl: String,
     contentDescription: String,
     modifier: Modifier = Modifier,
+    boxModifier: Modifier = Modifier,
     placeholder: Painter? = null,
     error: Painter? = painterResource(R.drawable.ic_broken_image),
     onLoading: ((AsyncImagePainter.State.Loading) -> Unit)? = null,
@@ -47,7 +48,7 @@ fun WrapAsyncImage(
     shadowData: ShadowData? = null,
     isCacheDisabled: Boolean = false,
 ) {
-    val boxModifier = if (shadowData != null) {
+    val shadowModifier = if (shadowData != null) {
         Modifier
             .shadow(
                 elevation = shadowData.elevation,
@@ -58,7 +59,7 @@ fun WrapAsyncImage(
             )
     } else Modifier
 
-    Box(modifier = boxModifier) {
+    Box(modifier = boxModifier.then(shadowModifier)) {
         AsyncImage(
             model = ImageRequest.Builder(LocalContext.current)
                 .data(imageUrl)

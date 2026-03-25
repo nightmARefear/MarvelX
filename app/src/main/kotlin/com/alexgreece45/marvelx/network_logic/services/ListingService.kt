@@ -1,13 +1,16 @@
 package com.alexgreece45.marvelx.network_logic.services
 
+import com.alexgreece45.marvelx.network_logic.models_api.cart.ResponseCartInfo
+import com.alexgreece45.marvelx.network_logic.models_api.cart.ResponseCartSummary
 import com.alexgreece45.marvelx.network_logic.models_api.marketplace.ResponseMarketplace
-import com.alexgreece45.marvelx.network_logic.models_api.marketplace.listing.RequestCreateListing
 import com.alexgreece45.marvelx.network_logic.models_api.marketplace.listing.RequestUpdateListing
 import com.alexgreece45.marvelx.network_logic.models_api.marketplace.listing.ResponseListing
 import com.alexgreece45.marvelx.network_logic.models_api.marketplace.listing.ResponseListingCategory
 import com.alexgreece45.marvelx.network_logic.models_api.marketplace.listing.ResponseListingEnumGeneric
 import com.alexgreece45.marvelx.network_logic.models_api.marketplace.listing.ResponseListingId
 import com.alexgreece45.marvelx.network_logic.models_api.marketplace.listing.ResponseListingPreview
+import com.alexgreece45.marvelx.network_logic.models_api.myListing.ResponseMyListing
+import okhttp3.MultipartBody
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -54,11 +57,16 @@ interface ListingService {
         @Path("categoryCode") categoryCode: String
     ): Response<List<ResponseListing>>
 
+    @GET("/api/private/marvelx/users/me/listings")
+    suspend fun getCurrentUserListings(
+        @Query("page") page: Int
+    ): Response<List<ResponseMyListing>>
+
     @GET("/api/private/marvelx/users/{userId}/listings")
     suspend fun getUserListings(
         @Path("userId") userId: String,
         @Query("page") page: Int
-    ): Response<List<ResponseListing>>
+    ): Response<List<ResponseListingPreview>>
 
     @GET("/api/private/marvelx/listings/{listingId}")
     suspend fun getListing(
@@ -67,7 +75,7 @@ interface ListingService {
 
     @POST("/api/private/marvelx/listings")
     suspend fun createListing(
-        @Body request: RequestCreateListing
+        @Body body: MultipartBody
     ): Response<ResponseListingId>
 
     @PATCH("/api/private/marvelx/listings/{listingId}")
@@ -94,4 +102,25 @@ interface ListingService {
     @GET("/api/private/marvelx/listings/favorites")
     suspend fun getFavoriteListings(
     ): Response<List<ResponseListingPreview>>
+
+    // Cart calls.
+
+    @GET("/api/private/marvelx/cart/info")
+    suspend fun getCartInfo(): Response<ResponseCartInfo>
+
+    @GET("/api/private/marvelx/cart/items")
+    suspend fun getCartItems(): Response<List<ResponseListingPreview>>
+
+    @GET("/api/private/marvelx/cart/summary")
+    suspend fun getCartSummary(): Response<ResponseCartSummary>
+
+    @POST("/api/private/marvelx/cart/{listingId}")
+    suspend fun addCartItem(
+        @Path("listingId") listingId: String
+    ): Response<Void>
+
+    @DELETE("/api/private/marvelx/cart/{listingId}")
+    suspend fun deleteCartItem(
+        @Path("listingId") listingId: String
+    ): Response<Void>
 }

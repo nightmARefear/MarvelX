@@ -49,7 +49,7 @@ import coil.request.ImageRequest
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.data.model.deepLink.DeepLinkAction
 import com.alexgreece45.marvelx.ui.components.BottomNavigationBarData
-import com.alexgreece45.marvelx.ui.components.ContentErrorScreen
+import com.alexgreece45.marvelx.ui.components.LazyItemContentErrorScreen
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.ExtendedFabData
 import com.alexgreece45.marvelx.ui.components.NormalFabData
@@ -198,7 +198,7 @@ fun AllCharactersScreen(
                     contentPadding = contentPadding
                 ) {
                     item {
-                        ContentErrorScreen(
+                        LazyItemContentErrorScreen(
                             errorMessage = error.errorMessage,
                             onRetryClick = error.onRetryClick
                         )

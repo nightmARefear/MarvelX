@@ -1,12 +1,9 @@
 package com.alexgreece45.marvelx.ui.screens.profile.profileDetails
 
-import android.content.ClipData
 import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.core.FastOutLinearInEasing
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
@@ -20,13 +17,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Card
-import androidx.compose.material.Divider
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.ModalBottomSheetValue
 import androidx.compose.material.Text
-import androidx.compose.material.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -66,6 +61,7 @@ import com.alexgreece45.marvelx.ui.components.ModalBottomSheetContent
 import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
 import com.alexgreece45.marvelx.ui.components.ToolbarAction
 import com.alexgreece45.marvelx.ui.components.WrapAsyncImage
+import com.alexgreece45.marvelx.ui.components.WrapHorizontalDivider
 import com.alexgreece45.marvelx.ui.components.WrapModalBottomSheetLayout
 import com.alexgreece45.marvelx.ui.components.chips.AddFriendChip
 import com.alexgreece45.marvelx.ui.components.chips.CancelRequestChip
@@ -76,6 +72,7 @@ import com.alexgreece45.marvelx.ui.components.enforceMaxBrightness
 import com.alexgreece45.marvelx.ui.components.error.ContentErrorScreen
 import com.alexgreece45.marvelx.ui.components.modalBottomSheetContents.ModalBottomSheetContentItems
 import com.alexgreece45.marvelx.ui.components.model.BottomSheetContentItem
+import com.alexgreece45.marvelx.ui.components.rememberWrapModalBottomSheetState
 import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.model.ProfileDetailsBottomSheetType
 import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.model.ProfileDetailsNestedErrorView
 import com.alexgreece45.marvelx.ui.theme.MarvelXTheme
@@ -86,6 +83,7 @@ import com.alexgreece45.marvelx.util.VSpacer
 import com.alexgreece45.marvelx.util.constants.ConstantsUi
 import com.alexgreece45.marvelx.util.extensions.circularImageWithBorder
 import com.alexgreece45.marvelx.util.extensions.hideIfVisible
+import com.alexgreece45.marvelx.util.extensions.setText
 import com.alexgreece45.marvelx.util.extensions.shareContentUrl
 import com.alexgreece45.marvelx.util.extensions.throttledClickable
 import kotlinx.coroutines.flow.Flow
@@ -107,16 +105,7 @@ fun ProfileDetailsScreen(
     val coroutineScope = rememberCoroutineScope()
     val clipboard = LocalClipboard.current
 
-    val modalBottomSheetState =
-        rememberModalBottomSheetState(
-            initialValue = ModalBottomSheetValue.Hidden,
-            // Allows to display a bottom sheet directly after the previous one.
-            animationSpec = tween(
-                durationMillis = 150,
-                easing = FastOutLinearInEasing
-            ),
-            skipHalfExpanded = true
-        )
+    val modalBottomSheetState = rememberWrapModalBottomSheetState()
 
     /**
      * Whether to enforce the max screen brightness.
@@ -158,9 +147,7 @@ fun ProfileDetailsScreen(
             }
 
             is ProfileDetailsContract.Effect.SetClipboardText -> {
-                clipboard.nativeClipboard.setPrimaryClip(
-                    ClipData.newPlainText("copied text", uiEffect.text)
-                )
+                clipboard.setText(uiEffect.text)
                 Toast.makeText(context, uiEffect.toastMessage, Toast.LENGTH_SHORT).show()
             }
         }
@@ -399,10 +386,7 @@ fun ProfileDetailsScreen(
 
                             // Relationship status.
                             if (profileDetails.isDifferentUser) {
-                                Divider(
-                                    color = MaterialTheme.colors.onSurface,
-                                    thickness = 1.dp
-                                )
+                                WrapHorizontalDivider()
 
                                 when (profileDetails.relationshipStatus) {
                                     null -> {}

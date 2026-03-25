@@ -12,6 +12,7 @@ import com.alexgreece45.marvelx.controllers.WebsocketControllerImpl
 import com.alexgreece45.marvelx.controllers.model.websocket.WebsocketRequestType
 import com.alexgreece45.marvelx.di.ApiClientImpl
 import com.alexgreece45.marvelx.di.ListingClientImpl
+import com.alexgreece45.marvelx.di.OrderClientImpl
 import com.alexgreece45.marvelx.dispatchers.IoDispatcher
 import com.alexgreece45.marvelx.dispatchers.MainDispatcher
 import com.alexgreece45.marvelx.domain.model_api.comic.ComicPriceType
@@ -20,6 +21,7 @@ import com.alexgreece45.marvelx.network_logic.authenticators.ApiAuthenticator
 import com.alexgreece45.marvelx.network_logic.authenticators.RefreshTokenAuthenticator
 import com.alexgreece45.marvelx.network_logic.clients.ApiClient
 import com.alexgreece45.marvelx.network_logic.clients.ListingClient
+import com.alexgreece45.marvelx.network_logic.clients.OrderClient
 import com.alexgreece45.marvelx.network_logic.clients.RefreshTokenClient
 import com.alexgreece45.marvelx.network_logic.clients.RefreshTokenClientImpl
 import com.alexgreece45.marvelx.network_logic.interceptors.ApiInterceptor
@@ -27,6 +29,7 @@ import com.alexgreece45.marvelx.network_logic.interceptors.RefreshTokenIntercept
 import com.alexgreece45.marvelx.network_logic.interceptors.WebsocketInterceptor
 import com.alexgreece45.marvelx.network_logic.services.ApiService
 import com.alexgreece45.marvelx.network_logic.services.ListingService
+import com.alexgreece45.marvelx.network_logic.services.OrderService
 import com.alexgreece45.marvelx.network_logic.services.RefreshTokenService
 import com.alexgreece45.marvelx.network_logic.typeAdapters.ComicPriceTypeAdapter
 import com.alexgreece45.marvelx.network_logic.typeAdapters.InstantTypeAdapter
@@ -260,19 +263,6 @@ fun provideRetrofit(
     .client(okHttpClient)
     .build()
 
-/**
- * Provides [Retrofit] for the token service.
- */
-fun provideRetrofitForRefreshTokenService(
-    okHttpClient: OkHttpClient,
-    converterFactory: GsonConverterFactory,
-    configLogic: ConfigLogic
-): Retrofit = Retrofit.Builder()
-    .baseUrl(configLogic.serverUrl)
-    .addConverterFactory(converterFactory)
-    .client(okHttpClient)
-    .build()
-
 @Single(binds = [ApiClientImpl::class])
 fun provideApiService(retrofit: Retrofit): ApiService =
     retrofit.create(ApiService::class.java)
@@ -285,16 +275,9 @@ fun provideRefreshTokenService(retrofit: Retrofit): RefreshTokenService =
 fun provideListingService(retrofit: Retrofit): ListingService =
     retrofit.create(ListingService::class.java)
 
-@Single
-fun provideApiClient(apiService: ApiService): ApiClient = ApiClientImpl(apiService)
-
-@Single
-fun provideRefreshTokenClient(refreshTokenService: RefreshTokenService): RefreshTokenClient =
-    RefreshTokenClientImpl(refreshTokenService)
-
-@Single
-fun provideListingClient(listingService: ListingService): ListingClient =
-    ListingClientImpl(listingService)
+@Single(binds = [OrderClientImpl::class])
+fun provideOrderService(retrofit: Retrofit): OrderService =
+    retrofit.create(OrderService::class.java)
 
 @Single
 fun provideWebsocketController(
@@ -346,7 +329,7 @@ val networkKoinModule = module {
     single<RefreshTokenService> {
         val okHttpClient: OkHttpClient =
             provideOkHttpClientForRefreshTokenClient(get(), get(), get(), get(), get(), get())
-        val retrofit: Retrofit = provideRetrofitForRefreshTokenService(okHttpClient, get(), get())
+        val retrofit: Retrofit = provideRetrofit(okHttpClient, get(), get())
         provideRefreshTokenService(retrofit)
     }
     single<ListingService> {
@@ -355,10 +338,17 @@ val networkKoinModule = module {
         val retrofit = provideRetrofit(okHttpClient, get(), get())
         provideListingService(retrofit)
     }
+    single<OrderService> {
+        val okHttpClient: OkHttpClient =
+            provideOkHttpClient(get(), get(), get(), get(), get(), get())
+        val retrofit: Retrofit = provideRetrofit(okHttpClient, get(), get())
+        provideOrderService(retrofit)
+    }
 
-    single<ApiClient> { provideApiClient(get()) }
-    single<RefreshTokenClient> { provideRefreshTokenClient(get()) }
+    single<ApiClient> { ApiClientImpl(get()) }
+    single<RefreshTokenClient> { RefreshTokenClientImpl(get()) }
     single<ListingClient> { ListingClientImpl(get()) }
+    single<OrderClient> { OrderClientImpl(get()) }
 
     // Websocket client.
     single<WebsocketController> {

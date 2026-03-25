@@ -1,7 +1,6 @@
 package com.alexgreece45.marvelx.ui.screens.marketplace.listingDetailsScreen
 
 import android.content.res.Configuration
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -15,6 +14,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.ButtonDefaults
+import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -29,7 +29,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.data.model.marketplace.listing.ListingEnumGeneric
+import com.alexgreece45.marvelx.data.model.marketplace.listing.EnumGeneric
 import com.alexgreece45.marvelx.domain.model_api.marketplace.listing.ListingDetailsDomain
 import com.alexgreece45.marvelx.domain.model_api.marketplace.listing.ListingDimensions
 import com.alexgreece45.marvelx.domain.model_api.user.privacySettings.PrivacySettingsDomain
@@ -49,9 +49,14 @@ import com.alexgreece45.marvelx.ui.components.WrapAsyncImage
 import com.alexgreece45.marvelx.ui.components.WrapButton
 import com.alexgreece45.marvelx.ui.components.WrapHorizontalPager
 import com.alexgreece45.marvelx.ui.components.effect.ObserveUiEffect
+import com.alexgreece45.marvelx.ui.components.icons.ProcessingRequestIconLottie
+import com.alexgreece45.marvelx.ui.model_generic.BigDecimalUi
+import com.alexgreece45.marvelx.ui.model_generic.InstantUi
 import com.alexgreece45.marvelx.ui.screens.marketplace.components.ListingImage
-import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.model.CreateListingFieldUi
+import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.model.CreateListingWizardMode
+import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.model.WizardInputFieldUi
 import com.alexgreece45.marvelx.ui.screens.marketplace.listingDetailsScreen.model.ListingDetailsContract
+import com.alexgreece45.marvelx.ui.screens.marketplace.listingDetailsScreen.model.ListingDetailsMode
 import com.alexgreece45.marvelx.ui.screens.marketplace.model.ListingStatusUi
 import com.alexgreece45.marvelx.ui.screens.marketplace.model.ListingUi
 import com.alexgreece45.marvelx.ui.theme.MarvelXTheme
@@ -77,7 +82,8 @@ fun ListingDetailsScreen(
     state: ListingDetailsContract.State,
     effect: Flow<ListingDetailsContract.Effect>,
     onNavigation: (ListingDetailsContract.Effect.Navigation) -> Unit,
-    listingId: String
+    listingId: String?,
+    createListingWizardMode: CreateListingWizardMode?
 ) {
 
     val context = LocalContext.current
@@ -96,11 +102,7 @@ fun ListingDetailsScreen(
     }
 
     LaunchedEffect(Unit) {
-        onEvent(ListingDetailsContract.Event.Init(listingId))
-    }
-
-    BackHandler(enabled = true) {
-        onEvent(ListingDetailsContract.Event.OnBack)
+        onEvent(ListingDetailsContract.Event.Init(listingId, createListingWizardMode))
     }
 
     ContentScreen(
@@ -117,18 +119,25 @@ fun ListingDetailsScreen(
                 ListingDetailsContract.Event.OnBack
             )
         },
-        showToolbar = true,
+        showToolbar = state.showToolbar,
         toolbarTitle = state.toolbarTitle,
         toolbarActions = getToolbarActions(
-            listing = state.listing,
+            canEditListing = state.listing?.canEdit,
+            isListingFavorite = state.listing?.favorite,
+            mode = state.mode,
             onToolbarActionButtonEvent = onEvent
         ),
         stickyBottom = {
-            state.listing?.let { listing ->
-                StickyBottom(
-                    listingStatus = listing.status,
-                    onAddToBasketButtonClicked = { onEvent(ListingDetailsContract.Event.OnAddToBasketButtonClicked) }
-                )
+            safeLetComposable(state.listing, state.mode) { listing, mode ->
+                if (mode == ListingDetailsMode.EXISTING
+                    && !listing.canEdit
+                ) {
+                    StickyBottom(
+                        listingStatus = listing.status,
+                        buttonLoading = state.addToBasketButtonLoading,
+                        onButtonClicked = { onEvent(ListingDetailsContract.Event.OnStickyBottomButtonClicked) }
+                    )
+                }
             }
         }
     ) { paddingValues ->
@@ -141,9 +150,9 @@ fun ListingDetailsScreen(
             if (state.hasError) {
                 GenericErrorScreen(
                     errorMessage = stringResource(R.string.screen_listing_details_error_loading_listing),
+                    modifier = Modifier.fillMaxSize(),
                     onRetryClick = { onEvent(ListingDetailsContract.Event.OnErrorRetryButtonClicked) }
                 )
-
                 return@ContentScreen
             }
 
@@ -200,7 +209,7 @@ private fun ListingView(
         VSpacer.Small()
 
         Text(
-            text = listing.priceLabel,
+            text = listing.price.label,
             color = MaterialTheme.customColors.genericRed,
             style = MaterialTheme.typography.h5
         )
@@ -225,14 +234,14 @@ private fun ListingView(
 
         DateSection(
             label = stringResource(R.string.screen_listing_details_listing_posted_at),
-            formattedDate = listing.postedAtLabel
+            formattedDate = listing.postedAt.label
         )
 
         VSpacer.Small()
 
         DateSection(
             label = stringResource(R.string.screen_listing_details_listing_updated_at),
-            formattedDate = listing.updatedAtLabel
+            formattedDate = listing.updatedAt.label
         )
 
         VSpacer.Medium()
@@ -353,8 +362,8 @@ private fun ColumnScope.DimensionDetailsSubSection(listingDimensions: ListingDim
     DetailsSubSectionItem(
         label = stringResource(
             R.string.screen_listing_details_listing_details_label_dimensions,
-            listingDimensions.width,
-            listingDimensions.height
+            listingDimensions.width.integerValue,
+            listingDimensions.height.integerValue
         ),
         iconData = IconData(
             iconResource = R.drawable.ic_listing_size,
@@ -569,13 +578,19 @@ private fun ColumnScope.CardDetailsSubSection(cardDetailsDomain: ListingDetailsD
 
 @Composable
 private fun getToolbarActions(
-    listing: ListingUi?,
+    canEditListing: Boolean?,
+    isListingFavorite: Boolean?,
+    mode: ListingDetailsMode?,
     onToolbarActionButtonEvent: (ListingDetailsContract.Event.ToolbarActionButton) -> Unit
 ): List<ToolbarAction>? {
-    if (listing == null) return null
+    if (canEditListing == null
+        || isListingFavorite == null
+        || mode == null
+        || mode == ListingDetailsMode.OVERVIEW
+    ) return null
 
     return listOf(
-        if (listing.canEdit) {
+        if (canEditListing) {
             ToolbarAction(
                 label = stringResource(R.string.screen_listing_details_toolbar_action_label_edit_listing),
                 order = 1,
@@ -586,7 +601,7 @@ private fun getToolbarActions(
                 onClick = { onToolbarActionButtonEvent(ListingDetailsContract.Event.ToolbarActionButton.OnEditClicked) }
             )
         } else {
-            if (listing.favorite) {
+            if (isListingFavorite) {
                 ToolbarAction(
                     label = stringResource(R.string.screen_listing_details_toolbar_action_label_unfavorite_listing),
                     order = 1,
@@ -622,18 +637,39 @@ private fun getToolbarActions(
 }
 
 @Composable
-private fun StickyBottom(listingStatus: ListingStatusUi, onAddToBasketButtonClicked: () -> Unit) {
+private fun StickyBottom(
+    listingStatus: ListingStatusUi,
+    buttonLoading: Boolean,
+    onButtonClicked: () -> Unit
+) {
     when (listingStatus) {
+        ListingStatusUi.Draft -> {}
+
         ListingStatusUi.Active -> {
             WrapButton(
-                onClick = onAddToBasketButtonClicked,
+                onClick = onButtonClicked,
                 modifier = Modifier.fillMaxWidth(),
+                enabled = !buttonLoading,
                 colors = ButtonDefaults.buttonColors(
                     backgroundColor = MaterialTheme.customColors.genericRed,
-                    contentColor = MaterialTheme.customColors.buttonContentWhite
+                    contentColor = MaterialTheme.customColors.buttonContentWhite,
+
+                    // We use the same colors as the enabled state in order to highlight the loading
+                    // icon.
+                    disabledBackgroundColor = MaterialTheme.customColors.genericRed,
+                    disabledContentColor = MaterialTheme.customColors.buttonContentWhite
                 )
             ) {
-                Text(text = stringResource(R.string.screen_listing_details_sticky_bottom_button_add_to_basket))
+                if (buttonLoading) {
+                    // TODO: Review icon.
+//                    CircularProgressIndicator(
+//                        modifier = Modifier.size(ConstantsUi.MIN_ICON_SIZE),
+//                        color = MaterialTheme.customColors.white
+//                    )
+                    ProcessingRequestIconLottie()
+                } else {
+                    Text(text = stringResource(R.string.screen_listing_details_sticky_bottom_button_add_to_basket))
+                }
             }
         }
 
@@ -664,28 +700,32 @@ private fun ListingDetailsScreenPreview() {
             onEvent = { },
             state = ListingDetailsContract.State(
                 isLoading = false,
+                mode = ListingDetailsMode.EXISTING,
                 listingId = "1",
                 listing = ListingUi(
                     listingId = "1",
                     sellerUserId = "23223",
-                    category = ListingEnumGeneric(
+                    category = EnumGeneric(
                         code = "drinkware",
                         label = "Drinkware"
                     ),
-                    subcategory = ListingEnumGeneric(
+                    subcategory = EnumGeneric(
                         code = "mug",
                         label = "Mugs"
                     ),
-                    condition = ListingEnumGeneric(
+                    condition = EnumGeneric(
                         code = "very_good",
                         label = "Very Good"
                     ),
                     status = ListingStatusUi.Active,
                     title = "Rare 2005 Spider-Man Limited Edition Mug",
                     description = "Exclusive 2005 edition Spider-Man mug. It is of high quality.",
-                    price = price,
-                    priceLabel = price.formatPrice(),
-                    allImageUrls = listOf("https://alexgreece45.georgev22.com:25760/api/private/marvelx/user/1/profile-image"),
+                    price = BigDecimalUi(
+                        value = price,
+                        label = price.formatPrice(2)
+                    ),
+                    coverImageUrl = "https://backend.alexandrosvoliotis.com/api/private/marvelx/user/1/profile-image",
+                    imageUrls = listOf("https://backend.alexandrosvoliotis.com/api/private/marvelx/user/2/profile-image"),
                     selectedImageIndex = 0,
 //                    details = ListingDetailsDomain.DrinkwareDetailsDomain(
 //                        material = ListingEnumGeneric(
@@ -712,16 +752,21 @@ private fun ListingDetailsScreenPreview() {
 //                    ),
                     details = ListingDetailsDomain.ArtDetailsDomain(
                         dimensions = ListingDimensions(
-                            width = CreateListingFieldUi.Integer(integerValue = "10"),
-                            height = CreateListingFieldUi.Integer(integerValue = "20"),
+                            width = WizardInputFieldUi.Integer(integerValue = "10"),
+                            height = WizardInputFieldUi.Integer(integerValue = "20"),
                         ),
                         framed = true
                     ),
                     favorite = false,
-                    postedAt = postedAt,
-                    postedAtLabel = postedAt.toListingFormat(),
-                    updatedAt = null,
-                    updatedAtLabel = "-",
+                    cart = false,
+                    postedAt = InstantUi(
+                        value = postedAt,
+                        label = postedAt.toListingFormat()
+                    ),
+                    updatedAt = InstantUi(
+                        value = null,
+                        label = "-"
+                    ),
                     canEdit = false
                 ),
                 sellerProfileDetails = ProfileDetailsDomain(
@@ -730,9 +775,9 @@ private fun ListingDetailsScreenPreview() {
                         lastName = "Voliotis",
                         gender = Gender.Male,
                         email = "alexv@email.com",
-                        profileImageUrlData = ReloadableImageUrlData("https://alexgreece45.georgev22.com:25760/api/private/marvelx/user/1/profile-image")
+                        profileImageUrlData = ReloadableImageUrlData("https://backend.alexandrosvoliotis.com/api/private/marvelx/user/1/profile-image")
                     ),
-                    isDifferentUser = false,
+                    isDifferentUser = true,
                     relationshipStatus = RelationshipStatusDomain.None,
                     privacySettings = PrivacySettingsDomain(
                         isFriendsListVisible = false,
@@ -751,7 +796,8 @@ private fun ListingDetailsScreenPreview() {
             ),
             effect = emptyFlow(),
             onNavigation = {},
-            listingId = "1"
+            listingId = "1",
+            createListingWizardMode = null
         )
     }
 }

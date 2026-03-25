@@ -3,7 +3,6 @@ package com.alexgreece45.marvelx.ui.screens.myListings.model
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
-import com.alexgreece45.marvelx.ui.screens.marketplace.model.ListingUi
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 
@@ -15,15 +14,19 @@ sealed interface MyListingsContract {
         data object OnFabButtonClicked : Event
         data object OnEndOfListScrolled : Event
 
+        data object OnCreateListingButtonClicked : Event
+
         sealed interface ListingEvents : Event {
             data class OnClicked(val listingId: String) : ListingEvents
-            data class OnMoreActionsButtonClicked(val listing: ListingUi) : ListingEvents
+            data class OnMoreActionsButtonClicked(val listing: MyListingUi) : ListingEvents
         }
 
         sealed interface BottomSheetEvents : Event {
             data object OnEditListingClicked : BottomSheetEvents
             data object OnDeleteListingClicked : BottomSheetEvents
         }
+
+        data object OnErrorButtonClicked : Event
     }
 
     data class State(
@@ -33,9 +36,10 @@ sealed interface MyListingsContract {
         val currentPage: Int = 1,
         val isScrollingInitialized: Boolean = false,
 
-        val allListings: PersistentList<ListingUi> = persistentListOf(),
+        val allListings: PersistentList<MyListingUi> = persistentListOf(),
 
         val selectedListingData: MyListingsSelectedListingData? = null,
+        val error: Boolean = false
     ) : BaseState
 
     sealed interface Effect : BaseEffect {

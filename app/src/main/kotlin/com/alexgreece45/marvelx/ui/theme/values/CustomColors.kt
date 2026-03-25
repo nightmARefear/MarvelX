@@ -22,14 +22,19 @@ data class CustomColors(
     val error: Color,
     val scrim: Color,
     val chipBackgroundColors: ChipBackgroundColors,
+    val orderStatusBackgroundColors: OrderStatusBackgroundColors,
+    val orderStatusContentColors: OrderStatusContentColors,
     val buttonBackgroundPositive: Color,
     val buttonBackgroundNegative: Color,
     val buttonContentWhite: Color,
     val genericRed: Color,
     val friendsDateColor: Color,
     val white: Color,
+    val black: Color,
     val greenCheckmark: Color,
     val transparent: Color,
+    val info: Color,
+    val cardBrandBackgroundColor: Color,
 )
 
 /**
@@ -41,7 +46,29 @@ data class ChipBackgroundColors(
     val friends: Color,
     val cancelRequest: Color,
     val incomingFriendRequest: Color,
-    val unfriend: Color
+    val unfriend: Color,
+    val listingDraft: Color,
+    val listingActive: Color,
+    val listingReserved: Color,
+    val listingSold: Color,
+)
+
+@Immutable
+data class OrderStatusBackgroundColors(
+    val processing: Color,
+    val partiallyShipped: Color,
+    val shipped: Color,
+    val partiallyDelivered: Color,
+    val delivered: Color
+)
+
+@Immutable
+data class OrderStatusContentColors(
+    val processing: Color,
+    val shipped: Color,
+    val departedSortingFacility: Color,
+    val outForDelivery: Color,
+    val delivered: Color
 )
 
 /**
@@ -57,7 +84,25 @@ internal fun customLightColors() = CustomColors(
         friends = Color(0xFF2821F3),
         cancelRequest = Color(0xFF2196F3),
         incomingFriendRequest = Color(0xFF21F33D),
-        unfriend = Color(0xFFF1F1F1)
+        unfriend = Color(0xFFF1F1F1),
+        listingDraft = Color(0xFF1B1314),
+        listingActive = Color(0xFF21F33D),
+        listingReserved = Color(0xFFD56E00),
+        listingSold = Color(0xFFD50000),
+    ),
+    orderStatusBackgroundColors = OrderStatusBackgroundColors(
+        processing = Color(0xFF2196F3),
+        partiallyShipped = Color(0xFFE65100),
+        shipped = Color(0xFFFF9800),
+        partiallyDelivered = Color(0xFF81C784),
+        delivered = Color(0xFF4CAF50)
+    ),
+    orderStatusContentColors = OrderStatusContentColors(
+        processing = Color(0xFFE3F2FD),
+        shipped = Color(0xFFFFF3E0),
+        departedSortingFacility = Color(0xFFFFF3E0),
+        outForDelivery = Color(0xFFFFF3E0),
+        delivered = Color(0xFFE8F5E9)
     ),
     buttonBackgroundPositive = Color(0xFF21F33D),
     buttonBackgroundNegative = Color(0xFFD50000),
@@ -65,8 +110,11 @@ internal fun customLightColors() = CustomColors(
     genericRed = Color(0xFFD50000),
     friendsDateColor = Color(0xFF2196F3),
     white = Color(0xFFFFFFFF),
+    black = Color(0xFF000000),
     greenCheckmark = Color(0xFF21F33D),
     transparent = Color(0x00000000),
+    info = Color(0xFF2196F3),
+    cardBrandBackgroundColor = Color(0xFF1e40af),
 )
 
 /**
@@ -82,7 +130,25 @@ internal fun customDarkColors() = CustomColors(
         friends = Color(0xFF2821F3),
         cancelRequest = Color(0xFF2196F3),
         incomingFriendRequest = Color(0xFF21F33D),
-        unfriend = Color(0xFFF1F1F1)
+        unfriend = Color(0xFFF1F1F1),
+        listingDraft = Color(0xFF1B1314),
+        listingActive = Color(0xFF21F33D),
+        listingReserved = Color(0xFFD56E00),
+        listingSold = Color(0xFFD50000),
+    ),
+    orderStatusBackgroundColors = OrderStatusBackgroundColors(
+        processing = Color(0xFF2196F3),
+        partiallyShipped = Color(0xFFD56E00),
+        shipped = Color(0xFFD56E00),
+        partiallyDelivered = Color(0xFF21F33D),
+        delivered = Color(0xFF21F33D)
+    ),
+    orderStatusContentColors = OrderStatusContentColors(
+        processing = Color(0xFFE3F2FD),
+        shipped = Color(0xFFFFF3E0),
+        departedSortingFacility = Color(0xFFFFF3E0),
+        outForDelivery = Color(0xFFFFF3E0),
+        delivered = Color(0xFFE8F5E9)
     ),
     buttonBackgroundPositive = Color(0xFF21F33D),
     buttonBackgroundNegative = Color(0xFFD50000),
@@ -90,8 +156,11 @@ internal fun customDarkColors() = CustomColors(
     genericRed = Color(0xFFD50000),
     friendsDateColor = Color(0xFF2196F3),
     white = Color(0xFFFFFFFF),
+    black = Color(0xFF000000),
     greenCheckmark = Color(0xFF21F33D),
     transparent = Color(0x00000000),
+    info = Color(0xFF2196F3),
+    cardBrandBackgroundColor = Color(0xFF1e40af),
 )
 
 internal val LocalCustomColors = staticCompositionLocalOf { customLightColors() }

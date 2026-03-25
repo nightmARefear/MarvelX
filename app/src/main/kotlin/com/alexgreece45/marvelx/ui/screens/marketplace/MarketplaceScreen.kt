@@ -66,9 +66,8 @@ fun MarketplaceScreen(
         bottomNavigationBarData = bottomNavigationBarData()
     ) { paddingValues ->
         LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues),
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = paddingValues,
             verticalArrangement = Arrangement.spacedBy(SPACING_LARGE.dp)
         ) {
             item(key = "searchBar") {
@@ -150,7 +149,7 @@ private fun PromoSection(
                 ListingPreviewItem(
                     isPromo = true,
                     listingPreviewUi = currentListing,
-                    onListingClicked = { onListingClicked(currentListing.id) }
+                    onListingClicked = { onListingClicked(currentListing.listingId) }
                 )
             }
         }
@@ -208,11 +207,11 @@ private fun ListingPreviewItems(
     ) {
         items(
             items = listings,
-            key = { it.id }
+            key = { it.listingId }
         ) { listing ->
             ListingPreviewItem(
                 listingPreviewUi = listing,
-                onListingClicked = { onListingClicked(listing.id) }
+                onListingClicked = { onListingClicked(listing.listingId) }
             )
         }
     }

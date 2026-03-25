@@ -4,7 +4,7 @@ import com.alexgreece45.marvelx.data.repository.marketplace.listing.details.List
 import com.alexgreece45.marvelx.domain.model_api.marketplace.listing.ListingDetailsDomain
 import com.alexgreece45.marvelx.domain.model_api.marketplace.listing.ListingDimensions
 import com.alexgreece45.marvelx.network_logic.models_api.marketplace.listing.details.ResponseListingDetails
-import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.model.CreateListingFieldUi
+import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.model.WizardInputFieldUi
 
 class ListingDetailsDomainMapper(
     private val listingDetailsRepository: ListingDetailsRepository
@@ -34,8 +34,8 @@ class ListingDetailsDomainMapper(
             is ResponseListingDetails.ResponseListingArtDetails ->
                 ListingDetailsDomain.ArtDetailsDomain(
                     dimensions = ListingDimensions(
-                        width = CreateListingFieldUi.Integer(integerValue = responseListingDetails.width.toString()),
-                        height = CreateListingFieldUi.Integer(integerValue = responseListingDetails.height.toString())
+                        width = WizardInputFieldUi.Integer(integerValue = responseListingDetails.width.toString()),
+                        height = WizardInputFieldUi.Integer(integerValue = responseListingDetails.height.toString())
                     ),
                     framed = responseListingDetails.framed
                 )
@@ -49,8 +49,8 @@ class ListingDetailsDomainMapper(
             is ResponseListingDetails.ResponseListingHomeDetails ->
                 ListingDetailsDomain.HomeDetailsDomain(
                     dimensions = ListingDimensions(
-                        width = CreateListingFieldUi.Integer(integerValue = responseListingDetails.width.toString()),
-                        height = CreateListingFieldUi.Integer(integerValue = responseListingDetails.height.toString())
+                        width = WizardInputFieldUi.Integer(integerValue = responseListingDetails.width.toString()),
+                        height = WizardInputFieldUi.Integer(integerValue = responseListingDetails.height.toString())
                     )
                 )
 

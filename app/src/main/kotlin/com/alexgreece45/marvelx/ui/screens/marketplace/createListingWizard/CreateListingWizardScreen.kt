@@ -1,9 +1,11 @@
 package com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.LinearProgressIndicator
+import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -12,23 +14,35 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.domain.model_generic.ReadFileContentData
 import com.alexgreece45.marvelx.ui.components.AlertDialogButton
 import com.alexgreece45.marvelx.ui.components.AlertDialogError
 import com.alexgreece45.marvelx.ui.components.ContentScreen
-import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
+import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction.Backable
+import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction.Closeable
 import com.alexgreece45.marvelx.ui.components.WrapButton
 import com.alexgreece45.marvelx.ui.components.effect.ObserveUiEffect
 import com.alexgreece45.marvelx.ui.components.model.ErrorButtonType
 import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.advancedDetails.CreateListingAdvancedDetailsScreen
 import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.advancedDetails.CreateListingAdvancedDetailsViewModel
-import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.advancedDetails.model.CreateListingAdvancedDetailsScreenData
+import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.advancedDetails.model.CreateListingAdvancedDetailsScreenData.Create
+import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.advancedDetails.model.CreateListingAdvancedDetailsScreenData.Update
 import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.basicDetails.CreateListingBasicDetailsScreen
 import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.basicDetails.CreateListingBasicDetailsViewModel
-import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.basicDetails.model.CreateListingBasicDetailsContract
-import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.basicDetails.model.CreateListingBasicDetailsContract.Event.*
+import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.basicDetails.model.CreateListingBasicDetailsContract.Event.Init
 import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.model.CreateListingWizardContract
+import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.model.CreateListingWizardContract.Event.OnNavigateToListingDetailsScreen
+import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.model.CreateListingWizardContract.Event.SetNextButtonEnabled
 import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.model.CreateListingWizardMode
 import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.model.CreateListingWizardStep
+import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.success.CreateListingSuccessScreen
+import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.success.CreateListingSuccessViewModel
+import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.success.model.CreateListingSuccessContract
+import com.alexgreece45.marvelx.ui.screens.marketplace.listingDetailsScreen.ListingDetailsScreen
+import com.alexgreece45.marvelx.ui.screens.marketplace.listingDetailsScreen.ListingDetailsViewModel
+import com.alexgreece45.marvelx.ui.screens.marketplace.listingDetailsScreen.model.ListingDetailsContract
+import com.alexgreece45.marvelx.ui.theme.values.customColors
+import com.alexgreece45.marvelx.util.FileUtil
 import com.alexgreece45.marvelx.util.extensions.showToast
 import kotlinx.coroutines.flow.Flow
 import org.koin.androidx.compose.koinViewModel
@@ -38,17 +52,22 @@ fun CreateListingWizardScreen(
     onEvent: (CreateListingWizardContract.Event) -> Unit,
     state: CreateListingWizardContract.State,
     effect: Flow<CreateListingWizardContract.Effect>,
-    exitWizard: () -> Unit,
+    onNavigationEffect: (CreateListingWizardContract.Effect.Navigation) -> Unit,
     listingId: String?,
+    createListingWizardViewModel: CreateListingWizardViewModel = koinViewModel(),
     createListingBasicDetailsViewModel: CreateListingBasicDetailsViewModel = koinViewModel(),
     createListingAdvancedDetailsViewModel: CreateListingAdvancedDetailsViewModel = koinViewModel()
 ) {
 
     val context = LocalContext.current
+    val createListingWizardState =
+        createListingWizardViewModel.uiState.collectAsStateWithLifecycle().value
+    val createListingBasicDetailsState =
+        createListingBasicDetailsViewModel.uiState.collectAsStateWithLifecycle().value
 
     ObserveUiEffect(effect) { uiEffect ->
         when (uiEffect) {
-            CreateListingWizardContract.Effect.Navigation.ExitWizard -> exitWizard()
+            is CreateListingWizardContract.Effect.Navigation -> onNavigationEffect(uiEffect)
             is CreateListingWizardContract.Effect.InitBasicDetailsScreen -> {
                 createListingBasicDetailsViewModel.setEvent(
                     Init(uiEffect.updateListingBasicDetails)
@@ -57,6 +76,31 @@ fun CreateListingWizardScreen(
 
             is CreateListingWizardContract.Effect.ShowToastMessage -> {
                 context.showToast(uiEffect.message)
+            }
+
+            is CreateListingWizardContract.Effect.ReadFileContentData -> {
+                val readFileContentsData = mutableListOf<ReadFileContentData>()
+
+                uiEffect.attachedImages.forEach { attachedImage ->
+                    val readFileContentData =
+                        FileUtil.getAdvancedFileContentData(attachedImage, context)
+                    if (readFileContentData == null) {
+                        createListingWizardViewModel.setEvent(
+                            CreateListingWizardContract.Event.OnAttachedImagesContentRead(
+                                null
+                            )
+                        )
+                        return@forEach
+                    }
+
+                    readFileContentsData.add(readFileContentData)
+                }
+
+                createListingWizardViewModel.setEvent(
+                    CreateListingWizardContract.Event.OnAttachedImagesContentRead(
+                        readFileContentsData
+                    )
+                )
             }
         }
     }
@@ -68,8 +112,9 @@ fun CreateListingWizardScreen(
     ContentScreen(
         isLoading = state.isLoading,
         navigableAction = when (state.wizardStep) {
-            CreateListingWizardStep.BASIC_DETAILS, CreateListingWizardStep.SUCCESS_CREATION -> {
-                ScreenNavigableAction.Closeable(
+            CreateListingWizardStep.BASIC_DETAILS,
+            CreateListingWizardStep.SUCCESS -> {
+                Closeable(
                     onClose = {
                         onEvent(CreateListingWizardContract.Event.OnCloseButtonClicked)
                     }
@@ -77,8 +122,8 @@ fun CreateListingWizardScreen(
             }
 
             CreateListingWizardStep.ADVANCED_DETAILS,
-            CreateListingWizardStep.LOGISTICS -> {
-                ScreenNavigableAction.Backable(
+            CreateListingWizardStep.OVERVIEW -> {
+                Backable(
                     onBack = {
                         onEvent(CreateListingWizardContract.Event.OnBackButtonClicked)
                     }
@@ -90,35 +135,57 @@ fun CreateListingWizardScreen(
         },
         showToolbar = true,
         toolbarTitle = state.toolbarTitle,
-        toolbarActions = listOf(),
-        stickyBottom = {
-            WrapButton(
-                onClick = { onEvent(CreateListingWizardContract.Event.OnNextButtonClicked) },
-                modifier = Modifier.fillMaxWidth(),
-                enabled = state.isNextButtonEnabled
-            ) {
-                Text(text = stringResource(R.string.screen_create_listing_wizard_screen_button_next))
+        stickyBottom = if (state.wizardStep == CreateListingWizardStep.SUCCESS) null else {
+            {
+                WrapButton(
+                    onClick = { onEvent(CreateListingWizardContract.Event.OnStickyBottomButtonClicked) },
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = state.isStickyBottomButtonEnabled
+                ) {
+                    Text(
+                        text = stringResource(
+                            if (state.wizardStep == CreateListingWizardStep.OVERVIEW) {
+                                if (state.wizardMode == CreateListingWizardMode.CREATE) {
+                                    R.string.screen_create_listing_wizard_screen_sticky_bottom_button_upload_new_listing
+                                } else {
+                                    R.string.screen_create_listing_wizard_screen_sticky_bottom_button_upload_modified_listing
+                                }
+                            } else {
+                                R.string.screen_create_listing_wizard_screen_sticky_bottom_button_next
+                            }
+                        )
+                    )
+                }
             }
         }
     ) { _ ->
         Column(modifier = Modifier.fillMaxSize()) {
-            // TODO: Add progress bar.
-            LinearProgressIndicator(
-                progress = state.wizardStep.order.toFloat() / 4f,
-                modifier = Modifier.fillMaxWidth()
-            )
+            AnimatedVisibility(visible = state.wizardStep != CreateListingWizardStep.SUCCESS) {
+                LinearProgressIndicator(
+                    progress = state.progress,
+                    modifier = Modifier.fillMaxWidth(),
+                    color = MaterialTheme.customColors.genericRed
+                )
+            }
 
             when (state.wizardStep) {
                 CreateListingWizardStep.BASIC_DETAILS -> {
                     CreateListingBasicDetailsScreen(
                         onEvent = createListingBasicDetailsViewModel::setEvent,
-                        state = createListingBasicDetailsViewModel.uiState.collectAsStateWithLifecycle().value,
+                        state = createListingBasicDetailsState,
                         effect = createListingBasicDetailsViewModel.uiEffect,
-                        goToPreviousStep = { onEvent(CreateListingWizardContract.Event.OnBackButtonClicked) },
-                        setNextButtonEnabled = {
+                        showToastMessage = { message ->
                             onEvent(
-                                CreateListingWizardContract.Event.SetNextButtonEnabled(
-                                    it
+                                CreateListingWizardContract.Event.OnShowToastMessage(
+                                    message
+                                )
+                            )
+                        },
+                        goToPreviousStep = { onEvent(CreateListingWizardContract.Event.OnBackButtonClicked) },
+                        setNextButtonEnabled = { enabled ->
+                            onEvent(
+                                SetNextButtonEnabled(
+                                    enabled
                                 )
                             )
                         }
@@ -126,34 +193,82 @@ fun CreateListingWizardScreen(
                 }
 
                 CreateListingWizardStep.ADVANCED_DETAILS -> {
-                    val createListingBasicDetailsState =
-                        createListingBasicDetailsViewModel.uiState.collectAsStateWithLifecycle().value
                     val listingUi = state.listingUi
 
                     CreateListingAdvancedDetailsScreen(
                         onEvent = createListingAdvancedDetailsViewModel::setEvent,
                         state = createListingAdvancedDetailsViewModel.uiState.collectAsStateWithLifecycle().value,
                         effect = createListingAdvancedDetailsViewModel.uiEffect,
-                        goToPreviousStep = { onEvent(CreateListingWizardContract.Event.OnBackButtonClicked) },
-                        setNextButtonEnabled = {
+                        showToastMessage = { message ->
                             onEvent(
-                                CreateListingWizardContract.Event.SetNextButtonEnabled(
-                                    it
+                                CreateListingWizardContract.Event.OnShowToastMessage(
+                                    message
                                 )
                             )
                         },
-                        createListingAdvancedDetailsScreenData = if (listingUi == null) CreateListingAdvancedDetailsScreenData.Create(
+                        goToPreviousStep = { onEvent(CreateListingWizardContract.Event.OnBackButtonClicked) },
+                        setNextButtonEnabled = { enabled ->
+                            onEvent(
+                                SetNextButtonEnabled(
+                                    enabled
+                                )
+                            )
+                        },
+                        createListingAdvancedDetailsScreenData = if (listingUi == null) Create(
                             categoryCode = createListingBasicDetailsState.category.value?.code
-                        ) else CreateListingAdvancedDetailsScreenData.Update(
+                        ) else Update(
                             listingDetails = listingUi.details,
                             condition = listingUi.condition,
-                            price = listingUi.price
+                            price = listingUi.price.value
                         )
                     )
                 }
 
-                CreateListingWizardStep.LOGISTICS -> {}
-                CreateListingWizardStep.SUCCESS_CREATION -> {}
+                CreateListingWizardStep.OVERVIEW -> {
+                    val listingDetailsViewModel = koinViewModel<ListingDetailsViewModel>()
+
+                    ListingDetailsScreen(
+                        onEvent = listingDetailsViewModel::setEvent,
+                        state = listingDetailsViewModel.uiState.collectAsStateWithLifecycle().value,
+                        effect = listingDetailsViewModel.uiEffect,
+                        onNavigation = { navigationEffect ->
+                            when (navigationEffect) {
+                                ListingDetailsContract.Effect.Navigation.GoBack -> {
+                                    onEvent(CreateListingWizardContract.Event.OnBackButtonClicked)
+                                }
+
+                                is ListingDetailsContract.Effect.Navigation.NavigateToEditListingScreen -> {}
+                                is ListingDetailsContract.Effect.Navigation.NavigateToProfileDetailsScreen -> {}
+                                ListingDetailsContract.Effect.Navigation.GoToNextScreen -> onEvent(
+                                    CreateListingWizardContract.Event.OnStickyBottomButtonClicked
+                                )
+                            }
+                        },
+                        listingId = null,
+                        createListingWizardMode = createListingWizardState.wizardMode
+                    )
+                }
+
+                CreateListingWizardStep.SUCCESS -> {
+                    val createListingSuccessViewModel =
+                        koinViewModel<CreateListingSuccessViewModel>()
+                    CreateListingSuccessScreen(
+                        onEvent = createListingSuccessViewModel::setEvent,
+                        state = createListingSuccessViewModel.uiState.collectAsStateWithLifecycle().value,
+                        effect = createListingSuccessViewModel.uiEffect,
+                        onNavigation = { navigationEffect ->
+                            when (navigationEffect) {
+                                is CreateListingSuccessContract.Effect.Navigation.NavigateToListingDetailsScreen -> {
+                                    onEvent(
+                                        OnNavigateToListingDetailsScreen(
+                                            listingId = navigationEffect.listingId
+                                        )
+                                    )
+                                }
+                            }
+                        }
+                    )
+                }
             }
 
             AlertDialogError(

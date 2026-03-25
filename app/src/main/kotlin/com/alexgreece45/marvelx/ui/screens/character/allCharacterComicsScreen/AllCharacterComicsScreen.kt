@@ -32,7 +32,7 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.domain.model_api.comic.ComicDomain
-import com.alexgreece45.marvelx.ui.components.ContentErrorScreen
+import com.alexgreece45.marvelx.ui.components.LazyItemContentErrorScreen
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
 import com.alexgreece45.marvelx.ui.components.SortingModalBottomSheetContent
@@ -123,7 +123,7 @@ fun AllCharacterComicsScreen(
             ) {
                 state.error?.let {
                     item {
-                        ContentErrorScreen(errorMessage = it.errorMessage) {
+                        LazyItemContentErrorScreen(errorMessage = it.errorMessage) {
                             it.onRetryClick()
                         }
                     }
@@ -131,7 +131,7 @@ fun AllCharacterComicsScreen(
 
                 if (!state.hasInternetConnection) {
                     item {
-                        ContentErrorScreen(errorMessage = stringResource(R.string.no_internet_connection_error_message)) {
+                        LazyItemContentErrorScreen(errorMessage = stringResource(R.string.no_internet_connection_error_message)) {
                             onEventSent(AllCharacterComicsEvent.Init(characterId = characterId))
                         }
                     }
