@@ -10,9 +10,6 @@ import com.alexgreece45.marvelx.controllers.AuthController
 import com.alexgreece45.marvelx.controllers.WebsocketController
 import com.alexgreece45.marvelx.controllers.WebsocketControllerImpl
 import com.alexgreece45.marvelx.controllers.model.websocket.WebsocketRequestType
-import com.alexgreece45.marvelx.di.ApiClientImpl
-import com.alexgreece45.marvelx.di.ListingClientImpl
-import com.alexgreece45.marvelx.di.OrderClientImpl
 import com.alexgreece45.marvelx.dispatchers.IoDispatcher
 import com.alexgreece45.marvelx.dispatchers.MainDispatcher
 import com.alexgreece45.marvelx.domain.model_api.comic.ComicPriceType
@@ -20,8 +17,9 @@ import com.alexgreece45.marvelx.domain.model_api.user.VerificationStep
 import com.alexgreece45.marvelx.network_logic.authenticators.ApiAuthenticator
 import com.alexgreece45.marvelx.network_logic.authenticators.RefreshTokenAuthenticator
 import com.alexgreece45.marvelx.network_logic.clients.ApiClient
-import com.alexgreece45.marvelx.network_logic.clients.ListingClient
-import com.alexgreece45.marvelx.network_logic.clients.OrderClient
+import com.alexgreece45.marvelx.network_logic.clients.ApiClientImpl
+import com.alexgreece45.marvelx.network_logic.clients.ListingClientImpl
+import com.alexgreece45.marvelx.network_logic.clients.OrderClientImpl
 import com.alexgreece45.marvelx.network_logic.clients.RefreshTokenClient
 import com.alexgreece45.marvelx.network_logic.clients.RefreshTokenClientImpl
 import com.alexgreece45.marvelx.network_logic.interceptors.ApiInterceptor
@@ -344,11 +342,6 @@ val networkKoinModule = module {
         val retrofit: Retrofit = provideRetrofit(okHttpClient, get(), get())
         provideOrderService(retrofit)
     }
-
-    single<ApiClient> { ApiClientImpl(get()) }
-    single<RefreshTokenClient> { RefreshTokenClientImpl(get()) }
-    single<ListingClient> { ListingClientImpl(get()) }
-    single<OrderClient> { OrderClientImpl(get()) }
 
     // Websocket client.
     single<WebsocketController> {

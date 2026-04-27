@@ -45,7 +45,7 @@ sealed class OrderItemStatusUi(@StringRes val labelResId: Int) {
             Shipped -> MaterialTheme.customColors.orderStatusContentColors.shipped
             DepartedSortingFacility -> MaterialTheme.customColors.orderStatusContentColors.departedSortingFacility
             OutForDelivery -> MaterialTheme.customColors.orderStatusContentColors.outForDelivery
-            Delivered -> MaterialTheme.customColors.orderStatusContentColors.delivered
+            is Delivered -> MaterialTheme.customColors.orderStatusContentColors.delivered
         }
 }
 

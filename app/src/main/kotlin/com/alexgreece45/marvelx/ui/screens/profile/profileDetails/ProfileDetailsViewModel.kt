@@ -7,8 +7,10 @@ import androidx.core.graphics.createBitmap
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.configuration.models.DeepLinkWebUrl
+import com.alexgreece45.marvelx.controllers.AppLogger
 import com.alexgreece45.marvelx.data.repository.NotificationRepository
 import com.alexgreece45.marvelx.data.repository.user.FriendRepository
+import com.alexgreece45.marvelx.dispatchers.IoDispatcher
 import com.alexgreece45.marvelx.domain.interactors.GetProfileDetailsPartialState
 import com.alexgreece45.marvelx.domain.interactors.UserInteractor
 import com.alexgreece45.marvelx.domain.interactors.user.BlockUserPartialState
@@ -41,6 +43,8 @@ import com.google.zxing.BarcodeFormat
 import com.google.zxing.MultiFormatWriter
 import com.google.zxing.WriterException
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlin.coroutines.CoroutineContext
 
 sealed interface ProfileDetailsContract {
     sealed interface Event : BaseEvent {
@@ -153,6 +157,8 @@ class ProfileDetailsViewModel(
     private val friendRequestInteractor: FriendRequestInteractor,
     private val blockedUserInteractor: BlockedUserInteractor,
     private val notificationRepository: NotificationRepository,
+    private val appLogger: AppLogger,
+    @IoDispatcher private val ioDispatcher: CoroutineContext,
 ) : BaseViewModel<ProfileDetailsContract.Event, ProfileDetailsContract.State, ProfileDetailsContract.Effect>() {
 
     override fun setInitialState(): ProfileDetailsContract.State =
@@ -213,18 +219,21 @@ class ProfileDetailsViewModel(
             }
 
             ProfileDetailsContract.Event.MoreActions.OnShowQrCodeClicked -> {
-                when (val qrBitmap =
-                    generateQRCodeBitmap(DeepLinkWebUrl.ProfileDetails.webUrl + currentState.userId)) {
-                    null -> {
-                        showGenericAlertDialogError(resourceProvider.getString(R.string.profile_details_screen_error_generating_qr_code))
-                    }
+                viewModelScope.launch {
+                    val qrBitmap =
+                        withContext(ioDispatcher) { generateQRCodeBitmap(DeepLinkWebUrl.ProfileDetails.webUrl + currentState.userId) }
+                    when (qrBitmap) {
+                        null -> {
+                            showGenericAlertDialogError(resourceProvider.getString(R.string.profile_details_screen_error_generating_qr_code))
+                        }
 
-                    else -> {
-                        showBottomSheet(
-                            bottomSheetType = ProfileDetailsBottomSheetType.QrCode(
-                                qrBitmap = qrBitmap
+                        else -> {
+                            showBottomSheet(
+                                bottomSheetType = ProfileDetailsBottomSheetType.QrCode(
+                                    qrBitmap = qrBitmap
+                                )
                             )
-                        )
+                        }
                     }
                 }
             }
@@ -556,13 +565,14 @@ class ProfileDetailsViewModel(
      * @param content   The content of the QR code.
      * @return          The generated QR code bitmap, or `null` if generation failed.
      */
-    private fun generateQRCodeBitmap(content: String): Bitmap? {
+    private suspend fun generateQRCodeBitmap(content: String): Bitmap? {
         val size = ConstantsUi.ProfileDetailsScreen.QR_CODE_SIZE
         val blackArgb = Color.Black.toArgb()
         val whiteArgb = Color.White.toArgb()
 
         return try {
-            val bitMatrix = MultiFormatWriter().encode(content, BarcodeFormat.QR_CODE, size, size)
+            val bitMatrix =
+                MultiFormatWriter().encode(content, BarcodeFormat.QR_CODE, size, size)
             val width = bitMatrix.width
             val height = bitMatrix.height
             val pixels = IntArray(width * height)

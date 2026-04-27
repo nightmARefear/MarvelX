@@ -3,6 +3,8 @@ package com.alexgreece45.marvelx.data.model.order.item
 import com.alexgreece45.marvelx.data.model.order.OrderCourierData
 import com.alexgreece45.marvelx.data.model.order.OrderEstimatedDeliveryDateRangeData
 import com.alexgreece45.marvelx.data.model.order.OrderItemStatusData
+import com.alexgreece45.marvelx.data.model.order.item.itemReturn.OrderItemReturnStatusData
+import com.alexgreece45.marvelx.data.model.order.item.refund.OrderItemRefundStatusData
 import com.alexgreece45.marvelx.data.model.order.toData
 import com.alexgreece45.marvelx.data.model.order.tracking.OrderTrackingInfoHistoryItemData
 import com.alexgreece45.marvelx.data.model.order.tracking.toData
@@ -13,10 +15,14 @@ data class OrderItemTrackingHistoryData(
     val courier: OrderCourierData,
     val estimatedDelivery: OrderEstimatedDeliveryDateRangeData,
     val status: OrderItemStatusData,
-    val shipped: OrderTrackingInfoHistoryItemData? = null,
-    val departedSortingFacility: OrderTrackingInfoHistoryItemData? = null,
-    val outForDelivery: OrderTrackingInfoHistoryItemData? = null,
-    val delivered: OrderTrackingInfoHistoryItemData? = null,
+    val shipped: OrderTrackingInfoHistoryItemData?,
+    val departedSortingFacility: OrderTrackingInfoHistoryItemData?,
+    val outForDelivery: OrderTrackingInfoHistoryItemData?,
+    val delivered: OrderTrackingInfoHistoryItemData?,
+    val returnStatus: OrderItemReturnStatusData?,
+    val returnUntilDate: String?,
+    val refundStatus: OrderItemRefundStatusData?,
+    val refundUntilDate: String?,
 )
 
 fun ResponseOrderItemTrackingHistory.toData(): OrderItemTrackingHistoryData =
@@ -28,5 +34,9 @@ fun ResponseOrderItemTrackingHistory.toData(): OrderItemTrackingHistoryData =
         shipped = shipped?.toData(),
         departedSortingFacility = departedSortingFacility?.toData(),
         outForDelivery = outForDelivery?.toData(),
-        delivered = delivered?.toData()
+        delivered = delivered?.toData(),
+        returnStatus = OrderItemReturnStatusData.entries.first { it.key == returnStatus },
+        returnUntilDate = returnUntilDate,
+        refundStatus = OrderItemRefundStatusData.entries.first { it.key == refundStatus },
+        refundUntilDate = refundUntilDate
     )

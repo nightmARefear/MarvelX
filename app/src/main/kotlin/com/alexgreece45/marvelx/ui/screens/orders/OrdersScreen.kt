@@ -102,8 +102,7 @@ fun OrdersScreen(
 
     WrapModalBottomSheetLayout(
         sheetContent = {
-            val type = state.ordersBottomSheetType
-            if (type == null) return@WrapModalBottomSheetLayout
+            val type = state.ordersBottomSheetType ?: return@WrapModalBottomSheetLayout
 
             ModalBottomSheetContent {
                 when (type) {

@@ -3,6 +3,7 @@ package com.alexgreece45.marvelx.ui.screens.profile
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.configuration.ConfigLogic
+import com.alexgreece45.marvelx.controllers.AppLogger
 import com.alexgreece45.marvelx.controllers.PrefKeys
 import com.alexgreece45.marvelx.domain.helper.InteractorPartialState
 import com.alexgreece45.marvelx.domain.interactors.GetCurrentUserProfileDetailsPartialState
@@ -29,6 +30,7 @@ import java.util.UUID
 
 
 class ProfileViewModel(
+    private val appLogger: AppLogger,
     private val resourceProvider: ResourceProvider,
     private val userInteractor: UserInteractor,
     private val prefKeys: PrefKeys,

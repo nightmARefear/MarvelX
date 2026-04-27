@@ -2,6 +2,7 @@ package com.alexgreece45.marvelx.ui.screens.orders.orderItemTrackingHistory
 
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.controllers.AppLogger
 import com.alexgreece45.marvelx.data.repository.UserRepository
 import com.alexgreece45.marvelx.data.repository.helper.RepositoryResult
 import com.alexgreece45.marvelx.domain.helper.InteractorPartialState
@@ -14,12 +15,14 @@ import com.alexgreece45.marvelx.ui.screens.orders.orderItemTrackingHistory.model
 import com.alexgreece45.marvelx.ui.screens.orders.orderItemTrackingHistory.model.OrderItemTrackingHistoryErrorType
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.extensions.decodeFromUrl
+import com.alexgreece45.marvelx.util.extensions.toUrlEncoding
 import kotlinx.coroutines.launch
 
 class OrderItemTrackingHistoryViewModel(
     private val orderInteractor: OrderInteractor,
     private val resourceProvider: ResourceProvider,
     private val userRepository: UserRepository,
+    private val appLogger: AppLogger,
 ) :
     BaseViewModel<OrderItemTrackingHistoryContract.Event, OrderItemTrackingHistoryContract.State, OrderItemTrackingHistoryContract.Effect>() {
 
@@ -44,6 +47,10 @@ class OrderItemTrackingHistoryViewModel(
 
             OrderItemTrackingHistoryContract.Event.CourierCardEvents.OnCopyButtonClicked -> onCourierCardCopyButtonClicked()
             OrderItemTrackingHistoryContract.Event.CourierCardEvents.OnViewOnCourierWebsiteButtonClicked -> onCourierCardViewOnCourierWebsiteButtonClicked()
+            OrderItemTrackingHistoryContract.Event.OnReturnActionButtonClicked -> onRequestReturnClicked()
+            OrderItemTrackingHistoryContract.Event.OnRefundActionButtonClicked -> onRequestRefundClicked()
+            OrderItemTrackingHistoryContract.Event.ExtraActionButtonEvents.OnContactSupportClicked -> onExtraActionButtonContactSupportClicked()
+            OrderItemTrackingHistoryContract.Event.ExtraActionButtonEvents.OnContactSellerClicked -> onExtraActionButtonContactSellerClicked()
         }
     }
 
@@ -122,7 +129,40 @@ class OrderItemTrackingHistoryViewModel(
         // TODO: Navigate to webpage.
     }
 
+    private fun onRequestReturnClicked() {
+        setEffect {
+            OrderItemTrackingHistoryContract.Effect.Navigation.GoToRequestItemReturnScreen(
+                orderId = currentState.orderId.value,
+                orderItemId = currentState.orderItemId.value,
+                orderItemTitle = currentState.orderItemTitle,
+                orderItemCoverImageUrl = currentState.orderItemCoverImageUrl.toUrlEncoding(),
+                orderItemPriceLabel = currentState.orderItemPriceLabel
+            )
+        }
+    }
+
+    private fun onRequestRefundClicked() {
+        setEffect {
+            OrderItemTrackingHistoryContract.Effect.Navigation.GoToRequestItemRefundScreen(
+                orderId = currentState.orderId.value,
+                orderItemId = currentState.orderItemId.value,
+                orderItemTitle = currentState.orderItemTitle,
+                orderItemCoverImageUrl = currentState.orderItemCoverImageUrl.toUrlEncoding(),
+                orderItemPriceLabel = currentState.orderItemPriceLabel
+            )
+        }
+    }
+
+    private fun onExtraActionButtonContactSupportClicked() {
+
+    }
+
+    private fun onExtraActionButtonContactSellerClicked() {
+        // TODO: Navigate to chat screen.
+    }
+
     private fun onErrorButtonClicked() {
+        // TODO: Refine coroutine handling.
         viewModelScope.launch {
             launch {
                 getOrderItemTrackingHistory()

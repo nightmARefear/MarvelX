@@ -2,6 +2,7 @@ package com.alexgreece45.marvelx.ui.screens.orders.orderItemTrackingHistory
 
 import android.annotation.SuppressLint
 import android.content.res.Configuration
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -15,11 +16,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.ContentAlpha
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
@@ -32,19 +35,24 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.drawWithContent
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.data.model.profileDetails.RepositoryBasicProfileDetails
+import com.alexgreece45.marvelx.domain.model_api.order.OrderEstimatedDeliveryDateRangeDomain
+import com.alexgreece45.marvelx.domain.model_api.order.item.itemReturn.OrderItemReturnStatusDomain
+import com.alexgreece45.marvelx.domain.model_api.order.item.refund.OrderItemRefundStatusDomain
+import com.alexgreece45.marvelx.domain.model_api.order.tracking.OrderTrackingHistoryItemDomain
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.GenericErrorScreen
 import com.alexgreece45.marvelx.ui.components.GenericInfoScreen
@@ -58,6 +66,7 @@ import com.alexgreece45.marvelx.ui.components.effect.ObserveUiEffect
 import com.alexgreece45.marvelx.ui.components.icons.NavigateIcon
 import com.alexgreece45.marvelx.ui.components.icons.ProcessingRequestIconLottie
 import com.alexgreece45.marvelx.ui.components.sections.SectionHeader
+import com.alexgreece45.marvelx.ui.components.sections.SectionHeaderDefaults
 import com.alexgreece45.marvelx.ui.components.sections.SectionHeaderTitle
 import com.alexgreece45.marvelx.ui.model_generic.InstantUi
 import com.alexgreece45.marvelx.ui.model_generic.UiState
@@ -66,7 +75,10 @@ import com.alexgreece45.marvelx.ui.model_generic.onLoading
 import com.alexgreece45.marvelx.ui.model_generic.onSuccess
 import com.alexgreece45.marvelx.ui.screens.orders.model.OrderCourierUi
 import com.alexgreece45.marvelx.ui.screens.orders.model.item.OrderItemStatusUi
+import com.alexgreece45.marvelx.ui.screens.orders.model.item.OrderItemTrackingHistoryUi
+import com.alexgreece45.marvelx.ui.screens.orders.model.toUi
 import com.alexgreece45.marvelx.ui.screens.orders.model.tracking.OrderTrackingHistoryItemUi
+import com.alexgreece45.marvelx.ui.screens.orders.model.tracking.toUi
 import com.alexgreece45.marvelx.ui.screens.orders.orderItemTrackingHistory.model.OrderItemTrackingHistoryContract
 import com.alexgreece45.marvelx.ui.screens.orders.orderItemTrackingHistory.model.OrderItemTrackingHistoryErrorType
 import com.alexgreece45.marvelx.ui.screens.orders.orderItemTrackingHistory.model.OrderItemTrackingStepState
@@ -82,12 +94,21 @@ import com.alexgreece45.marvelx.util.VSpacer
 import com.alexgreece45.marvelx.util.constants.ConstantsUi
 import com.alexgreece45.marvelx.util.extensions.circularImageWithBorder
 import com.alexgreece45.marvelx.util.extensions.clickableNoRipple
+import com.alexgreece45.marvelx.util.extensions.defaultFormat
 import com.alexgreece45.marvelx.util.extensions.minusDays
 import com.alexgreece45.marvelx.util.extensions.plusDays
 import com.alexgreece45.marvelx.util.extensions.setText
 import com.alexgreece45.marvelx.util.extensions.showToast
 import com.alexgreece45.marvelx.util.extensions.toOrderEstimatedDeliveryFormatFull
+import com.alexgreece45.marvelx.util.extensions.withEuroSymbol
+import com.alexgreece45.marvelx.util.safeLetComposable
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
+import kotlin.random.Random
+import kotlin.random.nextLong
 
 @Composable
 fun OrderItemTrackingHistoryScreen(
@@ -129,7 +150,7 @@ fun OrderItemTrackingHistoryScreen(
     }
 
     ContentScreen(
-        isLoading = state.uiState is UiState.Loading,
+        isLoading = state.uiState.isLoading,
         navigableAction = ScreenNavigableAction.Backable(
             onBack = {
                 onEvent(OrderItemTrackingHistoryContract.Event.OnBack)
@@ -154,8 +175,8 @@ fun OrderItemTrackingHistoryScreen(
                     GenericInfoScreen(
                         title = stringResource(
                             if (isErrorTypeNoData) R.string.screen_order_item_tracking_history_error_label_no_data else R.string.screen_order_item_tracking_history_error_label_fetching_data,
-                            state.orderId,
-                            state.orderItemId
+                            state.orderId.formatted,
+                            state.orderItemId.formatted
                         ),
                         titleColor = MaterialTheme.colors.error,
                         buttonLabel = stringResource(if (isErrorTypeNoData) R.string.generic_go_back else R.string.generic_retry_button),
@@ -191,25 +212,52 @@ fun OrderItemTrackingHistoryScreen(
                             },
                             onSellerCardErrorButtonClicked = {
                                 onEvent(OrderItemTrackingHistoryContract.Event.SellerDetailsCardEvents.OnErrorButtonClicked)
-                            },
-                        )
-
-                        CourierCard(
-                            trackingId = orderItemTrackingHistoryUi.trackingId,
-                            courierUi = orderItemTrackingHistoryUi.courier,
-                            onCopyButtonClicked = {
-                                onEvent(OrderItemTrackingHistoryContract.Event.CourierCardEvents.OnCopyButtonClicked)
-                            },
-                            onViewOnCourierWebsiteButtonClicked = {
-                                onEvent(OrderItemTrackingHistoryContract.Event.CourierCardEvents.OnViewOnCourierWebsiteButtonClicked)
                             }
                         )
 
-                        if (orderItemTrackingHistoryUi.status !is OrderItemStatusUi.Delivered) {
+                        if (orderItemTrackingHistoryUi.status is OrderItemStatusUi.Delivered) {
+                            with(orderItemTrackingHistoryUi) {
+                                PostDeliverySection(
+                                    deliveryDateLabel = currentStepItem?.date?.label.orEmpty(),
+                                    courierUi = courier,
+                                    trackingId = trackingId,
+                                    returnUntilDateLabel = returnUntilDate?.label,
+                                    returnStatus = returnStatus,
+                                    refundStatus = refundStatus,
+                                    refundUntilDateLabel = refundUntilDate?.label,
+                                    onReturnActionButtonClicked = {
+                                        onEvent(OrderItemTrackingHistoryContract.Event.OnReturnActionButtonClicked)
+                                    },
+                                    onRefundActionButtonClicked = {
+                                        onEvent(OrderItemTrackingHistoryContract.Event.OnRefundActionButtonClicked)
+                                    }
+                                )
+                            }
+                        } else {
+                            CourierCard(
+                                trackingId = orderItemTrackingHistoryUi.trackingId,
+                                courierUi = orderItemTrackingHistoryUi.courier,
+                                onCopyButtonClicked = {
+                                    onEvent(OrderItemTrackingHistoryContract.Event.CourierCardEvents.OnCopyButtonClicked)
+                                },
+                                onViewOnCourierWebsiteButtonClicked = {
+                                    onEvent(OrderItemTrackingHistoryContract.Event.CourierCardEvents.OnViewOnCourierWebsiteButtonClicked)
+                                }
+                            )
+
                             EstimatedDeliveryCard(estimatedDateRangeLabel = orderItemTrackingHistoryUi.estimatedDelivery.estimatedDateRangeLabel)
+
+                            TrackingHistorySteps(trackingSteps = orderItemTrackingHistoryUi.steps)
                         }
 
-                        TrackingHistorySteps(trackingSteps = orderItemTrackingHistoryUi.steps)
+                        ExtraActionButtonsRow(
+                            onContactSupportButtonClicked = {
+                                onEvent(OrderItemTrackingHistoryContract.Event.ExtraActionButtonEvents.OnContactSupportClicked)
+                            },
+                            onContactSellerButtonClicked = {
+                                onEvent(OrderItemTrackingHistoryContract.Event.ExtraActionButtonEvents.OnContactSellerClicked)
+                            }
+                        )
                     }
                 }
         }
@@ -247,7 +295,6 @@ private fun OrderItemCard(
                         startY = 0f,
                         endY = size.height
                     ),
-                    topLeft = Offset(0f, 0f),
                     size = Size(SPACING_TINY.dp.toPx(), size.height)
                 )
             }
@@ -309,7 +356,7 @@ private fun OrderItemCard(
                     // Seller details.
                     Column(verticalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp)) {
                         Text(
-                            text = stringResource(R.string.screen_order_item_tracking_history_title_seller),
+                            text = stringResource(R.string.screen_order_item_tracking_history_seller_card_title),
                             color = MaterialTheme.colors.onSurface.copy(alpha = 0.5f)
                         )
 
@@ -372,13 +419,21 @@ private fun SellerDetailsCard(
                             )
                     )
 
-                    Text(
-                        text = profileDetails.fullName,
-                        style = MaterialTheme.typography.subtitle1
-                    )
+                    Column {
+                        Text(
+                            text = profileDetails.fullName,
+                            style = MaterialTheme.typography.subtitle1
+                        )
+
+                        Text(
+                            text = stringResource(R.string.screen_order_item_tracking_history_seller_card_label_view_profile),
+                            color = MaterialTheme.colors.onSurface.copy(alpha = ContentAlpha.medium),
+                            style = MaterialTheme.typography.caption
+                        )
+                    }
                 }
 
-                NavigateIcon()
+                NavigateIcon() // TODO: Icon not displayed if text is full width.
             }
         }
 }
@@ -391,7 +446,7 @@ private fun CourierCard(
     onViewOnCourierWebsiteButtonClicked: () -> Unit,
 ) {
     SectionHeader(
-        title = stringResource(R.string.screen_order_item_tracking_history_title_courier),
+        title = stringResource(R.string.screen_order_item_tracking_history_courier_card_title),
         additionalTitleContent = {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -459,8 +514,7 @@ private fun CourierCard(
             }
         },
         enabled = false,
-        onClick = {},
-    )
+    ) {}
 }
 
 @Composable
@@ -473,14 +527,453 @@ private fun EstimatedDeliveryCard(estimatedDateRangeLabel: String) {
                 style = MaterialTheme.typography.subtitle1
             )
         },
+        enabled = false
+    ) {}
+}
+
+@Composable
+private fun PostDeliverySection(
+    deliveryDateLabel: String,
+    courierUi: OrderCourierUi,
+    trackingId: String,
+    returnStatus: OrderItemReturnStatusDomain?,
+    returnUntilDateLabel: String?,
+    refundStatus: OrderItemRefundStatusDomain?,
+    refundUntilDateLabel: String?,
+    onReturnActionButtonClicked: () -> Unit,
+    onRefundActionButtonClicked: () -> Unit,
+) {
+    DeliveryDetailsCard(
+        deliveryDateLabel = deliveryDateLabel,
+        courierUi = courierUi,
+        trackingId = trackingId
+    )
+
+    if (refundStatus?.isProcessingStatus() == false) {
+        safeLetComposable(
+            returnStatus,
+            returnUntilDateLabel
+        ) { returnStatus, returnUntilDateLabel ->
+            ReturnCard(
+                returnStatus = returnStatus,
+                returnUntilDateLabel = returnUntilDateLabel,
+                onRequestReturnClicked = onReturnActionButtonClicked
+            )
+        }
+    }
+
+    if (returnStatus?.isProcessingStatus() == false) {
+        safeLetComposable(
+            refundStatus,
+            refundUntilDateLabel
+        ) { refundStatus, refundUntilDateLabel ->
+            RefundCard(
+                refundStatus = refundStatus,
+                refundUntilDateLabel = refundUntilDateLabel,
+                onButtonClicked = onRefundActionButtonClicked
+            )
+        }
+    }
+}
+
+@Composable
+private fun DeliveryDetailsCard(
+    deliveryDateLabel: String,
+    courierUi: OrderCourierUi,
+    trackingId: String
+) {
+    SectionHeader(
+        title = stringResource(R.string.screen_order_item_tracking_history_delivery_details_card_title),
+        additionalTitleContent = {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                DeliveryDetailsRow(
+                    label = stringResource(R.string.screen_order_item_tracking_history_delivery_details_card_label_delivered_date),
+                    value = deliveryDateLabel
+                )
+
+                DeliveryDetailsRow(
+                    label = stringResource(R.string.screen_order_item_tracking_history_delivery_details_card_label_courier),
+                    value = stringResource(courierUi.labelResId)
+                )
+
+                DeliveryDetailsRow(
+                    label = stringResource(R.string.screen_order_item_tracking_history_delivery_details_card_label_tracking_id),
+                    value = trackingId,
+                    onClick = {}
+                )
+            }
+        },
         enabled = false,
         onClick = {}
     )
 }
 
 @Composable
+private fun DeliveryDetailsRow(label: String, value: String, onClick: (() -> Unit)? = null) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = label,
+            color = MaterialTheme.colors.onSurface.copy(alpha = ContentAlpha.medium),
+            style = MaterialTheme.typography.body1
+        )
+
+        when (onClick) {
+            null -> {
+                Text(
+                    text = value
+                )
+            }
+
+            else -> {
+                Box(
+                    modifier = Modifier.clickableNoRipple(onClick = onClick)
+                ) {
+                    Text(
+                        text = value,
+                        color = MaterialTheme.customColors.linkTextColor,
+                        textDecoration = TextDecoration.Underline
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ReturnCard(
+    returnStatus: OrderItemReturnStatusDomain,
+    returnUntilDateLabel: String,
+    onRequestReturnClicked: () -> Unit
+) {
+    when (returnStatus) {
+        OrderItemReturnStatusDomain.AVAILABLE -> {
+            GenericCard(
+                titleLabel = stringResource(R.string.screen_order_item_tracking_history_return_card_available_title),
+                additionalTitleContentLabel = stringResource(
+                    R.string.screen_order_item_tracking_history_return_card_available_description,
+                    returnUntilDateLabel
+                ),
+                leadingIconResId = R.drawable.ic_alarm,
+                additionalContent = {
+                    GenericCardButton(
+                        label = stringResource(R.string.screen_order_item_tracking_history_return_section_button_request_return),
+                        onClick = onRequestReturnClicked
+                    )
+                }
+            )
+        }
+
+        OrderItemReturnStatusDomain.EXPIRED -> {
+            GenericCard(
+                titleLabel = stringResource(R.string.screen_order_item_tracking_history_return_card_expired_title),
+                additionalTitleContentLabel = stringResource(R.string.screen_order_item_tracking_history_return_card_expired_description),
+                leadingIconResId = R.drawable.ic_lock,
+                additionalContent = null
+            )
+        }
+
+        OrderItemReturnStatusDomain.FINAL_SALE -> {
+            GenericCard(
+                titleLabel = stringResource(R.string.screen_order_item_tracking_history_return_card_final_sale_title),
+                additionalTitleContentLabel = stringResource(R.string.screen_order_item_tracking_history_return_card_final_sale_description),
+                leadingIconResId = R.drawable.ic_lock,
+                leadingIconTint = MaterialTheme.customColors.white,
+                additionalContent = {
+                    val errorColor = MaterialTheme.colors.error
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(color = errorColor.copy(alpha = ContentAlpha.medium))
+                            .drawWithContent {
+                                drawContent()
+
+                                drawRect(
+                                    color = errorColor,
+                                    size = Size(SPACING_TINY.dp.toPx(), size.height)
+                                )
+                            }
+                            .padding(SPACING_MEDIUM.dp)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.screen_order_item_tracking_history_return_card_final_sale_additional_description),
+                            color = MaterialTheme.customColors.white
+                        )
+                    }
+                }
+            )
+        }
+
+        // TODO: Add further customization in the future.
+        OrderItemReturnStatusDomain.PENDING -> {
+            GenericCard(
+                titleLabel = stringResource(R.string.screen_order_item_tracking_history_return_card_pending_title),
+                additionalTitleContentLabel = stringResource(R.string.screen_order_item_tracking_history_return_card_pending_description),
+                leadingIconResId = R.drawable.ic_hourglass,
+                additionalContent = {
+                    GenericCardButton(
+                        label = stringResource(R.string.screen_order_item_tracking_history_return_section_button_view_return_request),
+                        onClick = onRequestReturnClicked
+                    )
+                }
+            )
+        }
+
+        OrderItemReturnStatusDomain.REJECTED -> {
+            GenericCard(
+                titleLabel = stringResource(R.string.screen_order_item_tracking_history_return_card_rejected_title),
+                additionalTitleContentLabel = stringResource(R.string.screen_order_item_tracking_history_return_card_rejected_description),
+                leadingIconResId = R.drawable.ic_close, // TODO: Review icon.
+                leadingIconTint = MaterialTheme.customColors.genericRed,
+                additionalContent = {
+                    GenericCardButton(
+                        label = stringResource(R.string.screen_order_item_tracking_history_return_card_rejected_action_button),
+                        backgroundColor = MaterialTheme.customColors.buttonBackgroundNegative,
+                        onClick = onRequestReturnClicked
+                    )
+                }
+            )
+        }
+
+        OrderItemReturnStatusDomain.ACCEPTED -> {
+            GenericCard(
+                titleLabel = stringResource(R.string.screen_order_item_tracking_history_return_card_accepted_title),
+                additionalTitleContentLabel = stringResource(R.string.screen_order_item_tracking_history_return_card_accepted_description),
+                leadingIconResId = R.drawable.ic_check,
+                leadingIconTint = MaterialTheme.customColors.greenCheckmark,
+                additionalContent = {
+                    GenericCardButton(
+                        label = stringResource(R.string.screen_order_item_tracking_history_return_card_accepted_action_button),
+                        backgroundColor = MaterialTheme.customColors.buttonBackgroundPositive,
+                        onClick = onRequestReturnClicked
+                    )
+                }
+            )
+        }
+    }
+}
+
+@Composable
+private fun RefundCard(
+    refundStatus: OrderItemRefundStatusDomain,
+    refundUntilDateLabel: String,
+    onButtonClicked: () -> Unit
+) {
+    when (refundStatus) {
+        OrderItemRefundStatusDomain.AVAILABLE -> {
+            GenericCard(
+                titleLabel = stringResource(R.string.screen_order_item_tracking_history_refund_card_available_title),
+                additionalTitleContentLabel = stringResource(
+                    R.string.screen_order_item_tracking_history_refund_card_available_description,
+                    refundUntilDateLabel
+                ),
+                leadingIconResId = R.drawable.ic_alarm,
+                additionalContent = {
+                    GenericCardButton(
+                        label = stringResource(R.string.screen_order_item_tracking_history_refund_section_button_request_refund),
+                        onClick = onButtonClicked
+                    )
+                }
+            )
+        }
+
+        OrderItemRefundStatusDomain.EXPIRED -> {
+            GenericCard(
+                titleLabel = stringResource(R.string.screen_order_item_tracking_history_refund_card_expired_title),
+                additionalTitleContentLabel = stringResource(R.string.screen_order_item_tracking_history_refund_card_expired_description),
+                leadingIconResId = R.drawable.ic_lock,
+                additionalContent = null
+            )
+        }
+
+        OrderItemRefundStatusDomain.FINAL_SALE -> {
+            GenericCard(
+                titleLabel = stringResource(R.string.screen_order_item_tracking_history_refund_card_final_sale_title),
+                additionalTitleContentLabel = stringResource(R.string.screen_order_item_tracking_history_refund_card_final_sale_description),
+                leadingIconResId = R.drawable.ic_lock,
+                additionalContent = {
+                    val errorColor = MaterialTheme.colors.error
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(color = errorColor.copy(alpha = ContentAlpha.medium))
+                            .drawWithContent {
+                                drawContent()
+
+                                drawRect(
+                                    color = errorColor,
+                                    size = Size(SPACING_TINY.dp.toPx(), size.height)
+                                )
+                            }
+                            .padding(SPACING_MEDIUM.dp)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.screen_order_item_tracking_history_refund_card_final_sale_additional_description),
+                            color = errorColor
+                        )
+                    }
+                }
+            )
+        }
+
+        OrderItemRefundStatusDomain.PENDING -> {
+            GenericCard(
+                titleLabel = stringResource(R.string.screen_order_item_tracking_history_refund_card_pending_title),
+                additionalTitleContentLabel = stringResource(R.string.screen_order_item_tracking_history_refund_card_pending_description),
+                leadingIconResId = R.drawable.ic_hourglass,
+                additionalContent = {
+                    GenericCardButton(
+                        label = stringResource(R.string.screen_order_item_tracking_history_refund_section_button_view_refund_request),
+                        onClick = onButtonClicked
+                    )
+                }
+            )
+        }
+
+        OrderItemRefundStatusDomain.REJECTED -> {
+            GenericCard(
+                titleLabel = stringResource(R.string.screen_order_item_tracking_history_refund_card_rejected_title),
+                additionalTitleContentLabel = stringResource(R.string.screen_order_item_tracking_history_refund_card_rejected_description),
+                leadingIconResId = R.drawable.ic_close,
+                leadingIconTint = MaterialTheme.customColors.genericRed,
+                additionalContent = {
+                    GenericCardButton(
+                        label = stringResource(R.string.screen_order_item_tracking_history_refund_card_rejected_action_button),
+                        backgroundColor = MaterialTheme.customColors.buttonBackgroundNegative,
+                        onClick = onButtonClicked
+                    )
+                }
+            )
+        }
+
+        OrderItemRefundStatusDomain.ACCEPTED -> {
+            GenericCard(
+                titleLabel = stringResource(R.string.screen_order_item_tracking_history_refund_card_accepted_title),
+                additionalTitleContentLabel = stringResource(R.string.screen_order_item_tracking_history_refund_card_accepted_description),
+                leadingIconResId = R.drawable.ic_check,
+                leadingIconTint = MaterialTheme.customColors.greenCheckmark,
+                additionalContent = {
+                    GenericCardButton(
+                        label = stringResource(R.string.screen_order_item_tracking_history_refund_card_accepted_action_button),
+                        backgroundColor = MaterialTheme.customColors.buttonBackgroundPositive,
+                        onClick = onButtonClicked
+                    )
+                }
+            )
+        }
+    }
+}
+
+@Composable
+private fun GenericCard(
+    titleLabel: String,
+    additionalTitleContentLabel: String,
+    @DrawableRes leadingIconResId: Int,
+    leadingIconTint: Color? = null,
+    additionalContent: (@Composable () -> Unit)?,
+    backgroundColor: Color = SectionHeaderDefaults.BACKGROUND_COLOR
+) {
+    SectionHeader(
+        title = titleLabel,
+        titleContentAlignment = Alignment.CenterVertically,
+        additionalTitleContent = {
+            Text(
+                text = additionalTitleContentLabel,
+                style = MaterialTheme.typography.subtitle1
+            )
+        },
+        leadingIcon = {
+            Image(
+                painter = painterResource(leadingIconResId),
+                contentDescription = null,
+                modifier = Modifier.size(ConstantsUi.MIN_ICON_SIZE),
+                colorFilter = leadingIconTint?.let { ColorFilter.tint(color = it) }
+            )
+        },
+        additionalContent = {
+            additionalContent?.let {
+                VSpacer.Small()
+
+                it()
+            }
+        },
+        backgroundColor = backgroundColor,
+        enabled = false,
+        onClick = {}
+    )
+}
+
+@Composable
+private fun GenericCardButton(
+    label: String,
+    backgroundColor: Color = ButtonDefaults.outlinedButtonColors().backgroundColor(true).value,
+    onClick: () -> Unit
+) {
+    WrapOutlinedButton(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
+        colors = ButtonDefaults.outlinedButtonColors(backgroundColor = backgroundColor)
+    ) {
+        Text(text = label)
+    }
+}
+
+// Contact Support & Contact Seller buttons.
+@Composable
+private fun ExtraActionButtonsRow(
+    onContactSupportButtonClicked: () -> Unit,
+    onContactSellerButtonClicked: () -> Unit
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp)
+    ) {
+        WrapOutlinedButton(
+            onClick = onContactSupportButtonClicked,
+            modifier = Modifier.fillMaxWidth(),
+            enabled = false // TODO: Disabled for now.
+        ) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Image(
+                    painter = painterResource(R.drawable.ic_contact_support),
+                    contentDescription = null,
+                    modifier = Modifier.size(ConstantsUi.MIN_ICON_SIZE)
+                )
+
+                Text(text = stringResource(R.string.screen_order_item_tracking_history_extra_action_button_contact_support))
+            }
+        }
+
+        WrapOutlinedButton(
+            onClick = onContactSellerButtonClicked,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Image(
+                    painter = painterResource(R.drawable.ic_phone),
+                    contentDescription = null,
+                    modifier = Modifier.size(ConstantsUi.MIN_ICON_SIZE),
+                    colorFilter = ColorFilter.tint(MaterialTheme.customColors.genericRed)
+                )
+
+                Text(text = stringResource(R.string.screen_order_item_tracking_history_extra_action_button_contact_seller))
+            }
+        }
+    }
+}
+
+@Composable
 private fun TrackingHistorySteps(
-    trackingSteps: List<OrderItemTrackingStepUi>
+    trackingSteps: ImmutableList<OrderItemTrackingStepUi>
 ) {
     val completedColor = MaterialTheme.customColors.genericRed
     val activeColor = MaterialTheme.customColors.genericRed
@@ -587,7 +1080,7 @@ private fun TrackingHistoryStepLabels(
     descriptionLabel: String?,
     stepLabelColor: Color,
     modifier: Modifier = Modifier,
-    descriptionColor: Color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
+    descriptionColor: Color = MaterialTheme.colors.onSurface.copy(alpha = ContentAlpha.medium)
 ) {
     Column(
         modifier = modifier,
@@ -608,6 +1101,8 @@ private fun TrackingHistoryStepLabels(
         }
     }
 }
+
+// Previews.
 
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
 @Preview(
@@ -642,16 +1137,94 @@ private fun TrackingHistoryCardPreview() {
 
     val delivered = null
 
+    val trackingSteps = mapToTrackingStepList(
+        shipped,
+        departedSortingFacility,
+        outForDelivery,
+        delivered
+    ).toImmutableList()
+
     MarvelXTheme {
-        Scaffold {
+        Scaffold { paddingValues ->
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(paddingValues)
+                    .systemBarsPadding()
+                    .padding(SPACING_MEDIUM.dp)
+            )
             TrackingHistorySteps(
-                trackingSteps = mapToTrackingStepList(
-                    shipped,
-                    departedSortingFacility,
-                    outForDelivery,
-                    delivered
-                )
+                trackingSteps = trackingSteps
             )
         }
+    }
+}
+
+@Preview(
+    showSystemUi = true, showBackground = true,
+    uiMode = Configuration.UI_MODE_NIGHT_YES or Configuration.UI_MODE_TYPE_NORMAL
+)
+@Composable
+private fun OrderItemTrackingHistoryScreenDeliveredPreview() {
+    val orderDateMinusDays = Random.nextLong(3L..10L)
+    val estimatedDeliveryDateMinPlusDays = Random.nextLong(1L..3L)
+    val estimatedDeliveryDateMaxPlusDays = Random.nextLong(1L..5L)
+
+    val orderDate = DateUtil.getUTCInstant().minusDays(orderDateMinusDays)
+    val estimatedDeliveryDateMin = orderDate.plusDays(estimatedDeliveryDateMinPlusDays)
+    val estimatedDeliveryDateMax = orderDate.plusDays(estimatedDeliveryDateMaxPlusDays)
+
+    val deliveredDate = estimatedDeliveryDateMin.plusDays(1)
+
+    val returnUntilDate = deliveredDate.plusDays(30L)
+    val refundUntilDate = deliveredDate.plusDays(30L)
+
+    MarvelXTheme {
+        OrderItemTrackingHistoryScreen(
+            onEvent = {},
+            state = OrderItemTrackingHistoryContract.State(
+                uiState = UiState.Success(
+                    OrderItemTrackingHistoryUi(
+                        trackingId = "T1002350",
+                        courier = OrderCourierUi.entries.random(),
+                        estimatedDelivery = OrderEstimatedDeliveryDateRangeDomain(
+                            from = estimatedDeliveryDateMin,
+                            to = estimatedDeliveryDateMax
+                        ).toUi(),
+                        status = OrderItemStatusUi.Delivered,
+                        steps = persistentListOf(),
+                        currentStepItem = OrderTrackingHistoryItemDomain(
+                            location = "Athens",
+                            date = estimatedDeliveryDateMin.plusDays(1)
+                        ).toUi(),
+                        returnStatus = OrderItemReturnStatusDomain.AVAILABLE,
+                        returnUntilDate = InstantUi(
+                            value = returnUntilDate,
+                            label = returnUntilDate.defaultFormat()
+                        ),
+                        refundStatus = OrderItemRefundStatusDomain.REJECTED,
+                        refundUntilDate = InstantUi(
+                            value = refundUntilDate,
+                            label = refundUntilDate.defaultFormat()
+                        )
+                    )
+                ),
+                sellerDetailsUiState = UiState.Success(
+                    RepositoryBasicProfileDetails(
+                        firstName = "Alexandros",
+                        lastName = "Voliotis",
+                        profileImageUrl = ""
+                    )
+                )
+            ),
+            effect = emptyFlow(),
+            onNavigationEffect = {},
+            orderId = "A1001567",
+            orderItemId = "A1",
+            sellerUserId = "1",
+            orderItemTitle = "Super wow mug!",
+            orderItemCoverImageUrl = "",
+            orderItemPriceLabel = "150.20".withEuroSymbol()
+        )
     }
 }

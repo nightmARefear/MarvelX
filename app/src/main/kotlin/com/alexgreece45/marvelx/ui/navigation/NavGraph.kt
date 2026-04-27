@@ -52,6 +52,9 @@ import com.alexgreece45.marvelx.ui.screens.orders.orderDetails.model.OrderDetail
 import com.alexgreece45.marvelx.ui.screens.orders.orderItemTrackingHistory.OrderItemTrackingHistoryScreen
 import com.alexgreece45.marvelx.ui.screens.orders.orderItemTrackingHistory.OrderItemTrackingHistoryViewModel
 import com.alexgreece45.marvelx.ui.screens.orders.orderItemTrackingHistory.model.OrderItemTrackingHistoryContract
+import com.alexgreece45.marvelx.ui.screens.orders.requestReturn.RequestItemReturnScreen
+import com.alexgreece45.marvelx.ui.screens.orders.requestReturn.RequestItemReturnViewModel
+import com.alexgreece45.marvelx.ui.screens.orders.requestReturn.model.RequestItemReturnContract
 import com.alexgreece45.marvelx.ui.screens.otp.OtpScreen
 import com.alexgreece45.marvelx.ui.screens.otp.OtpViewModel
 import com.alexgreece45.marvelx.ui.screens.profile.ProfileScreen
@@ -415,6 +418,27 @@ fun NavGraph(navController: NavHostController) {
                         is OrderItemTrackingHistoryContract.Effect.Navigation.GoToProfileDetailsScreen -> navController.navigate(
                             Screen.ProfileDetailsScreen.createNavRoute(navigationEffect.userId)
                         )
+
+                        is OrderItemTrackingHistoryContract.Effect.Navigation.GoToRequestItemReturnScreen -> navController.navigate(
+                            Screen.RequestItemReturnScreen.createNavRoute(
+                                orderId = navigationEffect.orderId,
+                                orderItemId = navigationEffect.orderItemId,
+                                orderItemTitle = navigationEffect.orderItemTitle,
+                                orderItemCoverImageUrl = navigationEffect.orderItemCoverImageUrl,
+                                orderItemPriceLabel = navigationEffect.orderItemPriceLabel
+                            )
+                        )
+
+                        is OrderItemTrackingHistoryContract.Effect.Navigation.GoToContactSupportScreen -> TODO()
+                        is OrderItemTrackingHistoryContract.Effect.Navigation.GoToRequestItemRefundScreen -> navController.navigate(
+                            Screen.RequestItemRefundScreen.createNavRoute(
+                                orderId = navigationEffect.orderId,
+                                orderItemId = navigationEffect.orderItemId,
+                                orderItemTitle = navigationEffect.orderItemTitle,
+                                orderItemCoverImageUrl = navigationEffect.orderItemCoverImageUrl,
+                                orderItemPriceLabel = navigationEffect.orderItemPriceLabel
+                            )
+                        )
                     }
                 },
                 orderId = navBackStackEntry.arguments?.getString(NavItem.OrderId.key).orEmpty(),
@@ -430,6 +454,31 @@ fun NavGraph(navController: NavHostController) {
                     .orEmpty()
             )
         }
+
+        composable(screen = Screen.RequestItemReturnScreen) { navBackStackEntry ->
+            val viewModel = koinViewModel<RequestItemReturnViewModel>()
+            RequestItemReturnScreen(
+                onEvent = viewModel::setEvent,
+                state = viewModel.uiState.collectAsStateWithLifecycle().value,
+                effect = viewModel.uiEffect,
+                onNavigationEffect = { navigationEffect ->
+                    when (navigationEffect) {
+                        RequestItemReturnContract.Effect.Navigation.GoBack -> navController.navigateUp()
+                    }
+                },
+                orderId = navBackStackEntry.arguments?.getString(NavItem.OrderId.key).orEmpty(),
+                orderItemId = navBackStackEntry.arguments?.getString(NavItem.OrderItemId.key)
+                    .orEmpty(),
+                orderItemTitle = navBackStackEntry.arguments?.getString(NavItem.OrderItemTitle.key)
+                    .orEmpty(),
+                orderItemCoverImageUrl = navBackStackEntry.arguments?.getString(NavItem.OrderItemCoverImageUrl.key)
+                    .orEmpty(),
+                orderItemPriceLabel = navBackStackEntry.arguments?.getString(NavItem.OrderItemPriceLabel.key)
+                    .orEmpty()
+            )
+        }
+
+
 
         composable(screen = Screen.AllCharactersScreen) {
             val viewModel = koinViewModel<AllCharactersViewModel>()

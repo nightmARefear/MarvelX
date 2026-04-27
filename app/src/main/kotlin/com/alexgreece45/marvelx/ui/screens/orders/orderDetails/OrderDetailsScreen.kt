@@ -110,7 +110,7 @@ fun OrderDetailsScreen(
         sheetState = bottomSheetState
     ) {
         ContentScreen(
-            isLoading = state.uiState is UiState.Loading,
+            isLoading = state.uiState.isLoading,
             navigableAction = ScreenNavigableAction.Backable(
                 onBack = {
                     onEvent(OrderDetailsContract.Event.OnBack)

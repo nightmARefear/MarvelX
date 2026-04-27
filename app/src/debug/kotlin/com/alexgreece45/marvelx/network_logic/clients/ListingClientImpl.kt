@@ -1,6 +1,5 @@
-package com.alexgreece45.marvelx.di
+package com.alexgreece45.marvelx.network_logic.clients
 
-import com.alexgreece45.marvelx.network_logic.clients.ListingClient
 import com.alexgreece45.marvelx.network_logic.models_api.cart.ResponseCartInfo
 import com.alexgreece45.marvelx.network_logic.models_api.cart.ResponseCartSummary
 import com.alexgreece45.marvelx.network_logic.models_api.marketplace.ResponseMarketplace

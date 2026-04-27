@@ -427,16 +427,21 @@ private fun BottomNavigationBar(
                             ),
                         icon = {
                             Icon(
-                                modifier = Modifier.size(ConstantsUi.MIN_ICON_SIZE),
                                 painter = painterResource(item.iconData.iconResource),
                                 contentDescription = stringResource(item.iconData.contentDescription),
+                                modifier = Modifier.size(ConstantsUi.MIN_ICON_SIZE),
                                 tint = item.iconData.tint
                                     ?: LocalContentColor.current.copy(alpha = LocalContentAlpha.current)
                             )
                         },
                         label = {
                             Text(
-                                text = stringResource(item.label)
+                                text = stringResource(item.label),
+                                maxLines = 1,
+                                style = LocalTextStyle.current.copy(
+                                    fontSize = 10.sp,
+                                    letterSpacing = 0.1.sp
+                                )
                             )
                         },
                         selected = isSelected,

@@ -1,9 +1,11 @@
 package com.alexgreece45.marvelx.ui.screens.orders.orderItemTrackingHistory.model
 
 import androidx.annotation.StringRes
+import androidx.compose.runtime.Immutable
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.ui.screens.orders.model.tracking.OrderTrackingHistoryItemUi
 
+@Immutable
 data class OrderItemTrackingStepUi(
     @StringRes val titleResId: Int,
     val state: OrderItemTrackingStepState,

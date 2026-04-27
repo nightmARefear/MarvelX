@@ -4,6 +4,8 @@ sealed class UiState<out T, out R> {
     data object Loading : UiState<Nothing, Nothing>()
     data class Error<R>(val errorData: R) : UiState<Nothing, R>()
     data class Success<T>(val data: T) : UiState<T, Nothing>()
+
+    val isLoading: Boolean get() = this is Loading
 }
 
 inline fun <T, R> UiState<T, R>.onLoading(action: () -> Unit): UiState<T, R> {

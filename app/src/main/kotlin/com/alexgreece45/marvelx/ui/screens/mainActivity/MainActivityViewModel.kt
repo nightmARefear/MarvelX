@@ -44,6 +44,7 @@ import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
 import okhttp3.WebSocketListener
+import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.koin.core.qualifier.qualifier
 import java.time.Instant
@@ -51,12 +52,12 @@ import java.time.format.DateTimeParseException
 import kotlin.coroutines.CoroutineContext
 
 class MainActivityViewModel :
-    BaseViewModel<MainActivityEvent, MainActivityState, MainActivityEffect>() {
+    BaseViewModel<MainActivityEvent, MainActivityState, MainActivityEffect>(), KoinComponent {
 
     private val loggerTag = "MainActivityViewModel"
 
     private val prefKeys: PrefKeys by inject()
-    private val logger: AppLogger by inject()
+    private val appLogger: AppLogger by inject()
     private val loginInteractor: LoginInteractor by inject()
     private val resourceProvider: ResourceProvider by inject()
     private val websocketController: WebsocketController by inject()
@@ -211,7 +212,7 @@ class MainActivityViewModel :
      * The actions to perform when the viewModel is instantiated.
      */
     private fun setWebsocketListener() {
-        logger.d(loggerTag) { "authData: ${prefKeys.getUserAuthData()}" }
+        appLogger.d(loggerTag) { "authData: ${prefKeys.getUserAuthData()}" }
         websocketController.setWebSocketListener(getWebSocketListener())
     }
 
@@ -274,16 +275,16 @@ class MainActivityViewModel :
                         val currentTimestamp =
                             when (partialState) {
                                 is WebsocketSendRequestPartialState.Failed -> {
-                                    logger.d(loggerTag) { "(performAutoLogoutOperations#sendRequest#Failed) errorMessage: ${partialState.errorMessage}" }
+                                    appLogger.d(loggerTag) { "(performAutoLogoutOperations#sendRequest#Failed) errorMessage: ${partialState.errorMessage}" }
                                     DateUtil.getUTCInstant()
                                 }
 
                                 is WebsocketSendRequestPartialState.Success -> {
                                     try {
-                                        logger.d(loggerTag) { "(performAutoLogoutOperations#sendRequest#Success) timestamp: ${partialState.websocketDomain.data}" }
+                                        appLogger.d(loggerTag) { "(performAutoLogoutOperations#sendRequest#Success) timestamp: ${partialState.websocketDomain.data}" }
                                         Instant.parse(partialState.websocketDomain.data)
                                     } catch (e: DateTimeParseException) {
-                                        logger.e(loggerTag) { "(performAutoLogoutOperations#sendRequest#Success) parsing error: $e" }
+                                        appLogger.e(loggerTag) { "(performAutoLogoutOperations#sendRequest#Success) parsing error: $e" }
                                         DateUtil.getUTCInstant()
                                     }
                                 }
@@ -296,7 +297,7 @@ class MainActivityViewModel :
 
                             else -> {
                                 if (currentTimestamp.differenceInMinutes(storedTimestamp)
-                                        .also { logger.d(loggerTag) { "difference in time: $it" } } >= ConstantsSecurity.AutoLogout.TIMEOUT_PERIOD
+                                        .also { appLogger.d(loggerTag) { "difference in time: $it" } } >= ConstantsSecurity.AutoLogout.TIMEOUT_PERIOD
                                 ) {
                                     onLogoutUser()
                                 } else {

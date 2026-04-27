@@ -1,6 +1,5 @@
-package com.alexgreece45.marvelx.di
+package com.alexgreece45.marvelx.network_logic.clients
 
-import com.alexgreece45.marvelx.network_logic.clients.ApiClient
 import com.alexgreece45.marvelx.network_logic.models_api.authorize.ResponseAuthorize
 import com.alexgreece45.marvelx.network_logic.models_api.character.CharacterDataWrapper
 import com.alexgreece45.marvelx.network_logic.models_api.character.comic.ComicDataWrapper

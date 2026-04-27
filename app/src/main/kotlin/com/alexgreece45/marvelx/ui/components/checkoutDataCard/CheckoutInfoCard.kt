@@ -66,9 +66,8 @@ fun CheckoutInfoCard(
                     }
                 }
             },
-            enabled = false,
-            onClick = {}
-        )
+            enabled = false
+        ) {}
 
         SectionHeader(
             title = stringResource(R.string.checkout_info_card_payment_details_title),
@@ -143,9 +142,8 @@ fun CheckoutInfoCard(
                     }
                 }
             },
-            enabled = false,
-            onClick = {}
-        )
+            enabled = false
+        ) {}
     }
 }
 

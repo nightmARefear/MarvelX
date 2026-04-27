@@ -570,16 +570,78 @@
     <string name="screen_order_item_tracking_history_toolbar_title">Tracking History</string>
 
     <string name="screen_order_item_tracking_history_title_current_status">CURRENT STATUS</string>
-    <string name="screen_order_item_tracking_history_title_seller">SELLER</string>
-    <string name="screen_order_item_tracking_history_title_courier">Courier</string>
     <string name="screen_order_item_tracking_history_title_estimated_delivery">Estimated Delivery</string>
     <string name="screen_order_item_tracking_history_title_delivery_timeline">Delivery Timeline</string>
 
     <string name="screen_order_item_tracking_history_label_order_ids">Order %1$s > Order Item %2$s</string>
     <string name="screen_order_item_tracking_history_label_tracking_step_pending">Pending</string>
 
+    <string name="screen_order_item_tracking_history_seller_card_title">SELLER</string>
+    <string name="screen_order_item_tracking_history_seller_card_label_view_profile">View Profile</string>
+
+    <string name="screen_order_item_tracking_history_courier_card_title">Courier</string>
     <string name="screen_order_item_tracking_history_courier_card_label_tracking_id">Tracking ID: %1$s</string>
-    <string name="screen_order_item_tracking_history_courier_card_button">view on courier website</string>
+    <string name="screen_order_item_tracking_history_courier_card_button">View On Courier Website</string>
+
+    <string name="screen_order_item_tracking_history_delivery_details_card_title">Delivery Details</string>
+    <string name="screen_order_item_tracking_history_delivery_details_card_label_delivered_date">Delivered Date:</string>
+    <string name="screen_order_item_tracking_history_delivery_details_card_label_courier">Courier:</string>
+    <string name="screen_order_item_tracking_history_delivery_details_card_label_tracking_id">Tracking ID:</string>
+
+    // Return Card
+    <string name="screen_order_item_tracking_history_return_card_available_title">Return window open</string>
+    <string name="screen_order_item_tracking_history_return_card_available_description">You have until %1$s to return this item</string>
+
+    <string name="screen_order_item_tracking_history_return_card_expired_title">Return window closed</string>
+    <string name="screen_order_item_tracking_history_return_card_expired_description">The 30-day return period ended on %1$s</string>
+
+    <string name="screen_order_item_tracking_history_return_card_final_sale_title">Final Sale - No returns</string>
+    <string name="screen_order_item_tracking_history_return_card_final_sale_description">This clearance item was marked as final sale</string>
+    <string name="screen_order_item_tracking_history_return_card_final_sale_additional_description">All sales final • No returns or exchanges</string>
+
+    <string name="screen_order_item_tracking_history_return_card_pending_title">Return request pending</string>
+    <string name="screen_order_item_tracking_history_return_card_pending_description">The seller is reviewing your return request</string>
+
+    <string name="screen_order_item_tracking_history_return_card_rejected_title">Return request rejected</string>
+    <string name="screen_order_item_tracking_history_return_card_rejected_description">The seller has rejected your return request</string>
+    <string name="screen_order_item_tracking_history_return_card_rejected_action_button">View Response</string>
+
+    <string name="screen_order_item_tracking_history_return_card_accepted_title">Return request accepted</string>
+    <string name="screen_order_item_tracking_history_return_card_accepted_description">Your request has been accepted. Ship the item back to receive the correct one.</string>
+    <string name="screen_order_item_tracking_history_return_card_accepted_action_button">View Shipping Instructions</string>
+
+    <string name="screen_order_item_tracking_history_return_section_button_request_return">Request Return</string>
+    <string name="screen_order_item_tracking_history_return_section_button_view_return_request">View Request Return</string>
+    <string name="screen_order_item_tracking_history_return_section_button_view_tracking_history">View Tracking History</string>
+    <string name="screen_order_item_tracking_history_return_section_button_report_an_issue">Report An Issue</string>
+
+    // Refund Card
+    <string name="screen_order_item_tracking_history_refund_card_available_title">Refund window open</string>
+    <string name="screen_order_item_tracking_history_refund_card_available_description">You have until %1$s to refund this item</string>
+
+    <string name="screen_order_item_tracking_history_refund_card_expired_title">Refund window closed</string>
+    <string name="screen_order_item_tracking_history_refund_card_expired_description">The 30-day return period ended on %1$s</string>
+
+    <string name="screen_order_item_tracking_history_refund_card_final_sale_title">Final Sale - No refunds</string>
+    <string name="screen_order_item_tracking_history_refund_card_final_sale_description">This clearance item was marked as final sale</string>
+    <string name="screen_order_item_tracking_history_refund_card_final_sale_additional_description">All sales final • No refunds</string>
+
+    <string name="screen_order_item_tracking_history_refund_card_pending_title">Refund request pending</string>
+    <string name="screen_order_item_tracking_history_refund_card_pending_description">The seller is reviewing your refund request</string>
+
+    <string name="screen_order_item_tracking_history_refund_card_rejected_title">Refund request rejected</string>
+    <string name="screen_order_item_tracking_history_refund_card_rejected_description">The seller has rejected your refund request</string>
+    <string name="screen_order_item_tracking_history_refund_card_rejected_action_button">View Response</string>
+
+    <string name="screen_order_item_tracking_history_refund_card_accepted_title">Refund request accepted</string>
+    <string name="screen_order_item_tracking_history_refund_card_accepted_description">Your request has been accepted. Ship the item back to receive your refund.</string>
+    <string name="screen_order_item_tracking_history_refund_card_accepted_action_button">View Shipping Instructions</string>
+
+    <string name="screen_order_item_tracking_history_refund_section_button_request_refund">Request Refund</string>
+    <string name="screen_order_item_tracking_history_refund_section_button_view_refund_request">View Refund Request</string>
+
+    <string name="screen_order_item_tracking_history_extra_action_button_contact_support">Contact Support</string>
+    <string name="screen_order_item_tracking_history_extra_action_button_contact_seller">Contact Seller</string>
 
     <string name="screen_order_item_tracking_history_toast_message_success_copying_to_clipboard">Successfully copied the tracking ID to the clipboard</string>
 
@@ -591,6 +653,13 @@
     <string name="screen_order_item_tracking_history_error_button_fetching_data">Go Back</string>
 
     <string name="screen_order_item_tracking_history_content_description_copy_tracking_id">copy tracking ID icon button</string>
+
+    <!-- `RequestReturnScreen` -->
+    <string name="screen_request_return_toolbar_title">Request Return</string>
+    <string name="screen_request_return_reason_title">Return Reason</string>
+    <string name="screen_request_return_description_title">Additional Details (Optional)</string>
+    <string name="screen_request_return_description_placeholder">Describe your return reason…</string>
+    <string name="screen_request_return_submit_button">Submit Return Request</string>
 
     // `CheckoutDataCard`
     <string name="checkout_info_card_shipping_details_title">Shipping Details</string>
@@ -688,6 +757,13 @@
     <string name="card_brand_content_description_dinersclub">Diners Club card brand icon</string>
     <string name="card_brand_content_description_discover">Discover card brand icon</string>
     <string name="card_brand_content_description_unknown">Unknown card brand icon</string>
+
+    // `OrderItemReturnReasonUi` enum labels
+    <string name="order_item_return_reason_defective">Item is defective or damaged</string>
+    <string name="order_item_return_reason_not_as_described">Item not as described</string>
+    <string name="order_item_return_reason_wrong_item">Wrong item received</string>
+    <string name="order_item_return_reason_changed_mind">Changed my mind</string>
+    <string name="order_item_return_reason_other">Other</string>
 
     // Input field errors
     <string name="input_field_error_blank_email">Email cannot be blank.</string>

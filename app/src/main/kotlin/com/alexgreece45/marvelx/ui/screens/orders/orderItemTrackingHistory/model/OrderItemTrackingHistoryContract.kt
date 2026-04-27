@@ -33,6 +33,14 @@ interface OrderItemTrackingHistoryContract {
         }
 
         data object OnErrorButtonClicked : Event
+
+        data object OnReturnActionButtonClicked : Event
+        data object OnRefundActionButtonClicked : Event
+
+        sealed interface ExtraActionButtonEvents : Event {
+            data object OnContactSupportClicked : ExtraActionButtonEvents
+            data object OnContactSellerClicked : ExtraActionButtonEvents
+        }
     }
 
     data class State(
@@ -53,6 +61,29 @@ interface OrderItemTrackingHistoryContract {
         sealed interface Navigation : Effect {
             data object GoBack : Navigation
             data class GoToProfileDetailsScreen(val userId: String) : Navigation
+            data class GoToRequestItemReturnScreen(
+                val orderId: String,
+                val orderItemId: String,
+                val orderItemTitle: String,
+                val orderItemCoverImageUrl: String,
+                val orderItemPriceLabel: String
+            ) : Navigation
+
+            data class GoToContactSupportScreen(
+                val orderId: String,
+                val orderItemId: String,
+                val orderItemTitle: String,
+                val orderItemCoverImageUrl: String,
+                val orderItemPriceLabel: String
+            ) : Navigation
+
+            data class GoToRequestItemRefundScreen(
+                val orderId: String,
+                val orderItemId: String,
+                val orderItemTitle: String,
+                val orderItemCoverImageUrl: String,
+                val orderItemPriceLabel: String
+            ) : Navigation
         }
 
         data class SetClipboardText(val toastMessage: String, val text: String) : Effect

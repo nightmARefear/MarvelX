@@ -1,6 +1,5 @@
-package com.alexgreece45.marvelx.di
+package com.alexgreece45.marvelx.network_logic.clients
 
-import com.alexgreece45.marvelx.network_logic.clients.OrderClient
 import com.alexgreece45.marvelx.network_logic.models_api.order.ResponseOrder
 import com.alexgreece45.marvelx.network_logic.models_api.order.ResponseOrderId
 import com.alexgreece45.marvelx.network_logic.models_api.order.ResponseOrderPreview

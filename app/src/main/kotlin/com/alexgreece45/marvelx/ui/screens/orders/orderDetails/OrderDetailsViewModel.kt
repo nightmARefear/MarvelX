@@ -2,6 +2,7 @@ package com.alexgreece45.marvelx.ui.screens.orders.orderDetails
 
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.configuration.ConfigPriceLogic
+import com.alexgreece45.marvelx.controllers.AppLogger
 import com.alexgreece45.marvelx.domain.helper.InteractorPartialState
 import com.alexgreece45.marvelx.domain.interactors.order.OrderInteractor
 import com.alexgreece45.marvelx.mvi.BaseViewModel
@@ -19,6 +20,7 @@ class OrderDetailsViewModel(
     private val orderInteractor: OrderInteractor,
     private val configPriceLogic: ConfigPriceLogic,
     private val resourceProvider: ResourceProvider,
+    private val appLogger: AppLogger,
 ) : BaseViewModel<OrderDetailsContract.Event, OrderDetailsContract.State, OrderDetailsContract.Effect>() {
 
     override fun setInitialState(): OrderDetailsContract.State = OrderDetailsContract.State()

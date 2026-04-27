@@ -174,6 +174,7 @@ import com.alexgreece45.marvelx.ui.screens.myListings.MyListingsViewModel
 import com.alexgreece45.marvelx.ui.screens.orders.OrdersViewModel
 import com.alexgreece45.marvelx.ui.screens.orders.orderDetails.OrderDetailsViewModel
 import com.alexgreece45.marvelx.ui.screens.orders.orderItemTrackingHistory.OrderItemTrackingHistoryViewModel
+import com.alexgreece45.marvelx.ui.screens.orders.requestReturn.RequestItemReturnViewModel
 import com.alexgreece45.marvelx.ui.screens.otp.OtpViewModel
 import com.alexgreece45.marvelx.ui.screens.profile.ProfileViewModel
 import com.alexgreece45.marvelx.ui.screens.profile.editProfileDetails.EditProfileDetailsViewModel
@@ -218,6 +219,7 @@ fun initKoin(marvelXApplication: MarvelXApplication) {
             navigationModule,
             databaseModule,
             networkKoinModule,
+            networkLogicClientsModule,
             repositoryModule,
             interactorModule,
             mapperModule,
@@ -492,6 +494,7 @@ private val viewModelModule = module {
     viewModelOf(::OrdersViewModel)
     viewModelOf(::OrderDetailsViewModel)
     viewModelOf(::OrderItemTrackingHistoryViewModel)
+    viewModelOf(::RequestItemReturnViewModel)
 
     viewModel { AllCharactersViewModel(get(), get()) }
     viewModel { AllCharacterComicsViewModel(get()) }
@@ -503,13 +506,24 @@ private val viewModelModule = module {
 
     viewModelOf(::ProfileViewModel)
     viewModelOf(::ProfileImageViewModel)
-    viewModelOf(::ProfileDetailsViewModel)
+    viewModel {
+        ProfileDetailsViewModel(
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(qualifier<IoDispatcher>())
+        )
+    }
 
     viewModel { EditProfileDetailsViewModel(get(), get(), get(), get()) }
     viewModel { ProfileDetailsStatsViewModel(get(), get()) }
     viewModel { PrivacySettingsViewModel(get(), get()) }
     viewModel { FaqViewModel(get(), get()) }
-    viewModel { QrCodeScanViewModel() }
+    viewModelOf(::QrCodeScanViewModel)
 
     viewModelOf(::SettingsViewModel)
 }

@@ -222,6 +222,66 @@ sealed class Screen(
             "$baseRoute/$orderId/$orderItemId/$sellerUserId/$orderItemTitle/$orderItemCoverImageUrl/$orderItemPriceLabel"
     }
 
+    data object RequestItemReturnScreen : Screen(
+        baseRoute = "requestItemReturnScreen",
+        navArgs = listOf(
+            NavItem.OrderId,
+            NavItem.OrderItemId,
+            NavItem.OrderItemTitle,
+            NavItem.OrderItemCoverImageUrl,
+            NavItem.OrderItemPriceLabel
+        )
+    ) {
+        fun createNavRoute(
+            orderId: String,
+            orderItemId: String,
+            orderItemTitle: String,
+            orderItemCoverImageUrl: String,
+            orderItemPriceLabel: String
+        ): String =
+            "$baseRoute/$orderId/$orderItemId/$orderItemTitle/$orderItemCoverImageUrl/$orderItemPriceLabel"
+    }
+
+    data object RequestItemRefundScreen : Screen(
+        baseRoute = "requestItemRefundScreen",
+        navArgs = listOf(
+            NavItem.OrderId,
+            NavItem.OrderItemId,
+            NavItem.OrderItemTitle,
+            NavItem.OrderItemCoverImageUrl,
+            NavItem.OrderItemPriceLabel
+        )
+    ) {
+        fun createNavRoute(
+            orderId: String,
+            orderItemId: String,
+            orderItemTitle: String,
+            orderItemCoverImageUrl: String,
+            orderItemPriceLabel: String
+        ): String =
+            "$baseRoute/$orderId/$orderItemId/$orderItemTitle/$orderItemCoverImageUrl/$orderItemPriceLabel"
+    }
+
+    data object OrderItemContactSupportScreen : Screen(
+        baseRoute = "orderItemContactSupportScreen",
+        navArgs = listOf(
+            NavItem.OrderId,
+            NavItem.OrderItemId,
+            NavItem.OrderItemTitle,
+            NavItem.OrderItemCoverImageUrl,
+            NavItem.OrderItemPriceLabel
+        )
+    ) {
+        fun createNavRoute(
+            orderId: String,
+            orderItemId: String,
+            orderItemTitle: String,
+            orderItemCoverImageUrl: String,
+            orderItemPriceLabel: String
+        ): String =
+            "$baseRoute/$orderId/$orderItemId/$orderItemTitle/$orderItemCoverImageUrl/$orderItemPriceLabel"
+    }
+
     data object AllCharactersScreen : Screen(baseRoute = "allCharactersScreen")
     data object AllFavoriteCharactersScreen : Screen(baseRoute = "allFavoriteCharactersScreen")
     data object ProfileScreen : Screen(

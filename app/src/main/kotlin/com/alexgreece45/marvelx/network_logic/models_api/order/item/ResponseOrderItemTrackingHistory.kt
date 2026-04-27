@@ -13,4 +13,8 @@ data class ResponseOrderItemTrackingHistory(
     @SerializedName("departedSortingFacility") val departedSortingFacility: ResponseOrderTrackingHistoryItem? = null,
     @SerializedName("outForDelivery") val outForDelivery: ResponseOrderTrackingHistoryItem? = null,
     @SerializedName("delivered") val delivered: ResponseOrderTrackingHistoryItem? = null,
+    @SerializedName("returnStatus") val returnStatus: String? = null,
+    @SerializedName("returnUntilDate") val returnUntilDate: String? = null,
+    @SerializedName("refundStatus") val refundStatus: String? = null,
+    @SerializedName("refundUntilDate") val refundUntilDate: String? = null,
 )

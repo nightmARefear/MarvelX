@@ -9,11 +9,12 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.innerShadow
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
@@ -46,11 +47,12 @@ import com.alexgreece45.marvelx.util.extensions.throttledClickable
 fun SectionHeader(
     title: String,
     titleMaxLines: Int = SectionHeaderDefaults.TITLE_MAX_LINES,
-    additionalTitleContent: (@Composable () -> Unit)? = null,
     titleContentAlignment: Alignment.Vertical = Alignment.Top,
+    additionalTitleContent: (@Composable () -> Unit)? = null,
     leadingIcon: (@Composable () -> Unit)? = null,
     trailingIcon: (@Composable () -> Unit)? = null,
     additionalContent: (@Composable () -> Unit)? = null,
+    backgroundColor: Color = SectionHeaderDefaults.BACKGROUND_COLOR,
     throttleClicks: Boolean = true,
     showRipple: Boolean = true,
     enabled: Boolean = true,
@@ -87,7 +89,8 @@ fun SectionHeader(
         modifier = Modifier
             .fillMaxWidth()
             .then(modifier.value),
-        shape = headerShape
+        shape = headerShape,
+        color = backgroundColor
     ) {
         Column(
             modifier = Modifier
@@ -128,9 +131,14 @@ fun SectionHeader(
 }
 
 @Composable
-fun SectionHeaderTitle(title: String, titleMaxLines: Int = SectionHeaderDefaults.TITLE_MAX_LINES) {
+fun SectionHeaderTitle(
+    title: String,
+    color: Color = Color.Unspecified,
+    titleMaxLines: Int = SectionHeaderDefaults.TITLE_MAX_LINES
+) {
     Text(
         text = title,
+        color = color,
         overflow = TextOverflow.Ellipsis,
         maxLines = titleMaxLines,
         style = MaterialTheme.typography.h6
@@ -140,4 +148,9 @@ fun SectionHeaderTitle(title: String, titleMaxLines: Int = SectionHeaderDefaults
 object SectionHeaderDefaults {
 
     const val TITLE_MAX_LINES = 1
+
+    val BACKGROUND_COLOR: Color
+        @ReadOnlyComposable
+        @Composable
+        get() = MaterialTheme.colors.surface
 }

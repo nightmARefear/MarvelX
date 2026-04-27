@@ -2,6 +2,7 @@ package com.alexgreece45.marvelx.ui.screens.qrCode
 
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.controllers.AppLogger
 import com.alexgreece45.marvelx.controllers.CreateDeepLinkActionResult
 import com.alexgreece45.marvelx.controllers.DeepLinkController
 import com.alexgreece45.marvelx.controllers.HandleQrCodeWebUrlResult
@@ -21,7 +22,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
-import org.koin.core.component.inject
 
 sealed interface QrCodeScanContract {
     sealed interface Event : BaseEvent {
@@ -68,11 +68,12 @@ sealed interface QrCodeScanContract {
     }
 }
 
-class QrCodeScanViewModel :
+class QrCodeScanViewModel(
+    private val appLogger: AppLogger,
+    private val deepLinkController: DeepLinkController,
+    private val resourceProvider: ResourceProvider
+) :
     BaseViewModel<QrCodeScanContract.Event, QrCodeScanContract.State, QrCodeScanContract.Effect>() {
-
-    private val deepLinkController: DeepLinkController by inject()
-    private val resourceProvider: ResourceProvider by inject()
 
     /**
      * The QR code processing job. When this job isn't `null` it is an indication that a

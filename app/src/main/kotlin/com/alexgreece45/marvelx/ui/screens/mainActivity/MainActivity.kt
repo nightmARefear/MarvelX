@@ -38,6 +38,7 @@ import com.alexgreece45.marvelx.notifications.constants.ConstantsNotifications
 import com.alexgreece45.marvelx.notifications.model.NotificationChannelData
 import com.alexgreece45.marvelx.notifications.model.NotificationChannelType
 import com.alexgreece45.marvelx.notifications.model.NotificationData
+import com.alexgreece45.marvelx.ui.components.effect.ObserveUiEffect
 import com.alexgreece45.marvelx.ui.components.effect.OneTimeLaunchedEffect
 import com.alexgreece45.marvelx.ui.helper.openDeepLinkAction
 import com.alexgreece45.marvelx.ui.navigation.NavArgHelper
@@ -90,47 +91,45 @@ class MainActivity : ComponentActivity() {
                         viewModel.setEvent(MainActivityEvent.LifecycleEvent.OnCreate)
                     }
 
-                    LaunchedEffect(Unit) {
-                        viewModel.uiEffect.collect { effect ->
-                            when (effect) {
-                                is MainActivityEffect.Navigation.NavigateToHomeScreenWithSessionExpired -> {
-                                    NavArgHelper.setArgument(
-                                        NavArg.HomeAlertDialogErrorType,
-                                        HomeAlertDialogErrorType.SessionExpired
-                                    )
-                                    routerHost.logout()
-                                }
+                    ObserveUiEffect(viewModel.uiEffect) { effect ->
+                        when (effect) {
+                            is MainActivityEffect.Navigation.NavigateToHomeScreenWithSessionExpired -> {
+                                NavArgHelper.setArgument(
+                                    NavArg.HomeAlertDialogErrorType,
+                                    HomeAlertDialogErrorType.SessionExpired
+                                )
+                                routerHost.logout()
+                            }
 
-                                is MainActivityEffect.Navigation.NavigateToSplashScreenWithSecurityViolation -> {
-                                    NavArgHelper.setArgument(
-                                        NavArg.SplashAlertDialogErrorType,
-                                        InsecureApplication(
-                                            securityViolation = effect.securityViolation
-                                        )
+                            is MainActivityEffect.Navigation.NavigateToSplashScreenWithSecurityViolation -> {
+                                NavArgHelper.setArgument(
+                                    NavArg.SplashAlertDialogErrorType,
+                                    InsecureApplication(
+                                        securityViolation = effect.securityViolation
                                     )
-                                    routerHost.getNavController().let { navController ->
-                                        navController.navigate(Screen.SplashScreen.route) {
-                                            popUpToTop(navController)
-                                        }
+                                )
+                                routerHost.getNavController().let { navController ->
+                                    navController.navigate(Screen.SplashScreen.route) {
+                                        popUpToTop(navController)
                                     }
                                 }
+                            }
 
-                                is MainActivityEffect.OpenOrCacheDeepLink -> {
-                                    if (routerHost.canCurrentRouteRunDeepLink()) {
-                                        appLogger.d(loggerTag) { "opening deep link..." }
-                                        openDeepLinkAction(
-                                            navController = routerHost.getNavController(),
-                                            deepLinkAction = effect.deepLinkAction
-                                        )
-                                    } else {
-                                        appLogger.d(loggerTag) { "caching deep link..." }
-                                        pendingDeepLinkAction = effect.deepLinkAction
-                                    }
+                            is MainActivityEffect.OpenOrCacheDeepLink -> {
+                                if (routerHost.canCurrentRouteRunDeepLink()) {
+                                    appLogger.d(loggerTag) { "opening deep link..." }
+                                    openDeepLinkAction(
+                                        navController = routerHost.getNavController(),
+                                        deepLinkAction = effect.deepLinkAction
+                                    )
+                                } else {
+                                    appLogger.d(loggerTag) { "caching deep link..." }
+                                    pendingDeepLinkAction = effect.deepLinkAction
                                 }
+                            }
 
-                                is MainActivityEffect.ShowNotification -> {
-                                    showFcmNotification(effect.notificationData, this@MainActivity)
-                                }
+                            is MainActivityEffect.ShowNotification -> {
+                                showFcmNotification(effect.notificationData, this@MainActivity)
                             }
                         }
                     }

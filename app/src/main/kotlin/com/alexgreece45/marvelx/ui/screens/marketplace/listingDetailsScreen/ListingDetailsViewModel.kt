@@ -3,6 +3,7 @@ package com.alexgreece45.marvelx.ui.screens.marketplace.listingDetailsScreen
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.configuration.models.DeepLinkWebUrl
+import com.alexgreece45.marvelx.controllers.AppLogger
 import com.alexgreece45.marvelx.controllers.PrefKeys
 import com.alexgreece45.marvelx.controllers.createListingWizard.CreateListingWizardController
 import com.alexgreece45.marvelx.domain.helper.InteractorPartialState
@@ -27,6 +28,7 @@ class ListingDetailsViewModel(
     private val prefKeys: PrefKeys,
     private val createListingWizardController: CreateListingWizardController,
     private val cartInteractor: CartInteractor,
+    private val appLogger: AppLogger,
 ) :
     BaseViewModel<ListingDetailsContract.Event, ListingDetailsContract.State, ListingDetailsContract.Effect>() {
 

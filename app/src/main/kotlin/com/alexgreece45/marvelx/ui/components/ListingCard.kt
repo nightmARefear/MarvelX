@@ -28,8 +28,8 @@ fun ListingCard(
     SectionHeader(
         title = title,
         titleMaxLines = titleMaxLines,
-        additionalTitleContent = additionalTitleContent,
         titleContentAlignment = titleContentAlignment,
+        additionalTitleContent = additionalTitleContent,
         leadingIcon = {
             ListingImage(
                 imageUrl = coverImageUrl,

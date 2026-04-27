@@ -2,6 +2,7 @@ package com.alexgreece45.marvelx.ui.screens.friends
 
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.controllers.AppLogger
 import com.alexgreece45.marvelx.domain.helper.InteractorPartialState
 import com.alexgreece45.marvelx.domain.interactors.GetProfileDetailsPartialState
 import com.alexgreece45.marvelx.domain.interactors.UserInteractor
@@ -30,6 +31,7 @@ class FriendsViewModel(
     private val friendInteractor: FriendInteractor,
     private val friendRequestInteractor: FriendRequestInteractor,
     private val blockedUserInteractor: BlockedUserInteractor,
+    private val appLogger: AppLogger,
 ) : BaseViewModel<FriendsContract.Event, FriendsContract.State, FriendsContract.Effect>() {
 
     private val loggerTag = "FriendsViewModel"

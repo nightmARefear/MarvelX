@@ -35,6 +35,8 @@ data class CustomColors(
     val transparent: Color,
     val info: Color,
     val cardBrandBackgroundColor: Color,
+    val linkTextColor: Color,
+    val genericOrangeColor: Color,
 )
 
 /**
@@ -115,6 +117,8 @@ internal fun customLightColors() = CustomColors(
     transparent = Color(0x00000000),
     info = Color(0xFF2196F3),
     cardBrandBackgroundColor = Color(0xFF1e40af),
+    linkTextColor = Color(0xFF1e40af),
+    genericOrangeColor = Color(0xFFD56E00),
 )
 
 /**
@@ -161,6 +165,8 @@ internal fun customDarkColors() = CustomColors(
     transparent = Color(0x00000000),
     info = Color(0xFF2196F3),
     cardBrandBackgroundColor = Color(0xFF1e40af),
+    linkTextColor = Color(0xFF1e40af),
+    genericOrangeColor = Color(0xFFD56E00),
 )
 
 internal val LocalCustomColors = staticCompositionLocalOf { customLightColors() }

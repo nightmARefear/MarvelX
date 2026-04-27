@@ -63,9 +63,8 @@ fun OrderSummaryCard(
             }
         },
         additionalContent = additionalContent,
-        enabled = false,
-        onClick = {}
-    )
+        enabled = false
+    ) {}
 }
 
 @Composable

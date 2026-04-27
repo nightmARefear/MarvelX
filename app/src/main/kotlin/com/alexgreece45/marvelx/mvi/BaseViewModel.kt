@@ -2,7 +2,6 @@ package com.alexgreece45.marvelx.mvi
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.alexgreece45.marvelx.controllers.AppLogger
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -10,14 +9,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 
 abstract class BaseViewModel<Event : BaseEvent, State : BaseState, Effect : BaseEffect> :
-    ViewModel(), KoinComponent {
-
-    protected val appLogger: AppLogger by inject()
+    ViewModel() {
 
     private val initialState: State by lazy { setInitialState() }
 
@@ -64,8 +60,7 @@ abstract class BaseViewModel<Event : BaseEvent, State : BaseState, Effect : Base
     protected abstract fun setInitialState(): State
 
     protected fun setState(reducer: State.() -> State) {
-        val newState = uiState.value.reducer()
-        _state.value = newState
+        _state.update { oldState -> oldState.reducer() }
     }
 
     fun setEvent(event: Event) {

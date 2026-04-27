@@ -103,6 +103,7 @@ android {
             applicationIdSuffix = ".mock"
             isMinifyEnabled = false
             enableUnitTestCoverage = true
+            isDebuggable = true
 
             manifestPlaceholders.putAll(
                 mapOf(
@@ -115,6 +116,10 @@ android {
             )
 
             versionNameSuffix = "-MOCK"
+
+            signingConfig = signingConfigs.getByName("debug")
+
+            matchingFallbacks += listOf("debug")
         }
     }
 
@@ -203,7 +208,9 @@ dependencies {
     // Compose.
     implementation(project.dependencies.platform(libs.androidx.compose.bom))
     implementation(libs.bundles.app.ui)
+    implementation(libs.androidx.compose.ui.tooling) // Added to fix render issue (ClassNotFoundException: ComposeViewAdapter)
     debugImplementation(libs.bundles.app.ui.debug)
+    "mockImplementation"(libs.bundles.app.ui.debug)
 
     // QR code.
     implementation(libs.google.zxing)
@@ -217,6 +224,7 @@ dependencies {
     // Chucker
     debugImplementation(libs.chucker)
     releaseImplementation(libs.chucker.no.op)
+    "mockImplementation"(libs.chucker)
 
     implementation(libs.squareup.logcat)
     implementation(libs.bundles.coil)
