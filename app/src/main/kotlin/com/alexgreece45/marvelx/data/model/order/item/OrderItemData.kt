@@ -1,7 +1,7 @@
 package com.alexgreece45.marvelx.data.model.order.item
 
+import com.alexgreece45.marvelx.core.network.model.api.order.item.ResponseOrderItem
 import com.alexgreece45.marvelx.data.model.order.OrderItemStatusData
-import com.alexgreece45.marvelx.network_logic.models_api.order.item.ResponseOrderItem
 
 data class OrderItemData(
     val id: String,

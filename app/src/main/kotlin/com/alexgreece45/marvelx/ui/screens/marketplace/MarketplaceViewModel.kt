@@ -8,7 +8,9 @@ import com.alexgreece45.marvelx.mvi.BaseViewModel
 import com.alexgreece45.marvelx.ui.screens.marketplace.mappers.MarketplaceUiMapper
 import com.alexgreece45.marvelx.ui.screens.marketplace.model.MarketplaceContract
 import kotlinx.coroutines.launch
+import org.koin.android.annotation.KoinViewModel
 
+@KoinViewModel
 class MarketplaceViewModel(
     private val marketplaceInteractor: MarketplaceInteractor,
     private val marketplaceUiMapper: MarketplaceUiMapper,

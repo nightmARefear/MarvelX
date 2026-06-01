@@ -1,10 +1,9 @@
 package com.alexgreece45.marvelx.data.repository
 
-import com.alexgreece45.marvelx.network_logic.clients.ApiClient
-import com.alexgreece45.marvelx.network_logic.models_api.character.CharacterDataWrapper
-import com.alexgreece45.marvelx.network_logic.models_api.character.comic.ComicDataWrapper
+import com.alexgreece45.marvelx.core.network.clients.ApiClient
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import org.koin.core.annotation.Single
 
 interface CharacterRepository {
     suspend fun getAllCharacters(): Flow<GetAllCharactersRepositoryResponse>
@@ -12,6 +11,7 @@ interface CharacterRepository {
     suspend fun getCharacterComics(characterId: Int): Flow<GetCharacterComicsRepositoryResponse>
 }
 
+@Single
 class CharacterRepositoryImpl(
     private val apiClient: ApiClient
 ) : CharacterRepository {
@@ -73,16 +73,16 @@ class CharacterRepositoryImpl(
 }
 
 sealed class GetCharacterComicsRepositoryResponse {
-    data class Success(val response: ComicDataWrapper?) : GetCharacterComicsRepositoryResponse()
+    data class Success(val response: com.alexgreece45.marvelx.core.network.model.api.character.comic.ComicDataWrapper?) : GetCharacterComicsRepositoryResponse()
     data class Failed(val errorMessage: String?) : GetCharacterComicsRepositoryResponse()
 }
 
 sealed class GetAllCharactersRepositoryResponse {
-    data class Success(val response: com.alexgreece45.marvelx.network_logic.models_api.character.CharacterDataWrapper?) : GetAllCharactersRepositoryResponse()
+    data class Success(val response: com.alexgreece45.marvelx.core.network.model.api.character.CharacterDataWrapper?) : GetAllCharactersRepositoryResponse()
     data class Failed(val errorMessage: String?) : GetAllCharactersRepositoryResponse()
 }
 
 sealed class GetCharacterRepositoryResponse {
-    data class Success(val response: com.alexgreece45.marvelx.network_logic.models_api.character.CharacterDataWrapper?) : GetCharacterRepositoryResponse()
+    data class Success(val response: com.alexgreece45.marvelx.core.network.model.api.character.CharacterDataWrapper?) : GetCharacterRepositoryResponse()
     data class Failed(val errorMessage: String?) : GetCharacterRepositoryResponse()
 }

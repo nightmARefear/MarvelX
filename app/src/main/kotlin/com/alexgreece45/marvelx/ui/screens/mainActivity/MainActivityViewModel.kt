@@ -2,29 +2,32 @@ package com.alexgreece45.marvelx.ui.screens.mainActivity
 
 import androidx.lifecycle.viewModelScope
 import androidx.work.WorkManager
-import com.alexgreece45.marvelx.controllers.AppLogger
 import com.alexgreece45.marvelx.controllers.DeepLinkController
 import com.alexgreece45.marvelx.controllers.DeviceController
 import com.alexgreece45.marvelx.controllers.FcmController
 import com.alexgreece45.marvelx.controllers.HandleDeepLinkActionResult
-import com.alexgreece45.marvelx.controllers.PrefKeys
-import com.alexgreece45.marvelx.controllers.SecurityController
 import com.alexgreece45.marvelx.controllers.WebsocketController
-import com.alexgreece45.marvelx.controllers.model.security.SecurityViolation
 import com.alexgreece45.marvelx.controllers.model.websocket.WebsocketOnMessageReceivedPartialState
 import com.alexgreece45.marvelx.controllers.model.websocket.WebsocketRequestType
 import com.alexgreece45.marvelx.controllers.model.websocket.WebsocketSendRequestPartialState
+import com.alexgreece45.marvelx.core.common.config.SecurityConfigLogic
+import com.alexgreece45.marvelx.core.common.constants.ConstantsSecurity
+import com.alexgreece45.marvelx.core.common.dispatchers.model.DispatcherQualifiers
+import com.alexgreece45.marvelx.core.common.extensions.differenceInMinutes
+import com.alexgreece45.marvelx.core.common.logger.AppLogger
+import com.alexgreece45.marvelx.core.network.managers.SessionManager
+import com.alexgreece45.marvelx.core.network.managers.model.LogoutReason
+import com.alexgreece45.marvelx.core.network.model.websocket.ResponseWebSocketDeleteNotification
+import com.alexgreece45.marvelx.core.network.model.websocket.ResponseWebsocket
+import com.alexgreece45.marvelx.core.security.model.security.SecurityViolation
 import com.alexgreece45.marvelx.data.model.deepLink.DeepLinkAction
+import com.alexgreece45.marvelx.data.repository.AutoLogoutRepository
 import com.alexgreece45.marvelx.data.repository.UserRepository
 import com.alexgreece45.marvelx.data.repository.marketplace.listing.ListingCategoryRepository
 import com.alexgreece45.marvelx.data.repository.marketplace.listing.details.ListingDetailsRepository
-import com.alexgreece45.marvelx.dispatchers.IoDispatcher
-import com.alexgreece45.marvelx.domain.interactors.LoginInteractor
-import com.alexgreece45.marvelx.domain.interactors.LogoutPartialState
 import com.alexgreece45.marvelx.domain.model_websocket.toWebsocketDomain
+import com.alexgreece45.marvelx.domain.usecases.LogoutUseCase
 import com.alexgreece45.marvelx.mvi.BaseViewModel
-import com.alexgreece45.marvelx.network_logic.models_websocket.ResponseWebSocketDeleteNotification
-import com.alexgreece45.marvelx.network_logic.models_websocket.ResponseWebsocket
 import com.alexgreece45.marvelx.notifications.PushNotificationsController
 import com.alexgreece45.marvelx.ui.navigation.router.RouterHost
 import com.alexgreece45.marvelx.ui.screens.mainActivity.model.CoroutineWebSocketListener
@@ -36,41 +39,42 @@ import com.alexgreece45.marvelx.ui.screens.mainActivity.model.MainActivityState
 import com.alexgreece45.marvelx.ui.screens.mainActivity.model.WebSocketEvent
 import com.alexgreece45.marvelx.util.DateUtil
 import com.alexgreece45.marvelx.util.ResourceProvider
-import com.alexgreece45.marvelx.util.constants.ConstantsSecurity
 import com.alexgreece45.marvelx.util.constants.ConstantsWorker
-import com.alexgreece45.marvelx.util.extensions.differenceInMinutes
 import com.google.gson.Gson
 import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
 import okhttp3.WebSocketListener
+import org.koin.android.annotation.KoinViewModel
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import org.koin.core.qualifier.qualifier
+import org.koin.core.qualifier.named
 import java.time.Instant
 import java.time.format.DateTimeParseException
 import kotlin.coroutines.CoroutineContext
 
+@KoinViewModel
 class MainActivityViewModel :
     BaseViewModel<MainActivityEvent, MainActivityState, MainActivityEffect>(), KoinComponent {
 
     private val loggerTag = "MainActivityViewModel"
 
-    private val prefKeys: PrefKeys by inject()
     private val appLogger: AppLogger by inject()
-    private val loginInteractor: LoginInteractor by inject()
+    private val securityConfigLogic: SecurityConfigLogic by inject()
     private val resourceProvider: ResourceProvider by inject()
     private val websocketController: WebsocketController by inject()
-    private val securityController: SecurityController by inject()
     private val routerHost: RouterHost by inject()
     private val deepLinkController: DeepLinkController by inject()
     private val userRepository: UserRepository by inject()
 
-    @IoDispatcher
-    private val ioDispatcher: CoroutineContext by inject(qualifier<IoDispatcher>())
+    private val ioDispatcher: CoroutineContext by inject(named(DispatcherQualifiers.IO.qualifier))
     private val fcmController: FcmController by inject()
     private val deviceController: DeviceController by inject()
     private val gson: Gson by inject()
+    private val pushNotificationsController: PushNotificationsController by inject()
+    private val logoutUseCase: LogoutUseCase by inject()
+    private val sessionManager: SessionManager by inject()
+    private val autoLogoutRepository: AutoLogoutRepository by inject()
 
     // Listing enum-related values.
     private val listingCategoryRepository: ListingCategoryRepository by inject()
@@ -81,26 +85,30 @@ class MainActivityViewModel :
     override fun handleEvents(event: MainActivityEvent) {
         when (event) {
             MainActivityEvent.LifecycleEvent.OnCreate -> {
-                prefKeys.autoLogoutTimestamp = null
+                viewModelScope.launch {
+                    autoLogoutRepository.removeAutoLogoutTimestamp()
+                }
                 onCreateOperations()
             }
 
             MainActivityEvent.LifecycleEvent.OnPause -> {
-                if (userRepository.isUserLoggedIn && securityController.isAutoLogoutEnabled()) {
-                    prefKeys.autoLogoutTimestamp = DateUtil.getUTCInstant()
+                if (userRepository.isUserLoggedIn && securityConfigLogic.isAutoLogoutEnabled) {
+                    viewModelScope.launch {
+                        autoLogoutRepository.setAutoLogoutTimestamp(DateUtil.getUTCInstant())
+                    }
                 }
             }
 
             MainActivityEvent.LifecycleEvent.OnResume -> {
-                if (userRepository.isUserLoggedIn) { // TODO: To be reviewed.
-                    when (prefKeys.shouldRememberUserSession()) {
-                        false -> {
-                            if (securityController.isAutoLogoutEnabled()) {
-                                onLogoutUser()
-                            }
-                        }
+                if (!userRepository.isUserLoggedIn) return // TODO: To be reviewed.
 
-                        true -> performAutoLogoutOperations()
+                viewModelScope.launch {
+                    if (autoLogoutRepository.getRememberUserSession()) {
+                        performAutoLogoutOperations()
+                    } else {
+                        if (securityConfigLogic.isAutoLogoutEnabled) {
+                            sessionManager.triggerLogout(LogoutReason.SESSION_EXPIRED)
+                        }
                     }
                 }
             }
@@ -112,11 +120,17 @@ class MainActivityViewModel :
             }
 
             MainActivityEvent.OnUserInteraction -> {
-                performAutoLogoutOperations()
+                if (!userRepository.isUserLoggedIn) return
+
+                viewModelScope.launch {
+                    if (autoLogoutRepository.getRememberUserSession()) {
+                        performAutoLogoutOperations()
+                    }
+                }
             }
 
             MainActivityEvent.ApplicationDrawOverlayWindowsViolation -> {
-                onLogoutUser(showErrorDialog = false)
+                sessionManager.triggerLogout(LogoutReason.SECURITY_VALIDATION_ERROR)
                 setEffect {
                     NavigateToSplashScreenWithSecurityViolation(
                         SecurityViolation.ApplicationDrawOverlayWindows
@@ -125,7 +139,7 @@ class MainActivityViewModel :
             }
 
             MainActivityEvent.ApplicationInMultiWindowModeViolation -> {
-                onLogoutUser(showErrorDialog = false)
+                sessionManager.triggerLogout(LogoutReason.SECURITY_VALIDATION_ERROR)
                 setEffect {
                     NavigateToSplashScreenWithSecurityViolation(
                         SecurityViolation.ApplicationInMultiWindowMode
@@ -190,7 +204,16 @@ class MainActivityViewModel :
         }
 
         viewModelScope.launch {
-            PushNotificationsController.notification
+            sessionManager.logoutEvents.collect { logoutReason ->
+                setEffect {
+                    MainActivityEffect.Navigation.NavigateToHomeScreen(logoutReason)
+                }
+                logoutUseCase()
+            }
+        }
+
+        viewModelScope.launch {
+            pushNotificationsController.notification
                 .filterNotNull()
                 .collect { notification ->
                     setEffect {
@@ -212,39 +235,18 @@ class MainActivityViewModel :
      * The actions to perform when the viewModel is instantiated.
      */
     private fun setWebsocketListener() {
-        appLogger.d(loggerTag) { "authData: ${prefKeys.getUserAuthData()}" }
         websocketController.setWebSocketListener(getWebSocketListener())
     }
 
     private fun registerOrUpdateDevice() {
         viewModelScope.launch {
-            deviceController.registerOrUpdateDevice(fcmController.getFcmToken())
-                .collect { wasDeviceRegistered ->
-                    if (wasDeviceRegistered) {
-                        appLogger.d(loggerTag) { "(registerOrUpdateDevice) Device was successfully registered!" }
-                    } else {
-                        appLogger.e(loggerTag) { "(registerOrUpdateDevice) An error occurred whilst registering the device." }
-                    }
-                }
-        }
-    }
+            val wasDeviceRegistered =
+                deviceController.registerOrUpdateDevice(fcmController.getFcmToken())
 
-    /**
-     * The actions to perform to logout the user. If you don't want to show the error dialog, then
-     * set [showErrorDialog] to `false`.
-     *
-     * @param showErrorDialog Defines whether the error dialog is shown. It has a default value of
-     * `true`.
-     */
-    private fun onLogoutUser(showErrorDialog: Boolean = true) {
-        setEffect {
-            MainActivityEffect.Navigation.NavigateToHomeScreenWithSessionExpired(showErrorDialog = showErrorDialog)
-        }
-        viewModelScope.launch {
-            loginInteractor.logout().collect {
-                when (it) {
-                    is LogoutPartialState.Failed, LogoutPartialState.Success -> {}
-                }
+            if (wasDeviceRegistered) {
+                appLogger.d(loggerTag) { "(registerOrUpdateDevice) Device was successfully registered!" }
+            } else {
+                appLogger.e(loggerTag) { "(registerOrUpdateDevice) An error occurred whilst registering the device." }
             }
         }
     }
@@ -261,21 +263,25 @@ class MainActivityViewModel :
         websocketController.close()
 
         // Remove auto-logout timestamp.
-        prefKeys.autoLogoutTimestamp = null
+        viewModelScope.launch {
+            autoLogoutRepository.removeAutoLogoutTimestamp()
+        }
     }
 
     /**
      * Performs actions to auto-logout the user if the timeout period has been exceeded.
      */
     private fun performAutoLogoutOperations() {
-        if (securityController.isAutoLogoutEnabled() && routerHost.isCurrentRouteIncludedInAutoLogout()) {
+        if (securityConfigLogic.isAutoLogoutEnabled && routerHost.isCurrentRouteIncludedInAutoLogout()) {
             viewModelScope.launch {
                 websocketController.sendRequest(WebsocketRequestType.GetTimestamp)
                     .collect { partialState ->
+                        var logoutReason = LogoutReason.SESSION_EXPIRED
                         val currentTimestamp =
                             when (partialState) {
                                 is WebsocketSendRequestPartialState.Failed -> {
                                     appLogger.d(loggerTag) { "(performAutoLogoutOperations#sendRequest#Failed) errorMessage: ${partialState.errorMessage}" }
+                                    logoutReason = LogoutReason.WEBSOCKET_ERROR
                                     DateUtil.getUTCInstant()
                                 }
 
@@ -285,23 +291,27 @@ class MainActivityViewModel :
                                         Instant.parse(partialState.websocketDomain.data)
                                     } catch (e: DateTimeParseException) {
                                         appLogger.e(loggerTag) { "(performAutoLogoutOperations#sendRequest#Success) parsing error: $e" }
+                                        logoutReason = LogoutReason.WEBSOCKET_ERROR
                                         DateUtil.getUTCInstant()
                                     }
                                 }
                             }
 
-                        when (val storedTimestamp = prefKeys.autoLogoutTimestamp) {
-                            null -> {
-                                prefKeys.autoLogoutTimestamp = currentTimestamp
-                            }
+                        viewModelScope.launch {
+                            when (val storedTimestamp =
+                                autoLogoutRepository.getAutoLogoutTimestamp()) {
+                                null -> {
+                                    autoLogoutRepository.setAutoLogoutTimestamp(currentTimestamp)
+                                }
 
-                            else -> {
-                                if (currentTimestamp.differenceInMinutes(storedTimestamp)
-                                        .also { appLogger.d(loggerTag) { "difference in time: $it" } } >= ConstantsSecurity.AutoLogout.TIMEOUT_PERIOD
-                                ) {
-                                    onLogoutUser()
-                                } else {
-                                    prefKeys.autoLogoutTimestamp = currentTimestamp
+                                else -> {
+                                    if (currentTimestamp.differenceInMinutes(storedTimestamp)
+                                            .also { appLogger.d(loggerTag) { "difference in time: $it" } } >= ConstantsSecurity.AutoLogout.TIMEOUT_PERIOD
+                                    ) {
+                                        sessionManager.triggerLogout(logoutReason)
+                                    } else {
+                                        autoLogoutRepository.setAutoLogoutTimestamp(currentTimestamp)
+                                    }
                                 }
                             }
                         }
@@ -332,7 +342,7 @@ class MainActivityViewModel :
                                 webSocketEvent.text,
                                 ResponseWebSocketDeleteNotification::class.java
                             ).notificationId
-                            PushNotificationsController.deleteNotification(notificationId)
+                            pushNotificationsController.deleteNotification(notificationId)
                         } catch (_: Exception) {
                             appLogger.e(loggerTag) { "(onMessage) The received websocket response is not of \"delete notification\" type." }
 
@@ -360,21 +370,21 @@ class MainActivityViewModel :
                         appLogger.d(loggerTag) { "(onClosing): The websocket server has decided to close the websocket connection.\tcode: ${webSocketEvent.code}" }
 
                         if (userRepository.isUserLoggedIn) {
-                            onLogoutUser()
+                            sessionManager.triggerLogout(LogoutReason.WEBSOCKET_ERROR)
                         }
                     }
 
                     is WebSocketEvent.OnClosed -> {
                         if (userRepository.isUserLoggedIn) {
                             appLogger.d(loggerTag) { "(onClosed): isUserLoggedIn: true" }
-                            onLogoutUser()
+                            sessionManager.triggerLogout(LogoutReason.WEBSOCKET_ERROR)
                         }
                         appLogger.d(loggerTag) { "(onClosed): Both the websocket client and server have decided to end this websocket connection.\tcode: ${webSocketEvent.code}" }
                     }
 
                     is WebSocketEvent.OnFailure -> {
                         appLogger.d(loggerTag) { "(onFailure): The websocket server has decided to close this websocket connection." }
-                        onLogoutUser()
+                        sessionManager.triggerLogout(LogoutReason.WEBSOCKET_ERROR)
                     }
                 }
             }

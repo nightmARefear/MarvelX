@@ -48,6 +48,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.core.common.extensions.defaultFormat
+import com.alexgreece45.marvelx.core.common.extensions.minusDays
+import com.alexgreece45.marvelx.core.common.extensions.plusDays
+import com.alexgreece45.marvelx.core.common.extensions.toOrderEstimatedDeliveryFormatFull
 import com.alexgreece45.marvelx.data.model.profileDetails.RepositoryBasicProfileDetails
 import com.alexgreece45.marvelx.domain.model_api.order.OrderEstimatedDeliveryDateRangeDomain
 import com.alexgreece45.marvelx.domain.model_api.order.item.itemReturn.OrderItemReturnStatusDomain
@@ -55,12 +59,12 @@ import com.alexgreece45.marvelx.domain.model_api.order.item.refund.OrderItemRefu
 import com.alexgreece45.marvelx.domain.model_api.order.tracking.OrderTrackingHistoryItemDomain
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.GenericErrorScreen
-import com.alexgreece45.marvelx.ui.components.GenericInfoScreen
 import com.alexgreece45.marvelx.ui.components.ListingCard
 import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
 import com.alexgreece45.marvelx.ui.components.ThrottledIconButton
 import com.alexgreece45.marvelx.ui.components.WrapAsyncImage
 import com.alexgreece45.marvelx.ui.components.WrapHorizontalDivider
+import com.alexgreece45.marvelx.ui.components.WrapImage
 import com.alexgreece45.marvelx.ui.components.WrapOutlinedButton
 import com.alexgreece45.marvelx.ui.components.effect.ObserveUiEffect
 import com.alexgreece45.marvelx.ui.components.icons.NavigateIcon
@@ -94,12 +98,8 @@ import com.alexgreece45.marvelx.util.VSpacer
 import com.alexgreece45.marvelx.util.constants.ConstantsUi
 import com.alexgreece45.marvelx.util.extensions.circularImageWithBorder
 import com.alexgreece45.marvelx.util.extensions.clickableNoRipple
-import com.alexgreece45.marvelx.util.extensions.defaultFormat
-import com.alexgreece45.marvelx.util.extensions.minusDays
-import com.alexgreece45.marvelx.util.extensions.plusDays
 import com.alexgreece45.marvelx.util.extensions.setText
 import com.alexgreece45.marvelx.util.extensions.showToast
-import com.alexgreece45.marvelx.util.extensions.toOrderEstimatedDeliveryFormatFull
 import com.alexgreece45.marvelx.util.extensions.withEuroSymbol
 import com.alexgreece45.marvelx.util.safeLetComposable
 import kotlinx.collections.immutable.ImmutableList
@@ -172,16 +172,15 @@ fun OrderItemTrackingHistoryScreen(
                 .onError { errorType ->
                     val isErrorTypeNoData =
                         errorType == OrderItemTrackingHistoryErrorType.NO_DATA
-                    GenericInfoScreen(
-                        title = stringResource(
+
+                    GenericErrorScreen(
+                        errorMessage = stringResource(
                             if (isErrorTypeNoData) R.string.screen_order_item_tracking_history_error_label_no_data else R.string.screen_order_item_tracking_history_error_label_fetching_data,
                             state.orderId.formatted,
                             state.orderItemId.formatted
                         ),
-                        titleColor = MaterialTheme.colors.error,
                         buttonLabel = stringResource(if (isErrorTypeNoData) R.string.generic_go_back else R.string.generic_retry_button),
-                        modifier = Modifier.fillMaxSize(),
-                        onButtonClicked = {
+                        onErrorButtonClicked = {
                             onEvent(OrderItemTrackingHistoryContract.Event.OnErrorButtonClicked)
                         }
                     )
@@ -393,7 +392,7 @@ private fun SellerDetailsCard(
             GenericErrorScreen(
                 errorMessage = stringResource(R.string.screen_order_item_tracking_history_error_label_fetching_seller_info),
                 modifier = Modifier.fillMaxWidth(),
-                onRetryClick = onErrorButtonClicked
+                onErrorButtonClicked = onErrorButtonClicked
             )
         }
         .onSuccess { profileDetails ->
@@ -931,19 +930,21 @@ private fun ExtraActionButtonsRow(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp)
     ) {
+        val isContactButtonEnabled = false // TODO: Disabled for now.
         WrapOutlinedButton(
             onClick = onContactSupportButtonClicked,
             modifier = Modifier.fillMaxWidth(),
-            enabled = false // TODO: Disabled for now.
+            enabled = isContactButtonEnabled
         ) {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Image(
+                WrapImage(
                     painter = painterResource(R.drawable.ic_contact_support),
                     contentDescription = null,
-                    modifier = Modifier.size(ConstantsUi.MIN_ICON_SIZE)
+                    modifier = Modifier.size(ConstantsUi.MIN_ICON_SIZE),
+                    enabled = isContactButtonEnabled
                 )
 
                 Text(text = stringResource(R.string.screen_order_item_tracking_history_extra_action_button_contact_support))

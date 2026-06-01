@@ -2,7 +2,7 @@ package com.alexgreece45.marvelx.ui.screens.orders
 
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.configuration.ConfigPriceLogic
-import com.alexgreece45.marvelx.controllers.AppLogger
+import com.alexgreece45.marvelx.core.common.logger.AppLogger
 import com.alexgreece45.marvelx.domain.helper.InteractorPartialState
 import com.alexgreece45.marvelx.domain.interactors.order.OrderInteractor
 import com.alexgreece45.marvelx.mvi.BaseViewModel
@@ -13,7 +13,9 @@ import com.alexgreece45.marvelx.ui.screens.orders.model.OrdersContract
 import com.alexgreece45.marvelx.ui.screens.orders.model.toUi
 import com.alexgreece45.marvelx.util.extensions.transform
 import kotlinx.coroutines.launch
+import org.koin.android.annotation.KoinViewModel
 
+@KoinViewModel
 class OrdersViewModel(
     private val orderInteractor: OrderInteractor,
     private val configPriceLogic: ConfigPriceLogic,

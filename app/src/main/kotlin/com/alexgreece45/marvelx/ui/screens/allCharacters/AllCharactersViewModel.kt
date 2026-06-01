@@ -21,6 +21,7 @@ import com.alexgreece45.marvelx.ui.screens.allCharacters.uiModel.CharacterCardUi
 import com.alexgreece45.marvelx.ui.screens.allCharacters.uiModel.toFavoriteCharacterEntity
 import com.alexgreece45.marvelx.util.ResourceProvider
 import kotlinx.coroutines.launch
+import org.koin.android.annotation.KoinViewModel
 
 sealed interface AllCharactersEvent : BaseEvent {
     data class Init(val deepLinkAction: DeepLinkAction?) : AllCharactersEvent
@@ -98,6 +99,7 @@ data class AllCharactersState(
     val isFirstLaunch: Boolean = true
 ) : BaseState
 
+@KoinViewModel
 class AllCharactersViewModel(
     private val interactor: CharacterInteractor,
     private val resourceProvider: ResourceProvider,

@@ -6,6 +6,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
+import org.koin.core.annotation.Single
 
 /**
  * Provides a wide range of time-related utility functions.
@@ -23,6 +24,7 @@ interface TimerController {
     suspend fun startCountdown(duration: Long): Flow<TimerStatus>
 }
 
+@Single
 class TimerControllerImpl : TimerController {
     override suspend fun startCountdown(duration: Long): Flow<TimerStatus> = flow {
         for (remainingSeconds in duration downTo 1) {

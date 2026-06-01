@@ -16,7 +16,8 @@ import kotlinx.coroutines.flow.flow
  */
 fun <R : Any, D : Any> handleRepositoryResult(
     repositoryResult: RepositoryResult<R>,
-    transformation: R.() -> D
+    transformation: R.() -> D,
+    logError: ((String) -> Unit)? = null
 ): Flow<InteractorPartialState<D>> =
     flow {
         when (repositoryResult) {
@@ -31,7 +32,11 @@ fun <R : Any, D : Any> handleRepositoryResult(
 
             RepositoryResult.NetworkError -> emit(InteractorPartialState.NoInternetConnection)
         }
-    }.catch { InteractorPartialState.Error<D>(it.message.orEmpty()) }
+    }.catch { throwable ->
+        val errorMessage = throwable.localizedMessage.orEmpty()
+        logError?.invoke(errorMessage)
+        InteractorPartialState.Error<D>(errorMessage)
+    }
 
 
 /**
@@ -45,7 +50,8 @@ fun <R : Any, D : Any> handleRepositoryResult(
  */
 fun <R : Any, D : Any> handleRepositoryResultNoFlow(
     repositoryResult: RepositoryResult<R>,
-    transformation: R.() -> D
+    transformation: R.() -> D,
+    logError: ((String) -> Unit)? = null
 ): InteractorPartialState<D> =
     try {
         when (repositoryResult) {
@@ -59,7 +65,9 @@ fun <R : Any, D : Any> handleRepositoryResultNoFlow(
             RepositoryResult.NetworkError -> InteractorPartialState.NoInternetConnection
         }
     } catch (e: Exception) {
-        InteractorPartialState.Error(e.message.orEmpty())
+        val errorMessage = e.localizedMessage.orEmpty()
+        logError?.invoke(errorMessage)
+        InteractorPartialState.Error(errorMessage)
     }
 
 /**
@@ -74,6 +82,7 @@ fun <R : Any, D : Any> handleRepositoryResultNoFlow(
  */
 fun handleRepositoryResultNoTransformation(
     repositoryResult: RepositoryResult<String>,
+    logError: ((String) -> Unit)? = null
 ): Flow<InteractorPartialState<String>> =
     flow {
         when (repositoryResult) {
@@ -81,7 +90,11 @@ fun handleRepositoryResultNoTransformation(
             is RepositoryResult.Success -> emit(InteractorPartialState.Success(repositoryResult.data))
             RepositoryResult.NetworkError -> emit(InteractorPartialState.NoInternetConnection)
         }
-    }.catch { InteractorPartialState.Error<String>(it.message.orEmpty()) }
+    }.catch { throwable ->
+        val errorMessage = throwable.localizedMessage.orEmpty()
+        logError?.invoke(errorMessage)
+        InteractorPartialState.Error<String>(errorMessage)
+    }
 
 /**
  * Handles the given repository [repositoryResult] and returns the appropriate [InteractorPartialState].
@@ -95,6 +108,7 @@ fun handleRepositoryResultNoTransformation(
  */
 fun handleRepositoryResultNoTransformationNoFlow(
     repositoryResult: RepositoryResult<String>,
+    logError: ((String) -> Unit)? = null
 ): InteractorPartialState<String> =
     try {
         when (repositoryResult) {
@@ -106,7 +120,9 @@ fun handleRepositoryResultNoTransformationNoFlow(
             RepositoryResult.NetworkError -> InteractorPartialState.NoInternetConnection
         }
     } catch (e: Exception) {
-        InteractorPartialState.Error(e.message.orEmpty())
+        val errorMessage = e.localizedMessage.orEmpty()
+        logError?.invoke(errorMessage)
+        InteractorPartialState.Error(errorMessage)
     }
 
 /**
@@ -118,6 +134,7 @@ fun handleRepositoryResultNoTransformationNoFlow(
  */
 fun <T : Any> handleRepositoryResultNoTransformationNoFlowWithData(
     repositoryResult: RepositoryResult<T>,
+    logError: ((String) -> Unit)? = null
 ): InteractorPartialState<T> =
     try {
         when (repositoryResult) {
@@ -129,5 +146,7 @@ fun <T : Any> handleRepositoryResultNoTransformationNoFlowWithData(
             RepositoryResult.NetworkError -> InteractorPartialState.NoInternetConnection
         }
     } catch (e: Exception) {
-        InteractorPartialState.Error(e.message.orEmpty())
+        val errorMessage = e.localizedMessage.orEmpty()
+        logError?.invoke(errorMessage)
+        InteractorPartialState.Error(errorMessage)
     }

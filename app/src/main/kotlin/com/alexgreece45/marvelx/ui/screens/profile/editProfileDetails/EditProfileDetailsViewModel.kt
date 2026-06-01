@@ -10,12 +10,12 @@ import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
 import com.alexgreece45.marvelx.mvi.BaseViewModel
-import com.alexgreece45.marvelx.network_logic.models_api.user.Gender
 import com.alexgreece45.marvelx.ui.components.AlertDialogButton
 import com.alexgreece45.marvelx.ui.components.model.ErrorButtonLayout
 import com.alexgreece45.marvelx.ui.components.model.ErrorButtonType
 import com.alexgreece45.marvelx.ui.components.model.SnackbarStateData
 import com.alexgreece45.marvelx.ui.helper.FieldValidationRules
+import com.alexgreece45.marvelx.ui.model.Gender
 import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.model.EditProfileDetailsItemUi
 import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.model.ProfileDetailsUi
 import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.model.toBasicProfileDetailsDomain
@@ -25,6 +25,7 @@ import com.alexgreece45.marvelx.util.FormValidator
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.Rule
 import kotlinx.coroutines.launch
+import org.koin.android.annotation.KoinViewModel
 
 sealed interface EditProfileDetailsContract {
     /**
@@ -100,6 +101,7 @@ sealed interface EditProfileDetailsContract {
     }
 }
 
+@KoinViewModel
 class EditProfileDetailsViewModel(
     private val userInteractor: UserInteractor,
     private val fieldValidationRules: FieldValidationRules,

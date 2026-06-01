@@ -1,11 +1,11 @@
 package com.alexgreece45.marvelx.domain.interactors.user
 
+import com.alexgreece45.marvelx.core.network.model.api.user.friend.ResponseFriend
 import com.alexgreece45.marvelx.data.repository.user.FriendRepository
 import com.alexgreece45.marvelx.domain.helper.InteractorPartialState
 import com.alexgreece45.marvelx.domain.helper.handleRepositoryResult
 import com.alexgreece45.marvelx.domain.model_api.user.friend.FriendDomain
 import com.alexgreece45.marvelx.domain.model_api.user.friend.toFriendDomainList
-import com.alexgreece45.marvelx.network_logic.models_api.user.friend.ResponseFriend
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow

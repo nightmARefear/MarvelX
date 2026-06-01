@@ -101,7 +101,13 @@ sealed class Screen(
     data object IntroLoadingScreen :
         Screen(baseRoute = "introLoadingScreen", isIncludedInAutoLogout = false)
 
-    data object HomeScreen : Screen(baseRoute = "homeScreen", isIncludedInAutoLogout = false)
+    data object HomeScreen : Screen(
+        baseRoute = "homeScreen",
+        navArgs = listOf(NavItem.LogoutReason),
+        isIncludedInAutoLogout = false
+    ) {
+        fun createNavRoute(errorMessage: String): String = "$baseRoute/$errorMessage"
+    }
 
     data object LoginScreen :
         Screen(baseRoute = "loginScreen", isIncludedInAutoLogout = false)
@@ -418,6 +424,7 @@ enum class NavItem(val key: String, val type: NavType<*>) {
     OrderItemCoverImageUrl(key = NavItemKey.orderItemCoverImageUrl, type = NavType.StringType),
     OrderItemPriceLabel(key = NavItemKey.orderItemPriceLabel, type = NavType.StringType),
     SellerUserId(key = NavItemKey.sellerUserId, type = NavType.StringType),
+    LogoutReason(key = NavItemKey.logoutReason, type = NavType.StringType),
 }
 
 /**
@@ -458,4 +465,5 @@ private object NavItemKey {
     const val orderItemCoverImageUrl = "orderCoverImageUrl"
     const val orderItemPriceLabel = "orderItemPriceLabel"
     const val sellerUserId = "sellerUserId"
+    const val logoutReason = "logoutReason"
 }

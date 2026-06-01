@@ -1,12 +1,12 @@
 package com.alexgreece45.marvelx.data.repository
 
+import com.alexgreece45.marvelx.core.common.dispatchers.model.IoDispatcher
 import com.alexgreece45.marvelx.data.repository.helper.RepositoryResult
-import com.alexgreece45.marvelx.data.repository.helper.handleApiResult
-import com.alexgreece45.marvelx.dispatchers.IoDispatcher
-import com.alexgreece45.marvelx.network_logic.clients.ApiClient
+import com.alexgreece45.marvelx.data.repository.helper.handleApiResultNoFlow
+import com.alexgreece45.marvelx.core.network.clients.ApiClient
 import com.alexgreece45.marvelx.util.extensions.toByteArray
-import kotlinx.coroutines.flow.first
 import okhttp3.ResponseBody
+import org.koin.core.annotation.Single
 import kotlin.coroutines.CoroutineContext
 
 interface ImageRepository {
@@ -17,16 +17,17 @@ interface ImageRepository {
     suspend fun getImage(imageUrl: String): RepositoryResult<ByteArray>
 }
 
+@Single
 class ImageRepositoryImpl(
     private val apiClient: ApiClient,
     @IoDispatcher private val ioDispatcher: CoroutineContext
 ) : ImageRepository {
 
     override suspend fun getImage(imageUrl: String): RepositoryResult<ByteArray> {
-        return handleApiResult(
+        return handleApiResultNoFlow(
             apiResult = apiClient.getImage(imageUrl),
             transformation = ResponseBody::toByteArray,
             ioDispatcher = ioDispatcher
-        ).first()
+        )
     }
 }

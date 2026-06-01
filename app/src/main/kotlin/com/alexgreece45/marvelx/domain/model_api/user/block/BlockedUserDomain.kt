@@ -1,6 +1,6 @@
 package com.alexgreece45.marvelx.domain.model_api.user.block
 
-import com.alexgreece45.marvelx.network_logic.models_api.user.block.ResponseBlockedUser
+import com.alexgreece45.marvelx.core.network.model.api.user.block.ResponseBlockedUser
 import com.alexgreece45.marvelx.util.extensions.toFullName
 import java.time.Instant
 

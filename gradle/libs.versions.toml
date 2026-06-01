@@ -3,6 +3,7 @@ application-name = "com.alexgreece45.marvelx"
 
 min-sdk = "26"
 target-sdk = "36"
+compile-sdk = "36" # same as 'target-sdk'
 
 compose-bom = "2025.10.01"
 koin-bom = "4.1.1"
@@ -21,6 +22,8 @@ androidx-appcompat = "1.7.1"
 androidx-camera = "1.5.1"
 androidx-core = "1.17.0"
 androidx-credentials = "1.5.0"
+androidx-datastore = "1.2.1"
+androidx-datastore-tink = "1.3.0-alpha09"
 androidx-lifecycle = "2.9.4"
 androidx-room = "2.8.4"
 androidx-security-crypto = "1.1.0"
@@ -44,6 +47,7 @@ google-firebase-bom = "34.4.0"
 google-firebase-crashlytics = "3.0.6"
 google-play-services-auth = "21.4.0"
 google-gms-google-services = "4.4.4"
+google-tink = "1.21.0"
 google-zxing = "3.5.4"
 
 hilt-navigation = "1.3.0"
@@ -55,10 +59,14 @@ junit = "4.13.2"
 koin-annotations = "2.3.1"
 
 kotlin-collections-immutable = "0.4.0"
+kotlin-serialization = "1.11.0"
+
+kotlinx-coroutines = "1.11.0"
+kotlinx-serialization-converter = "1.0.0"
 
 lambdapioneer-argon2kt = "1.6.0"
 
-rootbeer = "0.1.1"
+rootbeer = "0.1.2"
 
 sh-calvin-reorderable = "3.0.0"
 
@@ -69,6 +77,7 @@ squareup-leakcanary = "2.14"
 
 valentinilk-shimmer = "1.3.3"
 vanniktech-android-image-cropper = "4.7.0"
+material = "1.14.0"
 
 [libraries]
 airbnb-lottie-compose = { module = "com.airbnb.android:lottie-compose", version.ref = "airbnb-lottie-compose" }
@@ -89,6 +98,9 @@ androidx-compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling" }
 androidx-compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview" }
 androidx-credentials = { module = "androidx.credentials:credentials", version.ref = "androidx-credentials" }
 androidx-credentials-play-services-auth = { module = "androidx.credentials:credentials-play-services-auth", version.ref = "androidx-credentials" }
+androidx-datastore-core = { group = "androidx.datastore", name = "datastore", version.ref = "androidx-datastore" }
+androidx-datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "androidx-datastore" }
+androidx-datastore-tink = { group = "androidx.datastore", name = "datastore-tink", version.ref = "androidx-datastore-tink" }
 androidx-lifecycle-runtime-ktx = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version.ref = "androidx-lifecycle" }
 androidx-lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "androidx-lifecycle" }
 androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "androidx-room" }
@@ -125,6 +137,7 @@ google-firebase-cloud-messaging = { group = "com.google.firebase", name = "fireb
 google-firebase-crashlytics = { group = "com.google.firebase", name = "firebase-crashlytics" }
 google-firebase-firestore = { group = "com.google.firebase", name = "firebase-firestore" }
 google-play-services-auth = { group = "com.google.android.gms", name = "play-services-auth", version.ref = "google-play-services-auth" }
+google-tink = { group = "com.google.crypto.tink", name = "tink-android", version.ref = "google-tink" }
 google-zxing = { module = "com.google.zxing:core", version.ref = "google-zxing" }
 
 junit = { module = "junit:junit", version.ref = "junit" }
@@ -140,8 +153,13 @@ koin-ksp-compiler = { module = "io.insert-koin:koin-ksp-compiler", version.ref =
 koin-android-test = { module = "io.insert-koin:koin-android-test" }
 koin-test-junit4 = { module = "io.insert-koin:koin-test-junit4" }
 
-kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect" }
 kotlin-collections-immutable = { group = "org.jetbrains.kotlinx", name = "kotlinx-collections-immutable", version.ref = "kotlin-collections-immutable" }
+kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect" }
+kotlin-serialization = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlin-serialization" }
+
+kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
+kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "kotlinx-coroutines" }
+kotlinx-serialization-converter = { module = "com.jakewharton.retrofit:retrofit2-kotlinx-serialization-converter", version.ref = "kotlinx-serialization-converter" }
 
 lambdapioneer-argon2kt = { module = "com.lambdapioneer.argon2kt:argon2kt", version.ref = "lambdapioneer-argon2kt" }
 
@@ -158,6 +176,13 @@ squareup-leakcanary = { module = "com.squareup.leakcanary:leakcanary-android", v
 valentinilk-shimmer = { module = "com.valentinilk.shimmer:compose-shimmer", version.ref = "valentinilk-shimmer" }
 vanniktech-android-image-cropper = { module = "com.vanniktech:android-image-cropper", version.ref = "vanniktech-android-image-cropper" }
 
+# Dependencies of the included build-logic
+android-gradlePlugin = { group = "com.android.tools.build", name = "gradle", version.ref = "plugin-agp" }
+kotlin-gradlePlugin = { group = "org.jetbrains.kotlin", name = "kotlin-gradle-plugin", version.ref = "plugin-kotlin" }
+ksp-gradlePlugin = { group = "com.google.devtools.ksp", name = "com.google.devtools.ksp.gradle.plugin", version.ref = "plugin-ksp" }
+kotlin-compose-gradlePlugin = { group = "org.jetbrains.kotlin", name = "compose-compiler-gradle-plugin", version.ref = "plugin-kotlin" }
+material = { group = "com.google.android.material", name = "material", version.ref = "material" }
+
 [plugins]
 android-application = { id = "com.android.application", version.ref = "plugin-agp" }
 android-library = { id = "com.android.library", version.ref = "plugin-agp" }
@@ -169,6 +194,7 @@ google-mapsplatform-secrets = { id = "com.google.android.libraries.mapsplatform.
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "plugin-kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "plugin-kotlin" }
 kotlin-parcelize = { id = "org.jetbrains.kotlin.plugin.parcelize", version.ref = "plugin-kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "plugin-kotlin" }
 
 ksp = { id = "com.google.devtools.ksp", version.ref = "plugin-ksp" }
 
@@ -176,10 +202,6 @@ ksp = { id = "com.google.devtools.ksp", version.ref = "plugin-ksp" }
 app-ui = [
     "androidx-activity-compose",
     "androidx-activity-ktx",
-    "androidx-camera-core",
-    "androidx-camera2",
-    "androidx-camera-lifecycle",
-    "androidx-camera-view",
     "androidx-core",
     "androidx-compat",
     "androidx-compose-material",
@@ -197,6 +219,13 @@ app-ui = [
 
 app-ui-debug = [
     "androidx-compose-ui-tooling"
+]
+
+app-ui-camera = [
+    "androidx-camera-core",
+    "androidx-camera2",
+    "androidx-camera-lifecycle",
+    "androidx-camera-view"
 ]
 
 test-implementation = [

@@ -1,23 +1,23 @@
 package com.alexgreece45.marvelx.domain.interactors
 
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.controllers.AppLogger
+import com.alexgreece45.marvelx.core.common.logger.AppLogger
+import com.alexgreece45.marvelx.core.network.model.api.jwtSensitiveUserData.RequestJwtSensitiveUserData
+import com.alexgreece45.marvelx.core.network.model.api.user.signup.RequestUserSignup
 import com.alexgreece45.marvelx.data.repository.GetJwtForSensitiveUserDataRepositoryResponse
 import com.alexgreece45.marvelx.data.repository.LoginRepositoryResponse
 import com.alexgreece45.marvelx.data.repository.PostLoginWithTokenRepositoryResponse
 import com.alexgreece45.marvelx.data.repository.RegisterRepository
 import com.alexgreece45.marvelx.data.repository.SignupRepositoryPartialState
 import com.alexgreece45.marvelx.domain.model_api.jwtSensitiveUserData.JwtSensitiveUserDataDomain
+import com.alexgreece45.marvelx.domain.model_api.jwtSensitiveUserData.toJwtSensitiveUserDataDomain
 import com.alexgreece45.marvelx.domain.model_api.user.VerificationStep
 import com.alexgreece45.marvelx.domain.model_api.user.login.LoginResponseDomain
+import com.alexgreece45.marvelx.domain.model_api.user.login.toUserLoginResponseDomain
 import com.alexgreece45.marvelx.domain.model_api.user.loginWithToken.LoginWithTokenResponseDomain
+import com.alexgreece45.marvelx.domain.model_api.user.loginWithToken.toUserLoginWithTokenResponseDomain
 import com.alexgreece45.marvelx.domain.model_api.user.signup.SignupDomain
 import com.alexgreece45.marvelx.domain.model_api.user.signup.toSignupDomain
-import com.alexgreece45.marvelx.network_logic.models_api.jwtSensitiveUserData.RequestJwtSensitiveUserData
-import com.alexgreece45.marvelx.network_logic.models_api.jwtSensitiveUserData.toJwtSensitiveUserDataDomain
-import com.alexgreece45.marvelx.network_logic.models_api.user.login.toUserLoginResponseDomain
-import com.alexgreece45.marvelx.network_logic.models_api.user.loginWithToken.toUserLoginWithTokenResponseDomain
-import com.alexgreece45.marvelx.network_logic.models_api.user.signup.RequestUserSignup
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.extensions.safeAsync
 import kotlinx.coroutines.flow.Flow
@@ -26,7 +26,7 @@ import okio.IOException
 
 interface RegisterInteractor {
 
-    suspend fun signup(requestUserSignup: RequestUserSignup): Flow<SignupPartialState>
+    suspend fun signup(requestUserSignup: com.alexgreece45.marvelx.core.network.model.api.user.signup.RequestUserSignup): Flow<SignupPartialState>
 
     /**
      * The login call. Attempts to login the user by sending the given [email], [password], and

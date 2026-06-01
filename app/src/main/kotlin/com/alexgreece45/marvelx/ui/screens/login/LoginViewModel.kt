@@ -2,8 +2,8 @@ package com.alexgreece45.marvelx.ui.screens.login
 
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.controllers.PrefKeys
-import com.alexgreece45.marvelx.dispatchers.DefaultDispatcher
+import com.alexgreece45.marvelx.core.common.dispatchers.model.DefaultDispatcher
+import com.alexgreece45.marvelx.core.data.repositories.UserSessionRepository
 import com.alexgreece45.marvelx.domain.interactors.LoginPartialState
 import com.alexgreece45.marvelx.domain.interactors.RegisterInteractor
 import com.alexgreece45.marvelx.domain.model_api.otp.OtpFlowType
@@ -23,6 +23,7 @@ import com.alexgreece45.marvelx.util.SecurityUtil
 import com.alexgreece45.marvelx.util.constants.ConstantsInputField
 import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.launch
+import org.koin.android.annotation.KoinViewModel
 import kotlin.coroutines.CoroutineContext
 
 data class LoginScreenErrorView(
@@ -127,11 +128,12 @@ sealed class LoginEffect : BaseEffect {
     data object SaveAutoFilledData : LoginEffect()
 }
 
+@KoinViewModel
 class LoginViewModel(
     private val resourceProvider: ResourceProvider,
     private val formValidator: FormValidator,
     private val registerInteractor: RegisterInteractor,
-    private val prefKeys: PrefKeys,
+    private val userSessionRepository: UserSessionRepository,
     @DefaultDispatcher private val defaultDispatcher: CoroutineContext,
 ) : BaseViewModel<LoginEvent, LoginState, LoginEffect>() {
 
@@ -343,7 +345,7 @@ class LoginViewModel(
 
                                 is VerificationStep.OtpEmail -> {
                                     // Save userId in device.
-                                    prefKeys.setUserId(userPartialStatePostLogIn.loginResponseDomain.userId)
+                                    userSessionRepository.setUserId(userPartialStatePostLogIn.loginResponseDomain.userId)
 
                                     val isRememberMeCheckboxChecked =
                                         currentState.isRememberMeCheckboxChecked

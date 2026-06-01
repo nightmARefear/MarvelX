@@ -1,6 +1,7 @@
 package com.alexgreece45.marvelx.data.repository.helper
 
-import com.alexgreece45.marvelx.network_logic.models_generic.ApiResult
+import com.alexgreece45.marvelx.core.common.util.withContextCatchable
+import com.alexgreece45.marvelx.core.network.model.generic.ApiResult
 import com.alexgreece45.marvelx.util.extensions.safeAsync
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -34,6 +35,22 @@ internal fun <A : Any, B : Any> handleApiResult(
         RepositoryResult.Failed(it.message.orEmpty())
     }
 
+internal suspend fun <A : Any, B : Any> handleApiResultNoFlow(
+    apiResult: ApiResult<A>,
+    transformation: A.() -> B,
+    ioDispatcher: CoroutineContext
+): RepositoryResult<B> =
+    withContextCatchable<RepositoryResult<B>>(
+        context = ioDispatcher,
+        onError = { RepositoryResult.Failed(it) }) {
+        when (apiResult) {
+            is ApiResult.Success -> RepositoryResult.Success(transformation(apiResult.body))
+            is ApiResult.Error -> RepositoryResult.Failed(apiResult.errorBody)
+            is ApiResult.Failed -> RepositoryResult.Failed(apiResult.failureMessage)
+            ApiResult.NetworkError -> RepositoryResult.NetworkError
+        }
+    }
+
 /**
  * Handles the result of an API client call, and returns the appropriate [RepositoryResult]. No data
  * transformation is performed. If the call was successful, [RepositoryResult.Success] is returned
@@ -58,6 +75,21 @@ internal fun handleApiResultNoTransformation(
         }
     }.safeAsync(ioDispatcher) {
         RepositoryResult.Failed(it.message.orEmpty())
+    }
+
+internal suspend fun <A : Any> handleApiResultNoTransformationNoFlow(
+    apiResult: ApiResult<A>,
+    ioDispatcher: CoroutineContext
+): RepositoryResult<A> =
+    withContextCatchable<RepositoryResult<A>>(
+        context = ioDispatcher,
+        onError = { RepositoryResult.Failed(it) }) {
+        when (apiResult) {
+            is ApiResult.Success -> RepositoryResult.Success(apiResult.body)
+            is ApiResult.Error -> RepositoryResult.Failed(apiResult.errorBody)
+            is ApiResult.Failed -> RepositoryResult.Failed(apiResult.failureMessage)
+            ApiResult.NetworkError -> RepositoryResult.NetworkError
+        }
     }
 
 /**

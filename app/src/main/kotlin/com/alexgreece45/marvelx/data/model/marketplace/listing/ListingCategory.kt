@@ -1,9 +1,9 @@
 package com.alexgreece45.marvelx.data.model.marketplace.listing
 
+import com.alexgreece45.marvelx.core.network.model.api.marketplace.listing.ResponseListingCategory
+import com.alexgreece45.marvelx.core.network.model.api.marketplace.listing.ResponseListingSubcategory
 import com.alexgreece45.marvelx.database.ListingCategoryWithSubcategoriesEntity
 import com.alexgreece45.marvelx.database.ListingSubcategoryEntity
-import com.alexgreece45.marvelx.network_logic.models_api.marketplace.listing.ResponseListingCategory
-import com.alexgreece45.marvelx.network_logic.models_api.marketplace.listing.ResponseListingSubcategory
 
 data class ListingCategory(
     val id: Int,

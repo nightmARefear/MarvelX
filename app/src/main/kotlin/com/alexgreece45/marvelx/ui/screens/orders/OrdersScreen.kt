@@ -29,6 +29,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.core.common.extensions.plusDays
+import com.alexgreece45.marvelx.core.common.extensions.toOrderFormatShort
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.GenericLazyItemInfoScreen
 import com.alexgreece45.marvelx.ui.components.LazyItemContentErrorScreen
@@ -61,8 +63,6 @@ import com.alexgreece45.marvelx.util.VSpacer
 import com.alexgreece45.marvelx.util.constants.ConstantsUi
 import com.alexgreece45.marvelx.util.extensions.formatPrice
 import com.alexgreece45.marvelx.util.extensions.hideIfVisible
-import com.alexgreece45.marvelx.util.extensions.plusDays
-import com.alexgreece45.marvelx.util.extensions.toOrderFormatShort
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 

@@ -1,6 +1,6 @@
 package com.alexgreece45.marvelx.domain.model_api.user.friendRequest
 
-import com.alexgreece45.marvelx.network_logic.models_api.user.incomingFriendRequest.ResponseIncomingFriendRequest
+import com.alexgreece45.marvelx.core.network.model.api.user.incomingFriendRequest.ResponseIncomingFriendRequest
 import com.alexgreece45.marvelx.util.DateUtil
 import com.alexgreece45.marvelx.util.extensions.toFullName
 import java.time.Duration

@@ -1,6 +1,4 @@
 <resources>
-    // DEX CRC
-    <string name="dex_crc">F5CDaispuQfYSYVV5M4cVc7ratyB7wXpzvap7km3KcE=</string>
 
     // Generic
     // • Generic Texts
@@ -66,10 +64,6 @@
     <string name="splash_screen_alert_dialog_error_message_insecure_application">It has been detected that the application has been tampered with and/or is running in an insecure device.</string>
     <string name="splash_screen_alert_dialog_error_message_application_in_multi_window_mode">It has been detected that the application is running in multi-window mode which is forbidden.</string>
     <string name="splash_screen_alert_dialog_confirm_button">close</string>
-
-    // Session status
-    <string name="session_status_session_has_expired_alert_dialog_title">Session expired</string>
-    <string name="session_status_session_has_expired_alert_dialog_error_message">Your session has expired!</string>
 
     // Sorting
     <string name="close">close</string>
@@ -337,9 +331,16 @@
     <string name="intro_loading_screen_label_loading_stage_post_login_with_token">Setting up the application</string>
 
     // Home Screen
-    <string name="home_screen_toolbar_title">Home Screen</string>
-    <string name="home_screen_label_log_in_button">Login</string>
-    <string name="home_screen_label_sign_up_button">Signup</string>
+    <string name="screen_home_toolbar_title">Home Screen</string>
+
+    <string name="screen_home_alert_dialog_session_expired_title">Session expired</string>
+    <string name="screen_home_alert_dialog_session_expired_description">Your session has expired!</string>
+
+    <string name="screen_home_alert_dialog_user_logout_title">Logout</string>
+    <string name="screen_home_alert_dialog_user_logout_description">You have been successfully logged out!</string>
+
+    <string name="screen_home_login_button">Login</string>
+    <string name="screen_home_signup_button">Signup</string>
 
     // Login Screen
     <string name="login_screen_toolbar_title">Login</string>
@@ -656,9 +657,15 @@
 
     <!-- `RequestReturnScreen` -->
     <string name="screen_request_return_toolbar_title">Request Return</string>
+
     <string name="screen_request_return_reason_title">Return Reason</string>
+
     <string name="screen_request_return_description_title">Additional Details (Optional)</string>
     <string name="screen_request_return_description_placeholder">Describe your return reason…</string>
+    <string name="screen_request_return_description_remaining_characters_label">remaining characters: %1$s/%2$s</string>
+
+    <string name="screen_request_return_mandatory_field_label">mandatory field</string>
+
     <string name="screen_request_return_submit_button">Submit Return Request</string>
 
     // `CheckoutDataCard`

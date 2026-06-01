@@ -15,7 +15,6 @@ import com.alexgreece45.marvelx.ui.components.effect.OneTimeLaunchedEffect
 import com.alexgreece45.marvelx.ui.navigation.NavArgHelper
 import com.alexgreece45.marvelx.ui.navigation.Screen
 import com.alexgreece45.marvelx.ui.navigation.models.NavArg
-import com.alexgreece45.marvelx.ui.screens.home.models.HomeAlertDialogErrorType
 import com.alexgreece45.marvelx.util.extensions.popUpToTop
 import kotlinx.coroutines.flow.Flow
 
@@ -34,10 +33,11 @@ fun IntroLoadingScreen(
     ObserveUiEffect(effect) { uiEffect ->
         when (uiEffect) {
             is IntroLoadingContract.Effect.Navigation.NavigateToHomeScreenWithErrorMessage -> {
-                NavArgHelper.setArgument(
-                    NavArg.HomeAlertDialogErrorType,
-                    HomeAlertDialogErrorType.HasError(uiEffect.errorMessage)
-                )
+                // TODO: Resolve.
+//                NavArgHelper.setArgument(
+//                    NavArg.HomeAlertDialogErrorType,
+//                    HomeAlertDialogErrorType.HasError(uiEffect.errorMessage)
+//                )
                 navController.navigate(Screen.HomeScreen.route) {
                     popUpToTop(navController)
                 }

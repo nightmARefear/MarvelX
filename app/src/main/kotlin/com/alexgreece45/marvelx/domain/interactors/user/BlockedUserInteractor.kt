@@ -1,7 +1,8 @@
 package com.alexgreece45.marvelx.domain.interactors.user
 
-import com.alexgreece45.marvelx.controllers.AppLogger
-import com.alexgreece45.marvelx.controllers.PrefKeys
+import com.alexgreece45.marvelx.core.common.logger.AppLogger
+import com.alexgreece45.marvelx.core.data.repositories.UserSessionRepository
+import com.alexgreece45.marvelx.core.network.model.api.user.block.ResponseBlockedUser
 import com.alexgreece45.marvelx.data.repository.user.BlockUserRepositoryResult
 import com.alexgreece45.marvelx.data.repository.user.BlockedUserRepository
 import com.alexgreece45.marvelx.domain.helper.InteractorPartialState
@@ -11,7 +12,6 @@ import com.alexgreece45.marvelx.domain.model_api.user.block.BlockedUserDomain
 import com.alexgreece45.marvelx.domain.model_api.user.block.UserBlockResultType
 import com.alexgreece45.marvelx.domain.model_api.user.block.toBlockedUserDomainList
 import com.alexgreece45.marvelx.domain.model_api.user.block.toUserBlockResultDomain
-import com.alexgreece45.marvelx.network_logic.models_api.user.block.ResponseBlockedUser
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.extensions.safeAsync
 import kotlinx.coroutines.flow.Flow
@@ -41,7 +41,7 @@ class BlockedUserInteractorImpl(
     private val logger: AppLogger,
     private val resourceProvider: ResourceProvider,
     private val repository: BlockedUserRepository,
-    private val prefKeys: PrefKeys
+    private val userSessionRepository: UserSessionRepository
 ) : BlockedUserInteractor {
 
     override suspend fun getBlockedUsers(): Flow<InteractorPartialState<List<BlockedUserDomain>>> =
@@ -58,7 +58,7 @@ class BlockedUserInteractorImpl(
 
     override suspend fun blockUser(userId: String): Flow<BlockUserPartialState> =
         flow {
-            if (userId == prefKeys.getUserId()) {
+            if (userId == userSessionRepository.getUserId()) {
                 emit(BlockUserPartialState.Failed(UserBlockResultType.SameUser))
                 return@flow
             }

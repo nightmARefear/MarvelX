@@ -2,9 +2,9 @@ package com.alexgreece45.marvelx.ui.screens.profile
 
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.configuration.ConfigLogic
-import com.alexgreece45.marvelx.controllers.AppLogger
-import com.alexgreece45.marvelx.controllers.PrefKeys
+import com.alexgreece45.marvelx.core.common.config.ConfigLogic
+import com.alexgreece45.marvelx.core.common.logger.AppLogger
+import com.alexgreece45.marvelx.core.data.repositories.UserSessionRepository
 import com.alexgreece45.marvelx.domain.helper.InteractorPartialState
 import com.alexgreece45.marvelx.domain.interactors.GetCurrentUserProfileDetailsPartialState
 import com.alexgreece45.marvelx.domain.interactors.UserInteractor
@@ -26,15 +26,16 @@ import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.extensions.endsWithAnySuffix
 import com.alexgreece45.marvelx.util.extensions.toUrlEncoding
 import kotlinx.coroutines.launch
+import org.koin.android.annotation.KoinViewModel
 import java.util.UUID
 
-
+@KoinViewModel
 class ProfileViewModel(
     private val appLogger: AppLogger,
     private val resourceProvider: ResourceProvider,
     private val userInteractor: UserInteractor,
-    private val prefKeys: PrefKeys,
-    private val configLogic: ConfigLogic
+    private val configLogic: ConfigLogic,
+    private val userSessionRepository: UserSessionRepository
 ) :
     BaseViewModel<ProfileContract.Event, ProfileContract.State, ProfileContract.Effect>() {
     override fun setInitialState(): ProfileContract.State = ProfileContract.State()
@@ -77,8 +78,13 @@ class ProfileViewModel(
             }
 
             ProfileContract.Event.OnSeeYourProfileClicked -> {
-                setEffect {
-                    ProfileContract.Effect.Navigation.NavigateToProfileDetailsScreen(prefKeys.getUserId())
+                viewModelScope.launch {
+                    val userId = userSessionRepository.getUserId()
+                    setEffect {
+                        ProfileContract.Effect.Navigation.NavigateToProfileDetailsScreen(
+                            userId
+                        )
+                    }
                 }
             }
 
@@ -493,37 +499,36 @@ class ProfileViewModel(
      */
     private fun updateProfileImage(readFileContentData: ReadFileContentData) {
         viewModelScope.launch {
-            userInteractor.updateUserProfileImage(profileImageReadFileContentData = readFileContentData)
-                .collect { result ->
-                    when (result) {
-                        is InteractorPartialState.Error<*>,
-                        is InteractorPartialState.Failed<*>,
-                        InteractorPartialState.NoInternetConnection -> {
-                            showToastMessage(message = resourceProvider.getString(R.string.screen_profile_error_image_upload))
-                            setState {
-                                copy(
-                                    croppedImageIsLoading = false,
-                                    croppedImageFileContentData = null
-                                )
-                            }
-                        }
-
-                        is InteractorPartialState.Success<*> -> {
-                            showToastMessage(message = resourceProvider.getString(R.string.screen_profile_success_image_upload))
-                            setState {
-                                copy(
-                                    croppedImageIsLoading = false,
-                                    croppedImageFileContentData = null,
-                                    profileDetails = profileDetails?.copy(
-                                        profileImageUrlData = profileDetails.profileImageUrlData.copy(
-                                            uuid = UUID.randomUUID()
-                                        )
-                                    )
-                                )
-                            }
-                        }
+            val result =
+                userInteractor.updateUserProfileImage(profileImageReadFileContentData = readFileContentData)
+            when (result) {
+                is InteractorPartialState.Error,
+                is InteractorPartialState.Failed,
+                InteractorPartialState.NoInternetConnection -> {
+                    showToastMessage(message = resourceProvider.getString(R.string.screen_profile_error_image_upload))
+                    setState {
+                        copy(
+                            croppedImageIsLoading = false,
+                            croppedImageFileContentData = null
+                        )
                     }
                 }
+
+                is InteractorPartialState.Success -> {
+                    showToastMessage(message = resourceProvider.getString(R.string.screen_profile_success_image_upload))
+                    setState {
+                        copy(
+                            croppedImageIsLoading = false,
+                            croppedImageFileContentData = null,
+                            profileDetails = profileDetails?.copy(
+                                profileImageUrlData = profileDetails.profileImageUrlData.copy(
+                                    uuid = UUID.randomUUID()
+                                )
+                            )
+                        )
+                    }
+                }
+            }
         }
     }
 

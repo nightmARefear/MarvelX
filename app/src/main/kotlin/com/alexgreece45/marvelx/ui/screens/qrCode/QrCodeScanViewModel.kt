@@ -2,10 +2,10 @@ package com.alexgreece45.marvelx.ui.screens.qrCode
 
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.controllers.AppLogger
 import com.alexgreece45.marvelx.controllers.CreateDeepLinkActionResult
 import com.alexgreece45.marvelx.controllers.DeepLinkController
 import com.alexgreece45.marvelx.controllers.HandleQrCodeWebUrlResult
+import com.alexgreece45.marvelx.core.common.logger.AppLogger
 import com.alexgreece45.marvelx.data.model.deepLink.DeepLinkAction
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
@@ -22,6 +22,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
+import org.koin.android.annotation.KoinViewModel
 
 sealed interface QrCodeScanContract {
     sealed interface Event : BaseEvent {
@@ -68,6 +69,7 @@ sealed interface QrCodeScanContract {
     }
 }
 
+@KoinViewModel
 class QrCodeScanViewModel(
     private val appLogger: AppLogger,
     private val deepLinkController: DeepLinkController,

@@ -2,7 +2,8 @@ package com.alexgreece45.marvelx.ui.screens.friends
 
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.controllers.AppLogger
+import com.alexgreece45.marvelx.core.common.extensions.LOGGER_TAG
+import com.alexgreece45.marvelx.core.common.logger.AppLogger
 import com.alexgreece45.marvelx.domain.helper.InteractorPartialState
 import com.alexgreece45.marvelx.domain.interactors.GetProfileDetailsPartialState
 import com.alexgreece45.marvelx.domain.interactors.UserInteractor
@@ -23,8 +24,10 @@ import com.alexgreece45.marvelx.util.DateUtil
 import com.alexgreece45.marvelx.util.ResourceProvider
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
+import org.koin.android.annotation.KoinViewModel
 import java.time.Instant
 
+@KoinViewModel
 class FriendsViewModel(
     private val resourceProvider: ResourceProvider,
     private val userInteractor: UserInteractor,
@@ -32,9 +35,8 @@ class FriendsViewModel(
     private val friendRequestInteractor: FriendRequestInteractor,
     private val blockedUserInteractor: BlockedUserInteractor,
     private val appLogger: AppLogger,
+    private val pushNotificationsController: PushNotificationsController,
 ) : BaseViewModel<FriendsContract.Event, FriendsContract.State, FriendsContract.Effect>() {
-
-    private val loggerTag = "FriendsViewModel"
 
     override fun setInitialState(): FriendsContract.State = FriendsContract.State()
 
@@ -416,7 +418,7 @@ class FriendsViewModel(
 
     private fun setupNotificationsListener() {
         viewModelScope.launch {
-            PushNotificationsController.notification
+            pushNotificationsController.notification
                 .filterNotNull()
                 .collect { notificationData ->
                     when (notificationData.channelType) {
@@ -430,7 +432,7 @@ class FriendsViewModel(
                                         is GetProfileDetailsPartialState.Error,
                                         is GetProfileDetailsPartialState.Failed,
                                         GetProfileDetailsPartialState.NoInternetConnection -> {
-                                            appLogger.e(loggerTag) { "(setupNotificationsListener) An error occurred whilst retrieving the details for user w/ID: $userId" }
+                                            appLogger.e(LOGGER_TAG) { "(setupNotificationsListener) An error occurred whilst retrieving the details for user w/ID: $userId" }
 
                                             setState {
                                                 copy(
@@ -477,7 +479,7 @@ class FriendsViewModel(
                                         is GetProfileDetailsPartialState.Error,
                                         is GetProfileDetailsPartialState.Failed,
                                         GetProfileDetailsPartialState.NoInternetConnection -> {
-                                            appLogger.e(loggerTag) { "(setupNotificationsListener) An error occurred whilst retrieving the details for user w/ID: $userId" }
+                                            appLogger.e(LOGGER_TAG) { "(setupNotificationsListener) An error occurred whilst retrieving the details for user w/ID: $userId" }
                                         }
 
                                         is GetProfileDetailsPartialState.Success -> {

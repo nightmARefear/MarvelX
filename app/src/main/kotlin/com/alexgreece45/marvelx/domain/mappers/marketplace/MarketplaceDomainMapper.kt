@@ -1,13 +1,13 @@
 package com.alexgreece45.marvelx.domain.mappers.marketplace
 
+import com.alexgreece45.marvelx.core.network.model.api.marketplace.ResponseMarketplace
+import com.alexgreece45.marvelx.core.network.model.api.marketplace.ResponseMarketplaceCategorySection
+import com.alexgreece45.marvelx.core.network.model.api.marketplace.ResponseMarketplacePromoSection
+import com.alexgreece45.marvelx.core.network.model.api.marketplace.listing.ResponseListingPreview
 import com.alexgreece45.marvelx.domain.model_api.marketplace.MarketplaceCategorySectionDomain
 import com.alexgreece45.marvelx.domain.model_api.marketplace.MarketplaceDomain
 import com.alexgreece45.marvelx.domain.model_api.marketplace.MarketplacePromoSectionDomain
 import com.alexgreece45.marvelx.domain.model_api.marketplace.listing.ListingPreviewDomain
-import com.alexgreece45.marvelx.network_logic.models_api.marketplace.ResponseMarketplace
-import com.alexgreece45.marvelx.network_logic.models_api.marketplace.ResponseMarketplaceCategorySection
-import com.alexgreece45.marvelx.network_logic.models_api.marketplace.ResponseMarketplacePromoSection
-import com.alexgreece45.marvelx.network_logic.models_api.marketplace.listing.ResponseListingPreview
 
 fun ResponseMarketplace.toDomain(): MarketplaceDomain =
     MarketplaceDomain(

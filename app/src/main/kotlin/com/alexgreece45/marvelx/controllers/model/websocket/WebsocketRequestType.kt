@@ -1,5 +1,7 @@
 package com.alexgreece45.marvelx.controllers.model.websocket
 
+import com.alexgreece45.marvelx.core.network.model.websocket.ResponseWebsocketRequestType
+
 /**
  * Contains all the possible websocket request types that can be made by the client -- i.e., the
  * application.
@@ -31,3 +33,9 @@ sealed class WebsocketRequestType(open val key: String, val responseType: Any) {
     data class Invalid(override val key: String) :
         WebsocketRequestType(key = key, responseType = String::class)
 }
+
+fun WebsocketRequestType.toResponse(): ResponseWebsocketRequestType =
+    when (val data = this) {
+        WebsocketRequestType.GetTimestamp -> ResponseWebsocketRequestType.GetTimestamp
+        is WebsocketRequestType.Invalid -> ResponseWebsocketRequestType.Invalid(data.key)
+    }

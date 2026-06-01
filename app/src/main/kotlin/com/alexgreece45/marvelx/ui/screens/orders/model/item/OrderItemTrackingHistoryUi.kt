@@ -1,5 +1,6 @@
 package com.alexgreece45.marvelx.ui.screens.orders.model.item
 
+import com.alexgreece45.marvelx.core.common.extensions.defaultFormat
 import com.alexgreece45.marvelx.domain.model_api.order.item.OrderItemTrackingHistoryDomain
 import com.alexgreece45.marvelx.domain.model_api.order.item.itemReturn.OrderItemReturnStatusDomain
 import com.alexgreece45.marvelx.domain.model_api.order.item.refund.OrderItemRefundStatusDomain
@@ -11,7 +12,6 @@ import com.alexgreece45.marvelx.ui.screens.orders.model.tracking.OrderTrackingHi
 import com.alexgreece45.marvelx.ui.screens.orders.model.tracking.toUi
 import com.alexgreece45.marvelx.ui.screens.orders.orderItemTrackingHistory.model.OrderItemTrackingStepUi
 import com.alexgreece45.marvelx.ui.screens.orders.orderItemTrackingHistory.model.mapToTrackingStepList
-import com.alexgreece45.marvelx.util.extensions.defaultFormat
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 

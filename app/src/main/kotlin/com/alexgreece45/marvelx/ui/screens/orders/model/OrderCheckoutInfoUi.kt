@@ -1,8 +1,8 @@
 package com.alexgreece45.marvelx.ui.screens.orders.model
 
+import com.alexgreece45.marvelx.core.common.extensions.toCustomFormat
 import com.alexgreece45.marvelx.domain.model_api.order.OrderCheckoutInfoDomain
 import com.alexgreece45.marvelx.ui.model_generic.InstantUi
-import com.alexgreece45.marvelx.util.extensions.toCustomFormat
 import com.alexgreece45.marvelx.util.extensions.toFullName
 
 data class OrderCheckoutInfoUi(

@@ -1,6 +1,6 @@
 package com.alexgreece45.marvelx.data.model.cart
 
-import com.alexgreece45.marvelx.network_logic.models_api.cart.ResponseCartSummary
+import com.alexgreece45.marvelx.core.network.model.api.cart.ResponseCartSummary
 
 data class CartSummaryData(
     val subtotalPrice: String,
@@ -8,7 +8,7 @@ data class CartSummaryData(
     val totalPrice: String
 )
 
-fun ResponseCartSummary.toData(): CartSummaryData =
+fun com.alexgreece45.marvelx.core.network.model.api.cart.ResponseCartSummary.toData(): CartSummaryData =
     CartSummaryData(
         subtotalPrice = subtotalPrice,
         shippingPrice = shippingPrice,

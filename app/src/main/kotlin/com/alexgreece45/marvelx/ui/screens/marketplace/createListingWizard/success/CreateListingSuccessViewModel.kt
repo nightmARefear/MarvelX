@@ -9,7 +9,9 @@ import com.alexgreece45.marvelx.ui.navigation.models.NavArgStatus
 import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.model.CreateListingWizardMode
 import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.success.model.CreateListingSuccessContract
 import com.alexgreece45.marvelx.util.ResourceProvider
+import org.koin.android.annotation.KoinViewModel
 
+@KoinViewModel
 class CreateListingSuccessViewModel(
     private val wizardController: CreateListingWizardController,
     private val resourceProvider: ResourceProvider

@@ -1,5 +1,11 @@
 package com.alexgreece45.marvelx.data.repository
 
+import com.alexgreece45.marvelx.core.common.dispatchers.model.IoDispatcher
+import com.alexgreece45.marvelx.core.network.clients.ApiClient
+import com.alexgreece45.marvelx.core.network.model.api.user.privacySettings.RequestPrivacySettings
+import com.alexgreece45.marvelx.core.network.model.api.user.privacySettings.ResponsePrivacySettings
+import com.alexgreece45.marvelx.core.network.model.api.user.profileDetails.RequestProfileDetailsUpdate
+import com.alexgreece45.marvelx.core.network.util.extensions.toSerialized
 import com.alexgreece45.marvelx.data.model.RepositoryPrivacySettings
 import com.alexgreece45.marvelx.data.model.profileDetails.RepositoryBasicProfileDetails
 import com.alexgreece45.marvelx.data.model.profileDetails.toData
@@ -7,17 +13,8 @@ import com.alexgreece45.marvelx.data.model.toRepositoryPrivacySettings
 import com.alexgreece45.marvelx.data.repository.helper.RepositoryResult
 import com.alexgreece45.marvelx.data.repository.helper.handleApiResult
 import com.alexgreece45.marvelx.data.repository.helper.handleApiResultNoTransformation
+import com.alexgreece45.marvelx.data.repository.helper.handleApiResultNoTransformationNoFlow
 import com.alexgreece45.marvelx.data.repository.helper.parseUserError
-import com.alexgreece45.marvelx.dispatchers.IoDispatcher
-import com.alexgreece45.marvelx.network_logic.clients.ApiClient
-import com.alexgreece45.marvelx.network_logic.models_api.user.ResponseUserError
-import com.alexgreece45.marvelx.network_logic.models_api.user.privacySettings.RequestPrivacySettings
-import com.alexgreece45.marvelx.network_logic.models_api.user.privacySettings.ResponsePrivacySettings
-import com.alexgreece45.marvelx.network_logic.models_api.user.profileDetails.RequestProfileDetailsUpdate
-import com.alexgreece45.marvelx.network_logic.models_api.user.profileDetails.ResponseBasicProfileDetails
-import com.alexgreece45.marvelx.network_logic.models_api.user.profileDetails.ResponseProfileDetails
-import com.alexgreece45.marvelx.network_logic.models_api.user.profileDetails.ResponseProfileDetailsError
-import com.alexgreece45.marvelx.network_logic.util.extensions.toSerialized
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -25,6 +22,7 @@ import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import okhttp3.MultipartBody
+import org.koin.core.annotation.Single
 import kotlin.coroutines.CoroutineContext
 
 interface UserRepository {
@@ -60,7 +58,7 @@ interface UserRepository {
     suspend fun updateUserProfileImage(
         userId: String,
         imagePart: MultipartBody.Part
-    ): Flow<RepositoryResult<String>>
+    ): RepositoryResult<String>
 
     /**
      * Gets the privacy settings of the current user.
@@ -70,7 +68,7 @@ interface UserRepository {
     /**
      * Updates the privacy settings of the current user.
      */
-    suspend fun updatePrivacySettings(requestPrivacySettings: RequestPrivacySettings): Flow<RepositoryResult<String>>
+    suspend fun updatePrivacySettings(requestPrivacySettings: com.alexgreece45.marvelx.core.network.model.api.user.privacySettings.RequestPrivacySettings): Flow<RepositoryResult<String>>
 
     /**
      * Tracks whether the user is logged in via a reactive way.
@@ -88,6 +86,7 @@ interface UserRepository {
     suspend fun setUserLoggedIn(loggedIn: Boolean)
 }
 
+@Single
 class UserRepositoryImpl(
     private val apiClient: ApiClient,
     @IoDispatcher private val ioDispatcher: CoroutineContext
@@ -108,7 +107,7 @@ class UserRepositoryImpl(
                 } else {
                     GetProfileDetailsRepositoryResponse.Failed(
                         responseProfileDetailsError = response.errorBody()
-                            .toSerialized<ResponseProfileDetailsError>()
+                            .toSerialized<com.alexgreece45.marvelx.core.network.model.api.user.profileDetails.ResponseProfileDetailsError>()
                     )
                 }
             }
@@ -144,12 +143,13 @@ class UserRepositoryImpl(
         gender: String,
         email: String
     ): Flow<RepositoryResult<String>> = flow {
-        val request = RequestProfileDetailsUpdate(
-            firstName = firstName,
-            lastName = lastName,
-            gender = gender,
-            email = email
-        )
+        val request =
+            RequestProfileDetailsUpdate(
+                firstName = firstName,
+                lastName = lastName,
+                gender = gender,
+                email = email
+            )
         emitAll(
             handleApiResultNoTransformation(
                 apiResult = apiClient.updateCurrentUserProfileDetails(request),
@@ -161,18 +161,15 @@ class UserRepositoryImpl(
     override suspend fun updateUserProfileImage(
         userId: String,
         imagePart: MultipartBody.Part
-    ): Flow<RepositoryResult<String>> =
-        flow {
-            emitAll(
-                handleApiResultNoTransformation(
-                    apiResult = apiClient.updateUserProfileImage(
-                        userId,
-                        imagePart
-                    ),
-                    ioDispatcher = ioDispatcher
-                )
-            )
-        }
+    ): RepositoryResult<String> {
+        return handleApiResultNoTransformationNoFlow(
+            apiResult = apiClient.updateUserProfileImage(
+                userId,
+                imagePart
+            ),
+            ioDispatcher = ioDispatcher
+        )
+    }
 
     override suspend fun getPrivacySettings(): Flow<RepositoryResult<RepositoryPrivacySettings>> =
         flow {
@@ -208,17 +205,17 @@ class UserRepositoryImpl(
 }
 
 sealed class GetCurrentUserProfileDetailsRepositoryResponse {
-    data class Success(val response: ResponseBasicProfileDetails?) :
+    data class Success(val response: com.alexgreece45.marvelx.core.network.model.api.user.profileDetails.ResponseBasicProfileDetails?) :
         GetCurrentUserProfileDetailsRepositoryResponse()
 
-    data class Failed(val responseUserError: ResponseUserError) :
+    data class Failed(val responseUserError: com.alexgreece45.marvelx.core.network.model.api.user.ResponseUserError) :
         GetCurrentUserProfileDetailsRepositoryResponse()
 }
 
 sealed class GetProfileDetailsRepositoryResponse {
-    data class Success(val response: ResponseProfileDetails?) :
+    data class Success(val response: com.alexgreece45.marvelx.core.network.model.api.user.profileDetails.ResponseProfileDetails?) :
         GetProfileDetailsRepositoryResponse()
 
-    data class Failed(val responseProfileDetailsError: ResponseProfileDetailsError) :
+    data class Failed(val responseProfileDetailsError: com.alexgreece45.marvelx.core.network.model.api.user.profileDetails.ResponseProfileDetailsError) :
         GetProfileDetailsRepositoryResponse()
 }

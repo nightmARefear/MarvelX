@@ -1,18 +1,19 @@
 package com.alexgreece45.marvelx.data.repository
 
-import com.alexgreece45.marvelx.controllers.AppLogger
+import com.alexgreece45.marvelx.core.common.dispatchers.model.IoDispatcher
+import com.alexgreece45.marvelx.core.common.logger.AppLogger
+import com.alexgreece45.marvelx.core.network.clients.ApiClient
+import com.alexgreece45.marvelx.core.network.model.api.sensitiveUserData.RequestSensitiveUserData
+import com.alexgreece45.marvelx.core.network.model.api.sensitiveUserData.ResponseSensitiveUserData
+import com.alexgreece45.marvelx.core.network.model.api.token.ResponseToken
+import com.alexgreece45.marvelx.data.repository.helper.RepositoryResult
+import com.alexgreece45.marvelx.data.repository.helper.handleApiResultNoTransformationNoFlow
 import com.alexgreece45.marvelx.data.repository.helper.parseUserError
-import com.alexgreece45.marvelx.network_logic.clients.ApiClient
-import com.alexgreece45.marvelx.network_logic.models_api.authorize.ResponseAuthorize
-import com.alexgreece45.marvelx.network_logic.models_api.sensitiveUserData.RequestSensitiveUserData
-import com.alexgreece45.marvelx.network_logic.models_api.sensitiveUserData.ResponseSensitiveUserData
-import com.alexgreece45.marvelx.network_logic.models_api.token.ResponseToken
-import com.alexgreece45.marvelx.network_logic.models_api.user.ResponseUserError
-import com.alexgreece45.marvelx.network_logic.models_api.user.postLogin.ResponsePostLogin
 import com.alexgreece45.marvelx.util.ResourceProvider
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import retrofit2.Response
+import org.koin.core.annotation.Single
+import kotlin.coroutines.CoroutineContext
 
 interface LoginRepository {
     suspend fun authorize(
@@ -37,7 +38,7 @@ interface LoginRepository {
     /**
      * Logouts the user.
      */
-    suspend fun logout(clientId: String, refreshToken: String): Flow<LogoutRepositoryResponse>
+    suspend fun logout(clientId: String, refreshToken: String): RepositoryResult<String>
 
     /**
      * Post-login call. More specifically, signing data is retrieved which will be later used for
@@ -48,11 +49,14 @@ interface LoginRepository {
     suspend fun getSensitiveUserData(requestSensitiveUserData: RequestSensitiveUserData): Flow<GetSensitiveUserDataRepositoryResponse>
 }
 
+@Single
 class LoginRepositoryImpl(
     private val logger: AppLogger,
     private val resourceProvider: ResourceProvider,
     private val apiClient: ApiClient,
+    @IoDispatcher private val ioDispatcher: CoroutineContext,
 ) : LoginRepository {
+
     override suspend fun authorize(
         tempAuthCode: String,
         clientId: String,
@@ -99,15 +103,10 @@ class LoginRepositoryImpl(
     override suspend fun logout(
         clientId: String,
         refreshToken: String
-    ): Flow<LogoutRepositoryResponse> = flow {
-        apiClient.logout(clientId, refreshToken).let { response ->
-            if (response.isSuccessful) {
-                emit(LogoutRepositoryResponse.Success(response))
-            } else {
-                emit(LogoutRepositoryResponse.Failed(errorMessage = resourceProvider.getGenericErrorMessage()))
-            }
-        }
-    }
+    ): RepositoryResult<String> = handleApiResultNoTransformationNoFlow(
+        apiResult = apiClient.logout(clientId, refreshToken),
+        ioDispatcher = ioDispatcher
+    )
 
     override suspend fun postLogin(accessToken: String): Flow<PostLoginRepositoryResponse> = flow {
         apiClient.postLogin(accessToken).let { response ->
@@ -140,12 +139,16 @@ class LoginRepositoryImpl(
 }
 
 sealed interface AuthorizeRepositoryPartialState {
-    data class Success(val response: ResponseAuthorize?) : AuthorizeRepositoryPartialState
+    data class Success(val response: com.alexgreece45.marvelx.core.network.model.api.authorize.ResponseAuthorize?) :
+        AuthorizeRepositoryPartialState
+
     data class Failed(val errorMessage: String) : AuthorizeRepositoryPartialState
 }
 
 sealed interface PostLoginRepositoryResponse {
-    data class Success(val response: ResponsePostLogin?) : PostLoginRepositoryResponse
+    data class Success(val response: com.alexgreece45.marvelx.core.network.model.api.user.postLogin.ResponsePostLogin?) :
+        PostLoginRepositoryResponse
+
     data class Failed(val errorMessage: String) : PostLoginRepositoryResponse
 }
 
@@ -154,15 +157,10 @@ sealed class GrandNewAccessTokenRepositoryResponse {
     data class Failed(val errorMessage: String) : GrandNewAccessTokenRepositoryResponse()
 }
 
-sealed class LogoutRepositoryResponse {
-    data class Success(val response: Response<Void>) : LogoutRepositoryResponse()
-    data class Failed(val errorMessage: String?) : LogoutRepositoryResponse()
-}
-
 sealed class GetSensitiveUserDataRepositoryResponse {
     data class Success(val response: ResponseSensitiveUserData?) :
         GetSensitiveUserDataRepositoryResponse()
 
-    data class Failed(val responseUserError: ResponseUserError) :
+    data class Failed(val responseUserError: com.alexgreece45.marvelx.core.network.model.api.user.ResponseUserError) :
         GetSensitiveUserDataRepositoryResponse()
 }

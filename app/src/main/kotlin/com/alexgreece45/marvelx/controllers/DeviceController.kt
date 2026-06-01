@@ -1,14 +1,12 @@
 package com.alexgreece45.marvelx.controllers
 
+import com.alexgreece45.marvelx.core.common.dispatchers.model.IoDispatcher
+import com.alexgreece45.marvelx.core.network.clients.ApiClient
+import com.alexgreece45.marvelx.core.network.model.api.device.RequestRegisterDevice
+import com.alexgreece45.marvelx.core.network.model.api.device.RequestUpdateDevice
 import com.alexgreece45.marvelx.data.repository.helper.RepositoryResult
-import com.alexgreece45.marvelx.data.repository.helper.handleApiResultNoTransformation
-import com.alexgreece45.marvelx.dispatchers.IoDispatcher
-import com.alexgreece45.marvelx.network_logic.clients.ApiClient
-import com.alexgreece45.marvelx.network_logic.models_api.device.RequestRegisterDevice
-import com.alexgreece45.marvelx.network_logic.models_api.device.RequestUpdateDevice
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.emitAll
-import kotlinx.coroutines.flow.flow
+import com.alexgreece45.marvelx.data.repository.helper.handleApiResultNoTransformationNoFlow
+import org.koin.core.annotation.Single
 import kotlin.coroutines.CoroutineContext
 
 /**
@@ -22,49 +20,46 @@ interface DeviceController {
      *
      * @param fcmToken The retrieved FCM token.
      */
-    suspend fun registerOrUpdateDevice(fcmToken: String?): Flow<Boolean>
+    suspend fun registerOrUpdateDevice(fcmToken: String?): Boolean
 }
 
+@Single
 class DeviceControllerImpl(
     private val fcmController: FcmController,
     private val apiClient: ApiClient,
     @IoDispatcher private val ioDispatcher: CoroutineContext,
 ) : DeviceController {
 
-    override suspend fun registerOrUpdateDevice(fcmToken: String?): Flow<Boolean> = flow {
-        if (fcmToken == null) return@flow emit(false)
+    override suspend fun registerOrUpdateDevice(fcmToken: String?): Boolean {
+        if (fcmToken == null) return false
 
         val savedFcmToken = fcmController.getFcmToken()
-        if (savedFcmToken != null && savedFcmToken != fcmToken) {
-            emitAll(updateDevice(fcmToken))
+        return if (savedFcmToken != null && savedFcmToken != fcmToken) {
+            updateDevice(fcmToken)
         } else {
-            emitAll(registerDevice(fcmToken))
+            registerDevice(fcmToken)
         }
     }
 
-    private fun registerDevice(fcmToken: String?): Flow<Boolean> = flow {
-        handleApiResultNoTransformation(
+    private suspend fun registerDevice(fcmToken: String?): Boolean {
+        return handleApiResultNoTransformationNoFlow(
             apiResult = apiClient.registerDevice(
                 RequestRegisterDevice(
                     fcmToken = fcmToken
                 )
             ),
             ioDispatcher = ioDispatcher
-        ).collect { result ->
-            emit(result is RepositoryResult.Success)
-        }
+        ) is RepositoryResult.Success
     }
 
-    private fun updateDevice(fcmToken: String?): Flow<Boolean> = flow {
-        handleApiResultNoTransformation(
+    private suspend fun updateDevice(fcmToken: String?): Boolean {
+        return handleApiResultNoTransformationNoFlow(
             apiResult = apiClient.updateDevice(
                 RequestUpdateDevice(
                     fcmToken = fcmToken
                 )
             ),
             ioDispatcher = ioDispatcher
-        ).collect { result ->
-            emit(result is RepositoryResult.Success)
-        }
+        ) is RepositoryResult.Success
     }
 }

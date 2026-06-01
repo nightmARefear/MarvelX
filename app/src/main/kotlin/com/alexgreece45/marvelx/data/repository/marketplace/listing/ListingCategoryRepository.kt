@@ -1,6 +1,8 @@
 package com.alexgreece45.marvelx.data.repository.marketplace.listing
 
-import com.alexgreece45.marvelx.controllers.AppLogger
+import com.alexgreece45.marvelx.core.common.dispatchers.model.IoDispatcher
+import com.alexgreece45.marvelx.core.common.logger.AppLogger
+import com.alexgreece45.marvelx.core.network.clients.ListingClient
 import com.alexgreece45.marvelx.data.model.marketplace.listing.ListingCategory
 import com.alexgreece45.marvelx.data.model.marketplace.listing.toData
 import com.alexgreece45.marvelx.data.repository.helper.RepositoryResult
@@ -8,14 +10,13 @@ import com.alexgreece45.marvelx.data.repository.helper.handleApiResult
 import com.alexgreece45.marvelx.database.ListingCategoryDao
 import com.alexgreece45.marvelx.database.ListingCategoryWithSubcategoriesEntity
 import com.alexgreece45.marvelx.database.toDatabase
-import com.alexgreece45.marvelx.dispatchers.IoDispatcher
-import com.alexgreece45.marvelx.network_logic.clients.ListingClient
 import com.alexgreece45.marvelx.util.DateUtil
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import org.koin.core.annotation.Single
 import kotlin.coroutines.CoroutineContext
 
 interface ListingCategoryRepository {
@@ -28,6 +29,7 @@ interface ListingCategoryRepository {
     val listingCategories: List<ListingCategory>
 }
 
+@Single
 class ListingCategoryRepositoryImpl(
     private val listingClient: ListingClient,
     private val listingCategoryDao: ListingCategoryDao,

@@ -1,5 +1,6 @@
 package com.alexgreece45.marvelx.data.model.order.item
 
+import com.alexgreece45.marvelx.core.network.model.api.order.item.ResponseOrderItemTrackingHistory
 import com.alexgreece45.marvelx.data.model.order.OrderCourierData
 import com.alexgreece45.marvelx.data.model.order.OrderEstimatedDeliveryDateRangeData
 import com.alexgreece45.marvelx.data.model.order.OrderItemStatusData
@@ -8,7 +9,6 @@ import com.alexgreece45.marvelx.data.model.order.item.refund.OrderItemRefundStat
 import com.alexgreece45.marvelx.data.model.order.toData
 import com.alexgreece45.marvelx.data.model.order.tracking.OrderTrackingInfoHistoryItemData
 import com.alexgreece45.marvelx.data.model.order.tracking.toData
-import com.alexgreece45.marvelx.network_logic.models_api.order.item.ResponseOrderItemTrackingHistory
 
 data class OrderItemTrackingHistoryData(
     val trackingId: String,

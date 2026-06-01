@@ -1,7 +1,8 @@
 package com.alexgreece45.marvelx.domain.interactors
 
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.controllers.AppLogger
+import com.alexgreece45.marvelx.core.common.logger.AppLogger
+import com.alexgreece45.marvelx.core.network.model.api.resendOtp.RequestResendOtp
 import com.alexgreece45.marvelx.data.repository.OtpRepository
 import com.alexgreece45.marvelx.data.repository.ResendOtpRepositoryResponse
 import com.alexgreece45.marvelx.data.repository.ValidateOtpRepositoryResponse
@@ -9,11 +10,10 @@ import com.alexgreece45.marvelx.domain.model_api.otp.OtpDomain
 import com.alexgreece45.marvelx.domain.model_api.otp.OtpErrorCause
 import com.alexgreece45.marvelx.domain.model_api.otp.OtpResponseErrorDomain
 import com.alexgreece45.marvelx.domain.model_api.otp.toOtpDomain
+import com.alexgreece45.marvelx.domain.model_api.otp.toOtpResponseErrorDomain
 import com.alexgreece45.marvelx.domain.model_api.resendOtp.ResponseResendOtpFailedDomain
+import com.alexgreece45.marvelx.domain.model_api.resendOtp.toResponseResendOtpFailedDomain
 import com.alexgreece45.marvelx.domain.model_api.user.VerificationStep
-import com.alexgreece45.marvelx.network_logic.models_api.otp.toOtpResponseErrorDomain
-import com.alexgreece45.marvelx.network_logic.models_api.resendOtp.RequestResendOtp
-import com.alexgreece45.marvelx.network_logic.models_api.resendOtp.toResponseResendOtpFailedDomain
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.extensions.safeAsync
 import kotlinx.coroutines.flow.Flow
@@ -35,7 +35,7 @@ class OtpInteractorImpl(
 ) : OtpInteractor {
     override suspend fun validateOtp(userId: String, otp: String): Flow<ValidateOtpPartialState> =
         flow {
-            repository.validateOtp(userId.toString(), otp).collect {
+            repository.validateOtp(userId, otp).collect {
                 when (it) {
                     is ValidateOtpRepositoryResponse.Failed -> {
                         val otpResponseErrorDomain = it.otpResponseError.toOtpResponseErrorDomain()

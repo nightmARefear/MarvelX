@@ -8,4 +8,6 @@ value class OrderId(val value: String) {
         fun from(raw: String) = OrderId(raw)
         fun fromFormatted(formatted: String) = OrderId(formatted.removePrefix("#"))
     }
+
+    override fun toString(): String = value
 }

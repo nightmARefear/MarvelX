@@ -1,6 +1,6 @@
 package com.alexgreece45.marvelx.data.model.profileDetails
 
-import com.alexgreece45.marvelx.network_logic.models_api.user.profileDetails.ResponseBasicProfileDetails
+import com.alexgreece45.marvelx.core.network.model.api.user.profileDetails.ResponseBasicProfileDetails
 import com.alexgreece45.marvelx.util.extensions.toFullName
 
 /**
@@ -29,7 +29,7 @@ data class RepositoryBasicProfileDetails(
 /**
  * Converts this instance to [RepositoryBasicProfileDetails].
  */
-internal fun ResponseBasicProfileDetails.toData(): RepositoryBasicProfileDetails =
+internal fun com.alexgreece45.marvelx.core.network.model.api.user.profileDetails.ResponseBasicProfileDetails.toData(): RepositoryBasicProfileDetails =
     RepositoryBasicProfileDetails(
         firstName = firstName,
         lastName = lastName,

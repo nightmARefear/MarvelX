@@ -28,6 +28,7 @@ import com.alexgreece45.marvelx.util.constants.ConstantsInputField
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import org.koin.android.annotation.KoinViewModel
 
 /**
  * Defines all the sub-screens needed for the `Forgot Password` flow. The string - related info
@@ -234,6 +235,7 @@ sealed class ForgotPasswordEffect : BaseEffect {
     }
 }
 
+@KoinViewModel
 class ForgotPasswordViewModel(
     private val forgotPasswordInteractor: ForgotPasswordInteractor,
     private val resourceProvider: ResourceProvider,

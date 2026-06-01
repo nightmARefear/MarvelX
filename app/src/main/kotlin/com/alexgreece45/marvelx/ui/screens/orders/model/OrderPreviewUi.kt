@@ -1,11 +1,11 @@
 package com.alexgreece45.marvelx.ui.screens.orders.model
 
 import androidx.compose.runtime.Immutable
+import com.alexgreece45.marvelx.core.common.extensions.toOrderFormatShort
 import com.alexgreece45.marvelx.domain.model_api.order.OrderPreviewDomain
 import com.alexgreece45.marvelx.ui.model_generic.BigDecimalUi
 import com.alexgreece45.marvelx.ui.model_generic.InstantUi
 import com.alexgreece45.marvelx.util.extensions.formatPrice
-import com.alexgreece45.marvelx.util.extensions.toOrderFormatShort
 
 @Immutable
 data class OrderPreviewUi(

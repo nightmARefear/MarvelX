@@ -34,6 +34,7 @@ import com.alexgreece45.marvelx.ui.screens.forgotPasswordScreen.forgotPasswordVa
 import com.alexgreece45.marvelx.ui.screens.friends.FriendsScreen
 import com.alexgreece45.marvelx.ui.screens.friends.FriendsViewModel
 import com.alexgreece45.marvelx.ui.screens.friends.model.FriendsContract
+import com.alexgreece45.marvelx.ui.screens.home.HomeEffect
 import com.alexgreece45.marvelx.ui.screens.home.HomeScreen
 import com.alexgreece45.marvelx.ui.screens.home.HomeViewModel
 import com.alexgreece45.marvelx.ui.screens.introLoading.IntroLoadingScreen
@@ -129,38 +130,48 @@ fun NavGraph(navController: NavHostController) {
             )
         }
 
-        composable(Screen.HomeScreen) {
+        composable(Screen.HomeScreen) { navBackStackEntry ->
             val viewModel = koinViewModel<HomeViewModel>()
             HomeScreen(
                 onEventSent = viewModel::setEvent,
                 state = viewModel.uiState.collectAsStateWithLifecycle().value,
                 effect = viewModel.uiEffect,
-                navigateToLoginScreen = {
-                    navController.navigate(Screen.LoginScreen.route) {
-                        launchSingleTop = true
+                logoutReason = navBackStackEntry.arguments?.getString(NavItem.LogoutReason.key),
+                onNavigationEffect = { navigationEffect ->
+                    when (navigationEffect) {
+                        HomeEffect.Navigation.PopBackStack -> navController.navigateUp()
+                        HomeEffect.Navigation.NavigateToLoginScreen -> {
+                            navController.navigate(Screen.LoginScreen.route) {
+                                launchSingleTop = true
+                            }
+                        }
+
+                        HomeEffect.Navigation.NavigateToSignupScreen -> {
+                            navController.navigate(Screen.SignupScreen.route) {
+                                launchSingleTop = true
+                            }
+                        }
+
+                        is HomeEffect.Navigation.NavigateToOtpScreen -> {
+                            with(navigationEffect) {
+                                navController.navigate(
+                                    Screen.OtpScreen.createNavRoute(
+                                        userId = userId,
+                                        otpFlowType = otpFlowType,
+                                        verificationStep = verificationStep,
+                                        shouldRememberUserSession = shouldRememberUserSession
+                                    )
+                                )
+                            }
+                        }
+
+                        HomeEffect.Navigation.NavigateToAllCharactersScreen -> {
+                            navController.navigate(Screen.AllCharactersScreen.route) {
+                                popUpToTop(navController)
+                            }
+                        }
                     }
-                },
-                navigateToSignupScreen = {
-                    navController.navigate(Screen.SignupScreen.route) {
-                        launchSingleTop = true
-                    }
-                },
-                navigateToAllCharactersScreen = {
-                    navController.navigate(Screen.AllCharactersScreen.route) {
-                        popUpToTop(navController)
-                    }
-                },
-                navigateToOtpScreen = { userId, otpFlowType, verificationStep, shouldRememberUserSession ->
-                    navController.navigate(
-                        Screen.OtpScreen.createNavRoute(
-                            userId = userId,
-                            otpFlowType = otpFlowType,
-                            verificationStep = verificationStep,
-                            shouldRememberUserSession = shouldRememberUserSession
-                        )
-                    )
-                },
-                popBackStack = navController::navigateUp
+                }
             )
         }
 
@@ -429,7 +440,6 @@ fun NavGraph(navController: NavHostController) {
                             )
                         )
 
-                        is OrderItemTrackingHistoryContract.Effect.Navigation.GoToContactSupportScreen -> TODO()
                         is OrderItemTrackingHistoryContract.Effect.Navigation.GoToRequestItemRefundScreen -> navController.navigate(
                             Screen.RequestItemRefundScreen.createNavRoute(
                                 orderId = navigationEffect.orderId,
@@ -439,6 +449,8 @@ fun NavGraph(navController: NavHostController) {
                                 orderItemPriceLabel = navigationEffect.orderItemPriceLabel
                             )
                         )
+
+                        is OrderItemTrackingHistoryContract.Effect.Navigation.GoToContactSupportScreen -> TODO()
                     }
                 },
                 orderId = navBackStackEntry.arguments?.getString(NavItem.OrderId.key).orEmpty(),

@@ -1,9 +1,9 @@
 package com.alexgreece45.marvelx.domain.mappers.marketplace.listing.details
 
+import com.alexgreece45.marvelx.core.network.model.api.marketplace.listing.details.ResponseListingDetails
 import com.alexgreece45.marvelx.data.repository.marketplace.listing.details.ListingDetailsRepository
 import com.alexgreece45.marvelx.domain.model_api.marketplace.listing.ListingDetailsDomain
 import com.alexgreece45.marvelx.domain.model_api.marketplace.listing.ListingDimensions
-import com.alexgreece45.marvelx.network_logic.models_api.marketplace.listing.details.ResponseListingDetails
 import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.model.WizardInputFieldUi
 
 class ListingDetailsDomainMapper(

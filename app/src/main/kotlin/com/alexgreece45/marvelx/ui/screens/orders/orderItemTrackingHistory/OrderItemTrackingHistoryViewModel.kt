@@ -2,7 +2,7 @@ package com.alexgreece45.marvelx.ui.screens.orders.orderItemTrackingHistory
 
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.controllers.AppLogger
+import com.alexgreece45.marvelx.core.common.logger.AppLogger
 import com.alexgreece45.marvelx.data.repository.UserRepository
 import com.alexgreece45.marvelx.data.repository.helper.RepositoryResult
 import com.alexgreece45.marvelx.domain.helper.InteractorPartialState
@@ -17,7 +17,9 @@ import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.extensions.decodeFromUrl
 import com.alexgreece45.marvelx.util.extensions.toUrlEncoding
 import kotlinx.coroutines.launch
+import org.koin.android.annotation.KoinViewModel
 
+@KoinViewModel
 class OrderItemTrackingHistoryViewModel(
     private val orderInteractor: OrderInteractor,
     private val resourceProvider: ResourceProvider,

@@ -7,10 +7,10 @@ import androidx.core.graphics.createBitmap
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.configuration.models.DeepLinkWebUrl
-import com.alexgreece45.marvelx.controllers.AppLogger
+import com.alexgreece45.marvelx.core.common.dispatchers.model.IoDispatcher
+import com.alexgreece45.marvelx.core.common.logger.AppLogger
 import com.alexgreece45.marvelx.data.repository.NotificationRepository
 import com.alexgreece45.marvelx.data.repository.user.FriendRepository
-import com.alexgreece45.marvelx.dispatchers.IoDispatcher
 import com.alexgreece45.marvelx.domain.interactors.GetProfileDetailsPartialState
 import com.alexgreece45.marvelx.domain.interactors.UserInteractor
 import com.alexgreece45.marvelx.domain.interactors.user.BlockUserPartialState
@@ -44,6 +44,7 @@ import com.google.zxing.MultiFormatWriter
 import com.google.zxing.WriterException
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.koin.android.annotation.KoinViewModel
 import kotlin.coroutines.CoroutineContext
 
 sealed interface ProfileDetailsContract {
@@ -150,6 +151,7 @@ sealed interface ProfileDetailsContract {
     }
 }
 
+@KoinViewModel
 class ProfileDetailsViewModel(
     private val userInteractor: UserInteractor,
     private val resourceProvider: ResourceProvider,
@@ -565,7 +567,7 @@ class ProfileDetailsViewModel(
      * @param content   The content of the QR code.
      * @return          The generated QR code bitmap, or `null` if generation failed.
      */
-    private suspend fun generateQRCodeBitmap(content: String): Bitmap? {
+    private fun generateQRCodeBitmap(content: String): Bitmap? {
         val size = ConstantsUi.ProfileDetailsScreen.QR_CODE_SIZE
         val blackArgb = Color.Black.toArgb()
         val whiteArgb = Color.White.toArgb()

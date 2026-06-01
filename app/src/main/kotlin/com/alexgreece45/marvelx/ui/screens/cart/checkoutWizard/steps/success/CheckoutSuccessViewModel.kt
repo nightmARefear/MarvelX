@@ -2,7 +2,9 @@ package com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.steps.success
 
 import com.alexgreece45.marvelx.mvi.BaseViewModel
 import com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.steps.success.model.CheckoutSuccessContract
+import org.koin.android.annotation.KoinViewModel
 
+@KoinViewModel
 class CheckoutSuccessViewModel :
     BaseViewModel<CheckoutSuccessContract.Event, CheckoutSuccessContract.State, CheckoutSuccessContract.Effect>() {
 

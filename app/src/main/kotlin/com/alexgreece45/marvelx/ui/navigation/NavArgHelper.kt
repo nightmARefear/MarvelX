@@ -2,6 +2,7 @@ package com.alexgreece45.marvelx.ui.navigation
 
 import com.alexgreece45.marvelx.ui.navigation.models.NavArg
 import com.alexgreece45.marvelx.ui.navigation.models.NavArgStatus
+import java.util.concurrent.ConcurrentMap
 
 /**
  * Navigation argument helper since compose as of version `2.7.7` doesn't support null values as

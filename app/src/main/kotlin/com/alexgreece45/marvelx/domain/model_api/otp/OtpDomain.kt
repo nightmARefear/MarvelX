@@ -1,6 +1,6 @@
 package com.alexgreece45.marvelx.domain.model_api.otp
 
-import com.alexgreece45.marvelx.network_logic.models_api.otp.OtpResponseSuccess
+import com.alexgreece45.marvelx.core.network.model.api.otp.OtpResponseSuccess
 
 data class OtpDomain(
     val tempAuthCode: String

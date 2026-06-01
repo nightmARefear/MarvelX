@@ -1693,15 +1693,16 @@ fun LazyItemScope.GenericLazyItemInfoScreen(
 @Composable
 fun GenericErrorScreen(
     errorMessage: String,
-    modifier: Modifier,
-    onRetryClick: () -> Unit
+    modifier: Modifier = Modifier,
+    buttonLabel: String? = null,
+    onErrorButtonClicked: () -> Unit
 ) {
     GenericInfoScreen(
         title = errorMessage,
         titleColor = MaterialTheme.colors.error,
-        buttonLabel = stringResource(R.string.generic_retry_button),
+        buttonLabel = buttonLabel ?: stringResource(R.string.generic_retry_button),
         modifier = modifier,
-        onButtonClicked = onRetryClick
+        onButtonClicked = onErrorButtonClicked
     )
 }
 
@@ -1714,7 +1715,7 @@ fun LazyItemScope.LazyItemErrorScreen(
     GenericErrorScreen(
         errorMessage = errorMessage,
         modifier = modifier,
-        onRetryClick = onRetryClick
+        onErrorButtonClicked = onRetryClick
     )
 }
 
@@ -1726,7 +1727,7 @@ fun LazyItemScope.LazyItemContentErrorScreen(
     GenericErrorScreen(
         errorMessage = errorMessage,
         modifier = Modifier.fillParentMaxSize(),
-        onRetryClick = onRetryClick
+        onErrorButtonClicked = onRetryClick
     )
 }
 

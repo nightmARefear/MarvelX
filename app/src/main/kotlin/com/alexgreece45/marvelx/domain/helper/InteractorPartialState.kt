@@ -33,3 +33,23 @@ sealed interface InteractorPartialState<out T> {
      */
     data object NoInternetConnection : InteractorPartialState<Nothing>
 }
+
+inline fun <T> InteractorPartialState<T>.onSuccess(action: (T) -> Unit): InteractorPartialState<T> {
+    if (this is InteractorPartialState.Success) action(data)
+    return this
+}
+
+inline fun <T> InteractorPartialState<T>.onFailed(action: (failureMessage: String) -> Unit): InteractorPartialState<T> {
+    if (this is InteractorPartialState.Failed) action(failureMessage)
+    return this
+}
+
+inline fun <T> InteractorPartialState<T>.onError(action: (errorMessage: String) -> Unit): InteractorPartialState<T> {
+    if (this is InteractorPartialState.Error) action(errorMessage)
+    return this
+}
+
+inline fun <T> InteractorPartialState<T>.onNoInternetConnection(action: () -> Unit): InteractorPartialState<T> {
+    if (this is InteractorPartialState.NoInternetConnection) action()
+    return this
+}

@@ -2,12 +2,14 @@ package com.alexgreece45.marvelx.controllers
 
 import android.net.Uri
 import com.alexgreece45.marvelx.configuration.models.DeepLinkWebUrl
+import com.alexgreece45.marvelx.core.common.logger.AppLogger
 import com.alexgreece45.marvelx.data.model.deepLink.DeepLinkAction
 import com.alexgreece45.marvelx.ui.navigation.NavDeepLinkItem
 import com.alexgreece45.marvelx.ui.navigation.Screen
 import com.google.gson.Gson
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import org.koin.core.annotation.Single
 
 interface DeepLinkController {
     /**
@@ -40,10 +42,12 @@ interface DeepLinkController {
     ): CreateDeepLinkActionResult
 }
 
+@Single
 class DeepLinkControllerImpl(
     private val appLogger: AppLogger,
     private val gson: Gson,
 ) : DeepLinkController {
+
     override suspend fun handleDeepLinkUri(deepLinkUri: Uri) = flow {
         parseDeepLinkUri(deepLinkUri).collect { parseDeepLinkUriResult ->
             when (parseDeepLinkUriResult) {

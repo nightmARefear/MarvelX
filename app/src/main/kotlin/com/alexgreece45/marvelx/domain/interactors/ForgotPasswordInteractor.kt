@@ -1,15 +1,15 @@
 package com.alexgreece45.marvelx.domain.interactors
 
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.domain.model_api.otp.OtpErrorCause
-import com.alexgreece45.marvelx.domain.model_api.otp.OtpResponseErrorDomain
-import com.alexgreece45.marvelx.domain.model_api.user.VerificationStep
-import com.alexgreece45.marvelx.network_logic.models_api.otp.toOtpResponseErrorDomain
 import com.alexgreece45.marvelx.data.repository.ForgotPasswordRepository
 import com.alexgreece45.marvelx.data.repository.ForgotPasswordRepositoryIsOtpBlockedEmailResponse
 import com.alexgreece45.marvelx.data.repository.ForgotPasswordRepositoryIsOtpBlockedPhoneNumberResponse
 import com.alexgreece45.marvelx.data.repository.ForgotPasswordRepositorySendOtpResponse
 import com.alexgreece45.marvelx.data.repository.ForgotPasswordRepositoryValidateOtpFromEmailResponse
+import com.alexgreece45.marvelx.domain.model_api.otp.OtpErrorCause
+import com.alexgreece45.marvelx.domain.model_api.otp.OtpResponseErrorDomain
+import com.alexgreece45.marvelx.domain.model_api.otp.toOtpResponseErrorDomain
+import com.alexgreece45.marvelx.domain.model_api.user.VerificationStep
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.extensions.safeAsync
 import kotlinx.coroutines.flow.Flow
@@ -62,6 +62,7 @@ class ForgotPasswordInteractorImpl(
     private val repository: ForgotPasswordRepository,
     private val resourceProvider: ResourceProvider
 ) : ForgotPasswordInteractor {
+
     override suspend fun sendOtp(
         data: String,
         verificationStep: VerificationStep

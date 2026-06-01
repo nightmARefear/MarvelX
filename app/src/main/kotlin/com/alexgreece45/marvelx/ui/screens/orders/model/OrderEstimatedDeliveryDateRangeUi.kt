@@ -1,10 +1,10 @@
 package com.alexgreece45.marvelx.ui.screens.orders.model
 
+import com.alexgreece45.marvelx.core.common.extensions.toOrderEstimatedDeliveryFormatFull
+import com.alexgreece45.marvelx.core.common.extensions.toOrderEstimatedDeliveryFormatShort
+import com.alexgreece45.marvelx.core.common.extensions.toZonedDateTime
 import com.alexgreece45.marvelx.domain.model_api.order.OrderEstimatedDeliveryDateRangeDomain
 import com.alexgreece45.marvelx.ui.model_generic.InstantUi
-import com.alexgreece45.marvelx.util.extensions.toOrderEstimatedDeliveryFormatFull
-import com.alexgreece45.marvelx.util.extensions.toOrderEstimatedDeliveryFormatShort
-import com.alexgreece45.marvelx.util.extensions.toZonedDateTime
 
 data class OrderEstimatedDeliveryDateRangeUi(
     val from: InstantUi,

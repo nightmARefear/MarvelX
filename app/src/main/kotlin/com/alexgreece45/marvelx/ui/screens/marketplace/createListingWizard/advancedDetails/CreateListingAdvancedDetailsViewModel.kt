@@ -8,8 +8,8 @@ import com.alexgreece45.marvelx.data.repository.marketplace.listing.details.List
 import com.alexgreece45.marvelx.mvi.BaseViewModel
 import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.advancedDetails.model.CreateListingAdvancedDetailsContract
 import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.advancedDetails.model.CreateListingAdvancedDetailsScreenData
-import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.model.WizardInputFieldUi
 import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.model.CreateListingWizardMode
+import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.model.WizardInputFieldUi
 import com.alexgreece45.marvelx.ui.screens.marketplace.mappers.ListingDetailsUiMapper
 import com.alexgreece45.marvelx.ui.screens.marketplace.model.ListingDetailsUi
 import com.alexgreece45.marvelx.util.Form
@@ -18,7 +18,9 @@ import com.alexgreece45.marvelx.util.FormValidator
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.Rule
 import com.alexgreece45.marvelx.util.extensions.formatPrice
+import org.koin.android.annotation.KoinViewModel
 
+@KoinViewModel
 class CreateListingAdvancedDetailsViewModel(
     private val listingDetailsUiMapper: ListingDetailsUiMapper,
     private val resourceProvider: ResourceProvider,

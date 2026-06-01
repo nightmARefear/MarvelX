@@ -11,6 +11,7 @@ import com.alexgreece45.marvelx.mvi.BaseViewModel
 import com.alexgreece45.marvelx.ui.screens.allCharacters.uiModel.CharacterCardUi
 import com.alexgreece45.marvelx.ui.screens.allFavoriteCharacters.model.AllFavoriteCharactersScreenErrorView
 import kotlinx.coroutines.launch
+import org.koin.android.annotation.KoinViewModel
 
 sealed class AllFavoriteCharactersEvent : BaseEvent {
     data object Init : AllFavoriteCharactersEvent()
@@ -26,6 +27,7 @@ data class AllFavoriteCharactersState(
 
 sealed class AllFavoriteCharactersEffect : BaseEffect
 
+@KoinViewModel
 class AllFavoriteCharactersViewModel(
     private val characterInteractor: CharacterInteractor
 ) : BaseViewModel<AllFavoriteCharactersEvent, AllFavoriteCharactersState, AllFavoriteCharactersEffect>() {

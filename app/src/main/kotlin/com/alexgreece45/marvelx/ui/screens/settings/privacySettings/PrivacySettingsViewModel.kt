@@ -12,6 +12,7 @@ import com.alexgreece45.marvelx.mvi.BaseViewModel
 import com.alexgreece45.marvelx.ui.screens.settings.privacySettings.model.PrivacySettingsErrorView
 import com.alexgreece45.marvelx.util.ResourceProvider
 import kotlinx.coroutines.launch
+import org.koin.android.annotation.KoinViewModel
 
 sealed interface PrivacySettingsEvent : BaseEvent {
     data object Init : PrivacySettingsEvent
@@ -37,6 +38,7 @@ sealed interface PrivacySettingsEffect : BaseEffect {
     }
 }
 
+@KoinViewModel
 class PrivacySettingsViewModel(
     private val userInteractor: UserInteractor,
     private val resourceProvider: ResourceProvider

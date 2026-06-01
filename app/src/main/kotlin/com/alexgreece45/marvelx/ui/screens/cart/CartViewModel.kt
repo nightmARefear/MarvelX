@@ -12,11 +12,12 @@ import com.alexgreece45.marvelx.mvi.BaseViewModel
 import com.alexgreece45.marvelx.ui.screens.cart.mappers.CartItemUiMapper
 import com.alexgreece45.marvelx.ui.screens.cart.model.CartContract
 import com.alexgreece45.marvelx.ui.screens.cart.model.CartInfoUi
-import com.alexgreece45.marvelx.ui.screens.orders.model.OrderCheckoutInfoUi
 import com.alexgreece45.marvelx.ui.screens.orders.model.toUi
 import com.alexgreece45.marvelx.util.ResourceProvider
 import kotlinx.coroutines.launch
+import org.koin.android.annotation.KoinViewModel
 
+@KoinViewModel
 class CartViewModel(
     private val cartInteractor: CartInteractor,
     private val cartItemUiMapper: CartItemUiMapper,

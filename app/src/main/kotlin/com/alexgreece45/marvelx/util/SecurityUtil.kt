@@ -14,7 +14,7 @@ import java.security.MessageDigest
 import java.security.SecureRandom
 import kotlin.coroutines.CoroutineContext
 
-object SecurityUtil {
+object SecurityUtil { // TODO: utilize coroutines.
     /**
      * Gets the hashed version of the given password. The `Argon2ID` algorithm is used, alongside
      * a strong iteration count.
@@ -42,21 +42,4 @@ object SecurityUtil {
         emit(hashResult.encodedOutputAsByteArray().toString(Charsets.UTF_8)
             .also { logcat { "(getHashedPasswordFromString) finalPassword: $it" } })
     }.flowOn(defaultDispatcher)
-
-    /**
-     * Creates a secure nonce using [SecureRandom], hashes it with `SHA-256` and returns the result
-     * as a [String] in `Base64` encoding, suitable for HTTP requests.
-     */
-    fun createNonce(): String {
-        val bytes = ByteArray(64)
-        SecureRandom().apply {
-            nextBytes(bytes)
-        }
-        val messageDigest = MessageDigest.getInstance("SHA-256")
-        messageDigest.update(bytes, 0, bytes.size)
-        return Base64.encodeToString(
-            messageDigest.digest(),
-            Base64.URL_SAFE or Base64.NO_WRAP or Base64.NO_PADDING
-        )
-    }
 }

@@ -1,6 +1,7 @@
 package com.alexgreece45.marvelx.data.model.marketplace.listing
 
-import com.alexgreece45.marvelx.network_logic.models_api.marketplace.listing.ResponseListingPreview
+import com.alexgreece45.marvelx.core.network.model.api.marketplace.listing.ResponseListingPreview
+
 
 data class ListingPreviewData(
     val id: String,

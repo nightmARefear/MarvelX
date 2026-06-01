@@ -1,11 +1,11 @@
 package com.alexgreece45.marvelx.domain.mappers.marketplace.listing
 
+import com.alexgreece45.marvelx.core.network.model.api.marketplace.listing.RequestUpdateListing
 import com.alexgreece45.marvelx.data.model.marketplace.listing.ListingData
 import com.alexgreece45.marvelx.domain.mappers.marketplace.listing.details.ListingDetailsDomainMapper
 import com.alexgreece45.marvelx.domain.model_api.marketplace.listing.ListingDomain
 import com.alexgreece45.marvelx.domain.model_api.marketplace.listing.ListingStatusDomain
 import com.alexgreece45.marvelx.domain.model_api.marketplace.listing.UpdateListingDomain
-import com.alexgreece45.marvelx.network_logic.models_api.marketplace.listing.RequestUpdateListing
 import java.time.Instant
 
 class ListingDomainMapper(

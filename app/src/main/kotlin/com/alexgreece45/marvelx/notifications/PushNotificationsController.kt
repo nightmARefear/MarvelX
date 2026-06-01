@@ -3,43 +3,44 @@ package com.alexgreece45.marvelx.notifications
 import android.app.NotificationManager
 import android.content.Context
 import androidx.core.content.ContextCompat.getSystemService
-import com.alexgreece45.marvelx.controllers.AppLogger
 import com.alexgreece45.marvelx.controllers.DeviceController
 import com.alexgreece45.marvelx.controllers.FcmController
+import com.alexgreece45.marvelx.core.common.applicationScope.model.ApplicationScope
+import com.alexgreece45.marvelx.core.common.dispatchers.model.IoDispatcher
+import com.alexgreece45.marvelx.core.common.logger.AppLogger
 import com.alexgreece45.marvelx.data.model.deepLink.DeepLinkAction
 import com.alexgreece45.marvelx.data.repository.ImageRepository
 import com.alexgreece45.marvelx.data.repository.UserRepository
 import com.alexgreece45.marvelx.data.repository.helper.RepositoryResult
-import com.alexgreece45.marvelx.dispatchers.IoDispatcher
 import com.alexgreece45.marvelx.notifications.constants.ConstantsNotifications
 import com.alexgreece45.marvelx.notifications.model.NotificationChannelType
 import com.alexgreece45.marvelx.notifications.model.NotificationData
 import com.google.firebase.messaging.RemoteMessage
 import com.google.gson.Gson
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
-import org.koin.core.qualifier.qualifier
+import org.koin.core.annotation.Single
 import kotlin.coroutines.CoroutineContext
 
-object PushNotificationsController : KoinComponent {
+@Single
+class PushNotificationsController(
+    @IoDispatcher ioDispatcher: CoroutineContext,
+    @ApplicationScope private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + ioDispatcher),
+    private val appLogger: AppLogger,
+    private val fcmController: FcmController,
+    private val deviceController: DeviceController,
+    private val userRepository: UserRepository,
+    private val gson: Gson,
+    private val imageRepository: ImageRepository,
+    private val context: Context
+) {
 
-    private const val LOGGER_TAG: String = "PushNotificationsController"
-
-    @IoDispatcher
-    private val ioDispatcher: CoroutineContext by inject(qualifier = qualifier<IoDispatcher>())
-    private val appLogger: AppLogger by inject()
-    private val fcmController: FcmController by inject()
-    private val deviceController: DeviceController by inject()
-    private val userRepository: UserRepository by inject()
-    private val gson: Gson by inject()
-    private val imageRepository: ImageRepository by inject()
-    private val context: Context by inject()
+    private val loggerTag: String = "PushNotificationsController"
 
     private var _notifications: MutableSharedFlow<NotificationData?> = MutableSharedFlow(
         replay = 0,
@@ -59,13 +60,12 @@ object PushNotificationsController : KoinComponent {
         fcmController.setFcmToken(token)
         if (!userRepository.isUserLoggedIn) return
 
-        CoroutineScope(ioDispatcher).launch {
-            deviceController.registerOrUpdateDevice(token).collect { wasTokenUpdated ->
-                if (wasTokenUpdated) {
-                    appLogger.d(LOGGER_TAG) { "(updateToken) FCM Token was successfully updated." }
-                } else {
-                    appLogger.e(LOGGER_TAG) { "(updateToken) An error occurred whilst updating the FCM token." }
-                }
+        scope.launch {
+            val wasTokenUpdated = deviceController.registerOrUpdateDevice(token)
+            if (wasTokenUpdated) {
+                appLogger.d(loggerTag) { "(updateToken) FCM Token was successfully updated." }
+            } else {
+                appLogger.e(loggerTag) { "(updateToken) An error occurred whilst updating the FCM token." }
             }
         }
     }
@@ -77,7 +77,7 @@ object PushNotificationsController : KoinComponent {
         messageData: Map<String, String>,
         fcmNotification: RemoteMessage.Notification
     ) {
-        CoroutineScope(ioDispatcher).launch {
+        scope.launch {
             _notifications.emit(parseNotificationData(messageData, fcmNotification))
         }
     }
@@ -97,7 +97,7 @@ object PushNotificationsController : KoinComponent {
                 when (val repositoryResult = imageRepository.getImage(imageUrl)) {
                     is RepositoryResult.Failed,
                     RepositoryResult.NetworkError -> {
-                        appLogger.e(LOGGER_TAG) { "(parseNotificationData) An error occurred whilst retrieving the image." }
+                        appLogger.e(loggerTag) { "(parseNotificationData) An error occurred whilst retrieving the image." }
                         return null
                     }
 
@@ -120,7 +120,7 @@ object PushNotificationsController : KoinComponent {
                 )
             )
         } catch (e: Exception) {
-            appLogger.e(LOGGER_TAG) { "(parseNotificationData) An error occurred whilst parsing the notification: ${e.localizedMessage}" }
+            appLogger.e(loggerTag) { "(parseNotificationData) An error occurred whilst parsing the notification: ${e.localizedMessage}" }
             null
         }
     }

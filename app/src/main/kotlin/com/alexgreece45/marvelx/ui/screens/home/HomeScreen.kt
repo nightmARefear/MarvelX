@@ -29,42 +29,16 @@ fun HomeScreen(
     onEventSent: (event: HomeEvent) -> Unit,
     state: HomeState,
     effect: Flow<HomeEffect>,
-    navigateToLoginScreen: () -> Unit,
-    navigateToSignupScreen: () -> Unit,
-    navigateToAllCharactersScreen: () -> Unit,
-    navigateToOtpScreen: (String, String, String, Boolean) -> Unit,
-    popBackStack: () -> Boolean
+    logoutReason: String?,
+    onNavigationEffect: (HomeEffect.Navigation) -> Unit,
 ) {
     OneTimeLaunchedEffect {
-        onEventSent(HomeEvent.Init)
+        onEventSent(HomeEvent.Init(logoutReason))
     }
 
-    ObserveUiEffect(effect) { homeEffect ->
-        when (homeEffect) {
-            HomeEffect.Navigation.NavigateToLoginScreen -> {
-                navigateToLoginScreen()
-            }
-
-            HomeEffect.Navigation.NavigateToSignupScreen -> {
-                navigateToSignupScreen()
-            }
-
-            HomeEffect.Navigation.NavigateToAllCharactersScreen -> {
-                navigateToAllCharactersScreen()
-            }
-
-            is HomeEffect.Navigation.NavigateToOtpScreen -> {
-                navigateToOtpScreen(
-                    homeEffect.userId,
-                    homeEffect.otpFlowType,
-                    homeEffect.verificationStep,
-                    homeEffect.shouldRememberUserSession
-                )
-            }
-
-            HomeEffect.Navigation.PopBackStack -> {
-                popBackStack()
-            }
+    ObserveUiEffect(effect) { uiEffect ->
+        when (uiEffect) {
+            is HomeEffect.Navigation -> onNavigationEffect(uiEffect)
         }
     }
 
@@ -83,7 +57,7 @@ fun HomeScreen(
                     AlertDialogError(
                         isVisible = true,
                         title = homeAlertDialogErrorView.title,
-                        errorMessage = { Text(text = homeAlertDialogErrorView.errorMessage) },
+                        errorMessage = { Text(text = homeAlertDialogErrorView.description) },
                         confirmButton = AlertDialogButton(
                             label = homeAlertDialogErrorView.buttonLabel,
                             onClick = homeAlertDialogErrorView.alertDialogOnClick
@@ -98,7 +72,7 @@ fun HomeScreen(
                     horizontalArrangement = Arrangement.Center
                 ) {
                     Text(
-                        text = stringResource(R.string.home_screen_toolbar_title),
+                        text = stringResource(R.string.screen_home_toolbar_title),
                         textAlign = TextAlign.Center,
                         style = MaterialTheme.typography.h4
                     )
@@ -116,7 +90,7 @@ fun HomeScreen(
                         onClick = { onEventSent(HomeEvent.OnLoginButtonClicked) }
                     ) {
                         Text(
-                            text = stringResource(R.string.home_screen_label_log_in_button),
+                            text = stringResource(R.string.screen_home_login_button),
                         )
                     }
 
@@ -126,7 +100,7 @@ fun HomeScreen(
                         onClick = { onEventSent(HomeEvent.OnSignupButtonClicked) }
                     ) {
                         Text(
-                            text = stringResource(R.string.home_screen_label_sign_up_button),
+                            text = stringResource(R.string.screen_home_signup_button),
                         )
                     }
                 }

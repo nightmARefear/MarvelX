@@ -17,6 +17,7 @@ import com.alexgreece45.marvelx.mvi.BaseState
 import com.alexgreece45.marvelx.mvi.BaseViewModel
 import com.alexgreece45.marvelx.util.ResourceProvider
 import kotlinx.coroutines.launch
+import org.koin.android.annotation.KoinViewModel
 
 data class CharacterScreenErrorView(
     val errorMessage: String,
@@ -71,6 +72,7 @@ data class CharacterState(
     }
 }
 
+@KoinViewModel
 class CharacterViewModel(
     private val interactor: CharacterInteractor,
     private val resourceProvider: ResourceProvider

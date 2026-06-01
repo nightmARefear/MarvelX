@@ -3,9 +3,9 @@ package com.alexgreece45.marvelx.ui.screens.splash
 import androidx.annotation.StringRes
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.controllers.model.security.ApplicationSecurity
-import com.alexgreece45.marvelx.controllers.model.security.SecurityViolation
-import com.alexgreece45.marvelx.domain.interactors.SplashInteractor
+import com.alexgreece45.marvelx.core.security.controllers.SecurityController
+import com.alexgreece45.marvelx.core.security.model.security.ApplicationSecurity
+import com.alexgreece45.marvelx.core.security.model.security.SecurityViolation
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
@@ -16,6 +16,7 @@ import com.alexgreece45.marvelx.ui.navigation.models.NavArgStatus
 import com.alexgreece45.marvelx.util.ResourceProvider
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import org.koin.android.annotation.KoinViewModel
 
 sealed interface SplashContract {
     sealed class AlertDialogErrorType(
@@ -63,11 +64,14 @@ sealed interface SplashContract {
     }
 }
 
+@KoinViewModel
 class SplashViewModel(
     private val resourceProvider: ResourceProvider,
-    private val splashInteractor: SplashInteractor
+    private val securityController: SecurityController
 ) : BaseViewModel<SplashContract.Event, SplashContract.State, SplashContract.Effect>() {
+
     override fun setInitialState(): SplashContract.State = SplashContract.State()
+
     override fun handleEvents(event: SplashContract.Event) {
         when (event) {
             SplashContract.Event.Init -> {
@@ -90,23 +94,21 @@ class SplashViewModel(
 
                 viewModelScope.launch {
                     // Intentional delay for logo to appear for at least 3 seconds.
-                    delay(3000L)
+                    delay(3000L) // TODO: Remove delay by finding a workaround.
 
-                    splashInteractor.isApplicationSecure().collect { applicationSecurity ->
-                        when (applicationSecurity) {
-                            ApplicationSecurity.Secure -> {
-                                setEffect {
-                                    SplashContract.Effect.Navigation.NavigateToIntroLoadingScreen
-                                }
+                    when (val applicationSecurity = securityController.isApplicationSecure()) {
+                        ApplicationSecurity.Secure -> {
+                            setEffect {
+                                SplashContract.Effect.Navigation.NavigateToIntroLoadingScreen
                             }
+                        }
 
-                            is ApplicationSecurity.Insecure -> {
-                                showAlertDialog(
-                                    SplashContract.AlertDialogErrorType.InsecureApplication(
-                                        applicationSecurity.securityViolation
-                                    )
+                        is ApplicationSecurity.Insecure -> {
+                            showAlertDialog(
+                                SplashContract.AlertDialogErrorType.InsecureApplication(
+                                    applicationSecurity.securityViolation
                                 )
-                            }
+                            )
                         }
                     }
                 }

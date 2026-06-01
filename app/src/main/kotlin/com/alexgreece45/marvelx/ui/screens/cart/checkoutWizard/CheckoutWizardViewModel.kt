@@ -6,7 +6,9 @@ import com.alexgreece45.marvelx.ui.navigation.Screen
 import com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.model.CheckoutWizardContract
 import com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.model.CheckoutWizardStep
 import com.alexgreece45.marvelx.util.ResourceProvider
+import org.koin.android.annotation.KoinViewModel
 
+@KoinViewModel
 class CheckoutWizardViewModel(
     private val resourceProvider: ResourceProvider
 ) :

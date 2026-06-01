@@ -1,6 +1,7 @@
 package com.alexgreece45.marvelx.ui.screens.marketplace.mappers
 
-import com.alexgreece45.marvelx.controllers.AppLogger
+import com.alexgreece45.marvelx.core.common.extensions.LOGGER_TAG
+import com.alexgreece45.marvelx.core.common.logger.AppLogger
 import com.alexgreece45.marvelx.domain.model_api.marketplace.MarketplaceCategorySectionDomain
 import com.alexgreece45.marvelx.domain.model_api.marketplace.MarketplaceDomain
 import com.alexgreece45.marvelx.domain.model_api.marketplace.MarketplacePromoSectionDomain
@@ -13,8 +14,6 @@ class MarketplaceUiMapper(
     private val appLogger: AppLogger
 ) {
 
-    private val loggerTag = "MarketplaceUiMapper"
-
     fun toUi(marketplaceDomain: MarketplaceDomain): MarketplaceUi? {
         with(marketplaceDomain) {
             return try {
@@ -23,7 +22,7 @@ class MarketplaceUiMapper(
                     categories = categories.map { it.toUi() }
                 )
             } catch (e: Exception) {
-                appLogger.e(loggerTag) { "An error occurred whilst converting `MarketplaceDomain` to `MarketplaceUi`.\n" + e.localizedMessage.orEmpty() }
+                appLogger.e(LOGGER_TAG) { "An error occurred whilst converting `MarketplaceDomain` to `MarketplaceUi`.\n" + e.localizedMessage.orEmpty() }
                 null
             }
         }

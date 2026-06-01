@@ -8,9 +8,10 @@ import com.alexgreece45.marvelx.data.model.marketplace.listing.toData
 import com.alexgreece45.marvelx.data.repository.helper.RepositoryResult
 import com.alexgreece45.marvelx.data.repository.helper.handleApiResult
 import com.alexgreece45.marvelx.data.repository.helper.handleApiResultNoTransformationWithData
-import com.alexgreece45.marvelx.dispatchers.IoDispatcher
-import com.alexgreece45.marvelx.network_logic.clients.ListingClient
+import com.alexgreece45.marvelx.core.common.dispatchers.model.IoDispatcher
+import com.alexgreece45.marvelx.core.network.clients.ListingClient
 import kotlinx.coroutines.flow.first
+import org.koin.core.annotation.Single
 import kotlin.coroutines.CoroutineContext
 
 interface CartRepository {
@@ -22,6 +23,7 @@ interface CartRepository {
     suspend fun deleteCartItem(listingId: String): Boolean
 }
 
+@Single
 class CartRepositoryImpl(
     private val listingClient: ListingClient,
     @IoDispatcher private val ioDispatcher: CoroutineContext

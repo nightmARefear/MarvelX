@@ -6,10 +6,10 @@ import com.alexgreece45.marvelx.data.model.order.item.OrderItemTrackingHistoryDa
 import com.alexgreece45.marvelx.data.model.order.item.toData
 import com.alexgreece45.marvelx.data.model.order.toData
 import com.alexgreece45.marvelx.data.repository.helper.RepositoryResult
-import com.alexgreece45.marvelx.data.repository.helper.handleApiResult
-import com.alexgreece45.marvelx.dispatchers.IoDispatcher
-import com.alexgreece45.marvelx.network_logic.clients.OrderClient
-import kotlinx.coroutines.flow.first
+import com.alexgreece45.marvelx.data.repository.helper.handleApiResultNoFlow
+import com.alexgreece45.marvelx.core.common.dispatchers.model.IoDispatcher
+import com.alexgreece45.marvelx.core.network.clients.OrderClient
+import org.koin.core.annotation.Single
 import kotlin.coroutines.CoroutineContext
 
 interface OrderRepository {
@@ -24,43 +24,44 @@ interface OrderRepository {
     suspend fun placeOrder(): RepositoryResult<String>
 }
 
+@Single
 class OrderRepositoryImpl(
     private val orderClient: OrderClient,
     @IoDispatcher private val ioDispatcher: CoroutineContext,
 ) : OrderRepository {
 
     override suspend fun getOrders(): RepositoryResult<List<OrderPreviewData>> {
-        return handleApiResult(
+        return handleApiResultNoFlow(
             apiResult = orderClient.getOrders(),
             transformation = { this.map { it.toData() } },
             ioDispatcher = ioDispatcher
-        ).first()
+        )
     }
 
     override suspend fun getOrderDetails(orderId: String): RepositoryResult<OrderData> {
-        return handleApiResult(
+        return handleApiResultNoFlow(
             apiResult = orderClient.getOrderDetails(orderId),
             transformation = { this.toData() },
             ioDispatcher = ioDispatcher
-        ).first()
+        )
     }
 
     override suspend fun getOrderItemTrackingHistory(
         orderId: String,
         orderItemId: String
     ): RepositoryResult<OrderItemTrackingHistoryData> {
-        return handleApiResult(
+        return handleApiResultNoFlow(
             apiResult = orderClient.getOrderItemTrackingHistory(orderId, orderItemId),
             transformation = { this.toData() },
             ioDispatcher = ioDispatcher
-        ).first()
+        )
     }
 
     override suspend fun placeOrder(): RepositoryResult<String> {
-        return handleApiResult(
+        return handleApiResultNoFlow(
             apiResult = orderClient.placeOrder(),
             transformation = { this.orderId },
             ioDispatcher = ioDispatcher
-        ).first()
+        )
     }
 }

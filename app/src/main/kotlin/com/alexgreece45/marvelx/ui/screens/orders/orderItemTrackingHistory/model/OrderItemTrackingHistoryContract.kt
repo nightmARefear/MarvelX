@@ -69,7 +69,7 @@ interface OrderItemTrackingHistoryContract {
                 val orderItemPriceLabel: String
             ) : Navigation
 
-            data class GoToContactSupportScreen(
+            data class GoToRequestItemRefundScreen(
                 val orderId: String,
                 val orderItemId: String,
                 val orderItemTitle: String,
@@ -77,7 +77,7 @@ interface OrderItemTrackingHistoryContract {
                 val orderItemPriceLabel: String
             ) : Navigation
 
-            data class GoToRequestItemRefundScreen(
+            data class GoToContactSupportScreen(
                 val orderId: String,
                 val orderItemId: String,
                 val orderItemTitle: String,

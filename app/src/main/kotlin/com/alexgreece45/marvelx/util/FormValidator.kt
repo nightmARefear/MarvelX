@@ -1,7 +1,7 @@
 package com.alexgreece45.marvelx.util
 
-import com.alexgreece45.marvelx.network_logic.models_api.user.Gender
-import com.alexgreece45.marvelx.util.extensions.isEmail
+import com.alexgreece45.marvelx.common_ui.extensions.isEmail
+import com.alexgreece45.marvelx.ui.model.Gender
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import java.math.BigDecimal
@@ -184,7 +184,7 @@ class FormValidatorImpl : FormValidator {
         value: String,
         stringToMatch: String,
         isCaseSensitive: Boolean = false
-    ) = value.equals(
+    ): Boolean = value.equals(
         stringToMatch,
         !isCaseSensitive
     )
@@ -198,7 +198,7 @@ class FormValidatorImpl : FormValidator {
         !isCaseSensitive
     )
 
-    private fun isGenderValid(value: String): Boolean = Gender.isStringValidGender(value = value)
+    private fun isGenderValid(value: String): Boolean = Gender.isValidGender(value = value)
 
     private fun isIntegerValid(value: String): Boolean = value.toIntOrNull() != null
 

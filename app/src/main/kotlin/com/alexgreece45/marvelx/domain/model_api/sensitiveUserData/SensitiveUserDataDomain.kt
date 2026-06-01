@@ -1,5 +1,9 @@
 package com.alexgreece45.marvelx.domain.model_api.sensitiveUserData
 
+import com.alexgreece45.marvelx.core.network.model.api.sensitiveUserData.ResponseSensitiveUserData
+import com.alexgreece45.marvelx.util.extensions.maskEmail
+import com.alexgreece45.marvelx.util.extensions.maskGreekPhoneNumber
+
 /**
  * Defines the initial required data needed in OTP-related operations.
  *
@@ -27,3 +31,20 @@ data class SensitiveUserDataDomain(
     val isResendOtpBlocked: Boolean,
     val otpBlockExpiresIn: Long?
 )
+
+fun ResponseSensitiveUserData.toSensitiveUserDataDomain(): SensitiveUserDataDomain =
+    SensitiveUserDataDomain(
+        otpPreferredCommunicationType = OtpPreferredCommunicationType.of(this.type),
+        maskedData = this.data.toMaskedData(type = this.type),
+        otpInterval = this.otpInterval,
+        isOtpBlocked = this.isOtpBlocked,
+        isResendOtpBlocked = isResendOtpBlocked,
+        otpBlockExpiresIn = otpBlockExpiresIn
+    )
+
+private fun String.toMaskedData(type: String): String =
+    when (type) {
+        OtpPreferredCommunicationType.Email.key -> this.maskEmail()
+        OtpPreferredCommunicationType.PhoneNumber.key -> this.maskGreekPhoneNumber()
+        else -> this
+    }

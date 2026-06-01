@@ -1,20 +1,26 @@
 package com.alexgreece45.marvelx.data.repository
 
-import com.alexgreece45.marvelx.network_logic.clients.ApiClient
-import com.alexgreece45.marvelx.network_logic.models_api.jwtSensitiveUserData.RequestJwtSensitiveUserData
-import com.alexgreece45.marvelx.network_logic.models_api.jwtSensitiveUserData.ResponseJwtSensitiveUserData
-import com.alexgreece45.marvelx.network_logic.models_api.user.ResponseUserError
-import com.alexgreece45.marvelx.network_logic.models_api.user.login.ResponseLogin
-import com.alexgreece45.marvelx.network_logic.models_api.user.login.RequestUserLogin
-import com.alexgreece45.marvelx.network_logic.models_api.user.loginWithToken.ResponseLoginWithToken
-import com.alexgreece45.marvelx.network_logic.models_api.user.signup.ResponseSignup
-import com.alexgreece45.marvelx.network_logic.models_api.user.signup.RequestUserSignup
+import com.alexgreece45.marvelx.core.network.clients.ApiClient
+import com.alexgreece45.marvelx.core.network.model.api.jwtSensitiveUserData.RequestJwtSensitiveUserData
+import com.alexgreece45.marvelx.core.network.model.api.jwtSensitiveUserData.ResponseJwtSensitiveUserData
+import com.alexgreece45.marvelx.core.network.model.api.user.ResponseUserError
+import com.alexgreece45.marvelx.core.network.model.api.user.login.RequestUserLogin
+import com.alexgreece45.marvelx.core.network.model.api.user.login.ResponseLogin
+import com.alexgreece45.marvelx.core.network.model.api.user.loginWithToken.ResponseLoginWithToken
+import com.alexgreece45.marvelx.core.network.model.api.user.signup.RequestUserSignup
+import com.alexgreece45.marvelx.core.network.model.api.user.signup.ResponseSignup
 import com.alexgreece45.marvelx.data.repository.helper.parseUserError
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import org.koin.core.annotation.Single
 
 interface RegisterRepository {
-    suspend fun login(email: String, password: String, isLoggedInWithFirebase: Boolean): Flow<LoginRepositoryResponse>
+    suspend fun login(
+        email: String,
+        password: String,
+        isLoggedInWithFirebase: Boolean
+    ): Flow<LoginRepositoryResponse>
+
     suspend fun loginWithToken(): Flow<PostLoginWithTokenRepositoryResponse>
     suspend fun postSignup(requestUserSignup: RequestUserSignup): Flow<SignupRepositoryPartialState>
 
@@ -25,16 +31,23 @@ interface RegisterRepository {
     suspend fun getJwtForSensitiveUserData(requestJwtSensitiveUserData: RequestJwtSensitiveUserData): Flow<GetJwtForSensitiveUserDataRepositoryResponse>
 }
 
-class RegisterRepositoryImpl(
+@Single
+internal class RegisterRepositoryImpl(
     private val apiClient: ApiClient
 ) : RegisterRepository {
-    override suspend fun login(email: String, password: String, isLoggedInWithFirebase: Boolean): Flow<LoginRepositoryResponse> =
+
+    override suspend fun login(
+        email: String,
+        password: String,
+        isLoggedInWithFirebase: Boolean
+    ): Flow<LoginRepositoryResponse> =
         flow {
-            val requestUserLogin = RequestUserLogin(
-                email = email,
-                password = password,
-                isLoggedInWithFirebase = isLoggedInWithFirebase
-            )
+            val requestUserLogin =
+                RequestUserLogin(
+                    email = email,
+                    password = password,
+                    isLoggedInWithFirebase = isLoggedInWithFirebase
+                )
             apiClient.login(requestUserLogin).let { response ->
                 if (response.isSuccessful) {
                     emit(
@@ -114,7 +127,8 @@ class RegisterRepositoryImpl(
 
 sealed class LoginRepositoryResponse {
     data class Success(val response: ResponseLogin?) : LoginRepositoryResponse()
-    data class Failed(val responseUserError: ResponseUserError) : LoginRepositoryResponse()
+    data class Failed(val responseUserError: ResponseUserError) :
+        LoginRepositoryResponse()
 }
 
 sealed class PostLoginWithTokenRepositoryResponse {
@@ -126,8 +140,11 @@ sealed class PostLoginWithTokenRepositoryResponse {
 }
 
 sealed class SignupRepositoryPartialState {
-    data class Success(val response: ResponseSignup?) : SignupRepositoryPartialState()
-    data class Failed(val responseUserError: ResponseUserError) : SignupRepositoryPartialState()
+    data class Success(val response: ResponseSignup?) :
+        SignupRepositoryPartialState()
+
+    data class Failed(val responseUserError: ResponseUserError) :
+        SignupRepositoryPartialState()
 }
 
 sealed class GetJwtForSensitiveUserDataRepositoryResponse {

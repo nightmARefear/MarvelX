@@ -1,6 +1,6 @@
 package com.alexgreece45.marvelx.data.model.order
 
-import com.alexgreece45.marvelx.network_logic.models_api.order.ResponseOrderPreview
+import com.alexgreece45.marvelx.core.network.model.api.order.ResponseOrderPreview
 
 data class OrderPreviewData(
     val orderId: String,

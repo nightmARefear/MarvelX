@@ -1,6 +1,6 @@
 package com.alexgreece45.marvelx.data.model.myListing
 
-import com.alexgreece45.marvelx.network_logic.models_api.myListing.ResponseMyListing
+import com.alexgreece45.marvelx.core.network.model.api.myListing.ResponseMyListing
 
 data class MyListingData(
     val listingId: String,

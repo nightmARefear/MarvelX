@@ -31,7 +31,7 @@ import androidx.compose.ui.unit.dp
 import com.alexgreece45.marvelx.ui.theme.MarvelXTheme
 import com.alexgreece45.marvelx.ui.theme.values.customColors
 import com.alexgreece45.marvelx.util.HSpacer
-import com.alexgreece45.marvelx.util.constants.ConstantsSecurity
+import com.alexgreece45.marvelx.core.common.constants.ConstantsSecurity
 
 /**
  * This composable represents an `OTP` text-field capable of receiving 6 digits. Each digit is

@@ -3,9 +3,9 @@ package com.alexgreece45.marvelx.ui.screens.marketplace.listingDetailsScreen
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.configuration.models.DeepLinkWebUrl
-import com.alexgreece45.marvelx.controllers.AppLogger
-import com.alexgreece45.marvelx.controllers.PrefKeys
 import com.alexgreece45.marvelx.controllers.createListingWizard.CreateListingWizardController
+import com.alexgreece45.marvelx.core.common.logger.AppLogger
+import com.alexgreece45.marvelx.core.data.repositories.UserSessionRepository
 import com.alexgreece45.marvelx.domain.helper.InteractorPartialState
 import com.alexgreece45.marvelx.domain.interactors.GetProfileDetailsPartialState
 import com.alexgreece45.marvelx.domain.interactors.UserInteractor
@@ -19,13 +19,15 @@ import com.alexgreece45.marvelx.ui.screens.marketplace.mappers.ListingUiMapper
 import com.alexgreece45.marvelx.util.ResourceProvider
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import org.koin.android.annotation.KoinViewModel
 
+@KoinViewModel
 class ListingDetailsViewModel(
     private val listingInteractor: ListingInteractor,
     private val listingUiMapper: ListingUiMapper,
     private val userInteractor: UserInteractor,
     private val resourceProvider: ResourceProvider,
-    private val prefKeys: PrefKeys,
+    private val userSessionRepository: UserSessionRepository,
     private val createListingWizardController: CreateListingWizardController,
     private val cartInteractor: CartInteractor,
     private val appLogger: AppLogger,
@@ -275,7 +277,7 @@ class ListingDetailsViewModel(
                 CreateListingWizardMode.CREATE -> {
                     listingUiMapper.toUi(
                         createListingUi = createListingWizardController.createListingUi,
-                        currentUserId = prefKeys.getUserId()
+                        currentUserId = userSessionRepository.getUserId()
                     )
                 }
 
@@ -288,7 +290,7 @@ class ListingDetailsViewModel(
             }
 
             when (val sellerInfo =
-                userInteractor.getProfileDetails(prefKeys.getUserId())
+                userInteractor.getProfileDetails(userSessionRepository.getUserId())
                     .first()) { // TODO: Add offline way to get cached profile details.
                 is GetProfileDetailsPartialState.Error,
                 is GetProfileDetailsPartialState.Failed,
@@ -328,7 +330,10 @@ class ListingDetailsViewModel(
 
                 is InteractorPartialState.Success -> {
                     when (val listing =
-                        listingUiMapper.toUi(partialState.data, prefKeys.getUserId())) {
+                        listingUiMapper.toUi(
+                            partialState.data,
+                            userSessionRepository.getUserId()
+                        )) {
                         null -> {
                             showGenericErrorMessage()
                         }

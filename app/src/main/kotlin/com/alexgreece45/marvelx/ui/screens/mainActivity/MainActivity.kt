@@ -29,11 +29,9 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.controllers.AppLogger
-import com.alexgreece45.marvelx.controllers.PrefKeys
-import com.alexgreece45.marvelx.controllers.SecurityController
+import com.alexgreece45.marvelx.core.common.config.SecurityConfigLogic
+import com.alexgreece45.marvelx.core.common.logger.AppLogger
 import com.alexgreece45.marvelx.data.model.deepLink.DeepLinkAction
-import com.alexgreece45.marvelx.data.repository.UserRepository
 import com.alexgreece45.marvelx.notifications.constants.ConstantsNotifications
 import com.alexgreece45.marvelx.notifications.model.NotificationChannelData
 import com.alexgreece45.marvelx.notifications.model.NotificationChannelType
@@ -45,7 +43,6 @@ import com.alexgreece45.marvelx.ui.navigation.NavArgHelper
 import com.alexgreece45.marvelx.ui.navigation.Screen
 import com.alexgreece45.marvelx.ui.navigation.models.NavArg
 import com.alexgreece45.marvelx.ui.navigation.router.RouterHost
-import com.alexgreece45.marvelx.ui.screens.home.models.HomeAlertDialogErrorType
 import com.alexgreece45.marvelx.ui.screens.mainActivity.model.MainActivityEffect
 import com.alexgreece45.marvelx.ui.screens.mainActivity.model.MainActivityEvent
 import com.alexgreece45.marvelx.ui.screens.splash.SplashContract.AlertDialogErrorType.InsecureApplication
@@ -66,10 +63,8 @@ class MainActivity : ComponentActivity() {
 
     private val appLogger: AppLogger by inject()
     private val routerHost: RouterHost by inject()
-    private val securityController: SecurityController by inject()
+    private val securityConfigLogic: SecurityConfigLogic by inject()
     private val viewModel: MainActivityViewModel by viewModels()
-    private val prefKeys: PrefKeys by inject()
-    private val userRepository: UserRepository by inject()
     private val gson: Gson by inject()
 
     var pendingDeepLinkAction: DeepLinkAction? = null
@@ -93,11 +88,12 @@ class MainActivity : ComponentActivity() {
 
                     ObserveUiEffect(viewModel.uiEffect) { effect ->
                         when (effect) {
-                            is MainActivityEffect.Navigation.NavigateToHomeScreenWithSessionExpired -> {
-                                NavArgHelper.setArgument(
-                                    NavArg.HomeAlertDialogErrorType,
-                                    HomeAlertDialogErrorType.SessionExpired
-                                )
+                            is MainActivityEffect.Navigation.NavigateToHomeScreen -> {
+                                // TODO: Resolve.
+//                                NavArgHelper.setArgument(
+//                                    NavArg.HomeAlertDialogErrorType,
+//                                    HomeAlertDialogErrorType.SessionExpired
+//                                )
                                 routerHost.logout()
                             }
 
@@ -176,16 +172,14 @@ class MainActivity : ComponentActivity() {
         super.onUserInteraction()
 
         appLogger.d(loggerTag) { "onUserInteraction called." }
-        if (userRepository.isUserLoggedIn && prefKeys.shouldRememberUserSession()) {
-            viewModel.setEvent(MainActivityEvent.OnUserInteraction)
-        }
+        viewModel.setEvent(MainActivityEvent.OnUserInteraction)
     }
 
     override fun isInMultiWindowMode(): Boolean {
         appLogger.d(loggerTag) { "isInMultiWindowMode called." }
 
         val isInMultiWindowMode = super.isInMultiWindowMode()
-        if (isInMultiWindowMode && !securityController.shouldApplicationBeInMultiWindowMode()) {
+        if (isInMultiWindowMode && !securityConfigLogic.applicationMultiWindowMode) {
             viewModel.setEvent(MainActivityEvent.ApplicationInMultiWindowModeViolation)
         }
 
@@ -347,7 +341,7 @@ class MainActivity : ComponentActivity() {
      * Sets security flags for the [Window] of [MainActivity].
      */
     private fun setWindowSecurityFlags() {
-        if (securityController.isScreenCapturingBlocked()) {
+        if (securityConfigLogic.blockScreenCapture) {
             window.setFlags(
                 WindowManager.LayoutParams.FLAG_SECURE,
                 WindowManager.LayoutParams.FLAG_SECURE
@@ -355,20 +349,20 @@ class MainActivity : ComponentActivity() {
         }
 
         @SuppressLint("MissingPermission", "NewApi")
-        if (securityController.areOverlayWindowsHidden()) {
+        if (securityConfigLogic.hideOverlayWindows) {
             window.setHideOverlayWindows(true)
         }
     }
 
     /**
-     * Checks whether this application, through [SecurityController.shouldApplicationDrawOverlayWindows]
+     * Checks whether this application, through [SecurityConfigLogic.applicationDrawOverlayWindows]
      * should have the ability to draw overlay windows over other applications, and if it doesn't it
-     * checks if the application can has this ability. If it has it, then
+     * checks if the application has this ability. If it has it, then
      * [MainActivityEvent.ApplicationDrawOverlayWindowsViolation] is set.
      */
     @Composable
     private fun ShouldAppDrawOverlayWindows() {
-        if (securityController.shouldApplicationDrawOverlayWindows().not()) {
+        if (!securityConfigLogic.applicationDrawOverlayWindows) {
             LaunchedEffect(Unit) {
                 lifecycleScope.launch {
                     repeatOnLifecycle(Lifecycle.State.STARTED) {

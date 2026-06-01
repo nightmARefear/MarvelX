@@ -4,20 +4,17 @@ import android.content.Context
 import androidx.work.ListenableWorker
 import androidx.work.WorkerFactory
 import androidx.work.WorkerParameters
-import com.alexgreece45.marvelx.configuration.ConfigOauth
-import com.alexgreece45.marvelx.controllers.AppLogger
-import com.alexgreece45.marvelx.controllers.AuthController
-import com.alexgreece45.marvelx.dispatchers.IoDispatcher
+import com.alexgreece45.marvelx.core.common.config.ConfigOauthLogic
+import com.alexgreece45.marvelx.core.common.logger.AppLogger
+import com.alexgreece45.marvelx.core.data.repositories.UserSessionRepository
+import com.alexgreece45.marvelx.core.network.clients.RefreshTokenClient
 import com.alexgreece45.marvelx.domain.worker.RefreshTokenWorker
-import com.alexgreece45.marvelx.network_logic.clients.RefreshTokenClient
-import kotlin.coroutines.CoroutineContext
 
 class RefreshTokenWorkerFactory(
     private val refreshTokenClient: RefreshTokenClient,
-    private val authController: AuthController,
-    private val configOauth: ConfigOauth,
-    private val logger: AppLogger,
-    @IoDispatcher private val ioDispatcher: CoroutineContext,
+    private val userSessionRepository: UserSessionRepository,
+    private val configOauthLogic: ConfigOauthLogic,
+    private val logger: AppLogger
 ) : WorkerFactory() {
 
     override fun createWorker(
@@ -28,9 +25,8 @@ class RefreshTokenWorkerFactory(
         context = appContext,
         workerParameters = workerParameters,
         refreshTokenClient = refreshTokenClient,
-        authController = authController,
-        configOauth = configOauth,
-        logger = logger,
-        ioDispatcher = ioDispatcher,
+        userSessionRepository = userSessionRepository,
+        configOauthLogic = configOauthLogic,
+        logger = logger
     )
 }

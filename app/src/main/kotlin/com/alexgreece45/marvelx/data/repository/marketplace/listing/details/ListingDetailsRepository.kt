@@ -1,16 +1,18 @@
 package com.alexgreece45.marvelx.data.repository.marketplace.listing.details
 
-import com.alexgreece45.marvelx.controllers.AppLogger
+import com.alexgreece45.marvelx.core.common.dispatchers.model.IoDispatcher
+import com.alexgreece45.marvelx.core.common.extensions.LOGGER_TAG
+import com.alexgreece45.marvelx.core.common.logger.AppLogger
+import com.alexgreece45.marvelx.core.network.clients.ListingClient
+import com.alexgreece45.marvelx.core.network.model.api.marketplace.listing.ResponseListingEnumGeneric
+import com.alexgreece45.marvelx.core.network.model.generic.ApiResult
 import com.alexgreece45.marvelx.data.model.marketplace.listing.EnumGeneric
 import com.alexgreece45.marvelx.data.model.marketplace.listing.toData
-import com.alexgreece45.marvelx.dispatchers.IoDispatcher
-import com.alexgreece45.marvelx.network_logic.clients.ListingClient
-import com.alexgreece45.marvelx.network_logic.models_api.marketplace.listing.ResponseListingEnumGeneric
-import com.alexgreece45.marvelx.network_logic.models_generic.ApiResult
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
+import org.koin.core.annotation.Single
 import kotlin.coroutines.CoroutineContext
 
 interface ListingDetailsRepository {
@@ -27,13 +29,12 @@ interface ListingDetailsRepository {
     val listingCardVariants: List<EnumGeneric>
 }
 
+@Single
 class ListingDetailsRepositoryImpl(
     private val listingClient: ListingClient,
     @IoDispatcher private val ioDispatcher: CoroutineContext,
     private val appLogger: AppLogger
 ) : ListingDetailsRepository {
-
-    private val loggerTag = "ListingDetailsRepository"
 
     private val scope = CoroutineScope(SupervisorJob() + ioDispatcher)
 
@@ -110,15 +111,15 @@ class ListingDetailsRepositoryImpl(
                 val apiResult = operation.apiCall()
                 when (apiResult) {
                     is ApiResult.Error -> {
-                        appLogger.d(loggerTag) { "An error occurred whilst initializing the cached listing ${operation.operationName}.\n" + apiResult.errorBody }
+                        appLogger.d(LOGGER_TAG) { "An error occurred whilst initializing the cached listing ${operation.operationName}.\n" + apiResult.errorBody }
                     }
 
                     is ApiResult.Failed -> {
-                        appLogger.d(loggerTag) { "An error occurred whilst initializing the cached listing ${operation.operationName}.\n" + apiResult.failureMessage }
+                        appLogger.d(LOGGER_TAG) { "An error occurred whilst initializing the cached listing ${operation.operationName}.\n" + apiResult.failureMessage }
                     }
 
                     ApiResult.NetworkError -> {
-                        appLogger.d(loggerTag) { "A network error occurred whilst initializing the cached listing ${operation.operationName}." }
+                        appLogger.d(LOGGER_TAG) { "A network error occurred whilst initializing the cached listing ${operation.operationName}." }
                     }
 
                     is ApiResult.Success -> {
@@ -126,7 +127,7 @@ class ListingDetailsRepositoryImpl(
                             val listingEnums = apiResult.body.map { it.toData() }
                             operation.cachedVariable.value = listingEnums
                         } catch (e: Exception) {
-                            appLogger.d(loggerTag) { "An error occurred whilst initializing the cached listing ${operation.operationName}.\n" + e.localizedMessage }
+                            appLogger.d(LOGGER_TAG) { "An error occurred whilst initializing the cached listing ${operation.operationName}.\n" + e.localizedMessage }
                         }
                     }
                 }

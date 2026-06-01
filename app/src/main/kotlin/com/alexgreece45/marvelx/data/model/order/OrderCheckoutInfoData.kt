@@ -1,7 +1,7 @@
 package com.alexgreece45.marvelx.data.model.order
 
+import com.alexgreece45.marvelx.core.network.model.api.order.ResponseOrderCheckoutInfo
 import com.alexgreece45.marvelx.data.model.cardBrand.CardBrandData
-import com.alexgreece45.marvelx.network_logic.models_api.order.ResponseOrderCheckoutInfo
 
 data class OrderCheckoutInfoData(
     val firstName: String,

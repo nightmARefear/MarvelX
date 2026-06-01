@@ -1,8 +1,8 @@
 package com.alexgreece45.marvelx.domain.model_api.user.profileDetails
 
-import com.alexgreece45.marvelx.network_logic.models_api.user.Gender
-import com.alexgreece45.marvelx.network_logic.models_api.user.profileDetails.ResponseBasicProfileDetails
+import com.alexgreece45.marvelx.core.network.model.api.user.profileDetails.ResponseBasicProfileDetails
 import com.alexgreece45.marvelx.domain.model_generic.ReloadableImageUrlData
+import com.alexgreece45.marvelx.ui.model.Gender
 import com.alexgreece45.marvelx.util.extensions.toFullName
 
 data class BasicProfileDetailsDomain(

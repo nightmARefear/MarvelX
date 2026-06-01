@@ -1,10 +1,10 @@
 package com.alexgreece45.marvelx.domain.model_api.user.profileDetails
 
+import com.alexgreece45.marvelx.core.network.model.api.user.profileDetails.ResponseProfileDetails
 import com.alexgreece45.marvelx.domain.model_api.user.privacySettings.PrivacySettingsDomain
 import com.alexgreece45.marvelx.domain.model_api.user.privacySettings.toPrivacySettingsDomain
 import com.alexgreece45.marvelx.domain.model_generic.ReloadableImageUrlData
-import com.alexgreece45.marvelx.network_logic.models_api.user.Gender
-import com.alexgreece45.marvelx.network_logic.models_api.user.profileDetails.ResponseProfileDetails
+import com.alexgreece45.marvelx.ui.model.Gender
 
 /**
  * The profile details of a user. If [isDifferentUser] is `true` then that means that the data is

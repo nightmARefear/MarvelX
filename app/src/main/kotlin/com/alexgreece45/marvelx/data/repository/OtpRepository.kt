@@ -1,25 +1,28 @@
 package com.alexgreece45.marvelx.data.repository
 
-import com.alexgreece45.marvelx.network_logic.clients.ApiClient
-import com.alexgreece45.marvelx.network_logic.models_api.otp.OtpRequest
-import com.alexgreece45.marvelx.network_logic.models_api.otp.OtpResponseError
-import com.alexgreece45.marvelx.network_logic.models_api.otp.OtpResponseSuccess
-import com.alexgreece45.marvelx.network_logic.models_api.resendOtp.RequestResendOtp
-import com.alexgreece45.marvelx.network_logic.models_api.resendOtp.ResponseResendOtpFailed
-import com.alexgreece45.marvelx.network_logic.models_api.resendOtp.ResponseResendOtpSuccess
+import com.alexgreece45.marvelx.core.network.clients.ApiClient
+import com.alexgreece45.marvelx.core.network.model.api.otp.OtpRequest
+import com.alexgreece45.marvelx.core.network.model.api.otp.OtpResponseError
+import com.alexgreece45.marvelx.core.network.model.api.otp.OtpResponseSuccess
+import com.alexgreece45.marvelx.core.network.model.api.resendOtp.RequestResendOtp
+import com.alexgreece45.marvelx.core.network.model.api.resendOtp.ResponseResendOtpFailed
+import com.alexgreece45.marvelx.core.network.model.api.resendOtp.ResponseResendOtpSuccess
 import com.google.gson.Gson
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import org.koin.core.annotation.Single
 
 interface OtpRepository {
     suspend fun validateOtp(userId: String, otp: String): Flow<ValidateOtpRepositoryResponse>
     suspend fun resendOtp(requestResendOtp: RequestResendOtp): Flow<ResendOtpRepositoryResponse>
 }
 
+@Single
 class OtpRepositoryImpl(
     private val apiClient: ApiClient,
     private val gson: Gson
 ) : OtpRepository {
+
     override suspend fun validateOtp(
         userId: String,
         otp: String

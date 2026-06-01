@@ -1,24 +1,29 @@
 package com.alexgreece45.marvelx.controllers
 
-import com.alexgreece45.marvelx.configuration.ConfigLogic
 import com.alexgreece45.marvelx.controllers.model.websocket.WebsocketOnMessageReceivedPartialState
 import com.alexgreece45.marvelx.controllers.model.websocket.WebsocketRequestType
 import com.alexgreece45.marvelx.controllers.model.websocket.WebsocketSendRequestPartialState
 import com.alexgreece45.marvelx.controllers.model.websocket.WebsocketSendRequestPartialState.Failed
 import com.alexgreece45.marvelx.controllers.model.websocket.WebsocketSendRequestPartialState.Success
 import com.alexgreece45.marvelx.controllers.model.websocket.WebsocketTerminationCode
-import com.alexgreece45.marvelx.dispatchers.IoDispatcher
-import com.alexgreece45.marvelx.network_logic.models_websocket.RequestWebsocket
-import com.alexgreece45.marvelx.util.constants.ConstantsSecurity
+import com.alexgreece45.marvelx.controllers.model.websocket.toResponse
+import com.alexgreece45.marvelx.core.common.config.ConfigLogic
+import com.alexgreece45.marvelx.core.common.config.WebsocketConfigLogic
+import com.alexgreece45.marvelx.core.common.constants.ConstantsSecurity
+import com.alexgreece45.marvelx.core.common.dispatchers.model.IoDispatcher
+import com.alexgreece45.marvelx.core.common.logger.AppLogger
+import com.alexgreece45.marvelx.core.data.repositories.UserSessionRepository
+import com.alexgreece45.marvelx.core.network.model.websocket.RequestWebsocket
 import com.google.gson.Gson
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.WebSocket
 import okhttp3.WebSocketListener
+import org.koin.core.annotation.Single
 import java.util.UUID
 import kotlin.coroutines.CoroutineContext
 
@@ -31,7 +36,7 @@ interface WebsocketController {
     /**
      * Initializes / opens the websocket connection.
      */
-    fun init()
+    suspend fun init()
 
     /**
      * Sets the websocket listener to the given [webSocketListener].
@@ -56,14 +61,17 @@ interface WebsocketController {
     suspend fun onMessageReceived(websocketOnMessageReceivedPartialState: WebsocketOnMessageReceivedPartialState)
 }
 
+@Single
 class WebsocketControllerImpl(
     private val configLogic: ConfigLogic,
-    private val okHttpClient: OkHttpClient,
-    private val authController: AuthController,
+    private val websocketConfigLogic: WebsocketConfigLogic,
+//    @WebSocketOkHttpClient private val okHttpClient: OkHttpClient,
+    private val userSessionRepository: UserSessionRepository,
     private val appLogger: AppLogger,
     private val gson: Gson,
     @IoDispatcher private val ioDispatcher: CoroutineContext,
 ) : WebsocketController {
+
     /**
      * The websocket client listener.
      */
@@ -77,25 +85,25 @@ class WebsocketControllerImpl(
     private val websocketReceivedMessage: MutableSharedFlow<WebsocketOnMessageReceivedPartialState> =
         MutableSharedFlow()
 
-    override fun init() {
+    override suspend fun init() {
         return // TODO: To be reviewed in the future.
 
         // Ensures that the websocket client doesn't get re-initialized.
         if (webSocket != null) return
 
         val request = Request.Builder()
-            .url(configLogic.websocketUrl)
+            .url(websocketConfigLogic.websocketUrl)
             .addHeader(
                 name = ConstantsSecurity.HeaderName.UserAgent.name,
                 value = ConstantsSecurity.HeaderValue.APP_USER_AGENT
             )
             .addHeader(
                 name = ConstantsSecurity.HeaderName.Authorization.name,
-                value = authController.getRefreshToken().orEmpty()
+                value = userSessionRepository.getRefreshToken().orEmpty()
             )
             .build()
 
-        webSocket = okHttpClient.newWebSocket(request, webSocketListener)
+//        webSocket = okHttpClient.newWebSocket(request, webSocketListener)
     }
 
     override fun setWebSocketListener(webSocketListener: WebSocketListener) {
@@ -119,11 +127,11 @@ class WebsocketControllerImpl(
             val requestId = UUID.randomUUID()
             val requestWebsocket = RequestWebsocket(
                 requestId = requestId,
-                requestType = websocketRequestType
+                requestType = websocketRequestType.toResponse()
             )
             sendMessage(gson.toJson(requestWebsocket))
 
-            coroutineScope {
+            withContext(ioDispatcher) {
                 websocketReceivedMessage.collect {
                     when (it) {
                         is WebsocketOnMessageReceivedPartialState.Failed -> {

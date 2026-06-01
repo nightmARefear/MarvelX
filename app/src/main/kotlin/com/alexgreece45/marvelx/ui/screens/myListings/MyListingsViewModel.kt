@@ -13,7 +13,9 @@ import com.alexgreece45.marvelx.util.ResourceProvider
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import org.koin.android.annotation.KoinViewModel
 
+@KoinViewModel
 class MyListingsViewModel(
     private val listingInteractor: ListingInteractor,
     private val resourceProvider: ResourceProvider,

@@ -10,7 +10,9 @@ import com.alexgreece45.marvelx.util.Form
 import com.alexgreece45.marvelx.util.FormValidator
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.Rule
+import org.koin.android.annotation.KoinViewModel
 
+@KoinViewModel
 class CheckoutShippingDetailsViewModel(
     private val resourceProvider: ResourceProvider,
     private val formValidator: FormValidator,

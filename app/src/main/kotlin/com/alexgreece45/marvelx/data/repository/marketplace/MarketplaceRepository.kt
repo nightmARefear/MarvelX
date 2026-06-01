@@ -1,11 +1,12 @@
 package com.alexgreece45.marvelx.data.repository.marketplace
 
+import com.alexgreece45.marvelx.core.common.dispatchers.model.IoDispatcher
+import com.alexgreece45.marvelx.core.network.clients.ListingClient
+import com.alexgreece45.marvelx.core.network.model.api.marketplace.ResponseMarketplace
 import com.alexgreece45.marvelx.data.repository.helper.RepositoryResult
 import com.alexgreece45.marvelx.data.repository.helper.handleApiResultNoTransformationWithData
-import com.alexgreece45.marvelx.dispatchers.IoDispatcher
-import com.alexgreece45.marvelx.network_logic.clients.ListingClient
-import com.alexgreece45.marvelx.network_logic.models_api.marketplace.ResponseMarketplace
 import kotlinx.coroutines.flow.first
+import org.koin.core.annotation.Single
 import kotlin.coroutines.CoroutineContext
 
 interface MarketplaceRepository {
@@ -13,6 +14,7 @@ interface MarketplaceRepository {
     suspend fun getMarketplaceInfo(): RepositoryResult<ResponseMarketplace>
 }
 
+@Single
 class MarketplaceRepositoryImpl(
     private val listingClient: ListingClient,
     @IoDispatcher private val ioDispatcher: CoroutineContext

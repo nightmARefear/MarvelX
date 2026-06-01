@@ -1,5 +1,10 @@
 package com.alexgreece45.marvelx.data.repository.marketplace.listing
 
+import com.alexgreece45.marvelx.core.common.dispatchers.model.IoDispatcher
+import com.alexgreece45.marvelx.core.network.clients.ListingClient
+import com.alexgreece45.marvelx.core.network.model.api.marketplace.listing.RequestUpdateListing
+import com.alexgreece45.marvelx.core.network.model.api.marketplace.listing.ResponseListingId
+import com.alexgreece45.marvelx.core.network.model.api.marketplace.listing.ResponseListingPreview
 import com.alexgreece45.marvelx.data.mappers.ListingDataMapper
 import com.alexgreece45.marvelx.data.model.marketplace.listing.ListingData
 import com.alexgreece45.marvelx.data.model.marketplace.listing.ListingPreviewData
@@ -9,13 +14,9 @@ import com.alexgreece45.marvelx.data.model.myListing.toData
 import com.alexgreece45.marvelx.data.repository.helper.RepositoryResult
 import com.alexgreece45.marvelx.data.repository.helper.handleApiResult
 import com.alexgreece45.marvelx.data.repository.helper.handleApiResultNoTransformationWithData
-import com.alexgreece45.marvelx.dispatchers.IoDispatcher
-import com.alexgreece45.marvelx.network_logic.clients.ListingClient
-import com.alexgreece45.marvelx.network_logic.models_api.marketplace.listing.RequestUpdateListing
-import com.alexgreece45.marvelx.network_logic.models_api.marketplace.listing.ResponseListingId
-import com.alexgreece45.marvelx.network_logic.models_api.marketplace.listing.ResponseListingPreview
 import kotlinx.coroutines.flow.first
 import okhttp3.MultipartBody
+import org.koin.core.annotation.Single
 import kotlin.coroutines.CoroutineContext
 
 interface ListingRepository {
@@ -45,6 +46,7 @@ interface ListingRepository {
     suspend fun getFavoriteListings(): RepositoryResult<List<ResponseListingPreview>>
 }
 
+@Single
 class ListingRepositoryImpl(
     private val listingClient: ListingClient,
     @IoDispatcher private val ioDispatcher: CoroutineContext,

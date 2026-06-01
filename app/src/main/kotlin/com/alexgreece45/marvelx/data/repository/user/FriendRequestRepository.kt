@@ -1,14 +1,14 @@
 package com.alexgreece45.marvelx.data.repository.user
 
+import com.alexgreece45.marvelx.core.common.dispatchers.model.IoDispatcher
 import com.alexgreece45.marvelx.data.repository.helper.RepositoryResult
 import com.alexgreece45.marvelx.data.repository.helper.handleApiResultNoTransformation
 import com.alexgreece45.marvelx.data.repository.helper.handleApiResultNoTransformationWithData
-import com.alexgreece45.marvelx.dispatchers.IoDispatcher
-import com.alexgreece45.marvelx.network_logic.clients.ApiClient
-import com.alexgreece45.marvelx.network_logic.models_api.user.incomingFriendRequest.ResponseIncomingFriendRequest
+import com.alexgreece45.marvelx.core.network.clients.ApiClient
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
+import org.koin.core.annotation.Single
 import kotlin.coroutines.CoroutineContext
 
 interface FriendRequestRepository {
@@ -16,18 +16,19 @@ interface FriendRequestRepository {
     /**
      * Returns the incoming friend requests of the current user.
      */
-    suspend fun getIncomingFriendRequests(): Flow<RepositoryResult<List<ResponseIncomingFriendRequest>>>
+    suspend fun getIncomingFriendRequests(): Flow<RepositoryResult<List<com.alexgreece45.marvelx.core.network.model.api.user.incomingFriendRequest.ResponseIncomingFriendRequest>>>
     suspend fun sendFriendRequest(userId: String): Flow<Boolean>
     suspend fun acceptFriendRequest(userId: String): Flow<Boolean>
     suspend fun deleteFriendRequest(userId: String, type: String): Flow<Boolean>
 }
 
+@Single
 class FriendRequestRepositoryImpl(
     private val apiClient: ApiClient,
     @IoDispatcher private val ioDispatcher: CoroutineContext
 ) : FriendRequestRepository {
 
-    override suspend fun getIncomingFriendRequests(): Flow<RepositoryResult<List<ResponseIncomingFriendRequest>>> =
+    override suspend fun getIncomingFriendRequests(): Flow<RepositoryResult<List<com.alexgreece45.marvelx.core.network.model.api.user.incomingFriendRequest.ResponseIncomingFriendRequest>>> =
         flow {
             emitAll(
                 handleApiResultNoTransformationWithData(

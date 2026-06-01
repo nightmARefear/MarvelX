@@ -1,35 +1,29 @@
 package com.alexgreece45.marvelx.ui.screens.settings
 
-import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.BuildConfig
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.domain.interactors.LoginInteractor
-import com.alexgreece45.marvelx.domain.interactors.LogoutPartialState
+import com.alexgreece45.marvelx.core.network.managers.SessionManager
+import com.alexgreece45.marvelx.core.network.managers.model.LogoutReason
 import com.alexgreece45.marvelx.mvi.BaseViewModel
 import com.alexgreece45.marvelx.ui.components.IconData
 import com.alexgreece45.marvelx.ui.components.sections.model.SectionHeaderData
 import com.alexgreece45.marvelx.ui.screens.settings.model.SettingsContract
 import com.alexgreece45.marvelx.util.ResourceProvider
-import kotlinx.coroutines.launch
+import org.koin.android.annotation.KoinViewModel
 
+@KoinViewModel
 class SettingsViewModel(
     private val resourceProvider: ResourceProvider,
-    private val loginInteractor: LoginInteractor,
+    private val sessionManager: SessionManager,
 ) : BaseViewModel<SettingsContract.Event, SettingsContract.State, SettingsContract.Effect>() {
 
     override fun setInitialState(): SettingsContract.State = SettingsContract.State()
 
     override fun handleEvents(event: SettingsContract.Event) {
         when (event) {
-            SettingsContract.Event.Init -> {
-                init()
-            }
+            SettingsContract.Event.Init -> init()
 
-            SettingsContract.Event.OnBackClicked -> {
-                setEffect {
-                    SettingsContract.Effect.Navigation.GoBack
-                }
-            }
+            SettingsContract.Event.OnBackClicked -> onBackClicked()
         }
     }
 
@@ -69,7 +63,9 @@ class SettingsViewModel(
                             contentDescription = R.string.content_description_ic_logout
                         ),
                         isNavigable = false,
-                        onClick = ::logout
+                        onClick = {
+                            sessionManager.triggerLogout(LogoutReason.USER_TRIGGERED)
+                        }
                     ),
                 ),
                 appVersion = BuildConfig.VERSION_NAME
@@ -77,37 +73,7 @@ class SettingsViewModel(
         }
     }
 
-    /**
-     * Logouts the user.
-     */
-    private fun logout() {
-        setState {
-            copy(
-                isLoading = true
-            )
-        }
-        viewModelScope.launch {
-            loginInteractor.logout().collect { logoutPartialState ->
-                when (logoutPartialState) {
-                    is LogoutPartialState.Failed -> {
-                        setEffect {
-                            SettingsContract.Effect.ShowToast(
-                                toastMessage = logoutPartialState.errorMessage
-                            )
-                        }
-
-                        setEffect {
-                            SettingsContract.Effect.Navigation.NavigateToHomeScreen
-                        }
-                    }
-
-                    LogoutPartialState.Success -> {
-                        setEffect {
-                            SettingsContract.Effect.Navigation.NavigateToHomeScreen
-                        }
-                    }
-                }
-            }
-        }
+    private fun onBackClicked() {
+        setEffect { SettingsContract.Effect.Navigation.GoBack }
     }
 }

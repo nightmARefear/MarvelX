@@ -1,10 +1,10 @@
 package com.alexgreece45.marvelx.data.model.order
 
+import com.alexgreece45.marvelx.core.network.model.api.order.ResponseOrder
 import com.alexgreece45.marvelx.data.model.order.item.OrderItemData
 import com.alexgreece45.marvelx.data.model.order.item.toData
 import com.alexgreece45.marvelx.data.model.order.tracking.OrderTrackingInfoData
 import com.alexgreece45.marvelx.data.model.order.tracking.toData
-import com.alexgreece45.marvelx.network_logic.models_api.order.ResponseOrder
 
 data class OrderData(
     val orderId: String,

@@ -8,8 +8,10 @@ import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.model
 import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.model.CreateListingWizardMode
 import com.alexgreece45.marvelx.ui.screens.marketplace.model.ListingDetailsUi
 import com.alexgreece45.marvelx.ui.screens.marketplace.model.ListingUi
+import org.koin.core.annotation.Single
 import java.math.BigDecimal
 
+@Single
 class CreateListingWizardController {
 
     private var _wizardMode: CreateListingWizardMode = CreateListingWizardMode.CREATE

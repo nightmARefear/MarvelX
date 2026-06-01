@@ -1,12 +1,12 @@
 package com.alexgreece45.marvelx.domain.interactors.user
 
+import com.alexgreece45.marvelx.core.network.model.api.user.incomingFriendRequest.ResponseIncomingFriendRequest
 import com.alexgreece45.marvelx.data.repository.user.FriendRequestRepository
 import com.alexgreece45.marvelx.domain.helper.InteractorPartialState
 import com.alexgreece45.marvelx.domain.helper.handleRepositoryResult
 import com.alexgreece45.marvelx.domain.model_api.user.friendRequest.DeleteFriendRequestType
 import com.alexgreece45.marvelx.domain.model_api.user.friendRequest.IncomingFriendRequestDomain
 import com.alexgreece45.marvelx.domain.model_api.user.friendRequest.toIncomingFriendRequestList
-import com.alexgreece45.marvelx.network_logic.models_api.user.incomingFriendRequest.ResponseIncomingFriendRequest
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow

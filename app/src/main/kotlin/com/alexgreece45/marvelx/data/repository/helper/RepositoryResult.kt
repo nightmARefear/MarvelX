@@ -20,3 +20,18 @@ sealed class RepositoryResult<out T> {
      */
     data object NetworkError : RepositoryResult<Nothing>()
 }
+
+inline fun <T> RepositoryResult<T>.onSuccess(action: (T) -> Unit): RepositoryResult<T> {
+    if (this is RepositoryResult.Success) action(data)
+    return this
+}
+
+inline fun <T> RepositoryResult<T>.onFailed(action: (String) -> Unit): RepositoryResult<T> {
+    if (this is RepositoryResult.Failed) action(failureMessage)
+    return this
+}
+
+inline fun <T> RepositoryResult<T>.onNetworkError(action: () -> Unit): RepositoryResult<T> {
+    if (this is RepositoryResult.NetworkError) action()
+    return this
+}

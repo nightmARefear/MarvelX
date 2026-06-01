@@ -1,7 +1,6 @@
 package com.alexgreece45.marvelx.data.model.marketplace.listing
 
-import com.alexgreece45.marvelx.network_logic.models_api.marketplace.listing.ResponseListing
-import com.alexgreece45.marvelx.network_logic.models_api.marketplace.listing.details.ResponseListingDetails
+import com.alexgreece45.marvelx.core.network.model.api.marketplace.listing.details.ResponseListingDetails
 
 /**
  * The [ResponseListing] model of the data layer.

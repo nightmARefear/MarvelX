@@ -10,6 +10,7 @@ import com.alexgreece45.marvelx.mvi.BaseState
 import com.alexgreece45.marvelx.mvi.BaseViewModel
 import com.alexgreece45.marvelx.ui.components.SortingType
 import kotlinx.coroutines.launch
+import org.koin.android.annotation.KoinViewModel
 
 data class AllCharacterComicsScreenErrorView(
     val errorMessage: String,
@@ -62,6 +63,7 @@ sealed class AllCharacterComicsEffect : BaseEffect {
     }
 }
 
+@KoinViewModel
 class AllCharacterComicsViewModel(
     private val interactor: CharacterInteractor
 ) : BaseViewModel<AllCharacterComicsEvent, AllCharacterComicsState, AllCharacterComicsEffect>() {

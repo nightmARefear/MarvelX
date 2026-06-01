@@ -1,6 +1,6 @@
 package com.alexgreece45.marvelx.data.model.marketplace.listing
 
-import com.alexgreece45.marvelx.network_logic.models_api.marketplace.listing.ResponseListingEnumGeneric
+import com.alexgreece45.marvelx.core.network.model.api.marketplace.listing.ResponseListingEnumGeneric
 
 /**
  * A generic model for enum-related values.

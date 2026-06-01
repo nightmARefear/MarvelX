@@ -1,7 +1,7 @@
 package com.alexgreece45.marvelx.ui.screens.cart.mappers
 
 import com.alexgreece45.marvelx.configuration.ConfigPriceLogic
-import com.alexgreece45.marvelx.controllers.AppLogger
+import com.alexgreece45.marvelx.core.common.logger.AppLogger
 import com.alexgreece45.marvelx.domain.model_api.marketplace.listing.ListingPreviewDomain
 import com.alexgreece45.marvelx.ui.screens.cart.model.CartItemUi
 import com.alexgreece45.marvelx.util.extensions.formatPrice

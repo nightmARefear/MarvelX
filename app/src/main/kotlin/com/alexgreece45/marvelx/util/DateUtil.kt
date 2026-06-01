@@ -1,6 +1,6 @@
 package com.alexgreece45.marvelx.util
 
-import com.alexgreece45.marvelx.util.extensions.pad
+import com.alexgreece45.marvelx.core.common.extensions.pad
 import java.time.Instant
 import java.time.LocalDate
 import java.time.YearMonth

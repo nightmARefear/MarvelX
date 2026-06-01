@@ -2,17 +2,19 @@ package com.alexgreece45.marvelx.ui.screens.profile.profileDetails.stats
 
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.core.network.model.api.user.friend.ResponseFriend
 import com.alexgreece45.marvelx.data.repository.helper.RepositoryResult
 import com.alexgreece45.marvelx.data.repository.user.FriendRepository
 import com.alexgreece45.marvelx.mvi.BaseViewModel
-import com.alexgreece45.marvelx.network_logic.models_api.user.friend.ResponseFriend
 import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.stats.model.ProfileDetailsStatsContract
 import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.stats.model.ProfileDetailsStatsErrorView
 import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.stats.model.ProfileDetailsStatsTab
 import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.stats.model.toProfileDetailsStatsItem
 import com.alexgreece45.marvelx.util.ResourceProvider
 import kotlinx.coroutines.launch
+import org.koin.android.annotation.KoinViewModel
 
+@KoinViewModel
 class ProfileDetailsStatsViewModel(
     private val resourceProvider: ResourceProvider,
     private val friendRepository: FriendRepository

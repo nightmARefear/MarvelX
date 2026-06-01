@@ -1,6 +1,6 @@
 package com.alexgreece45.marvelx.data.model.order
 
-import com.alexgreece45.marvelx.network_logic.models_api.order.ResponseOrderEstimatedDeliveryDateRange
+import com.alexgreece45.marvelx.core.network.model.api.order.ResponseOrderEstimatedDeliveryDateRange
 
 data class OrderEstimatedDeliveryDateRangeData(
     val from: String,

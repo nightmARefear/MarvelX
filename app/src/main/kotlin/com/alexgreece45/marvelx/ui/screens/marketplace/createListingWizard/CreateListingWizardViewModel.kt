@@ -2,8 +2,8 @@ package com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard
 
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.controllers.PrefKeys
 import com.alexgreece45.marvelx.controllers.createListingWizard.CreateListingWizardController
+import com.alexgreece45.marvelx.core.data.repositories.UserSessionRepository
 import com.alexgreece45.marvelx.domain.helper.InteractorPartialState
 import com.alexgreece45.marvelx.domain.interactors.marketplace.listing.ListingInteractor
 import com.alexgreece45.marvelx.domain.model_api.marketplace.listing.UpdateListingDomain
@@ -23,14 +23,16 @@ import com.alexgreece45.marvelx.ui.screens.marketplace.mappers.ListingUiMapper
 import com.alexgreece45.marvelx.ui.screens.marketplace.model.UpdateListingBasicDetails
 import com.alexgreece45.marvelx.util.ResourceProvider
 import kotlinx.coroutines.launch
+import org.koin.android.annotation.KoinViewModel
 
+@KoinViewModel
 class CreateListingWizardViewModel(
     private val listingInteractor: ListingInteractor,
     private val resourceProvider: ResourceProvider,
     private val listingUiMapper: ListingUiMapper,
-    private val prefKeys: PrefKeys,
     private val createListingWizardController: CreateListingWizardController,
     private val listingDetailsUiMapper: ListingDetailsUiMapper,
+    private val userSessionRepository: UserSessionRepository
 ) : BaseViewModel<CreateListingWizardContract.Event, CreateListingWizardContract.State, CreateListingWizardContract.Effect>() {
 
     override fun setInitialState(): CreateListingWizardContract.State =
@@ -364,7 +366,7 @@ class CreateListingWizardViewModel(
                 is InteractorPartialState.Success -> {
                     val listingUi = listingUiMapper.toUi(
                         listing = partialState.data,
-                        currentUserId = prefKeys.getUserId()
+                        currentUserId = userSessionRepository.getUserId()
                     )
 
                     setState {

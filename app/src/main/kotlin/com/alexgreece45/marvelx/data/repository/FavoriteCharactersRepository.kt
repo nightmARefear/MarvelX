@@ -2,6 +2,7 @@ package com.alexgreece45.marvelx.data.repository
 
 import com.alexgreece45.marvelx.database.FavoriteCharacterEntity
 import com.alexgreece45.marvelx.database.FavoriteCharactersDao
+import org.koin.core.annotation.Single
 
 interface FavoriteCharactersRepository {
     suspend fun insertCharacters(vararg favoriteCharacterEntity: FavoriteCharacterEntity): LongArray
@@ -17,9 +18,11 @@ interface FavoriteCharactersRepository {
     suspend fun getCharacterById(characterId: Int): FavoriteCharacterEntity
 }
 
+@Single
 class FavoriteCharactersRepositoryImpl(
     private val favoriteCharactersDao: FavoriteCharactersDao
 ) : FavoriteCharactersRepository {
+
     override suspend fun insertCharacters(vararg favoriteCharacterEntity: FavoriteCharacterEntity): LongArray =
         favoriteCharactersDao.insertCharacters(*favoriteCharacterEntity)
 

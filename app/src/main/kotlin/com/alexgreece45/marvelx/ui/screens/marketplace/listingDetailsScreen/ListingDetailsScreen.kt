@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.ButtonDefaults
-import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -29,6 +28,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.core.common.extensions.toListingFormat
 import com.alexgreece45.marvelx.data.model.marketplace.listing.EnumGeneric
 import com.alexgreece45.marvelx.domain.model_api.marketplace.listing.ListingDetailsDomain
 import com.alexgreece45.marvelx.domain.model_api.marketplace.listing.ListingDimensions
@@ -38,7 +38,6 @@ import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.ProfileDeta
 import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.RelationshipStatusDomain
 import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.UserStatsDomain
 import com.alexgreece45.marvelx.domain.model_generic.ReloadableImageUrlData
-import com.alexgreece45.marvelx.network_logic.models_api.user.Gender
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.GenericErrorScreen
 import com.alexgreece45.marvelx.ui.components.IconData
@@ -50,6 +49,7 @@ import com.alexgreece45.marvelx.ui.components.WrapButton
 import com.alexgreece45.marvelx.ui.components.WrapHorizontalPager
 import com.alexgreece45.marvelx.ui.components.effect.ObserveUiEffect
 import com.alexgreece45.marvelx.ui.components.icons.ProcessingRequestIconLottie
+import com.alexgreece45.marvelx.ui.model.Gender
 import com.alexgreece45.marvelx.ui.model_generic.BigDecimalUi
 import com.alexgreece45.marvelx.ui.model_generic.InstantUi
 import com.alexgreece45.marvelx.ui.screens.marketplace.components.ListingImage
@@ -71,7 +71,6 @@ import com.alexgreece45.marvelx.util.extensions.clickableNoRipple
 import com.alexgreece45.marvelx.util.extensions.formatPrice
 import com.alexgreece45.marvelx.util.extensions.shareContentUrl
 import com.alexgreece45.marvelx.util.extensions.showToast
-import com.alexgreece45.marvelx.util.extensions.toListingFormat
 import com.alexgreece45.marvelx.util.safeLetComposable
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
@@ -151,7 +150,7 @@ fun ListingDetailsScreen(
                 GenericErrorScreen(
                     errorMessage = stringResource(R.string.screen_listing_details_error_loading_listing),
                     modifier = Modifier.fillMaxSize(),
-                    onRetryClick = { onEvent(ListingDetailsContract.Event.OnErrorRetryButtonClicked) }
+                    onErrorButtonClicked = { onEvent(ListingDetailsContract.Event.OnErrorRetryButtonClicked) }
                 )
                 return@ContentScreen
             }
