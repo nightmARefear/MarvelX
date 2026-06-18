@@ -1,14 +1,14 @@
-package com.alexgreece45.marvelx.data.mappers
+package com.alexgreece45.marvelx.core.data.mappers
 
+import com.alexgreece45.marvelx.core.data.model.marketplace.listing.ListingCategoryCode
+import com.alexgreece45.marvelx.core.data.model.marketplace.listing.ListingData
 import com.alexgreece45.marvelx.core.network.model.api.marketplace.listing.ResponseListing
 import com.alexgreece45.marvelx.core.network.model.api.marketplace.listing.details.ResponseListingDetails
-import com.alexgreece45.marvelx.data.model.marketplace.listing.ListingCategoryCode
-import com.alexgreece45.marvelx.data.model.marketplace.listing.ListingData
 import com.google.gson.Gson
 import org.koin.core.annotation.Single
 
 @Single
-class ListingDataMapper(
+internal class ListingDataMapper(
     private val gson: Gson
 ) {
 

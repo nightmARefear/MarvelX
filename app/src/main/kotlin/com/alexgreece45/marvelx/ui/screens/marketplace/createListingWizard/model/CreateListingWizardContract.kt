@@ -1,7 +1,5 @@
 package com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.model
 
-import com.alexgreece45.marvelx.domain.model_generic.AttachedFileContentData
-import com.alexgreece45.marvelx.domain.model_generic.ReadFileContentData
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
@@ -16,9 +14,6 @@ sealed interface CreateListingWizardContract {
         data object OnBackButtonClicked : Event
         data object OnCloseButtonClicked : Event
         data object OnStickyBottomButtonClicked : Event
-
-        data class OnAttachedImagesContentRead(val readFileContentsData: List<ReadFileContentData>?) :
-            Event
 
         data class OnShowToastMessage(val message: String) : Event
 
@@ -59,8 +54,6 @@ sealed interface CreateListingWizardContract {
             data class NavigateToListingDetailsScreenAndExitWizard(val listingId: String) :
                 Navigation
         }
-
-        data class ReadFileContentData(val attachedImages: List<AttachedFileContentData>) : Effect
 
         data class InitBasicDetailsScreen(val updateListingBasicDetails: UpdateListingBasicDetails?) :
             Effect

@@ -20,34 +20,6 @@ import com.alexgreece45.marvelx.database.FavoriteCharactersDao
 import com.alexgreece45.marvelx.database.ListingCategoryDao
 import com.alexgreece45.marvelx.database.MarvelXDatabase
 import com.alexgreece45.marvelx.domain.di.DomainModule
-import com.alexgreece45.marvelx.domain.interactors.ChangePasswordInteractor
-import com.alexgreece45.marvelx.domain.interactors.ChangePasswordInteractorImpl
-import com.alexgreece45.marvelx.domain.interactors.CharacterInteractor
-import com.alexgreece45.marvelx.domain.interactors.CharacterInteractorImpl
-import com.alexgreece45.marvelx.domain.interactors.ComicInteractor
-import com.alexgreece45.marvelx.domain.interactors.ComicInteractorImpl
-import com.alexgreece45.marvelx.domain.interactors.ForgotPasswordInteractor
-import com.alexgreece45.marvelx.domain.interactors.ForgotPasswordInteractorImpl
-import com.alexgreece45.marvelx.domain.interactors.OtpInteractor
-import com.alexgreece45.marvelx.domain.interactors.OtpInteractorImpl
-import com.alexgreece45.marvelx.domain.interactors.RegisterInteractor
-import com.alexgreece45.marvelx.domain.interactors.RegisterInteractorImpl
-import com.alexgreece45.marvelx.domain.interactors.UserInteractor
-import com.alexgreece45.marvelx.domain.interactors.UserInteractorImpl
-import com.alexgreece45.marvelx.domain.interactors.cart.CartInteractor
-import com.alexgreece45.marvelx.domain.interactors.cart.CartInteractorImpl
-import com.alexgreece45.marvelx.domain.interactors.marketplace.MarketplaceInteractor
-import com.alexgreece45.marvelx.domain.interactors.marketplace.MarketplaceInteractorImpl
-import com.alexgreece45.marvelx.domain.interactors.marketplace.listing.ListingInteractor
-import com.alexgreece45.marvelx.domain.interactors.marketplace.listing.ListingInteractorImpl
-import com.alexgreece45.marvelx.domain.interactors.order.OrderInteractor
-import com.alexgreece45.marvelx.domain.interactors.order.OrderInteractorImpl
-import com.alexgreece45.marvelx.domain.interactors.user.BlockedUserInteractor
-import com.alexgreece45.marvelx.domain.interactors.user.BlockedUserInteractorImpl
-import com.alexgreece45.marvelx.domain.interactors.user.FriendInteractor
-import com.alexgreece45.marvelx.domain.interactors.user.FriendInteractorImpl
-import com.alexgreece45.marvelx.domain.interactors.user.FriendRequestInteractor
-import com.alexgreece45.marvelx.domain.interactors.user.FriendRequestInteractorImpl
 import com.alexgreece45.marvelx.domain.mappers.cart.CartSummaryDomainMapper
 import com.alexgreece45.marvelx.domain.mappers.marketplace.listing.ListingDomainMapper
 import com.alexgreece45.marvelx.domain.mappers.marketplace.listing.details.ListingDetailsDomainMapper
@@ -102,7 +74,6 @@ fun initKoin(marvelXApplication: MarvelXApplication) {
 
             DataModule().module,
             DomainModule().module,
-            interactorModule,
             mapperModule,
             ControllersModule().module,
             formValidatorModule,
@@ -132,42 +103,6 @@ private val databaseModule = module {
 
     single<FavoriteCharactersDao> { get<MarvelXDatabase>().favoriteCharactersDao }
     single<ListingCategoryDao> { get<MarvelXDatabase>().listingCategoryDao }
-}
-
-private val interactorModule = module {
-    factory<CharacterInteractor> { CharacterInteractorImpl(get(), get(), get(), get()) }
-    factory<ComicInteractor> { ComicInteractorImpl(get(), get(), get()) }
-//    factory<LoginInteractor> {
-//        LoginInteractorImpl(
-//            get(),
-//            get(),
-//            get(),
-//            get(),
-//            get(),
-//            get(),
-//            get(),
-//            get()
-//        )
-//    }
-    factory<UserInteractor> { UserInteractorImpl(get(), get(), get(), get()) }
-    factory<ForgotPasswordInteractor> { ForgotPasswordInteractorImpl(get(), get()) }
-    factory<ChangePasswordInteractor> { ChangePasswordInteractorImpl() }
-    factory<OtpInteractor> { OtpInteractorImpl(get(), get(), get()) }
-    factory<RegisterInteractor> { RegisterInteractorImpl(get(), get(), get()) }
-
-    // User interactors.
-    factory<FriendInteractor> { FriendInteractorImpl(get()) }
-    factory<FriendRequestInteractor> { FriendRequestInteractorImpl(get()) }
-    factory<BlockedUserInteractor> { BlockedUserInteractorImpl(get(), get(), get(), get()) }
-
-    // Marketplace interactors.
-    factory<MarketplaceInteractor> { MarketplaceInteractorImpl(get()) }
-    factory<ListingInteractor> { ListingInteractorImpl(get(), get()) }
-
-    // Cart interactors.
-    factory<CartInteractor> { CartInteractorImpl(get(), get()) }
-
-    factory<OrderInteractor> { OrderInteractorImpl(get()) }
 }
 
 private val mapperModule = module {

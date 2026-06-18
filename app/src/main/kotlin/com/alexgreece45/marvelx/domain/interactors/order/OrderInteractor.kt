@@ -8,6 +8,7 @@ import com.alexgreece45.marvelx.domain.model_api.order.OrderPreviewDomain
 import com.alexgreece45.marvelx.domain.model_api.order.item.OrderItemTrackingHistoryDomain
 import com.alexgreece45.marvelx.domain.model_api.order.item.toDomain
 import com.alexgreece45.marvelx.domain.model_api.order.toDomain
+import org.koin.core.annotation.Factory
 
 interface OrderInteractor {
 
@@ -21,7 +22,8 @@ interface OrderInteractor {
     suspend fun placeOrder(): InteractorPartialState<String>
 }
 
-class OrderInteractorImpl(
+@Factory
+internal class OrderInteractorImpl(
     private val orderRepository: OrderRepository
 ) : OrderInteractor {
 

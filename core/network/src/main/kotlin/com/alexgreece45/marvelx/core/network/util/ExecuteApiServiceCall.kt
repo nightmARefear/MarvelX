@@ -22,7 +22,7 @@ internal suspend fun <T : Any> executeApiServiceCall(apiCall: suspend () -> Resp
     } catch (_: IOException) {
         ApiResult.NetworkError
     } catch (e: Exception) {
-        ApiResult.Error(e.message.orEmpty())
+        ApiResult.Error(e.localizedMessage.orEmpty())
     }
 }
 
@@ -46,6 +46,6 @@ internal suspend fun executeApiServiceCallNoTransformation(apiCall: suspend () -
     } catch (_: IOException) {
         ApiResult.NetworkError
     } catch (e: Exception) {
-        ApiResult.Error(e.message.orEmpty())
+        ApiResult.Error(e.localizedMessage.orEmpty())
     }
 }

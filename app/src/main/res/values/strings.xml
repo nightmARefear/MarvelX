@@ -655,16 +655,28 @@
 
     <string name="screen_order_item_tracking_history_content_description_copy_tracking_id">copy tracking ID icon button</string>
 
-    <!-- `RequestReturnScreen` -->
-    <string name="screen_request_return_toolbar_title">Request Return</string>
+    // Request return screen
+    <string name="screen_request_item_return_toolbar_title">Request Return</string>
 
-    <string name="screen_request_return_reason_title">Return Reason</string>
+    <string name="screen_request_return_reason_label">Return Reason</string>
 
-    <string name="screen_request_return_description_title">Additional Details (Optional)</string>
-    <string name="screen_request_return_description_placeholder">Describe your return reason…</string>
-    <string name="screen_request_return_description_remaining_characters_label">remaining characters: %1$s/%2$s</string>
+    <string name="screen_request_item_return_checkbox_request_refund">Request refund</string>
 
-    <string name="screen_request_return_mandatory_field_label">mandatory field</string>
+    <string name="screen_request_item_return_description_title">Additional Details (Optional)</string>
+    <string name="screen_request_item_return_description_placeholder">Describe your return reason…</string>
+    <string name="screen_request_item_return_description_remaining_characters_label">remaining characters: %1$s/%2$s</string>
+
+    <string name="screen_request_item_return_mandatory_field_label">mandatory field</string>
+
+    <string name="screen_request_item_refund_toast_image_selection_failure">An error occurred whilst selecting the images</string>
+    <string name="screen_request_item_refund_toast_image_selection_none">No images were selected</string>
+
+    <string name="screen_request_item_return_refund_dialog_title">Important Refund Information</string>
+    <string name="screen_request_item_return_refund_dialog_error_message">Please note that submitting a refund request does not automatically guarantee eligibility. We will carefully inspect your item after it is returned to determine if a full or partial refund can be issued, based on its condition.</string>
+    <string name="screen_request_item_return_refund_dialog_button_negative">Cancel</string>
+    <string name="screen_request_item_return_refund_dialog_button_positive">Continue</string>
+
+    <string name="screen_request_return_description_error_max_characters">Description cannot be more than %1$s characters</string>
 
     <string name="screen_request_return_submit_button">Submit Return Request</string>
 
@@ -771,6 +783,16 @@
     <string name="order_item_return_reason_wrong_item">Wrong item received</string>
     <string name="order_item_return_reason_changed_mind">Changed my mind</string>
     <string name="order_item_return_reason_other">Other</string>
+
+    // `OrderItemReturnConditionUi` enum labels
+    <string name="order_item_return_condition_original_packaging_title">Unused with tags</string>
+    <string name="order_item_return_condition_original_packaging_description">Never used, original packaging intact</string>
+
+    <string name="order_item_return_condition_package_opened_title">Opened but unused</string>
+    <string name="order_item_return_condition_package_opened_description">Package opened but item not used</string>
+
+    <string name="order_item_return_condition_lightly_used_title">Gently used</string>
+    <string name="order_item_return_condition_lightly_used_description">Used once or twice, like new</string>
 
     // Input field errors
     <string name="input_field_error_blank_email">Email cannot be blank.</string>

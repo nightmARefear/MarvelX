@@ -11,10 +11,11 @@ import com.alexgreece45.marvelx.domain.model_api.otp.OtpResponseErrorDomain
 import com.alexgreece45.marvelx.domain.model_api.otp.toOtpResponseErrorDomain
 import com.alexgreece45.marvelx.domain.model_api.user.VerificationStep
 import com.alexgreece45.marvelx.util.ResourceProvider
-import com.alexgreece45.marvelx.util.extensions.safeAsync
+import com.alexgreece45.marvelx.core.common.extensions.safeAsync
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import okio.IOException
+import org.koin.core.annotation.Factory
 
 interface ForgotPasswordInteractor {
     /**
@@ -58,7 +59,8 @@ interface ForgotPasswordInteractor {
     ): Flow<ForgotPasswordValidateOtpPartialState>
 }
 
-class ForgotPasswordInteractorImpl(
+@Factory
+internal class ForgotPasswordInteractorImpl(
     private val repository: ForgotPasswordRepository,
     private val resourceProvider: ResourceProvider
 ) : ForgotPasswordInteractor {

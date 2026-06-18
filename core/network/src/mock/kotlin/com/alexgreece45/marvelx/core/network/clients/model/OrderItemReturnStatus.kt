@@ -4,9 +4,13 @@ internal enum class OrderItemReturnStatus(val key: String) {
     AVAILABLE(key = "available"),
     EXPIRED(key = "expired"),
     FINAL_SALE(key = "final_sale"),
-    PENDING(key = "pending"),
     REJECTED(key = "rejected"),
-    ACCEPTED(key = "accepted");
+    PENDING(key = "pending"),
+    ITEM_REPLACED(key = "item_replaced"),
+    REFUNDED(key = "refunded");
 
-    fun isProcessingStatus(): Boolean = this == PENDING || this == ACCEPTED
+    fun isProcessingStatus(): Boolean =
+        this == PENDING
+                || this == ITEM_REPLACED
+                || this == REFUNDED
 }

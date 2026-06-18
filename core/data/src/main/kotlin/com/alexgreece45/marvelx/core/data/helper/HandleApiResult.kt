@@ -1,8 +1,8 @@
-package com.alexgreece45.marvelx.data.repository.helper
+package com.alexgreece45.marvelx.core.data.helper
 
+import com.alexgreece45.marvelx.core.common.extensions.safeAsync
 import com.alexgreece45.marvelx.core.common.util.withContextCatchable
 import com.alexgreece45.marvelx.core.network.model.generic.ApiResult
-import com.alexgreece45.marvelx.util.extensions.safeAsync
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlin.coroutines.CoroutineContext
@@ -19,7 +19,7 @@ import kotlin.coroutines.CoroutineContext
  * @param transformation    The transformation to apply to [A] in order to transform it into [B].
  * @param ioDispatcher      The IO dispatcher.
  */
-internal fun <A : Any, B : Any> handleApiResult(
+fun <A : Any, B : Any> handleApiResult(
     apiResult: ApiResult<A>,
     transformation: A.() -> B,
     ioDispatcher: CoroutineContext
@@ -35,14 +35,17 @@ internal fun <A : Any, B : Any> handleApiResult(
         RepositoryResult.Failed(it.message.orEmpty())
     }
 
-internal suspend fun <A : Any, B : Any> handleApiResultNoFlow(
+suspend fun <A : Any, B : Any> handleApiResultNoFlow(
     apiResult: ApiResult<A>,
     transformation: A.() -> B,
-    ioDispatcher: CoroutineContext
+    ioDispatcher: CoroutineContext,
+    logError: ((String) -> Unit)?
 ): RepositoryResult<B> =
     withContextCatchable<RepositoryResult<B>>(
         context = ioDispatcher,
-        onError = { RepositoryResult.Failed(it) }) {
+        onError = { RepositoryResult.Failed(it) },
+        logError = logError
+    ) {
         when (apiResult) {
             is ApiResult.Success -> RepositoryResult.Success(transformation(apiResult.body))
             is ApiResult.Error -> RepositoryResult.Failed(apiResult.errorBody)
@@ -62,7 +65,7 @@ internal suspend fun <A : Any, B : Any> handleApiResultNoFlow(
  * @param apiResult The API result.
  * @param ioDispatcher The IO dispatcher.
  */
-internal fun handleApiResultNoTransformation(
+fun handleApiResultNoTransformation(
     apiResult: ApiResult<String>,
     ioDispatcher: CoroutineContext
 ): Flow<RepositoryResult<String>> =
@@ -77,13 +80,16 @@ internal fun handleApiResultNoTransformation(
         RepositoryResult.Failed(it.message.orEmpty())
     }
 
-internal suspend fun <A : Any> handleApiResultNoTransformationNoFlow(
+suspend fun <A : Any> handleApiResultNoTransformationNoFlow(
     apiResult: ApiResult<A>,
-    ioDispatcher: CoroutineContext
+    ioDispatcher: CoroutineContext,
+    logError: ((String) -> Unit)? = null
 ): RepositoryResult<A> =
     withContextCatchable<RepositoryResult<A>>(
         context = ioDispatcher,
-        onError = { RepositoryResult.Failed(it) }) {
+        onError = { RepositoryResult.Failed(it) },
+        logError = logError
+    ) {
         when (apiResult) {
             is ApiResult.Success -> RepositoryResult.Success(apiResult.body)
             is ApiResult.Error -> RepositoryResult.Failed(apiResult.errorBody)
@@ -99,7 +105,7 @@ internal suspend fun <A : Any> handleApiResultNoTransformationNoFlow(
  *
  * @param apiResult The API result.
  */
-internal fun <A : Any> handleApiResultNoTransformationWithData(
+fun <A : Any> handleApiResultNoTransformationWithData(
     apiResult: ApiResult<A>,
     ioDispatcher: CoroutineContext
 ): Flow<RepositoryResult<A>> =

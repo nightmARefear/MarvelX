@@ -713,7 +713,6 @@ private fun Toolbar(
                             when (navigableAction) {
                                 is ScreenNavigableAction.Closeable -> navigableAction.onClose()
                                 is ScreenNavigableAction.Backable -> navigableAction.onBack()
-                                else -> {}
                             }
                         }
                     ) {
@@ -1262,6 +1261,58 @@ fun ExposedDropdownMenu(
                     Text(text = placeholder)
                 }
             },
+            trailingIcon = {
+                ExposedDropdownMenuDefaults.TrailingIcon(
+                    expanded = expanded
+                )
+            },
+            maxLines = maxLines
+        )
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { onDismissRequest?.invoke() },
+            modifier = Modifier.width(with(density) { outlinedTextFieldSize.width.toDp() }),
+            content = content
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterialApi::class)
+@Composable
+fun ExposedDropdownMenu(
+    label: @Composable () -> Unit,
+    expanded: Boolean,
+    modifier: Modifier = Modifier,
+    placeholder: (@Composable () -> Unit)? = null,
+    value: String? = "",
+    enabled: Boolean = true,
+    maxLines: Int = 1,
+    onDismissRequest: (() -> Unit)? = null,
+    onExpandedChange: (() -> Unit)? = null,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    var outlinedTextFieldSize by remember { mutableStateOf(Size.Zero) }
+    val density = LocalDensity.current
+
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { onExpandedChange?.invoke() },
+        modifier = modifier
+    ) {
+        OutlinedTextField(
+            value = TextFieldValue(
+                text = value.orEmpty()
+            ),
+            onValueChange = {},
+            modifier = Modifier
+                .fillMaxWidth()
+                .onGloballyPositioned { coordinates ->
+                    outlinedTextFieldSize = coordinates.size.toSize()
+                },
+            enabled = enabled,
+            readOnly = true,
+            label = label,
+            placeholder = placeholder,
             trailingIcon = {
                 ExposedDropdownMenuDefaults.TrailingIcon(
                     expanded = expanded

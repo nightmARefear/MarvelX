@@ -3,7 +3,7 @@ package com.alexgreece45.marvelx.ui.screens.profile.profileDetails.stats
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.core.network.model.api.user.friend.ResponseFriend
-import com.alexgreece45.marvelx.data.repository.helper.RepositoryResult
+import com.alexgreece45.marvelx.core.data.helper.RepositoryResult
 import com.alexgreece45.marvelx.data.repository.user.FriendRepository
 import com.alexgreece45.marvelx.mvi.BaseViewModel
 import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.stats.model.ProfileDetailsStatsContract

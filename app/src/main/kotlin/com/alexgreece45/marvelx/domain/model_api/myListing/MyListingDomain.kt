@@ -1,6 +1,6 @@
 package com.alexgreece45.marvelx.domain.model_api.myListing
 
-import com.alexgreece45.marvelx.data.model.myListing.MyListingData
+import com.alexgreece45.marvelx.core.data.model.myListing.MyListingData
 import com.alexgreece45.marvelx.domain.model_api.marketplace.listing.ListingStatusDomain
 
 data class MyListingDomain(

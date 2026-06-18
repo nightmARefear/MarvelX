@@ -5,7 +5,7 @@ import com.alexgreece45.marvelx.core.common.config.ConfigLogic
 import com.alexgreece45.marvelx.core.common.config.model.AppBuildType
 import com.alexgreece45.marvelx.core.common.config.model.MarvelApiConfig
 import com.alexgreece45.marvelx.core.common.config.model.TimeoutData
-import com.alexgreece45.marvelx.util.constants.ConstantsContentTypes
+import com.alexgreece45.marvelx.core.common.constants.ConstantsContentTypes
 import com.alexgreece45.marvelx.util.extensions.getSchemeFromUrl
 import org.koin.core.annotation.Single
 

@@ -7,7 +7,7 @@ import com.alexgreece45.marvelx.core.common.dispatchers.model.DefaultDispatcher
 import com.alexgreece45.marvelx.core.common.util.withContextCatchable
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
-import org.koin.core.annotation.Single
+import org.koin.core.annotation.Factory
 import java.math.BigDecimal
 import java.time.YearMonth
 import kotlin.coroutines.CoroutineContext
@@ -20,7 +20,7 @@ interface InputFieldValidator {
     ): InputFieldValidationResult
 }
 
-@Single
+@Factory
 internal class InputFieldValidatorImpl(
     @DefaultDispatcher private val defaultDispatcher: CoroutineContext
 ) : InputFieldValidator {

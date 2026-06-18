@@ -3,8 +3,7 @@ package com.alexgreece45.marvelx.ui.screens.profile.model
 import android.net.Uri
 import com.alexgreece45.marvelx.data.model.deepLink.DeepLinkAction
 import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.BasicProfileDetailsDomain
-import com.alexgreece45.marvelx.domain.model_generic.AttachedFileContentData
-import com.alexgreece45.marvelx.domain.model_generic.ReadFileContentData
+import com.alexgreece45.marvelx.model.model.generic.AttachedFileContentData
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
@@ -55,12 +54,6 @@ sealed interface ProfileContract {
 
                 data class OnFailure(val errorMessage: String?) : ImageCropEvent
             }
-
-            /**
-             * Triggered when the cropped image's content is read.
-             */
-            data class OnCroppedImageFileContentRead(val croppedImageFileReadContentData: ReadFileContentData?) :
-                ProfileImage
 
             /**
              * Events for updating the current profile image.
@@ -149,10 +142,6 @@ sealed interface ProfileContract {
             val minImageSize: Int,
             val maxImageSize: Int,
             val imageUri: Uri
-        ) : Effect()
-
-        data class ReadCroppedImageFileContent(
-            val attachedFileContentData: AttachedFileContentData
         ) : Effect()
 
         data class OpenDeepLinkAction(val deepLinkAction: DeepLinkAction) : Effect()

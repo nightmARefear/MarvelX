@@ -1,4 +1,4 @@
-package com.alexgreece45.marvelx.util.constants
+package com.alexgreece45.marvelx.core.common.constants
 
 /**
  * All the constants for the content types.

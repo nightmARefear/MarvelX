@@ -1,4 +1,4 @@
-package com.alexgreece45.marvelx.util.extensions
+package com.alexgreece45.marvelx.core.common.extensions
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow

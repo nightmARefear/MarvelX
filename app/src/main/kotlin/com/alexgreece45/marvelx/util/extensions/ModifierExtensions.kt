@@ -168,6 +168,7 @@ fun Modifier.throttledClickable(
 fun Modifier.clickableNoRipple(
     enabled: Boolean = true,
     rippleShape: Shape? = null,
+    role: Role? = null,
     onClick: () -> Unit
 ): Modifier = composed {
     val interactionSource = remember { MutableInteractionSource() }
@@ -189,6 +190,7 @@ fun Modifier.clickableNoRipple(
         interactionSource = interactionSource,
         indication = indication,
         enabled = enabled,
+        role = role,
         onClick = onClick
     ).then(clipModifier)
 }

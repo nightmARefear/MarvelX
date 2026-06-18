@@ -1,4 +1,4 @@
-package com.alexgreece45.marvelx.data.model.marketplace.listing
+package com.alexgreece45.marvelx.core.data.model.marketplace.listing
 
 /**
  * All the listing category codes.

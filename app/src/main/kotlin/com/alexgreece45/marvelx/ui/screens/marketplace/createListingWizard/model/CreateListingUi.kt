@@ -1,12 +1,11 @@
 package com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.model
 
-import com.alexgreece45.marvelx.data.model.marketplace.listing.ListingCategory
 import com.alexgreece45.marvelx.data.model.marketplace.listing.EnumGeneric
+import com.alexgreece45.marvelx.data.model.marketplace.listing.ListingCategory
 import com.alexgreece45.marvelx.data.model.marketplace.listing.ListingSubcategory
 import com.alexgreece45.marvelx.domain.model_api.marketplace.listing.CreateListingDomain
 import com.alexgreece45.marvelx.domain.model_api.marketplace.listing.ListingDetailsDomain
-import com.alexgreece45.marvelx.domain.model_generic.AttachedFileContentData
-import com.alexgreece45.marvelx.domain.model_generic.ReadFileContentData
+import com.alexgreece45.marvelx.model.model.generic.AttachedFileContentData
 import com.alexgreece45.marvelx.ui.screens.marketplace.model.ListingDetailsUi
 import java.math.BigDecimal
 
@@ -21,13 +20,12 @@ data class CreateListingUi(
     val price: BigDecimal = BigDecimal.ZERO
 )
 
-fun CreateListingUi.toDomain(
-    readFileContentsData: List<ReadFileContentData>,
+internal fun CreateListingUi.toDomain(
     listingDetailsDomain: ListingDetailsDomain
 ): CreateListingDomain =
     CreateListingDomain(
-        coverImage = readFileContentsData.firstOrNull() ?: ReadFileContentData("", ByteArray(0)),
-        allImages = readFileContentsData,
+        coverImage = attachedImages.first(),
+        additionalImages = attachedImages.drop(1),
         title = title,
         description = description,
         categoryId = category?.id ?: -1,

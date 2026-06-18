@@ -4,10 +4,10 @@ import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.controllers.createListingWizard.CreateListingWizardController
 import com.alexgreece45.marvelx.core.data.repositories.UserSessionRepository
+import com.alexgreece45.marvelx.core.data.repositories.marketplace.listing.model.CreateListingResult
 import com.alexgreece45.marvelx.domain.helper.InteractorPartialState
 import com.alexgreece45.marvelx.domain.interactors.marketplace.listing.ListingInteractor
 import com.alexgreece45.marvelx.domain.model_api.marketplace.listing.UpdateListingDomain
-import com.alexgreece45.marvelx.domain.model_generic.ReadFileContentData
 import com.alexgreece45.marvelx.mvi.BaseViewModel
 import com.alexgreece45.marvelx.ui.components.model.ErrorButtonLayout
 import com.alexgreece45.marvelx.ui.navigation.NavArgHelper
@@ -26,7 +26,7 @@ import kotlinx.coroutines.launch
 import org.koin.android.annotation.KoinViewModel
 
 @KoinViewModel
-class CreateListingWizardViewModel(
+internal class CreateListingWizardViewModel(
     private val listingInteractor: ListingInteractor,
     private val resourceProvider: ResourceProvider,
     private val listingUiMapper: ListingUiMapper,
@@ -44,9 +44,6 @@ class CreateListingWizardViewModel(
             CreateListingWizardContract.Event.OnBackButtonClicked -> onBackButtonClicked()
             CreateListingWizardContract.Event.OnCloseButtonClicked -> onCloseButtonClicked()
             CreateListingWizardContract.Event.OnStickyBottomButtonClicked -> onStickyBottomButtonClicked()
-            is CreateListingWizardContract.Event.OnAttachedImagesContentRead -> onAttachedImagesContentRead(
-                event.readFileContentsData
-            )
 
             is CreateListingWizardContract.Event.OnShowToastMessage -> onShowToastMessage(event.message)
             is CreateListingWizardContract.Event.SetNextButtonEnabled -> setNextButtonEnabled(event.enabled)
@@ -193,107 +190,6 @@ class CreateListingWizardViewModel(
             }
     }
 
-    private fun onAttachedImagesContentRead(readFileContentsData: List<ReadFileContentData>?) {
-        val createListing = currentState.createListingUi
-        if (createListing == null || createListing.listingDetails == null) {
-            setEffect {
-                ShowToastMessage(
-                    message = resourceProvider.getString(R.string.screen_create_listing_wizard_screen_error_uploading_listing)
-                )
-            }
-            return
-        }
-
-        if (readFileContentsData.isNullOrEmpty()) {
-            setState {
-                copy(
-                    isLoading = false
-                )
-            }
-            setEffect {
-                ShowToastMessage(
-                    message = resourceProvider.getString(R.string.screen_create_listing_wizard_screen_error_reading_images)
-                )
-            }
-            return
-        }
-
-        viewModelScope.launch {
-            val listingDetailsDomain = listingDetailsUiMapper.toDomain(createListing.listingDetails)
-            if (listingDetailsDomain == null) {
-                setEffect {
-                    ShowToastMessage(
-                        message = resourceProvider.getString(R.string.screen_create_listing_wizard_screen_error_uploading_listing)
-                    )
-                }
-                return@launch
-            }
-
-            when (val createListingPartialState = listingInteractor.createListing(
-                createListingDomain = createListing.toDomain(
-                    readFileContentsData,
-                    listingDetailsDomain
-                )
-            )
-            ) {
-                is InteractorPartialState.Error,
-                is InteractorPartialState.Failed,
-                InteractorPartialState.NoInternetConnection -> {
-                    setState {
-                        copy(
-                            isLoading = false
-                        )
-                    }
-
-                    setEffect {
-                        ShowToastMessage(
-                            message = resourceProvider.getString(R.string.screen_create_listing_wizard_screen_error_uploading_listing)
-                        )
-                    }
-                }
-
-                is InteractorPartialState.Success -> {
-                    createListingWizardController.resetCreateListingData()
-
-                    NavArgHelper.setArgument(NavArg.NewListingId, createListingPartialState.data)
-
-                    val newWizardStep = CreateListingWizardStep.SUCCESS
-                    setState {
-                        copy(
-                            isLoading = false,
-                            toolbarTitle = getToolbarTitle(
-                                currentState.wizardMode,
-                                newWizardStep
-                            ),
-                            wizardStep = newWizardStep
-                        )
-                    }
-                }
-            }
-        }
-    }
-
-    /**
-     * Helper functions
-     */
-
-    /**
-     *
-     */
-    private fun onShowToastMessage(message: String) {
-        setEffect {
-            ShowToastMessage(message)
-        }
-    }
-
-    private fun setNextButtonEnabled(enabled: Boolean) {
-        setState {
-            copy(
-                isStickyBottomButtonEnabled = enabled
-            )
-        }
-    }
-
     private fun onAlertDialogNegativeButtonClicked() {
         setState {
             copy(
@@ -416,9 +312,22 @@ class CreateListingWizardViewModel(
                 CreateListingWizardStep.BASIC_DETAILS -> R.string.screen_create_listing_wizard_screen_step_label_basic
                 CreateListingWizardStep.ADVANCED_DETAILS -> R.string.screen_create_listing_wizard_screen_step_label_advanced
                 CreateListingWizardStep.OVERVIEW -> R.string.screen_create_listing_wizard_screen_step_label_overview
-                CreateListingWizardStep.SUCCESS -> R.string.screen_create_listing_wizard_screen_step_label_success
             }
         )
+    }
+
+    private fun onShowToastMessage(message: String) {
+        setEffect {
+            ShowToastMessage(message)
+        }
+    }
+
+    private fun setNextButtonEnabled(enabled: Boolean) {
+        setState {
+            copy(
+                isStickyBottomButtonEnabled = enabled
+            )
+        }
     }
 
     private fun onSuccessStepOperations(nextWizardStep: CreateListingWizardStep) {
@@ -483,7 +392,7 @@ class CreateListingWizardViewModel(
 
     private fun uploadDraftListing() {
         val createListing = currentState.createListingUi
-        if (createListing == null) {
+        if (createListing == null || createListing.listingDetails == null) {
             setEffect {
                 ShowToastMessage(
                     message = resourceProvider.getString(R.string.screen_create_listing_wizard_screen_error_uploading_listing)
@@ -492,8 +401,70 @@ class CreateListingWizardViewModel(
             return
         }
 
-        setEffect {
-            CreateListingWizardContract.Effect.ReadFileContentData(attachedImages = createListing.attachedImages)
+        viewModelScope.launch {
+            val listingDetailsDomain = listingDetailsUiMapper.toDomain(createListing.listingDetails)
+            if (listingDetailsDomain == null) {
+                setEffect {
+                    ShowToastMessage(
+                        message = resourceProvider.getString(R.string.screen_create_listing_wizard_screen_error_uploading_listing)
+                    )
+                }
+                return@launch
+            }
+
+            when (
+                val createListingResult = listingInteractor.createListing(
+                    createListingDomain = createListing.toDomain(
+                        listingDetailsDomain
+                    )
+                )
+            ) {
+                is CreateListingResult.GenericError,
+                CreateListingResult.NetworkError -> {
+                    setState {
+                        copy(
+                            isLoading = false
+                        )
+                    }
+
+                    setEffect {
+                        ShowToastMessage(
+                            message = resourceProvider.getString(R.string.screen_create_listing_wizard_screen_error_uploading_listing)
+                        )
+                    }
+                }
+
+                CreateListingResult.ImageProcessingError -> {
+                    setState {
+                        copy(
+                            isLoading = false
+                        )
+                    }
+                    setEffect {
+                        ShowToastMessage(
+                            message = resourceProvider.getString(R.string.screen_create_listing_wizard_screen_error_reading_images)
+                        )
+                    }
+                }
+
+                is CreateListingResult.Success -> {
+                    createListingWizardController.resetCreateListingData()
+
+                    NavArgHelper.setArgument(NavArg.NewListingId, createListingResult.listingId)
+
+                    val newWizardStep = CreateListingWizardStep.SUCCESS
+                    setState {
+                        copy(
+                            isLoading = false,
+                            toolbarTitle = getToolbarTitle(
+                                currentState.wizardMode,
+                                newWizardStep
+                            ),
+                            wizardStep = newWizardStep
+                        )
+                    }
+                }
+            }
         }
     }
 }

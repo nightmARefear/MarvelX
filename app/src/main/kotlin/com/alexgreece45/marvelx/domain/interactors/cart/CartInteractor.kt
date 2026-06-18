@@ -8,6 +8,7 @@ import com.alexgreece45.marvelx.domain.model_api.cart.CartInfoDomain
 import com.alexgreece45.marvelx.domain.model_api.cart.CartSummaryDomain
 import com.alexgreece45.marvelx.domain.model_api.marketplace.listing.ListingPreviewDomain
 import com.alexgreece45.marvelx.domain.model_api.marketplace.listing.toDomain
+import org.koin.core.annotation.Factory
 
 interface CartInteractor {
 
@@ -18,7 +19,8 @@ interface CartInteractor {
     suspend fun deleteCartItem(listingId: String): Boolean
 }
 
-class CartInteractorImpl(
+@Factory
+internal class CartInteractorImpl(
     private val cartRepository: CartRepository,
     private val cartSummaryDomainMapper: CartSummaryDomainMapper
 ) : CartInteractor {

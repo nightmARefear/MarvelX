@@ -5,7 +5,7 @@ import com.alexgreece45.marvelx.core.data.repositories.UserSessionRepository
 import com.alexgreece45.marvelx.core.network.storage.SignatureStorage
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.koin.core.annotation.Single
+import org.koin.core.annotation.Factory
 import kotlin.coroutines.CoroutineContext
 
 /**
@@ -13,7 +13,7 @@ import kotlin.coroutines.CoroutineContext
  *
  * ### Note: This operation is irreversible, and it MUST be used with caution.
  * */
-@Single
+@Factory
 class RemoveUserCredentialsUseCase(
     private val userSessionRepository: UserSessionRepository,
     private val signatureStorage: SignatureStorage,

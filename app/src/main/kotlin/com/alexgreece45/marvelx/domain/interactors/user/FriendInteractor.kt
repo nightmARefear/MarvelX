@@ -9,6 +9,7 @@ import com.alexgreece45.marvelx.domain.model_api.user.friend.toFriendDomainList
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
+import org.koin.core.annotation.Factory
 
 interface FriendInteractor {
 
@@ -29,7 +30,8 @@ interface FriendInteractor {
 
 }
 
-class FriendInteractorImpl(
+@Factory
+internal class FriendInteractorImpl(
     private val repository: FriendRepository
 ) : FriendInteractor {
 

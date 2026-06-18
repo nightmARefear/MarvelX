@@ -108,8 +108,7 @@ class ListingDetailsRepositoryImpl(
     override fun init() {
         scope.launch {
             operations.forEach { operation ->
-                val apiResult = operation.apiCall()
-                when (apiResult) {
+                when (val apiResult = operation.apiCall()) {
                     is ApiResult.Error -> {
                         appLogger.d(LOGGER_TAG) { "An error occurred whilst initializing the cached listing ${operation.operationName}.\n" + apiResult.errorBody }
                     }

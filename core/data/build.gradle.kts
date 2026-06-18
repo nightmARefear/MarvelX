@@ -13,4 +13,7 @@ dependencies {
     implementation(projects.core.datastore)
 
     implementation(libs.androidx.datastore.core)
+
+    implementation(libs.squareup.retrofit2)
+    implementation(libs.google.gson)
 }

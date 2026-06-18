@@ -1,8 +1,8 @@
 package com.alexgreece45.marvelx.data.repository
 
 import com.alexgreece45.marvelx.core.common.dispatchers.model.IoDispatcher
-import com.alexgreece45.marvelx.data.repository.helper.RepositoryResult
-import com.alexgreece45.marvelx.data.repository.helper.handleApiResultNoTransformation
+import com.alexgreece45.marvelx.core.data.helper.RepositoryResult
+import com.alexgreece45.marvelx.core.data.helper.handleApiResultNoTransformation
 import com.alexgreece45.marvelx.core.network.clients.ApiClient
 import kotlinx.coroutines.flow.first
 import org.koin.core.annotation.Single

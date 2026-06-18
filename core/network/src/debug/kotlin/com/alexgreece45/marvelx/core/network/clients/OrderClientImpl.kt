@@ -4,9 +4,11 @@ import com.alexgreece45.marvelx.core.network.model.api.order.ResponseOrder
 import com.alexgreece45.marvelx.core.network.model.api.order.ResponseOrderId
 import com.alexgreece45.marvelx.core.network.model.api.order.ResponseOrderPreview
 import com.alexgreece45.marvelx.core.network.model.api.order.item.ResponseOrderItemTrackingHistory
+import com.alexgreece45.marvelx.core.network.model.api.order.item.returnRequest.ResponseOrderItemReturn
 import com.alexgreece45.marvelx.core.network.model.generic.ApiResult
 import com.alexgreece45.marvelx.core.network.services.OrderService
 import com.alexgreece45.marvelx.core.network.util.executeApiServiceCall
+import okhttp3.MultipartBody
 import org.koin.core.annotation.Single
 
 @Single
@@ -37,6 +39,32 @@ internal class OrderClientImpl(
     override suspend fun placeOrder(): ApiResult<ResponseOrderId> {
         return executeApiServiceCall {
             orderService.placeOrder()
+        }
+    }
+
+    override suspend fun getOrderItemReturnRequest(
+        orderId: String,
+        orderItemId: String
+    ): ApiResult<ResponseOrderItemReturn> {
+        return executeApiServiceCall {
+            orderService.getOrderItemReturnRequest(
+                orderId = orderId,
+                orderItemId = orderItemId
+            )
+        }
+    }
+
+    override suspend fun placeOrderItemReturnRequest(
+        orderId: String,
+        orderItemId: String,
+        requestOrderItemReturn: MultipartBody
+    ): ApiResult<ResponseOrderItemReturn> {
+        return executeApiServiceCall {
+            orderService.placeOrderItemReturnRequest(
+                orderId = orderId,
+                orderItemId = orderItemId,
+                body = requestOrderItemReturn
+            )
         }
     }
 }

@@ -1,13 +1,14 @@
 package com.alexgreece45.marvelx.data.repository.user
 
 import com.alexgreece45.marvelx.core.common.dispatchers.model.IoDispatcher
+import com.alexgreece45.marvelx.core.data.helper.RepositoryResult
+import com.alexgreece45.marvelx.core.data.helper.handleApiResultNoTransformation
+import com.alexgreece45.marvelx.core.data.helper.handleApiResultNoTransformationWithData
 import com.alexgreece45.marvelx.core.network.clients.ApiClient
+import com.alexgreece45.marvelx.core.network.model.api.user.block.ResponseBlockedUser
 import com.alexgreece45.marvelx.core.network.model.api.user.block.ResponseUserBlockResult
 import com.alexgreece45.marvelx.data.model.RepositoryUserBlockResult
 import com.alexgreece45.marvelx.data.model.toRepositoryUserBlock
-import com.alexgreece45.marvelx.data.repository.helper.RepositoryResult
-import com.alexgreece45.marvelx.data.repository.helper.handleApiResultNoTransformation
-import com.alexgreece45.marvelx.data.repository.helper.handleApiResultNoTransformationWithData
 import com.google.gson.Gson
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
@@ -20,7 +21,7 @@ interface BlockedUserRepository {
     /**
      * Returns the blocked users of the current user.
      */
-    suspend fun getBlockedUsers(): Flow<RepositoryResult<List<com.alexgreece45.marvelx.core.network.model.api.user.block.ResponseBlockedUser>>>
+    suspend fun getBlockedUsers(): Flow<RepositoryResult<List<ResponseBlockedUser>>>
 
     /**
      * Blocks the user with [userId].
@@ -39,7 +40,7 @@ class BlockedUserRepositoryImpl(
     @IoDispatcher private val ioDispatcher: CoroutineContext
 ) : BlockedUserRepository {
 
-    override suspend fun getBlockedUsers(): Flow<RepositoryResult<List<com.alexgreece45.marvelx.core.network.model.api.user.block.ResponseBlockedUser>>> =
+    override suspend fun getBlockedUsers(): Flow<RepositoryResult<List<ResponseBlockedUser>>> =
         flow {
             emitAll(
                 handleApiResultNoTransformationWithData(

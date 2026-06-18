@@ -184,27 +184,6 @@ fun ProfileScreen(
                 }
             }
 
-            is ProfileContract.Effect.ReadCroppedImageFileContent -> {
-                val readFileContentData = FileUtil.getAdvancedFileContentData(
-                    file = uiEffect.attachedFileContentData,
-                    context = context
-                )
-                if (readFileContentData == null) {
-                    onEventSent(
-                        ProfileContract.Event.ProfileImage.OnCroppedImageFileContentRead(
-                            null
-                        )
-                    )
-                    return@ObserveUiEffect
-                }
-
-                onEventSent(
-                    ProfileContract.Event.ProfileImage.OnCroppedImageFileContentRead(
-                        croppedImageFileReadContentData = readFileContentData
-                    )
-                )
-            }
-
             ProfileContract.Effect.BottomSheet.Show -> {
                 modalBottomSheetCoroutineScope.launch {
                     modalBottomSheetState.show()

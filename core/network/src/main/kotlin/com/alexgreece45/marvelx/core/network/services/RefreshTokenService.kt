@@ -10,6 +10,7 @@ import retrofit2.http.POST
  * The token service for the refresh access token call only.
  */
 internal interface RefreshTokenService {
+
     @POST("/api/private/marvelx/user/token")
     @FormUrlEncoded
     suspend fun refreshAccessToken(

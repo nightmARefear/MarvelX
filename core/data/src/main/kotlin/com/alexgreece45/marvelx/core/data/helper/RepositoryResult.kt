@@ -1,4 +1,4 @@
-package com.alexgreece45.marvelx.data.repository.helper
+package com.alexgreece45.marvelx.core.data.helper
 
 /**
  * A generic wrapper for repository results.

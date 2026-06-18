@@ -13,11 +13,12 @@ import com.alexgreece45.marvelx.domain.model_api.user.block.UserBlockResultType
 import com.alexgreece45.marvelx.domain.model_api.user.block.toBlockedUserDomainList
 import com.alexgreece45.marvelx.domain.model_api.user.block.toUserBlockResultDomain
 import com.alexgreece45.marvelx.util.ResourceProvider
-import com.alexgreece45.marvelx.util.extensions.safeAsync
+import com.alexgreece45.marvelx.core.common.extensions.safeAsync
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import okio.IOException
+import org.koin.core.annotation.Factory
 
 interface BlockedUserInteractor {
 
@@ -37,7 +38,8 @@ interface BlockedUserInteractor {
     suspend fun unblockUser(userId: String): Flow<InteractorPartialState<String>>
 }
 
-class BlockedUserInteractorImpl(
+@Factory
+internal class BlockedUserInteractorImpl(
     private val logger: AppLogger,
     private val resourceProvider: ResourceProvider,
     private val repository: BlockedUserRepository,

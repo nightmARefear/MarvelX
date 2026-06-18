@@ -19,10 +19,11 @@ import com.alexgreece45.marvelx.domain.model_api.user.loginWithToken.toUserLogin
 import com.alexgreece45.marvelx.domain.model_api.user.signup.SignupDomain
 import com.alexgreece45.marvelx.domain.model_api.user.signup.toSignupDomain
 import com.alexgreece45.marvelx.util.ResourceProvider
-import com.alexgreece45.marvelx.util.extensions.safeAsync
+import com.alexgreece45.marvelx.core.common.extensions.safeAsync
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import okio.IOException
+import org.koin.core.annotation.Factory
 
 interface RegisterInteractor {
 
@@ -46,7 +47,8 @@ interface RegisterInteractor {
     ): Flow<GetJwtForSensitiveUserDataPartialState>
 }
 
-class RegisterInteractorImpl(
+@Factory
+internal class RegisterInteractorImpl(
     private val logger: AppLogger,
     private val repository: RegisterRepository,
     private val resourceProvider: ResourceProvider

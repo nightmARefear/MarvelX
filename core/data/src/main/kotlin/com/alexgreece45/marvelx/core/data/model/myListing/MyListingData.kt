@@ -1,4 +1,4 @@
-package com.alexgreece45.marvelx.data.model.myListing
+package com.alexgreece45.marvelx.core.data.model.myListing
 
 import com.alexgreece45.marvelx.core.network.model.api.myListing.ResponseMyListing
 

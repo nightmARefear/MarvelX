@@ -1,14 +1,14 @@
 package com.alexgreece45.marvelx.data.repository.order
 
+import com.alexgreece45.marvelx.core.common.dispatchers.model.IoDispatcher
+import com.alexgreece45.marvelx.core.data.helper.RepositoryResult
+import com.alexgreece45.marvelx.core.data.helper.handleApiResultNoFlow
+import com.alexgreece45.marvelx.core.network.clients.OrderClient
 import com.alexgreece45.marvelx.data.model.order.OrderData
 import com.alexgreece45.marvelx.data.model.order.OrderPreviewData
 import com.alexgreece45.marvelx.data.model.order.item.OrderItemTrackingHistoryData
 import com.alexgreece45.marvelx.data.model.order.item.toData
 import com.alexgreece45.marvelx.data.model.order.toData
-import com.alexgreece45.marvelx.data.repository.helper.RepositoryResult
-import com.alexgreece45.marvelx.data.repository.helper.handleApiResultNoFlow
-import com.alexgreece45.marvelx.core.common.dispatchers.model.IoDispatcher
-import com.alexgreece45.marvelx.core.network.clients.OrderClient
 import org.koin.core.annotation.Single
 import kotlin.coroutines.CoroutineContext
 
@@ -25,7 +25,7 @@ interface OrderRepository {
 }
 
 @Single
-class OrderRepositoryImpl(
+internal class OrderRepositoryImpl(
     private val orderClient: OrderClient,
     @IoDispatcher private val ioDispatcher: CoroutineContext,
 ) : OrderRepository {

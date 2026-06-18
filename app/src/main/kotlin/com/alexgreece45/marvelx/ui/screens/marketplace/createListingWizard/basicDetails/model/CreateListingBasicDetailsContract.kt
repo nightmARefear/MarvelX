@@ -3,7 +3,7 @@ package com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.basi
 import android.net.Uri
 import com.alexgreece45.marvelx.data.model.marketplace.listing.ListingCategory
 import com.alexgreece45.marvelx.data.model.marketplace.listing.ListingSubcategory
-import com.alexgreece45.marvelx.domain.model_generic.AttachedFileContentData
+import com.alexgreece45.marvelx.model.model.generic.AttachedFileContentData
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState

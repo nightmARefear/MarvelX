@@ -4,11 +4,12 @@ import android.net.Uri
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.controllers.createListingWizard.CreateListingWizardController
 import com.alexgreece45.marvelx.core.common.config.ConfigLogic
+import com.alexgreece45.marvelx.core.common.extensions.endsWithAnySuffix
 import com.alexgreece45.marvelx.data.model.marketplace.listing.EnumGeneric
 import com.alexgreece45.marvelx.data.model.marketplace.listing.ListingCategory
 import com.alexgreece45.marvelx.data.model.marketplace.listing.ListingSubcategory
 import com.alexgreece45.marvelx.data.repository.marketplace.listing.ListingCategoryRepository
-import com.alexgreece45.marvelx.domain.model_generic.AttachedFileContentData
+import com.alexgreece45.marvelx.model.model.generic.AttachedFileContentData
 import com.alexgreece45.marvelx.mvi.BaseViewModel
 import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.basicDetails.model.CreateListingBasicDetailsAttachedImagesConfigurationData
 import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.basicDetails.model.CreateListingBasicDetailsContract
@@ -19,7 +20,6 @@ import com.alexgreece45.marvelx.util.Form
 import com.alexgreece45.marvelx.util.FormValidator
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.Rule
-import com.alexgreece45.marvelx.util.extensions.endsWithAnySuffix
 import com.alexgreece45.marvelx.util.extensions.fromBytesToMb
 import org.koin.android.annotation.KoinViewModel
 

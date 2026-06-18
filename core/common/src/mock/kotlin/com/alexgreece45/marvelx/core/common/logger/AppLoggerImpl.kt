@@ -6,9 +6,10 @@ import logcat.LogPriority
 import logcat.LogcatLogger
 import logcat.asLog
 import logcat.logcat
+import org.koin.core.annotation.Factory
 import org.koin.core.annotation.Single
 
-@Single
+@Factory
 internal class AppLoggerImpl : AppLogger {
 
     private val lock = Any()

@@ -3,9 +3,9 @@ package com.alexgreece45.marvelx.ui.screens.settings.faq
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.data.repository.FaqsRepository
-import com.alexgreece45.marvelx.data.repository.helper.onFailed
-import com.alexgreece45.marvelx.data.repository.helper.onNetworkError
-import com.alexgreece45.marvelx.data.repository.helper.onSuccess
+import com.alexgreece45.marvelx.core.data.helper.onFailed
+import com.alexgreece45.marvelx.core.data.helper.onNetworkError
+import com.alexgreece45.marvelx.core.data.helper.onSuccess
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState

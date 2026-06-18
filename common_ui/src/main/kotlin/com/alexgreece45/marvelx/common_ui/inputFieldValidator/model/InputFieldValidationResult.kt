@@ -7,9 +7,9 @@ sealed interface InputFieldValidationResult {
     data class Error(val errorMessage: String) : InputFieldValidationResult
 
     /**
-     * Calculates whether this result type is valid.
+     * Calculates whether this result type is not erroneous.
      */
-    val isValid: Boolean get() = this is Uninitialized || this is Success
+    val isNotError: Boolean get() = this is Uninitialized || this is Success
 
     companion object {
         val EmptyError = Error("")

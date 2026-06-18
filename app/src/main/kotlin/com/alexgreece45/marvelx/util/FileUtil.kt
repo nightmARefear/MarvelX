@@ -1,14 +1,10 @@
 package com.alexgreece45.marvelx.util
 
 import android.content.Context
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.net.Uri
 import android.provider.OpenableColumns
-import com.alexgreece45.marvelx.domain.model_generic.AttachedFileContentData
-import com.alexgreece45.marvelx.domain.model_generic.ReadFileContentData
-import com.alexgreece45.marvelx.util.extensions.compressImage
-import com.alexgreece45.marvelx.util.extensions.toCompressFormat
+import com.alexgreece45.marvelx.core.data.utils.FileUtil
+import com.alexgreece45.marvelx.model.model.generic.AttachedFileContentData
 
 /**
  * Contains utility functions for file-related operations.
@@ -28,7 +24,7 @@ object FileUtil {
             return null
         }
 
-        val fileContents = decodeBitmapFromFileUri(context, uri)
+        val fileContents = FileUtil.decodeBitmapFromFileUri(context, uri)
         if (fileContents == null) {
             return null
         }
@@ -46,32 +42,6 @@ object FileUtil {
     }
 
     /**
-     * Retrieves advanced data of a file. More specifically, its raw bytes.
-     */
-    fun getAdvancedFileContentData(
-        file: AttachedFileContentData,
-        context: Context
-    ): ReadFileContentData? {
-        val compressFormat = file.name.toCompressFormat()
-        if (compressFormat == null) {
-            return null
-        }
-
-        val fileContent = decodeBitmapFromFileUri(context, file.uri)
-            ?.compressImage(
-                compressFormat = compressFormat
-            )
-        if (fileContent == null) {
-            return null
-        }
-
-        return ReadFileContentData(
-            fileName = file.name,
-            fileContent = fileContent
-        )
-    }
-
-    /**
      * Retrieves the file's name. If it could not be retrieved `null` is returned instead.
      */
     private fun getFileName(context: Context, uri: Uri): String? {
@@ -85,21 +55,6 @@ object FileUtil {
             }
         }
         return null
-    }
-
-    /**
-     * Attempts to locate the file with the specified file URI and if found decodes it into a bitmap.
-     */
-    private fun decodeBitmapFromFileUri(context: Context, uri: Uri): Bitmap? {
-        return try {
-            context.contentResolver
-                .openInputStream(uri)
-                ?.use { inputStream ->
-                    BitmapFactory.decodeStream(inputStream)
-                }
-        } catch (_: Exception) {
-            null
-        }
     }
 
     /**

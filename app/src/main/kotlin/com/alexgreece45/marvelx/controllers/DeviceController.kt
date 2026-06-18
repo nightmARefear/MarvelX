@@ -1,11 +1,11 @@
 package com.alexgreece45.marvelx.controllers
 
 import com.alexgreece45.marvelx.core.common.dispatchers.model.IoDispatcher
+import com.alexgreece45.marvelx.core.data.helper.RepositoryResult
+import com.alexgreece45.marvelx.core.data.helper.handleApiResultNoTransformationNoFlow
 import com.alexgreece45.marvelx.core.network.clients.ApiClient
 import com.alexgreece45.marvelx.core.network.model.api.device.RequestRegisterDevice
 import com.alexgreece45.marvelx.core.network.model.api.device.RequestUpdateDevice
-import com.alexgreece45.marvelx.data.repository.helper.RepositoryResult
-import com.alexgreece45.marvelx.data.repository.helper.handleApiResultNoTransformationNoFlow
 import org.koin.core.annotation.Single
 import kotlin.coroutines.CoroutineContext
 

@@ -23,7 +23,7 @@ import com.alexgreece45.marvelx.domain.usecases.RemoveUserCredentialsUseCase
 import com.alexgreece45.marvelx.model.model.AuthenticationTokens
 import com.alexgreece45.marvelx.model.model.Signature
 import com.alexgreece45.marvelx.util.ResourceProvider
-import com.alexgreece45.marvelx.util.extensions.safeAsync
+import com.alexgreece45.marvelx.core.common.extensions.safeAsync
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import okio.IOException

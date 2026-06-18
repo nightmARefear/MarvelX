@@ -1,6 +1,9 @@
 package com.alexgreece45.marvelx.ui.screens.orders.requestReturn
 
 import android.content.res.Configuration
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -10,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Card
+import androidx.compose.material.Checkbox
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.LocalTextStyle
 import androidx.compose.material.MaterialTheme
@@ -19,31 +23,39 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.model.model.generic.AttachedFileContentData
+import com.alexgreece45.marvelx.ui.components.AlertDialogButton
+import com.alexgreece45.marvelx.ui.components.AlertDialogError
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.ListingCard
 import com.alexgreece45.marvelx.ui.components.OutlinedTextFieldValidation
 import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
 import com.alexgreece45.marvelx.ui.components.WrapButton
 import com.alexgreece45.marvelx.ui.components.effect.ObserveUiEffect
+import com.alexgreece45.marvelx.ui.components.model.ErrorButtonType
 import com.alexgreece45.marvelx.ui.components.sections.SectionHeaderTitle
 import com.alexgreece45.marvelx.ui.screens.orders.model.item.itemReturn.OrderItemReturnReasonUi
 import com.alexgreece45.marvelx.ui.screens.orders.requestReturn.model.RequestItemReturnContract
 import com.alexgreece45.marvelx.ui.theme.MarvelXTheme
 import com.alexgreece45.marvelx.ui.theme.values.customColors
+import com.alexgreece45.marvelx.util.FileUtil
 import com.alexgreece45.marvelx.util.SPACING_MEDIUM
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.SPACING_TINY
+import com.alexgreece45.marvelx.util.extensions.clickableNoRipple
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 
 @Composable
-fun RequestItemReturnScreen(
+internal fun RequestItemReturnScreen(
     onEvent: (RequestItemReturnContract.Event) -> Unit,
     state: RequestItemReturnContract.State,
     effect: Flow<RequestItemReturnContract.Effect>,
@@ -54,9 +66,45 @@ fun RequestItemReturnScreen(
     orderItemCoverImageUrl: String,
     orderItemPriceLabel: String,
 ) {
+
+    val context = LocalContext.current
+
+    val multiPhotoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickMultipleVisualMedia(),
+        onResult = { uris ->
+            if (uris.isEmpty()) {
+                onEvent(RequestItemReturnContract.Event.ImageSelectionEvents.OnNoSelection)
+            } else {
+                val allFilesContentData = mutableListOf<AttachedFileContentData>()
+                uris.forEach { uri ->
+                    val fileContentData = FileUtil.getFileContentData(
+                        uri = uri,
+                        context = context
+                    )
+
+                    if (fileContentData == null) {
+                        onEvent(RequestItemReturnContract.Event.ImageSelectionEvents.OnFailure)
+                        return@rememberLauncherForActivityResult
+                    } else {
+                        allFilesContentData.add(fileContentData)
+                    }
+                }
+
+                onEvent(
+                    RequestItemReturnContract.Event.ImageSelectionEvents.OnSuccess(
+                        allFilesContentData
+                    )
+                )
+            }
+        }
+    )
+
     ObserveUiEffect(effect) { uiEffect ->
         when (uiEffect) {
             is RequestItemReturnContract.Effect.Navigation -> onNavigationEffect(uiEffect)
+            RequestItemReturnContract.Effect.OpenPhotoPicker -> {
+                multiPhotoPickerLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+            }
         }
     }
 
@@ -73,13 +121,13 @@ fun RequestItemReturnScreen(
     }
 
     ContentScreen(
-        isLoading = state.isSubmitting,
+        isLoading = state.uiState.isLoading,
         navigableAction = ScreenNavigableAction.Backable(
             onBack = { onEvent(RequestItemReturnContract.Event.OnBack) }
         ),
         onBack = { onEvent(RequestItemReturnContract.Event.OnBack) },
         showToolbar = true,
-        toolbarTitle = stringResource(R.string.screen_request_return_toolbar_title),
+        toolbarTitle = stringResource(R.string.screen_request_item_return_toolbar_title),
         stickyBottom = {
             WrapButton(
                 onClick = { onEvent(RequestItemReturnContract.Event.OnSubmitButtonClicked) },
@@ -97,6 +145,29 @@ fun RequestItemReturnScreen(
                 .padding(paddingValues),
             verticalArrangement = Arrangement.spacedBy(SPACING_MEDIUM.dp)
         ) {
+            AlertDialogError(
+                isVisible = state.isRefundDialogVisible,
+                title = stringResource(R.string.screen_request_item_return_refund_dialog_title),
+                errorMessage = {
+                    Text(
+                        text = stringResource(R.string.screen_request_item_return_refund_dialog_error_message)
+                    )
+                },
+                confirmButton = AlertDialogButton(
+                    label = stringResource(R.string.screen_request_item_return_refund_dialog_button_positive),
+                    buttonType = ErrorButtonType.Contained,
+                    onClick = {
+                        onEvent(RequestItemReturnContract.Event.RefundDialogEvent.OnPositiveButtonClicked)
+                    }
+                ),
+                dismissButton = AlertDialogButton(
+                    label = stringResource(R.string.screen_request_item_return_refund_dialog_button_negative),
+                    onClick = {
+                        onEvent(RequestItemReturnContract.Event.RefundDialogEvent.OnNegativeButtonClicked)
+                    }
+                )
+            )
+
             OrderItemPreviewCard(
                 title = orderItemTitle,
                 coverImageUrl = orderItemCoverImageUrl,
@@ -104,37 +175,44 @@ fun RequestItemReturnScreen(
             )
 
             ReturnReasonSection(
-                selectedReason = state.selectedReason,
-                onReasonSelected = {
+                returnReasons = state.returnReasons,
+                selectedItem = state.selectedReturnReason,
+                onItemSelected = {
                     onEvent(
-                        RequestItemReturnContract.Event.OnReturnReasonSelected(
+                        RequestItemReturnContract.Event.OnReturnReasonItemSelected(
+                            it
+                        )
+                    )
+                },
+                isRequestRefundChecked = state.isRequestRefundChecked,
+                onRequestRefundCheckboxClicked = {
+                    onEvent(RequestItemReturnContract.Event.OnRequestRefundCheckboxClicked)
+                }
+            )
+
+            DescriptionSection(
+                description = state.descriptionField.value,
+                maxDescriptionLength = state.descriptionMaxLength,
+                onDescriptionChanged = {
+                    onEvent(
+                        RequestItemReturnContract.Event.OnDescriptionChanged(
                             it
                         )
                     )
                 }
             )
 
-//            DescriptionSection(
-//                description = state.description,
-//                maxDescriptionLength = ,
-//                onDescriptionChanged = {
-//                    onEvent(
-//                        RequestItemReturnContract.Event.OnDescriptionChanged(
-//                            it
-//                        )
-//                    )
-//                }
-//            )
-
             Row(verticalAlignment = Alignment.CenterVertically) {
                 MandatoryCharacter(fontStyle = FontStyle.Italic)
 
                 Text(
-                    text = stringResource(R.string.screen_request_return_mandatory_field_label),
+                    text = stringResource(R.string.screen_request_item_return_mandatory_field_label),
                     fontStyle = FontStyle.Italic,
                     style = MaterialTheme.typography.subtitle2
                 )
             }
+
+
         }
     }
 }
@@ -163,30 +241,37 @@ private fun OrderItemPreviewCard(
 
 @Composable
 private fun ReturnReasonSection(
-    selectedReason: OrderItemReturnReasonUi?,
-    onReasonSelected: (OrderItemReturnReasonUi) -> Unit,
+    returnReasons: List<OrderItemReturnReasonUi>,
+    selectedItem: OrderItemReturnReasonUi?,
+    onItemSelected: (OrderItemReturnReasonUi) -> Unit,
+    isRequestRefundChecked: Boolean,
+    onRequestRefundCheckboxClicked: () -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            SectionHeaderTitle(title = stringResource(R.string.screen_request_return_reason_title))
-
+            SectionHeaderTitle(stringResource(R.string.screen_request_return_reason_label))
             MandatoryCharacter()
         }
 
-        OrderItemReturnReasonUi.entries.forEach { reason ->
+        returnReasons.forEach { returnReason ->
             ReturnReasonItem(
-                reason = reason,
-                isSelected = reason == selectedReason,
-                onSelected = { onReasonSelected(reason) }
+                label = stringResource(returnReason.labelResId),
+                isSelected = returnReason == selectedItem,
+                onSelected = { onItemSelected(returnReason) }
             )
         }
+
+        RequestRefundCheckbox(
+            checked = isRequestRefundChecked,
+            onClicked = onRequestRefundCheckboxClicked
+        )
     }
 }
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 private fun ReturnReasonItem(
-    reason: OrderItemReturnReasonUi,
+    label: String,
     isSelected: Boolean,
     onSelected: () -> Unit,
 ) {
@@ -201,8 +286,29 @@ private fun ReturnReasonItem(
         ) {
             RadioButton(selected = isSelected, onClick = onSelected)
 
-            SectionHeaderTitle(title = stringResource(reason.labelResId))
+            SectionHeaderTitle(title = label)
         }
+    }
+}
+
+@Composable
+private fun RequestRefundCheckbox(checked: Boolean, onClicked: () -> Unit) {
+    Row(
+        modifier = Modifier.clickableNoRipple(
+            role = Role.Checkbox,
+            onClick = onClicked
+        ),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Checkbox(
+            checked = checked,
+            onCheckedChange = { onClicked() },
+        )
+
+        Text(
+            text = stringResource(R.string.screen_request_item_return_checkbox_request_refund),
+            style = MaterialTheme.typography.h6
+        )
     }
 }
 
@@ -226,7 +332,7 @@ private fun DescriptionSection(
     onDescriptionChanged: (String) -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp)) {
-        SectionHeaderTitle(title = stringResource(R.string.screen_request_return_description_title))
+        SectionHeaderTitle(title = stringResource(R.string.screen_request_item_return_description_title))
 
         Column(
             verticalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp)
@@ -235,14 +341,14 @@ private fun DescriptionSection(
                 value = description,
                 onValueChange = onDescriptionChanged,
                 modifier = Modifier.fillMaxWidth(),
-                placeholder = stringResource(R.string.screen_request_return_description_placeholder),
+                placeholder = stringResource(R.string.screen_request_item_return_description_placeholder),
                 minLines = 4,
                 maxLines = 8
             )
-            
+
             Text(
                 text = stringResource(
-                    R.string.screen_request_return_description_remaining_characters_label,
+                    R.string.screen_request_item_return_description_remaining_characters_label,
                     description.length,
                     maxDescriptionLength
                 ),

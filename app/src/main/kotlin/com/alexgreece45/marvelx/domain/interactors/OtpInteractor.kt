@@ -15,10 +15,11 @@ import com.alexgreece45.marvelx.domain.model_api.resendOtp.ResponseResendOtpFail
 import com.alexgreece45.marvelx.domain.model_api.resendOtp.toResponseResendOtpFailedDomain
 import com.alexgreece45.marvelx.domain.model_api.user.VerificationStep
 import com.alexgreece45.marvelx.util.ResourceProvider
-import com.alexgreece45.marvelx.util.extensions.safeAsync
+import com.alexgreece45.marvelx.core.common.extensions.safeAsync
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import okio.IOException
+import org.koin.core.annotation.Factory
 
 interface OtpInteractor {
     suspend fun validateOtp(userId: String, otp: String): Flow<ValidateOtpPartialState>
@@ -28,7 +29,8 @@ interface OtpInteractor {
     ): Flow<ResendOtpPartialState>
 }
 
-class OtpInteractorImpl(
+@Factory
+internal class OtpInteractorImpl(
     private val repository: OtpRepository,
     private val resourceProvider: ResourceProvider,
     private val logger: AppLogger

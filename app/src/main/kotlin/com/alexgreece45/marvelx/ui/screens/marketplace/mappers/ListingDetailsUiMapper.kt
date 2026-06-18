@@ -3,7 +3,7 @@ package com.alexgreece45.marvelx.ui.screens.marketplace.mappers
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.core.common.logger.AppLogger
 import com.alexgreece45.marvelx.core.common.util.DateUtil
-import com.alexgreece45.marvelx.data.model.marketplace.listing.ListingCategoryCode
+import com.alexgreece45.marvelx.core.data.model.marketplace.listing.ListingCategoryCode
 import com.alexgreece45.marvelx.data.repository.marketplace.listing.details.ListingDetailsRepository
 import com.alexgreece45.marvelx.domain.model_api.marketplace.listing.ListingDetailsDomain
 import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.model.WizardInputFieldUi

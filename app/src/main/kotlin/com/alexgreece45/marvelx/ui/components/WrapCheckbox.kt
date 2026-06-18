@@ -7,6 +7,7 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.Role
 import com.alexgreece45.marvelx.util.extensions.clickableNoRipple
 
 @Composable
@@ -17,7 +18,7 @@ fun WrapCheckbox(
     enabled: Boolean = true
 ) {
     Row(
-        modifier = Modifier.clickableNoRipple(onClick = onCheckedChange),
+        modifier = Modifier.clickableNoRipple(role = Role.Checkbox, onClick = onCheckedChange),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Checkbox(

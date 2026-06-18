@@ -8,14 +8,14 @@ import kotlin.coroutines.CoroutineContext
 suspend fun <T> withContextCatchable(
     context: CoroutineContext,
     onError: (errorMessage: String) -> T,
-    logger: ((errorMessage: String) -> Unit)? = null,
+    logError: ((errorMessage: String) -> Unit)? = null,
     block: suspend CoroutineScope.() -> T
 ): T = try {
     withContext(context = context, block = block)
 } catch (e: CancellationException) {
     throw e
 } catch (e: Exception) {
-    val errorMessage = e.message.orEmpty()
-    logger?.invoke(errorMessage)
+    val errorMessage = e.localizedMessage.orEmpty()
+    logError?.invoke(errorMessage)
     onError(errorMessage)
 }

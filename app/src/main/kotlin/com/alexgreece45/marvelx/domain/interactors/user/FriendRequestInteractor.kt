@@ -10,6 +10,7 @@ import com.alexgreece45.marvelx.domain.model_api.user.friendRequest.toIncomingFr
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
+import org.koin.core.annotation.Factory
 
 interface FriendRequestInteractor {
 
@@ -25,7 +26,8 @@ interface FriendRequestInteractor {
     ): Flow<Boolean>
 }
 
-class FriendRequestInteractorImpl(
+@Factory
+internal class FriendRequestInteractorImpl(
     private val repository: FriendRequestRepository
 ) : FriendRequestInteractor {
 

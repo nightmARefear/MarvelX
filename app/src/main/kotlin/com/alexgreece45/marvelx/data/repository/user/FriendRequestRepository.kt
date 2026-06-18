@@ -1,10 +1,11 @@
 package com.alexgreece45.marvelx.data.repository.user
 
 import com.alexgreece45.marvelx.core.common.dispatchers.model.IoDispatcher
-import com.alexgreece45.marvelx.data.repository.helper.RepositoryResult
-import com.alexgreece45.marvelx.data.repository.helper.handleApiResultNoTransformation
-import com.alexgreece45.marvelx.data.repository.helper.handleApiResultNoTransformationWithData
+import com.alexgreece45.marvelx.core.data.helper.RepositoryResult
+import com.alexgreece45.marvelx.core.data.helper.handleApiResultNoTransformation
+import com.alexgreece45.marvelx.core.data.helper.handleApiResultNoTransformationWithData
 import com.alexgreece45.marvelx.core.network.clients.ApiClient
+import com.alexgreece45.marvelx.core.network.model.api.user.incomingFriendRequest.ResponseIncomingFriendRequest
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
@@ -16,7 +17,7 @@ interface FriendRequestRepository {
     /**
      * Returns the incoming friend requests of the current user.
      */
-    suspend fun getIncomingFriendRequests(): Flow<RepositoryResult<List<com.alexgreece45.marvelx.core.network.model.api.user.incomingFriendRequest.ResponseIncomingFriendRequest>>>
+    suspend fun getIncomingFriendRequests(): Flow<RepositoryResult<List<ResponseIncomingFriendRequest>>>
     suspend fun sendFriendRequest(userId: String): Flow<Boolean>
     suspend fun acceptFriendRequest(userId: String): Flow<Boolean>
     suspend fun deleteFriendRequest(userId: String, type: String): Flow<Boolean>
@@ -28,7 +29,7 @@ class FriendRequestRepositoryImpl(
     @IoDispatcher private val ioDispatcher: CoroutineContext
 ) : FriendRequestRepository {
 
-    override suspend fun getIncomingFriendRequests(): Flow<RepositoryResult<List<com.alexgreece45.marvelx.core.network.model.api.user.incomingFriendRequest.ResponseIncomingFriendRequest>>> =
+    override suspend fun getIncomingFriendRequests(): Flow<RepositoryResult<List<ResponseIncomingFriendRequest>>> =
         flow {
             emitAll(
                 handleApiResultNoTransformationWithData(

@@ -14,7 +14,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.domain.model_generic.ReadFileContentData
 import com.alexgreece45.marvelx.ui.components.AlertDialogButton
 import com.alexgreece45.marvelx.ui.components.AlertDialogError
 import com.alexgreece45.marvelx.ui.components.ContentScreen
@@ -42,13 +41,12 @@ import com.alexgreece45.marvelx.ui.screens.marketplace.listingDetailsScreen.List
 import com.alexgreece45.marvelx.ui.screens.marketplace.listingDetailsScreen.ListingDetailsViewModel
 import com.alexgreece45.marvelx.ui.screens.marketplace.listingDetailsScreen.model.ListingDetailsContract
 import com.alexgreece45.marvelx.ui.theme.values.customColors
-import com.alexgreece45.marvelx.util.FileUtil
 import com.alexgreece45.marvelx.util.extensions.showToast
 import kotlinx.coroutines.flow.Flow
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun CreateListingWizardScreen(
+internal fun CreateListingWizardScreen(
     onEvent: (CreateListingWizardContract.Event) -> Unit,
     state: CreateListingWizardContract.State,
     effect: Flow<CreateListingWizardContract.Effect>,
@@ -76,31 +74,6 @@ fun CreateListingWizardScreen(
 
             is CreateListingWizardContract.Effect.ShowToastMessage -> {
                 context.showToast(uiEffect.message)
-            }
-
-            is CreateListingWizardContract.Effect.ReadFileContentData -> {
-                val readFileContentsData = mutableListOf<ReadFileContentData>()
-
-                uiEffect.attachedImages.forEach { attachedImage ->
-                    val readFileContentData =
-                        FileUtil.getAdvancedFileContentData(attachedImage, context)
-                    if (readFileContentData == null) {
-                        createListingWizardViewModel.setEvent(
-                            CreateListingWizardContract.Event.OnAttachedImagesContentRead(
-                                null
-                            )
-                        )
-                        return@forEach
-                    }
-
-                    readFileContentsData.add(readFileContentData)
-                }
-
-                createListingWizardViewModel.setEvent(
-                    CreateListingWizardContract.Event.OnAttachedImagesContentRead(
-                        readFileContentsData
-                    )
-                )
             }
         }
     }

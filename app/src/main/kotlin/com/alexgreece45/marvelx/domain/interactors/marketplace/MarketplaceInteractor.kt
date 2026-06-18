@@ -6,13 +6,15 @@ import com.alexgreece45.marvelx.domain.helper.InteractorPartialState
 import com.alexgreece45.marvelx.domain.helper.handleRepositoryResultNoFlow
 import com.alexgreece45.marvelx.domain.mappers.marketplace.toDomain
 import com.alexgreece45.marvelx.domain.model_api.marketplace.MarketplaceDomain
+import org.koin.core.annotation.Factory
 
 interface MarketplaceInteractor {
 
     suspend fun getMarketplaceInfo(): InteractorPartialState<MarketplaceDomain>
 }
 
-class MarketplaceInteractorImpl(
+@Factory
+internal class MarketplaceInteractorImpl(
     private val marketplaceRepository: MarketplaceRepository
 ) : MarketplaceInteractor {
 

@@ -3,12 +3,13 @@ package com.alexgreece45.marvelx.ui.screens.profile
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.core.common.config.ConfigLogic
+import com.alexgreece45.marvelx.core.common.extensions.endsWithAnySuffix
 import com.alexgreece45.marvelx.core.common.logger.AppLogger
+import com.alexgreece45.marvelx.core.data.helper.multi_part_builder.model.MultipartResult
 import com.alexgreece45.marvelx.core.data.repositories.UserSessionRepository
-import com.alexgreece45.marvelx.domain.helper.InteractorPartialState
 import com.alexgreece45.marvelx.domain.interactors.GetCurrentUserProfileDetailsPartialState
 import com.alexgreece45.marvelx.domain.interactors.UserInteractor
-import com.alexgreece45.marvelx.domain.model_generic.ReadFileContentData
+import com.alexgreece45.marvelx.model.model.generic.AttachedFileContentData
 import com.alexgreece45.marvelx.mvi.BaseViewModel
 import com.alexgreece45.marvelx.ui.components.AlertDialogButton
 import com.alexgreece45.marvelx.ui.components.IconData
@@ -23,7 +24,6 @@ import com.alexgreece45.marvelx.ui.screens.profile.model.ProfileErrorAlertDialog
 import com.alexgreece45.marvelx.ui.screens.profile.model.ProfileScreenErrorView
 import com.alexgreece45.marvelx.util.FileUtil
 import com.alexgreece45.marvelx.util.ResourceProvider
-import com.alexgreece45.marvelx.util.extensions.endsWithAnySuffix
 import com.alexgreece45.marvelx.util.extensions.toUrlEncoding
 import kotlinx.coroutines.launch
 import org.koin.android.annotation.KoinViewModel
@@ -190,30 +190,12 @@ class ProfileViewModel(
                 }
             }
 
-            is ProfileContract.Event.ProfileImage.OnCroppedImageFileContentRead -> {
-                val readFileContentData = event.croppedImageFileReadContentData
-                if (readFileContentData == null) {
-                    showToastMessage(message = resourceProvider.getString(R.string.screen_profile_error_image_crop_reading))
-                    setState {
-                        copy(
-                            croppedImageIsLoading = false,
-                            croppedImageFileContentData = null
-                        )
-                    }
-                    return
-                }
-
-                updateProfileImage(
-                    readFileContentData = readFileContentData
-                )
-            }
-
             ProfileContract.Event.ProfileImage.CroppedImage.OnCloseClicked -> {
                 exitCroppedImageScreen()
             }
 
             ProfileContract.Event.ProfileImage.CroppedImage.OnSaveClicked -> {
-                readCroppedImageFileContentData()
+                onSaveButtonClicked()
             }
         }
     }
@@ -467,7 +449,7 @@ class ProfileViewModel(
         }
     }
 
-    private fun readCroppedImageFileContentData() {
+    private fun onSaveButtonClicked() {
         when (val fileContentData = currentState.croppedImageFileContentData) {
             null -> {
                 setState {
@@ -485,11 +467,7 @@ class ProfileViewModel(
                     )
                 }
 
-                setEffect {
-                    ProfileContract.Effect.ReadCroppedImageFileContent(
-                        attachedFileContentData = fileContentData
-                    )
-                }
+                updateProfileImage(fileContentData)
             }
         }
     }
@@ -497,14 +475,13 @@ class ProfileViewModel(
     /**
      * Updates the current profile image with the one that the user has cropped.
      */
-    private fun updateProfileImage(readFileContentData: ReadFileContentData) {
+    private fun updateProfileImage(newProfileImageData: AttachedFileContentData) {
         viewModelScope.launch {
             val result =
-                userInteractor.updateUserProfileImage(profileImageReadFileContentData = readFileContentData)
+                userInteractor.updateUserProfileImage(profileImageData = newProfileImageData)
             when (result) {
-                is InteractorPartialState.Error,
-                is InteractorPartialState.Failed,
-                InteractorPartialState.NoInternetConnection -> {
+                is MultipartResult.GenericError,
+                is MultipartResult.NetworkError -> {
                     showToastMessage(message = resourceProvider.getString(R.string.screen_profile_error_image_upload))
                     setState {
                         copy(
@@ -514,7 +491,17 @@ class ProfileViewModel(
                     }
                 }
 
-                is InteractorPartialState.Success -> {
+                MultipartResult.ImageProcessingError -> {
+                    showToastMessage(message = resourceProvider.getString(R.string.screen_profile_error_image_crop_reading))
+                    setState {
+                        copy(
+                            croppedImageIsLoading = false,
+                            croppedImageFileContentData = null
+                        )
+                    }
+                }
+
+                is MultipartResult.Success -> {
                     showToastMessage(message = resourceProvider.getString(R.string.screen_profile_success_image_upload))
                     setState {
                         copy(

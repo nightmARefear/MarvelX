@@ -1,10 +1,11 @@
 package com.alexgreece45.marvelx.data.repository.user
 
 import com.alexgreece45.marvelx.core.common.dispatchers.model.IoDispatcher
-import com.alexgreece45.marvelx.data.repository.helper.RepositoryResult
-import com.alexgreece45.marvelx.data.repository.helper.handleApiResultNoTransformation
-import com.alexgreece45.marvelx.data.repository.helper.handleApiResultNoTransformationWithData
+import com.alexgreece45.marvelx.core.data.helper.RepositoryResult
+import com.alexgreece45.marvelx.core.data.helper.handleApiResultNoTransformation
+import com.alexgreece45.marvelx.core.data.helper.handleApiResultNoTransformationWithData
 import com.alexgreece45.marvelx.core.network.clients.ApiClient
+import com.alexgreece45.marvelx.core.network.model.api.user.friend.ResponseFriend
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
@@ -16,12 +17,12 @@ interface FriendRepository {
     /**
      * Retrieves the friends of the given user ID.
      */
-    suspend fun getFriends(userId: String): Flow<RepositoryResult<List<com.alexgreece45.marvelx.core.network.model.api.user.friend.ResponseFriend>>>
+    suspend fun getFriends(userId: String): Flow<RepositoryResult<List<ResponseFriend>>>
 
     /**
      * Retrieves the friends of the current user.
      */
-    suspend fun getCurrentUserFriends(): Flow<RepositoryResult<List<com.alexgreece45.marvelx.core.network.model.api.user.friend.ResponseFriend>>>
+    suspend fun getCurrentUserFriends(): Flow<RepositoryResult<List<ResponseFriend>>>
 
     /**
      * Deletes the friend with the given ID.
@@ -30,12 +31,12 @@ interface FriendRepository {
 }
 
 @Single
-class FriendRepositoryImpl(
+internal class FriendRepositoryImpl(
     private val apiClient: ApiClient,
     @IoDispatcher private val ioDispatcher: CoroutineContext
 ) : FriendRepository {
 
-    override suspend fun getFriends(userId: String): Flow<RepositoryResult<List<com.alexgreece45.marvelx.core.network.model.api.user.friend.ResponseFriend>>> =
+    override suspend fun getFriends(userId: String): Flow<RepositoryResult<List<ResponseFriend>>> =
         flow {
             emitAll(
                 handleApiResultNoTransformationWithData(
@@ -45,7 +46,7 @@ class FriendRepositoryImpl(
             )
         }
 
-    override suspend fun getCurrentUserFriends(): Flow<RepositoryResult<List<com.alexgreece45.marvelx.core.network.model.api.user.friend.ResponseFriend>>> =
+    override suspend fun getCurrentUserFriends(): Flow<RepositoryResult<List<ResponseFriend>>> =
         flow {
             emitAll(
                 handleApiResultNoTransformationWithData(

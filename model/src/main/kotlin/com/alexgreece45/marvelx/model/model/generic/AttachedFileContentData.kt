@@ -1,4 +1,4 @@
-package com.alexgreece45.marvelx.domain.model_generic
+package com.alexgreece45.marvelx.model.model.generic
 
 import android.net.Uri
 
