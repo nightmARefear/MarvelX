@@ -13,8 +13,12 @@ import java.time.YearMonth
 import kotlin.coroutines.CoroutineContext
 
 interface InputFieldValidator {
+    fun validateInputSerially(
+        value: String,
+        rules: List<InputFieldRule>
+    ): InputFieldValidationResult
 
-    suspend fun validateInput(
+    suspend fun validateInputInParallel(
         value: String,
         rules: List<InputFieldRule>
     ): InputFieldValidationResult
@@ -25,7 +29,24 @@ internal class InputFieldValidatorImpl(
     @DefaultDispatcher private val defaultDispatcher: CoroutineContext
 ) : InputFieldValidator {
 
-    override suspend fun validateInput(
+    override fun validateInputSerially(
+        value: String,
+        rules: List<InputFieldRule>
+    ): InputFieldValidationResult {
+        return try {
+            for (rule in rules) {
+                val result = validateRule(value = value, inputFieldRule = rule)
+                if (result is InputFieldValidationResult.Error) {
+                    return result
+                }
+            }
+            InputFieldValidationResult.Success
+        } catch (_: Exception) {
+            InputFieldValidationResult.EmptyError
+        }
+    }
+
+    override suspend fun validateInputInParallel(
         value: String,
         rules: List<InputFieldRule>
     ): InputFieldValidationResult =

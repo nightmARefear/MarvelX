@@ -5,7 +5,7 @@ import com.alexgreece45.marvelx.core.common.config.WebsocketConfigLogic
 import com.alexgreece45.marvelx.core.common.config.model.TimeoutData
 import org.koin.core.annotation.Single
 
-@Single
+@Single(binds = [WebsocketConfigLogic::class])
 internal class WebsocketConfigLogicImpl : WebsocketConfigLogic {
 
     override val websocketUrl: String get() = BuildConfig.MARVELX_BACKEND_WEBSOCKET_BASE_URL

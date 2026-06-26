@@ -11,9 +11,10 @@ koin-bom = "4.1.1"
 compose-navigation = "2.9.5"
 
 plugin-agp = "8.13.0"
-plugin-kotlin = "2.3.10"
+plugin-kotlin = "2.3.20"
 plugin-google-mapsplatform-secrets = "2.0.1"
-plugin-ksp = "2.3.0"
+plugin-ksp = "2.3.2"
+plugin-koin = "1.0.1"
 
 airbnb-lottie-compose = "6.6.10"
 
@@ -63,6 +64,8 @@ kotlin-serialization = "1.11.0"
 
 kotlinx-coroutines = "1.11.0"
 kotlinx-serialization-converter = "1.0.0"
+
+kotzilla = "2.2.3"
 
 lambdapioneer-argon2kt = "1.6.0"
 
@@ -161,6 +164,8 @@ kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-cor
 kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "kotlinx-coroutines" }
 kotlinx-serialization-converter = { module = "com.jakewharton.retrofit:retrofit2-kotlinx-serialization-converter", version.ref = "kotlinx-serialization-converter" }
 
+kotzilla-sdk-compose = { group = "io.kotzilla", name = "kotzilla-sdk-compose", version.ref = "kotzilla" }
+
 lambdapioneer-argon2kt = { module = "com.lambdapioneer.argon2kt:argon2kt", version.ref = "lambdapioneer-argon2kt" }
 
 rootbeer = { module = "com.scottyab:rootbeer-lib", version.ref = "rootbeer" }
@@ -197,6 +202,10 @@ kotlin-parcelize = { id = "org.jetbrains.kotlin.plugin.parcelize", version.ref =
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "plugin-kotlin" }
 
 ksp = { id = "com.google.devtools.ksp", version.ref = "plugin-ksp" }
+#koin-compiler = { id = "io.insert-koin.compiler.plugin", version.ref = "plugin-koin" }
+
+kotzilla = { id = "io.kotzilla.kotzilla-plugin", version.ref = "kotzilla" }
+
 
 [bundles]
 app-ui = [

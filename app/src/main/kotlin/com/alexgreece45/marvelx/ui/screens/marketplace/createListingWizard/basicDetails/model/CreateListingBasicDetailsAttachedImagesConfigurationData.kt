@@ -1,7 +1,7 @@
 package com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.basicDetails.model
 
 import androidx.compose.runtime.Immutable
-import com.alexgreece45.marvelx.util.extensions.fromBytesToMb
+import com.alexgreece45.marvelx.core.common.extensions.fromBytesToMb
 
 /**
  * The configuration data for the uploading of listing images.

@@ -6,7 +6,7 @@ import com.alexgreece45.marvelx.core.common.config.model.AppBuildType
 import com.alexgreece45.marvelx.core.common.constants.ConstantsSecurity
 import org.koin.core.annotation.Single
 
-@Single
+@Single(binds = [SecurityConfigLogic::class])
 internal class SecurityConfigLogicImpl(
     private val configLogic: ConfigLogic
 ) : SecurityConfigLogic {

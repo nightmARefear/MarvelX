@@ -15,7 +15,6 @@ import com.alexgreece45.marvelx.core.data.model.marketplace.listing.ListingPrevi
 import com.alexgreece45.marvelx.core.data.model.marketplace.listing.toData
 import com.alexgreece45.marvelx.core.data.model.myListing.MyListingData
 import com.alexgreece45.marvelx.core.data.model.myListing.toData
-import com.alexgreece45.marvelx.core.data.repositories.marketplace.listing.model.CreateListingResult
 import com.alexgreece45.marvelx.core.network.clients.ListingClient
 import com.alexgreece45.marvelx.core.network.model.api.marketplace.listing.RequestUpdateListing
 import com.alexgreece45.marvelx.core.network.model.api.marketplace.listing.ResponseListingId
@@ -36,7 +35,7 @@ interface ListingRepository {
     ): RepositoryResult<List<ListingPreviewData>>
 
     suspend fun getListing(listingId: String): RepositoryResult<ListingData>
-    suspend fun createListing(createListingData: CreateListingData): CreateListingResult
+    suspend fun createListing(createListingData: CreateListingData): MultipartResult<String>
 
     suspend fun updateListing(
         listingId: String,
@@ -96,7 +95,7 @@ internal class ListingRepositoryImpl(
         )
     }
 
-    override suspend fun createListing(createListingData: CreateListingData): CreateListingResult {
+    override suspend fun createListing(createListingData: CreateListingData): MultipartResult<String> {
         val multipartImageItems = buildList {
             add(
                 MultipartItem.Image(

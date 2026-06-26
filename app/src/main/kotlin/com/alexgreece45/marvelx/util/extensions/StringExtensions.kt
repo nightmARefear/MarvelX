@@ -133,9 +133,23 @@ fun Pair<String, String>.toFullName(): String = "$first $second"
 fun String.toUrlEncoding(): String = URLEncoder.encode(this, StandardCharsets.UTF_8.toString())
 
 /**
+ * Safely encodes the given string using URL encoding. This is safe for navigation arguments. If an
+ * exception occurs, [defaultValue] is returned instead.
+ */
+fun String.toSafeUrlEncoding(defaultValue: String): String =
+    runCatching { this.toUrlEncoding() }.getOrDefault(defaultValue)
+
+/**
  * Decodes this string from url encoding to UTF-8.
  */
 fun String.decodeFromUrl(): String = this.toUri().toString()
+
+/**
+ * Safely decodes this url encoded string to UTF-8. If an exception occurs, [defaultValue] is
+ * returned instead.
+ */
+fun String.safeDecodeFromUrl(defaultValue: String): String =
+    runCatching { this.decodeFromUrl() }.getOrDefault(defaultValue)
 
 /**
  * Returns this string with the euro symbol at the end.

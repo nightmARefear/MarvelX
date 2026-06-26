@@ -1,5 +1,6 @@
 package com.alexgreece45.marvelx.configuration
 
+import org.koin.core.annotation.Single
 import java.math.BigDecimal
 
 /**
@@ -23,7 +24,8 @@ interface ConfigPriceLogic {
     val maximumPrice: BigDecimal
 }
 
-class ConfigPriceLogicImpl : ConfigPriceLogic {
+@Single(binds = [ConfigPriceLogic::class])
+internal class ConfigPriceLogicImpl : ConfigPriceLogic {
 
     override val priceScale: Int
         get() = 2
@@ -33,5 +35,4 @@ class ConfigPriceLogicImpl : ConfigPriceLogic {
 
     override val maximumPrice: BigDecimal
         get() = "9999.99".toBigDecimalOrNull() ?: BigDecimal.ZERO
-
 }

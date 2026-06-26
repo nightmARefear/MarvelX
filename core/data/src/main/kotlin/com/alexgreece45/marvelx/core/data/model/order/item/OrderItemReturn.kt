@@ -14,9 +14,9 @@ data class OrderItemReturn(
 internal fun ResponseOrderItemReturn.toData(): OrderItemReturn =
     OrderItemReturn(
         status = OrderItemReturnStatus.entries.first { it.key == status },
-        reason = OrderItemReturnReason.entries.first { it.key == reason },
+        reason = OrderItemReturnReason.entries.first { it.key == returnReason },
         description = description,
-        attachedImageUrls = attachedImageUrls,
-        condition = OrderItemReturnCondition.entries.first { it.key == reason },
+        attachedImageUrls = attachedImageUrls.orEmpty(),
+        condition = OrderItemReturnCondition.entries.first { it.key == returnReason },
         sellerMessage = sellerMessage
     )

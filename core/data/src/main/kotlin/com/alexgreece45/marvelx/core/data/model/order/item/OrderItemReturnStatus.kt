@@ -10,7 +10,5 @@ enum class OrderItemReturnStatus(val key: String) {
     REFUNDED(key = "refunded");
 
     fun isProcessingStatus(): Boolean =
-        this == PENDING
-                || this == ITEM_REPLACED
-                || this == REFUNDED
+        this in setOf(PENDING, ITEM_REPLACED, REFUNDED)
 }

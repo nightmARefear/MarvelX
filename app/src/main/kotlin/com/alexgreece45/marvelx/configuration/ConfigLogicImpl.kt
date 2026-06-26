@@ -9,7 +9,7 @@ import com.alexgreece45.marvelx.core.common.constants.ConstantsContentTypes
 import com.alexgreece45.marvelx.util.extensions.getSchemeFromUrl
 import org.koin.core.annotation.Single
 
-@Single
+@Single(binds = [ConfigLogic::class])
 internal class ConfigLogicImpl : ConfigLogic {
 
     override val appBuildType: AppBuildType

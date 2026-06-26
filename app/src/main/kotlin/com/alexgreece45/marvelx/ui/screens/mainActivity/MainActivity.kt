@@ -18,6 +18,7 @@ import android.view.Window
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
@@ -71,6 +72,7 @@ class MainActivity : ComponentActivity() {
 
     @OptIn(KoinExperimentalAPI::class)
     override fun onCreate(savedInstanceState: Bundle?) {
+//        enableEdgeToEdge() // TODO: Investigate paddings.
         super.onCreate(savedInstanceState)
         appLogger.d(loggerTag) { "onCreate called." }
 

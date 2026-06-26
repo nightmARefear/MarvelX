@@ -7,6 +7,7 @@ plugins {
     alias(libs.plugins.kotlin.parcelize)
     alias(libs.plugins.google.gms.google.services)
     alias(libs.plugins.google.firebase.crashlytics)
+//    alias(libs.plugins.kotzilla)
 }
 
 val keystoreProperties = Properties()
@@ -258,4 +259,6 @@ dependencies {
     implementation(libs.binayshaw.kotstep)
 
     implementation(libs.androidx.datastore.preferences)
+
+//    implementation(libs.kotzilla.sdk.compose)
 }

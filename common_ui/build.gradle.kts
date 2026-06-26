@@ -8,7 +8,8 @@ android {
 }
 
 dependencies {
-    implementation(project(":core:common"))
+    implementation(projects.core.common)
+    implementation(projects.model)
 
     implementation(libs.androidx.compat)
 }

@@ -39,7 +39,7 @@ suspend fun <A : Any, B : Any> handleApiResultNoFlow(
     apiResult: ApiResult<A>,
     transformation: A.() -> B,
     ioDispatcher: CoroutineContext,
-    logError: ((String) -> Unit)?
+    logError: ((String) -> Unit)? = null
 ): RepositoryResult<B> =
     withContextCatchable<RepositoryResult<B>>(
         context = ioDispatcher,

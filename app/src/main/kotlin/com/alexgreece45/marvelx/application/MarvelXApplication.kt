@@ -31,7 +31,7 @@ class MarvelXApplication : Application(), Configuration.Provider, ImageLoaderFac
         FirebaseApp.initializeApp(this)
 
         // Initialize dependencies.
-        initKoin(this)
+        initKoin(this@MarvelXApplication)
 
         // Install logger.
         appLogger.installLogger()

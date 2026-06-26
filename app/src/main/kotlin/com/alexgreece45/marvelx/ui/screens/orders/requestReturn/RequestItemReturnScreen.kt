@@ -1,20 +1,30 @@
 package com.alexgreece45.marvelx.ui.screens.orders.requestReturn
 
 import android.content.res.Configuration
+import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Card
 import androidx.compose.material.Checkbox
 import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.Icon
 import androidx.compose.material.LocalTextStyle
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.RadioButton
@@ -23,14 +33,19 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarType
 import com.alexgreece45.marvelx.model.model.generic.AttachedFileContentData
 import com.alexgreece45.marvelx.ui.components.AlertDialogButton
 import com.alexgreece45.marvelx.ui.components.AlertDialogError
@@ -38,10 +53,12 @@ import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.ListingCard
 import com.alexgreece45.marvelx.ui.components.OutlinedTextFieldValidation
 import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
+import com.alexgreece45.marvelx.ui.components.ThrottledIconButton
 import com.alexgreece45.marvelx.ui.components.WrapButton
 import com.alexgreece45.marvelx.ui.components.effect.ObserveUiEffect
 import com.alexgreece45.marvelx.ui.components.model.ErrorButtonType
 import com.alexgreece45.marvelx.ui.components.sections.SectionHeaderTitle
+import com.alexgreece45.marvelx.ui.screens.marketplace.components.ListingImage
 import com.alexgreece45.marvelx.ui.screens.orders.model.item.itemReturn.OrderItemReturnReasonUi
 import com.alexgreece45.marvelx.ui.screens.orders.requestReturn.model.RequestItemReturnContract
 import com.alexgreece45.marvelx.ui.theme.MarvelXTheme
@@ -50,9 +67,15 @@ import com.alexgreece45.marvelx.util.FileUtil
 import com.alexgreece45.marvelx.util.SPACING_MEDIUM
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.SPACING_TINY
+import com.alexgreece45.marvelx.util.constants.ConstantsUi
 import com.alexgreece45.marvelx.util.extensions.clickableNoRipple
+import com.alexgreece45.marvelx.util.extensions.throttledClickable
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
+import sh.calvin.reorderable.ReorderableItem
+import sh.calvin.reorderable.ReorderableLazyListState
+
+private val ATTACHED_IMAGE_SIZE = ConstantsUi.LISTING_IMAGE_BIG_SIZE
 
 @Composable
 internal fun RequestItemReturnScreen(
@@ -65,6 +88,7 @@ internal fun RequestItemReturnScreen(
     orderItemTitle: String,
     orderItemCoverImageUrl: String,
     orderItemPriceLabel: String,
+    showSnackbar: (String, SnackbarType) -> Unit
 ) {
 
     val context = LocalContext.current
@@ -105,6 +129,11 @@ internal fun RequestItemReturnScreen(
             RequestItemReturnContract.Effect.OpenPhotoPicker -> {
                 multiPhotoPickerLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
             }
+
+            is RequestItemReturnContract.Effect.ShowSnackbar -> showSnackbar(
+                uiEffect.message,
+                uiEffect.type
+            )
         }
     }
 
@@ -359,6 +388,138 @@ private fun DescriptionSection(
     }
 }
 
+private fun LazyListScope.attachedImages(
+    attachedImages: List<AttachedFileContentData>,
+    onDeleteIconClicked: (Uri) -> Unit,
+    reorderableLazyRowState: ReorderableLazyListState,
+    onDragStarted: (Offset) -> Unit,
+    onDragStopped: () -> Unit,
+    onUploadPhotosButtonClicked: () -> Unit
+) {
+    itemsIndexed(
+        items = attachedImages,
+        key = { _, attachedImage -> attachedImage.uri }
+    ) { index, attachedImage ->
+        val attachedImageUri = attachedImage.uri
+        ReorderableItem(
+            state = reorderableLazyRowState,
+            key = attachedImageUri
+        ) {
+            AttachedImageItem(
+                imageUrl = attachedImageUri.toString(),
+                title = stringResource(
+                    R.string.screen_request_item_return_uploaded_image_content_description,
+                    (index + 1)
+                ),
+                { onDeleteIconClicked(attachedImageUri) },
+                modifier = Modifier
+                    .draggableHandle(
+                        onDragStarted = onDragStarted,
+                        onDragStopped = onDragStopped
+                    )
+            )
+        }
+    }
+
+    item(key = "uploadPhotosButton") {
+        Box(
+            modifier = Modifier
+                .size(size = ATTACHED_IMAGE_SIZE)
+                .border(
+                    width = 1.dp,
+                    color = MaterialTheme.customColors.genericRed,
+                    shape = MaterialTheme.shapes.medium
+                )
+                .throttledClickable(
+                    view = LocalView.current,
+                    onClick = onUploadPhotosButtonClicked
+                )
+        ) {
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_add),
+                    contentDescription = stringResource(R.string.screen_request_item_return_upload_image_button_content_description)
+                )
+
+                Text(
+                    text = stringResource(R.string.screen_request_item_return_upload_images_button),
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
+    }
+}
+
+private fun LazyListScope.uploadedImages(imageUrls: List<String>) {
+    itemsIndexed(
+        items = imageUrls,
+        key = { _, imageUrl -> imageUrl }
+    ) { index, imageUrl ->
+        ImageItem(
+            imageUrl = imageUrl,
+            title = stringResource(
+                R.string.screen_request_item_return_uploaded_image_content_description,
+                (index + 1)
+            )
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterialApi::class)
+@Composable
+private fun ImageItem(
+    imageUrl: String,
+    title: String,
+    modifier: Modifier = Modifier
+) {
+    ListingImage(
+        imageUrl = imageUrl,
+        title = title,
+        modifier = Modifier
+            .size(ATTACHED_IMAGE_SIZE)
+            .then(modifier)
+    )
+}
+
+@OptIn(ExperimentalMaterialApi::class)
+@Composable
+private fun AttachedImageItem(
+    imageUrl: String,
+    title: String,
+    onDeleteIconClicked: () -> Unit,
+    modifier: Modifier
+) {
+    val alignmentOffset = ((48.dp - SPACING_MEDIUM.dp) / 2 - SPACING_SMALL.dp).coerceAtLeast(0.dp)
+
+    Box {
+        ImageItem(
+            imageUrl = imageUrl,
+            title = title,
+            modifier = modifier
+        )
+
+        ThrottledIconButton(
+            onClick = onDeleteIconClicked,
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .offset(x = alignmentOffset, y = -alignmentOffset)
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.ic_close),
+                contentDescription = stringResource(R.string.screen_request_item_return_remove_image_button_content_description),
+                modifier = Modifier.background(
+                    color = MaterialTheme.colors.background,
+                    shape = CircleShape
+                )
+            )
+        }
+    }
+}
+
 @Preview(
     showBackground = true, showSystemUi = true,
     uiMode = Configuration.UI_MODE_NIGHT_YES or Configuration.UI_MODE_TYPE_NORMAL
@@ -375,7 +536,8 @@ private fun ScreenPreview() {
             orderItemId = "100",
             orderItemTitle = "Wow mug!!!!",
             orderItemCoverImageUrl = "....",
-            orderItemPriceLabel = "150.20€"
+            orderItemPriceLabel = "150.20€",
+            showSnackbar = { _, _ -> }
         )
     }
 }

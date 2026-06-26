@@ -668,6 +668,10 @@
 
     <string name="screen_request_item_return_mandatory_field_label">mandatory field</string>
 
+    <string name="screen_request_item_return_upload_images_title">Upload photos (optional)</string>
+    <string name="screen_request_item_return_upload_images_button">Upload photos</string>
+    <string name="screen_request_item_return_upload_images_helper_text">Upload up to %1$s photos</string>
+
     <string name="screen_request_item_refund_toast_image_selection_failure">An error occurred whilst selecting the images</string>
     <string name="screen_request_item_refund_toast_image_selection_none">No images were selected</string>
 
@@ -677,6 +681,15 @@
     <string name="screen_request_item_return_refund_dialog_button_positive">Continue</string>
 
     <string name="screen_request_return_description_error_max_characters">Description cannot be more than %1$s characters</string>
+    <string name="screen_request_item_return_refund_error_attaching_images_generic">An error occurred whilst attaching the images.</string>
+    <string name="screen_request_item_return_refund_error_attaching_images_invalid_extension">You can only attach JPEG and PNG images.</string>
+    <string name="screen_request_item_return_refund_error_attaching_images_over_max_count">You can only attach up to %1$s images.</string>
+    <string name="screen_request_item_return_refund_error_attaching_images_over_max_size">The maximum allowed image size is %1$s MB.</string>
+    <string name="screen_request_item_return_refund_error_attaching_images_existing_image">One of the selected images is already attached.</string>
+
+    <string name="screen_request_item_return_upload_image_button_content_description">upload image button</string>
+    <string name="screen_request_item_return_uploaded_image_content_description">Uploaded image %1$s</string>
+    <string name="screen_request_item_return_remove_image_button_content_description">remove attached image button</string>
 
     <string name="screen_request_return_submit_button">Submit Return Request</string>
 

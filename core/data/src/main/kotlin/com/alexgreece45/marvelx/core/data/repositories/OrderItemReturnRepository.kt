@@ -5,17 +5,19 @@ import com.alexgreece45.marvelx.core.common.extensions.LOGGER_TAG
 import com.alexgreece45.marvelx.core.common.logger.AppLogger
 import com.alexgreece45.marvelx.core.data.helper.RepositoryResult
 import com.alexgreece45.marvelx.core.data.helper.handleApiResultNoFlow
-import com.alexgreece45.marvelx.core.data.helper.handleApiResultNoTransformationNoFlow
 import com.alexgreece45.marvelx.core.data.helper.multi_part_builder.MultipartBuilder
 import com.alexgreece45.marvelx.core.data.helper.multi_part_builder.model.MultipartBuilderResult
 import com.alexgreece45.marvelx.core.data.helper.multi_part_builder.model.MultipartItem
 import com.alexgreece45.marvelx.core.data.helper.multi_part_builder.model.MultipartResult
 import com.alexgreece45.marvelx.core.data.helper.multi_part_builder.model.toMultipartResult
+import com.alexgreece45.marvelx.core.data.model.order.OrderId
 import com.alexgreece45.marvelx.core.data.model.order.item.OrderItemReturnCondition
+import com.alexgreece45.marvelx.core.data.model.order.item.OrderItemReturnReason
 import com.alexgreece45.marvelx.core.data.model.order.item.OrderItemReturnResult
+import com.alexgreece45.marvelx.core.data.model.order.item.OrderItemReturnState
 import com.alexgreece45.marvelx.core.data.model.order.item.toData
+import com.alexgreece45.marvelx.core.data.model.order.item.toDataState
 import com.alexgreece45.marvelx.core.network.clients.OrderClient
-import com.alexgreece45.marvelx.core.network.model.api.order.item.returnRequest.ResponseOrderItemReturn
 import com.alexgreece45.marvelx.model.model.generic.AttachedFileContentData
 import org.koin.core.annotation.Single
 import kotlin.coroutines.CoroutineContext
@@ -23,14 +25,14 @@ import kotlin.coroutines.CoroutineContext
 interface OrderItemReturnRepository {
 
     suspend fun getOrderItemReturnRequest(
-        orderId: String,
-        orderItemId: String,
-    ): RepositoryResult<ResponseOrderItemReturn>
+        orderId: OrderId,
+        orderItemId: OrderId,
+    ): RepositoryResult<OrderItemReturnState>
 
     suspend fun placeOrderItemReturnRequest(
-        orderId: String,
-        orderItemId: String,
-        reason: String,
+        orderId: OrderId,
+        orderItemId: OrderId,
+        returnReason: OrderItemReturnReason,
         requestRefund: Boolean,
         attachedImages: List<AttachedFileContentData>,
         description: String,
@@ -47,22 +49,23 @@ internal class OrderItemReturnRepositoryImpl(
 ) : OrderItemReturnRepository {
 
     override suspend fun getOrderItemReturnRequest(
-        orderId: String,
-        orderItemId: String,
-    ): RepositoryResult<ResponseOrderItemReturn> {
-        return handleApiResultNoTransformationNoFlow(
+        orderId: OrderId,
+        orderItemId: OrderId,
+    ): RepositoryResult<OrderItemReturnState> {
+        return handleApiResultNoFlow(
             apiResult = orderClient.getOrderItemReturnRequest(
-                orderId = orderId,
-                orderItemId = orderItemId
+                orderId = orderId.value,
+                orderItemId = orderItemId.value
             ),
+            transformation = { this.toDataState() },
             ioDispatcher = ioDispatcher
         )
     }
 
     override suspend fun placeOrderItemReturnRequest(
-        orderId: String,
-        orderItemId: String,
-        reason: String,
+        orderId: OrderId,
+        orderItemId: OrderId,
+        returnReason: OrderItemReturnReason,
         requestRefund: Boolean,
         attachedImages: List<AttachedFileContentData>,
         description: String,
@@ -72,8 +75,8 @@ internal class OrderItemReturnRepositoryImpl(
             buildList {
                 add(
                     MultipartItem.Text(
-                        partName = "reason",
-                        value = reason
+                        partName = "returnReason",
+                        value = returnReason.key
                     )
                 )
                 add(
@@ -115,8 +118,8 @@ internal class OrderItemReturnRepositoryImpl(
             is MultipartBuilderResult.Success -> {
                 handleApiResultNoFlow(
                     apiResult = orderClient.placeOrderItemReturnRequest(
-                        orderId = orderId,
-                        orderItemId = orderItemId,
+                        orderId = orderId.value,
+                        orderItemId = orderItemId.value,
                         requestOrderItemReturn = multipartBuilderResult.data
                     ),
                     transformation = { this.toData() },

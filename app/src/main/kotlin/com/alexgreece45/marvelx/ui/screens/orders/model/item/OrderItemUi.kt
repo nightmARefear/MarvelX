@@ -1,14 +1,14 @@
 package com.alexgreece45.marvelx.ui.screens.orders.model.item
 
 import androidx.compose.runtime.Immutable
-import com.alexgreece45.marvelx.domain.model_api.order.OrderId
+import com.alexgreece45.marvelx.domain.model_api.order.OrderIdDomain
 import com.alexgreece45.marvelx.domain.model_api.order.item.OrderItemDomain
 import com.alexgreece45.marvelx.ui.model_generic.BigDecimalUi
 import com.alexgreece45.marvelx.util.extensions.formatPrice
 
 @Immutable
 data class OrderItemUi(
-    val id: OrderId,
+    val id: OrderIdDomain,
     val sellerUserId: String,
     val title: String,
     val coverImageUrl: String,

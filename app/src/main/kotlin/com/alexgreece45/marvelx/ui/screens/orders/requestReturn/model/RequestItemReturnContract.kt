@@ -1,5 +1,6 @@
 package com.alexgreece45.marvelx.ui.screens.orders.requestReturn.model
 
+import com.alexgreece45.marvelx.common_ui.imageValidator.model.ImageValidationConfig
 import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarType
 import com.alexgreece45.marvelx.core.data.model.order.item.OrderItemReturn
 import com.alexgreece45.marvelx.model.model.generic.AttachedFileContentData
@@ -9,6 +10,7 @@ import com.alexgreece45.marvelx.mvi.BaseState
 import com.alexgreece45.marvelx.ui.model_generic.InputFieldUi
 import com.alexgreece45.marvelx.ui.model_generic.UiState
 import com.alexgreece45.marvelx.ui.screens.orders.model.item.itemReturn.OrderItemReturnReasonUi
+import com.alexgreece45.marvelx.ui.screens.orders.orderDetails.model.OrderItemDetails
 
 internal sealed interface RequestItemReturnContract {
 
@@ -60,12 +62,10 @@ internal sealed interface RequestItemReturnContract {
 
     data class State(
         val uiState: UiState<OrderItemReturn, Unit> = UiState.Loading,
+        val wizardMode: RequestItemReturnWizardMode = RequestItemReturnWizardMode.Create,
+        val wizardStep: RequestItemReturnWizardStep = RequestItemReturnWizardStep.RETURN_DETAILS,
 
-        val orderId: String = "",
-        val orderItemId: String = "",
-        val orderItemTitle: String = "",
-        val orderItemCoverImageUrl: String = "",
-        val orderItemPriceLabel: String = "",
+        val orderItemDetails: OrderItemDetails = OrderItemDetails(),
 
         // User input.
 
@@ -77,6 +77,7 @@ internal sealed interface RequestItemReturnContract {
         val descriptionMaxLength: Int = 0,
 
         val attachedImages: List<AttachedFileContentData> = emptyList(),
+        val imageValidationConfig: ImageValidationConfig = ImageValidationConfig(),
 
         val itemCondition: OrderItemReturnConditionUi? = null,
 

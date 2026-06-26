@@ -2,7 +2,7 @@ package com.alexgreece45.marvelx.ui.screens.orders.model.item.itemReturn
 
 import androidx.annotation.StringRes
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.domain.model_api.order.item.itemReturn.OrderItemReturnReasonDomain
+import com.alexgreece45.marvelx.core.data.model.order.item.OrderItemReturnReason
 
 internal enum class OrderItemReturnReasonUi(@StringRes val labelResId: Int) {
     DEFECTIVE(R.string.order_item_return_reason_defective),
@@ -12,20 +12,20 @@ internal enum class OrderItemReturnReasonUi(@StringRes val labelResId: Int) {
     OTHER(R.string.order_item_return_reason_other)
 }
 
-internal fun OrderItemReturnReasonDomain.toUi(): OrderItemReturnReasonUi =
+internal fun OrderItemReturnReason.toUi(): OrderItemReturnReasonUi =
     when (this) {
-        OrderItemReturnReasonDomain.DEFECTIVE -> OrderItemReturnReasonUi.DEFECTIVE
-        OrderItemReturnReasonDomain.NOT_AS_DESCRIBED -> OrderItemReturnReasonUi.NOT_AS_DESCRIBED
-        OrderItemReturnReasonDomain.WRONG_ITEM -> OrderItemReturnReasonUi.WRONG_ITEM
-        OrderItemReturnReasonDomain.CHANGED_MIND -> OrderItemReturnReasonUi.CHANGED_MIND
-        OrderItemReturnReasonDomain.OTHER -> OrderItemReturnReasonUi.OTHER
+        OrderItemReturnReason.DEFECTIVE -> OrderItemReturnReasonUi.DEFECTIVE
+        OrderItemReturnReason.NOT_AS_DESCRIBED -> OrderItemReturnReasonUi.NOT_AS_DESCRIBED
+        OrderItemReturnReason.WRONG_ITEM -> OrderItemReturnReasonUi.WRONG_ITEM
+        OrderItemReturnReason.CHANGED_MIND -> OrderItemReturnReasonUi.CHANGED_MIND
+        OrderItemReturnReason.OTHER -> OrderItemReturnReasonUi.OTHER
     }
 
-internal fun OrderItemReturnReasonUi.toDomain(): OrderItemReturnReasonDomain =
+internal fun OrderItemReturnReasonUi.toData(): OrderItemReturnReason =
     when (this) {
-        OrderItemReturnReasonUi.DEFECTIVE -> OrderItemReturnReasonDomain.DEFECTIVE
-        OrderItemReturnReasonUi.NOT_AS_DESCRIBED -> OrderItemReturnReasonDomain.NOT_AS_DESCRIBED
-        OrderItemReturnReasonUi.WRONG_ITEM -> OrderItemReturnReasonDomain.WRONG_ITEM
-        OrderItemReturnReasonUi.CHANGED_MIND -> OrderItemReturnReasonDomain.CHANGED_MIND
-        OrderItemReturnReasonUi.OTHER -> OrderItemReturnReasonDomain.OTHER
+        OrderItemReturnReasonUi.DEFECTIVE -> OrderItemReturnReason.DEFECTIVE
+        OrderItemReturnReasonUi.NOT_AS_DESCRIBED -> OrderItemReturnReason.NOT_AS_DESCRIBED
+        OrderItemReturnReasonUi.WRONG_ITEM -> OrderItemReturnReason.WRONG_ITEM
+        OrderItemReturnReasonUi.CHANGED_MIND -> OrderItemReturnReason.CHANGED_MIND
+        OrderItemReturnReasonUi.OTHER -> OrderItemReturnReason.OTHER
     }

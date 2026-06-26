@@ -5,6 +5,7 @@ import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
 import com.alexgreece45.marvelx.ui.helper.createUriPatternForDeepLink
+import com.alexgreece45.marvelx.ui.screens.orders.orderDetails.model.OrderItemDetails
 
 /**
  * Represents a unique screen in this application. You can set the screen name through [baseRoute],
@@ -259,13 +260,9 @@ sealed class Screen(
         )
     ) {
         fun createNavRoute(
-            orderId: String,
-            orderItemId: String,
-            orderItemTitle: String,
-            orderItemCoverImageUrl: String,
-            orderItemPriceLabel: String
+            orderItemDetails: OrderItemDetails
         ): String =
-            "$baseRoute/$orderId/$orderItemId/$orderItemTitle/$orderItemCoverImageUrl/$orderItemPriceLabel"
+            "$baseRoute/${orderItemDetails.orderId}/${orderItemDetails.orderItemId}/${orderItemDetails.orderItemTitle}/${orderItemDetails.orderItemCoverImageUrl}/${orderItemDetails.orderItemPriceLabel}"
     }
 
     data object OrderItemContactSupportScreen : Screen(

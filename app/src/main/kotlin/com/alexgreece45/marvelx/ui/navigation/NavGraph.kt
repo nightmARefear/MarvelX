@@ -441,13 +441,7 @@ fun NavGraph(navController: NavHostController) {
                         )
 
                         is OrderItemTrackingHistoryContract.Effect.Navigation.GoToRequestItemRefundScreen -> navController.navigate(
-                            Screen.RequestItemRefundScreen.createNavRoute(
-                                orderId = navigationEffect.orderId,
-                                orderItemId = navigationEffect.orderItemId,
-                                orderItemTitle = navigationEffect.orderItemTitle,
-                                orderItemCoverImageUrl = navigationEffect.orderItemCoverImageUrl,
-                                orderItemPriceLabel = navigationEffect.orderItemPriceLabel
-                            )
+                            Screen.RequestItemRefundScreen.createNavRoute(orderItemDetails = navigationEffect.orderItemDetails)
                         )
 
                         is OrderItemTrackingHistoryContract.Effect.Navigation.GoToContactSupportScreen -> TODO()
@@ -456,13 +450,13 @@ fun NavGraph(navController: NavHostController) {
                 orderId = navBackStackEntry.arguments?.getString(NavItem.OrderId.key).orEmpty(),
                 orderItemId = navBackStackEntry.arguments?.getString(NavItem.OrderItemId.key)
                     .orEmpty(),
-                sellerUserId = navBackStackEntry.arguments?.getString(NavItem.SellerUserId.key)
-                    .orEmpty(),
                 orderItemTitle = navBackStackEntry.arguments?.getString(NavItem.OrderItemTitle.key)
                     .orEmpty(),
                 orderItemCoverImageUrl = navBackStackEntry.arguments?.getString(NavItem.OrderItemCoverImageUrl.key)
                     .orEmpty(),
                 orderItemPriceLabel = navBackStackEntry.arguments?.getString(NavItem.OrderItemPriceLabel.key)
+                    .orEmpty(),
+                sellerUserId = navBackStackEntry.arguments?.getString(NavItem.SellerUserId.key)
                     .orEmpty()
             )
         }
@@ -486,11 +480,10 @@ fun NavGraph(navController: NavHostController) {
                 orderItemCoverImageUrl = navBackStackEntry.arguments?.getString(NavItem.OrderItemCoverImageUrl.key)
                     .orEmpty(),
                 orderItemPriceLabel = navBackStackEntry.arguments?.getString(NavItem.OrderItemPriceLabel.key)
-                    .orEmpty()
+                    .orEmpty(),
+                showSnackbar = { _, _ -> }
             )
         }
-
-
 
         composable(screen = Screen.AllCharactersScreen) {
             val viewModel = koinViewModel<AllCharactersViewModel>()

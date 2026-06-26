@@ -6,7 +6,7 @@ import com.alexgreece45.marvelx.core.data.helper.RepositoryResult
 import com.alexgreece45.marvelx.core.data.helper.handleApiResult
 import com.alexgreece45.marvelx.core.network.clients.ListingClient
 import com.alexgreece45.marvelx.data.model.marketplace.listing.ListingCategory
-import com.alexgreece45.marvelx.core.data.model.marketplace.listing.toData
+import com.alexgreece45.marvelx.data.model.marketplace.listing.toData
 import com.alexgreece45.marvelx.database.ListingCategoryDao
 import com.alexgreece45.marvelx.database.ListingCategoryWithSubcategoriesEntity
 import com.alexgreece45.marvelx.database.toDatabase

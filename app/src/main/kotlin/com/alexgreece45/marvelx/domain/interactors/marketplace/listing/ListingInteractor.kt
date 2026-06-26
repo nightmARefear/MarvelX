@@ -1,7 +1,7 @@
 package com.alexgreece45.marvelx.domain.interactors.marketplace.listing
 
+import com.alexgreece45.marvelx.core.data.helper.multi_part_builder.model.MultipartResult
 import com.alexgreece45.marvelx.core.data.repositories.marketplace.listing.ListingRepository
-import com.alexgreece45.marvelx.core.data.repositories.marketplace.listing.model.CreateListingResult
 import com.alexgreece45.marvelx.domain.helper.InteractorPartialState
 import com.alexgreece45.marvelx.domain.helper.handleRepositoryResultNoFlow
 import com.alexgreece45.marvelx.domain.mappers.marketplace.listing.ListingDomainMapper
@@ -29,7 +29,7 @@ interface ListingInteractor {
     ): InteractorPartialState<List<ListingPreviewDomain>>
 
     suspend fun getListing(listingId: String): InteractorPartialState<ListingDomain>
-    suspend fun createListing(createListingDomain: CreateListingDomain): CreateListingResult
+    suspend fun createListing(createListingDomain: CreateListingDomain): MultipartResult<String>
     suspend fun updateListing(
         listingId: String,
         updateListingDomain: UpdateListingDomain
@@ -80,7 +80,7 @@ internal class ListingInteractorImpl(
         )
     }
 
-    override suspend fun createListing(createListingDomain: CreateListingDomain): CreateListingResult {
+    override suspend fun createListing(createListingDomain: CreateListingDomain): MultipartResult<String> {
         return listingRepository.createListing(
             createListingData = createListingDomain.toData()
         )

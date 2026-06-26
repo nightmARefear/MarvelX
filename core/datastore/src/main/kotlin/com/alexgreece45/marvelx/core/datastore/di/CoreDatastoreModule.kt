@@ -8,11 +8,13 @@ import com.google.crypto.tink.aead.AeadConfig
 import com.google.crypto.tink.aead.PredefinedAeadParameters
 import com.google.crypto.tink.integration.android.AndroidKeysetManager
 import org.koin.core.annotation.ComponentScan
+import org.koin.core.annotation.Configuration
 import org.koin.core.annotation.Module
 import org.koin.core.annotation.Single
 
 @Module
 @ComponentScan("com.alexgreece45.marvelx.core.datastore")
+//@Configuration
 class CoreDatastoreModule
 
 @Single

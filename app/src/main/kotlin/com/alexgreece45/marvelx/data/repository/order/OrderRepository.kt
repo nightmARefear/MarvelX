@@ -3,6 +3,7 @@ package com.alexgreece45.marvelx.data.repository.order
 import com.alexgreece45.marvelx.core.common.dispatchers.model.IoDispatcher
 import com.alexgreece45.marvelx.core.data.helper.RepositoryResult
 import com.alexgreece45.marvelx.core.data.helper.handleApiResultNoFlow
+import com.alexgreece45.marvelx.core.data.model.order.OrderId
 import com.alexgreece45.marvelx.core.network.clients.OrderClient
 import com.alexgreece45.marvelx.data.model.order.OrderData
 import com.alexgreece45.marvelx.data.model.order.OrderPreviewData
@@ -15,10 +16,10 @@ import kotlin.coroutines.CoroutineContext
 interface OrderRepository {
 
     suspend fun getOrders(): RepositoryResult<List<OrderPreviewData>>
-    suspend fun getOrderDetails(orderId: String): RepositoryResult<OrderData>
+    suspend fun getOrderDetails(orderId: OrderId): RepositoryResult<OrderData>
     suspend fun getOrderItemTrackingHistory(
-        orderId: String,
-        orderItemId: String
+        orderId: OrderId,
+        orderItemId: OrderId
     ): RepositoryResult<OrderItemTrackingHistoryData>
 
     suspend fun placeOrder(): RepositoryResult<String>
@@ -38,20 +39,20 @@ internal class OrderRepositoryImpl(
         )
     }
 
-    override suspend fun getOrderDetails(orderId: String): RepositoryResult<OrderData> {
+    override suspend fun getOrderDetails(orderId: OrderId): RepositoryResult<OrderData> {
         return handleApiResultNoFlow(
-            apiResult = orderClient.getOrderDetails(orderId),
+            apiResult = orderClient.getOrderDetails(orderId.value),
             transformation = { this.toData() },
             ioDispatcher = ioDispatcher
         )
     }
 
     override suspend fun getOrderItemTrackingHistory(
-        orderId: String,
-        orderItemId: String
+        orderId: OrderId,
+        orderItemId: OrderId
     ): RepositoryResult<OrderItemTrackingHistoryData> {
         return handleApiResultNoFlow(
-            apiResult = orderClient.getOrderItemTrackingHistory(orderId, orderItemId),
+            apiResult = orderClient.getOrderItemTrackingHistory(orderId.value, orderItemId.value),
             transformation = { this.toData() },
             ioDispatcher = ioDispatcher
         )

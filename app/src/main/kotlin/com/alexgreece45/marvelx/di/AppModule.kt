@@ -5,8 +5,6 @@ import androidx.work.WorkerFactory
 import com.alexgreece45.marvelx.BuildConfig
 import com.alexgreece45.marvelx.application.MarvelXApplication
 import com.alexgreece45.marvelx.application.worker.RefreshTokenWorkerFactory
-import com.alexgreece45.marvelx.configuration.ConfigPriceLogic
-import com.alexgreece45.marvelx.configuration.ConfigPriceLogicImpl
 import com.alexgreece45.marvelx.configuration.di.ConfigurationModule
 import com.alexgreece45.marvelx.controllers.di.ControllersModule
 import com.alexgreece45.marvelx.core.common.config.model.AppBuildType
@@ -42,12 +40,16 @@ import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.androidx.workmanager.dsl.worker
 import org.koin.androidx.workmanager.koin.workManagerFactory
-import org.koin.core.context.startKoin
+import org.koin.core.annotation.KoinApplication
+import org.koin.core.context.GlobalContext.startKoin
 import org.koin.core.logger.Level
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
 import org.koin.ksp.generated.module
+
+@KoinApplication
+class MarvelXApp
 
 /**
  * Initializes a Koin application with the given [marvelXApplication] as the Android Context used
@@ -55,6 +57,7 @@ import org.koin.ksp.generated.module
  */
 fun initKoin(marvelXApplication: MarvelXApplication) {
     startKoin {
+//    startKoin<MarvelXApp> {
         androidLogger(if (BuildConfig.BUILD_TYPE == AppBuildType.DEBUG.key) Level.DEBUG else Level.NONE)
         androidContext(marvelXApplication)
 
@@ -78,13 +81,13 @@ fun initKoin(marvelXApplication: MarvelXApplication) {
             ControllersModule().module,
             formValidatorModule,
             resourceProviderModule,
-            configModule,
             workerModule,
 //            CommonUiModule().module,
             NotificationsModule().module,
             ViewModelModule().module,
             UiModule().module,
         )
+//        monitoring()
     }
 }
 
@@ -124,10 +127,6 @@ private val formValidatorModule = module {
 
 private val resourceProviderModule = module {
     single<ResourceProvider> { ResourceProviderImpl(get()) }
-}
-
-private val configModule = module {
-    single<ConfigPriceLogic> { ConfigPriceLogicImpl() }
 }
 
 private val viewModelModule = module {

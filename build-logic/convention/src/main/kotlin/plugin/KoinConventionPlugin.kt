@@ -20,6 +20,7 @@ internal class KoinConventionPlugin : Plugin<Project> {
     override fun apply(target: Project) {
         with(target) {
             pluginManager.apply(libs.alias("ksp"))
+//            pluginManager.apply(libs.alias("koin.compiler"))
 
             dependencies {
                 implementationPlatform(libs.library("koin.bom"))

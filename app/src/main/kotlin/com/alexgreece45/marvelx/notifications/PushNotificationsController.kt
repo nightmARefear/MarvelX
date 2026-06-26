@@ -5,13 +5,12 @@ import android.content.Context
 import androidx.core.content.ContextCompat.getSystemService
 import com.alexgreece45.marvelx.controllers.DeviceController
 import com.alexgreece45.marvelx.controllers.FcmController
-import com.alexgreece45.marvelx.core.common.applicationScope.model.ApplicationScope
 import com.alexgreece45.marvelx.core.common.dispatchers.model.IoDispatcher
 import com.alexgreece45.marvelx.core.common.logger.AppLogger
+import com.alexgreece45.marvelx.core.data.helper.RepositoryResult
 import com.alexgreece45.marvelx.data.model.deepLink.DeepLinkAction
 import com.alexgreece45.marvelx.data.repository.ImageRepository
 import com.alexgreece45.marvelx.data.repository.UserRepository
-import com.alexgreece45.marvelx.core.data.helper.RepositoryResult
 import com.alexgreece45.marvelx.notifications.constants.ConstantsNotifications
 import com.alexgreece45.marvelx.notifications.model.NotificationChannelType
 import com.alexgreece45.marvelx.notifications.model.NotificationData
@@ -30,7 +29,7 @@ import kotlin.coroutines.CoroutineContext
 @Single
 class PushNotificationsController(
     @IoDispatcher ioDispatcher: CoroutineContext,
-    @ApplicationScope private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + ioDispatcher),
+    private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + ioDispatcher),
     private val appLogger: AppLogger,
     private val fcmController: FcmController,
     private val deviceController: DeviceController,

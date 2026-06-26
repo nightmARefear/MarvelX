@@ -111,17 +111,17 @@ import kotlin.random.Random
 import kotlin.random.nextLong
 
 @Composable
-fun OrderItemTrackingHistoryScreen(
+internal fun OrderItemTrackingHistoryScreen(
     onEvent: (OrderItemTrackingHistoryContract.Event) -> Unit,
     state: OrderItemTrackingHistoryContract.State,
     effect: Flow<OrderItemTrackingHistoryContract.Effect>,
     onNavigationEffect: (OrderItemTrackingHistoryContract.Effect.Navigation) -> Unit,
     orderId: String,
     orderItemId: String,
-    sellerUserId: String,
     orderItemTitle: String,
     orderItemCoverImageUrl: String,
     orderItemPriceLabel: String,
+    sellerUserId: String,
 ) {
     val clipboard = LocalClipboard.current
     val context = LocalContext.current
@@ -141,10 +141,10 @@ fun OrderItemTrackingHistoryScreen(
             OrderItemTrackingHistoryContract.Event.Init(
                 orderId = orderId,
                 orderItemId = orderItemId,
-                sellerId = sellerUserId,
                 orderItemTitle = orderItemTitle,
                 orderItemCoverImageUrl = orderItemCoverImageUrl,
-                orderItemPriceLabel = orderItemPriceLabel
+                orderItemPriceLabel = orderItemPriceLabel,
+                sellerId = sellerUserId,
             )
         )
     }
@@ -176,8 +176,8 @@ fun OrderItemTrackingHistoryScreen(
                     GenericErrorScreen(
                         errorMessage = stringResource(
                             if (isErrorTypeNoData) R.string.screen_order_item_tracking_history_error_label_no_data else R.string.screen_order_item_tracking_history_error_label_fetching_data,
-                            state.orderId.formatted,
-                            state.orderItemId.formatted
+                            state.orderItemDetails.orderId.formatted,
+                            state.orderItemDetails.orderItemId.formatted
                         ),
                         buttonLabel = stringResource(if (isErrorTypeNoData) R.string.generic_go_back else R.string.generic_retry_button),
                         onErrorButtonClicked = {
@@ -186,6 +186,7 @@ fun OrderItemTrackingHistoryScreen(
                     )
                 }
                 .onSuccess { orderItemTrackingHistoryUi ->
+                    val orderItemDetails = state.orderItemDetails
                     Column(
                         modifier = Modifier.fillMaxWidth(),
                         verticalArrangement = Arrangement.spacedBy(SPACING_MEDIUM.dp)
@@ -194,15 +195,16 @@ fun OrderItemTrackingHistoryScreen(
                         Text(
                             text = stringResource(
                                 R.string.screen_order_item_tracking_history_label_order_ids,
-                                orderId, orderItemId
+                                orderItemDetails.orderId.formatted,
+                                orderItemDetails.orderItemId.formatted
                             ),
                             color = MaterialTheme.colors.onSurface.copy(alpha = ContentAlpha.medium)
                         )
 
                         OrderItemCard(
-                            title = orderItemTitle,
-                            coverImageUrl = orderItemCoverImageUrl,
-                            priceLabel = orderItemPriceLabel,
+                            title = orderItemDetails.orderItemTitle,
+                            coverImageUrl = orderItemDetails.orderItemCoverImageUrl,
+                            priceLabel = orderItemDetails.orderItemPriceLabel,
                             status = orderItemTrackingHistoryUi.status,
                             currentStepItem = orderItemTrackingHistoryUi.currentStepItem,
                             sellerBasicProfileDetailsState = state.sellerDetailsUiState,
@@ -1222,10 +1224,10 @@ private fun OrderItemTrackingHistoryScreenDeliveredPreview() {
             onNavigationEffect = {},
             orderId = "A1001567",
             orderItemId = "A1",
-            sellerUserId = "1",
             orderItemTitle = "Super wow mug!",
             orderItemCoverImageUrl = "",
-            orderItemPriceLabel = "150.20".withEuroSymbol()
+            orderItemPriceLabel = "150.20".withEuroSymbol(),
+            sellerUserId = "1"
         )
     }
 }

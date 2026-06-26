@@ -3,8 +3,8 @@ package com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.controllers.createListingWizard.CreateListingWizardController
+import com.alexgreece45.marvelx.core.data.helper.multi_part_builder.model.MultipartResult
 import com.alexgreece45.marvelx.core.data.repositories.UserSessionRepository
-import com.alexgreece45.marvelx.core.data.repositories.marketplace.listing.model.CreateListingResult
 import com.alexgreece45.marvelx.domain.helper.InteractorPartialState
 import com.alexgreece45.marvelx.domain.interactors.marketplace.listing.ListingInteractor
 import com.alexgreece45.marvelx.domain.model_api.marketplace.listing.UpdateListingDomain
@@ -419,8 +419,8 @@ internal class CreateListingWizardViewModel(
                     )
                 )
             ) {
-                is CreateListingResult.GenericError,
-                CreateListingResult.NetworkError -> {
+                is MultipartResult.GenericError,
+                MultipartResult.NetworkError -> {
                     setState {
                         copy(
                             isLoading = false
@@ -434,7 +434,7 @@ internal class CreateListingWizardViewModel(
                     }
                 }
 
-                CreateListingResult.ImageProcessingError -> {
+                MultipartResult.ImageProcessingError -> {
                     setState {
                         copy(
                             isLoading = false
@@ -447,10 +447,10 @@ internal class CreateListingWizardViewModel(
                     }
                 }
 
-                is CreateListingResult.Success -> {
+                is MultipartResult.Success -> {
                     createListingWizardController.resetCreateListingData()
 
-                    NavArgHelper.setArgument(NavArg.NewListingId, createListingResult.listingId)
+                    NavArgHelper.setArgument(NavArg.NewListingId, createListingResult.data)
 
                     val newWizardStep = CreateListingWizardStep.SUCCESS
                     setState {

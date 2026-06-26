@@ -4,9 +4,9 @@ import com.google.gson.annotations.SerializedName
 
 data class ResponseOrderItemReturn(
     @SerializedName("status") val status: String,
-    @SerializedName("reason") val reason: String,
+    @SerializedName("returnReason") val returnReason: String? = null,
     @SerializedName("description") val description: String? = null,
-    @SerializedName("attachedImageUrls") val attachedImageUrls: List<String>,
-    @SerializedName("condition") val condition: String,
+    @SerializedName("attachedImageUrls") val attachedImageUrls: List<String>? = null,
+    @SerializedName("condition") val condition: String? = null,
     @SerializedName("sellerMessage") val sellerMessage: String? = null
 )

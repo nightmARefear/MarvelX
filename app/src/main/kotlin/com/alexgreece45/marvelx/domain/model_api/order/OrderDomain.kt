@@ -8,7 +8,7 @@ import com.alexgreece45.marvelx.domain.model_api.order.tracking.toDomain
 import java.math.BigDecimal
 
 data class OrderDomain(
-    val orderId: OrderId,
+    val orderId: OrderIdDomain,
     val status: OrderStatusDomain,
     val items: List<OrderItemDomain>,
     val trackingInfo: OrderTrackingInfoDomain,
@@ -20,7 +20,7 @@ data class OrderDomain(
 
 fun OrderData.toDomain(): OrderDomain =
     OrderDomain(
-        orderId = OrderId(orderId),
+        orderId = OrderIdDomain(orderId),
         status = status.toDomain(),
         items = items.map { it.toDomain() },
         trackingInfo = trackingInfo.toDomain(),

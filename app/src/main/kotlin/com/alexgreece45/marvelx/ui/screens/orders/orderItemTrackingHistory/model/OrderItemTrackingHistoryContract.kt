@@ -1,23 +1,24 @@
 package com.alexgreece45.marvelx.ui.screens.orders.orderItemTrackingHistory.model
 
+import com.alexgreece45.marvelx.core.data.model.user.UserId
 import com.alexgreece45.marvelx.data.model.profileDetails.RepositoryBasicProfileDetails
-import com.alexgreece45.marvelx.domain.model_api.order.OrderId
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
 import com.alexgreece45.marvelx.ui.model_generic.UiState
 import com.alexgreece45.marvelx.ui.screens.orders.model.item.OrderItemTrackingHistoryUi
+import com.alexgreece45.marvelx.ui.screens.orders.orderDetails.model.OrderItemDetails
 
-interface OrderItemTrackingHistoryContract {
+internal interface OrderItemTrackingHistoryContract {
 
     sealed interface Event : BaseEvent {
         data class Init(
             val orderId: String,
             val orderItemId: String,
-            val sellerId: String,
             val orderItemTitle: String,
             val orderItemCoverImageUrl: String,
-            val orderItemPriceLabel: String
+            val orderItemPriceLabel: String,
+            val sellerId: String
         ) : Event
 
         data object OnBack : Event
@@ -47,12 +48,8 @@ interface OrderItemTrackingHistoryContract {
         val uiState: UiState<OrderItemTrackingHistoryUi, OrderItemTrackingHistoryErrorType> = UiState.Loading,
         val sellerDetailsUiState: UiState<RepositoryBasicProfileDetails, Unit> = UiState.Loading,
 
-        val orderId: OrderId = OrderId(""),
-        val orderItemId: OrderId = OrderId(""),
-        val sellerId: String = "",
-        val orderItemTitle: String = "",
-        val orderItemCoverImageUrl: String = "",
-        val orderItemPriceLabel: String = "",
+        val orderItemDetails: OrderItemDetails = OrderItemDetails.EMPTY,
+        val sellerUserId: UserId = UserId.EMPTY,
 
         val orderItemTrackingHistoryUi: OrderItemTrackingHistoryUi? = null,
     ) : BaseState
@@ -69,21 +66,10 @@ interface OrderItemTrackingHistoryContract {
                 val orderItemPriceLabel: String
             ) : Navigation
 
-            data class GoToRequestItemRefundScreen(
-                val orderId: String,
-                val orderItemId: String,
-                val orderItemTitle: String,
-                val orderItemCoverImageUrl: String,
-                val orderItemPriceLabel: String
-            ) : Navigation
+            data class GoToRequestItemRefundScreen(val orderItemDetails: OrderItemDetails) :
+                Navigation
 
-            data class GoToContactSupportScreen(
-                val orderId: String,
-                val orderItemId: String,
-                val orderItemTitle: String,
-                val orderItemCoverImageUrl: String,
-                val orderItemPriceLabel: String
-            ) : Navigation
+            data class GoToContactSupportScreen(val orderItemDetails: OrderItemDetails) : Navigation
         }
 
         data class SetClipboardText(val toastMessage: String, val text: String) : Effect

@@ -1,35 +1,50 @@
 package com.alexgreece45.marvelx.common_ui.imageValidator
 
-import com.alexgreece45.marvelx.common_ui.imageValidator.model.ImageData
+import com.alexgreece45.marvelx.common_ui.imageValidator.model.ImageValidationConfig
+import com.alexgreece45.marvelx.common_ui.imageValidator.model.ImageValidationResult
+import com.alexgreece45.marvelx.core.common.extensions.endsWithAnySuffix
+import com.alexgreece45.marvelx.core.common.extensions.fromMbToBytes
+import com.alexgreece45.marvelx.model.model.generic.AttachedFileContentData
 import org.koin.core.annotation.Factory
 
 interface ImageValidator {
-
-    fun setRules(
-        allowedExtensionTypes: List<String>,
-        maxSize: Int
-    )
-    fun validateImages(images: List<ImageData>)
+    fun validateImages(
+        oldImages: List<AttachedFileContentData>,
+        newImages: List<AttachedFileContentData>?,
+        config: ImageValidationConfig
+    ): ImageValidationResult
 }
 
 @Factory
 internal class ImageValidatorImpl : ImageValidator {
 
-    private var allowedExtensions: List<String> = emptyList()
-    private var maxImageSize: Int = 0
-
-    override fun setRules(
-        allowedExtensionTypes: List<String>,
-        maxSize: Int
-    ) {
-        allowedExtensions = allowedExtensionTypes
-        maxImageSize = maxSize
-    }
-
-    override fun validateImages(images: List<ImageData>) {
-        return images.forEach { image ->
-
-
+    override fun validateImages(
+        oldImages: List<AttachedFileContentData>,
+        newImages: List<AttachedFileContentData>?,
+        config: ImageValidationConfig
+    ): ImageValidationResult {
+        if (newImages.isNullOrEmpty()) {
+            return ImageValidationResult.AttachmentError
         }
+        if (oldImages.size + newImages.size > config.maxCount) {
+            return ImageValidationResult.OverMaxCount
+        }
+
+        val oldImageUris = oldImages.map { it.uri }
+        newImages.forEach { image ->
+            if (image.uri in oldImageUris) {
+                return ImageValidationResult.AlreadyExists
+            }
+
+            if (!image.name.endsWithAnySuffix(config.allowedExtensions)) {
+                return ImageValidationResult.InvalidExtensionType
+            }
+
+            if (image.bytesCount > config.maxSizeMB.fromMbToBytes()) {
+                return ImageValidationResult.OverMaxSize
+            }
+        }
+
+        return ImageValidationResult.Success(allImages = oldImages + newImages)
     }
 }

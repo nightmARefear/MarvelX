@@ -7,3 +7,5 @@ package com.alexgreece45.marvelx.core.common.extensions
 fun Int.pad(): String {
     return this.toString().padStart(2, '0')
 }
+
+fun Int.fromMbToBytes(): Long = this * 1024L * 1024L

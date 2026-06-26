@@ -2,9 +2,12 @@ package com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.basi
 
 import android.net.Uri
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.common_ui.imageValidator.ImageValidator
+import com.alexgreece45.marvelx.common_ui.imageValidator.model.ImageValidationConfig
+import com.alexgreece45.marvelx.common_ui.imageValidator.model.ImageValidationResult
 import com.alexgreece45.marvelx.controllers.createListingWizard.CreateListingWizardController
 import com.alexgreece45.marvelx.core.common.config.ConfigLogic
-import com.alexgreece45.marvelx.core.common.extensions.endsWithAnySuffix
+import com.alexgreece45.marvelx.core.common.extensions.fromBytesToMb
 import com.alexgreece45.marvelx.data.model.marketplace.listing.EnumGeneric
 import com.alexgreece45.marvelx.data.model.marketplace.listing.ListingCategory
 import com.alexgreece45.marvelx.data.model.marketplace.listing.ListingSubcategory
@@ -20,7 +23,6 @@ import com.alexgreece45.marvelx.util.Form
 import com.alexgreece45.marvelx.util.FormValidator
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.Rule
-import com.alexgreece45.marvelx.util.extensions.fromBytesToMb
 import org.koin.android.annotation.KoinViewModel
 
 @KoinViewModel
@@ -30,6 +32,7 @@ class CreateListingBasicDetailsViewModel(
     private val formValidator: FormValidator,
     private val createListingWizardController: CreateListingWizardController,
     private val configLogic: ConfigLogic,
+    private val imageValidator: ImageValidator,
 ) :
     BaseViewModel<CreateListingBasicDetailsContract.Event, CreateListingBasicDetailsContract.State, CreateListingBasicDetailsContract.Effect>() {
 
@@ -281,50 +284,40 @@ class CreateListingBasicDetailsViewModel(
     private fun onImagesSelectionSuccess(allFilesContentData: List<AttachedFileContentData>?) {
         if (currentState.wizardMode == CreateListingWizardMode.UPDATE) return
 
-        if (allFilesContentData == null) {
-            showToastMessage(resourceProvider.getString(R.string.screen_create_listing_basic_details_error_attaching_images_generic))
-            return
-        }
+        val imageValidationResult = imageValidator.validateImages(
+            oldImages = currentState.attachedImages,
+            newImages = allFilesContentData,
+            config = ImageValidationConfig(
+                allowedExtensions = currentState.configurationData.supportedImageFileExtensions,
+                maxCount = currentState.configurationData.maxImageCount,
+                maxSizeMB = currentState.configurationData.maxImageSize.toInt()
+            )
+        )
 
-        if (allFilesContentData
-                .map { it.name }
-                .any { !it.endsWithAnySuffix(currentState.configurationData.supportedImageFileExtensions) }
-        ) {
-            showToastMessage(resourceProvider.getString(R.string.screen_create_listing_basic_details_error_attaching_images_invalid_extension))
-            return
-        }
-
-        if (currentState.attachedImages.size + allFilesContentData.size > currentState.configurationData.maxImageCount) {
-            showToastMessage(resourceProvider.getString(R.string.screen_create_listing_basic_details_error_attaching_images_over_max_count))
-            return
-        }
-
-        val attachedImagesUris = currentState.attachedImages.map { it.uri }
-        if (allFilesContentData.any { it.uri in attachedImagesUris }) {
-            showToastMessage(resourceProvider.getString(R.string.screen_create_listing_basic_details_error_attaching_images_existing_image))
-            return
-        }
-
-        if (allFilesContentData.any { it.bytesCount > currentState.configurationData.maxImageSize }) {
-            showToastMessage(
-                resourceProvider.getString(
-                    R.string.screen_create_listing_basic_details_error_attaching_images_over_max_size,
-                    currentState.configurationData.maxImageSize.fromBytesToMb()
+        if (imageValidationResult is ImageValidationResult.Success) {
+            setState {
+                copy(
+                    attachedImages = imageValidationResult.allImages
                 )
-            )
+            }
+
+            createListingWizardController.setAttachedImages(imageValidationResult.allImages)
+
+            validateAllFields()
             return
         }
 
-        val allImages = currentState.attachedImages + allFilesContentData
-        setState {
-            copy(
-                attachedImages = allImages
+        val errorMessage = when (imageValidationResult) {
+            ImageValidationResult.AttachmentError -> resourceProvider.getString(R.string.screen_create_listing_basic_details_error_attaching_images_generic)
+            ImageValidationResult.InvalidExtensionType -> resourceProvider.getString(R.string.screen_create_listing_basic_details_error_attaching_images_invalid_extension)
+            ImageValidationResult.OverMaxCount -> resourceProvider.getString(R.string.screen_create_listing_basic_details_error_attaching_images_over_max_count)
+            ImageValidationResult.AlreadyExists -> resourceProvider.getString(R.string.screen_create_listing_basic_details_error_attaching_images_existing_image)
+            ImageValidationResult.OverMaxSize -> resourceProvider.getString(
+                R.string.screen_create_listing_basic_details_error_attaching_images_over_max_size,
+                currentState.configurationData.maxImageSize.fromBytesToMb()
             )
         }
-
-        createListingWizardController.setAttachedImages(allImages)
-
-        validateAllFields()
+        showToastMessage(errorMessage)
     }
 
     private fun onImagesSelectionFailure() {

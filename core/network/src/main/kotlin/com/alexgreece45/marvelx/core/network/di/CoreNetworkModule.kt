@@ -51,6 +51,7 @@ import java.util.concurrent.TimeUnit
 
 @Module
 @ComponentScan("com.alexgreece45.marvelx.core.network")
+//@Configuration
 class CoreNetworkModule
 
 /**

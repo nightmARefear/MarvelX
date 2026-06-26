@@ -3,24 +3,26 @@ package com.alexgreece45.marvelx.ui.screens.orders.orderItemTrackingHistory
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.core.common.logger.AppLogger
-import com.alexgreece45.marvelx.data.repository.UserRepository
 import com.alexgreece45.marvelx.core.data.helper.RepositoryResult
+import com.alexgreece45.marvelx.core.data.model.user.UserId
+import com.alexgreece45.marvelx.data.repository.UserRepository
 import com.alexgreece45.marvelx.domain.helper.InteractorPartialState
 import com.alexgreece45.marvelx.domain.interactors.order.OrderInteractor
-import com.alexgreece45.marvelx.domain.model_api.order.OrderId
+import com.alexgreece45.marvelx.domain.model_api.order.OrderIdDomain
 import com.alexgreece45.marvelx.mvi.BaseViewModel
 import com.alexgreece45.marvelx.ui.model_generic.UiState
 import com.alexgreece45.marvelx.ui.screens.orders.model.item.toUi
+import com.alexgreece45.marvelx.ui.screens.orders.orderDetails.model.OrderItemDetails
 import com.alexgreece45.marvelx.ui.screens.orders.orderItemTrackingHistory.model.OrderItemTrackingHistoryContract
 import com.alexgreece45.marvelx.ui.screens.orders.orderItemTrackingHistory.model.OrderItemTrackingHistoryErrorType
 import com.alexgreece45.marvelx.util.ResourceProvider
-import com.alexgreece45.marvelx.util.extensions.decodeFromUrl
-import com.alexgreece45.marvelx.util.extensions.toUrlEncoding
+import com.alexgreece45.marvelx.util.extensions.safeDecodeFromUrl
+import com.alexgreece45.marvelx.util.extensions.toSafeUrlEncoding
 import kotlinx.coroutines.launch
 import org.koin.android.annotation.KoinViewModel
 
 @KoinViewModel
-class OrderItemTrackingHistoryViewModel(
+internal class OrderItemTrackingHistoryViewModel(
     private val orderInteractor: OrderInteractor,
     private val resourceProvider: ResourceProvider,
     private val userRepository: UserRepository,
@@ -36,10 +38,10 @@ class OrderItemTrackingHistoryViewModel(
             is OrderItemTrackingHistoryContract.Event.Init -> init(
                 orderId = event.orderId,
                 orderItemId = event.orderItemId,
-                sellerId = event.sellerId,
                 orderItemTitle = event.orderItemTitle,
                 orderItemCoverImageUrl = event.orderItemCoverImageUrl,
-                orderItemPriceLabel = event.orderItemPriceLabel
+                orderItemPriceLabel = event.orderItemPriceLabel,
+                sellerUserId = event.sellerId
             )
 
             OrderItemTrackingHistoryContract.Event.OnErrorButtonClicked -> onErrorButtonClicked()
@@ -61,15 +63,15 @@ class OrderItemTrackingHistoryViewModel(
     private fun init(
         orderId: String,
         orderItemId: String,
-        sellerId: String,
         orderItemTitle: String,
         orderItemCoverImageUrl: String,
-        orderItemPriceLabel: String
+        orderItemPriceLabel: String,
+        sellerUserId: String
     ) {
-        val decodedOrderItemCoverImageUrl = orderItemCoverImageUrl.decodeFromUrl()
+        val decodedOrderItemCoverImageUrl = orderItemCoverImageUrl.safeDecodeFromUrl("")
         if (orderId.isBlank()
             || orderItemId.isBlank()
-            || sellerId.isBlank()
+            || sellerUserId.isBlank()
             || decodedOrderItemCoverImageUrl.isBlank()
         ) {
             setEffect {
@@ -80,12 +82,14 @@ class OrderItemTrackingHistoryViewModel(
 
         setState {
             copy(
-                orderId = OrderId(orderId),
-                orderItemId = OrderId(orderItemId),
-                sellerId = sellerId,
-                orderItemTitle = orderItemTitle,
-                orderItemCoverImageUrl = decodedOrderItemCoverImageUrl,
-                orderItemPriceLabel = orderItemPriceLabel
+                orderItemDetails = OrderItemDetails(
+                    orderId = OrderIdDomain(orderId),
+                    orderItemId = OrderIdDomain(orderItemId),
+                    orderItemTitle = orderItemTitle,
+                    orderItemCoverImageUrl = decodedOrderItemCoverImageUrl,
+                    orderItemPriceLabel = orderItemPriceLabel
+                ),
+                sellerUserId = UserId(sellerUserId)
             )
         }
 
@@ -108,7 +112,7 @@ class OrderItemTrackingHistoryViewModel(
 
     private fun onSellerDetailsCardClicked() {
         setEffect {
-            OrderItemTrackingHistoryContract.Effect.Navigation.GoToProfileDetailsScreen(currentState.sellerId)
+            OrderItemTrackingHistoryContract.Effect.Navigation.GoToProfileDetailsScreen(currentState.sellerUserId.value)
         }
     }
 
@@ -133,30 +137,48 @@ class OrderItemTrackingHistoryViewModel(
 
     private fun onRequestReturnClicked() {
         setEffect {
-            OrderItemTrackingHistoryContract.Effect.Navigation.GoToRequestItemReturnScreen(
-                orderId = currentState.orderId.value,
-                orderItemId = currentState.orderItemId.value,
-                orderItemTitle = currentState.orderItemTitle,
-                orderItemCoverImageUrl = currentState.orderItemCoverImageUrl.toUrlEncoding(),
-                orderItemPriceLabel = currentState.orderItemPriceLabel
-            )
+            with(currentState.orderItemDetails) {
+                OrderItemTrackingHistoryContract.Effect.Navigation.GoToRequestItemReturnScreen(
+                    orderId = orderId.value,
+                    orderItemId = orderItemId.value,
+                    orderItemTitle = orderItemTitle,
+                    orderItemCoverImageUrl = orderItemCoverImageUrl.toSafeUrlEncoding(""),
+                    orderItemPriceLabel = orderItemPriceLabel
+                )
+            }
         }
     }
 
     private fun onRequestRefundClicked() {
         setEffect {
             OrderItemTrackingHistoryContract.Effect.Navigation.GoToRequestItemRefundScreen(
-                orderId = currentState.orderId.value,
-                orderItemId = currentState.orderItemId.value,
-                orderItemTitle = currentState.orderItemTitle,
-                orderItemCoverImageUrl = currentState.orderItemCoverImageUrl.toUrlEncoding(),
-                orderItemPriceLabel = currentState.orderItemPriceLabel
+                with(currentState.orderItemDetails) {
+                    OrderItemDetails(
+                        orderId = orderId,
+                        orderItemId = orderItemId,
+                        orderItemTitle = orderItemTitle,
+                        orderItemCoverImageUrl = orderItemCoverImageUrl.toSafeUrlEncoding(""),
+                        orderItemPriceLabel = orderItemPriceLabel
+                    )
+                }
             )
         }
     }
 
     private fun onExtraActionButtonContactSupportClicked() {
-
+        setEffect {
+            OrderItemTrackingHistoryContract.Effect.Navigation.GoToContactSupportScreen(
+                with(currentState.orderItemDetails) {
+                    OrderItemDetails(
+                        orderId = orderId,
+                        orderItemId = orderItemId,
+                        orderItemTitle = orderItemTitle,
+                        orderItemCoverImageUrl = orderItemCoverImageUrl.toSafeUrlEncoding(""),
+                        orderItemPriceLabel = orderItemPriceLabel
+                    )
+                }
+            )
+        }
     }
 
     private fun onExtraActionButtonContactSellerClicked() {
@@ -188,8 +210,8 @@ class OrderItemTrackingHistoryViewModel(
         }
         when (
             val partialState = orderInteractor.getOrderItemTrackingHistory(
-                orderId = currentState.orderId.value,
-                orderItemId = currentState.orderItemId.value
+                orderId = currentState.orderItemDetails.orderId,
+                orderItemId = currentState.orderItemDetails.orderItemId
             )
         ) {
             is InteractorPartialState.Failed -> {
@@ -244,7 +266,7 @@ class OrderItemTrackingHistoryViewModel(
                 sellerDetailsUiState = UiState.Loading
             )
         }
-        when (val result = userRepository.getBasicProfileDetails(currentState.sellerId)) {
+        when (val result = userRepository.getBasicProfileDetails(currentState.sellerUserId.value)) {
             is RepositoryResult.Failed,
             is RepositoryResult.NetworkError -> {
                 setState {

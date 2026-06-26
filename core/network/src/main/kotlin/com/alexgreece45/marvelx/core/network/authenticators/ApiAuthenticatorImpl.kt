@@ -19,7 +19,6 @@ import com.alexgreece45.marvelx.core.network.storage.TokenStorage
 import com.alexgreece45.marvelx.model.model.ConsecutiveFailedAuthentication
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import okhttp3.Authenticator
 import okhttp3.Request
@@ -32,7 +31,7 @@ import kotlin.coroutines.CoroutineContext
  * The authenticator class for all the API calls of the MarvelX backend. It is triggered when a 401
  * response is received.
  */
-@Single
+@Single(binds = [Authenticator::class])
 @ApiAuthenticator
 internal class ApiAuthenticatorImpl(
     private val appLogger: AppLogger,

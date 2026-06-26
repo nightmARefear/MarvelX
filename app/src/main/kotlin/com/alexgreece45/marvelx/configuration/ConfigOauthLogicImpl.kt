@@ -4,7 +4,7 @@ import com.alexgreece45.marvelx.BuildConfig
 import com.alexgreece45.marvelx.core.common.config.ConfigOauthLogic
 import org.koin.core.annotation.Single
 
-@Single
+@Single(binds = [ConfigOauthLogic::class])
 internal class ConfigOauthLogicImpl : ConfigOauthLogic {
 
     override val tokenPath: String
