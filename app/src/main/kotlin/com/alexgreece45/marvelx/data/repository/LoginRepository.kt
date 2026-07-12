@@ -44,7 +44,7 @@ interface LoginRepository {
      * Post-login call. More specifically, signing data is retrieved which will be later used for
      * signing requests.
      */
-    suspend fun postLogin(accessToken: String): Flow<PostLoginRepositoryResponse>
+    suspend fun postLogin(accessTokenAndType: String): Flow<PostLoginRepositoryResponse>
 
     suspend fun getSensitiveUserData(requestSensitiveUserData: RequestSensitiveUserData): Flow<GetSensitiveUserDataRepositoryResponse>
 }
@@ -108,8 +108,8 @@ class LoginRepositoryImpl(
         ioDispatcher = ioDispatcher
     )
 
-    override suspend fun postLogin(accessToken: String): Flow<PostLoginRepositoryResponse> = flow {
-        apiClient.postLogin(accessToken).let { response ->
+    override suspend fun postLogin(accessTokenAndType: String): Flow<PostLoginRepositoryResponse> = flow {
+        apiClient.postLogin(accessTokenAndType).let { response ->
             if (response.isSuccessful) {
                 emit(PostLoginRepositoryResponse.Success(response.body()))
             } else {

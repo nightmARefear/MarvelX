@@ -6,12 +6,20 @@ import androidx.datastore.core.DataStoreFactory
 import androidx.datastore.core.Serializer
 import androidx.datastore.dataStoreFile
 import androidx.datastore.tink.AeadSerializer
-import com.alexgreece45.marvelx.core.common.dispatchers.model.IoDispatcher
+import com.alexgreece45.marvelx.core.datastore.model.AuthenticationTokensEntity
 import com.alexgreece45.marvelx.core.datastore.model.ConsecutiveFailedAuthenticationEntity
 import com.alexgreece45.marvelx.core.datastore.model.SignatureEntity
-import com.alexgreece45.marvelx.core.datastore.model.UserSessionEntity
+import com.alexgreece45.marvelx.core.datastore.model.UserIdEntity
 import com.alexgreece45.marvelx.core.datastore.providers.factory.EncryptedDataStoreFactory
+import com.alexgreece45.marvelx.core.datastore.providers.model.AuthenticationTokensDataStore
+import com.alexgreece45.marvelx.core.datastore.providers.model.ConsecutiveFailedAuthenticationDataStore
 import com.alexgreece45.marvelx.core.datastore.providers.model.ProviderPath
+import com.alexgreece45.marvelx.core.datastore.providers.model.SignatureDataStore
+import com.alexgreece45.marvelx.core.datastore.providers.model.UserIdDataStore
+import com.alexgreece45.marvelx.core.datastore.serializers.model.AuthenticationTokensSerializer
+import com.alexgreece45.marvelx.core.datastore.serializers.model.ConsecutiveFailedAuthenticationSerializer
+import com.alexgreece45.marvelx.core.datastore.serializers.model.SignatureSerializer
+import com.alexgreece45.marvelx.core.datastore.serializers.model.UserIdSerializer
 import com.google.crypto.tink.Aead
 import com.google.crypto.tink.KeyTemplate
 import com.google.crypto.tink.KeysetHandle
@@ -24,19 +32,33 @@ import org.koin.core.annotation.Single
 import kotlin.coroutines.CoroutineContext
 
 @Single
-internal fun provideUserSessionDataStore(
-    serializer: Serializer<UserSessionEntity?>,
+@UserIdDataStore
+internal fun provideUserIdDataStore(
+    @UserIdSerializer serializer: Serializer<UserIdEntity?>,
     encryptedDataStoreFactory: EncryptedDataStoreFactory
-): DataStore<UserSessionEntity?> {
+): DataStore<UserIdEntity?> {
     return encryptedDataStoreFactory.create(
         serializer = serializer,
-        providerPath = ProviderPath.USER_SESSION
+        providerPath = ProviderPath.USER_ID
     )
 }
 
 @Single
+@AuthenticationTokensDataStore
+internal fun provideAuthenticationTokensDataStore(
+    @AuthenticationTokensSerializer serializer: Serializer<AuthenticationTokensEntity?>,
+    encryptedDataStoreFactory: EncryptedDataStoreFactory
+): DataStore<AuthenticationTokensEntity?> {
+    return encryptedDataStoreFactory.create(
+        serializer = serializer,
+        providerPath = ProviderPath.AUTHENTICATION_TOKENS
+    )
+}
+
+@Single
+@SignatureDataStore
 internal fun provideSignatureDataStore(
-    serializer: Serializer<SignatureEntity?>,
+    @SignatureSerializer serializer: Serializer<SignatureEntity?>,
     encryptedDataStoreFactory: EncryptedDataStoreFactory
 ): DataStore<SignatureEntity?> {
     return encryptedDataStoreFactory.create(
@@ -46,8 +68,9 @@ internal fun provideSignatureDataStore(
 }
 
 @Single
+@ConsecutiveFailedAuthenticationDataStore
 internal fun provideConsecutiveFailedAuthenticationDataStore(
-    serializer: Serializer<ConsecutiveFailedAuthenticationEntity?>,
+    @ConsecutiveFailedAuthenticationSerializer serializer: Serializer<ConsecutiveFailedAuthenticationEntity?>,
     encryptedDataStoreFactory: EncryptedDataStoreFactory
 ): DataStore<ConsecutiveFailedAuthenticationEntity?> {
     return encryptedDataStoreFactory.create(

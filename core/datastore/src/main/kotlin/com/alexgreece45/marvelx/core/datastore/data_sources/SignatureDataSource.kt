@@ -1,6 +1,7 @@
 package com.alexgreece45.marvelx.core.datastore.data_sources
 
 import androidx.datastore.core.DataStore
+import com.alexgreece45.marvelx.core.datastore.providers.model.SignatureDataStore
 import com.alexgreece45.marvelx.core.datastore.extensions.getData
 import com.alexgreece45.marvelx.core.datastore.extensions.removeDataCatchable
 import com.alexgreece45.marvelx.core.datastore.extensions.updateDataCatchable
@@ -18,7 +19,7 @@ interface SignatureDataSource {
 
 @Single
 internal class SignatureDataSourceImpl(
-    private val dataStore: DataStore<SignatureEntity?>,
+    @SignatureDataStore private val dataStore: DataStore<SignatureEntity?>,
 ) : SignatureDataSource {
 
     override suspend fun getSignature(): Signature? {

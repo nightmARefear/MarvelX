@@ -5,6 +5,7 @@ import androidx.work.WorkerFactory
 import com.alexgreece45.marvelx.BuildConfig
 import com.alexgreece45.marvelx.application.MarvelXApplication
 import com.alexgreece45.marvelx.application.worker.RefreshTokenWorkerFactory
+import com.alexgreece45.marvelx.common_ui.di.CommonUiModule
 import com.alexgreece45.marvelx.configuration.di.ConfigurationModule
 import com.alexgreece45.marvelx.controllers.di.ControllersModule
 import com.alexgreece45.marvelx.core.common.config.model.AppBuildType
@@ -25,8 +26,6 @@ import com.alexgreece45.marvelx.domain.worker.RefreshTokenWorker
 import com.alexgreece45.marvelx.notifications.di.NotificationsModule
 import com.alexgreece45.marvelx.ui.helper.FieldValidationRules
 import com.alexgreece45.marvelx.ui.helper.FieldValidationRulesImpl
-import com.alexgreece45.marvelx.ui.navigation.router.RouterHost
-import com.alexgreece45.marvelx.ui.navigation.router.RouterHostImpl
 import com.alexgreece45.marvelx.ui.screens.cart.mappers.CartItemUiMapper
 import com.alexgreece45.marvelx.ui.screens.marketplace.mappers.ListingDetailsUiMapper
 import com.alexgreece45.marvelx.ui.screens.marketplace.mappers.ListingPreviewUiMapper
@@ -64,7 +63,6 @@ fun initKoin(marvelXApplication: MarvelXApplication) {
         workManagerFactory()
 
         modules(
-            navigationModule,
             databaseModule,
 
             ConfigurationModule().module,
@@ -82,17 +80,13 @@ fun initKoin(marvelXApplication: MarvelXApplication) {
             formValidatorModule,
             resourceProviderModule,
             workerModule,
-//            CommonUiModule().module,
+            CommonUiModule().module,
             NotificationsModule().module,
             ViewModelModule().module,
             UiModule().module,
         )
 //        monitoring()
     }
-}
-
-private val navigationModule = module {
-    single<RouterHost> { RouterHostImpl() }
 }
 
 private val databaseModule = module {

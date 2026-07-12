@@ -22,9 +22,11 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyItemScope
@@ -61,7 +63,7 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.OutlinedButton
 import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Scaffold
-import androidx.compose.material.SnackbarHostState
+import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.material.TextButton
 import androidx.compose.material.TextField
@@ -77,7 +79,6 @@ import androidx.compose.material.primarySurface
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
-import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -121,9 +122,10 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.common_ui.snackbar.MarvelXSnackbar
+import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarConfig
 import com.alexgreece45.marvelx.ui.components.model.ErrorButtonType
-import com.alexgreece45.marvelx.ui.components.model.SnackbarStateData
-import com.alexgreece45.marvelx.ui.theme.values.customColors
+import com.alexgreece45.marvelx.ui_theme.theme.values.customColors
 import com.alexgreece45.marvelx.util.BOTTOM_NAVIGATION_BAR_ITEM_LABEL_MAX_LENGTH
 import com.alexgreece45.marvelx.util.BOTTOM_NAVIGATION_BAR_MAX_ITEMS
 import com.alexgreece45.marvelx.util.BOTTOM_NAVIGATION_BAR_MIN_ITEMS
@@ -138,8 +140,8 @@ import com.alexgreece45.marvelx.util.VSpacer
 import com.alexgreece45.marvelx.util.constants.ConstantsUi
 import com.alexgreece45.marvelx.util.constants.ConstantsZIndex
 import com.alexgreece45.marvelx.util.extensions.ClickState
+import com.alexgreece45.marvelx.util.extensions.applyContentScreenPaddings
 import com.alexgreece45.marvelx.util.extensions.applyPadding
-import com.alexgreece45.marvelx.util.extensions.applyPaddingValues
 import com.alexgreece45.marvelx.util.extensions.filterTouchesWhenObscured
 import com.alexgreece45.marvelx.util.extensions.screenPaddingsNone
 import com.alexgreece45.marvelx.util.extensions.throttledClickableIcon
@@ -348,8 +350,7 @@ private fun BottomNavigationBar(
     items: List<BottomBarItem>,
     backgroundColor: Color? = null,
     topHorizontalColor: Color? = null,
-    selectedItemTopHorizontalColor: Color? = null,
-    elevation: Dp = BottomNavigationDefaults.Elevation
+    selectedItemTopHorizontalColor: Color? = null
 ) {
     if (items.size < BOTTOM_NAVIGATION_BAR_MIN_ITEMS) throw RuntimeException("The minimum allowed bottom navigation bar items is $BOTTOM_NAVIGATION_BAR_MIN_ITEMS!")
     if (items.size > BOTTOM_NAVIGATION_BAR_MAX_ITEMS) throw RuntimeException("The maximum allowed bottom navigation bar items is $BOTTOM_NAVIGATION_BAR_MAX_ITEMS!")
@@ -357,12 +358,13 @@ private fun BottomNavigationBar(
         "The maximum allowed length for a bottom navigation bar's item label is $BOTTOM_NAVIGATION_BAR_ITEM_LABEL_MAX_LENGTH characters."
     )
 
+    val finalBackgroundColor = backgroundColor ?: MaterialTheme.customColors.transparent
+
     BottomNavigation(
-        backgroundColor = backgroundColor ?: MaterialTheme.colors.primarySurface,
-        contentColor = if (backgroundColor == null) contentColorFor(MaterialTheme.colors.primarySurface) else contentColorFor(
-            backgroundColor
-        ),
-        elevation = elevation
+        modifier = Modifier.navigationBarsPadding(),
+        backgroundColor = MaterialTheme.customColors.transparent,
+        contentColor = contentColorFor(finalBackgroundColor),
+        elevation = 0.dp
     ) {
         val navBackStackEntry by navController.currentBackStackEntryAsState()
         val currentRoute = navBackStackEntry?.destination?.route
@@ -550,29 +552,17 @@ fun ContentScreen(
     toolbarActionsContent: (@Composable RowScope.() -> Unit)? = null,
     bottomBarData: BottomBarData? = null,
     bottomNavigationBarData: BottomNavigationBarData? = null,
-    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
-    snackbarStateData: SnackbarStateData? = null,
+    snackbarConfig: SnackbarConfig? = null,
     fabData: FabData? = null,
     stickyBottom: @Composable (BoxScope.() -> Unit)? = null,
-    paddingValues: PaddingValues? = null,
+    paddingValues: PaddingValues = PaddingValues(DEFAULT_SCREEN_PADDING),
     content: @Composable (PaddingValues) -> Unit
 ) {
     if (toolbarActions != null && toolbarActionsContent != null) {
         throw IllegalArgumentException("You cannot use `toolbarActions` and `toolbarActionsContent` at the same time. Set either argument.")
     }
 
-    LaunchedEffect(snackbarStateData) {
-        snackbarStateData?.let {
-            snackbarHostState.showSnackbar(
-                message = it.message,
-                actionLabel = it.actionLabel,
-                duration = it.duration
-            )
-        }
-    }
-
     Scaffold(
-        scaffoldState = rememberScaffoldState(snackbarHostState = snackbarHostState),
         topBar = {
             if (showToolbar) {
                 Toolbar(
@@ -621,43 +611,60 @@ fun ContentScreen(
                 }
             }*/
 
-            bottomNavigationBarData?.let { bottomNavigationBarData ->
-                BottomNavigationBar(
-                    navController = bottomNavigationBarData.navController,
-                    items = bottomNavigationBarData.items,
-                    backgroundColor = bottomNavigationBarData.backgroundColor,
-                    topHorizontalColor = bottomNavigationBarData.topHorizontalColor,
-                    selectedItemTopHorizontalColor = bottomNavigationBarData.selectedItemTopHorizontalColor,
-                    elevation = bottomNavigationBarData.elevation
+            Surface(
+                color = bottomNavigationBarData?.backgroundColor
+                    ?: MaterialTheme.colors.primarySurface,
+                elevation = bottomNavigationBarData?.elevation ?: 0.dp
+            ) {
+                bottomNavigationBarData?.let { bottomNavigationBarData ->
+                    BottomNavigationBar(
+                        navController = bottomNavigationBarData.navController,
+                        items = bottomNavigationBarData.items,
+                        backgroundColor = bottomNavigationBarData.backgroundColor,
+                        topHorizontalColor = bottomNavigationBarData.topHorizontalColor,
+                        selectedItemTopHorizontalColor = bottomNavigationBarData.selectedItemTopHorizontalColor
+                    )
+                }
+            }
+        },
+        snackbarHost = {
+            snackbarConfig?.let {
+                MarvelXSnackbar(
+                    snackbarHostState = snackbarConfig.snackbarHostState,
+                    snackbarStateData = snackbarConfig.snackbarStateData
                 )
             }
         },
         floatingActionButton = {
             if (!isLoading) {
                 fabData?.let { fabData ->
-                    when (fabData) {
-                        is NormalFabData -> {
-                            NormalFloatingActionButton(normalFabData = fabData)
-                        }
+                    Box(modifier = if (bottomNavigationBarData == null) Modifier.navigationBarsPadding() else Modifier) {
+                        when (fabData) {
+                            is NormalFabData -> {
+                                NormalFloatingActionButton(normalFabData = fabData)
+                            }
 
-                        is ExtendedFabData -> {
-                            CollapsibleExtendedFloatingActionButton(extendedFabData = fabData)
+                            is ExtendedFabData -> {
+                                CollapsibleExtendedFloatingActionButton(extendedFabData = fabData)
+                            }
                         }
                     }
                 }
             }
         }
     ) { scaffoldPaddingValues ->
+        val finalScaffoldingPaddings = scaffoldPaddingValues.applyContentScreenPaddings(
+            paddingValues = paddingValues,
+            isToolbarVisible = showToolbar,
+            isBottomBarVisible = bottomNavigationBarData != null
+        )
+
         Column(modifier = Modifier.fillMaxSize()) {
             Box(modifier = Modifier.weight(1f)) {
                 if (isLoading) {
                     LoadingScreen()
                 }
-                content(
-                    if (paddingValues != null) scaffoldPaddingValues.applyPaddingValues(
-                        paddingValues = paddingValues
-                    ) else scaffoldPaddingValues.applyPadding()
-                )
+                content(finalScaffoldingPaddings)
             }
 
             // Sticky bottom.
@@ -667,11 +674,7 @@ fun ContentScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .zIndex(ConstantsZIndex.STICKY_BOTTOM)
-                            .padding(
-                                if (paddingValues != null) scaffoldPaddingValues.applyPaddingValues(
-                                    paddingValues = paddingValues
-                                ) else scaffoldPaddingValues.applyPadding()
-                            )
+                            .padding(finalScaffoldingPaddings)
                     ) {
                         stickyBottom()
                     }
@@ -699,6 +702,7 @@ private fun Toolbar(
     val keyboard = LocalSoftwareKeyboardController.current
 
     TopAppBar(
+        modifier = Modifier.statusBarsPadding(),
         backgroundColor = MaterialTheme.colors.background,
         elevation = 0.dp,
         contentPadding = screenPaddingsNone()

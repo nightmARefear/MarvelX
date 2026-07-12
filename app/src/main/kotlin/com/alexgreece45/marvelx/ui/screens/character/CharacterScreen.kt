@@ -46,7 +46,7 @@ import com.alexgreece45.marvelx.ui.components.IconData
 import com.alexgreece45.marvelx.ui.components.ItemDescription
 import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
 import com.alexgreece45.marvelx.ui.components.ToolbarAction
-import com.alexgreece45.marvelx.ui.theme.values.customColors
+import com.alexgreece45.marvelx.ui_theme.theme.values.customColors
 import com.alexgreece45.marvelx.util.constants.ConstantsUi.IMAGE_BORDER_WIDTH
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.VSpacer

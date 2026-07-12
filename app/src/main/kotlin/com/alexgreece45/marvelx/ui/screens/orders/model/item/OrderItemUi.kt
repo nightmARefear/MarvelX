@@ -8,7 +8,7 @@ import com.alexgreece45.marvelx.util.extensions.formatPrice
 
 @Immutable
 data class OrderItemUi(
-    val id: OrderIdDomain,
+    val orderId: OrderIdDomain,
     val sellerUserId: String,
     val title: String,
     val coverImageUrl: String,
@@ -18,7 +18,7 @@ data class OrderItemUi(
 
 fun OrderItemDomain.toUi(priceScale: Int): OrderItemUi =
     OrderItemUi(
-        id = id,
+        orderId = id,
         sellerUserId = sellerUserId,
         title = title,
         coverImageUrl = coverImageUrl,

@@ -36,11 +36,11 @@ import com.valentinilk.shimmer.rememberShimmer
 import kotlinx.coroutines.flow.Flow
 
 @Composable
-fun EditProfileDetailsScreen(
+internal fun EditProfileDetailsScreen(
     onEventSent: (event: EditProfileDetailsContract.Event) -> Unit,
     state: EditProfileDetailsContract.State,
     effect: Flow<EditProfileDetailsContract.Effect>,
-    navigateUp: () -> Unit
+    onNavigationEffect: (EditProfileDetailsContract.Effect.Navigation) -> Unit
 ) {
     LaunchedEffect(Unit) {
         onEventSent(EditProfileDetailsContract.Event.Init)
@@ -48,9 +48,7 @@ fun EditProfileDetailsScreen(
 
     ObserveUiEffect(effect) { uiEffect ->
         when (uiEffect) {
-            EditProfileDetailsContract.Effect.Navigation.NavigateUp -> {
-                navigateUp()
-            }
+            is EditProfileDetailsContract.Effect.Navigation -> onNavigationEffect(uiEffect)
         }
     }
 
@@ -70,7 +68,6 @@ fun EditProfileDetailsScreen(
         },
         showToolbar = true,
         toolbarTitle = stringResource(R.string.edit_profile_details_screen_header_title),
-        snackbarStateData = state.snackbarStateData,
         stickyBottom = {
             WrapButton(
                 onClick = { onEventSent(EditProfileDetailsContract.Event.OnSaveChangesButtonClicked) },

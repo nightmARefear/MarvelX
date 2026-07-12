@@ -8,7 +8,7 @@ import com.alexgreece45.marvelx.core.common.extensions.differenceInMilliseconds
 import com.alexgreece45.marvelx.core.common.logger.AppLogger
 import com.alexgreece45.marvelx.core.common.util.DateUtil
 import com.alexgreece45.marvelx.core.network.clients.RefreshTokenClient
-import com.alexgreece45.marvelx.core.network.controller.MarvelXBackendRequestController
+import com.alexgreece45.marvelx.core.network.controller.MarvelXBackendRequestTransformer
 import com.alexgreece45.marvelx.core.network.di.model.ApiAuthenticator
 import com.alexgreece45.marvelx.core.network.managers.SessionManager
 import com.alexgreece45.marvelx.core.network.managers.model.LogoutReason
@@ -26,6 +26,7 @@ import okhttp3.Response
 import okhttp3.Route
 import org.koin.core.annotation.Single
 import kotlin.coroutines.CoroutineContext
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * The authenticator class for all the API calls of the MarvelX backend. It is triggered when a 401
@@ -40,7 +41,7 @@ internal class ApiAuthenticatorImpl(
     private val refreshTokenClient: RefreshTokenClient,
     private val tokenStorage: TokenStorage,
     private val consecutiveFailedAuthenticationStorage: ConsecutiveFailedAuthenticationStorage,
-    private val marvelXBackendRequestController: MarvelXBackendRequestController,
+    private val marvelXBackendRequestTransformer: MarvelXBackendRequestTransformer,
     @IoDispatcher private val ioDispatcher: CoroutineContext,
     private val sessionManager: SessionManager,
 ) : Authenticator {
@@ -132,8 +133,11 @@ internal class ApiAuthenticatorImpl(
         var timeoutExceeded = false
         runBlocking(ioDispatcher) {
             try {
-                // 22.5 seconds --> 22_500 milliseconds
-                withTimeout((configLogic.backendTimeoutData.connectTimeout * 1.5.toLong()) * 1000) {
+                // 22.5 seconds
+                val maxTimeoutSeconds =
+                    (configLogic.backendTimeoutData.connectTimeout * 1.5).toLong().seconds
+
+                withTimeout(maxTimeoutSeconds) {
                     repeat(configLogic.backendMaxAuthenticationTries) {
                         // If the token was retrieved from a previous call, exit the loop.
                         if (responseToken != null) {
@@ -184,7 +188,7 @@ internal class ApiAuthenticatorImpl(
         tokenStorage.setAuthenticationTokens(responseToken.toModel())
 
         // Re-construct initial request with the new token.
-        return marvelXBackendRequestController.applyMarvelXBackendTransformations(
+        return marvelXBackendRequestTransformer.applyMarvelXBackendTransformations(
             originalRequest = request,
             path = request.url.toUri().path
         )

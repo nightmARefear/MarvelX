@@ -9,8 +9,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.ui.components.IconData
-import com.alexgreece45.marvelx.ui.theme.MarvelXTheme
-import com.alexgreece45.marvelx.ui.theme.values.customColors
+import com.alexgreece45.marvelx.ui_theme.theme.MarvelXTheme
+import com.alexgreece45.marvelx.ui_theme.theme.values.customColors
 
 /**
  * The `add friend` chip.

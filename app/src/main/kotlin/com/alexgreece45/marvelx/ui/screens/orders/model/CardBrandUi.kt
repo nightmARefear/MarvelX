@@ -93,5 +93,5 @@ fun CardBrandUi.toData(): CardBrandData =
         CardBrandUi.AmericanExpress -> CardBrandData.AMERICAN_EXPRESS
         CardBrandUi.DinersClub -> CardBrandData.DINERS_CLUB
         CardBrandUi.Discover -> CardBrandData.DISCOVER
-        CardBrandUi.Unknown -> throw IllegalStateException("Illegal card brand `unknown`.")
+        CardBrandUi.Unknown -> CardBrandData.UNKNOWN
     }

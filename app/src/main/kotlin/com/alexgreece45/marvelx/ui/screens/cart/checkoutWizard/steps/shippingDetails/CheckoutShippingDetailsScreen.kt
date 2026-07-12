@@ -2,6 +2,7 @@ package com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.steps.shippingDe
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -52,13 +53,13 @@ fun CheckoutShippingDetailsScreen(
     }
 
     ContentScreen(
-        isLoading = state.isLoading
-    ) { paddingValues ->
+        isLoading = state.isLoading,
+        paddingValues = PaddingValues(0.dp)
+    ) { _ ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(paddingValues)
         ) {
             Column(
                 modifier = Modifier.fillMaxWidth(),

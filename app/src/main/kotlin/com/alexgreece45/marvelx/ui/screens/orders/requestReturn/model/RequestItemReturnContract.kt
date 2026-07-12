@@ -1,8 +1,9 @@
 package com.alexgreece45.marvelx.ui.screens.orders.requestReturn.model
 
+import android.net.Uri
 import com.alexgreece45.marvelx.common_ui.imageValidator.model.ImageValidationConfig
-import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarType
-import com.alexgreece45.marvelx.core.data.model.order.item.OrderItemReturn
+import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarStateData
+import com.alexgreece45.marvelx.core.data.model.order.item.OrderItemReturnState
 import com.alexgreece45.marvelx.model.model.generic.AttachedFileContentData
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
@@ -23,6 +24,7 @@ internal sealed interface RequestItemReturnContract {
             val orderItemPriceLabel: String
         ) : Event
 
+        data object OnClose : Event
         data object OnBack : Event
 
         data class OnReturnReasonItemSelected(val item: OrderItemReturnReasonUi) : Event
@@ -30,6 +32,9 @@ internal sealed interface RequestItemReturnContract {
         data object OnRequestRefundCheckboxClicked : Event
 
         data class OnDescriptionChanged(val description: String) : Event
+
+        data object OnUploadPhotosButtonClicked : Event
+        data class OnImageDeleteButtonClicked(val uri: Uri) : Event
 
         sealed interface ImageSelectionEvents : Event {
 
@@ -57,15 +62,17 @@ internal sealed interface RequestItemReturnContract {
             data object OnPositiveButtonClicked : RefundDialogEvent
         }
 
-        data object OnSubmitButtonClicked : Event
+        data object OnErrorButtonClicked : Event
+
+        data object OnStickyBottomButtonClicked : Event
     }
 
     data class State(
-        val uiState: UiState<OrderItemReturn, Unit> = UiState.Loading,
+        val uiState: UiState<OrderItemReturnState, Unit> = UiState.Loading,
         val wizardMode: RequestItemReturnWizardMode = RequestItemReturnWizardMode.Create,
-        val wizardStep: RequestItemReturnWizardStep = RequestItemReturnWizardStep.RETURN_DETAILS,
+        val wizardStep: RequestItemReturnWizardStep = RequestItemReturnWizardStep.INITIAL_STEP,
 
-        val orderItemDetails: OrderItemDetails = OrderItemDetails(),
+        val orderItemDetails: OrderItemDetails = OrderItemDetails.EMPTY,
 
         // User input.
 
@@ -81,7 +88,9 @@ internal sealed interface RequestItemReturnContract {
 
         val itemCondition: OrderItemReturnConditionUi? = null,
 
-        val isRefundDialogVisible: Boolean = false,
+        val dialogType: RequestItemReturnDialogType? = null,
+
+        val snackbarStateData: SnackbarStateData? = null,
     ) : BaseState {
 
         val isSubmitButtonEnabled: Boolean
@@ -99,6 +108,7 @@ internal sealed interface RequestItemReturnContract {
 
         data object OpenPhotoPicker : Effect
 
-        data class ShowSnackbar(val message: String, val type: SnackbarType) : Effect
+        data class ShowSnackbar(val snackbarStateData: SnackbarStateData) : Effect
+        data object HideSnackbar : Effect
     }
 }

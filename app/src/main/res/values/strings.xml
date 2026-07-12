@@ -196,7 +196,8 @@
 
     <string name="profile_screen_content_description_cropped_image_new_profile_image">New profile image preview</string>
 
-    <string name="screen_profile_success_image_upload">The profile image has been successfully uploaded!</string>
+    <string name="screen_profile_success_image_upload_message">The profile image has been successfully uploaded!</string>
+    <string name="screen_profile_success_image_upload_action_label">OK</string>
 
     <string name="profile_screen_error_loading_profile_details">An error occurred while loading the profile details.</string>
     <string name="profile_screen_label_error_alert_dialog_cropped_image_title_exit">Discard changes?</string>
@@ -670,15 +671,31 @@
 
     <string name="screen_request_item_return_upload_images_title">Upload photos (optional)</string>
     <string name="screen_request_item_return_upload_images_button">Upload photos</string>
-    <string name="screen_request_item_return_upload_images_helper_text">Upload up to %1$s photos</string>
-
-    <string name="screen_request_item_refund_toast_image_selection_failure">An error occurred whilst selecting the images</string>
-    <string name="screen_request_item_refund_toast_image_selection_none">No images were selected</string>
+    <string name="screen_request_item_return_upload_images_helper_text">A maximum of %1$s images are allowed, up to %2$sMB each.</string>
 
     <string name="screen_request_item_return_refund_dialog_title">Important Refund Information</string>
     <string name="screen_request_item_return_refund_dialog_error_message">Please note that submitting a refund request does not automatically guarantee eligibility. We will carefully inspect your item after it is returned to determine if a full or partial refund can be issued, based on its condition.</string>
     <string name="screen_request_item_return_refund_dialog_button_negative">Cancel</string>
     <string name="screen_request_item_return_refund_dialog_button_positive">Continue</string>
+
+    <string name="screen_request_item_return_exit_dialog_title">Exit</string>
+    <string name="screen_request_item_return_exit_dialog_error_message">Are you sure that you want to exit the request item return process? If you do so, all saved progress will be lost.</string>
+    <string name="screen_request_item_return_exit_dialog_button_negative">Cancel</string>
+    <string name="screen_request_item_return_exit_dialog_button_positive">Exit</string>
+
+    <string name="screen_request_item_return_snackbar_image_selection_none_message">No images were selected</string>
+    <string name="screen_request_item_return_snackbar_image_selection_none_button">OK</string>
+
+    <string name="screen_request_item_return_snackbar_image_selection_failure_message">An error occurred whilst selecting the images</string>
+    <string name="screen_request_item_return_snackbar_image_selection_failure_button">OK</string>
+
+    // Errors.
+
+    <string name="screen_request_item_return_generic_error_message">An error occurred whilst fetching the details</string>
+    <string name="screen_request_item_return_generic_error_button">Try again</string>
+
+    <string name="screen_request_item_return_snackbar_error_submitting_item_return_message">An error occurred whilst submitting the item return</string>
+    <string name="screen_request_item_return_snackbar_error_submitting_item_return_button">Try again</string>
 
     <string name="screen_request_return_description_error_max_characters">Description cannot be more than %1$s characters</string>
     <string name="screen_request_item_return_refund_error_attaching_images_generic">An error occurred whilst attaching the images.</string>

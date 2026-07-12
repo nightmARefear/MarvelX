@@ -9,8 +9,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Icon
-import androidx.compose.material.LocalContentAlpha
-import androidx.compose.material.LocalContentColor
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -22,10 +20,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.ui.theme.MarvelXTheme
-import com.alexgreece45.marvelx.ui.theme.values.customColors
+import com.alexgreece45.marvelx.ui_theme.theme.MarvelXTheme
+import com.alexgreece45.marvelx.ui_theme.theme.values.customColors
 import com.alexgreece45.marvelx.util.SPACING_MEDIUM
-import com.alexgreece45.marvelx.util.SPACING_SMALL
 
 /**
  * An info box component that displays an icon and a label in a rectangular box.

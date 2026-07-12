@@ -20,7 +20,7 @@ import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
 import com.alexgreece45.marvelx.ui.components.effect.ObserveUiEffect
 import com.alexgreece45.marvelx.ui.components.sections.SectionListHeader
 import com.alexgreece45.marvelx.ui.screens.settings.model.SettingsContract
-import com.alexgreece45.marvelx.ui.theme.values.customColors
+import com.alexgreece45.marvelx.ui_theme.theme.values.customColors
 import kotlinx.coroutines.flow.Flow
 
 @Composable

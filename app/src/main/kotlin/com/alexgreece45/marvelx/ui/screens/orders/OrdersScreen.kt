@@ -54,8 +54,8 @@ import com.alexgreece45.marvelx.ui.screens.orders.model.OrderPreviewUi
 import com.alexgreece45.marvelx.ui.screens.orders.model.OrderStatusUi
 import com.alexgreece45.marvelx.ui.screens.orders.model.OrdersBottomSheetType
 import com.alexgreece45.marvelx.ui.screens.orders.model.OrdersContract
-import com.alexgreece45.marvelx.ui.theme.MarvelXTheme
-import com.alexgreece45.marvelx.ui.theme.values.customColors
+import com.alexgreece45.marvelx.ui_theme.theme.MarvelXTheme
+import com.alexgreece45.marvelx.ui_theme.theme.values.customColors
 import com.alexgreece45.marvelx.util.DateUtil
 import com.alexgreece45.marvelx.util.SPACING_MEDIUM
 import com.alexgreece45.marvelx.util.SPACING_SMALL

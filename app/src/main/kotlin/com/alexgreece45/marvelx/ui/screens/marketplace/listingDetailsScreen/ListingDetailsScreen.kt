@@ -28,6 +28,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.common_ui.util.safeLetComposable
 import com.alexgreece45.marvelx.core.common.extensions.toListingFormat
 import com.alexgreece45.marvelx.data.model.marketplace.listing.EnumGeneric
 import com.alexgreece45.marvelx.domain.model_api.marketplace.listing.ListingDetailsDomain
@@ -59,8 +60,8 @@ import com.alexgreece45.marvelx.ui.screens.marketplace.listingDetailsScreen.mode
 import com.alexgreece45.marvelx.ui.screens.marketplace.listingDetailsScreen.model.ListingDetailsMode
 import com.alexgreece45.marvelx.ui.screens.marketplace.model.ListingStatusUi
 import com.alexgreece45.marvelx.ui.screens.marketplace.model.ListingUi
-import com.alexgreece45.marvelx.ui.theme.MarvelXTheme
-import com.alexgreece45.marvelx.ui.theme.values.customColors
+import com.alexgreece45.marvelx.ui_theme.theme.MarvelXTheme
+import com.alexgreece45.marvelx.ui_theme.theme.values.customColors
 import com.alexgreece45.marvelx.util.DateUtil
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.SPACING_TINY
@@ -71,7 +72,6 @@ import com.alexgreece45.marvelx.util.extensions.clickableNoRipple
 import com.alexgreece45.marvelx.util.extensions.formatPrice
 import com.alexgreece45.marvelx.util.extensions.shareContentUrl
 import com.alexgreece45.marvelx.util.extensions.showToast
-import com.alexgreece45.marvelx.util.safeLetComposable
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 
@@ -327,9 +327,12 @@ private fun SellerInfoSection(profileImageUrl: String, fullName: String, onClick
 }
 
 /**
- * Sub sections
+ * Sub-sections
  */
 
+/**
+ * Details subsection item.
+ */
 @Composable
 private fun DetailsSubSectionItem(
     label: String,

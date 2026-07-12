@@ -61,7 +61,7 @@ import com.alexgreece45.marvelx.ui.components.effect.DisposableEffectWithLifecyc
 import com.alexgreece45.marvelx.ui.components.effect.ObserveUiEffect
 import com.alexgreece45.marvelx.ui.components.isScrollingUp
 import com.alexgreece45.marvelx.ui.screens.allCharacters.uiModel.CharacterCardUi
-import com.alexgreece45.marvelx.ui.theme.values.customColors
+import com.alexgreece45.marvelx.ui_theme.theme.values.customColors
 import com.alexgreece45.marvelx.util.DEFAULT_SCREEN_PADDING
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.SPACING_TINY

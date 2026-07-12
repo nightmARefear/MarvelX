@@ -1,7 +1,7 @@
 package com.alexgreece45.marvelx.core.network.clients
 
 import com.alexgreece45.marvelx.core.common.util.DateUtil
-import com.alexgreece45.marvelx.core.network.clients.model.ListingStatus
+import com.alexgreece45.marvelx.core.network.model.ListingStatus
 import com.alexgreece45.marvelx.core.network.model.api.cart.ResponseCartInfo
 import com.alexgreece45.marvelx.core.network.model.api.cart.ResponseCartSummary
 import com.alexgreece45.marvelx.core.network.model.api.marketplace.ResponseMarketplace
@@ -24,6 +24,8 @@ import kotlinx.coroutines.delay
 import okhttp3.MultipartBody
 import org.koin.core.annotation.Single
 import kotlin.random.Random
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 @Single
 internal class ListingClientImpl(
@@ -725,7 +727,7 @@ internal class ListingClientImpl(
     }
 
     override suspend fun getCurrentUserListings(page: Int): ApiResult<List<ResponseMyListing>> {
-        delay(2500L)
+        delay(2.5.seconds)
 
         val startIndex = 1 + (page - 1) * 10
         return ApiResult.Success(
@@ -746,7 +748,7 @@ internal class ListingClientImpl(
         userId: String,
         page: Int
     ): ApiResult<List<ResponseListingPreview>> {
-        delay(2500L)
+        delay(2.5.seconds)
 
         val startIndex = 1 + (page - 1) * 10
         return ApiResult.Success(
@@ -796,37 +798,26 @@ internal class ListingClientImpl(
         )
     }
 
-    override suspend fun createListing(body: MultipartBody): ApiResult<ResponseListingId> {
-        return executeApiServiceCall {
-            listingService.createListing(body)
-        }
-    }
+    override suspend fun createListing(body: MultipartBody): ApiResult<ResponseListingId> =
+        ApiResult.Success(ResponseListingId("100"))
 
     override suspend fun updateListing(
         listingId: String,
         request: RequestUpdateListing
-    ): ApiResult<String> {
-        return executeApiServiceCallNoTransformation {
-            listingService.updateListing(listingId, request)
-        }
-    }
+    ): ApiResult<String> = ApiResult.Success("")
 
     override suspend fun deleteListing(listingId: String): ApiResult<String> {
-        delay(1500L)
+        delay(1500L.milliseconds)
         return ApiResult.Success("")
     }
 
-    override suspend fun addToFavorites(listingId: String): ApiResult<String> {
-        return executeApiServiceCallNoTransformation {
-            listingService.addToFavorites(listingId)
-        }
-    }
+    override suspend fun addToFavorites(listingId: String): ApiResult<String> =
+        ApiResult.Success("")
 
-    override suspend fun removeFromFavorites(listingId: String): ApiResult<String> {
-        return executeApiServiceCallNoTransformation {
-            listingService.removeFromFavorites(listingId)
-        }
-    }
+
+    override suspend fun removeFromFavorites(listingId: String): ApiResult<String> =
+        ApiResult.Success("")
+
 
     override suspend fun getFavoriteListings(): ApiResult<List<ResponseListingPreview>> {
         return executeApiServiceCall {

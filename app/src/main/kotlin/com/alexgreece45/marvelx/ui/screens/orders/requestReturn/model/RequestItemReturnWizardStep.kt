@@ -1,7 +1,19 @@
 package com.alexgreece45.marvelx.ui.screens.orders.requestReturn.model
 
-internal enum class RequestItemReturnWizardStep(val order: Int) {
-    RETURN_REASON(order = 1),
-    RETURN_DETAILS(order = 2),
-    OVERVIEW(order = 3);
+internal enum class RequestItemReturnWizardStep {
+    RETURN_REASON,
+    RETURN_DETAILS,
+    OVERVIEW;
+
+    val previousStep: RequestItemReturnWizardStep
+        get() =
+            entries[(this.ordinal - 1).coerceAtLeast(0)]
+
+    val nextStep: RequestItemReturnWizardStep
+        get() =
+            entries[(this.ordinal + 1).coerceAtMost(entries.lastIndex)]
+
+    companion object {
+        val INITIAL_STEP = RETURN_REASON
+    }
 }

@@ -29,7 +29,7 @@ import com.alexgreece45.marvelx.domain.model_websocket.toWebsocketDomain
 import com.alexgreece45.marvelx.domain.usecases.LogoutUseCase
 import com.alexgreece45.marvelx.mvi.BaseViewModel
 import com.alexgreece45.marvelx.notifications.PushNotificationsController
-import com.alexgreece45.marvelx.ui.navigation.router.RouterHost
+import com.alexgreece45.marvelx.ui.navigation.Screen
 import com.alexgreece45.marvelx.ui.screens.mainActivity.model.CoroutineWebSocketListener
 import com.alexgreece45.marvelx.ui.screens.mainActivity.model.MainActivityEffect
 import com.alexgreece45.marvelx.ui.screens.mainActivity.model.MainActivityEffect.Navigation.NavigateToSplashScreenWithSecurityViolation
@@ -63,7 +63,6 @@ class MainActivityViewModel :
     private val securityConfigLogic: SecurityConfigLogic by inject()
     private val resourceProvider: ResourceProvider by inject()
     private val websocketController: WebsocketController by inject()
-    private val routerHost: RouterHost by inject()
     private val deepLinkController: DeepLinkController by inject()
     private val userRepository: UserRepository by inject()
 
@@ -147,9 +146,25 @@ class MainActivityViewModel :
                 }
             }
 
+            MainActivityEvent.OnFlowStarted -> {
+                setState {
+                    copy(
+                        flowStarted = true
+                    )
+                }
+            }
+
+            is MainActivityEvent.OnDestinationChanged -> {
+                setState {
+                    copy(
+                        currentRoute = event.route
+                    )
+                }
+            }
+
             is MainActivityEvent.OnDeepLinkReceived -> {
                 viewModelScope.launch {
-                    deepLinkController.handleDeepLinkUri(event.uri).collect {
+                    deepLinkController.handleDeepLinkUri(event.uri).let {
                         when (it) {
                             is HandleDeepLinkActionResult.Success -> {
                                 setEffect {
@@ -272,7 +287,7 @@ class MainActivityViewModel :
      * Performs actions to auto-logout the user if the timeout period has been exceeded.
      */
     private fun performAutoLogoutOperations() {
-        if (securityConfigLogic.isAutoLogoutEnabled && routerHost.isCurrentRouteIncludedInAutoLogout()) {
+        if (securityConfigLogic.isAutoLogoutEnabled && isCurrentRouteIncludedInAutoLogout()) {
             viewModelScope.launch {
                 websocketController.sendRequest(WebsocketRequestType.GetTimestamp)
                     .collect { partialState ->
@@ -391,4 +406,11 @@ class MainActivityViewModel :
         }
         return listener
     }
+
+    /**
+     * Returns `true` if the current route is included in the auto-logout mechanism, otherwise
+     * `false`.
+     */
+    private fun isCurrentRouteIncludedInAutoLogout(): Boolean =
+        Screen.fromRoute(currentState.currentRoute)?.isIncludedInAutoLogout ?: false
 }

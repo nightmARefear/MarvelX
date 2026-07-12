@@ -6,5 +6,5 @@ import org.koin.core.annotation.Module
 
 @Module
 @ComponentScan("com.alexgreece45.marvelx.controllers")
-@Configuration
+//@Configuration
 class ControllersModule

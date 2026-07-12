@@ -2,14 +2,19 @@ package com.alexgreece45.marvelx.domain.interactors
 
 import android.util.Base64
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.controllers.RefreshTokenController
+import com.alexgreece45.marvelx.controllers.WebsocketController
 import com.alexgreece45.marvelx.core.common.config.ConfigOauthLogic
 import com.alexgreece45.marvelx.core.common.extensions.LOGGER_TAG
+import com.alexgreece45.marvelx.core.common.extensions.safeAsync
 import com.alexgreece45.marvelx.core.common.logger.AppLogger
+import com.alexgreece45.marvelx.core.common.util.DateUtil
 import com.alexgreece45.marvelx.core.data.repositories.UserSessionRepository
 import com.alexgreece45.marvelx.core.network.model.api.sensitiveUserData.RequestSensitiveUserData
 import com.alexgreece45.marvelx.core.network.model.api.token.toModel
 import com.alexgreece45.marvelx.core.network.storage.SignatureStorage
 import com.alexgreece45.marvelx.data.repository.AuthorizeRepositoryPartialState
+import com.alexgreece45.marvelx.data.repository.AutoLogoutRepository
 import com.alexgreece45.marvelx.data.repository.GetSensitiveUserDataRepositoryResponse
 import com.alexgreece45.marvelx.data.repository.GrandNewAccessTokenRepositoryResponse
 import com.alexgreece45.marvelx.data.repository.LoginRepository
@@ -23,7 +28,6 @@ import com.alexgreece45.marvelx.domain.usecases.RemoveUserCredentialsUseCase
 import com.alexgreece45.marvelx.model.model.AuthenticationTokens
 import com.alexgreece45.marvelx.model.model.Signature
 import com.alexgreece45.marvelx.util.ResourceProvider
-import com.alexgreece45.marvelx.core.common.extensions.safeAsync
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import okio.IOException
@@ -46,7 +50,7 @@ interface LoginInteractor {
     /**
      * The post-login call. It retrieves all the necessary data for signing requests.
      */
-    suspend fun postLogin(accessToken: String): Flow<PostLoginPartialState>
+    suspend fun postLogin(accessTokenAndType: String): Flow<PostLoginPartialState>
 
     /**
      * Grants an access token for the OAuth 2.0 flow. It sends the code verifier and the `code` that
@@ -71,6 +75,9 @@ class LoginInteractorImpl(
     private val removeUserCredentialsUseCase: RemoveUserCredentialsUseCase,
     private val appLogger: AppLogger,
     private val userRepository: UserRepository,
+    private val autoLogoutRepository: AutoLogoutRepository,
+    private val websocketController: WebsocketController,
+    private val refreshTokenController: RefreshTokenController,
 ) : LoginInteractor {
 
     private val codeVerifier by lazy {
@@ -84,10 +91,10 @@ class LoginInteractorImpl(
     override suspend fun authorize(tempAuthCode: String): Flow<AuthorizePartialState> = flow {
         val genericErrorMessage = resourceProvider.getGenericErrorMessage()
         loginRepository.authorize(
-            tempAuthCode,
-            configOauthLogic.clientId,
-            codeChallenge,
-            configOauthLogic.codeChallengeMethod
+            tempAuthCode = tempAuthCode,
+            clientId = configOauthLogic.clientId,
+            codeChallenge = codeChallenge,
+            codeChallengeMethod = configOauthLogic.codeChallengeMethod
         ).collect {
             when (it) {
                 is AuthorizeRepositoryPartialState.Success -> {
@@ -119,10 +126,10 @@ class LoginInteractorImpl(
         }
     }
 
-    override suspend fun postLogin(accessToken: String): Flow<PostLoginPartialState> = flow {
+    override suspend fun postLogin(accessTokenAndType: String): Flow<PostLoginPartialState> = flow {
         val genericErrorMessage = resourceProvider.getGenericErrorMessage()
 
-        loginRepository.postLogin(accessToken).collect {
+        loginRepository.postLogin(accessTokenAndType).collect {
             when (it) {
                 is PostLoginRepositoryResponse.Success -> {
                     val sign = it.response?.sign
@@ -133,6 +140,10 @@ class LoginInteractorImpl(
                         emit(PostLoginPartialState.Failed(genericErrorMessage))
                         return@collect
                     }
+
+                    autoLogoutRepository.setAutoLogoutTimestamp(DateUtil.getUTCInstant())
+                    websocketController.init()
+                    refreshTokenController.startWorker()
 
                     signatureStorage.setSignature(
                         Signature(
@@ -172,7 +183,7 @@ class LoginInteractorImpl(
             loginRepository.grandNewAccessToken(
                 clientId = configOauthLogic.clientId,
                 code = authCode,
-                codeVerifier = createCodeVerifier(),
+                codeVerifier = codeVerifier,
                 uri = configOauthLogic.redirectUri
             ).collect {
                 when (it) {

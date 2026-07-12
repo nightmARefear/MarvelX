@@ -9,7 +9,7 @@ import org.koin.core.annotation.Factory
 import kotlin.coroutines.CoroutineContext
 
 /**
- * Removes the stored user credentials: user session, sign data.
+ * Removes the stored user credentials: user ID, authentication tokens, sign data.
  *
  * ### Note: This operation is irreversible, and it MUST be used with caution.
  * */
@@ -22,13 +22,9 @@ class RemoveUserCredentialsUseCase(
 
     suspend operator fun invoke() {
         withContext(ioDispatcher) {
-            launch {
-                userSessionRepository.removeUserSession()
-            }
-
-            launch {
-                signatureStorage.removeSignature()
-            }
+            launch { userSessionRepository.removeUserId() }
+            launch { userSessionRepository.removeAuthenticationTokens() }
+            launch { signatureStorage.removeSignature() }
         }
     }
 }

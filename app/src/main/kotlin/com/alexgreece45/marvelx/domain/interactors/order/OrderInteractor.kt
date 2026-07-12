@@ -1,5 +1,6 @@
 package com.alexgreece45.marvelx.domain.interactors.order
 
+import com.alexgreece45.marvelx.core.data.model.order.OrderId
 import com.alexgreece45.marvelx.data.repository.order.OrderRepository
 import com.alexgreece45.marvelx.domain.helper.InteractorPartialState
 import com.alexgreece45.marvelx.domain.helper.handleRepositoryResultNoFlow
@@ -15,7 +16,7 @@ import org.koin.core.annotation.Factory
 interface OrderInteractor {
 
     suspend fun getOrders(): InteractorPartialState<List<OrderPreviewDomain>>
-    suspend fun getOrderDetails(orderId: OrderIdDomain): InteractorPartialState<OrderDomain>
+    suspend fun getOrderDetails(orderId: OrderId): InteractorPartialState<OrderDomain>
     suspend fun getOrderItemTrackingHistory(
         orderId: OrderIdDomain,
         orderItemId: OrderIdDomain
@@ -36,9 +37,9 @@ internal class OrderInteractorImpl(
         )
     }
 
-    override suspend fun getOrderDetails(orderId: OrderIdDomain): InteractorPartialState<OrderDomain> {
+    override suspend fun getOrderDetails(orderId: OrderId): InteractorPartialState<OrderDomain> {
         return handleRepositoryResultNoFlow(
-            repositoryResult = orderRepository.getOrderDetails(orderId.toData()),
+            repositoryResult = orderRepository.getOrderDetails(orderId),
             transformation = { this.toDomain() }
         )
     }

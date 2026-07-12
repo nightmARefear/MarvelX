@@ -2,6 +2,7 @@ package com.alexgreece45.marvelx.ui.screens.cart
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
@@ -33,7 +34,8 @@ import com.alexgreece45.marvelx.ui.components.effect.ObserveUiEffect
 import com.alexgreece45.marvelx.ui.components.icons.ProcessingRequestIconLottie
 import com.alexgreece45.marvelx.ui.components.orderSumamaryCard.OrderSummaryCard
 import com.alexgreece45.marvelx.ui.screens.cart.model.CartContract
-import com.alexgreece45.marvelx.ui.theme.values.customColors
+import com.alexgreece45.marvelx.ui_theme.theme.values.customColors
+import com.alexgreece45.marvelx.util.DEFAULT_SCREEN_PADDING
 import com.alexgreece45.marvelx.util.SPACING_MEDIUM
 import com.alexgreece45.marvelx.util.VSpacer
 import com.alexgreece45.marvelx.util.extensions.showToast
@@ -66,7 +68,8 @@ fun CartScreen(
         isLoading = state.isLoading,
         showToolbar = orderCheckoutInfo == null,
         toolbarTitle = stringResource(R.string.screen_cart_toolbar_title),
-        bottomNavigationBarData = bottomNavigationBarData?.invoke()
+        bottomNavigationBarData = bottomNavigationBarData?.invoke(),
+        paddingValues = PaddingValues(if (orderCheckoutInfo == null) DEFAULT_SCREEN_PADDING else 0.dp)
     ) { paddingValues ->
         LazyColumn(
             modifier = Modifier.fillMaxSize(),

@@ -1,5 +1,6 @@
 package com.alexgreece45.marvelx.ui.screens.orders.orderDetails.model
 
+import com.alexgreece45.marvelx.core.data.model.order.OrderId
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
@@ -7,7 +8,7 @@ import com.alexgreece45.marvelx.ui.model_generic.UiState
 import com.alexgreece45.marvelx.ui.screens.orders.model.OrderUi
 import com.alexgreece45.marvelx.ui.screens.orders.model.item.OrderItemUi
 
-sealed interface OrderDetailsContract {
+internal sealed interface OrderDetailsContract {
 
     sealed interface Event : BaseEvent {
         data class Init(val orderId: String) : Event
@@ -24,7 +25,7 @@ sealed interface OrderDetailsContract {
     data class State(
         val uiState: UiState<OrderUi, Unit> = UiState.Loading,
 
-        val orderId: String = "",
+        val orderId: OrderId = OrderId.EMPTY,
 
         val bottomSheetType: OrderDetailsBottomSheetType? = null,
     ) : BaseState

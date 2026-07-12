@@ -15,7 +15,6 @@ import com.alexgreece45.marvelx.core.data.model.order.item.OrderItemReturnCondit
 import com.alexgreece45.marvelx.core.data.model.order.item.OrderItemReturnReason
 import com.alexgreece45.marvelx.core.data.model.order.item.OrderItemReturnResult
 import com.alexgreece45.marvelx.core.data.model.order.item.OrderItemReturnState
-import com.alexgreece45.marvelx.core.data.model.order.item.toData
 import com.alexgreece45.marvelx.core.data.model.order.item.toDataState
 import com.alexgreece45.marvelx.core.network.clients.OrderClient
 import com.alexgreece45.marvelx.model.model.generic.AttachedFileContentData
@@ -24,12 +23,12 @@ import kotlin.coroutines.CoroutineContext
 
 interface OrderItemReturnRepository {
 
-    suspend fun getOrderItemReturnRequest(
+    suspend fun getOrderItemReturn(
         orderId: OrderId,
         orderItemId: OrderId,
     ): RepositoryResult<OrderItemReturnState>
 
-    suspend fun placeOrderItemReturnRequest(
+    suspend fun submitOrderItemReturn(
         orderId: OrderId,
         orderItemId: OrderId,
         returnReason: OrderItemReturnReason,
@@ -48,12 +47,12 @@ internal class OrderItemReturnRepositoryImpl(
     private val appLogger: AppLogger
 ) : OrderItemReturnRepository {
 
-    override suspend fun getOrderItemReturnRequest(
+    override suspend fun getOrderItemReturn(
         orderId: OrderId,
         orderItemId: OrderId,
     ): RepositoryResult<OrderItemReturnState> {
         return handleApiResultNoFlow(
-            apiResult = orderClient.getOrderItemReturnRequest(
+            apiResult = orderClient.getOrderItemReturn(
                 orderId = orderId.value,
                 orderItemId = orderItemId.value
             ),
@@ -62,7 +61,7 @@ internal class OrderItemReturnRepositoryImpl(
         )
     }
 
-    override suspend fun placeOrderItemReturnRequest(
+    override suspend fun submitOrderItemReturn(
         orderId: OrderId,
         orderItemId: OrderId,
         returnReason: OrderItemReturnReason,
@@ -117,12 +116,12 @@ internal class OrderItemReturnRepositoryImpl(
             MultipartBuilderResult.ImageProcessingError -> MultipartResult.ImageProcessingError
             is MultipartBuilderResult.Success -> {
                 handleApiResultNoFlow(
-                    apiResult = orderClient.placeOrderItemReturnRequest(
+                    apiResult = orderClient.submitOrderItemReturn(
                         orderId = orderId.value,
                         orderItemId = orderItemId.value,
                         requestOrderItemReturn = multipartBuilderResult.data
                     ),
-                    transformation = { this.toData() },
+                    transformation = { this.toDataState() },
                     ioDispatcher = ioDispatcher,
                     logError = { errorMessage -> appLogger.e(LOGGER_TAG) { errorMessage } }
                 ).toMultipartResult()

@@ -46,7 +46,6 @@ import com.alexgreece45.marvelx.ui.components.effect.ObserveUiEffect
 import com.alexgreece45.marvelx.ui.components.orderSumamaryCard.OrderSummaryCard
 import com.alexgreece45.marvelx.ui.components.rememberWrapModalBottomSheetState
 import com.alexgreece45.marvelx.ui.components.sections.SectionHeader
-import com.alexgreece45.marvelx.ui.model_generic.UiState
 import com.alexgreece45.marvelx.ui.model_generic.onError
 import com.alexgreece45.marvelx.ui.model_generic.onSuccess
 import com.alexgreece45.marvelx.ui.screens.orders.components.OrderStatusInfoBottomSheetContent
@@ -54,7 +53,7 @@ import com.alexgreece45.marvelx.ui.screens.orders.model.OrderStatusUi
 import com.alexgreece45.marvelx.ui.screens.orders.model.item.OrderItemStatusUi
 import com.alexgreece45.marvelx.ui.screens.orders.orderDetails.model.OrderDetailsBottomSheetType
 import com.alexgreece45.marvelx.ui.screens.orders.orderDetails.model.OrderDetailsContract
-import com.alexgreece45.marvelx.ui.theme.values.customShapes
+import com.alexgreece45.marvelx.ui_theme.theme.values.customShapes
 import com.alexgreece45.marvelx.util.SPACING_MEDIUM
 import com.alexgreece45.marvelx.util.SPACING_TINY
 import com.alexgreece45.marvelx.util.VSpacer
@@ -63,7 +62,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 
 @Composable
-fun OrderDetailsScreen(
+internal fun OrderDetailsScreen(
     onEvent: (OrderDetailsContract.Event) -> Unit,
     state: OrderDetailsContract.State,
     effect: Flow<OrderDetailsContract.Effect>,
@@ -162,10 +161,10 @@ fun OrderDetailsScreen(
 
                         items(
                             items = order.items,
-                            key = { item -> item.id.value }
+                            key = { item -> item.orderId.value }
                         ) { order ->
                             OrderItemCard(
-                                id = order.id.formatted,
+                                id = order.orderId.formatted,
                                 title = order.title,
                                 coverImageUrl = order.coverImageUrl,
                                 priceLabel = order.price.label,
@@ -279,9 +278,8 @@ private fun OrderItemStatusChip(status: OrderItemStatusUi) {
                     colorFilter = ColorFilter.tint(statusContentColor)
                 )
             } else {
-                val circleColor = statusContentColor
                 Canvas(modifier = Modifier.size(6.dp)) {
-                    drawCircle(color = circleColor)
+                    drawCircle(color = statusContentColor)
                 }
             }
 

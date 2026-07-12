@@ -17,14 +17,15 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.common_ui.previewAnnotation.ThemePreview
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
 import com.alexgreece45.marvelx.ui.components.WrapAsyncImage
 import com.alexgreece45.marvelx.ui.components.effect.ObserveUiEffect
 import com.alexgreece45.marvelx.ui.components.error.ContentErrorScreen
 import com.alexgreece45.marvelx.ui.screens.profile.image.model.ProfileImageContract
-import com.alexgreece45.marvelx.ui.theme.MarvelXTheme
-import com.alexgreece45.marvelx.ui.theme.values.customColors
+import com.alexgreece45.marvelx.ui_theme.theme.MarvelXTheme
+import com.alexgreece45.marvelx.ui_theme.theme.values.customColors
 import com.alexgreece45.marvelx.util.constants.ConstantsUi
 import com.alexgreece45.marvelx.util.extensions.circularImageWithBorder
 import kotlinx.coroutines.flow.Flow
@@ -101,10 +102,7 @@ fun ProfileImageScreen(
     }
 }
 
-@Preview(
-    apiLevel = 34,
-    uiMode = Configuration.UI_MODE_NIGHT_YES or Configuration.UI_MODE_TYPE_NORMAL
-)
+@ThemePreview
 @Composable
 private fun ProfileImageScreenPreview() {
     MarvelXTheme {

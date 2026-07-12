@@ -1,7 +1,7 @@
 package com.alexgreece45.marvelx.core.data.storage
 
 import com.alexgreece45.marvelx.core.common.dispatchers.model.IoDispatcher
-import com.alexgreece45.marvelx.core.datastore.data_sources.UserSessionDataSource
+import com.alexgreece45.marvelx.core.data.repositories.UserSessionRepository
 import com.alexgreece45.marvelx.core.network.storage.TokenStorage
 import com.alexgreece45.marvelx.model.model.AuthenticationTokens
 import kotlinx.coroutines.runBlocking
@@ -10,29 +10,25 @@ import kotlin.coroutines.CoroutineContext
 
 @Single
 internal class TokenStorageImpl(
-    private val userSessionDataSource: UserSessionDataSource,
+    private val userSessionRepository: UserSessionRepository,
     @IoDispatcher private val ioDispatcher: CoroutineContext
 ) : TokenStorage {
 
-    override fun getAccessToken(): String {
+    override fun getAccessTokenAndType(): String {
         return runBlocking(ioDispatcher) {
-            userSessionDataSource.getUserSession()?.authenticationTokens?.accessToken.orEmpty()
+            userSessionRepository.getAccessTokenAndType()
         }
     }
 
     override fun getRefreshToken(): String? {
         return runBlocking(ioDispatcher) {
-            userSessionDataSource.getUserSession()?.authenticationTokens?.refreshToken
+            userSessionRepository.getRefreshToken()
         }
     }
 
     override fun setAuthenticationTokens(authenticationTokens: AuthenticationTokens) {
         return runBlocking(ioDispatcher) {
-            userSessionDataSource.setUserSession { currentUserSession ->
-                currentUserSession.copy(
-                    authenticationTokens = authenticationTokens
-                )
-            }
+            userSessionRepository.setAuthenticationTokens(authenticationTokens)
         }
     }
 }

@@ -30,13 +30,13 @@ internal interface OrderService {
     ): Response<ResponseOrderItemTrackingHistory>
 
     @GET("/api/private/marvelx/orders/{orderId}/{orderItemId}/return-request")
-    suspend fun getOrderItemReturnRequest(
+    suspend fun getOrderItemReturn(
         @Path(value = "orderId") orderId: String,
         @Path(value = "orderItemId") orderItemId: String,
     ): Response<ResponseOrderItemReturn>
 
     @POST("/api/private/marvelx/orders/{orderId}/{orderItemId}/return-request")
-    suspend fun placeOrderItemReturnRequest(
+    suspend fun submitOrderItemReturn(
         @Path(value = "orderId") orderId: String,
         @Path(value = "orderItemId") orderItemId: String,
         @Body body: MultipartBody

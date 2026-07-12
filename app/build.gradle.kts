@@ -246,9 +246,6 @@ dependencies {
     implementation(libs.google.firebase.firestore)
     implementation(libs.google.firebase.cloud.messaging)
 
-    // Shimmer.
-    implementation(libs.valentinilk.shimmer)
-
     // Image cropper.
     implementation(libs.vanniktech.android.image.cropper)
 

@@ -3,6 +3,8 @@ package com.alexgreece45.marvelx.ui.screens.profile.editProfileDetails
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarNavigationPayload
+import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarType
 import com.alexgreece45.marvelx.domain.helper.InteractorPartialState
 import com.alexgreece45.marvelx.domain.interactors.GetCurrentUserProfileDetailsPartialState
 import com.alexgreece45.marvelx.domain.interactors.UserInteractor
@@ -13,7 +15,6 @@ import com.alexgreece45.marvelx.mvi.BaseViewModel
 import com.alexgreece45.marvelx.ui.components.AlertDialogButton
 import com.alexgreece45.marvelx.ui.components.model.ErrorButtonLayout
 import com.alexgreece45.marvelx.ui.components.model.ErrorButtonType
-import com.alexgreece45.marvelx.ui.components.model.SnackbarStateData
 import com.alexgreece45.marvelx.ui.helper.FieldValidationRules
 import com.alexgreece45.marvelx.ui.model.Gender
 import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.model.EditProfileDetailsItemUi
@@ -91,12 +92,13 @@ sealed interface EditProfileDetailsContract {
 
         val alertDialogView: AlertDialogView? = null,
         val errorView: ErrorView? = null,
-        val snackbarStateData: SnackbarStateData? = null
     ) : BaseState
 
     sealed interface Effect : BaseEffect {
         sealed interface Navigation : Effect {
             data object NavigateUp : Navigation
+            data class NavigateUpWithSnackbarPayload(val snackbarNavigationPayload: SnackbarNavigationPayload) :
+                Navigation
         }
     }
 }
@@ -384,57 +386,55 @@ class EditProfileDetailsViewModel(
         }
         currentState.profileDetailsUi?.toBasicProfileDetailsDomain()?.let { profileDetailsDomain ->
             viewModelScope.launch {
-                userInteractor.updateCurrentUserProfileDetails(profileDetailsDomain).collect {
-                    when (it) {
-                        is InteractorPartialState.Success -> {
-                            // TODO: Review snackbar handling.
-                            setState {
-                                copy(
-                                    snackbarStateData = SnackbarStateData(
-                                        message = resourceProvider.getString(R.string.edit_profile_details_screen_success_updating_profile_details)
-                                    )
-                                )
-                            }
-                            setEffect {
-                                EditProfileDetailsContract.Effect.Navigation.NavigateUp
-                            }
-                        }
-
-                        is InteractorPartialState.Failed, is InteractorPartialState.Error -> {
-                            setState {
-                                copy(
-                                    isLoading = false,
-                                    errorView = EditProfileDetailsContract.ErrorView(
-                                        errorTitle = resourceProvider.getString(R.string.edit_profile_details_screen_error_updating_profile_details),
-                                        errorSubtitle = resourceProvider.getString(R.string.internal_server_error),
-                                        onCloseClicked = EditProfileDetailsContract.Event.OnBackClicked,
-                                        errorButtonLayout = ErrorButtonLayout.Single(
-                                            primaryButtonLabel = resourceProvider.getString(R.string.generic_retry_button),
-                                            onPrimaryButtonClicked = ::updateProfileDetails
+                userInteractor.updateCurrentUserProfileDetails(profileDetailsDomain)
+                    .collect { result ->
+                        when (result) {
+                            is InteractorPartialState.Success -> {
+                                setEffect {
+                                    EditProfileDetailsContract.Effect.Navigation.NavigateUpWithSnackbarPayload(
+                                        SnackbarNavigationPayload(
+                                            message = resourceProvider.getString(R.string.edit_profile_details_screen_success_updating_profile_details),
+                                            type = SnackbarType.SUCCESS
                                         )
                                     )
-                                )
+                                }
                             }
-                        }
 
-                        is InteractorPartialState.NoInternetConnection -> {
-                            setState {
-                                copy(
-                                    isLoading = false,
-                                    errorView = EditProfileDetailsContract.ErrorView(
-                                        errorTitle = resourceProvider.getString(R.string.edit_profile_details_screen_error_updating_profile_details),
-                                        errorSubtitle = resourceProvider.getNoInternetConnectionMessage(),
-                                        onCloseClicked = EditProfileDetailsContract.Event.OnBackClicked,
-                                        errorButtonLayout = ErrorButtonLayout.Single(
-                                            primaryButtonLabel = resourceProvider.getString(R.string.generic_retry_button),
-                                            onPrimaryButtonClicked = ::updateProfileDetails
+                            is InteractorPartialState.Failed, is InteractorPartialState.Error -> {
+                                setState {
+                                    copy(
+                                        isLoading = false,
+                                        errorView = EditProfileDetailsContract.ErrorView(
+                                            errorTitle = resourceProvider.getString(R.string.edit_profile_details_screen_error_updating_profile_details),
+                                            errorSubtitle = resourceProvider.getString(R.string.internal_server_error),
+                                            onCloseClicked = EditProfileDetailsContract.Event.OnBackClicked,
+                                            errorButtonLayout = ErrorButtonLayout.Single(
+                                                primaryButtonLabel = resourceProvider.getString(R.string.generic_retry_button),
+                                                onPrimaryButtonClicked = ::updateProfileDetails
+                                            )
                                         )
                                     )
-                                )
+                                }
+                            }
+
+                            is InteractorPartialState.NoInternetConnection -> {
+                                setState {
+                                    copy(
+                                        isLoading = false,
+                                        errorView = EditProfileDetailsContract.ErrorView(
+                                            errorTitle = resourceProvider.getString(R.string.edit_profile_details_screen_error_updating_profile_details),
+                                            errorSubtitle = resourceProvider.getNoInternetConnectionMessage(),
+                                            onCloseClicked = EditProfileDetailsContract.Event.OnBackClicked,
+                                            errorButtonLayout = ErrorButtonLayout.Single(
+                                                primaryButtonLabel = resourceProvider.getString(R.string.generic_retry_button),
+                                                onPrimaryButtonClicked = ::updateProfileDetails
+                                            )
+                                        )
+                                    )
+                                }
                             }
                         }
                     }
-                }
             }
         }
     }

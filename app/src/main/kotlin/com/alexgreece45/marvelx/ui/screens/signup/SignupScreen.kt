@@ -19,7 +19,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.autofill.ContentType
@@ -42,6 +41,7 @@ import com.alexgreece45.marvelx.ui.components.ExposedDropdownMenu
 import com.alexgreece45.marvelx.ui.components.OutlinedTextFieldValidation
 import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
 import com.alexgreece45.marvelx.ui.components.WrapButton
+import com.alexgreece45.marvelx.ui.components.effect.ObserveUiEffect
 import com.alexgreece45.marvelx.ui.model.Gender
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.SPACING_TINY
@@ -49,56 +49,44 @@ import kotlinx.coroutines.flow.Flow
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
-fun SignUpScreen(
-    onEventSent: (SignupEvent) -> Unit,
+internal fun SignUpScreen(
+    onEvent: (SignupEvent) -> Unit,
     state: SignupState,
     effect: Flow<SignupEffect>,
-    navigateToAllCharactersScreen: () -> Unit,
-    navigateToOtpScreen: (String, String, String, Boolean) -> Unit,
-    popBackStack: () -> Unit,
+    onNavigationEffect: (SignupEffect.Navigation) -> Unit
 ) {
     val focusManager = LocalFocusManager.current
     val keyboard = LocalSoftwareKeyboardController.current
 
-    LaunchedEffect(Unit) {
-        effect.collect { effect ->
-            when (effect) {
-                is SignupEffect.ShowAlertDialogError -> {
-                    onEventSent(
-                        SignupEvent.AlertDialogError.OnShow(
-                            errorMessage = effect.errorMessage
-                        )
+    ObserveUiEffect(effect) { uiEffect ->
+        when (uiEffect) {
+            is SignupEffect.ShowAlertDialogError -> {
+                onEvent(
+                    SignupEvent.AlertDialogError.OnShow(
+                        errorMessage = uiEffect.errorMessage
                     )
-                }
+                )
+            }
 
-                SignupEffect.Navigation.NavigateToAllCharactersScreen -> {
-                    navigateToAllCharactersScreen()
-                }
+            is SignupEffect.Navigation -> onNavigationEffect(uiEffect)
 
-                is SignupEffect.Navigation.NavigateToOtpScreen -> {
-                    navigateToOtpScreen(
-                        effect.userId,
-                        effect.otpFlowType,
-                        effect.verificationStep,
-                        effect.shouldRememberUserSession
-                    )
-                }
+            SignupEffect.CloseKeyboardAndRemoveFocus -> {
+                keyboard?.hide()
+                focusManager.clearFocus(true)
+            }
 
-                SignupEffect.CloseKeyboardAndRemoveFocus -> {
-                    keyboard?.hide()
-                    focusManager.clearFocus(true)
-                }
-
-                SignupEffect.OnDoneClick -> {
-                    onEventSent(SignupEvent.OnSignupButtonClick)
-                }
+            SignupEffect.OnDoneClick -> {
+                onEvent(SignupEvent.OnSignupButtonClick)
             }
         }
     }
 
     ContentScreen(
         isLoading = state.isLoading,
-        navigableAction = ScreenNavigableAction.Backable(popBackStack),
+        navigableAction = ScreenNavigableAction.Backable(
+            onBack = { onEvent(SignupEvent.OnDoneClick) }
+        ),
+        onBack = { onEvent(SignupEvent.OnBack) },
         showToolbar = true,
         toolbarTitle = stringResource(R.string.sign_up_screen_toolbar_title)
     ) { paddingValues ->
@@ -115,7 +103,7 @@ fun SignUpScreen(
                 errorMessage = { Text(text = state.alertDialogErrorMessage) },
                 confirmButton = AlertDialogButton(
                     label = stringResource(R.string.generic_ok_button),
-                    onClick = { onEventSent(SignupEvent.AlertDialogError.OnOkClick) }
+                    onClick = { onEvent(SignupEvent.AlertDialogError.OnOkClick) }
                 )
             )
 
@@ -128,7 +116,7 @@ fun SignUpScreen(
                 OutlinedTextFieldValidation(
                     value = state.firstName,
                     onValueChange = { newValue ->
-                        onEventSent(SignupEvent.FieldValueChange.FirstName(firstName = newValue))
+                        onEvent(SignupEvent.FieldValueChange.FirstName(firstName = newValue))
                     },
                     modifier = Modifier.weight(1f),
                     label = stringResource(R.string.generic_label_first_name),
@@ -150,7 +138,7 @@ fun SignUpScreen(
                 OutlinedTextFieldValidation(
                     value = state.lastName,
                     onValueChange = { newValue ->
-                        onEventSent(SignupEvent.FieldValueChange.LastName(lastName = newValue))
+                        onEvent(SignupEvent.FieldValueChange.LastName(lastName = newValue))
                     },
                     modifier = Modifier.weight(1f),
                     label = stringResource(R.string.generic_label_last_name),
@@ -175,14 +163,14 @@ fun SignUpScreen(
                 expanded = state.isGenderDropdownMenuVisible,
                 modifier = Modifier.fillMaxWidth(),
                 value = state.gender?.label?.let { stringResource(it) },
-                onDismissRequest = { onEventSent(SignupEvent.GenderDropdownMenu.OnDismiss) },
-                onExpandedChange = { onEventSent(SignupEvent.GenderDropdownMenu.OnClick) }
+                onDismissRequest = { onEvent(SignupEvent.GenderDropdownMenu.OnDismiss) },
+                onExpandedChange = { onEvent(SignupEvent.GenderDropdownMenu.OnClick) }
             ) {
                 Gender.asList().forEach { gender ->
                     DropdownMenuItem(
                         modifier = Modifier.fillMaxWidth(),
                         onClick = {
-                            onEventSent(
+                            onEvent(
                                 SignupEvent.FieldValueChange.GenderDropDown(
                                     gender = gender
                                 )
@@ -201,7 +189,7 @@ fun SignUpScreen(
             OutlinedTextFieldValidation(
                 value = state.email,
                 onValueChange = { newEmail ->
-                    onEventSent(
+                    onEvent(
                         SignupEvent.FieldValueChange.Email(
                             email = newEmail
                         )
@@ -229,7 +217,7 @@ fun SignUpScreen(
             OutlinedTextFieldValidation(
                 value = state.password,
                 onValueChange = { newPassword ->
-                    onEventSent(
+                    onEvent(
                         SignupEvent.FieldValueChange.Password(
                             password = newPassword
                         )
@@ -240,7 +228,7 @@ fun SignUpScreen(
                     .semantics { contentType = ContentType.NewPassword },
                 label = stringResource(R.string.generic_label_password),
                 trailingIcon = {
-                    IconButton(onClick = { onEventSent(SignupEvent.OnPasswordVisibilityIconClick) }) {
+                    IconButton(onClick = { onEvent(SignupEvent.OnPasswordVisibilityIconClick) }) {
                         if (state.isPasswordVisible) {
                             Icon(
                                 imageVector = Icons.Filled.VisibilityOff,
@@ -264,7 +252,7 @@ fun SignUpScreen(
                     imeAction = ImeAction.Done
                 ),
                 keyboardActions = KeyboardActions(
-                    onDone = { onEventSent(SignupEvent.OnDoneClick) }
+                    onDone = { onEvent(SignupEvent.OnDoneClick) }
                 )
             )
 
@@ -272,7 +260,7 @@ fun SignUpScreen(
             WrapButton(
                 modifier = Modifier.fillMaxWidth(),
                 enabled = state.signupButton,
-                onClick = { onEventSent(SignupEvent.OnSignupButtonClick) }
+                onClick = { onEvent(SignupEvent.OnSignupButtonClick) }
             ) {
                 Text(
                     text = stringResource(R.string.sign_up_screen_signup_button)

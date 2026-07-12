@@ -1,6 +1,7 @@
 package com.alexgreece45.marvelx.core.datastore.data_sources
 
 import androidx.datastore.core.DataStore
+import com.alexgreece45.marvelx.core.datastore.providers.model.ConsecutiveFailedAuthenticationDataStore
 import com.alexgreece45.marvelx.core.datastore.extensions.removeData
 import com.alexgreece45.marvelx.core.datastore.extensions.updateDataCatchable
 import com.alexgreece45.marvelx.core.datastore.mappers.toEntity
@@ -18,7 +19,7 @@ interface ConsecutiveFailedAuthenticationDataSource {
 
 @Single
 internal class ConsecutiveFailedAuthenticationDataSourceImpl(
-    private val dataStore: DataStore<ConsecutiveFailedAuthenticationEntity?>,
+    @ConsecutiveFailedAuthenticationDataStore private val dataStore: DataStore<ConsecutiveFailedAuthenticationEntity?>,
 ) : ConsecutiveFailedAuthenticationDataSource {
 
     override suspend fun getConsecutiveFailedAuthentication(): ConsecutiveFailedAuthentication? {

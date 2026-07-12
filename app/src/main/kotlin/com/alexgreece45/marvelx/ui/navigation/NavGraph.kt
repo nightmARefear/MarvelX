@@ -8,6 +8,7 @@ import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarNavigationPayload
 import com.alexgreece45.marvelx.ui.components.BottomBarItem
 import com.alexgreece45.marvelx.ui.components.BottomNavigationBarData
 import com.alexgreece45.marvelx.ui.components.IconData
@@ -39,6 +40,7 @@ import com.alexgreece45.marvelx.ui.screens.home.HomeScreen
 import com.alexgreece45.marvelx.ui.screens.home.HomeViewModel
 import com.alexgreece45.marvelx.ui.screens.introLoading.IntroLoadingScreen
 import com.alexgreece45.marvelx.ui.screens.introLoading.IntroLoadingViewModel
+import com.alexgreece45.marvelx.ui.screens.login.LoginEffect
 import com.alexgreece45.marvelx.ui.screens.login.LoginScreen
 import com.alexgreece45.marvelx.ui.screens.login.LoginViewModel
 import com.alexgreece45.marvelx.ui.screens.myListings.MyListingsScreen
@@ -56,10 +58,12 @@ import com.alexgreece45.marvelx.ui.screens.orders.orderItemTrackingHistory.model
 import com.alexgreece45.marvelx.ui.screens.orders.requestReturn.RequestItemReturnScreen
 import com.alexgreece45.marvelx.ui.screens.orders.requestReturn.RequestItemReturnViewModel
 import com.alexgreece45.marvelx.ui.screens.orders.requestReturn.model.RequestItemReturnContract
+import com.alexgreece45.marvelx.ui.screens.otp.OtpEffect
 import com.alexgreece45.marvelx.ui.screens.otp.OtpScreen
 import com.alexgreece45.marvelx.ui.screens.otp.OtpViewModel
 import com.alexgreece45.marvelx.ui.screens.profile.ProfileScreen
 import com.alexgreece45.marvelx.ui.screens.profile.ProfileViewModel
+import com.alexgreece45.marvelx.ui.screens.profile.editProfileDetails.EditProfileDetailsContract
 import com.alexgreece45.marvelx.ui.screens.profile.editProfileDetails.EditProfileDetailsScreen
 import com.alexgreece45.marvelx.ui.screens.profile.editProfileDetails.EditProfileDetailsViewModel
 import com.alexgreece45.marvelx.ui.screens.profile.image.ProfileImageScreen
@@ -82,11 +86,12 @@ import com.alexgreece45.marvelx.ui.screens.settings.model.SettingsContract
 import com.alexgreece45.marvelx.ui.screens.settings.privacySettings.PrivacySettingsScreen
 import com.alexgreece45.marvelx.ui.screens.settings.privacySettings.PrivacySettingsViewModel
 import com.alexgreece45.marvelx.ui.screens.signup.SignUpScreen
+import com.alexgreece45.marvelx.ui.screens.signup.SignupEffect
 import com.alexgreece45.marvelx.ui.screens.signup.SignupViewModel
 import com.alexgreece45.marvelx.ui.screens.splash.SplashScreen
-import com.alexgreece45.marvelx.ui.theme.values.customColors
 import com.alexgreece45.marvelx.ui.transitions.EnterTransition
 import com.alexgreece45.marvelx.ui.transitions.ExitTransition
+import com.alexgreece45.marvelx.ui_theme.theme.values.customColors
 import com.alexgreece45.marvelx.util.SPACING_MEDIUM
 import com.alexgreece45.marvelx.util.extensions.composable
 import com.alexgreece45.marvelx.util.extensions.openAppSettings
@@ -99,7 +104,7 @@ import org.koin.androidx.compose.koinViewModel
  * @param navController The root [NavHostController] to be used by the `NavHost`.
  */
 @Composable
-fun NavGraph(navController: NavHostController) {
+internal fun NavGraph(navController: NavHostController) {
     NavHost(
         navController = navController,
         startDestination = Screen.getStartDestination()
@@ -181,30 +186,42 @@ fun NavGraph(navController: NavHostController) {
                 onEventSent = viewModel::setEvent,
                 state = viewModel.uiState.collectAsStateWithLifecycle().value,
                 effect = viewModel.uiEffect,
-                navigateToSignupScreen = {
-                    navController.navigate(Screen.SignupScreen.route) {
-                        launchSingleTop = true
+                onNavigationEffect = { navigationEffect ->
+                    when (navigationEffect) {
+                        is LoginEffect.Navigation.NavigateToOtpScreen -> {
+                            with(navigationEffect) {
+                                navController.navigate(
+                                    Screen.OtpScreen.createNavRoute(
+                                        userId = userId,
+                                        otpFlowType = otpFlowType,
+                                        verificationStep = verificationStep,
+                                        shouldRememberUserSession = shouldRememberUserSession
+                                    )
+                                )
+                            }
+                        }
+
+                        LoginEffect.Navigation.NavigateToSignupScreen -> {
+                            navController.navigate(Screen.SignupScreen.route) {
+                                launchSingleTop = true
+                            }
+                        }
+
+                        is LoginEffect.Navigation.PopBackStack -> {
+                            navController.navigateUp()
+                        }
+
+                        LoginEffect.Navigation.NavigateToForgotPasswordScreen -> {
+                            navController.navigate(Screen.ForgotPasswordScreen.route)
+                        }
+
+                        is LoginEffect.Navigation.NavigateToAllCharactersScreen -> {
+                            navController.navigate(Screen.AllCharactersScreen.route) {
+                                popUpToTop(navController)
+                            }
+                        }
                     }
-                },
-                navigateToAllCharactersScreen = {
-                    navController.navigate(Screen.AllCharactersScreen.route) {
-                        popUpToTop(navController)
-                    }
-                },
-                navigateToOtpScreen = { userId, otpFlowType, verificationStep, shouldRememberUserSession ->
-                    navController.navigate(
-                        Screen.OtpScreen.createNavRoute(
-                            userId = userId,
-                            otpFlowType = otpFlowType,
-                            verificationStep = verificationStep,
-                            shouldRememberUserSession = shouldRememberUserSession
-                        )
-                    )
-                },
-                navigateToForgotPasswordScreen = {
-                    navController.navigate(Screen.ForgotPasswordScreen.route)
-                },
-                popBackStack = navController::navigateUp
+                }
             )
         }
 
@@ -241,25 +258,35 @@ fun NavGraph(navController: NavHostController) {
         composable(Screen.SignupScreen) {
             val viewModel = koinViewModel<SignupViewModel>()
             SignUpScreen(
-                onEventSent = viewModel::setEvent,
+                onEvent = viewModel::setEvent,
                 state = viewModel.uiState.collectAsStateWithLifecycle().value,
                 effect = viewModel.uiEffect,
-                navigateToAllCharactersScreen = {
-                    navController.navigate(Screen.AllCharactersScreen.route) {
-                        popUpToTop(navController)
+                onNavigationEffect = { navigationEffect ->
+                    when (navigationEffect) {
+                        SignupEffect.Navigation.GoBack -> {
+                            navController.navigateUp()
+                        }
+
+                        SignupEffect.Navigation.NavigateToAllCharactersScreen -> {
+                            navController.navigate(Screen.AllCharactersScreen.route) {
+                                popUpToTop(navController)
+                            }
+                        }
+
+                        is SignupEffect.Navigation.NavigateToOtpScreen -> {
+                            with(navigationEffect) {
+                                navController.navigate(
+                                    Screen.OtpScreen.createNavRoute(
+                                        userId = userId,
+                                        otpFlowType = otpFlowType,
+                                        verificationStep = verificationStep,
+                                        shouldRememberUserSession = shouldRememberUserSession
+                                    )
+                                )
+                            }
+                        }
                     }
-                },
-                navigateToOtpScreen = { userId, otpFlowType, verificationStep, shouldRememberUserSession ->
-                    navController.navigate(
-                        Screen.OtpScreen.createNavRoute(
-                            userId = userId,
-                            otpFlowType = otpFlowType,
-                            verificationStep = verificationStep,
-                            shouldRememberUserSession = shouldRememberUserSession
-                        )
-                    )
-                },
-                popBackStack = navController::navigateUp
+                }
             )
         }
 
@@ -269,26 +296,36 @@ fun NavGraph(navController: NavHostController) {
                 onEventSent = viewModel::setEvent,
                 state = viewModel.uiState.collectAsStateWithLifecycle().value,
                 effect = viewModel.uiEffect,
-                popBackStack = navController::navigateUp,
-                navigateToAllCharactersScreen = {
-                    navController.navigate(Screen.AllCharactersScreen.route) {
-                        popUpToTop(navController)
+                onNavigationEffect = { navigationEffect ->
+                    when (navigationEffect) {
+                        OtpEffect.Navigation.GoBack -> {
+                            navController.navigateUp()
+                        }
+
+                        OtpEffect.Navigation.NavigateToAllCharactersScreen -> {
+                            navController.navigate(Screen.AllCharactersScreen.route) {
+                                popUpToTop(navController)
+                            }
+                        }
+
+                        is OtpEffect.Navigation.NavigateToChangePasswordScreen -> {
+                            navController.navigate(
+                                Screen.ChangePasswordScreen.createNavRoute(
+                                    requestIdEmail = navigationEffect.requestIdEmail,
+                                    requestIdPhoneNumber = navigationEffect.requestIdPhoneNumber
+                                )
+                            )
+                        }
                     }
-                },
-                navigateToChangePasswordScreen = { requestIdEmail, requestIdPhoneNumber ->
-                    navController.navigate(
-                        Screen.ChangePasswordScreen.createNavRoute(
-                            requestIdEmail = requestIdEmail,
-                            requestIdPhoneNumber = requestIdPhoneNumber
-                        )
-                    )
                 },
                 userId = navBackStackEntry.arguments?.getString(NavItem.UserId.key),
                 otpFlowType = navBackStackEntry.arguments?.getString(NavItem.OtpFlowType.key),
                 verificationStep = navBackStackEntry.arguments?.getString(NavItem.VerificationStep.key),
-                shouldRememberUserSession = navBackStackEntry.arguments?.getBoolean(NavItem.ShouldRememberUserSession.key),
+                shouldRememberUserSession =
+                    navBackStackEntry.arguments?.getBoolean(NavItem.ShouldRememberUserSession.key),
                 requestIdEmail = navBackStackEntry.arguments?.getString(NavItem.RequestIdEmail.key),
-                requestIdPhoneNumber = navBackStackEntry.arguments?.getString(NavItem.RequestIdPhoneNumber.key)
+                requestIdPhoneNumber =
+                    navBackStackEntry.arguments?.getString(NavItem.RequestIdPhoneNumber.key)
             )
         }
 
@@ -298,7 +335,11 @@ fun NavGraph(navController: NavHostController) {
             bottomNavigationBarData = { getBottomNavigationBarData(navController) }
         )
 
-        composable(screen = Screen.MyListingsScreen) {
+        composable(
+            screen = Screen.MyListingsScreen,
+            enterTransition = { EnterTransition.RightToLeft },
+            exitTransition = { ExitTransition.LeftToRight },
+        ) {
             val viewModel = koinViewModel<MyListingsViewModel>()
             MyListingsScreen(
                 onEvent = viewModel::setEvent,
@@ -371,7 +412,11 @@ fun NavGraph(navController: NavHostController) {
             )
         }
 
-        composable(screen = Screen.OrdersScreen) {
+        composable(
+            screen = Screen.OrdersScreen,
+            enterTransition = { EnterTransition.RightToLeft },
+            exitTransition = { ExitTransition.LeftToRight },
+        ) {
             val viewModel = koinViewModel<OrdersViewModel>()
             OrdersScreen(
                 onEvent = viewModel::setEvent,
@@ -480,8 +525,7 @@ fun NavGraph(navController: NavHostController) {
                 orderItemCoverImageUrl = navBackStackEntry.arguments?.getString(NavItem.OrderItemCoverImageUrl.key)
                     .orEmpty(),
                 orderItemPriceLabel = navBackStackEntry.arguments?.getString(NavItem.OrderItemPriceLabel.key)
-                    .orEmpty(),
-                showSnackbar = { _, _ -> }
+                    .orEmpty()
             )
         }
 
@@ -587,7 +631,11 @@ fun NavGraph(navController: NavHostController) {
             )
         }
 
-        composable(Screen.FriendsScreen) {
+        composable(
+            screen = Screen.FriendsScreen,
+            enterTransition = { EnterTransition.RightToLeft },
+            exitTransition = { ExitTransition.LeftToRight },
+        ) {
             val viewModel = koinViewModel<FriendsViewModel>()
             FriendsScreen(
                 onEventSent = viewModel::setEvent,
@@ -609,12 +657,20 @@ fun NavGraph(navController: NavHostController) {
             )
         }
 
-        composable(Screen.ProfileScreen) {
+        composable(Screen.ProfileScreen) { navBackStackEntry ->
             val viewModel = koinViewModel<ProfileViewModel>()
             ProfileScreen(
                 onEventSent = viewModel::setEvent,
                 state = viewModel.uiState.collectAsStateWithLifecycle().value,
                 effect = viewModel.uiEffect,
+                snackbarNavigationPayloadFlow = navBackStackEntry.savedStateHandle
+                    .getStateFlow<SnackbarNavigationPayload?>(
+                        "snackbarNavigationPayload",
+                        null
+                    ),
+                onSnackbarNavigationPayloadConsumed = {
+                    navBackStackEntry.savedStateHandle.remove<SnackbarNavigationPayload>("SnackbarNavigationPayload")
+                },
                 bottomNavigationBarData = { getBottomNavigationBarData(navController = navController) },
                 onNavigation = { navigationEffect ->
                     when (navigationEffect) {
@@ -768,12 +824,26 @@ fun NavGraph(navController: NavHostController) {
                 onEventSent = viewModel::setEvent,
                 state = viewModel.uiState.collectAsStateWithLifecycle().value,
                 effect = viewModel.uiEffect,
-                navigateUp = navController::navigateUp,
+                onNavigationEffect = { navigationEffect ->
+                    when (navigationEffect) {
+                        EditProfileDetailsContract.Effect.Navigation.NavigateUp -> {
+                            navController.navigateUp()
+                        }
+
+                        is EditProfileDetailsContract.Effect.Navigation.NavigateUpWithSnackbarPayload -> {
+                            navController.previousBackStackEntry?.savedStateHandle["snackbarNavigationPayload"] =
+                                navigationEffect.snackbarNavigationPayload
+                            navController.navigateUp()
+                        }
+                    }
+                }
             )
         }
 
         composable(
-            screen = Screen.SettingsScreen
+            screen = Screen.SettingsScreen,
+            enterTransition = { EnterTransition.RightToLeft },
+            exitTransition = { ExitTransition.LeftToRight },
         ) {
             val viewModel = koinViewModel<SettingsViewModel>()
 

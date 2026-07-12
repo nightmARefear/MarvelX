@@ -4,7 +4,7 @@ import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.core.common.logger.AppLogger
 import com.alexgreece45.marvelx.core.data.helper.RepositoryResult
-import com.alexgreece45.marvelx.core.data.model.user.UserId
+import com.alexgreece45.marvelx.model.model.user.UserId
 import com.alexgreece45.marvelx.data.repository.UserRepository
 import com.alexgreece45.marvelx.domain.helper.InteractorPartialState
 import com.alexgreece45.marvelx.domain.interactors.order.OrderInteractor
@@ -266,7 +266,7 @@ internal class OrderItemTrackingHistoryViewModel(
                 sellerDetailsUiState = UiState.Loading
             )
         }
-        when (val result = userRepository.getBasicProfileDetails(currentState.sellerUserId.value)) {
+        when (val result = userRepository.getBasicProfileDetails(currentState.sellerUserId)) {
             is RepositoryResult.Failed,
             is RepositoryResult.NetworkError -> {
                 setState {

@@ -22,16 +22,16 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.common_ui.util.safeLetComposable
 import com.alexgreece45.marvelx.ui.components.ThrottledIconButton
 import com.alexgreece45.marvelx.ui.components.WrapHorizontalDivider
 import com.alexgreece45.marvelx.ui.components.sections.SectionHeader
 import com.alexgreece45.marvelx.ui.screens.orders.model.OrderCheckoutInfoUi
-import com.alexgreece45.marvelx.ui.theme.values.customColors
-import com.alexgreece45.marvelx.ui.theme.values.customShapes
+import com.alexgreece45.marvelx.ui_theme.theme.values.customColors
+import com.alexgreece45.marvelx.ui_theme.theme.values.customShapes
 import com.alexgreece45.marvelx.util.SPACING_MEDIUM
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.SPACING_TINY
-import com.alexgreece45.marvelx.util.safeLetComposable
 
 @Composable
 fun CheckoutInfoCard(
@@ -109,7 +109,6 @@ fun CheckoutInfoCard(
                             )
                         }
                     }
-
                     safeLetComposable(
                         orderCheckoutInfo.paymentDate,
                         orderCheckoutInfo.transactionId

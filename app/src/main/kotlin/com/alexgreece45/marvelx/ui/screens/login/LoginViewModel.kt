@@ -344,9 +344,6 @@ class LoginViewModel(
                                 }
 
                                 is VerificationStep.OtpEmail -> {
-                                    // Save userId in device.
-                                    userSessionRepository.setUserId(userPartialStatePostLogIn.loginResponseDomain.userId)
-
                                     val isRememberMeCheckboxChecked =
                                         currentState.isRememberMeCheckboxChecked
                                     resetUiFieldStates()

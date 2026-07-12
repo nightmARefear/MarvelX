@@ -1,6 +1,8 @@
 plugins {
     id("marvelx.android.library")
     id("marvelx.koin.core")
+    id("marvelx.android.library.compose")
+    alias(libs.plugins.kotlin.parcelize)
 }
 
 android {
@@ -10,6 +12,7 @@ android {
 dependencies {
     implementation(projects.core.common)
     implementation(projects.model)
+    api(projects.uiTheme)
 
     implementation(libs.androidx.compat)
 }

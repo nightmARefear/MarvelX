@@ -10,7 +10,7 @@ import com.alexgreece45.marvelx.ui.screens.orders.model.tracking.OrderTrackingIn
 import com.alexgreece45.marvelx.ui.screens.orders.model.tracking.toUi
 import com.alexgreece45.marvelx.util.extensions.formatPrice
 
-data class OrderUi(
+internal data class OrderUi(
     val orderId: OrderIdDomain,
     val status: OrderStatusUi,
     val statusDescription: String,
@@ -22,7 +22,7 @@ data class OrderUi(
     val totalPrice: BigDecimalUi,
 )
 
-fun OrderDomain.toUi(
+internal fun OrderDomain.toUi(
     getString: (Int, Array<Any>) -> String,
     priceScale: Int,
     onErrorLog: (String) -> Unit

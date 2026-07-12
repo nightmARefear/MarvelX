@@ -11,7 +11,6 @@ import androidx.compose.material.Button
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -27,6 +26,7 @@ import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
 import com.alexgreece45.marvelx.ui.components.WrapButton
+import com.alexgreece45.marvelx.ui.components.effect.ObserveUiEffect
 import com.alexgreece45.marvelx.ui.components.effect.OneTimeLaunchedEffect
 import com.alexgreece45.marvelx.ui.components.error.ContentErrorScreen
 import com.alexgreece45.marvelx.ui.components.otpTextField.OtpTextField
@@ -36,7 +36,7 @@ import com.alexgreece45.marvelx.util.VSpacer
 import kotlinx.coroutines.flow.Flow
 
 /**
- * The OTP (One Time Password) screen is used to double check the user's identity when signing up or
+ * The OTP (One Time Password) screen is used to double-check the user's identity when signing up or
  * logging in.
  *
  * Navigation **to** and **from** this screen ***must*** be handled with caution.
@@ -44,13 +44,11 @@ import kotlinx.coroutines.flow.Flow
  * or `SignupScreen`.
  */
 @Composable
-fun OtpScreen(
+internal fun OtpScreen(
     onEventSent: (event: OtpEvent) -> Unit,
     state: OtpState,
     effect: Flow<OtpEffect>,
-    popBackStack: () -> Unit,
-    navigateToAllCharactersScreen: () -> Unit,
-    navigateToChangePasswordScreen: (String, String?) -> Unit,
+    onNavigationEffect: (OtpEffect.Navigation) -> Unit,
     userId: String?,
     otpFlowType: String?,
     verificationStep: String?,
@@ -75,38 +73,26 @@ fun OtpScreen(
         )
     }
 
-    LaunchedEffect(Unit) {
-        effect.collect { effect ->
-            when (effect) {
-                OtpEffect.Navigation.PopBackStack -> {
-                    popBackStack()
-                }
+    ObserveUiEffect(effect) { uiEffect ->
+        when (uiEffect) {
+            is OtpEffect.Navigation -> onNavigationEffect(uiEffect)
 
-                OtpEffect.OnUserSensitiveDataReceived -> {
-                    // Requests focus for OTP field.
-                    focusRequester.requestFocus()
-                }
+            OtpEffect.OnUserSensitiveDataReceived -> {
+                // Requests focus for OTP field.
+                focusRequester.requestFocus()
+            }
 
-                OtpEffect.OtpFieldRequestFocus -> {
-                    focusRequester.requestFocus()
-                }
+            OtpEffect.OtpFieldRequestFocus -> {
+                focusRequester.requestFocus()
+            }
 
-                OtpEffect.Navigation.NavigateToAllCharactersScreen -> {
-                    navigateToAllCharactersScreen()
-                }
+            OtpEffect.CloseKeyboardAndRemoveFocus -> {
+                keyboardController?.hide()
+                focusRequester.freeFocus()
+            }
 
-                is OtpEffect.Navigation.NavigateToChangePasswordScreen -> {
-                    navigateToChangePasswordScreen(effect.requestIdEmail, requestIdPhoneNumber)
-                }
-
-                OtpEffect.CloseKeyboardAndRemoveFocus -> {
-                    keyboardController?.hide()
-                    focusRequester.freeFocus()
-                }
-
-                OtpEffect.SaveAutoFilledData -> {
-                    autofillManager?.commit()
-                }
+            OtpEffect.SaveAutoFilledData -> {
+                autofillManager?.commit()
             }
         }
     }

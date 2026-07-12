@@ -48,12 +48,14 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.common_ui.util.safeLetComposable
 import com.alexgreece45.marvelx.core.common.extensions.defaultFormat
 import com.alexgreece45.marvelx.core.common.extensions.minusDays
 import com.alexgreece45.marvelx.core.common.extensions.plusDays
 import com.alexgreece45.marvelx.core.common.extensions.toOrderEstimatedDeliveryFormatFull
 import com.alexgreece45.marvelx.data.model.profileDetails.RepositoryBasicProfileDetails
 import com.alexgreece45.marvelx.domain.model_api.order.OrderEstimatedDeliveryDateRangeDomain
+import com.alexgreece45.marvelx.domain.model_api.order.OrderIdDomain
 import com.alexgreece45.marvelx.domain.model_api.order.item.itemReturn.OrderItemReturnStatusDomain
 import com.alexgreece45.marvelx.domain.model_api.order.item.refund.OrderItemRefundStatusDomain
 import com.alexgreece45.marvelx.domain.model_api.order.tracking.OrderTrackingHistoryItemDomain
@@ -83,13 +85,14 @@ import com.alexgreece45.marvelx.ui.screens.orders.model.item.OrderItemTrackingHi
 import com.alexgreece45.marvelx.ui.screens.orders.model.toUi
 import com.alexgreece45.marvelx.ui.screens.orders.model.tracking.OrderTrackingHistoryItemUi
 import com.alexgreece45.marvelx.ui.screens.orders.model.tracking.toUi
+import com.alexgreece45.marvelx.ui.screens.orders.orderDetails.model.OrderItemDetails
 import com.alexgreece45.marvelx.ui.screens.orders.orderItemTrackingHistory.model.OrderItemTrackingHistoryContract
 import com.alexgreece45.marvelx.ui.screens.orders.orderItemTrackingHistory.model.OrderItemTrackingHistoryErrorType
 import com.alexgreece45.marvelx.ui.screens.orders.orderItemTrackingHistory.model.OrderItemTrackingStepState
 import com.alexgreece45.marvelx.ui.screens.orders.orderItemTrackingHistory.model.OrderItemTrackingStepUi
 import com.alexgreece45.marvelx.ui.screens.orders.orderItemTrackingHistory.model.mapToTrackingStepList
-import com.alexgreece45.marvelx.ui.theme.MarvelXTheme
-import com.alexgreece45.marvelx.ui.theme.values.customColors
+import com.alexgreece45.marvelx.ui_theme.theme.MarvelXTheme
+import com.alexgreece45.marvelx.ui_theme.theme.values.customColors
 import com.alexgreece45.marvelx.util.DateUtil
 import com.alexgreece45.marvelx.util.SPACING_MEDIUM
 import com.alexgreece45.marvelx.util.SPACING_SMALL
@@ -101,7 +104,6 @@ import com.alexgreece45.marvelx.util.extensions.clickableNoRipple
 import com.alexgreece45.marvelx.util.extensions.setText
 import com.alexgreece45.marvelx.util.extensions.showToast
 import com.alexgreece45.marvelx.util.extensions.withEuroSymbol
-import com.alexgreece45.marvelx.util.safeLetComposable
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -1169,6 +1171,13 @@ private fun TrackingHistoryCardPreview() {
 )
 @Composable
 private fun OrderItemTrackingHistoryScreenDeliveredPreview() {
+    val orderId = "A1001567"
+    val orderItemId = "A1"
+    val orderItemTitle = "Super wow mug!"
+    val orderItemCoverImageUrl = ""
+    val orderItemPriceLabel = "150.20".withEuroSymbol()
+    val sellerUserId = "1"
+
     val orderDateMinusDays = Random.nextLong(3L..10L)
     val estimatedDeliveryDateMinPlusDays = Random.nextLong(1L..3L)
     val estimatedDeliveryDateMaxPlusDays = Random.nextLong(1L..5L)
@@ -1218,16 +1227,23 @@ private fun OrderItemTrackingHistoryScreenDeliveredPreview() {
                         lastName = "Voliotis",
                         profileImageUrl = ""
                     )
+                ),
+                orderItemDetails = OrderItemDetails(
+                    orderId = OrderIdDomain(orderId),
+                    orderItemId = OrderIdDomain(orderItemId),
+                    orderItemTitle = orderItemTitle,
+                    orderItemCoverImageUrl = orderItemCoverImageUrl,
+                    orderItemPriceLabel = orderItemPriceLabel
                 )
             ),
             effect = emptyFlow(),
             onNavigationEffect = {},
-            orderId = "A1001567",
-            orderItemId = "A1",
-            orderItemTitle = "Super wow mug!",
-            orderItemCoverImageUrl = "",
-            orderItemPriceLabel = "150.20".withEuroSymbol(),
-            sellerUserId = "1"
+            orderId = orderId,
+            orderItemId = orderItemId,
+            orderItemTitle = orderItemTitle,
+            orderItemCoverImageUrl = orderItemCoverImageUrl,
+            orderItemPriceLabel = orderItemPriceLabel,
+            sellerUserId = sellerUserId
         )
     }
 }

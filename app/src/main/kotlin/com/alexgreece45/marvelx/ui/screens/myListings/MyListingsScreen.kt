@@ -45,7 +45,7 @@ import com.alexgreece45.marvelx.ui.components.model.BottomSheetContentItemIconDa
 import com.alexgreece45.marvelx.ui.components.rememberWrapModalBottomSheetState
 import com.alexgreece45.marvelx.ui.screens.marketplace.model.ListingStatusUi
 import com.alexgreece45.marvelx.ui.screens.myListings.model.MyListingsContract
-import com.alexgreece45.marvelx.ui.theme.values.customColors
+import com.alexgreece45.marvelx.ui_theme.theme.values.customColors
 import com.alexgreece45.marvelx.util.SPACING_MEDIUM
 import com.alexgreece45.marvelx.util.constants.ConstantsUi
 import com.alexgreece45.marvelx.util.extensions.clickableNoRipple

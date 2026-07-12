@@ -23,6 +23,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 import org.koin.android.annotation.KoinViewModel
+import kotlin.time.Duration.Companion.milliseconds
 
 sealed interface QrCodeScanContract {
     sealed interface Event : BaseEvent {
@@ -123,7 +124,7 @@ class QrCodeScanViewModel(
                             )
                         )
                     }
-                    delay(800L) // Fake delay; its only use is to display the `processing` lottie.
+                    delay(800L.milliseconds) // Fake delay; its only use is to display the `processing` lottie.
                     handleQrCodeWebUrl(event.qrCode).collect { shouldCancelJob ->
                         if (shouldCancelJob) {
                             qrCodeProcessingJob = null
@@ -222,7 +223,7 @@ class QrCodeScanViewModel(
      */
     private fun handleQrCodeWebUrl(qrCode: String): Flow<Boolean> = flow {
         deepLinkController.handleQrCodeWebUrl(qrCode)
-            .collect { handleQrCodeWebUrlResult ->
+            .let { handleQrCodeWebUrlResult ->
                 when (handleQrCodeWebUrlResult) {
                     HandleQrCodeWebUrlResult.ErrorCreatingDeepLinkAction -> {
                         appLogger.d("QrCodeScanViewModel") { "Error handling the scanned QR code web url." }
@@ -253,7 +254,7 @@ class QrCodeScanViewModel(
                                 )
                             )
                         }
-                        delay(1600L) // Fake delay; its only use is to display the success lottie.
+                        delay(1600L.milliseconds) // Fake delay; its only use is to display the success lottie.
                         setEffect {
                             QrCodeScanContract.Effect.NavigateUpAndOpenDeepLinkAction(
                                 handleQrCodeWebUrlResult.deepLinkAction

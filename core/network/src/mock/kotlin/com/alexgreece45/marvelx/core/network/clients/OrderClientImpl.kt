@@ -3,13 +3,13 @@ package com.alexgreece45.marvelx.core.network.clients
 import com.alexgreece45.marvelx.core.common.extensions.minusDays
 import com.alexgreece45.marvelx.core.common.extensions.plusDays
 import com.alexgreece45.marvelx.core.common.util.DateUtil
-import com.alexgreece45.marvelx.core.network.clients.model.CardBrand
-import com.alexgreece45.marvelx.core.network.clients.model.OrderCourier
-import com.alexgreece45.marvelx.core.network.clients.model.OrderItemCondition
-import com.alexgreece45.marvelx.core.network.clients.model.OrderItemReturnReason
-import com.alexgreece45.marvelx.core.network.clients.model.OrderItemReturnStatus
-import com.alexgreece45.marvelx.core.network.clients.model.OrderItemStatus
-import com.alexgreece45.marvelx.core.network.clients.model.OrderStatus
+import com.alexgreece45.marvelx.core.network.model.CardBrand
+import com.alexgreece45.marvelx.core.network.model.OrderCourier
+import com.alexgreece45.marvelx.core.network.model.OrderItemCondition
+import com.alexgreece45.marvelx.core.network.model.OrderItemReturnReason
+import com.alexgreece45.marvelx.core.network.model.OrderItemReturnStatus
+import com.alexgreece45.marvelx.core.network.model.OrderItemStatus
+import com.alexgreece45.marvelx.core.network.model.OrderStatus
 import com.alexgreece45.marvelx.core.network.model.api.order.ResponseOrder
 import com.alexgreece45.marvelx.core.network.model.api.order.ResponseOrderCheckoutInfo
 import com.alexgreece45.marvelx.core.network.model.api.order.ResponseOrderEstimatedDeliveryDateRange
@@ -17,13 +17,11 @@ import com.alexgreece45.marvelx.core.network.model.api.order.ResponseOrderId
 import com.alexgreece45.marvelx.core.network.model.api.order.ResponseOrderPreview
 import com.alexgreece45.marvelx.core.network.model.api.order.item.ResponseOrderItem
 import com.alexgreece45.marvelx.core.network.model.api.order.item.ResponseOrderItemTrackingHistory
-import com.alexgreece45.marvelx.core.network.model.api.order.item.returnRequest.RequestOrderItemReturn
-import com.alexgreece45.marvelx.core.network.model.api.order.item.returnRequest.ResponseOrderItemReturnRequest
+import com.alexgreece45.marvelx.core.network.model.api.order.item.returnRequest.ResponseOrderItemReturn
 import com.alexgreece45.marvelx.core.network.model.api.order.tracking.ResponseOrderTrackingHistoryItem
 import com.alexgreece45.marvelx.core.network.model.api.order.tracking.ResponseOrderTrackingInfo
 import com.alexgreece45.marvelx.core.network.model.generic.ApiResult
-import com.alexgreece45.marvelx.core.network.services.OrderService
-import com.alexgreece45.marvelx.core.network.util.executeApiServiceCall
+import okhttp3.MultipartBody
 import org.koin.core.annotation.Single
 import java.math.BigDecimal
 import kotlin.random.Random
@@ -31,9 +29,7 @@ import kotlin.random.nextInt
 import kotlin.random.nextLong
 
 @Single
-internal class OrderClientImpl(
-    private val orderService: OrderService
-) : OrderClient {
+internal class OrderClientImpl : OrderClient {
 
     override suspend fun getOrders(): ApiResult<List<ResponseOrderPreview>> {
         return ApiResult.Success(
@@ -210,22 +206,20 @@ internal class OrderClientImpl(
         )
     }
 
-    override suspend fun placeOrder(): ApiResult<ResponseOrderId> {
-        return executeApiServiceCall {
-            orderService.placeOrder()
-        }
-    }
+    override suspend fun placeOrder(): ApiResult<ResponseOrderId> = ApiResult.Success(
+        ResponseOrderId("A10001")
+    )
 
-    override suspend fun getOrderItemReturnRequest(
+    override suspend fun getOrderItemReturn(
         orderId: String,
         orderItemId: String
-    ): ApiResult<ResponseOrderItemReturnRequest> {
+    ): ApiResult<ResponseOrderItemReturn> {
         return if (orderId == "1") {
             if (orderItemId == "B2") {
                 ApiResult.Success(
-                    ResponseOrderItemReturnRequest(
+                    ResponseOrderItemReturn(
                         status = OrderItemReturnStatus.PENDING.key,
-                        reason = OrderItemReturnReason.CHANGED_MIND.key,
+                        returnReason = OrderItemReturnReason.CHANGED_MIND.key,
                         description = "I have changed my mind regarding this item. I want my money back!",
                         attachedImageUrls = listOf(),
                         condition = OrderItemCondition.FAIR.key
@@ -233,9 +227,9 @@ internal class OrderClientImpl(
                 )
             } else {
                 ApiResult.Success(
-                    ResponseOrderItemReturnRequest(
+                    ResponseOrderItemReturn(
                         status = OrderItemReturnStatus.AVAILABLE.key,
-                        reason = OrderItemReturnReason.WRONG_ITEM.key,
+                        returnReason = OrderItemReturnReason.WRONG_ITEM.key,
                         description = "I have received something completely different to what I ordered. I want the correct item!",
                         attachedImageUrls = listOf(),
                         condition = OrderItemCondition.VERY_GOOD.key
@@ -244,9 +238,9 @@ internal class OrderClientImpl(
             }
         } else {
             ApiResult.Success(
-                ResponseOrderItemReturnRequest(
+                ResponseOrderItemReturn(
                     status = OrderItemReturnStatus.REFUNDED.key,
-                    reason = OrderItemReturnReason.DEFECTIVE.key,
+                    returnReason = OrderItemReturnReason.DEFECTIVE.key,
                     description = "The item that I received was in really bad shape. I want my money back!",
                     attachedImageUrls = listOf(),
                     condition = OrderItemCondition.BAD.key,
@@ -256,18 +250,19 @@ internal class OrderClientImpl(
         }
     }
 
-    override suspend fun placeOrderItemReturnRequest(
+    override suspend fun submitOrderItemReturn(
         orderId: String,
         orderItemId: String,
-        requestOrderItemReturn: RequestOrderItemReturn
-    ): ApiResult<ResponseOrderItemReturnRequest> {
+        requestOrderItemReturn: MultipartBody
+    ): ApiResult<ResponseOrderItemReturn> {
+        // TODO: Make returned values match the provided ones.
         return ApiResult.Success(
-            ResponseOrderItemReturnRequest(
+            ResponseOrderItemReturn(
                 status = OrderItemReturnStatus.PENDING.key,
-                reason = requestOrderItemReturn.reason,
-                description = requestOrderItemReturn.description,
+                returnReason = OrderItemReturnReason.CHANGED_MIND.key,// requestOrderItemReturn.reason,
+                description = "RETURN_DESCRIPTION",//requestOrderItemReturn.description,
                 attachedImageUrls = listOf(""), // TODO: Add dummy image in the future.
-                condition = requestOrderItemReturn.conditionCode
+                condition = OrderItemCondition.FAIR.key //requestOrderItemReturn.conditionCode
             )
         )
     }

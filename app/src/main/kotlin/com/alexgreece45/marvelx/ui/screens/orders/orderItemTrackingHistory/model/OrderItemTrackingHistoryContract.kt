@@ -1,6 +1,6 @@
 package com.alexgreece45.marvelx.ui.screens.orders.orderItemTrackingHistory.model
 
-import com.alexgreece45.marvelx.core.data.model.user.UserId
+import com.alexgreece45.marvelx.model.model.user.UserId
 import com.alexgreece45.marvelx.data.model.profileDetails.RepositoryBasicProfileDetails
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent

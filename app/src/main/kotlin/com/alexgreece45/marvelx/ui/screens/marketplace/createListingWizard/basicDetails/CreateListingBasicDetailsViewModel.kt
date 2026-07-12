@@ -4,7 +4,8 @@ import android.net.Uri
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.common_ui.imageValidator.ImageValidator
 import com.alexgreece45.marvelx.common_ui.imageValidator.model.ImageValidationConfig
-import com.alexgreece45.marvelx.common_ui.imageValidator.model.ImageValidationResult
+import com.alexgreece45.marvelx.common_ui.imageValidator.model.ImageValidationError
+import com.alexgreece45.marvelx.common_ui.imageValidator.model.MultiImageValidationResult
 import com.alexgreece45.marvelx.controllers.createListingWizard.CreateListingWizardController
 import com.alexgreece45.marvelx.core.common.config.ConfigLogic
 import com.alexgreece45.marvelx.core.common.extensions.fromBytesToMb
@@ -294,7 +295,7 @@ class CreateListingBasicDetailsViewModel(
             )
         )
 
-        if (imageValidationResult is ImageValidationResult.Success) {
+        if (imageValidationResult is MultiImageValidationResult.Success) {
             setState {
                 copy(
                     attachedImages = imageValidationResult.allImages
@@ -308,14 +309,19 @@ class CreateListingBasicDetailsViewModel(
         }
 
         val errorMessage = when (imageValidationResult) {
-            ImageValidationResult.AttachmentError -> resourceProvider.getString(R.string.screen_create_listing_basic_details_error_attaching_images_generic)
-            ImageValidationResult.InvalidExtensionType -> resourceProvider.getString(R.string.screen_create_listing_basic_details_error_attaching_images_invalid_extension)
-            ImageValidationResult.OverMaxCount -> resourceProvider.getString(R.string.screen_create_listing_basic_details_error_attaching_images_over_max_count)
-            ImageValidationResult.AlreadyExists -> resourceProvider.getString(R.string.screen_create_listing_basic_details_error_attaching_images_existing_image)
-            ImageValidationResult.OverMaxSize -> resourceProvider.getString(
-                R.string.screen_create_listing_basic_details_error_attaching_images_over_max_size,
-                currentState.configurationData.maxImageSize.fromBytesToMb()
-            )
+            is MultiImageValidationResult.FileError -> {
+                when (imageValidationResult.error) {
+                    ImageValidationError.OverMaxSize -> resourceProvider.getString(
+                        R.string.screen_create_listing_basic_details_error_attaching_images_over_max_size,
+                        currentState.configurationData.maxImageSize.fromBytesToMb()
+                    )
+                    ImageValidationError.InvalidExtensionType -> resourceProvider.getString(R.string.screen_create_listing_basic_details_error_attaching_images_invalid_extension)
+                    ImageValidationError.AttachmentError -> resourceProvider.getString(R.string.screen_create_listing_basic_details_error_attaching_images_generic)
+                }
+            }
+
+            MultiImageValidationResult.OverMaxCount -> resourceProvider.getString(R.string.screen_create_listing_basic_details_error_attaching_images_over_max_count)
+            MultiImageValidationResult.AlreadyExists -> resourceProvider.getString(R.string.screen_create_listing_basic_details_error_attaching_images_existing_image)
         }
         showToastMessage(errorMessage)
     }

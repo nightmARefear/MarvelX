@@ -42,25 +42,25 @@ internal class OrderClientImpl(
         }
     }
 
-    override suspend fun getOrderItemReturnRequest(
+    override suspend fun getOrderItemReturn(
         orderId: String,
         orderItemId: String
     ): ApiResult<ResponseOrderItemReturn> {
         return executeApiServiceCall {
-            orderService.getOrderItemReturnRequest(
+            orderService.getOrderItemReturn(
                 orderId = orderId,
                 orderItemId = orderItemId
             )
         }
     }
 
-    override suspend fun placeOrderItemReturnRequest(
+    override suspend fun submitOrderItemReturn(
         orderId: String,
         orderItemId: String,
         requestOrderItemReturn: MultipartBody
     ): ApiResult<ResponseOrderItemReturn> {
         return executeApiServiceCall {
-            orderService.placeOrderItemReturnRequest(
+            orderService.submitOrderItemReturn(
                 orderId = orderId,
                 orderItemId = orderItemId,
                 body = requestOrderItemReturn

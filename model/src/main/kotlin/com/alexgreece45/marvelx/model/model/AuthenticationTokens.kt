@@ -15,4 +15,6 @@ data class AuthenticationTokens(
     val refreshToken: String,
     val refreshExpiresIn: Long,
     val tokenType: String
-)
+) {
+    val accessTokenAndType: String get() = "$tokenType $accessToken"
+}

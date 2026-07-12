@@ -2,10 +2,10 @@ package com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.steps.paymentDet
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -53,13 +53,13 @@ fun CheckoutPaymentDetailsScreen(
     }
 
     ContentScreen(
-        isLoading = state.isLoading
-    ) { paddingValues ->
+        isLoading = state.isLoading,
+        paddingValues = PaddingValues(0.dp)
+    ) { _ ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(paddingValues)
         ) {
             // Input fields.
             Column(
@@ -82,7 +82,6 @@ fun CheckoutPaymentDetailsScreen(
                 WizardTextInputField(
                     label = stringResource(R.string.screen_checkout_payment_details_label_card_number),
                     placeholder = stringResource(R.string.screen_checkout_payment_details_placeholder_card_number),
-                    modifier = Modifier.weight(1f),
                     wizardInputField = state.cardNumber,
                     onValueChanged = {
                         onEvent(
@@ -98,8 +97,9 @@ fun CheckoutPaymentDetailsScreen(
                 )
 
                 Row(
+                    modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(SPACING_TINY.dp),
-                    verticalAlignment = Alignment.CenterVertically
+//                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     WizardTextInputField(
                         label = stringResource(R.string.screen_checkout_payment_details_label_expiration_date),
@@ -122,6 +122,7 @@ fun CheckoutPaymentDetailsScreen(
                     WizardTextInputField(
                         label = stringResource(R.string.screen_checkout_payment_details_label_cvv),
                         placeholder = stringResource(R.string.screen_checkout_payment_details_placeholder_CVV),
+                        modifier = Modifier.weight(1f),
                         wizardInputField = state.cvv,
                         onValueChanged = {
                             onEvent(

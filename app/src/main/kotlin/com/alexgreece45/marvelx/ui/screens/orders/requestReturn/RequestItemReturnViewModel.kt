@@ -1,17 +1,25 @@
 package com.alexgreece45.marvelx.ui.screens.orders.requestReturn
 
+import android.net.Uri
+import androidx.compose.material.SnackbarDuration
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.common_ui.imageValidator.ImageValidator
 import com.alexgreece45.marvelx.common_ui.imageValidator.model.ImageValidationConfig
-import com.alexgreece45.marvelx.common_ui.imageValidator.model.ImageValidationResult
+import com.alexgreece45.marvelx.common_ui.imageValidator.model.ImageValidationError
+import com.alexgreece45.marvelx.common_ui.imageValidator.model.MultiImageValidationResult
 import com.alexgreece45.marvelx.common_ui.inputFieldValidator.InputFieldValidator
 import com.alexgreece45.marvelx.common_ui.inputFieldValidator.model.InputFieldRule
+import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarActionData
+import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarStateData
 import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarType
 import com.alexgreece45.marvelx.core.common.config.ConfigLogic
+import com.alexgreece45.marvelx.core.data.helper.RepositoryResult
 import com.alexgreece45.marvelx.core.data.helper.multi_part_builder.model.MultipartResult
+import com.alexgreece45.marvelx.core.data.model.order.item.OrderItemReturnState
 import com.alexgreece45.marvelx.core.data.repositories.OrderItemReturnRepository
 import com.alexgreece45.marvelx.domain.model_api.order.OrderIdDomain
+import com.alexgreece45.marvelx.domain.model_api.order.toData
 import com.alexgreece45.marvelx.model.model.generic.AttachedFileContentData
 import com.alexgreece45.marvelx.mvi.BaseViewModel
 import com.alexgreece45.marvelx.ui.model_generic.UiState
@@ -20,11 +28,15 @@ import com.alexgreece45.marvelx.ui.screens.orders.model.item.itemReturn.toData
 import com.alexgreece45.marvelx.ui.screens.orders.orderDetails.model.OrderItemDetails
 import com.alexgreece45.marvelx.ui.screens.orders.requestReturn.model.OrderItemReturnConditionUi
 import com.alexgreece45.marvelx.ui.screens.orders.requestReturn.model.RequestItemReturnContract
+import com.alexgreece45.marvelx.ui.screens.orders.requestReturn.model.RequestItemReturnDialogType
+import com.alexgreece45.marvelx.ui.screens.orders.requestReturn.model.RequestItemReturnWizardMode
+import com.alexgreece45.marvelx.ui.screens.orders.requestReturn.model.RequestItemReturnWizardStep
 import com.alexgreece45.marvelx.ui.screens.orders.requestReturn.model.toData
 import com.alexgreece45.marvelx.util.ResourceProvider
-import com.alexgreece45.marvelx.util.extensions.decodeFromUrl
+import com.alexgreece45.marvelx.util.extensions.safeDecodeFromUrl
 import kotlinx.coroutines.launch
 import org.koin.android.annotation.KoinViewModel
+import java.util.UUID
 
 @KoinViewModel
 internal class RequestItemReturnViewModel(
@@ -49,6 +61,7 @@ internal class RequestItemReturnViewModel(
                 orderItemPriceLabel = event.orderItemPriceLabel
             )
 
+            RequestItemReturnContract.Event.OnClose -> onClose()
             RequestItemReturnContract.Event.OnBack -> onBack()
             is RequestItemReturnContract.Event.OnReturnReasonItemSelected -> onReturnReasonDropdownItemSelected(
                 event.item
@@ -58,6 +71,11 @@ internal class RequestItemReturnViewModel(
 
             is RequestItemReturnContract.Event.OnDescriptionChanged -> onDescriptionChanged(
                 event.description
+            )
+
+            RequestItemReturnContract.Event.OnUploadPhotosButtonClicked -> onUploadPhotosButtonClicked()
+            is RequestItemReturnContract.Event.OnImageDeleteButtonClicked -> onImageDeleteButtonClicked(
+                event.uri
             )
 
             is RequestItemReturnContract.Event.ImageSelectionEvents.OnSuccess -> onImageSelectionSuccess(
@@ -74,7 +92,9 @@ internal class RequestItemReturnViewModel(
             RequestItemReturnContract.Event.RefundDialogEvent.OnNegativeButtonClicked -> onRefundDialogNegativeButtonClicked()
             RequestItemReturnContract.Event.RefundDialogEvent.OnPositiveButtonClicked -> onRefundDialogPositiveButtonClicked()
 
-            RequestItemReturnContract.Event.OnSubmitButtonClicked -> onSubmitClicked()
+            RequestItemReturnContract.Event.OnErrorButtonClicked -> onErrorButtonClicked()
+
+            RequestItemReturnContract.Event.OnStickyBottomButtonClicked -> submitOrderItemReturn()
         }
     }
 
@@ -89,11 +109,12 @@ internal class RequestItemReturnViewModel(
     ) {
         setState {
             copy(
+                uiState = UiState.Loading,
                 orderItemDetails = OrderItemDetails(
                     orderId = OrderIdDomain(orderId),
                     orderItemId = OrderIdDomain(orderItemId),
                     orderItemTitle = orderItemTitle,
-                    orderItemCoverImageUrl = orderItemCoverImageUrl.decodeFromUrl(),
+                    orderItemCoverImageUrl = orderItemCoverImageUrl.safeDecodeFromUrl(""),
                     orderItemPriceLabel = orderItemPriceLabel
                 ),
                 descriptionField = descriptionField.copy(
@@ -115,11 +136,47 @@ internal class RequestItemReturnViewModel(
                 )
             )
         }
+
+        getOrderItemReturn()
+    }
+
+    private fun onClose() {
+        onBack()
     }
 
     private fun onBack() {
-        setEffect {
-            RequestItemReturnContract.Effect.Navigation.GoBack
+        if (currentState.dialogType != null) {
+            setState {
+                copy(
+                    dialogType = null
+                )
+            }
+            return
+        }
+
+        if (currentState.wizardMode is RequestItemReturnWizardMode.Exists) {
+            setEffect {
+                RequestItemReturnContract.Effect.Navigation.GoBack
+            }
+        } else {
+            when (currentState.wizardStep) {
+                RequestItemReturnWizardStep.RETURN_REASON -> {
+                    setState {
+                        copy(
+                            dialogType = RequestItemReturnDialogType.Exit
+                        )
+                    }
+                }
+
+                RequestItemReturnWizardStep.RETURN_DETAILS,
+                RequestItemReturnWizardStep.OVERVIEW -> {
+                    setState {
+                        copy(
+                            wizardStep = wizardStep.previousStep
+                        )
+                    }
+                }
+            }
         }
     }
 
@@ -141,7 +198,7 @@ internal class RequestItemReturnViewModel(
         } else {
             setState {
                 copy(
-                    isRefundDialogVisible = true
+                    dialogType = RequestItemReturnDialogType.Refund
                 )
             }
         }
@@ -163,6 +220,20 @@ internal class RequestItemReturnViewModel(
         }
     }
 
+    private fun onUploadPhotosButtonClicked() {
+        setEffect {
+            RequestItemReturnContract.Effect.OpenPhotoPicker
+        }
+    }
+
+    private fun onImageDeleteButtonClicked(uri: Uri) {
+        setState {
+            copy(
+                attachedImages = attachedImages.filterNot { it.uri == uri }
+            )
+        }
+    }
+
     private fun onImageSelectionSuccess(attachedFiles: List<AttachedFileContentData>?) {
         if (attachedFiles == null) {
             onImageSelectionFailure()
@@ -174,7 +245,7 @@ internal class RequestItemReturnViewModel(
             newImages = attachedFiles,
             config = currentState.imageValidationConfig
         )
-        if (imageValidationResult is ImageValidationResult.Success) {
+        if (imageValidationResult is MultiImageValidationResult.Success) {
             setState {
                 copy(
                     attachedImages = attachedImages + attachedFiles
@@ -184,34 +255,39 @@ internal class RequestItemReturnViewModel(
         }
 
         val errorStringResId = when (imageValidationResult) {
-            ImageValidationResult.InvalidExtensionType -> R.string.screen_request_item_return_refund_error_attaching_images_invalid_extension
-            ImageValidationResult.OverMaxSize -> R.string.screen_request_item_return_refund_error_attaching_images_over_max_size
-            ImageValidationResult.OverMaxCount -> R.string.screen_request_item_return_refund_error_attaching_images_over_max_count
-            ImageValidationResult.AttachmentError -> R.string.screen_request_item_return_refund_error_attaching_images_generic
-            ImageValidationResult.AlreadyExists -> R.string.screen_request_item_return_refund_error_attaching_images_existing_image
+            is MultiImageValidationResult.FileError -> {
+                when (imageValidationResult.error) {
+                    ImageValidationError.OverMaxSize -> R.string.screen_request_item_return_refund_error_attaching_images_over_max_size
+                    ImageValidationError.InvalidExtensionType -> R.string.screen_request_item_return_refund_error_attaching_images_invalid_extension
+                    ImageValidationError.AttachmentError -> R.string.screen_request_item_return_refund_error_attaching_images_generic
+                }
+            }
+
+            MultiImageValidationResult.OverMaxCount -> R.string.screen_request_item_return_refund_error_attaching_images_over_max_count
+            MultiImageValidationResult.AlreadyExists -> R.string.screen_request_item_return_refund_error_attaching_images_existing_image
         }
-        showSnackbar(
-            message = resourceProvider.getString(errorStringResId),
-            type = SnackbarType.ERROR
-        )
+        showErroneousSnackbar(message = resourceProvider.getString(errorStringResId))
     }
 
     private fun onImageSelectionFailure() {
-        setEffect {
-            RequestItemReturnContract.Effect.ShowSnackbar(
-                message = resourceProvider.getString(R.string.screen_request_item_refund_toast_image_selection_failure),
-                type = SnackbarType.ERROR
+        showErroneousSnackbar(
+            message = resourceProvider.getString(R.string.screen_request_item_return_snackbar_image_selection_failure_message),
+            snackbarActionData = SnackbarActionData(
+                label = resourceProvider.getString(R.string.screen_request_item_return_snackbar_image_selection_failure_button),
+                onClick = { hideSnackbar() }
             )
-        }
+        )
     }
 
     private fun onImageSelectionNone() {
-        setEffect {
-            RequestItemReturnContract.Effect.ShowSnackbar(
-                message = resourceProvider.getString(R.string.screen_request_item_refund_toast_image_selection_none),
-                type = SnackbarType.INFO
+        showSnackbar(
+            message = resourceProvider.getString(R.string.screen_request_item_return_snackbar_image_selection_none_message),
+            type = SnackbarType.INFO,
+            snackbarActionData = SnackbarActionData(
+                label = resourceProvider.getString(R.string.screen_request_item_return_snackbar_image_selection_none_button),
+                onClick = { hideSnackbar() }
             )
-        }
+        )
     }
 
     private fun onItemConditionSelected(itemCondition: OrderItemReturnConditionUi) {
@@ -225,7 +301,7 @@ internal class RequestItemReturnViewModel(
     private fun onRefundDialogNegativeButtonClicked() {
         setState {
             copy(
-                isRefundDialogVisible = false
+                dialogType = null
             )
         }
     }
@@ -233,39 +309,68 @@ internal class RequestItemReturnViewModel(
     private fun onRefundDialogPositiveButtonClicked() {
         setState {
             copy(
-                isRefundDialogVisible = false,
+                dialogType = null,
                 isRequestRefundChecked = true
             )
         }
     }
 
-    private fun onSubmitClicked() {
+    private fun onErrorButtonClicked() {
+        getOrderItemReturn()
+    }
+
+    private fun onStickyBottomButtonClicked() {
+        if (currentState.uiState.isLoading || currentState.wizardMode is RequestItemReturnWizardMode.Exists) return
+
+        when (currentState.wizardStep) {
+            RequestItemReturnWizardStep.RETURN_REASON,
+            RequestItemReturnWizardStep.RETURN_DETAILS -> {
+                setState {
+                    copy(
+                        wizardStep = wizardStep.nextStep
+                    )
+                }
+            }
+
+            RequestItemReturnWizardStep.OVERVIEW -> submitOrderItemReturn()
+        }
+    }
+
+    // Helper functions.
+
+    private fun submitOrderItemReturn() {
         val returnReason = currentState.selectedReturnReason
         val itemCondition = currentState.itemCondition
         if (currentState.uiState.isLoading || returnReason == null || itemCondition == null) return
 
         setState { copy(uiState = UiState.Loading) }
         viewModelScope.launch {
-            when (
-                val result =
-                    orderItemReturnRepository.placeOrderItemReturnRequest(
-                        orderId = currentState.orderItemDetails.orderId,
-                        orderItemId = currentState.orderItemDetails.orderItemId,
-                        returnReason = returnReason.toData(),
-                        requestRefund = currentState.isRequestRefundChecked,
-                        attachedImages = currentState.attachedImages,
-                        description = currentState.descriptionField.value,
-                        itemCondition = itemCondition.toData()
-                    )
-            ) {
+            val result =
+                orderItemReturnRepository.submitOrderItemReturn(
+                    orderId = currentState.orderItemDetails.orderId.toData(),
+                    orderItemId = currentState.orderItemDetails.orderItemId.toData(),
+                    returnReason = returnReason.toData(),
+                    requestRefund = currentState.isRequestRefundChecked,
+                    attachedImages = currentState.attachedImages,
+                    description = currentState.descriptionField.value,
+                    itemCondition = itemCondition.toData()
+                )
+            when (result) {
                 is MultipartResult.GenericError,
                 MultipartResult.NetworkError,
                 MultipartResult.ImageProcessingError -> {
                     setState {
                         copy(
-                            uiState = UiState.Error(Unit)
+                            uiState = UiState.Success(OrderItemReturnState.Available)
                         )
                     }
+                    showErroneousSnackbar(
+                        message = resourceProvider.getString(R.string.screen_request_item_return_snackbar_error_submitting_item_return_message),
+                        snackbarActionData = SnackbarActionData(
+                            label = resourceProvider.getString(R.string.screen_request_item_return_snackbar_error_submitting_item_return_button),
+                            onClick = { submitOrderItemReturn() }
+                        )
+                    )
                 }
 
                 is MultipartResult.Success -> {
@@ -281,14 +386,89 @@ internal class RequestItemReturnViewModel(
         }
     }
 
-    // Helper functions.
-
-    private fun showSnackbar(message: String, type: SnackbarType) {
-        setEffect {
-            RequestItemReturnContract.Effect.ShowSnackbar(
-                message = message,
-                type = type
+    private fun getOrderItemReturn() {
+        setState {
+            copy(
+                uiState = UiState.Loading
             )
+        }
+        viewModelScope.launch {
+            val result = orderItemReturnRepository.getOrderItemReturn(
+                orderId = currentState.orderItemDetails.orderId.toData(),
+                orderItemId = currentState.orderItemDetails.orderItemId.toData()
+            )
+            when (result) {
+                is RepositoryResult.Failed,
+                RepositoryResult.NetworkError -> {
+                    setState {
+                        copy(
+                            uiState = UiState.Error(Unit)
+                        )
+                    }
+                }
+
+                is RepositoryResult.Success -> {
+                    val returnState = result.data
+                    setState {
+                        copy(
+                            uiState = UiState.Success(returnState),
+                            wizardMode = if (returnState is OrderItemReturnState.Available) RequestItemReturnWizardMode.Create else RequestItemReturnWizardMode.Exists,
+                            wizardStep = RequestItemReturnWizardStep.INITIAL_STEP
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    private fun showSnackbar(
+        message: String,
+        type: SnackbarType,
+        duration: SnackbarDuration = SnackbarDuration.Short,
+        snackbarActionData: SnackbarActionData? = null
+    ) {
+        val newSnackbarUuid = UUID.randomUUID()
+        val snackbarStateData = SnackbarStateData(
+            uuid = newSnackbarUuid,
+            message = message,
+            type = type,
+            duration = duration,
+            snackbarActionData = snackbarActionData,
+            onDismiss = {
+                if (currentState.snackbarStateData?.uuid == newSnackbarUuid) {
+                    setState {
+                        copy(
+                            snackbarStateData = null
+                        )
+                    }
+                }
+            }
+        )
+
+        setState {
+            copy(
+                snackbarStateData = snackbarStateData
+            )
+        }
+        setEffect {
+            RequestItemReturnContract.Effect.ShowSnackbar(snackbarStateData = snackbarStateData)
+        }
+    }
+
+    private fun showErroneousSnackbar(
+        message: String,
+        snackbarActionData: SnackbarActionData? = null
+    ) {
+        showSnackbar(
+            message = message,
+            type = SnackbarType.ERROR,
+            snackbarActionData = snackbarActionData
+        )
+    }
+
+    private fun hideSnackbar() {
+        setEffect {
+            RequestItemReturnContract.Effect.HideSnackbar
         }
     }
 

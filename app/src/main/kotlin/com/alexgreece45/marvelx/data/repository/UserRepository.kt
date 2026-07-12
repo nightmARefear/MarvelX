@@ -12,6 +12,7 @@ import com.alexgreece45.marvelx.core.data.helper.multi_part_builder.model.Multip
 import com.alexgreece45.marvelx.core.data.helper.multi_part_builder.model.MultipartItem.Image
 import com.alexgreece45.marvelx.core.data.helper.multi_part_builder.model.MultipartResult
 import com.alexgreece45.marvelx.core.data.helper.multi_part_builder.model.toMultipartResult
+import com.alexgreece45.marvelx.model.model.user.UserId
 import com.alexgreece45.marvelx.core.network.clients.ApiClient
 import com.alexgreece45.marvelx.core.network.model.api.user.ResponseUserError
 import com.alexgreece45.marvelx.core.network.model.api.user.privacySettings.RequestPrivacySettings
@@ -43,7 +44,7 @@ interface UserRepository {
      */
     suspend fun getProfileDetails(userId: String): GetProfileDetailsRepositoryResponse
 
-    suspend fun getBasicProfileDetails(userId: String): RepositoryResult<RepositoryBasicProfileDetails>
+    suspend fun getBasicProfileDetails(userId: UserId): RepositoryResult<RepositoryBasicProfileDetails>
 
     /**
      * Get the profile details of the current user.
@@ -124,9 +125,9 @@ internal class UserRepositoryImpl(
                 }
             }
 
-    override suspend fun getBasicProfileDetails(userId: String): RepositoryResult<RepositoryBasicProfileDetails> {
+    override suspend fun getBasicProfileDetails(userId: UserId): RepositoryResult<RepositoryBasicProfileDetails> {
         return handleApiResult(
-            apiResult = apiClient.getBasicProfileDetails(userId),
+            apiResult = apiClient.getBasicProfileDetails(userId.value),
             transformation = { this.toData() },
             ioDispatcher = ioDispatcher
         ).first()

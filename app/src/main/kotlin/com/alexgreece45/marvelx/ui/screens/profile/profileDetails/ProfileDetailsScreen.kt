@@ -1,6 +1,5 @@
 package com.alexgreece45.marvelx.ui.screens.profile.profileDetails
 
-import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
@@ -21,6 +20,7 @@ import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.ModalBottomSheetValue
+import androidx.compose.material.SnackbarHostState
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -43,7 +43,6 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
@@ -51,6 +50,10 @@ import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.common_ui.extensions.hideSnackbar
+import com.alexgreece45.marvelx.common_ui.extensions.showSnackbarAndHandleResult
+import com.alexgreece45.marvelx.common_ui.previewAnnotation.ThemePreview
+import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarConfig
 import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.ProfileDetailsDomain
 import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.RelationshipStatusDomain
 import com.alexgreece45.marvelx.ui.components.AlertDialogError
@@ -75,8 +78,8 @@ import com.alexgreece45.marvelx.ui.components.rememberWrapModalBottomSheetState
 import com.alexgreece45.marvelx.ui.model.Gender
 import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.model.ProfileDetailsBottomSheetType
 import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.model.ProfileDetailsNestedErrorView
-import com.alexgreece45.marvelx.ui.theme.MarvelXTheme
-import com.alexgreece45.marvelx.ui.theme.values.customColors
+import com.alexgreece45.marvelx.ui_theme.theme.MarvelXTheme
+import com.alexgreece45.marvelx.ui_theme.theme.values.customColors
 import com.alexgreece45.marvelx.util.SPACING_MEDIUM
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.VSpacer
@@ -92,7 +95,7 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun ProfileDetailsScreen(
+internal fun ProfileDetailsScreen(
     onEventSent: (ProfileDetailsContract.Event) -> Unit,
     state: ProfileDetailsContract.State,
     effect: Flow<ProfileDetailsContract.Effect>,
@@ -106,6 +109,7 @@ fun ProfileDetailsScreen(
     val clipboard = LocalClipboard.current
 
     val modalBottomSheetState = rememberWrapModalBottomSheetState()
+    val snackbarHostState = remember { SnackbarHostState() }
 
     /**
      * Whether to enforce the max screen brightness.
@@ -149,6 +153,16 @@ fun ProfileDetailsScreen(
             is ProfileDetailsContract.Effect.SetClipboardText -> {
                 clipboard.setText(uiEffect.text)
                 Toast.makeText(context, uiEffect.toastMessage, Toast.LENGTH_SHORT).show()
+            }
+
+            is ProfileDetailsContract.Effect.ShowSnackbar -> {
+                coroutineScope.launch {
+                    snackbarHostState.showSnackbarAndHandleResult(uiEffect.snackbarStateData)
+                }
+            }
+
+            ProfileDetailsContract.Effect.HideSnackbar -> {
+                snackbarHostState.hideSnackbar()
             }
         }
     }
@@ -226,7 +240,10 @@ fun ProfileDetailsScreen(
                     )
                 )
             },
-            snackbarStateData = state.snackbarStateData,
+            snackbarConfig = SnackbarConfig(
+                snackbarHostState = snackbarHostState,
+                snackbarStateData = state.snackbarStateData
+            ),
         ) { paddingValues ->
             Column(
                 modifier = Modifier
@@ -592,10 +609,7 @@ private fun NestedErrorView(
     }
 }
 
-@Preview(
-    apiLevel = 34,
-    uiMode = Configuration.UI_MODE_NIGHT_YES or Configuration.UI_MODE_TYPE_NORMAL,
-)
+@ThemePreview
 @Composable
 private fun ProfileDetailsScreenPreview() {
     MarvelXTheme {
@@ -614,10 +628,7 @@ private fun ProfileDetailsScreenPreview() {
     }
 }
 
-@Preview(
-    apiLevel = 34,
-    uiMode = Configuration.UI_MODE_NIGHT_YES or Configuration.UI_MODE_TYPE_NORMAL
-)
+@ThemePreview
 @Composable
 private fun ProfileDetailsScreenNestedErrorViewPreview() {
     MarvelXTheme {
@@ -640,10 +651,7 @@ private fun ProfileDetailsScreenNestedErrorViewPreview() {
     }
 }
 
-@Preview(
-    apiLevel = 34,
-    uiMode = Configuration.UI_MODE_NIGHT_YES or Configuration.UI_MODE_TYPE_NORMAL
-)
+@ThemePreview
 @Composable
 private fun ProfileDetailsScreenMoreActionBottomSheetPreview() {
     MarvelXTheme {

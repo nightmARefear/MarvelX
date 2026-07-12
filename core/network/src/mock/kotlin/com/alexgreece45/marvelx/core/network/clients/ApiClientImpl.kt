@@ -1,6 +1,10 @@
 package com.alexgreece45.marvelx.core.network.clients
 
 import android.content.Context
+import com.alexgreece45.marvelx.core.common.extensions.plusDays
+import com.alexgreece45.marvelx.core.common.extensions.plusMinutes
+import com.alexgreece45.marvelx.core.common.util.DateUtil
+import com.alexgreece45.marvelx.core.network.constants.TokenConstants
 import com.alexgreece45.marvelx.core.network.model.api.authorize.ResponseAuthorize
 import com.alexgreece45.marvelx.core.network.model.api.character.CharacterDataContainer
 import com.alexgreece45.marvelx.core.network.model.api.character.CharacterDataWrapper
@@ -26,7 +30,6 @@ import com.alexgreece45.marvelx.core.network.model.api.resendOtp.ResponseResendO
 import com.alexgreece45.marvelx.core.network.model.api.sensitiveUserData.RequestSensitiveUserData
 import com.alexgreece45.marvelx.core.network.model.api.sensitiveUserData.ResponseSensitiveUserData
 import com.alexgreece45.marvelx.core.network.model.api.token.ResponseToken
-import com.alexgreece45.marvelx.core.network.model.api.user.BodyUserId
 import com.alexgreece45.marvelx.core.network.model.api.user.block.ResponseBlockedUser
 import com.alexgreece45.marvelx.core.network.model.api.user.friend.ResponseFriend
 import com.alexgreece45.marvelx.core.network.model.api.user.incomingFriendRequest.ResponseIncomingFriendRequest
@@ -40,12 +43,12 @@ import com.alexgreece45.marvelx.core.network.model.api.user.privacySettings.Resp
 import com.alexgreece45.marvelx.core.network.model.api.user.profileDetails.RequestProfileDetailsUpdate
 import com.alexgreece45.marvelx.core.network.model.api.user.profileDetails.ResponseBasicProfileDetails
 import com.alexgreece45.marvelx.core.network.model.api.user.profileDetails.ResponseProfileDetails
+import com.alexgreece45.marvelx.core.network.model.api.user.profileDetails.ResponseUserStats
 import com.alexgreece45.marvelx.core.network.model.api.user.signup.RequestUserSignup
 import com.alexgreece45.marvelx.core.network.model.api.user.signup.ResponseSignup
 import com.alexgreece45.marvelx.core.network.model.generic.ApiResult
 import com.alexgreece45.marvelx.core.network.services.ApiService
 import com.alexgreece45.marvelx.core.network.util.executeApiServiceCall
-import com.alexgreece45.marvelx.core.network.util.executeApiServiceCallNoTransformation
 import com.google.gson.Gson
 import okhttp3.MultipartBody
 import okhttp3.ResponseBody
@@ -54,7 +57,6 @@ import org.koin.core.annotation.Single
 import retrofit2.Response
 import java.io.BufferedReader
 import java.io.InputStreamReader
-import kotlin.random.Random
 
 @Single
 internal class ApiClientImpl(
@@ -63,9 +65,66 @@ internal class ApiClientImpl(
     private val apiService: ApiService,
 ) : ApiClient {
 
-    private val userId = Random.nextInt(1, 3).toString()
+    private val currentUserId = "1"
+
+    private val basicProfileDetails: ResponseBasicProfileDetails = gson.fromJson(
+        readFileContents("mock_profile_details.json"),
+        ResponseBasicProfileDetails::class.java
+    )
+
     private val verificationStep = "verification_pin_email"
-    private val email = "alexv@domain.com"
+    private val forgotPasswordRequestId = "1001"
+
+    private fun getProfileDetails(targetUserId: String): ResponseProfileDetails {
+        return if (targetUserId == currentUserId) {
+            ResponseProfileDetails(
+                basicProfileDetails = basicProfileDetails,
+                isDifferentUser = false,
+                relationshipStatus = null,
+                privacySettings = null,
+                userStats = ResponseUserStats(
+                    friendsCount = 2,
+                    listingsCount = 5,
+                    favoritesCount = 8
+                )
+            )
+        } else {
+            ResponseProfileDetails(
+                basicProfileDetails = gson.fromJson(
+                    readFileContents("mock_profile_details_2.json"),
+                    ResponseBasicProfileDetails::class.java
+                ),
+                isDifferentUser = false,
+                relationshipStatus = null,
+                privacySettings = getPrivacySettings(targetUserId),
+                userStats = ResponseUserStats(
+                    friendsCount = 10,
+                    listingsCount = 0,
+                    favoritesCount = 5
+                )
+            )
+        }
+    }
+
+    private fun getPrivacySettings(targetUserId: String): ResponsePrivacySettings {
+        return if (targetUserId == currentUserId) {
+            ResponsePrivacySettings(
+                isFriendsListVisible = true,
+                isListingsListVisible = true,
+                isFavoritesListVisible = false,
+                isGenderVisible = true,
+                isEmailVisible = false
+            )
+        } else {
+            ResponsePrivacySettings(
+                isFriendsListVisible = false,
+                isListingsListVisible = true,
+                isFavoritesListVisible = false,
+                isGenderVisible = false,
+                isEmailVisible = true
+            )
+        }
+    }
 
     override suspend fun getCharacters(): Response<CharacterDataWrapper> {
         return Response.success(
@@ -195,16 +254,24 @@ internal class ApiClientImpl(
         }
 
     override suspend fun signup(requestUserSignup: RequestUserSignup): Response<ResponseSignup> =
-        apiService.signup(requestUserSignup)
+        Response.success(
+            200,
+            ResponseSignup(
+                verificationStep = verificationStep,
+                userId = currentUserId,
+                tempAuthCode = "tempAuthCode"
+            )
+        )
 
     override suspend fun login(requestUserLogin: RequestUserLogin): Response<ResponseLogin> =
         Response.success(
             200,
             ResponseLogin(
                 verificationStep = verificationStep,
-                userId = userId
+                userId = currentUserId
             )
         )
+
 
     override suspend fun loginWithToken(): Response<ResponseLoginWithToken> =
         Response.success(
@@ -214,7 +281,8 @@ internal class ApiClientImpl(
             )
         )
 
-    override suspend fun postLogin(accessToken: String): Response<ResponsePostLogin> =
+    override suspend
+    fun postLogin(accessToken: String): Response<ResponsePostLogin> =
         Response.success(
             200,
             ResponsePostLogin(
@@ -246,13 +314,7 @@ internal class ApiClientImpl(
         uri: String
     ): Response<ResponseToken> = Response.success(
         200,
-        ResponseToken(
-            accessToken = "ACCESS_TOKEN",
-            accessExpiresIn = 15,
-            refreshToken = "REFRESH_TOKEN",
-            refreshExpiresIn = 200,
-            tokenType = "access_token"
-        )
+        TokenConstants.responseToken
     )
 
     override suspend fun registerDevice(requestRegisterDevice: RequestRegisterDevice): ApiResult<String> =
@@ -277,7 +339,10 @@ internal class ApiClientImpl(
         )
 
     override suspend fun forgotPasswordSendOtp(body: RequestForgotPasswordSendOtp): Response<ResponseForgotPasswordSendOtp> =
-        apiService.forgotPasswordSendOtp(body)
+        Response.success(
+            200,
+            ResponseForgotPasswordSendOtp(requestId = forgotPasswordRequestId)
+        )
 
     override suspend fun forgotPasswordIsOtpBlockedEmail(body: RequestForgotPasswordOtpBlockedEmail): Response<ResponseForgotPasswordOtpBlockedEmail> =
         apiService.forgotPasswordIsOtpBlockedEmail(body)
@@ -286,30 +351,16 @@ internal class ApiClientImpl(
         apiService.forgotPasswordIsOtpBlockedPhoneNumber(body)
 
     override suspend fun forgotPasswordValidateOtp(body: RequestForgotPasswordValidateOtp): Response<ResponseForgotPasswordValidateOtp> =
-        apiService.forgotPasswordValidateOtp(body)
-
-    override suspend fun getBasicProfileDetails(userId: String): ApiResult<ResponseBasicProfileDetails> =
-        ApiResult.Success(
-            ResponseBasicProfileDetails(
-                firstName = "John",
-                lastName = "Doe",
-                gender = "male",
-                email = "johndoe@domain.com",
-                profileImageUrl = ""
-            )
-        )
-
-    override suspend fun getCurrentUserProfileDetails(): Response<ResponseBasicProfileDetails> =
         Response.success(
             200,
-            ResponseBasicProfileDetails(
-                firstName = "Alexandros",
-                lastName = "Voliotis",
-                gender = "male",
-                email = email,
-                profileImageUrl = ""
-            )
+            ResponseForgotPasswordValidateOtp(isPhoneNumberRequired = false)
         )
+
+    override suspend fun getBasicProfileDetails(userId: String): ApiResult<ResponseBasicProfileDetails> =
+        ApiResult.Success(body = basicProfileDetails)
+
+    override suspend fun getCurrentUserProfileDetails(): Response<ResponseBasicProfileDetails> =
+        Response.success(basicProfileDetails)
 
     override suspend fun updateCurrentUserProfileDetails(requestProfileDetailsUpdate: RequestProfileDetailsUpdate): ApiResult<String> =
         ApiResult.Success("")
@@ -317,86 +368,55 @@ internal class ApiClientImpl(
     override suspend fun updateUserProfileImage(
         userId: String,
         profileImage: MultipartBody.Part
-    ): ApiResult<String> =
-        executeApiServiceCallNoTransformation {
-            apiService.updateUserProfileImage(
-                userId,
-                profileImage
-            )
-        }
+    ): ApiResult<String> = ApiResult.Success("")
 
     override suspend fun getUserProfileDetails(userId: String): Response<ResponseProfileDetails> =
-        apiService.getUserProfileDetails(userId = userId)
+        Response.success(
+            200,
+            getProfileDetails(targetUserId = userId)
+        )
 
     override suspend fun getUserPrivacySettings(): ApiResult<ResponsePrivacySettings> =
-        executeApiServiceCall { apiService.getUserPrivacySettings() }
+        ApiResult.Success(getPrivacySettings(currentUserId))
 
     override suspend fun updateUserPrivacySettings(requestPrivacySettings: RequestPrivacySettings): ApiResult<String> =
-        executeApiServiceCallNoTransformation {
-            apiService.updateUserPrivacySettings(
-                requestPrivacySettings
-            )
-        }
+        ApiResult.Success("")
 
-    override suspend fun getUserFriends(userId: String): ApiResult<List<ResponseFriend>> {
-        return executeApiServiceCall {
-            apiService.getUserFriends(userId)
-        }
-    }
+    override suspend fun getUserFriends(userId: String): ApiResult<List<ResponseFriend>> =
+        ApiResult.Success(emptyList())
 
-    override suspend fun getIncomingFriendRequests(): ApiResult<List<ResponseIncomingFriendRequest>> {
-        return executeApiServiceCall {
-            apiService.getIncomingFriendRequests()
-        }
-    }
+    override suspend fun getIncomingFriendRequests(): ApiResult<List<ResponseIncomingFriendRequest>> =
+        ApiResult.Success(emptyList())
 
-    override suspend fun sendFriendRequest(userId: String): ApiResult<String> {
-        return executeApiServiceCallNoTransformation {
-            apiService.sendFriendRequest(BodyUserId(userId))
-        }
-    }
+    override suspend fun sendFriendRequest(userId: String): ApiResult<String> =
+        ApiResult.Success("")
 
-    override suspend fun acceptFriendRequest(userId: String): ApiResult<String> {
-        return executeApiServiceCallNoTransformation {
-            apiService.acceptFriendRequest(BodyUserId(userId))
-        }
-    }
+    override suspend fun acceptFriendRequest(userId: String): ApiResult<String> =
+        ApiResult.Success("")
 
-    override suspend fun deleteFriendRequest(userId: String, type: String): ApiResult<String> {
-        return executeApiServiceCallNoTransformation {
-            apiService.deleteFriendRequest(userId, type)
-        }
-    }
+    override suspend fun deleteFriendRequest(userId: String, type: String): ApiResult<String> =
+        ApiResult.Success("")
 
-    override suspend fun getFriends(): ApiResult<List<ResponseFriend>> {
-        return executeApiServiceCall {
-            apiService.getFriends()
-        }
-    }
+    override suspend fun getFriends(): ApiResult<List<ResponseFriend>> =
+        ApiResult.Success(emptyList())
 
-    override suspend fun deleteFriend(userId: String): ApiResult<String> {
-        return executeApiServiceCallNoTransformation {
-            apiService.deleteFriend(userId)
-        }
-    }
+    override suspend fun deleteFriend(userId: String): ApiResult<String> = ApiResult.Success("")
 
-    override suspend fun getBlockedUsers(): ApiResult<List<ResponseBlockedUser>> {
-        return executeApiServiceCall {
-            apiService.getBlockedUsers()
-        }
-    }
+    override suspend fun getBlockedUsers(): ApiResult<List<ResponseBlockedUser>> =
+        ApiResult.Success(emptyList())
 
-    override suspend fun blockUser(userId: String): Response<Void> {
-        return apiService.blockUser(BodyUserId(userId))
-    }
+    override suspend fun blockUser(userId: String): Response<Void> = Response.success(null)
 
     override suspend fun unblockUser(userId: String): ApiResult<String> =
-        executeApiServiceCallNoTransformation {
-            apiService.unblockUser(userId)
-        }
+        ApiResult.Success("")
 
     override suspend fun getFaqs(): ApiResult<ResponseFaqs> =
-        executeApiServiceCall { apiService.getFaqs() }
+        ApiResult.Success(
+            body = gson.fromJson(
+                readFileContents("mock_faqs.json"),
+                ResponseFaqs::class.java
+            )
+        )
 
     override suspend fun getJwtForSensitiveUserData(requestJwtSensitiveUserData: RequestJwtSensitiveUserData): Response<ResponseJwtSensitiveUserData> =
         Response.success(
@@ -409,7 +429,7 @@ internal class ApiClientImpl(
             200,
             ResponseSensitiveUserData(
                 type = "email",
-                data = email,
+                data = basicProfileDetails.email,
                 otpInterval = 300L,
                 isOtpBlocked = false,
                 isResendOtpBlocked = false,
@@ -423,11 +443,7 @@ internal class ApiClientImpl(
         }
     }
 
-    override suspend fun markNotificationAsOpened(): ApiResult<String> {
-        return executeApiServiceCallNoTransformation {
-            apiService.markIncomingFriendRequestNotificationAsOpened()
-        }
-    }
+    override suspend fun markNotificationAsOpened(): ApiResult<String> = ApiResult.Success("")
 
     private fun readFileContents(fileName: String): BufferedReader {
         return context.assets.open(fileName).bufferedReader()

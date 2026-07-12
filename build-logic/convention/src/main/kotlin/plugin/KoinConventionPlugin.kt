@@ -29,12 +29,12 @@ internal class KoinConventionPlugin : Plugin<Project> {
                 ksp(libs.library("koin.ksp.compiler"))
             }
 
-            when {
-                pluginManager.hasPlugin(libs.alias("android.application")) ->
-                    configure<ApplicationExtension> { addVariantOptions(this.sourceSets) }
+            pluginManager.withPlugin(libs.alias("android.application")) {
+                configure<ApplicationExtension> { addVariantOptions(this.sourceSets) }
+            }
 
-                pluginManager.hasPlugin(libs.alias("android.library")) ->
-                    configure<LibraryExtension> { addVariantOptions(this.sourceSets) }
+            pluginManager.withPlugin(libs.alias("android.library")) {
+                configure<LibraryExtension> { addVariantOptions(this.sourceSets) }
             }
         }
     }

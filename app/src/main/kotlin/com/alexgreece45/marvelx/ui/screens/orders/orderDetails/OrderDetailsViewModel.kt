@@ -3,6 +3,7 @@ package com.alexgreece45.marvelx.ui.screens.orders.orderDetails
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.configuration.ConfigPriceLogic
 import com.alexgreece45.marvelx.core.common.logger.AppLogger
+import com.alexgreece45.marvelx.core.data.model.order.OrderId
 import com.alexgreece45.marvelx.domain.helper.InteractorPartialState
 import com.alexgreece45.marvelx.domain.interactors.order.OrderInteractor
 import com.alexgreece45.marvelx.mvi.BaseViewModel
@@ -18,7 +19,7 @@ import kotlinx.coroutines.launch
 import org.koin.android.annotation.KoinViewModel
 
 @KoinViewModel
-class OrderDetailsViewModel(
+internal class OrderDetailsViewModel(
     private val orderInteractor: OrderInteractor,
     private val configPriceLogic: ConfigPriceLogic,
     private val resourceProvider: ResourceProvider,
@@ -36,7 +37,6 @@ class OrderDetailsViewModel(
             is OrderDetailsContract.Event.OrderItemEvents.OnTrackButtonClicked -> onOrderItemButtonClicked(
                 event.orderItem
             )
-
         }
     }
 
@@ -45,7 +45,7 @@ class OrderDetailsViewModel(
     private fun init(orderId: String) {
         setState {
             copy(
-                orderId = orderId
+                orderId = OrderId(orderId)
             )
         }
         getOrderDetails()
@@ -78,9 +78,9 @@ class OrderDetailsViewModel(
         with(orderItem) {
             setEffect {
                 OrderDetailsContract.Effect.Navigation.NavigateToOrderItemTrackingHistoryScreen(
-                    orderId = currentState.orderId,
+                    orderId = currentState.orderId.value,
                     sellerUserId = sellerUserId,
-                    orderItemId = id.value,
+                    orderItemId = orderId.value,
                     orderItemTitle = title,
                     orderItemCoverImageUrl = coverImageUrl.toUrlEncoding(),
                     orderItemPriceLabel = price.label
@@ -93,7 +93,7 @@ class OrderDetailsViewModel(
     private fun getOrderDetails() {
         setState {
             copy(
-                uiState = UiState.Loading,
+                uiState = UiState.Loading
             )
         }
         viewModelScope.launch {

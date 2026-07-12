@@ -3,9 +3,6 @@ package com.alexgreece45.marvelx.ui.screens.introLoading
 import androidx.annotation.StringRes
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.controllers.RefreshTokenController
-import com.alexgreece45.marvelx.controllers.WebsocketController
-import com.alexgreece45.marvelx.core.common.util.DateUtil
 import com.alexgreece45.marvelx.core.data.repositories.UserSessionRepository
 import com.alexgreece45.marvelx.core.network.managers.SessionManager
 import com.alexgreece45.marvelx.core.network.managers.model.LogoutReason
@@ -70,17 +67,15 @@ sealed interface IntroLoadingContract {
 }
 
 @KoinViewModel
-class IntroLoadingViewModel(
+internal class IntroLoadingViewModel(
     private val resourceProvider: ResourceProvider,
     private val registerInteractor: RegisterInteractor,
     private val loginInteractor: LoginInteractor,
     private val userSessionRepository: UserSessionRepository,
     private val consecutiveFailedAuthenticationStorage: ConsecutiveFailedAuthenticationStorage,
-    private val websocketController: WebsocketController,
-    private val refreshTokenController: RefreshTokenController,
     private val sessionManager: SessionManager,
     private val autoLogoutRepository: AutoLogoutRepository,
-    private val removeUserCredentialsUseCase: RemoveUserCredentialsUseCase
+    private val removeUserCredentialsUseCase: RemoveUserCredentialsUseCase,
 ) :
     BaseViewModel<IntroLoadingContract.Event, IntroLoadingContract.State, IntroLoadingContract.Effect>() {
 
@@ -185,16 +180,10 @@ class IntroLoadingViewModel(
                                 // been generated in the `loginFlow` function.
                                 VerificationStep.None -> {
                                     // Retrieve sign data.
-                                    loginInteractor.postLogin(userSessionRepository.getAccessToken())
+                                    loginInteractor.postLogin(userSessionRepository.getAccessTokenAndType())
                                         .collect { postLoginPartialState ->
                                             when (postLoginPartialState) {
                                                 PostLoginPartialState.Success -> {
-                                                    refreshTokenController.startWorker()
-                                                    websocketController.init()
-                                                    autoLogoutRepository.setAutoLogoutTimestamp(
-                                                        DateUtil.getUTCInstant()
-                                                    )
-
                                                     setEffect {
                                                         IntroLoadingContract.Effect.Navigation.NavigateToAllCharactersScreen
                                                     }

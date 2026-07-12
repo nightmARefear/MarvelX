@@ -29,7 +29,7 @@ import com.alexgreece45.marvelx.ui.components.WrapOutlinedButton
 import com.alexgreece45.marvelx.ui.components.effect.ObserveUiEffect
 import com.alexgreece45.marvelx.ui.components.effect.OneTimeLaunchedEffect
 import com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.steps.success.model.CheckoutSuccessContract
-import com.alexgreece45.marvelx.ui.theme.MarvelXTheme
+import com.alexgreece45.marvelx.ui_theme.theme.MarvelXTheme
 import com.alexgreece45.marvelx.util.SPACING_MEDIUM
 import com.alexgreece45.marvelx.util.constants.ConstantsUi
 import kotlinx.coroutines.flow.Flow

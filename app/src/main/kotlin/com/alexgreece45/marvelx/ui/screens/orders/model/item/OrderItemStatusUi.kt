@@ -8,7 +8,7 @@ import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.graphics.Color
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.domain.model_api.order.OrderItemStatusDomain
-import com.alexgreece45.marvelx.ui.theme.values.customColors
+import com.alexgreece45.marvelx.ui_theme.theme.values.customColors
 
 @Immutable
 sealed class OrderItemStatusUi(@StringRes val labelResId: Int) {

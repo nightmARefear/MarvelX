@@ -6,7 +6,7 @@ import com.alexgreece45.marvelx.model.model.AuthenticationTokens
  * Token handling for the network layer.
  */
 interface TokenStorage {
-    fun getAccessToken(): String
+    fun getAccessTokenAndType(): String
     fun getRefreshToken(): String?
     fun setAuthenticationTokens(authenticationTokens: AuthenticationTokens)
 }

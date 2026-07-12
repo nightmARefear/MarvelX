@@ -19,13 +19,13 @@ interface OrderClient {
 
     suspend fun placeOrder(): ApiResult<ResponseOrderId>
 
-    suspend fun getOrderItemReturnRequest(
+    suspend fun getOrderItemReturn(
         orderId: String,
         orderItemId: String,
     ): ApiResult<ResponseOrderItemReturn>
 
 
-    suspend fun placeOrderItemReturnRequest(
+    suspend fun submitOrderItemReturn(
         orderId: String,
         orderItemId: String,
         requestOrderItemReturn: MultipartBody

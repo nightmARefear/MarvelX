@@ -3,10 +3,8 @@ package com.alexgreece45.marvelx.ui.screens.otp
 import androidx.core.text.isDigitsOnly
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.controllers.RefreshTokenController
 import com.alexgreece45.marvelx.controllers.TimerController
 import com.alexgreece45.marvelx.controllers.TimerStatus
-import com.alexgreece45.marvelx.controllers.WebsocketController
 import com.alexgreece45.marvelx.core.data.repositories.UserSessionRepository
 import com.alexgreece45.marvelx.data.repository.AutoLogoutRepository
 import com.alexgreece45.marvelx.domain.interactors.AuthorizePartialState
@@ -31,7 +29,6 @@ import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
 import com.alexgreece45.marvelx.mvi.BaseViewModel
 import com.alexgreece45.marvelx.ui.components.model.ErrorButtonLayout
-import com.alexgreece45.marvelx.util.DateUtil
 import com.alexgreece45.marvelx.util.FormsValidationResult
 import com.alexgreece45.marvelx.util.ResourceProvider
 import kotlinx.coroutines.CoroutineScope
@@ -74,14 +71,14 @@ private sealed class OtpScreenErrorCodes(val code: String) {
     }
 }
 
-data class OtpScreenErrorView(
+internal data class OtpScreenErrorView(
     val errorTitle: String,
     val errorSubtitle: String,
     val onCloseClicked: (() -> Unit)? = null,
     val errorButtonLayout: ErrorButtonLayout.Single
 )
 
-sealed class OtpEvent : BaseEvent {
+internal sealed class OtpEvent : BaseEvent {
     data class Init(
         val userId: String?,
         val otpFlowType: String?,
@@ -102,7 +99,7 @@ sealed class OtpEvent : BaseEvent {
     data object OnResendOtpButtonClick : OtpEvent()
 }
 
-data class OtpState(
+internal data class OtpState(
     // Base states.
     val isLoading: Boolean = true,
 
@@ -164,12 +161,12 @@ data class OtpState(
 
 ) : BaseState
 
-sealed class OtpEffect : BaseEffect {
+internal sealed class OtpEffect : BaseEffect {
     data object OtpFieldRequestFocus : OtpEffect()
     data object CloseKeyboardAndRemoveFocus : OtpEffect()
 
     sealed class Navigation : OtpEffect() {
-        data object PopBackStack : Navigation()
+        data object GoBack : Navigation()
 
         data class NavigateToChangePasswordScreen(
             val requestIdEmail: String,
@@ -185,7 +182,7 @@ sealed class OtpEffect : BaseEffect {
 }
 
 @KoinViewModel
-class OtpViewModel(
+internal class OtpViewModel(
     private val otpInteractor: OtpInteractor,
     private val loginInteractor: LoginInteractor,
     private val registerInteractor: RegisterInteractor,
@@ -193,9 +190,7 @@ class OtpViewModel(
     private val resourceProvider: ResourceProvider,
     private val userSessionRepository: UserSessionRepository,
     private val timerController: TimerController,
-    private val websocketController: WebsocketController,
     private val autoLogoutRepository: AutoLogoutRepository,
-    private val refreshTokenController: RefreshTokenController,
 ) : BaseViewModel<OtpEvent, OtpState, OtpEffect>() {
 
     /**
@@ -341,7 +336,7 @@ class OtpViewModel(
 
             OtpEvent.OnBackClick -> {
                 setEffect {
-                    OtpEffect.Navigation.PopBackStack
+                    OtpEffect.Navigation.GoBack
                 }
             }
 
@@ -727,9 +722,7 @@ class OtpViewModel(
                             // Token was successfully generated (in the server) and retrieved (in the client).
 
                             // Retrieve signing data.
-                            val accessTokenWithType =
-                                accessTokenPartialState.authenticationTokens.tokenType + " " + accessTokenPartialState.authenticationTokens.accessToken
-                            loginInteractor.postLogin(accessTokenWithType)
+                            loginInteractor.postLogin(accessTokenPartialState.authenticationTokens.accessTokenAndType)
                                 .collect { postLoginPartialState ->
                                     when (postLoginPartialState) {
                                         PostLoginPartialState.Success -> {
@@ -739,21 +732,10 @@ class OtpViewModel(
                                             }
 
                                             // Save token info in device.
-                                            userSessionRepository.setAuthenticationTokens(
-                                                accessTokenPartialState.authenticationTokens
+                                            userSessionRepository.setUserSession(
+                                                userId = currentState.userId,
+                                                authenticationTokens = accessTokenPartialState.authenticationTokens
                                             )
-
-                                            // Start refresh token worker since the access token was successfully retrieved.
-                                            refreshTokenController.startWorker()
-
-                                            // Initialize websocket connection.
-                                            websocketController.init()
-
-                                            // Save current timestamp.
-                                            autoLogoutRepository.setAutoLogoutTimestamp(DateUtil.getUTCInstant())
-
-                                            // Save userId in device.
-                                            userSessionRepository.setUserId(currentState.userId)
 
                                             // Save remember user session flag.
                                             autoLogoutRepository.setRememberUserSession(currentState.shouldRememberUserSession)
@@ -1133,7 +1115,7 @@ class OtpViewModel(
                     errorSubtitle = errorMessage,
                     onCloseClicked = {
                         setEffect {
-                            OtpEffect.Navigation.PopBackStack
+                            OtpEffect.Navigation.GoBack
                         }
                     },
                     errorButtonLayout = ErrorButtonLayout.Single(
@@ -1145,7 +1127,7 @@ class OtpViewModel(
                         },
                         onPrimaryButtonClicked = {
                             setEffect {
-                                OtpEffect.Navigation.PopBackStack
+                                OtpEffect.Navigation.GoBack
                             }
                         }
                     )

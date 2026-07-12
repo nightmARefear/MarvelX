@@ -17,7 +17,6 @@ import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.ui.components.AlertDialogButton
 import com.alexgreece45.marvelx.ui.components.AlertDialogError
 import com.alexgreece45.marvelx.ui.components.ContentScreen
-import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
 import com.alexgreece45.marvelx.ui.components.WrapButton
 import com.alexgreece45.marvelx.ui.components.effect.ObserveUiEffect
 import com.alexgreece45.marvelx.ui.components.effect.OneTimeLaunchedEffect
@@ -25,12 +24,12 @@ import com.alexgreece45.marvelx.util.SPACING_SMALL
 import kotlinx.coroutines.flow.Flow
 
 @Composable
-fun HomeScreen(
+internal fun HomeScreen(
     onEventSent: (event: HomeEvent) -> Unit,
     state: HomeState,
     effect: Flow<HomeEffect>,
-    logoutReason: String?,
     onNavigationEffect: (HomeEffect.Navigation) -> Unit,
+    logoutReason: String?,
 ) {
     OneTimeLaunchedEffect {
         onEventSent(HomeEvent.Init(logoutReason))
@@ -44,9 +43,7 @@ fun HomeScreen(
 
     ContentScreen(
         isLoading = state.isLoading,
-        navigableAction = ScreenNavigableAction.Backable {
-            onEventSent(HomeEvent.OnBack)
-        },
+        onBack = { onEventSent(HomeEvent.OnBack) }
     ) { paddingValues ->
         LazyColumn(
             modifier = Modifier.fillMaxSize(),

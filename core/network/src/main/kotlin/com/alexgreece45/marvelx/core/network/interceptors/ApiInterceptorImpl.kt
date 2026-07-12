@@ -2,7 +2,7 @@ package com.alexgreece45.marvelx.core.network.interceptors
 
 import com.alexgreece45.marvelx.core.common.config.ConfigLogic
 import com.alexgreece45.marvelx.core.common.util.DateUtil
-import com.alexgreece45.marvelx.core.network.controller.MarvelXBackendRequestController
+import com.alexgreece45.marvelx.core.network.controller.MarvelXBackendRequestTransformer
 import com.alexgreece45.marvelx.core.network.di.model.ApiInterceptor
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
@@ -19,7 +19,7 @@ import org.koin.core.annotation.Single
 internal class ApiInterceptorImpl(
 //    private val resourceProvider: ResourceProvider,
     private val configLogic: ConfigLogic,
-    private val marvelXBackendRequestController: MarvelXBackendRequestController
+    private val marvelXBackendRequestTransformer: MarvelXBackendRequestTransformer
 ) : Interceptor {
 
     override fun intercept(chain: Interceptor.Chain): Response {
@@ -97,7 +97,7 @@ internal class ApiInterceptorImpl(
         path: String,
         chain: Interceptor.Chain
     ): Response {
-        val finalRequest = marvelXBackendRequestController.applyMarvelXBackendTransformations(
+        val finalRequest = marvelXBackendRequestTransformer.applyMarvelXBackendTransformations(
             originalRequest = chain.request(),
             path = path
         )

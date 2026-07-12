@@ -40,7 +40,7 @@ import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.succe
 import com.alexgreece45.marvelx.ui.screens.marketplace.listingDetailsScreen.ListingDetailsScreen
 import com.alexgreece45.marvelx.ui.screens.marketplace.listingDetailsScreen.ListingDetailsViewModel
 import com.alexgreece45.marvelx.ui.screens.marketplace.listingDetailsScreen.model.ListingDetailsContract
-import com.alexgreece45.marvelx.ui.theme.values.customColors
+import com.alexgreece45.marvelx.ui_theme.theme.values.customColors
 import com.alexgreece45.marvelx.util.extensions.showToast
 import kotlinx.coroutines.flow.Flow
 import org.koin.androidx.compose.koinViewModel

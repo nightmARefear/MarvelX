@@ -1,11 +1,11 @@
 package com.alexgreece45.marvelx.ui.screens.home
 
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.core.network.managers.model.LogoutReason
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
 import com.alexgreece45.marvelx.mvi.BaseViewModel
-import com.alexgreece45.marvelx.core.network.managers.model.LogoutReason
 import com.alexgreece45.marvelx.ui.screens.home.models.HomeAlertDialogErrorView
 import com.alexgreece45.marvelx.util.ResourceProvider
 import org.koin.android.annotation.KoinViewModel
