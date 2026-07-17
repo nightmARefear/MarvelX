@@ -1,9 +1,10 @@
 package com.alexgreece45.marvelx.ui.screens.mainActivity.model
 
-import com.alexgreece45.marvelx.controllers.model.security.SecurityViolation
+import com.alexgreece45.marvelx.core.network.managers.model.LogoutReason
+import com.alexgreece45.marvelx.core.security.model.security.SecurityViolation
+import com.alexgreece45.marvelx.data.model.deepLink.DeepLinkAction
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.notifications.model.NotificationData
-import com.alexgreece45.marvelx.data.model.deepLink.DeepLinkAction
 
 sealed class MainActivityEffect : BaseEffect {
 
@@ -11,7 +12,7 @@ sealed class MainActivityEffect : BaseEffect {
         MainActivityEffect()
 
     sealed class Navigation : MainActivityEffect() {
-        data class NavigateToHomeScreenWithSessionExpired(val showErrorDialog: Boolean) :
+        data class NavigateToHomeScreen(val logoutReason: LogoutReason) :
             Navigation()
 
         data class NavigateToSplashScreenWithSecurityViolation(val securityViolation: SecurityViolation) :

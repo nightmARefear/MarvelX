@@ -5,6 +5,7 @@ import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.controllers.CreateDeepLinkActionResult
 import com.alexgreece45.marvelx.controllers.DeepLinkController
 import com.alexgreece45.marvelx.controllers.HandleQrCodeWebUrlResult
+import com.alexgreece45.marvelx.core.common.logger.AppLogger
 import com.alexgreece45.marvelx.data.model.deepLink.DeepLinkAction
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
@@ -21,7 +22,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
-import org.koin.core.component.inject
+import org.koin.android.annotation.KoinViewModel
+import kotlin.time.Duration.Companion.milliseconds
 
 sealed interface QrCodeScanContract {
     sealed interface Event : BaseEvent {
@@ -68,11 +70,13 @@ sealed interface QrCodeScanContract {
     }
 }
 
-class QrCodeScanViewModel :
+@KoinViewModel
+class QrCodeScanViewModel(
+    private val appLogger: AppLogger,
+    private val deepLinkController: DeepLinkController,
+    private val resourceProvider: ResourceProvider
+) :
     BaseViewModel<QrCodeScanContract.Event, QrCodeScanContract.State, QrCodeScanContract.Effect>() {
-
-    private val deepLinkController: DeepLinkController by inject()
-    private val resourceProvider: ResourceProvider by inject()
 
     /**
      * The QR code processing job. When this job isn't `null` it is an indication that a
@@ -120,7 +124,7 @@ class QrCodeScanViewModel :
                             )
                         )
                     }
-                    delay(800L) // Fake delay; its only use is to display the `processing` lottie.
+                    delay(800L.milliseconds) // Fake delay; its only use is to display the `processing` lottie.
                     handleQrCodeWebUrl(event.qrCode).collect { shouldCancelJob ->
                         if (shouldCancelJob) {
                             qrCodeProcessingJob = null
@@ -219,7 +223,7 @@ class QrCodeScanViewModel :
      */
     private fun handleQrCodeWebUrl(qrCode: String): Flow<Boolean> = flow {
         deepLinkController.handleQrCodeWebUrl(qrCode)
-            .collect { handleQrCodeWebUrlResult ->
+            .let { handleQrCodeWebUrlResult ->
                 when (handleQrCodeWebUrlResult) {
                     HandleQrCodeWebUrlResult.ErrorCreatingDeepLinkAction -> {
                         appLogger.d("QrCodeScanViewModel") { "Error handling the scanned QR code web url." }
@@ -250,7 +254,7 @@ class QrCodeScanViewModel :
                                 )
                             )
                         }
-                        delay(1600L) // Fake delay; its only use is to display the success lottie.
+                        delay(1600L.milliseconds) // Fake delay; its only use is to display the success lottie.
                         setEffect {
                             QrCodeScanContract.Effect.NavigateUpAndOpenDeepLinkAction(
                                 handleQrCodeWebUrlResult.deepLinkAction

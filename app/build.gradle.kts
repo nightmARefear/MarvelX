@@ -2,14 +2,13 @@ import java.io.FileInputStream
 import java.util.Properties
 
 plugins {
-    alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
-    alias(libs.plugins.kotlin.compose)
+    id("marvelx.android.application.compose")
     alias(libs.plugins.google.mapsplatform.secrets)
-    alias(libs.plugins.ksp)
     alias(libs.plugins.kotlin.parcelize)
     alias(libs.plugins.google.gms.google.services)
     alias(libs.plugins.google.firebase.crashlytics)
+//    alias(libs.plugins.kotzilla)
+    id("marvelx.kotlin.serialization")
 }
 
 val keystoreProperties = Properties()
@@ -20,7 +19,6 @@ deeplinkProperties.load(FileInputStream(rootProject.file("deeplink.properties"))
 
 android {
     namespace = libs.versions.application.name.get()
-    compileSdk = libs.versions.target.sdk.get().toInt()
 
     signingConfigs {
         create("release") {
@@ -99,10 +97,11 @@ android {
             signingConfig = signingConfigs.getByName("debug")
         }
 
-        create("mock") {
+        getByName("mock") {
             applicationIdSuffix = ".mock"
             isMinifyEnabled = false
             enableUnitTestCoverage = true
+            isDebuggable = true
 
             manifestPlaceholders.putAll(
                 mapOf(
@@ -115,40 +114,38 @@ android {
             )
 
             versionNameSuffix = "-MOCK"
+
+            signingConfig = signingConfigs.getByName("debug")
+
+            matchingFallbacks += listOf("debug")
         }
     }
 
-    compileOptions {
-        sourceCompatibility = JavaVersion.toVersion(libs.versions.java.version.get())
-        targetCompatibility = JavaVersion.toVersion(libs.versions.java.version.get())
-    }
+    // TODO: To be transferred to kotlin block (kotlin {}).
+//    kotlinOptions {
+//        jvmTarget = JavaVersion.toVersion(libs.versions.java.version.get()).toString()
+//    }
 
-    buildFeatures {
-        buildConfig = true
-        compose = true
-    }
-
-    kotlinOptions {
-        jvmTarget = JavaVersion.toVersion(libs.versions.java.version.get()).toString()
-        freeCompilerArgs = listOf("-XXLanguage:+PropertyParamAnnotationDefaultTargetMode")
-    }
-
-    packaging {
-        resources.excludes.addAll(
-            listOf(
-                "/META-INF/{AL2.0,LGPL2.1}",
-                "DebugProbes.kt"
-            )
-        )
-
-        dex {
-            useLegacyPackaging = false
-        }
-    }
-
-    sourceSets.all {
-        kotlin.srcDir("build/generated/ksp/$name/kotlin")
-    }
+//    kotlin {
+//        compilerOptions {
+//            freeCompilerArgs.add("-XXLanguage:+PropertyParamAnnotationDefaultTargetMode")
+//
+//            // Compose metrics.
+//            freeCompilerArgs.addAll(
+//                "-P",
+//                "plugin:androidx.compose.compiler.plugins.kotlin:reportsDestination=" +
+//                        project.buildDir.absolutePath + "/compose_metrics"
+//            )
+//            freeCompilerArgs.addAll(
+//                "-P",
+//                "plugin:androidx.compose.compiler.plugins.kotlin:metricsDestination=" +
+//                        project.buildDir.absolutePath + "/compose_metrics"
+//            )
+//
+//            // Explicit backing fields.
+//            freeCompilerArgs.add("-XXLanguage:+ExplicitBackingFields")
+//        }
+//    }
 }
 
 // TODO: TO BE FIXED
@@ -173,13 +170,28 @@ tasks.register("buildDebugApk") {
 }*/
 
 dependencies {
+    // Other modules.
+    implementation(projects.commonUi)
+    implementation(projects.core.common)
+    implementation(projects.core.network)
+    implementation(projects.core.datastore)
+    implementation(projects.core.data)
+    implementation(projects.core.security)
+    implementation(projects.model)
+
     // Kotlin reflection.
     implementation(libs.kotlin.reflect)
 
+    // Kotlin immutable lists.
+    implementation(libs.kotlin.collections.immutable)
+
     // Compose.
     implementation(project.dependencies.platform(libs.androidx.compose.bom))
-    implementation(libs.bundles.app.ui)
+//    implementation(libs.bundles.app.ui)
+    implementation(libs.bundles.app.ui.camera)
+    implementation(libs.androidx.compose.ui.tooling) // Added to fix render issue (ClassNotFoundException: ComposeViewAdapter)
     debugImplementation(libs.bundles.app.ui.debug)
+    "mockImplementation"(libs.bundles.app.ui.debug)
 
     // QR code.
     implementation(libs.google.zxing)
@@ -193,6 +205,7 @@ dependencies {
     // Chucker
     debugImplementation(libs.chucker)
     releaseImplementation(libs.chucker.no.op)
+    "mockImplementation"(libs.chucker)
 
     implementation(libs.squareup.logcat)
     implementation(libs.bundles.coil)
@@ -216,9 +229,7 @@ dependencies {
     implementation(libs.rootbeer)
 
     // Koin.
-    implementation(platform(libs.koin.bom))
-    implementation(libs.bundles.koin.implementation)
-    ksp(libs.koin.ksp.compiler)
+    implementation(libs.koin.androidx.work.manager)
     testImplementation(libs.bundles.koin.test.implementation)
 
     // Bouncycastle. Contains Blake2 algorithm.
@@ -236,9 +247,16 @@ dependencies {
     implementation(libs.google.firebase.firestore)
     implementation(libs.google.firebase.cloud.messaging)
 
-    // Shimmer.
-    implementation(libs.valentinilk.shimmer)
-
     // Image cropper.
     implementation(libs.vanniktech.android.image.cropper)
+
+    // Reorderable composables.
+    implementation(libs.sh.calvin.reorderable)
+
+    // Stepper.
+    implementation(libs.binayshaw.kotstep)
+
+    implementation(libs.androidx.datastore.preferences)
+
+//    implementation(libs.kotzilla.sdk.compose)
 }

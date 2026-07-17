@@ -31,6 +31,8 @@ import com.alexgreece45.marvelx.util.extensions.clickableNoRipple
  * [LottieConstants.IterateForever].
  * @param backgroundColor       The background color of the container, defaults to MaterialTheme
  * background.
+ * @param clipLottie            Whether this lottie should be clipped to the specified size. It has
+ * the default value of `false`. This setting should be used with caution!
  * @param verticalArrangement    The vertical arrangement of the content inside the Column, defaults
  * to [Arrangement.Center].
  * @param horizontalAlignment   The horizontal alignment of the content inside the Column, defaults
@@ -45,6 +47,7 @@ fun LottieComposable(
     modifier: Modifier = Modifier,
     iterations: Int = LottieConstants.IterateForever,
     backgroundColor: Color? = null,
+    clipLottie: Boolean = false,
     verticalArrangement: Arrangement.Vertical = Arrangement.Center,
     horizontalAlignment: Alignment.Horizontal = Alignment.CenterHorizontally,
     subtitleContent: (@Composable () -> Unit)? = null,
@@ -59,10 +62,12 @@ fun LottieComposable(
         iterations = iterations
     )
 
+    val clipModifier = if (clipLottie) Modifier else Modifier.fillMaxSize()
+
     Box(modifier = modifier) {
         Column(
             modifier = Modifier
-                .fillMaxSize()
+                .then(clipModifier)
                 .background(backgroundColor ?: MaterialTheme.colors.background)
                 .clickableNoRipple(onClick = {}),
             verticalArrangement = verticalArrangement,

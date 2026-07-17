@@ -1,11 +1,12 @@
 package com.alexgreece45.marvelx.domain.model_api.user.block
 
-import com.alexgreece45.marvelx.network_logic.models_api.user.block.ResponseBlockedUser
+import com.alexgreece45.marvelx.core.network.model.api.user.block.ResponseBlockedUser
+import com.alexgreece45.marvelx.model.model.user.UserId
 import com.alexgreece45.marvelx.util.extensions.toFullName
 import java.time.Instant
 
 data class BlockedUserDomain(
-    val userId: String,
+    val userId: UserId,
     val fullName: String,
     val profileImageUrl: String,
     val blockedAt: Instant
@@ -14,7 +15,7 @@ data class BlockedUserDomain(
 fun List<ResponseBlockedUser>.toBlockedUserDomainList(): List<BlockedUserDomain> =
     this.map { user ->
         BlockedUserDomain(
-            userId = user.userId,
+            userId = UserId(user.userId),
             fullName = Pair(user.firstName, user.lastName).toFullName(),
             profileImageUrl = user.profileImageUrl,
             blockedAt = Instant.parse(user.blockedAt)

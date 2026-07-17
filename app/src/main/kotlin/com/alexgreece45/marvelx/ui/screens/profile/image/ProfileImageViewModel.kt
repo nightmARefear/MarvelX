@@ -7,7 +7,9 @@ import com.alexgreece45.marvelx.ui.screens.profile.image.model.ProfileImageContr
 import com.alexgreece45.marvelx.ui.screens.profile.image.model.ProfileImageErrorView
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.extensions.decodeFromUrl
+import org.koin.android.annotation.KoinViewModel
 
+@KoinViewModel
 class ProfileImageViewModel(
     private val resourceProvider: ResourceProvider
 ) :

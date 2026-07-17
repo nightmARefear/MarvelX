@@ -49,7 +49,6 @@
                 <data
                     android:host="${deeplinkHost}"
                     android:pathAdvancedPattern="${deeplinkPathAdvancedPattern}"
-                    android:port="${deeplinkPort}"
                     android:scheme="${deeplinkScheme}" />
             </intent-filter>
 

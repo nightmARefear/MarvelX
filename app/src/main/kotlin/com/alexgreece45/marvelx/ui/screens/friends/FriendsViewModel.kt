@@ -2,6 +2,7 @@ package com.alexgreece45.marvelx.ui.screens.friends
 
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.core.common.logger.AppLogger
 import com.alexgreece45.marvelx.domain.helper.InteractorPartialState
 import com.alexgreece45.marvelx.domain.interactors.GetProfileDetailsPartialState
 import com.alexgreece45.marvelx.domain.interactors.UserInteractor
@@ -12,6 +13,7 @@ import com.alexgreece45.marvelx.domain.model_api.user.block.BlockedUserDomain
 import com.alexgreece45.marvelx.domain.model_api.user.friend.FriendDomain
 import com.alexgreece45.marvelx.domain.model_api.user.friendRequest.DeleteFriendRequestType
 import com.alexgreece45.marvelx.domain.model_api.user.friendRequest.IncomingFriendRequestDomain
+import com.alexgreece45.marvelx.model.model.user.UserId
 import com.alexgreece45.marvelx.mvi.BaseViewModel
 import com.alexgreece45.marvelx.notifications.PushNotificationsController
 import com.alexgreece45.marvelx.notifications.model.NotificationChannelType
@@ -20,20 +22,23 @@ import com.alexgreece45.marvelx.ui.screens.friends.model.FriendsDialogView
 import com.alexgreece45.marvelx.ui.screens.friends.model.FriendsErrorView
 import com.alexgreece45.marvelx.util.DateUtil
 import com.alexgreece45.marvelx.util.ResourceProvider
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
+import org.koin.android.annotation.KoinViewModel
 import java.time.Instant
 
-class FriendsViewModel(
+@KoinViewModel
+internal class FriendsViewModel(
     private val resourceProvider: ResourceProvider,
     private val userInteractor: UserInteractor,
     private val friendInteractor: FriendInteractor,
     private val friendRequestInteractor: FriendRequestInteractor,
     private val blockedUserInteractor: BlockedUserInteractor,
+    private val appLogger: AppLogger,
+    private val pushNotificationsController: PushNotificationsController,
 ) : BaseViewModel<FriendsContract.Event, FriendsContract.State, FriendsContract.Effect>() {
 
-    private val LOGGER_TAG = "FriendsViewModel"
+    private val loggerTag = "FriendsViewModel"
 
     override fun setInitialState(): FriendsContract.State = FriendsContract.State()
 
@@ -147,13 +152,13 @@ class FriendsViewModel(
         }
     }
 
-    private fun allTabOnUserClicked(userId: String) {
+    private fun allTabOnUserClicked(userId: UserId) {
         setEffect {
-            FriendsContract.Effect.Navigation.NavigateToProfileDetailsScreen(userId = userId)
+            FriendsContract.Effect.Navigation.NavigateToProfileDetailsScreen(userId = userId.value)
         }
     }
 
-    private fun allTabOnRemoveClicked(userId: String) {
+    private fun allTabOnRemoveClicked(userId: UserId) {
         setState {
             copy(
                 dialogView = FriendsDialogView(
@@ -171,9 +176,9 @@ class FriendsViewModel(
         }
     }
 
-    private fun requestsTabOnUserClicked(userId: String) {
+    private fun requestsTabOnUserClicked(userId: UserId) {
         setEffect {
-            FriendsContract.Effect.Navigation.NavigateToProfileDetailsScreen(userId = userId)
+            FriendsContract.Effect.Navigation.NavigateToProfileDetailsScreen(userId = userId.value)
         }
     }
 
@@ -182,7 +187,7 @@ class FriendsViewModel(
         acceptFriendRequest(incomingFriendRequest)
     }
 
-    private fun requestsTabOnRequestDeclined(userId: String) {
+    private fun requestsTabOnRequestDeclined(userId: UserId) {
         hideDialogView()
         removeFriendRequest(userId)
     }
@@ -415,7 +420,7 @@ class FriendsViewModel(
 
     private fun setupNotificationsListener() {
         viewModelScope.launch {
-            PushNotificationsController.notification
+            pushNotificationsController.notification
                 .filterNotNull()
                 .collect { notificationData ->
                     when (notificationData.channelType) {
@@ -429,7 +434,7 @@ class FriendsViewModel(
                                         is GetProfileDetailsPartialState.Error,
                                         is GetProfileDetailsPartialState.Failed,
                                         GetProfileDetailsPartialState.NoInternetConnection -> {
-                                            appLogger.e(LOGGER_TAG) { "(setupNotificationsListener) An error occurred whilst retrieving the details for user w/ID: $userId" }
+                                            appLogger.e(loggerTag) { "(setupNotificationsListener) An error occurred whilst retrieving the details for user w/ID: $userId" }
 
                                             setState {
                                                 copy(
@@ -476,8 +481,7 @@ class FriendsViewModel(
                                         is GetProfileDetailsPartialState.Error,
                                         is GetProfileDetailsPartialState.Failed,
                                         GetProfileDetailsPartialState.NoInternetConnection -> {
-                                            appLogger.e(LOGGER_TAG) { "(setupNotificationsListener) An error occurred whilst retrieving the details for user w/ID: $userId" }
-
+                                            appLogger.e(loggerTag) { "(setupNotificationsListener) An error occurred whilst retrieving the details for user w/ID: $userId" }
                                         }
 
                                         is GetProfileDetailsPartialState.Success -> {
@@ -506,15 +510,15 @@ class FriendsViewModel(
                                 }
                         }
 
-                        NotificationChannelType.ListingPurchase -> {
-                            // No need for implementation.
+                        else -> {
+                            // We do not care about other cases.
                         }
                     }
                 }
         }
     }
 
-    private fun removeFriend(userId: String) {
+    private fun removeFriend(userId: UserId) {
         viewModelScope.launch {
             friendInteractor.deleteFriend(userId).collect { wasFriendDeleted ->
                 if (wasFriendDeleted) {
@@ -598,7 +602,7 @@ class FriendsViewModel(
         }
     }
 
-    private fun removeFriendRequest(userId: String) {
+    private fun removeFriendRequest(userId: UserId) {
         viewModelScope.launch {
             friendRequestInteractor.deleteFriendRequest(
                 userId = userId,
@@ -636,7 +640,7 @@ class FriendsViewModel(
         }
     }
 
-    private fun unblockUser(userId: String) {
+    private fun unblockUser(userId: UserId) {
         viewModelScope.launch {
             blockedUserInteractor.unblockUser(userId)
                 .collect { result ->

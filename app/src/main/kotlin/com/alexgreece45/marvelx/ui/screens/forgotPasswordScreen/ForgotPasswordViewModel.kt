@@ -6,16 +6,18 @@ import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.controllers.TimerController
 import com.alexgreece45.marvelx.controllers.TimerStatus
-import com.alexgreece45.marvelx.domain.model_api.otp.OtpErrorCause
-import com.alexgreece45.marvelx.domain.model_api.user.VerificationStep
 import com.alexgreece45.marvelx.domain.interactors.ForgotPasswordInteractor
 import com.alexgreece45.marvelx.domain.interactors.ForgotPasswordIsOtpBlockedEmailPartialState
 import com.alexgreece45.marvelx.domain.interactors.ForgotPasswordSendOtpPartialState
 import com.alexgreece45.marvelx.domain.interactors.ForgotPasswordValidateOtpPartialState
+import com.alexgreece45.marvelx.domain.model_api.otp.OtpErrorCause
+import com.alexgreece45.marvelx.domain.model_api.user.VerificationStep
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
 import com.alexgreece45.marvelx.mvi.BaseViewModel
+import com.alexgreece45.marvelx.ui.screens.forgotPasswordScreen.ForgotPasswordSubScreens.EnterEmail
+import com.alexgreece45.marvelx.ui.screens.forgotPasswordScreen.ForgotPasswordSubScreens.PasswordChanged
 import com.alexgreece45.marvelx.util.Form
 import com.alexgreece45.marvelx.util.FormValidationResult
 import com.alexgreece45.marvelx.util.FormValidator
@@ -23,11 +25,10 @@ import com.alexgreece45.marvelx.util.FormsValidationResult
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.Rule
 import com.alexgreece45.marvelx.util.constants.ConstantsInputField
-import com.alexgreece45.marvelx.ui.screens.forgotPasswordScreen.ForgotPasswordSubScreens.EnterEmail
-import com.alexgreece45.marvelx.ui.screens.forgotPasswordScreen.ForgotPasswordSubScreens.PasswordChanged
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import org.koin.android.annotation.KoinViewModel
 
 /**
  * Defines all the sub-screens needed for the `Forgot Password` flow. The string - related info
@@ -234,6 +235,7 @@ sealed class ForgotPasswordEffect : BaseEffect {
     }
 }
 
+@KoinViewModel
 class ForgotPasswordViewModel(
     private val forgotPasswordInteractor: ForgotPasswordInteractor,
     private val resourceProvider: ResourceProvider,
@@ -550,16 +552,14 @@ class ForgotPasswordViewModel(
     }
 
     private fun validateEmail() {
-        viewModelScope.launch {
+        val formValidationResult =
             formValidator.validateForm(Form(mapOf(getEmailValidationRules() to currentState.email)))
-                .collect { formValidationResult ->
-                    setState {
-                        copy(
-                            emailValidationResult = formValidationResult,
-                            isContinueButtonEnabled = formValidationResult.isValid
-                        )
-                    }
-                }
+
+        setState {
+            copy(
+                emailValidationResult = formValidationResult,
+                isContinueButtonEnabled = formValidationResult.isValid
+            )
         }
     }
 

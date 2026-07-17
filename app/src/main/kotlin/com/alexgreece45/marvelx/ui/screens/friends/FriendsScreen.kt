@@ -34,6 +34,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.model.model.user.UserId
 import com.alexgreece45.marvelx.ui.components.AlertDialogButton
 import com.alexgreece45.marvelx.ui.components.AlertDialogError
 import com.alexgreece45.marvelx.ui.components.ContentScreen
@@ -47,7 +48,7 @@ import com.alexgreece45.marvelx.ui.components.effect.ObserveUiEffect
 import com.alexgreece45.marvelx.ui.components.error.ContentErrorScreenHeader
 import com.alexgreece45.marvelx.ui.components.model.ErrorButtonType
 import com.alexgreece45.marvelx.ui.screens.friends.model.FriendsContract
-import com.alexgreece45.marvelx.ui.theme.values.customColors
+import com.alexgreece45.marvelx.ui_theme.theme.values.customColors
 import com.alexgreece45.marvelx.util.SPACING_MEDIUM
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.SPACING_TINY
@@ -190,7 +191,7 @@ fun FriendsScreen(
                             GenericListView(
                                 noItemsLabel = stringResource(id = R.string.screen_friends_tab_all_no_friends),
                                 items = state.allFriends,
-                                key = { it.userId }
+                                key = { it.userId.value }
                             ) { friend ->
                                 FriendTile(
                                     fullName = friend.fullName,
@@ -217,7 +218,7 @@ fun FriendsScreen(
                             GenericListView(
                                 noItemsLabel = stringResource(R.string.screen_friends_tab_requests_no_requests),
                                 items = state.incomingFriendRequests,
-                                key = { it.userId }
+                                key = { it.userId.value }
                             ) { incomingFriendRequest ->
                                 IncomingFriendRequestTile(
                                     fullName = incomingFriendRequest.fullName,
@@ -252,7 +253,7 @@ fun FriendsScreen(
                             GenericListView(
                                 noItemsLabel = stringResource(id = R.string.screen_friends_tab_blocked_no_blocked_users),
                                 items = state.blockedUsers,
-                                key = { it.userId }
+                                key = { it.userId.value }
                             ) { blockedUser ->
                                 BlockTile(
                                     fullName = blockedUser.fullName,

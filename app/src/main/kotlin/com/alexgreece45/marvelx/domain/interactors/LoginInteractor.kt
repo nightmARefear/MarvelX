@@ -1,33 +1,38 @@
 package com.alexgreece45.marvelx.domain.interactors
 
+import android.util.Base64
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.configuration.ConfigOauth
-import com.alexgreece45.marvelx.controllers.AppLogger
-import com.alexgreece45.marvelx.controllers.AuthController
-import com.alexgreece45.marvelx.controllers.CryptoController
-import com.alexgreece45.marvelx.controllers.PrefKeys
 import com.alexgreece45.marvelx.controllers.RefreshTokenController
 import com.alexgreece45.marvelx.controllers.WebsocketController
+import com.alexgreece45.marvelx.core.common.config.ConfigOauthLogic
+import com.alexgreece45.marvelx.core.common.extensions.safeAsync
+import com.alexgreece45.marvelx.core.common.logger.AppLogger
+import com.alexgreece45.marvelx.core.common.util.DateUtil
+import com.alexgreece45.marvelx.core.data.repositories.UserSessionRepository
+import com.alexgreece45.marvelx.core.network.model.api.sensitiveUserData.RequestSensitiveUserData
+import com.alexgreece45.marvelx.core.network.model.api.token.toModel
+import com.alexgreece45.marvelx.core.network.storage.SignatureStorage
 import com.alexgreece45.marvelx.data.repository.AuthorizeRepositoryPartialState
+import com.alexgreece45.marvelx.data.repository.AutoLogoutRepository
 import com.alexgreece45.marvelx.data.repository.GetSensitiveUserDataRepositoryResponse
 import com.alexgreece45.marvelx.data.repository.GrandNewAccessTokenRepositoryResponse
 import com.alexgreece45.marvelx.data.repository.LoginRepository
-import com.alexgreece45.marvelx.data.repository.LogoutRepositoryResponse
 import com.alexgreece45.marvelx.data.repository.PostLoginRepositoryResponse
 import com.alexgreece45.marvelx.data.repository.RefreshTokenRepository
 import com.alexgreece45.marvelx.data.repository.TokenRefreshRepositoryResult
 import com.alexgreece45.marvelx.data.repository.UserRepository
 import com.alexgreece45.marvelx.domain.model_api.sensitiveUserData.SensitiveUserDataDomain
-import com.alexgreece45.marvelx.domain.model_api.user.postLogin.SignData
-import com.alexgreece45.marvelx.domain.model_api.userAuthData.UserAuthData
-import com.alexgreece45.marvelx.network_logic.models_api.sensitiveUserData.RequestSensitiveUserData
-import com.alexgreece45.marvelx.network_logic.models_api.sensitiveUserData.toSensitiveUserDataDomain
-import com.alexgreece45.marvelx.network_logic.models_api.token.toUserAuthData
+import com.alexgreece45.marvelx.domain.model_api.sensitiveUserData.toSensitiveUserDataDomain
+import com.alexgreece45.marvelx.domain.usecases.RemoveUserCredentialsUseCase
+import com.alexgreece45.marvelx.model.model.AuthenticationTokens
+import com.alexgreece45.marvelx.model.model.Signature
 import com.alexgreece45.marvelx.util.ResourceProvider
-import com.alexgreece45.marvelx.util.extensions.safeAsync
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import okio.IOException
+import org.koin.core.annotation.Factory
+import java.security.MessageDigest
+import java.security.SecureRandom
 
 interface LoginInteractor {
 
@@ -42,15 +47,9 @@ interface LoginInteractor {
     suspend fun authorize(tempAuthCode: String): Flow<AuthorizePartialState>
 
     /**
-     * The logout call. It performs all the necessary operations to wipe the local data, and to
-     * close the websocket connection, and much more.
-     */
-    suspend fun logout(): Flow<LogoutPartialState>
-
-    /**
      * The post-login call. It retrieves all the necessary data for signing requests.
      */
-    suspend fun postLogin(accessToken: String): Flow<PostLoginPartialState>
+    suspend fun postLogin(accessTokenAndType: String): Flow<PostLoginPartialState>
 
     /**
      * Grants an access token for the OAuth 2.0 flow. It sends the code verifier and the `code` that
@@ -64,35 +63,39 @@ interface LoginInteractor {
     suspend fun getSensitiveUserData(token: String): Flow<GetSensitiveUserDataPartialState>
 }
 
+@Factory
 class LoginInteractorImpl(
     private val loginRepository: LoginRepository,
     private val refreshTokenRepository: RefreshTokenRepository,
     private val resourceProvider: ResourceProvider,
-    private val configOauth: ConfigOauth,
-    private val authController: AuthController,
-    private val refreshTokenController: RefreshTokenController,
-    private val prefKeys: PrefKeys,
-    private val logger: AppLogger,
-    private val websocketController: WebsocketController,
-    private val cryptoController: CryptoController,
+    private val configOauthLogic: ConfigOauthLogic,
+    private val userSessionRepository: UserSessionRepository,
+    private val signatureStorage: SignatureStorage,
+    private val removeUserCredentialsUseCase: RemoveUserCredentialsUseCase,
+    private val appLogger: AppLogger,
     private val userRepository: UserRepository,
+    private val autoLogoutRepository: AutoLogoutRepository,
+    private val websocketController: WebsocketController,
+    private val refreshTokenController: RefreshTokenController,
 ) : LoginInteractor {
 
+    private val loggerTag = "LoginInteractor"
+
     private val codeVerifier by lazy {
-        cryptoController.createCodeVerifier()
+        createCodeVerifier()
     }
 
     private val codeChallenge by lazy {
-        cryptoController.createCodeChallenge(codeVerifier)
+        createCodeChallenge(codeVerifier)
     }
 
     override suspend fun authorize(tempAuthCode: String): Flow<AuthorizePartialState> = flow {
         val genericErrorMessage = resourceProvider.getGenericErrorMessage()
         loginRepository.authorize(
-            tempAuthCode,
-            configOauth.clientId,
-            codeChallenge,
-            configOauth.codeChallengeMethod
+            tempAuthCode = tempAuthCode,
+            clientId = configOauthLogic.clientId,
+            codeChallenge = codeChallenge,
+            codeChallengeMethod = configOauthLogic.codeChallengeMethod
         ).collect {
             when (it) {
                 is AuthorizeRepositoryPartialState.Success -> {
@@ -124,71 +127,10 @@ class LoginInteractorImpl(
         }
     }
 
-    override suspend fun logout(): Flow<LogoutPartialState> = flow {
-        val genericErrorMessage = resourceProvider.getGenericErrorMessage()
-        val refreshToken = authController.getRefreshToken()
-
-        // Close websocket connection.
-        websocketController.close()
-
-        // Disable user logged in flag.
-        userRepository.setUserLoggedIn(false)
-
-        // Disable remember user session functionality.
-        prefKeys.setRememberUserSession(false)
-
-        // Remove auto-logout timestamp.
-        prefKeys.autoLogoutTimestamp = null
-
-        // Remove stored credentials.
-        authController.removeUserCredentials()
-
-        if (refreshToken.isNullOrEmpty()) {
-            emit(LogoutPartialState.Success)
-            return@flow
-        }
-
-        loginRepository.logout(configOauth.clientId, refreshToken)
-            .collect { logoutRepositoryResponse ->
-                // Stop refresh token worker irrespectively of the response.
-                refreshTokenController.stopWorker()
-
-                when (logoutRepositoryResponse) {
-                    is LogoutRepositoryResponse.Failed -> {
-                        emit(
-                            LogoutPartialState.Failed(
-                                errorMessage = logoutRepositoryResponse.errorMessage
-                                    ?: genericErrorMessage
-                            )
-                        )
-                    }
-
-                    is LogoutRepositoryResponse.Success -> {
-                        emit(LogoutPartialState.Success)
-                    }
-                }
-            }
-    }.safeAsync {
-        logger.e("LoginInteractor") { "(logout) error: ${it.message.orEmpty()}" }
-        when (it) {
-            is IOException -> {
-                LogoutPartialState.Failed(
-                    errorMessage = resourceProvider.getNoInternetConnectionMessage()
-                )
-            }
-
-            else -> {
-                LogoutPartialState.Failed(
-                    errorMessage = resourceProvider.getGenericErrorMessage()
-                )
-            }
-        }
-    }
-
-    override suspend fun postLogin(accessToken: String): Flow<PostLoginPartialState> = flow {
+    override suspend fun postLogin(accessTokenAndType: String): Flow<PostLoginPartialState> = flow {
         val genericErrorMessage = resourceProvider.getGenericErrorMessage()
 
-        loginRepository.postLogin(accessToken).collect {
+        loginRepository.postLogin(accessTokenAndType).collect {
             when (it) {
                 is PostLoginRepositoryResponse.Success -> {
                     val sign = it.response?.sign
@@ -200,7 +142,16 @@ class LoginInteractorImpl(
                         return@collect
                     }
 
-                    prefKeys.signData = SignData(key = sign.key, algorithm = sign.algorithm)
+                    autoLogoutRepository.setAutoLogoutTimestamp(DateUtil.getUTCInstant())
+                    websocketController.init()
+                    refreshTokenController.startWorker()
+
+                    signatureStorage.setSignature(
+                        Signature(
+                            key = sign.key.orEmpty(),
+                            algorithm = sign.algorithm.orEmpty()
+                        )
+                    )
                     userRepository.setUserLoggedIn(true)
                     emit(PostLoginPartialState.Success)
                 }
@@ -211,7 +162,7 @@ class LoginInteractorImpl(
             }
         }
     }.safeAsync {
-        logger.e("LoginInteractor") { "(postLogin) error: ${it.message.orEmpty()}" }
+        appLogger.e("LoginInteractor") { "(postLogin) error: ${it.message.orEmpty()}" }
         when (it) {
             is IOException -> {
                 PostLoginPartialState.Failed(
@@ -231,10 +182,10 @@ class LoginInteractorImpl(
         flow {
             val genericErrorMessage = resourceProvider.getGenericErrorMessage()
             loginRepository.grandNewAccessToken(
-                clientId = configOauth.clientId,
+                clientId = configOauthLogic.clientId,
                 code = authCode,
                 codeVerifier = codeVerifier,
-                uri = configOauth.redirectUri
+                uri = configOauthLogic.redirectUri
             ).collect {
                 when (it) {
                     is GrandNewAccessTokenRepositoryResponse.Failed -> {
@@ -254,14 +205,14 @@ class LoginInteractorImpl(
                             }
 
                             else -> {
-                                emit(GrandNewAccessTokenPartialState.Success(response.toUserAuthData()))
+                                emit(GrandNewAccessTokenPartialState.Success(response.toModel()))
                             }
                         }
                     }
                 }
             }
         }.safeAsync {
-            logger.e { "(grandNewAccessToken) error: ${it.message.orEmpty()}" }
+            appLogger.e(loggerTag) { "(grandNewAccessToken) error: ${it.message.orEmpty()}" }
             when (it) {
                 is IOException -> GrandNewAccessTokenPartialState.Failed(
                     errorMessage = resourceProvider.getNoInternetConnectionMessage()
@@ -277,21 +228,21 @@ class LoginInteractorImpl(
 
     override suspend fun refreshAccessToken(): Flow<RefreshAccessTokenPartialState> = flow {
         val genericErrorMessage = resourceProvider.getGenericErrorMessage()
-        val clientId = configOauth.clientId
-        val refreshToken = authController.getRefreshToken()
+        val clientId = configOauthLogic.clientId
+        val refreshToken = userSessionRepository.getRefreshToken()
 
         if (refreshToken.isNullOrBlank()) {
             // Remove stored credentials.
-            authController.removeUserCredentials()
+            removeUserCredentialsUseCase()
             emit(RefreshAccessTokenPartialState.Failed(errorMessage = genericErrorMessage))
             return@flow
         }
 
-        refreshTokenRepository.refreshAccessToken(clientId, refreshToken).collect {
+        refreshTokenRepository.refreshAccessToken(clientId, refreshToken).let {
             when (it) {
                 is TokenRefreshRepositoryResult.Failed -> {
                     // Remove stored credentials.
-                    authController.removeUserCredentials()
+                    removeUserCredentialsUseCase()
                     emit(
                         RefreshAccessTokenPartialState.Failed(
                             errorMessage = genericErrorMessage
@@ -303,7 +254,7 @@ class LoginInteractorImpl(
                     when (val response = it.responseToken) {
                         null -> {
                             // Remove stored credentials.
-                            authController.removeUserCredentials()
+                            removeUserCredentialsUseCase()
                             emit(
                                 RefreshAccessTokenPartialState.Failed(
                                     errorMessage = genericErrorMessage
@@ -313,7 +264,7 @@ class LoginInteractorImpl(
 
                         else -> {
                             // Save token info to device.
-                            authController.setData(response.toUserAuthData())
+                            userSessionRepository.setAuthenticationTokens(response.toModel())
                             emit(RefreshAccessTokenPartialState.Success)
                         }
                     }
@@ -321,7 +272,7 @@ class LoginInteractorImpl(
             }
         }
     }.safeAsync {
-        logger.e { "(refreshAccessToken) error: ${it.message.orEmpty()}" }
+        appLogger.e { "(refreshAccessToken) error: ${it.message.orEmpty()}" }
         when (it) {
             is IOException -> RefreshAccessTokenPartialState.Failed(
                 errorMessage = resourceProvider.getNoInternetConnectionMessage()
@@ -384,12 +335,30 @@ class LoginInteractorImpl(
                 }
             }
         }.safeAsync {
-            logger.e { "(getSensitiveUserData) error: ${it.message}" }
+            appLogger.e { "(getSensitiveUserData) error: ${it.message}" }
             when (it) {
                 is IOException -> GetSensitiveUserDataPartialState.Failed(errorMessage = resourceProvider.getNoInternetConnectionMessage())
                 else -> GetSensitiveUserDataPartialState.Failed(errorMessage = resourceProvider.getGenericErrorMessage())
             }
         }
+
+    private fun createCodeVerifier(): String {
+        val code = ByteArray(64)
+        SecureRandom().apply {
+            nextBytes(code)
+        }
+        return Base64.encodeToString(code, Base64.URL_SAFE or Base64.NO_WRAP or Base64.NO_PADDING)
+    }
+
+    private fun createCodeChallenge(verifier: String): String {
+        val bytes = verifier.toByteArray(Charsets.UTF_8)
+        val messageDigest = MessageDigest.getInstance("SHA-256")
+        messageDigest.update(bytes, 0, bytes.size)
+        return Base64.encodeToString(
+            messageDigest.digest(),
+            Base64.URL_SAFE or Base64.NO_WRAP or Base64.NO_PADDING
+        )
+    }
 }
 
 sealed interface AuthorizePartialState {
@@ -404,7 +373,9 @@ sealed interface PostLoginPartialState {
 }
 
 sealed class GrandNewAccessTokenPartialState {
-    data class Success(val userAuthData: UserAuthData) : GrandNewAccessTokenPartialState()
+    data class Success(val authenticationTokens: AuthenticationTokens) :
+        GrandNewAccessTokenPartialState()
+
     data class Failed(val errorMessage: String) : GrandNewAccessTokenPartialState()
 }
 

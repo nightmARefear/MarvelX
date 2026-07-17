@@ -4,11 +4,10 @@ import androidx.compose.material.ChipDefaults
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.ui.components.IconData
-import com.alexgreece45.marvelx.ui.theme.values.customColors
+import com.alexgreece45.marvelx.ui_theme.theme.values.customColors
 
 /**
  * The `cancel request` chip.
@@ -25,8 +24,8 @@ fun CancelRequestChip(onClick: () -> Unit, isLoading: Boolean) {
         isLoading = isLoading,
         colors = ChipDefaults.chipColors(
             backgroundColor = MaterialTheme.customColors.chipBackgroundColors.cancelRequest,
-            contentColor = Color.White,
-            leadingIconContentColor = Color.White
+            contentColor = MaterialTheme.customColors.white,
+            leadingIconContentColor = MaterialTheme.customColors.white
         ),
         leadingIconData = IconData(
             iconResource = R.drawable.ic_person,

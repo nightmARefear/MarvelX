@@ -1,15 +1,18 @@
 package com.alexgreece45.marvelx.domain.model_api.character
 
-import com.alexgreece45.marvelx.domain.model_api.image.ImageDomain
-import com.alexgreece45.marvelx.domain.model_api.image.toResponse
-import com.alexgreece45.marvelx.network_logic.models_api.character.ComicList
-import com.alexgreece45.marvelx.network_logic.models_api.character.EventList
-import com.alexgreece45.marvelx.network_logic.models_api.character.SeriesList
-import com.alexgreece45.marvelx.network_logic.models_api.character.StoryList
-import com.alexgreece45.marvelx.network_logic.models_api.character.Url
-import com.alexgreece45.marvelx.ui.screens.allCharacters.uiModel.CharacterCardUi
+import com.alexgreece45.marvelx.core.network.model.api.character.CharacterResponse
+import com.alexgreece45.marvelx.core.network.model.api.character.ComicList
+import com.alexgreece45.marvelx.core.network.model.api.character.EventList
+import com.alexgreece45.marvelx.core.network.model.api.character.SeriesList
+import com.alexgreece45.marvelx.core.network.model.api.character.StoryList
+import com.alexgreece45.marvelx.core.network.model.api.character.Url
 import com.alexgreece45.marvelx.database.FavoriteCharacterEntity
+import com.alexgreece45.marvelx.domain.model_api.image.ImageDomain
+import com.alexgreece45.marvelx.domain.model_api.image.toDomain
+import com.alexgreece45.marvelx.domain.model_api.image.toResponse
+import com.alexgreece45.marvelx.ui.screens.allCharacters.uiModel.CharacterCardUi
 import com.alexgreece45.marvelx.util.extensions.toOffsetDateTime
+import com.alexgreece45.marvelx.util.extensions.toSystemLocalDateTime
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -28,8 +31,29 @@ data class CharacterDomain(
     val isFavorite: Boolean = false
 )
 
-fun CharacterDomain.toResponse(): com.alexgreece45.marvelx.network_logic.models_api.character.CharacterResponse {
-    return com.alexgreece45.marvelx.network_logic.models_api.character.CharacterResponse(
+fun CharacterResponse.toCharacterDomain(): CharacterDomain =
+    CharacterDomain(
+        id = this.id,
+        name = this.name,
+        description = this.description,
+        modified = this.modified.toSystemLocalDateTime(),
+        resourceURI = this.resourceURI,
+        urls = this.urls,
+        thumbnail = this.thumbnail.toDomain(
+            containerClassType = this::class,
+            characterName = this.name
+        ),
+        comics = this.comics,
+        stories = this.stories,
+        events = this.events,
+        series = this.series
+    )
+
+fun List<CharacterResponse>.toCharacterDomainList(): List<CharacterDomain> =
+    this.map { characterResponse -> characterResponse.toCharacterDomain() }
+
+fun CharacterDomain.toResponse(): CharacterResponse {
+    return CharacterResponse(
         id = this.id,
         name = this.name,
         description = this.description,
@@ -44,21 +68,22 @@ fun CharacterDomain.toResponse(): com.alexgreece45.marvelx.network_logic.models_
     )
 }
 
-fun List<CharacterDomain>.toResponse(): List<com.alexgreece45.marvelx.network_logic.models_api.character.CharacterResponse> = this.map { character ->
-    com.alexgreece45.marvelx.network_logic.models_api.character.CharacterResponse(
-        id = character.id,
-        name = character.name,
-        description = character.description,
-        modified = character.modified.toOffsetDateTime(),
-        resourceURI = character.resourceURI,
-        urls = character.urls,
-        thumbnail = character.thumbnail.toResponse(),
-        comics = character.comics,
-        stories = character.stories,
-        events = character.events,
-        series = character.series
-    )
-}
+fun List<CharacterDomain>.toResponse(): List<CharacterResponse> =
+    this.map { character ->
+        CharacterResponse(
+            id = character.id,
+            name = character.name,
+            description = character.description,
+            modified = character.modified.toOffsetDateTime(),
+            resourceURI = character.resourceURI,
+            urls = character.urls,
+            thumbnail = character.thumbnail.toResponse(),
+            comics = character.comics,
+            stories = character.stories,
+            events = character.events,
+            series = character.series
+        )
+    }
 
 fun CharacterDomain.toCharacterCardUi(): CharacterCardUi =
     CharacterCardUi(

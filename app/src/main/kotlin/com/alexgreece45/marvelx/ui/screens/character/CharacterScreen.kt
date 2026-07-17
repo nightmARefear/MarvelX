@@ -1,6 +1,5 @@
 package com.alexgreece45.marvelx.ui.screens.character
 
-import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -40,16 +39,18 @@ import coil.request.ImageRequest
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.domain.model_api.character.CharacterDomain
 import com.alexgreece45.marvelx.domain.model_api.comic.ComicDomain
-import com.alexgreece45.marvelx.ui.components.ContentErrorScreen
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.IconData
 import com.alexgreece45.marvelx.ui.components.ItemDescription
+import com.alexgreece45.marvelx.ui.components.LazyItemContentErrorScreen
 import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
 import com.alexgreece45.marvelx.ui.components.ToolbarAction
-import com.alexgreece45.marvelx.ui.theme.values.customColors
-import com.alexgreece45.marvelx.util.constants.ConstantsUi.IMAGE_BORDER_WIDTH
+import com.alexgreece45.marvelx.ui.components.effect.ObserveUiEffect
+import com.alexgreece45.marvelx.ui_theme.theme.values.customColors
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.VSpacer
+import com.alexgreece45.marvelx.util.constants.ConstantsUi.IMAGE_BORDER_WIDTH
+import com.alexgreece45.marvelx.util.extensions.showToast
 import kotlinx.coroutines.flow.Flow
 
 @Composable
@@ -57,39 +58,26 @@ fun CharacterScreen(
     onEventSent: (event: CharacterEvent) -> Unit,
     state: CharacterState,
     effect: Flow<CharacterEffect>,
+    onNavigationEffect: (CharacterEffect.Navigation) -> Unit,
     characterId: Int,
-    popBackStack: () -> Unit,
-    navigateToComicsScreen: (Int) -> Unit,
-    navigateToAllComicsScreen: (Int, String) -> Unit
 ) {
     val context = LocalContext.current
 
-    LaunchedEffect(Unit) {
-        onEventSent(CharacterEvent.InitView(characterId))
+    ObserveUiEffect(effect) { uiEffect ->
+        when (uiEffect) {
+            is CharacterEffect.Navigation -> onNavigationEffect(uiEffect)
+            is CharacterEffect.DisplayError -> {
+                context.showToast(message = uiEffect.errorMessage)
+            }
 
-        effect.collect { effect ->
-            when (effect) {
-                CharacterEffect.PopBackStack -> {
-                    popBackStack()
-                }
-
-                is CharacterEffect.NavigateToComicScreen -> {
-                   navigateToComicsScreen(effect.comicId)
-                }
-
-                is CharacterEffect.NavigateToAllComicsScreen -> {
-                   navigateToAllComicsScreen(effect.characterId, effect.toolbarTitlePrefix)
-                }
-
-                is CharacterEffect.DisplayError -> {
-                    Toast.makeText(context, effect.errorMessage, Toast.LENGTH_SHORT).show()
-                }
-
-                is CharacterEffect.DisplayOnFavoriteClickMessage -> {
-                    Toast.makeText(context, effect.message, Toast.LENGTH_SHORT).show()
-                }
+            is CharacterEffect.DisplayOnFavoriteClickMessage -> {
+                context.showToast(message = uiEffect.message)
             }
         }
+    }
+
+    LaunchedEffect(Unit) {
+        onEventSent(CharacterEvent.InitView(characterId))
     }
 
     ContentScreen(
@@ -134,7 +122,7 @@ fun CharacterScreen(
         ) {
             state.error?.let { error ->
                 item {
-                    ContentErrorScreen(
+                    LazyItemContentErrorScreen(
                         errorMessage = error.errorMessage,
                         onRetryClick = { error.onRetryClick.invoke() })
                 }
@@ -242,7 +230,7 @@ fun <T> LazyRowTemplate(
         )
 
         IconButton(
-            onClick = { onArrowRightClick() }
+            onClick = onArrowRightClick
         ) {
             Icon(
                 painter = painterResource(R.drawable.ic_arrow_right),

@@ -1,19 +1,16 @@
-import org.bouncycastle.jcajce.provider.digest.Blake2b
-import org.bouncycastle.jce.provider.BouncyCastleProvider
-import java.security.Security
-import java.util.Base64
-import java.util.zip.ZipFile
-
 plugins {
     alias(libs.plugins.android.application).apply(false)
     alias(libs.plugins.android.library).apply(false)
     alias(libs.plugins.kotlin.android).apply(false)
     alias(libs.plugins.kotlin.compose).apply(false)
+    alias(libs.plugins.kotlin.serialization).apply(false)
     alias(libs.plugins.google.mapsplatform.secrets).apply(false)
     alias(libs.plugins.ksp).apply(false)
+//    alias(libs.plugins.koin.compiler).apply(false)
     alias(libs.plugins.kotlin.parcelize).apply(false)
     alias(libs.plugins.google.gms.google.services).apply(false)
     alias(libs.plugins.google.firebase.crashlytics).apply(false)
+//    alias(libs.plugins.kotzilla).apply(true)
 }
 
 tasks.register<Delete>("clean") {

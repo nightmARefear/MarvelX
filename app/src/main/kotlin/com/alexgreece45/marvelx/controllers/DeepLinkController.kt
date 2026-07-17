@@ -2,25 +2,25 @@ package com.alexgreece45.marvelx.controllers
 
 import android.net.Uri
 import com.alexgreece45.marvelx.configuration.models.DeepLinkWebUrl
+import com.alexgreece45.marvelx.core.common.logger.AppLogger
 import com.alexgreece45.marvelx.data.model.deepLink.DeepLinkAction
 import com.alexgreece45.marvelx.ui.navigation.NavDeepLinkItem
 import com.alexgreece45.marvelx.ui.navigation.Screen
 import com.google.gson.Gson
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
+import org.koin.core.annotation.Single
 
 interface DeepLinkController {
     /**
      * Handles the given [deepLinkUri] and if it's valid it returns the corresponding [DeepLinkAction].
      * This function is used for handling web redirects.
      */
-    suspend fun handleDeepLinkUri(deepLinkUri: Uri): Flow<HandleDeepLinkActionResult>
+    suspend fun handleDeepLinkUri(deepLinkUri: Uri): HandleDeepLinkActionResult
 
     /**
      * Attempts to match the given [webUrl] to a deep link action and return it. Otherwise, an error
      * is returned. This function is used for handling QR code web urls.
      */
-    suspend fun handleQrCodeWebUrl(webUrl: String): Flow<HandleQrCodeWebUrlResult>
+    suspend fun handleQrCodeWebUrl(webUrl: String): HandleQrCodeWebUrlResult
 
     /**
      * Attempts to extract data of type [dataType] from the given [deepLinkAction]. If the operation
@@ -29,7 +29,7 @@ interface DeepLinkController {
     suspend fun extractDataFromDeepLinkAction(
         deepLinkAction: DeepLinkAction,
         dataType: Any
-    ): Flow<ExtractDataFromDeepLinkAction>
+    ): ExtractDataFromDeepLinkAction
 
     /**
      * Attempts to create a [DeepLinkAction] based on the given arguments.
@@ -40,26 +40,30 @@ interface DeepLinkController {
     ): CreateDeepLinkActionResult
 }
 
+@Single
 class DeepLinkControllerImpl(
     private val appLogger: AppLogger,
     private val gson: Gson,
 ) : DeepLinkController {
-    override suspend fun handleDeepLinkUri(deepLinkUri: Uri) = flow {
-        parseDeepLinkUri(deepLinkUri).collect { parseDeepLinkUriResult ->
-            when (parseDeepLinkUriResult) {
+
+    private val loggerTag = "DeepLinkController"
+
+    override suspend fun handleDeepLinkUri(deepLinkUri: Uri): HandleDeepLinkActionResult {
+        parseDeepLinkUri(deepLinkUri).let { parseDeepLinkUriResult ->
+            return when (parseDeepLinkUriResult) {
                 ParseDeepLinkUriResult.Failed -> {
-                    emit(HandleDeepLinkActionResult.Failed)
+                    HandleDeepLinkActionResult.Failed
                 }
 
                 is ParseDeepLinkUriResult.Success -> {
-                    validateDeepLinkAction(parseDeepLinkUriResult.deepLinkAction).collect {
+                    validateDeepLinkAction(parseDeepLinkUriResult.deepLinkAction).let {
                         when (it) {
                             ValidateDeepLinkActionResult.Failed -> {
-                                emit(HandleDeepLinkActionResult.Failed)
+                                HandleDeepLinkActionResult.Failed
                             }
 
                             is ValidateDeepLinkActionResult.Success -> {
-                                emit(HandleDeepLinkActionResult.Success(it.deepLinkAction))
+                                HandleDeepLinkActionResult.Success(it.deepLinkAction)
                             }
                         }
                     }
@@ -68,16 +72,14 @@ class DeepLinkControllerImpl(
         }
     }
 
-    override suspend fun handleQrCodeWebUrl(webUrl: String): Flow<HandleQrCodeWebUrlResult> = flow {
+    override suspend fun handleQrCodeWebUrl(webUrl: String): HandleQrCodeWebUrlResult {
         if (!webUrl.startsWith(DeepLinkWebUrl.WEB_BASE_URL)) {
-            emit(HandleQrCodeWebUrlResult.InvalidUrl)
-            return@flow
+            return HandleQrCodeWebUrlResult.InvalidUrl
         }
         val deepLinkWebUrl = DeepLinkWebUrl.asList()
             .firstOrNull { webUrl.replace(DeepLinkWebUrl.WEB_BASE_URL, "").startsWith(it.suffix) }
         if (deepLinkWebUrl == null) {
-            emit(HandleQrCodeWebUrlResult.InvalidUrl)
-            return@flow
+            return HandleQrCodeWebUrlResult.InvalidUrl
         }
 
         // *** Construct deep link action. ***
@@ -89,21 +91,21 @@ class DeepLinkControllerImpl(
         // Extract parameter values.
         val parameterValues = isolatedParameters.split("/")
 
+        // TODO: Create util function to handle the full deep link creation flow (validation + creation).
         when (deepLinkWebUrl) {
             DeepLinkWebUrl.ProfileDetails -> {
                 if (parameterValues.isEmpty()) {
-                    emit(HandleQrCodeWebUrlResult.InvalidUrl)
-                    return@flow
+                    return HandleQrCodeWebUrlResult.InvalidUrl
                 }
+
                 val userId = try {
                     Integer.parseInt(parameterValues.last()).toString()
                 } catch (_: NumberFormatException) {
-                    appLogger.e("DeepLinkController") { "(handleQrCodeWebUrl) The parsed userId \"${parameterValues.last()}\" is not of type Int!" }
-                    emit(HandleQrCodeWebUrlResult.InvalidUrl)
-                    return@flow
+                    appLogger.e(loggerTag) { "(handleQrCodeWebUrl) The parsed userId \"${parameterValues.last()}\" is not of type Int!" }
+                    return HandleQrCodeWebUrlResult.InvalidUrl
                 }
 
-                when (
+                return when (
                     val result = createDeepLinkAction(
                         screenRoute = deepLinkWebUrl.screenBaseRoute,
                         deepLinkMap = mapOf(
@@ -111,33 +113,55 @@ class DeepLinkControllerImpl(
                         )
                     )
                 ) {
-                    is CreateDeepLinkActionResult.Success -> emit(
-                        HandleQrCodeWebUrlResult.Success(
-                            result.deepLinkAction
-                        )
+                    is CreateDeepLinkActionResult.Success -> HandleQrCodeWebUrlResult.Success(
+                        result.deepLinkAction
                     )
 
-                    CreateDeepLinkActionResult.Failed -> emit(HandleQrCodeWebUrlResult.ErrorCreatingDeepLinkAction)
+                    CreateDeepLinkActionResult.Failed -> HandleQrCodeWebUrlResult.ErrorCreatingDeepLinkAction
                 }
             }
 
-            DeepLinkWebUrl.ViewListing -> TODO("Not implemented yet.")
+            DeepLinkWebUrl.ListingDetails -> {
+                if (parameterValues.isEmpty()) {
+                    return HandleQrCodeWebUrlResult.InvalidUrl
+                }
+
+                val listingId =
+                    parameterValues.last().filter { character -> character.isLetterOrDigit() }
+                if (listingId.isBlank()) {
+                    return HandleQrCodeWebUrlResult.InvalidUrl
+                }
+
+                return when (
+                    val result = createDeepLinkAction(
+                        screenRoute = deepLinkWebUrl.screenBaseRoute,
+                        deepLinkMap = mapOf(
+                            Pair(NavDeepLinkItem.ListingId, listingId)
+                        )
+                    )
+                ) {
+                    is CreateDeepLinkActionResult.Success -> HandleQrCodeWebUrlResult.Success(
+                        result.deepLinkAction
+                    )
+
+                    CreateDeepLinkActionResult.Failed -> HandleQrCodeWebUrlResult.ErrorCreatingDeepLinkAction
+                }
+            }
         }
     }
 
     override suspend fun extractDataFromDeepLinkAction(
         deepLinkAction: DeepLinkAction,
         dataType: Any
-    ): Flow<ExtractDataFromDeepLinkAction> =
-        flow {
-            try {
-                val json = gson.toJson(deepLinkAction.data)
-                val extractedData = gson.fromJson(json, dataType::class.java)
-                emit(ExtractDataFromDeepLinkAction.Success(extractedData))
-            } catch (_: Exception) {
-                emit(ExtractDataFromDeepLinkAction.Failed)
-            }
+    ): ExtractDataFromDeepLinkAction {
+        return try {
+            val json = gson.toJson(deepLinkAction.data)
+            val extractedData = gson.fromJson(json, dataType::class.java)
+            ExtractDataFromDeepLinkAction.Success(extractedData)
+        } catch (_: Exception) {
+            ExtractDataFromDeepLinkAction.Failed
         }
+    }
 
     override fun createDeepLinkAction(
         screenRoute: String,
@@ -145,12 +169,12 @@ class DeepLinkControllerImpl(
     ): CreateDeepLinkActionResult {
         val screen = Screen.matchDeepLinkScreenRoute(screenRoute)
         if (screen == null) {
-            appLogger.e("DeepLinkController") { "(createDeepLinkAction) The provided $screenRoute does not match a deep-link supported screen." }
+            appLogger.e(loggerTag) { "(createDeepLinkAction) The provided $screenRoute does not match a deep-link supported screen." }
             return (CreateDeepLinkActionResult.Failed)
         }
         val doDeepLinkArgsMatch = Screen.doDeepLinkArgsMatch(screen, deepLinkMap.keys.toList())
         if (!doDeepLinkArgsMatch) {
-            appLogger.e("DeepLinkController") { "(createDeepLinkAction) The provided deep-link arguments do not match the ones of $screenRoute." }
+            appLogger.e(loggerTag) { "(createDeepLinkAction) The provided deep-link arguments do not match the ones of $screenRoute." }
             return (CreateDeepLinkActionResult.Failed)
         }
 
@@ -161,27 +185,25 @@ class DeepLinkControllerImpl(
             }
         }
 
-        return (
-                CreateDeepLinkActionResult.Success(
-                    deepLinkAction = DeepLinkAction(
-                        screenRoute = screenRoute,
-                        data = stringifiedMap
-                    )
-                )
-                )
+        val deepLinkAction = DeepLinkAction(
+            screenRoute = screenRoute,
+            data = stringifiedMap
+        )
+
+        return CreateDeepLinkActionResult.Success(deepLinkAction)
     }
 
     /**
      * Attempts to parse the given [uri], convert it into a [DeepLinkAction] and return it.
      * If this operation fails, then an error is returned.
      */
-    private fun parseDeepLinkUri(uri: Uri): Flow<ParseDeepLinkUriResult> = flow {
-        try {
+    private fun parseDeepLinkUri(uri: Uri): ParseDeepLinkUriResult {
+        return try {
             val deepLinkAction = gson.fromJson(uri.pathSegments[1], DeepLinkAction::class.java)
-            emit(ParseDeepLinkUriResult.Success(deepLinkAction))
+            ParseDeepLinkUriResult.Success(deepLinkAction)
         } catch (e: Exception) {
-            appLogger.e("DeepLinkController") { "(parseDeepLinkUri) An error occurred whilst parsing the received deep link URI:\n ${e.message.orEmpty()}" }
-            emit(ParseDeepLinkUriResult.Failed)
+            appLogger.e(loggerTag) { "(parseDeepLinkUri) An error occurred whilst parsing the received deep link URI:\n ${e.message.orEmpty()}" }
+            ParseDeepLinkUriResult.Failed
         }
     }
 
@@ -189,25 +211,24 @@ class DeepLinkControllerImpl(
      * Validates the given [deepLinkAction] based on whether the screen route matches a deep-link
      * supported screen and the arguments' names are exactly the same.
      */
-    private fun validateDeepLinkAction(deepLinkAction: DeepLinkAction): Flow<ValidateDeepLinkActionResult> =
-        flow {
-            when (val screen = Screen.matchDeepLinkScreenRoute(deepLinkAction.screenRoute)) {
-                null -> {
-                    appLogger.e("DeepLinkController") { "(handleDeepLinkAction) No deep link supported screen name \"${deepLinkAction.screenRoute}\" was found." }
-                    emit(ValidateDeepLinkActionResult.Failed)
-                }
+    private fun validateDeepLinkAction(deepLinkAction: DeepLinkAction): ValidateDeepLinkActionResult {
+        return when (val screen = Screen.matchDeepLinkScreenRoute(deepLinkAction.screenRoute)) {
+            null -> {
+                appLogger.e(loggerTag) { "(handleDeepLinkAction) No deep link supported screen name \"${deepLinkAction.screenRoute}\" was found." }
+                ValidateDeepLinkActionResult.Failed
+            }
 
-                else -> {
-                    // Check if the required data is present.
-                    if (deepLinkAction.data.keys.toList() == screen.deepLinkArgs.map { it.key }) {
-                        emit(ValidateDeepLinkActionResult.Success(deepLinkAction))
-                    } else {
-                        appLogger.e("DeepLinkController") { "(handleDeepLinkAction) Data is missing from the deep link." }
-                        emit(ValidateDeepLinkActionResult.Failed)
-                    }
+            else -> {
+                // Check if the required data is present.
+                if (deepLinkAction.data.keys.toList() == screen.deepLinkArgs.map { it.key }) {
+                    ValidateDeepLinkActionResult.Success(deepLinkAction)
+                } else {
+                    appLogger.e(loggerTag) { "(handleDeepLinkAction) Data is missing from the deep link." }
+                    ValidateDeepLinkActionResult.Failed
                 }
             }
         }
+    }
 }
 
 private sealed interface ParseDeepLinkUriResult {

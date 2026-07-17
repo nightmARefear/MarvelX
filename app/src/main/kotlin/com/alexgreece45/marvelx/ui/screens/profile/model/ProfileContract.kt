@@ -1,19 +1,23 @@
 package com.alexgreece45.marvelx.ui.screens.profile.model
 
 import android.net.Uri
+import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarNavigationPayload
+import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarStateData
+import com.alexgreece45.marvelx.data.model.deepLink.DeepLinkAction
 import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.BasicProfileDetailsDomain
-import com.alexgreece45.marvelx.domain.model_generic.AttachedFileContentData
-import com.alexgreece45.marvelx.domain.model_generic.ReadFileContentData
+import com.alexgreece45.marvelx.model.model.generic.AttachedFileContentData
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
 import com.alexgreece45.marvelx.ui.components.model.BottomSheetContentItem
 import com.alexgreece45.marvelx.ui.components.sections.model.SectionHeaderData
-import com.alexgreece45.marvelx.data.model.deepLink.DeepLinkAction
 
 sealed interface ProfileContract {
     sealed interface Event : BaseEvent {
         data class Init(val deepLinkAction: DeepLinkAction?) : Event
+        data class OnSnackbarNavigationPayloadReceived(val snackbarNavigationPayload: SnackbarNavigationPayload) :
+            Event
+
         data object OnSettingsIconButtonClicked : Event
         data object OnSystemBack : Event
         data object OnSeeYourProfileClicked : Event
@@ -37,7 +41,8 @@ sealed interface ProfileContract {
                 /**
                  * Triggered when an image is selected in the `photo picker`.
                  */
-                data class OnSuccess(val imageFileContentData: AttachedFileContentData?) : ImageSelectionEvent
+                data class OnSuccess(val imageFileContentData: AttachedFileContentData?) :
+                    ImageSelectionEvent
 
                 /**
                  * Triggered when no image was selected.
@@ -54,12 +59,6 @@ sealed interface ProfileContract {
 
                 data class OnFailure(val errorMessage: String?) : ImageCropEvent
             }
-
-            /**
-             * Triggered when the cropped image's content is read.
-             */
-            data class OnCroppedImageFileContentRead(val croppedImageFileReadContentData: ReadFileContentData?) :
-                ProfileImage
 
             /**
              * Events for updating the current profile image.
@@ -114,6 +113,7 @@ sealed interface ProfileContract {
 
         val error: ProfileScreenErrorView? = null,
         val errorAlertDialog: ProfileErrorAlertDialog? = null,
+        val snackbarStateData: SnackbarStateData? = null,
     ) : BaseState
 
     sealed class Effect : BaseEffect {
@@ -125,8 +125,12 @@ sealed interface ProfileContract {
         sealed class Navigation : Effect() {
             data object NavigateUp : Navigation()
             data object NavigateToSettingsScreen : Navigation()
-            data object NavigateToFriendsScreen : Navigation()
+
             data class NavigateToQrCodeScreen(val previousScreenRoute: String) : Navigation()
+            data object NavigateToFriendsScreen : Navigation()
+            data object NavigateToMyListingsScreen : Navigation()
+            data object NavigateToOrdersScreen : Navigation()
+
             data class NavigateToProfileImageScreen(val profileImageUrl: String) : Navigation()
             data class NavigateToProfileDetailsScreen(val userId: String) : Navigation()
         }
@@ -146,13 +150,9 @@ sealed interface ProfileContract {
             val imageUri: Uri
         ) : Effect()
 
-        data class ReadCroppedImageFileContent(
-            val fileUri: Uri,
-            val fileName: String
-        ) : Effect()
-
         data class OpenDeepLinkAction(val deepLinkAction: DeepLinkAction) : Effect()
 
-        data class ShowToastMessage(val message: String) : Effect()
+        data class ShowSnackbar(val snackbarStateData: SnackbarStateData) : Effect()
+        data object HideSnackbar : Effect()
     }
 }

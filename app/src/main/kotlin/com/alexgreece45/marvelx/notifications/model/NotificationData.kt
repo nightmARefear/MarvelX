@@ -1,6 +1,7 @@
 package com.alexgreece45.marvelx.notifications.model
 
 import com.alexgreece45.marvelx.data.model.deepLink.DeepLinkAction
+import com.alexgreece45.marvelx.model.model.user.UserId
 import com.google.gson.Gson
 
 /**
@@ -19,7 +20,7 @@ data class NotificationData(
     val channelType: NotificationChannelType,
     val title: String,
     val body: String,
-    val userId: String,
+    val userId: UserId,
     val imageBytes: ByteArray? = null,
     val deepLinkAction: DeepLinkAction
 ) {

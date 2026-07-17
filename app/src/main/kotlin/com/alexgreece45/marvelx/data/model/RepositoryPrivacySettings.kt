@@ -1,6 +1,6 @@
 package com.alexgreece45.marvelx.data.model
 
-import com.alexgreece45.marvelx.network_logic.models_api.user.privacySettings.ResponsePrivacySettings
+import com.alexgreece45.marvelx.core.network.model.api.user.privacySettings.ResponsePrivacySettings
 
 data class RepositoryPrivacySettings(
     val isFriendsListVisible: Boolean,
@@ -10,7 +10,7 @@ data class RepositoryPrivacySettings(
     val isEmailVisible: Boolean
 )
 
-fun ResponsePrivacySettings.toRepositoryPrivacySettings(): RepositoryPrivacySettings =
+fun com.alexgreece45.marvelx.core.network.model.api.user.privacySettings.ResponsePrivacySettings.toRepositoryPrivacySettings(): RepositoryPrivacySettings =
     RepositoryPrivacySettings(
         isFriendsListVisible = this.isFriendsListVisible,
         isListingsListVisible = this.isListingsListVisible,

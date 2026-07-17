@@ -6,7 +6,11 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.core.graphics.createBitmap
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarStateData
+import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarType
 import com.alexgreece45.marvelx.configuration.models.DeepLinkWebUrl
+import com.alexgreece45.marvelx.core.common.dispatchers.model.IoDispatcher
+import com.alexgreece45.marvelx.core.common.logger.AppLogger
 import com.alexgreece45.marvelx.data.repository.NotificationRepository
 import com.alexgreece45.marvelx.data.repository.user.FriendRepository
 import com.alexgreece45.marvelx.domain.interactors.GetProfileDetailsPartialState
@@ -19,6 +23,7 @@ import com.alexgreece45.marvelx.domain.model_api.user.friendRequest.DeleteFriend
 import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.ProfileDetailsDomain
 import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.ProfileDetailsErrorType
 import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.RelationshipStatusDomain
+import com.alexgreece45.marvelx.model.model.user.UserId
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
@@ -27,13 +32,12 @@ import com.alexgreece45.marvelx.ui.components.AlertDialogButton
 import com.alexgreece45.marvelx.ui.components.model.BottomSheetContentItem
 import com.alexgreece45.marvelx.ui.components.model.ErrorButtonLayout
 import com.alexgreece45.marvelx.ui.components.model.ErrorButtonType
-import com.alexgreece45.marvelx.ui.components.model.SnackbarStateData
 import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.model.ProfileDetailsAlertDialogErrorData
 import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.model.ProfileDetailsBottomSheetType
 import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.model.ProfileDetailsFullScreenErrorView
 import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.model.ProfileDetailsNestedErrorView
 import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.stats.model.ProfileDetailsStatsTab
-import com.alexgreece45.marvelx.ui.theme.values.getErrorColor
+import com.alexgreece45.marvelx.ui_theme.theme.values.getErrorColor
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.constants.ConstantsUi
 import com.alexgreece45.marvelx.util.extensions.toUrlEncoding
@@ -41,6 +45,10 @@ import com.google.zxing.BarcodeFormat
 import com.google.zxing.MultiFormatWriter
 import com.google.zxing.WriterException
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import org.koin.android.annotation.KoinViewModel
+import java.util.UUID
+import kotlin.coroutines.CoroutineContext
 
 sealed interface ProfileDetailsContract {
     sealed interface Event : BaseEvent {
@@ -99,7 +107,7 @@ sealed interface ProfileDetailsContract {
         // Data.
         val isGenderDropDownExpanded: Boolean = false,
         val profileDetails: ProfileDetailsDomain? = null,
-        val userId: String = "",
+        val userId: UserId = UserId.EMPTY,
         val isGenderHidden: Boolean = false,
         val isEmailHidden: Boolean = false,
 
@@ -125,6 +133,9 @@ sealed interface ProfileDetailsContract {
          */
         data object HideBottomSheet : Effect
 
+        data class ShowSnackbar(val snackbarStateData: SnackbarStateData) : Effect
+        data object HideSnackbar : Effect
+
         data class ShareProfileUrl(val url: String, val intentTitle: String) : Effect
 
         data class SetClipboardText(val toastMessage: String, val text: String) : Effect
@@ -146,6 +157,7 @@ sealed interface ProfileDetailsContract {
     }
 }
 
+@KoinViewModel
 class ProfileDetailsViewModel(
     private val userInteractor: UserInteractor,
     private val resourceProvider: ResourceProvider,
@@ -153,6 +165,8 @@ class ProfileDetailsViewModel(
     private val friendRequestInteractor: FriendRequestInteractor,
     private val blockedUserInteractor: BlockedUserInteractor,
     private val notificationRepository: NotificationRepository,
+    private val appLogger: AppLogger,
+    @IoDispatcher private val ioDispatcher: CoroutineContext,
 ) : BaseViewModel<ProfileDetailsContract.Event, ProfileDetailsContract.State, ProfileDetailsContract.Effect>() {
 
     override fun setInitialState(): ProfileDetailsContract.State =
@@ -213,18 +227,21 @@ class ProfileDetailsViewModel(
             }
 
             ProfileDetailsContract.Event.MoreActions.OnShowQrCodeClicked -> {
-                when (val qrBitmap =
-                    generateQRCodeBitmap(DeepLinkWebUrl.ProfileDetails.webUrl + currentState.userId)) {
-                    null -> {
-                        showGenericAlertDialogError(resourceProvider.getString(R.string.profile_details_screen_error_generating_qr_code))
-                    }
+                viewModelScope.launch {
+                    val qrBitmap =
+                        withContext(ioDispatcher) { generateQRCodeBitmap(DeepLinkWebUrl.ProfileDetails.webUrl + currentState.userId) }
+                    when (qrBitmap) {
+                        null -> {
+                            showGenericAlertDialogError(resourceProvider.getString(R.string.profile_details_screen_error_generating_qr_code))
+                        }
 
-                    else -> {
-                        showBottomSheet(
-                            bottomSheetType = ProfileDetailsBottomSheetType.QrCode(
-                                qrBitmap = qrBitmap
+                        else -> {
+                            showBottomSheet(
+                                bottomSheetType = ProfileDetailsBottomSheetType.QrCode(
+                                    qrBitmap = qrBitmap
+                                )
                             )
-                        )
+                        }
                     }
                 }
             }
@@ -320,7 +337,7 @@ class ProfileDetailsViewModel(
                                         }
 
                                         if (!wasSent) {
-                                            showSnackbar(resourceProvider.getString(R.string.profile_details_screen_error_sending_friend_request))
+                                            showErroneousSnackbar(resourceProvider.getString(R.string.profile_details_screen_error_sending_friend_request))
                                         }
                                     }
                             }
@@ -395,6 +412,8 @@ class ProfileDetailsViewModel(
      * Loads the profile details by user ID.
      */
     private fun loadProfileDetails(event: ProfileDetailsContract.Event.Init) {
+        val userId = UserId(event.userId)
+
         setState {
             copy(
                 isLoading = true,
@@ -402,7 +421,7 @@ class ProfileDetailsViewModel(
             )
         }
         viewModelScope.launch {
-            userInteractor.getProfileDetails(event.userId).collect {
+            userInteractor.getProfileDetails(userId).collect {
                 when (it) {
                     is GetProfileDetailsPartialState.Success -> {
                         initializeMoreActionItems(it.profileDetailsDomain.isDifferentUser)
@@ -411,7 +430,7 @@ class ProfileDetailsViewModel(
                                 isLoading = false,
                                 fullScreenErrorView = null,
                                 profileDetails = it.profileDetailsDomain,
-                                userId = event.userId,
+                                userId = userId,
                                 isGenderHidden = it.profileDetailsDomain.isDifferentUser && it.profileDetailsDomain.privacySettings != null && !it.profileDetailsDomain.privacySettings.isGenderVisible,
                                 isEmailHidden = it.profileDetailsDomain.isDifferentUser && it.profileDetailsDomain.privacySettings != null && !it.profileDetailsDomain.privacySettings.isEmailVisible,
                             )
@@ -528,15 +547,15 @@ class ProfileDetailsViewModel(
             BottomSheetContentItem(
                 title = resourceProvider.getString(R.string.profile_details_screen_label_more_actions_block),
                 titleColor = getErrorColor(),
-                onClick = ProfileDetailsContract.Event.MoreActions.OnBlockClicked
+                onClickEvent = ProfileDetailsContract.Event.MoreActions.OnBlockClicked
             ),
             BottomSheetContentItem(
                 title = resourceProvider.getString(R.string.profile_details_screen_label_more_actions_share_profile),
-                onClick = ProfileDetailsContract.Event.MoreActions.OnShareProfileClicked
+                onClickEvent = ProfileDetailsContract.Event.MoreActions.OnShareProfileClicked
             ),
             BottomSheetContentItem(
                 title = resourceProvider.getString(R.string.profile_details_screen_label_more_actions_show_qr_code),
-                onClick = ProfileDetailsContract.Event.MoreActions.OnShowQrCodeClicked
+                onClickEvent = ProfileDetailsContract.Event.MoreActions.OnShowQrCodeClicked
             ),
         )
         setState {
@@ -562,7 +581,8 @@ class ProfileDetailsViewModel(
         val whiteArgb = Color.White.toArgb()
 
         return try {
-            val bitMatrix = MultiFormatWriter().encode(content, BarcodeFormat.QR_CODE, size, size)
+            val bitMatrix =
+                MultiFormatWriter().encode(content, BarcodeFormat.QR_CODE, size, size)
             val width = bitMatrix.width
             val height = bitMatrix.height
             val pixels = IntArray(width * height)
@@ -597,7 +617,11 @@ class ProfileDetailsViewModel(
             blockedUserInteractor.blockUser(currentState.userId).collect {
                 when (it) {
                     is BlockUserPartialState.Success -> {
-                        showSnackbar(message = resourceProvider.getString(R.string.profile_details_screen_label_success_block_user))
+                        // TODO: Use global snackbar.
+                        showSnackbar(
+                            message = resourceProvider.getString(R.string.profile_details_screen_label_success_block_user),
+                            type = SnackbarType.SUCCESS
+                        )
                         setEffect {
                             ProfileDetailsContract.Effect.Navigation.PopBackStack
                         }
@@ -611,7 +635,7 @@ class ProfileDetailsViewModel(
                                         isLoading = false
                                     )
                                 }
-                                showSnackbar(message = resourceProvider.getString(R.string.profile_details_screen_error_blocking_user_generic))
+                                showErroneousSnackbar(message = resourceProvider.getString(R.string.profile_details_screen_error_blocking_user_generic))
                             }
 
                             UserBlockResultType.SameUser -> {
@@ -620,7 +644,10 @@ class ProfileDetailsViewModel(
                                         isLoading = false
                                     )
                                 }
-                                showSnackbar(message = resourceProvider.getString(R.string.profile_details_screen_error_blocking_user_same_user))
+                                showSnackbar(
+                                    message = resourceProvider.getString(R.string.profile_details_screen_error_blocking_user_same_user),
+                                    type = SnackbarType.INFO
+                                )
                             }
                         }
                     }
@@ -631,7 +658,7 @@ class ProfileDetailsViewModel(
                                 isLoading = false
                             )
                         }
-                        showSnackbar(message = resourceProvider.getString(R.string.profile_details_screen_error_blocking_user_generic))
+                        showErroneousSnackbar(message = resourceProvider.getString(R.string.profile_details_screen_error_blocking_user_generic))
                     }
                 }
             }
@@ -672,7 +699,7 @@ class ProfileDetailsViewModel(
                                 isRelationshipStatusChipLoading = false
                             )
                         }
-                        showSnackbar(message = resourceProvider.getString(R.string.profile_details_screen_error_deleting_friend_request))
+                        showErroneousSnackbar(message = resourceProvider.getString(R.string.profile_details_screen_error_deleting_friend_request))
                     }
                 }
             }
@@ -714,7 +741,7 @@ class ProfileDetailsViewModel(
                                     isRelationshipStatusChipLoading = false
                                 )
                             }
-                            showSnackbar(message = resourceProvider.getString(R.string.profile_details_screen_error_accepting_friend_request))
+                            showErroneousSnackbar(resourceProvider.getString(R.string.profile_details_screen_error_accepting_friend_request))
                         }
                     }
                 }
@@ -755,7 +782,7 @@ class ProfileDetailsViewModel(
                                 isRelationshipStatusChipLoading = false
                             )
                         }
-                        showSnackbar(message = resourceProvider.getString(R.string.profile_details_screen_error_deleting_friend))
+                        showErroneousSnackbar(message = resourceProvider.getString(R.string.profile_details_screen_error_deleting_friend))
                     }
                 }
             }
@@ -837,11 +864,43 @@ class ProfileDetailsViewModel(
     /**
      * Shows the snackbar with the given [message].
      */
-    private fun showSnackbar(message: String) {
+    private fun showSnackbar(message: String, type: SnackbarType) {
+        val newSnackbarUuid = UUID.randomUUID()
+        val snackbarStateData = SnackbarStateData(
+            uuid = newSnackbarUuid,
+            message = message,
+            type = type,
+            onDismiss = {
+                if (currentState.snackbarStateData?.uuid == newSnackbarUuid) {
+                    setState {
+                        copy(
+                            snackbarStateData = null
+                        )
+                    }
+                }
+            }
+        )
+
         setState {
             copy(
-                snackbarStateData = SnackbarStateData(message)
+                snackbarStateData = snackbarStateData
             )
+        }
+        setEffect {
+            ProfileDetailsContract.Effect.ShowSnackbar(snackbarStateData)
+        }
+    }
+
+    private fun showErroneousSnackbar(message: String) {
+        showSnackbar(
+            message = message,
+            type = SnackbarType.ERROR
+        )
+    }
+
+    private fun hideSnackbar() {
+        setEffect {
+            ProfileDetailsContract.Effect.HideSnackbar
         }
     }
 
@@ -852,7 +911,7 @@ class ProfileDetailsViewModel(
         setEffect {
             ProfileDetailsContract.Effect.Navigation.NavigateToProfileDetailsStatsScreen(
                 fullName = currentState.profileDetails?.basicProfileDetails?.fullName.orEmpty(),
-                userId = currentState.userId,
+                userId = currentState.userId.value,
                 tab = tab
             )
         }

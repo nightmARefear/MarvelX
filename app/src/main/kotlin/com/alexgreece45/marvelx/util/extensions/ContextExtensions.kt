@@ -6,6 +6,7 @@ import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.net.Uri
 import android.provider.Settings
+import android.widget.Toast
 import com.alexgreece45.marvelx.data.model.deepLink.DeepLinkAction
 import com.alexgreece45.marvelx.ui.screens.mainActivity.MainActivity
 
@@ -61,7 +62,7 @@ fun Context.getAndRemovePendingDeepLinkAction(): DeepLinkAction? {
 /**
  * Attempts to retrieve [MainActivity] from the [Context]. If it fails to do so, `null` is returned.
  */
-fun Context.getActivity(): MainActivity? = (this as? MainActivity)
+internal fun Context.getActivity(): MainActivity? = (this as? MainActivity)
 
 /**
  * Closes the [MainActivity].
@@ -78,4 +79,39 @@ fun Context.openAppSettings() {
         data = Uri.fromParts("package", packageName, null)
     }
     startActivity(intent)
+}
+
+/**
+ * Shares a specific content's link.
+ */
+fun Context.shareContentUrl(url: String, title: String) {
+    val intent = Intent().apply {
+        action = Intent.ACTION_SEND
+        type = "text/plain"
+
+        putExtra(Intent.EXTRA_TEXT, url)
+        putExtra(Intent.EXTRA_TITLE, title)
+    }
+
+    val chooser = Intent.createChooser(intent, title).apply {
+        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    }
+
+    if (intent.resolveActivity(packageManager) != null) {
+        startActivity(chooser)
+    }
+}
+
+/**
+ * shows a toast message.
+ *
+ * @param message The message to display.
+ * @param shortDuration Whether this message should be shown for a short period. Defaults to `true`.
+ */
+fun Context.showToast(message: String, shortDuration: Boolean = true) {
+    Toast.makeText(
+        this,
+        message,
+        if (shortDuration) Toast.LENGTH_SHORT else Toast.LENGTH_LONG
+    ).show()
 }

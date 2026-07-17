@@ -7,6 +7,7 @@ import com.alexgreece45.marvelx.mvi.BaseState
 import com.alexgreece45.marvelx.mvi.BaseViewModel
 import com.alexgreece45.marvelx.ui.components.model.ErrorButtonLayout
 import com.alexgreece45.marvelx.util.ResourceProvider
+import org.koin.android.annotation.KoinViewModel
 
 /**
  * The error codes of this screen.
@@ -54,6 +55,7 @@ sealed interface ForgotPasswordValidateEmailEffect : BaseEffect {
     }
 }
 
+@KoinViewModel
 class ForgotPasswordValidateEmailViewModel(
     private val resourceProvider: ResourceProvider
 ) :

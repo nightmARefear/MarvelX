@@ -137,7 +137,7 @@ fun ForgotPasswordScreen(
  */
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
-fun ForgotPasswordScreenContent(
+private fun ForgotPasswordScreenContent(
     onEventSent: (ForgotPasswordEvent) -> Unit,
     state: ForgotPasswordState
 ) {

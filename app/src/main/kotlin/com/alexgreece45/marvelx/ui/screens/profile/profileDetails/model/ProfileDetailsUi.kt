@@ -4,7 +4,7 @@ import androidx.annotation.StringRes
 import androidx.compose.ui.text.input.KeyboardType
 import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.BasicProfileDetailsDomain
 import com.alexgreece45.marvelx.domain.model_generic.ReloadableImageUrlData
-import com.alexgreece45.marvelx.network_logic.models_api.user.Gender
+import com.alexgreece45.marvelx.ui.model.Gender
 import com.alexgreece45.marvelx.ui.screens.profile.editProfileDetails.EditProfileDetailsContract
 import com.alexgreece45.marvelx.util.FormValidationResult
 

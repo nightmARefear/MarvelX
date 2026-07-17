@@ -2,11 +2,9 @@ package com.alexgreece45.marvelx.ui.screens.signup
 
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.controllers.PrefKeys
-import com.alexgreece45.marvelx.controllers.RefreshTokenController
-import com.alexgreece45.marvelx.controllers.WebsocketController
-import com.alexgreece45.marvelx.data.repository.UserRepository
-import com.alexgreece45.marvelx.dispatchers.DefaultDispatcher
+import com.alexgreece45.marvelx.core.common.dispatchers.model.DefaultDispatcher
+import com.alexgreece45.marvelx.core.network.model.api.user.signup.RequestUserSignup
+import com.alexgreece45.marvelx.data.repository.AutoLogoutRepository
 import com.alexgreece45.marvelx.domain.interactors.AuthorizePartialState
 import com.alexgreece45.marvelx.domain.interactors.GrandNewAccessTokenPartialState
 import com.alexgreece45.marvelx.domain.interactors.LoginInteractor
@@ -19,9 +17,8 @@ import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
 import com.alexgreece45.marvelx.mvi.BaseViewModel
-import com.alexgreece45.marvelx.network_logic.models_api.user.Gender
-import com.alexgreece45.marvelx.network_logic.models_api.user.signup.RequestUserSignup
 import com.alexgreece45.marvelx.ui.helper.FieldValidationRules
+import com.alexgreece45.marvelx.ui.model.Gender
 import com.alexgreece45.marvelx.util.Form
 import com.alexgreece45.marvelx.util.FormValidator
 import com.alexgreece45.marvelx.util.FormsValidationResult
@@ -29,9 +26,11 @@ import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.SecurityUtil
 import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.launch
+import org.koin.android.annotation.KoinViewModel
 import kotlin.coroutines.CoroutineContext
 
 sealed class SignupEvent : BaseEvent {
+    data object OnBack : SignupEvent()
     sealed class GenderDropdownMenu : SignupEvent() {
         data object OnClick : GenderDropdownMenu()
         data object OnDismiss : GenderDropdownMenu()
@@ -105,6 +104,7 @@ data class SignupState(
 
 sealed class SignupEffect : BaseEffect {
     sealed class Navigation : SignupEffect() {
+        data object GoBack : Navigation()
         data object NavigateToAllCharactersScreen : Navigation()
         data class NavigateToOtpScreen(
             val userId: String,
@@ -121,17 +121,15 @@ sealed class SignupEffect : BaseEffect {
     data object OnDoneClick : SignupEffect()
 }
 
-class SignupViewModel(
+@KoinViewModel
+internal class SignupViewModel(
     private val resourceProvider: ResourceProvider,
     private val formValidator: FormValidator,
     private val registerInteractor: RegisterInteractor,
-    private val prefKeys: PrefKeys,
-    private val websocketController: WebsocketController,
-    private val refreshTokenController: RefreshTokenController,
     private val loginInteractor: LoginInteractor,
     private val fieldValidationRules: FieldValidationRules,
     @DefaultDispatcher private val defaultDispatcher: CoroutineContext,
-    private val userRepository: UserRepository,
+    private val autoLogoutRepository: AutoLogoutRepository
 ) : BaseViewModel<SignupEvent, SignupState, SignupEffect>() {
 
     override fun setInitialState(): SignupState =
@@ -157,6 +155,10 @@ class SignupViewModel(
 
     override fun handleEvents(event: SignupEvent) {
         when (event) {
+            SignupEvent.OnBack -> {
+                setEffect { SignupEffect.Navigation.GoBack }
+            }
+
             is SignupEvent.FieldValueChange.FirstName -> {
                 setState {
                     copy(
@@ -478,18 +480,12 @@ class SignupViewModel(
 
                     is GrandNewAccessTokenPartialState.Success -> {
                         // Retrieve sign data.
-                        loginInteractor.postLogin(it.userAuthData.accessToken)
+                        loginInteractor.postLogin(it.authenticationTokens.accessTokenAndType)
                             .collect { postLoginPartialState ->
                                 when (postLoginPartialState) {
                                     PostLoginPartialState.Success -> {
                                         // ONLY for signup, set the remember user session to `true` by default.
-                                        prefKeys.setRememberUserSession(shouldRemember = true)
-
-                                        // Start token worker.
-                                        refreshTokenController.startWorker()
-
-                                        // Initiate websocket connection.
-                                        websocketController.init()
+                                        autoLogoutRepository.setRememberUserSession(true)
 
                                         setEffect {
                                             SignupEffect.Navigation.NavigateToAllCharactersScreen

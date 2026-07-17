@@ -1,19 +1,20 @@
 package com.alexgreece45.marvelx.data.repository
 
-import com.alexgreece45.marvelx.network_logic.clients.ApiClient
-import com.alexgreece45.marvelx.network_logic.models_api.forgotPassword.email.RequestForgotPasswordOtpBlockedEmail
-import com.alexgreece45.marvelx.network_logic.models_api.forgotPassword.email.RequestForgotPasswordSendOtp
-import com.alexgreece45.marvelx.network_logic.models_api.forgotPassword.email.RequestForgotPasswordValidateOtp
-import com.alexgreece45.marvelx.network_logic.models_api.forgotPassword.email.ResponseForgotPasswordOtpBlockedEmail
-import com.alexgreece45.marvelx.network_logic.models_api.forgotPassword.email.ResponseForgotPasswordSendOtp
-import com.alexgreece45.marvelx.network_logic.models_api.forgotPassword.email.ResponseForgotPasswordValidateOtp
-import com.alexgreece45.marvelx.network_logic.models_api.forgotPassword.phoneNumber.RequestForgotPasswordOtpBlockedPhoneNumber
-import com.alexgreece45.marvelx.network_logic.models_api.forgotPassword.phoneNumber.ResponseForgotPasswordOtpBlockedPhoneNumber
-import com.alexgreece45.marvelx.network_logic.models_api.otp.OtpResponseError
+import com.alexgreece45.marvelx.core.network.clients.ApiClient
+import com.alexgreece45.marvelx.core.network.model.api.forgotPassword.email.RequestForgotPasswordOtpBlockedEmail
+import com.alexgreece45.marvelx.core.network.model.api.forgotPassword.email.RequestForgotPasswordSendOtp
+import com.alexgreece45.marvelx.core.network.model.api.forgotPassword.email.RequestForgotPasswordValidateOtp
+import com.alexgreece45.marvelx.core.network.model.api.forgotPassword.email.ResponseForgotPasswordOtpBlockedEmail
+import com.alexgreece45.marvelx.core.network.model.api.forgotPassword.email.ResponseForgotPasswordSendOtp
+import com.alexgreece45.marvelx.core.network.model.api.forgotPassword.email.ResponseForgotPasswordValidateOtp
+import com.alexgreece45.marvelx.core.network.model.api.forgotPassword.phoneNumber.RequestForgotPasswordOtpBlockedPhoneNumber
+import com.alexgreece45.marvelx.core.network.model.api.forgotPassword.phoneNumber.ResponseForgotPasswordOtpBlockedPhoneNumber
+import com.alexgreece45.marvelx.core.network.model.api.otp.OtpResponseError
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.google.gson.Gson
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import org.koin.core.annotation.Single
 
 interface ForgotPasswordRepository {
     /**
@@ -52,10 +53,12 @@ interface ForgotPasswordRepository {
     ): Flow<ForgotPasswordRepositoryValidateOtpFromEmailResponse>
 }
 
+@Single
 class ForgotPasswordRepositoryImpl(
     private val apiClient: ApiClient,
     private val resourceProvider: ResourceProvider
 ) : ForgotPasswordRepository {
+
     override suspend fun sendOtp(
         data: String,
         verificationStep: String
@@ -86,7 +89,9 @@ class ForgotPasswordRepositoryImpl(
     override suspend fun isOtpBlockedEmail(requestId: String): Flow<ForgotPasswordRepositoryIsOtpBlockedEmailResponse> =
         flow {
             apiClient.forgotPasswordIsOtpBlockedEmail(
-                body = RequestForgotPasswordOtpBlockedEmail(requestId = requestId)
+                body = RequestForgotPasswordOtpBlockedEmail(
+                    requestId = requestId
+                )
             ).let { response ->
                 if (response.isSuccessful) {
                     emit(
@@ -107,7 +112,9 @@ class ForgotPasswordRepositoryImpl(
     override suspend fun isOtpBlockedPhoneNumber(requestId: String): Flow<ForgotPasswordRepositoryIsOtpBlockedPhoneNumberResponse> =
         flow {
             apiClient.forgotPasswordIsOtpBlockedPhoneNumber(
-                body = RequestForgotPasswordOtpBlockedPhoneNumber(requestId = requestId)
+                body = RequestForgotPasswordOtpBlockedPhoneNumber(
+                    requestId = requestId
+                )
             ).let { response ->
                 if (response.isSuccessful) {
                     emit(

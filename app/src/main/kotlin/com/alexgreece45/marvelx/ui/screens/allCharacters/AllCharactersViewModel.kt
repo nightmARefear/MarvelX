@@ -21,6 +21,7 @@ import com.alexgreece45.marvelx.ui.screens.allCharacters.uiModel.CharacterCardUi
 import com.alexgreece45.marvelx.ui.screens.allCharacters.uiModel.toFavoriteCharacterEntity
 import com.alexgreece45.marvelx.util.ResourceProvider
 import kotlinx.coroutines.launch
+import org.koin.android.annotation.KoinViewModel
 
 sealed interface AllCharactersEvent : BaseEvent {
     data class Init(val deepLinkAction: DeepLinkAction?) : AllCharactersEvent
@@ -98,6 +99,7 @@ data class AllCharactersState(
     val isFirstLaunch: Boolean = true
 ) : BaseState
 
+@KoinViewModel
 class AllCharactersViewModel(
     private val interactor: CharacterInteractor,
     private val resourceProvider: ResourceProvider,
@@ -175,36 +177,23 @@ class AllCharactersViewModel(
                 setEffect {
                     AllCharactersEffect.SortingBottomSheet.Hide
                 }
+
+                val sortingType = event.sortingType
+
                 // Selected sorting type is the same as the old one, so don't perform further actions.
-                if (event.sortingType == currentState.sortingType) return
+                if (sortingType == currentState.sortingType) return
 
-                when (event.sortingType) {
-                    SortingType.Random -> {
-                        setState {
-                            copy(
-                                filteredCharacters = currentState.filteredCharacters.shuffled(),
-                                sortingType = event.sortingType
-                            )
-                        }
-                    }
-
-                    SortingType.TextAscending -> {
-                        setState {
-                            copy(
-                                filteredCharacters = currentState.filteredCharacters.sortedBy { it.name },
-                                sortingType = event.sortingType
-                            )
-                        }
-                    }
-
-                    SortingType.TextDescending -> {
-                        setState {
-                            copy(
-                                filteredCharacters = currentState.filteredCharacters.sortedByDescending { it.name },
-                                sortingType = event.sortingType
-                            )
-                        }
-                    }
+                setState {
+                    copy(
+                        filteredCharacters = filteredCharacters.apply {
+                            when (sortingType) {
+                                SortingType.Random -> shuffled()
+                                SortingType.TextAscending -> sortedBy { it.name }
+                                SortingType.TextDescending -> sortedByDescending { it.name }
+                            }
+                        },
+                        sortingType = sortingType
+                    )
                 }
             }
 

@@ -1,8 +1,12 @@
 package com.alexgreece45.marvelx.util.extensions
 
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.systemBars
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.Dp
@@ -14,11 +18,56 @@ import com.alexgreece45.marvelx.util.DEFAULT_SCREEN_PADDING
  */
 @Composable
 fun PaddingValues.applyPadding(padding: Dp = DEFAULT_SCREEN_PADDING): PaddingValues {
+    val layoutDirection = LocalLayoutDirection.current
+
     return PaddingValues(
-        start = padding,
+        start = padding + this.calculateStartPadding(layoutDirection),
         top = padding + this.calculateTopPadding(),
-        end = padding,
+        end = padding + this.calculateEndPadding(layoutDirection),
         bottom = padding + this.calculateBottomPadding()
+    )
+}
+
+@Composable
+fun PaddingValues.applyContentScreenPaddings(
+    paddingValues: PaddingValues,
+    isToolbarVisible: Boolean,
+    isBottomBarVisible: Boolean,
+    isInnerScreen: Boolean
+): PaddingValues {
+    val layoutDirection = LocalLayoutDirection.current
+    val systemBarPaddings = WindowInsets.systemBars.asPaddingValues()
+    val navigationBarPaddings = WindowInsets.navigationBars.asPaddingValues()
+
+    val topPadding = if (isToolbarVisible) {
+        this.calculateTopPadding()
+    } else {
+        if (!isInnerScreen) {
+            systemBarPaddings.calculateTopPadding()
+        } else {
+            0.dp
+        }
+    }
+
+    val bottomPadding = if (isBottomBarVisible) {
+        this.calculateBottomPadding()
+    } else {
+        if (!isInnerScreen) {
+            navigationBarPaddings.calculateBottomPadding()
+        } else {
+            0.dp
+        }
+    }
+
+    return PaddingValues(
+        start = paddingValues.calculateStartPadding(layoutDirection) + this.calculateStartPadding(
+            layoutDirection
+        ),
+        top = paddingValues.calculateTopPadding() + topPadding,
+        end = paddingValues.calculateEndPadding(layoutDirection) + this.calculateEndPadding(
+            layoutDirection
+        ),
+        bottom = paddingValues.calculateBottomPadding() + bottomPadding
     )
 }
 
@@ -37,10 +86,16 @@ fun PaddingValues.applyPadding(padding: Dp = DEFAULT_SCREEN_PADDING): PaddingVal
  */
 @Composable
 fun PaddingValues.applyPaddingValues(paddingValues: PaddingValues): PaddingValues {
+    val layoutDirection = LocalLayoutDirection.current
+
     return PaddingValues(
-        start = paddingValues.calculateStartPadding(LocalLayoutDirection.current),
+        start = paddingValues.calculateStartPadding(layoutDirection) + this.calculateStartPadding(
+            layoutDirection
+        ),
         top = paddingValues.calculateTopPadding() + this.calculateTopPadding(),
-        end = paddingValues.calculateEndPadding(LocalLayoutDirection.current),
+        end = paddingValues.calculateEndPadding(layoutDirection) + this.calculateEndPadding(
+            layoutDirection
+        ),
         bottom = paddingValues.calculateBottomPadding() + this.calculateBottomPadding()
     )
 }

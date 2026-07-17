@@ -3,7 +3,9 @@ package com.alexgreece45.marvelx.ui.screens.settings.faq
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.data.repository.FaqsRepository
-import com.alexgreece45.marvelx.data.repository.helper.RepositoryResult
+import com.alexgreece45.marvelx.core.data.helper.onFailed
+import com.alexgreece45.marvelx.core.data.helper.onNetworkError
+import com.alexgreece45.marvelx.core.data.helper.onSuccess
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
@@ -12,6 +14,7 @@ import com.alexgreece45.marvelx.ui.screens.settings.faq.model.FaqUi
 import com.alexgreece45.marvelx.ui.screens.settings.faq.model.toFaqUi
 import com.alexgreece45.marvelx.util.ResourceProvider
 import kotlinx.coroutines.launch
+import org.koin.android.annotation.KoinViewModel
 
 sealed interface FaqContract {
     sealed interface Event : BaseEvent {
@@ -33,6 +36,7 @@ sealed interface FaqContract {
     }
 }
 
+@KoinViewModel
 class FaqViewModel(
     private val resourceProvider: ResourceProvider,
     private val faqsRepository: FaqsRepository
@@ -72,42 +76,37 @@ class FaqViewModel(
 
     private fun init(event: FaqContract.Event) {
         viewModelScope.launch {
-            faqsRepository.getFaqs().collect { result ->
-                when (result) {
-                    is RepositoryResult.Success -> {
-                        setState {
-                            copy(
-                                isLoading = false,
-                                sections = result.data.map { it.toFaqUi() }
-                            )
-                        }
-                    }
-
-                    RepositoryResult.NetworkError -> {
-                        setState {
-                            copy(
-                                isLoading = false
-                            )
-                        }
-                        showError(
-                            subTitle = resourceProvider.getNoInternetConnectionMessage(),
-                            event = event
-                        )
-                    }
-
-                    is RepositoryResult.Failed -> {
-                        setState {
-                            copy(
-                                isLoading = false
-                            )
-                        }
-                        showError(
-                            subTitle = resourceProvider.getString(R.string.generic_unknown_error),
-                            event = event
+            faqsRepository.getFaqs()
+                .onSuccess { data ->
+                    setState {
+                        copy(
+                            isLoading = false,
+                            sections = data.map { it.toFaqUi() }
                         )
                     }
                 }
-            }
+                .onNetworkError {
+                    setState {
+                        copy(
+                            isLoading = false
+                        )
+                    }
+                    showError(
+                        subTitle = resourceProvider.getNoInternetConnectionMessage(),
+                        event = event
+                    )
+                }
+                .onFailed {
+                    setState {
+                        copy(
+                            isLoading = false
+                        )
+                    }
+                    showError(
+                        subTitle = resourceProvider.getString(R.string.generic_unknown_error),
+                        event = event
+                    )
+                }
         }
     }
 

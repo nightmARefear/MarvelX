@@ -2,7 +2,6 @@ package com.alexgreece45.marvelx.ui.screens.profile
 
 import android.content.res.Configuration
 import android.net.Uri
-import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -23,9 +22,11 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
+import androidx.compose.material.SnackbarHostState
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -42,8 +43,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.rememberNavController
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.common_ui.extensions.hideSnackbar
+import com.alexgreece45.marvelx.common_ui.extensions.showSnackbarAndHandleResult
+import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarConfig
+import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarNavigationPayload
+import com.alexgreece45.marvelx.data.model.deepLink.DeepLinkAction
 import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.ProfileDetailsDomain
-import com.alexgreece45.marvelx.domain.model_generic.ReadFileContentData
 import com.alexgreece45.marvelx.domain.model_generic.ReloadableImageUrlData
 import com.alexgreece45.marvelx.ui.components.AlertDialogError
 import com.alexgreece45.marvelx.ui.components.BottomNavigationBarData
@@ -64,25 +69,22 @@ import com.alexgreece45.marvelx.ui.components.model.ShadowData
 import com.alexgreece45.marvelx.ui.components.rememberWrapModalBottomSheetState
 import com.alexgreece45.marvelx.ui.components.sections.SectionListHeader
 import com.alexgreece45.marvelx.ui.components.sections.model.SectionHeaderData
-import com.alexgreece45.marvelx.data.model.deepLink.DeepLinkAction
 import com.alexgreece45.marvelx.ui.navigation.getBottomNavigationBarData
 import com.alexgreece45.marvelx.ui.screens.profile.model.ProfileBottomSheetType
 import com.alexgreece45.marvelx.ui.screens.profile.model.ProfileContract
-import com.alexgreece45.marvelx.ui.theme.MarvelXTheme
-import com.alexgreece45.marvelx.ui.theme.values.customColors
-import com.alexgreece45.marvelx.ui.theme.values.customShapes
+import com.alexgreece45.marvelx.ui_theme.theme.MarvelXTheme
+import com.alexgreece45.marvelx.ui_theme.theme.values.customColors
+import com.alexgreece45.marvelx.ui_theme.theme.values.customShapes
 import com.alexgreece45.marvelx.util.FileUtil
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.VSpacer
 import com.alexgreece45.marvelx.util.constants.ConstantsUi
 import com.alexgreece45.marvelx.util.extensions.applyPadding
 import com.alexgreece45.marvelx.util.extensions.circularImageWithBorder
-import com.alexgreece45.marvelx.util.extensions.compressImage
 import com.alexgreece45.marvelx.util.extensions.getAndRemovePendingDeepLinkAction
 import com.alexgreece45.marvelx.util.extensions.hideIfVisible
 import com.alexgreece45.marvelx.util.extensions.screenPaddingsNone
 import com.alexgreece45.marvelx.util.extensions.throttledClickable
-import com.alexgreece45.marvelx.util.extensions.toCompressFormat
 import com.canhub.cropper.CropImageContract
 import com.canhub.cropper.CropImageContractOptions
 import com.canhub.cropper.CropImageOptions
@@ -97,6 +99,8 @@ fun ProfileScreen(
     onEventSent: (ProfileContract.Event) -> Unit,
     state: ProfileContract.State,
     effect: Flow<ProfileContract.Effect>,
+    snackbarNavigationPayloadFlow: Flow<SnackbarNavigationPayload?>,
+    onSnackbarNavigationPayloadConsumed: () -> Unit,
     bottomNavigationBarData: @Composable () -> BottomNavigationBarData,
     onNavigation: (ProfileContract.Effect.Navigation) -> Unit,
     openDeepLinkAction: (DeepLinkAction) -> Unit
@@ -106,9 +110,9 @@ fun ProfileScreen(
     val waveShape = MaterialTheme.customShapes.waveShape
     val waveColor = MaterialTheme.colors.surface
 
-    val cropImageCoroutineScope = rememberCoroutineScope()
-    val modalBottomSheetCoroutineScope = rememberCoroutineScope()
+    val coroutineScope = rememberCoroutineScope()
     val modalBottomSheetState = rememberWrapModalBottomSheetState()
+    val snackbarHostState = remember { SnackbarHostState() }
 
     val singlePhotoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia(),
@@ -150,6 +154,13 @@ fun ProfileScreen(
         onEventSent(ProfileContract.Event.Init(context.getAndRemovePendingDeepLinkAction()))
     }
 
+    ObserveUiEffect(snackbarNavigationPayloadFlow) { payload ->
+        payload?.let {
+            onSnackbarNavigationPayloadConsumed()
+            onEventSent(ProfileContract.Event.OnSnackbarNavigationPayloadReceived(payload))
+        }
+    }
+
     ObserveUiEffect(effect) { uiEffect ->
         when (uiEffect) {
             is ProfileContract.Effect.Navigation -> {
@@ -165,7 +176,7 @@ fun ProfileScreen(
             }
 
             is ProfileContract.Effect.OpenImageCropper -> {
-                cropImageCoroutineScope.launch {
+                coroutineScope.launch {
                     cropImageLauncher.launch(
                         CropImageContractOptions(
                             uri = uiEffect.imageUri,
@@ -187,56 +198,26 @@ fun ProfileScreen(
                 }
             }
 
-            is ProfileContract.Effect.ReadCroppedImageFileContent -> {
-                val fileName = uiEffect.fileName
-
-                val compressFormat = fileName.toCompressFormat()
-                if (compressFormat == null) {
-                    onEventSent(
-                        ProfileContract.Event.ProfileImage.OnCroppedImageFileContentRead(
-                            null
-                        )
-                    )
-                    return@ObserveUiEffect
-                }
-
-                val fileContent = FileUtil.decodeBitmapFromFileUri(context, uiEffect.fileUri)
-                    ?.compressImage(
-                        compressFormat = compressFormat
-                    )
-                if (fileContent == null) {
-                    onEventSent(
-                        ProfileContract.Event.ProfileImage.OnCroppedImageFileContentRead(
-                            null
-                        )
-                    )
-                    return@ObserveUiEffect
-                }
-
-                onEventSent(
-                    ProfileContract.Event.ProfileImage.OnCroppedImageFileContentRead(
-                        croppedImageFileReadContentData = ReadFileContentData(
-                            fileName = fileName,
-                            fileContent = fileContent
-                        )
-                    )
-                )
-            }
-
             ProfileContract.Effect.BottomSheet.Show -> {
-                modalBottomSheetCoroutineScope.launch {
+                coroutineScope.launch {
                     modalBottomSheetState.show()
                 }
             }
 
             ProfileContract.Effect.BottomSheet.Hide -> {
-                modalBottomSheetCoroutineScope.launch {
+                coroutineScope.launch {
                     modalBottomSheetState.hideIfVisible()
                 }
             }
 
-            is ProfileContract.Effect.ShowToastMessage -> {
-                Toast.makeText(context, uiEffect.message, Toast.LENGTH_SHORT).show()
+            is ProfileContract.Effect.ShowSnackbar -> {
+                coroutineScope.launch {
+                    snackbarHostState.showSnackbarAndHandleResult(uiEffect.snackbarStateData)
+                }
+            }
+
+            ProfileContract.Effect.HideSnackbar -> {
+                snackbarHostState.hideSnackbar()
             }
         }
     }
@@ -274,7 +255,11 @@ fun ProfileScreen(
                 )
             ),
             bottomNavigationBarData = bottomNavigationBarData(),
-            paddingValues = PaddingValues.Absolute()
+            snackbarConfig = SnackbarConfig(
+                snackbarHostState = snackbarHostState,
+                snackbarStateData = state.snackbarStateData
+            ),
+            paddingValues = PaddingValues()
         ) { paddingValues ->
             Column(
                 modifier = Modifier
@@ -544,6 +529,8 @@ private fun ProfileScreenPreview() {
                 profileDetails = profileDetails.basicProfileDetails
             ),
             effect = emptyFlow(),
+            snackbarNavigationPayloadFlow = emptyFlow(),
+            onSnackbarNavigationPayloadConsumed = {},
             bottomNavigationBarData = { getBottomNavigationBarData(navController = rememberNavController()) },
             onNavigation = {},
             openDeepLinkAction = {},

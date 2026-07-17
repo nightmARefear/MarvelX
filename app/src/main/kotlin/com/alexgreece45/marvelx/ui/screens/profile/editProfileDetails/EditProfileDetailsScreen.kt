@@ -17,7 +17,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.network_logic.models_api.user.Gender
 import com.alexgreece45.marvelx.ui.components.AlertDialogError
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.ExposedDropdownMenu
@@ -27,6 +26,7 @@ import com.alexgreece45.marvelx.ui.components.ThrottledIconButton
 import com.alexgreece45.marvelx.ui.components.WrapButton
 import com.alexgreece45.marvelx.ui.components.effect.ObserveUiEffect
 import com.alexgreece45.marvelx.ui.components.error.ContentErrorScreen
+import com.alexgreece45.marvelx.ui.model.Gender
 import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.model.EditProfileDetailsItemUi
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.SPACING_TINY
@@ -36,11 +36,11 @@ import com.valentinilk.shimmer.rememberShimmer
 import kotlinx.coroutines.flow.Flow
 
 @Composable
-fun EditProfileDetailsScreen(
+internal fun EditProfileDetailsScreen(
     onEventSent: (event: EditProfileDetailsContract.Event) -> Unit,
     state: EditProfileDetailsContract.State,
     effect: Flow<EditProfileDetailsContract.Effect>,
-    navigateUp: () -> Unit
+    onNavigationEffect: (EditProfileDetailsContract.Effect.Navigation) -> Unit
 ) {
     LaunchedEffect(Unit) {
         onEventSent(EditProfileDetailsContract.Event.Init)
@@ -48,9 +48,7 @@ fun EditProfileDetailsScreen(
 
     ObserveUiEffect(effect) { uiEffect ->
         when (uiEffect) {
-            EditProfileDetailsContract.Effect.Navigation.NavigateUp -> {
-                navigateUp()
-            }
+            is EditProfileDetailsContract.Effect.Navigation -> onNavigationEffect(uiEffect)
         }
     }
 
@@ -70,7 +68,6 @@ fun EditProfileDetailsScreen(
         },
         showToolbar = true,
         toolbarTitle = stringResource(R.string.edit_profile_details_screen_header_title),
-        snackbarStateData = state.snackbarStateData,
         stickyBottom = {
             WrapButton(
                 onClick = { onEventSent(EditProfileDetailsContract.Event.OnSaveChangesButtonClicked) },

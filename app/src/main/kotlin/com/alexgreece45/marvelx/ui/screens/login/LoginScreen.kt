@@ -82,11 +82,7 @@ fun LoginScreen(
     onEventSent: (event: LoginEvent) -> Unit,
     state: LoginState,
     effect: Flow<LoginEffect>,
-    navigateToSignupScreen: () -> Unit,
-    navigateToAllCharactersScreen: () -> Unit,
-    navigateToOtpScreen: (String, String, String, Boolean) -> Unit,
-    navigateToForgotPasswordScreen: () -> Unit,
-    popBackStack: () -> Unit
+    onNavigationEffect: (LoginEffect.Navigation) -> Unit
 ) {
 
     val context = LocalContext.current
@@ -100,36 +96,13 @@ fun LoginScreen(
 
     ObserveUiEffect(effect) { uiEffect ->
         when (uiEffect) {
-            is LoginEffect.Navigation.NavigateToAllCharactersScreen -> {
-                navigateToAllCharactersScreen()
-            }
-
-            is LoginEffect.Navigation.NavigateToOtpScreen -> {
-                navigateToOtpScreen(
-                    uiEffect.userId,
-                    uiEffect.otpFlowType,
-                    uiEffect.verificationStep,
-                    uiEffect.shouldRememberUserSession
-                )
-            }
-
-            LoginEffect.Navigation.NavigateToSignupScreen -> {
-                navigateToSignupScreen()
-            }
+            is LoginEffect.Navigation -> onNavigationEffect(uiEffect)
 
             LoginEffect.CloseKeyboardAndClearFocus -> {
                 keyboard?.hide()
                 focusManager.clearFocus(
                     force = true
                 )
-            }
-
-            LoginEffect.Navigation.PopBackStack -> {
-                popBackStack()
-            }
-
-            LoginEffect.Navigation.NavigateToForgotPasswordScreen -> {
-                navigateToForgotPasswordScreen()
             }
 
             is LoginEffect.ShowToast -> {

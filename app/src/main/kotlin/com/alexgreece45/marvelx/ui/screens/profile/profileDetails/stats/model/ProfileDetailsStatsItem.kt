@@ -2,7 +2,7 @@ package com.alexgreece45.marvelx.ui.screens.profile.profileDetails.stats.model
 
 import androidx.annotation.StringRes
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.network_logic.models_api.user.friend.ResponseFriend
+import com.alexgreece45.marvelx.core.network.model.api.user.friend.ResponseFriend
 
 data class ProfileDetailsStatsItem(
     val id: String,

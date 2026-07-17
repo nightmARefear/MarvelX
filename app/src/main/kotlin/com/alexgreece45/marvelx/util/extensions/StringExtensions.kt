@@ -1,12 +1,6 @@
 package com.alexgreece45.marvelx.util.extensions
 
-import android.graphics.Bitmap
-import android.graphics.Bitmap.CompressFormat
-import android.util.Patterns
 import androidx.core.net.toUri
-import com.alexgreece45.marvelx.util.constants.ConstantsContentTypes
-import okhttp3.MediaType
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import java.math.BigInteger
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
@@ -23,25 +17,16 @@ fun String.toMd5(): String {
 }
 
 /**
- * Checks if the given [String] is a valid email address.
- *
- * @return Returns `true` if the given [String] is a valid email address, otherwise `false`.
- */
-fun String.isEmail(): Boolean {
-    return Patterns.EMAIL_ADDRESS.matcher(this).matches()
-}
-
-/**
  * Masks the characters of the given [String] from [startIndex] to
  * [endIndex] with [maskChar].
  */
 fun String.maskCharactersWith(startIndex: Int, endIndex: Int, maskChar: Char = '*'): String {
-    if (startIndex < 0 || startIndex > endIndex || endIndex >= this.length) return this
+    if (startIndex !in 0..endIndex || endIndex >= this.length) return this
 
     var finalString = ""
     return try {
         this.forEachIndexed { index, character ->
-            finalString += if (index < startIndex || index > endIndex) character
+            finalString += if (index !in startIndex..endIndex) character
             else maskChar
         }
         finalString
@@ -138,16 +123,6 @@ fun String.getSchemeFromUrl(): String =
     }
 
 /**
- * Returns the port for this [String] if it could be located, otherwise `-1`. The returned value is
- * of type [Int].
- */
-fun String.getPortFromUrl(): Int {
-    val parts = this.split(":")
-    if (parts.isEmpty()) return -1
-    return parts.last().toInt()
-}
-
-/**
  * Converts this pair to a full name.
  */
 fun Pair<String, String>.toFullName(): String = "$first $second"
@@ -158,55 +133,25 @@ fun Pair<String, String>.toFullName(): String = "$first $second"
 fun String.toUrlEncoding(): String = URLEncoder.encode(this, StandardCharsets.UTF_8.toString())
 
 /**
+ * Safely encodes the given string using URL encoding. This is safe for navigation arguments. If an
+ * exception occurs, [defaultValue] is returned instead.
+ */
+fun String.toSafeUrlEncoding(defaultValue: String): String =
+    runCatching { this.toUrlEncoding() }.getOrDefault(defaultValue)
+
+/**
  * Decodes this string from url encoding to UTF-8.
  */
 fun String.decodeFromUrl(): String = this.toUri().toString()
 
 /**
- * Checks whether this instance ends with any of the specified suffixes.
- *
- * @param suffixes The suffixes to check against.
- * @param ignoreCase Whether the case should be ignored. By default it's `true`.
- */
-fun String.endsWithAnySuffix(suffixes: List<String>, ignoreCase: Boolean = true): Boolean {
-    return suffixes.any { suffix ->
-        this.endsWith(
-            suffix = suffix,
-            ignoreCase = ignoreCase
-        )
-    }
-}
-
-/**
- * Converts this file name into a [Bitmap.CompressFormat] based on the extension type. Only JPG and
- * PNG images are supported.
- */
-fun String.toCompressFormat(): CompressFormat? {
-    return when {
-        this.endsWithAnySuffix(
-            suffixes = ConstantsContentTypes.JPEG_FORMATS
-        ) -> CompressFormat.JPEG
-
-        this.endsWithAnySuffix(ConstantsContentTypes.PNG_FORMATS) -> CompressFormat.PNG
-
-        else -> null
-    }
-}
-
-/**
- * Returns the file name extension.
- */
-fun String.getFileNameExtension(): String =
-    this.substringAfterLast(delimiter = ".", missingDelimiterValue = "").lowercase()
-
-/**
- * Returns the media type from the given file name. If the extension is not supported, `null` is
+ * Safely decodes this url encoded string to UTF-8. If an exception occurs, [defaultValue] is
  * returned instead.
  */
-fun String.getMediaTypeFromFileName(): MediaType? {
-    return when (this.getFileNameExtension()) {
-        "jpg", "jpeg" -> "image/jpeg".toMediaTypeOrNull()
-        "png" -> "image/png".toMediaTypeOrNull()
-        else -> null
-    }
-}
+fun String.safeDecodeFromUrl(defaultValue: String): String =
+    runCatching { this.decodeFromUrl() }.getOrDefault(defaultValue)
+
+/**
+ * Returns this string with the euro symbol at the end.
+ */
+fun String.withEuroSymbol(): String = "$this€"

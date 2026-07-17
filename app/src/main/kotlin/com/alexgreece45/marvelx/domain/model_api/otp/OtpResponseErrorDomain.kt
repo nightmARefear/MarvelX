@@ -1,5 +1,7 @@
 package com.alexgreece45.marvelx.domain.model_api.otp
 
+import com.alexgreece45.marvelx.core.network.model.api.otp.OtpResponseError
+
 /**
  * Defines the error response of an OTP request.
  *
@@ -13,3 +15,9 @@ data class OtpResponseErrorDomain(
     val errorCause: OtpErrorCause,
     val blockExpiresIn: Long?
 )
+
+fun OtpResponseError.toOtpResponseErrorDomain(): OtpResponseErrorDomain =
+    OtpResponseErrorDomain(
+        errorCause = OtpErrorCause.of(this.errorCause),
+        blockExpiresIn = this.blockExpiresIn
+    )

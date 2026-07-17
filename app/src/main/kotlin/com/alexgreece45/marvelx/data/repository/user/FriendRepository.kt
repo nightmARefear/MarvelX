@@ -1,14 +1,16 @@
 package com.alexgreece45.marvelx.data.repository.user
 
-import com.alexgreece45.marvelx.data.repository.helper.RepositoryResult
-import com.alexgreece45.marvelx.data.repository.helper.handleApiResultNoTransformation
-import com.alexgreece45.marvelx.data.repository.helper.handleApiResultNoTransformationWithData
-import com.alexgreece45.marvelx.dispatchers.IoDispatcher
-import com.alexgreece45.marvelx.network_logic.clients.ApiClient
-import com.alexgreece45.marvelx.network_logic.models_api.user.friend.ResponseFriend
+import com.alexgreece45.marvelx.core.common.dispatchers.model.IoDispatcher
+import com.alexgreece45.marvelx.core.data.helper.RepositoryResult
+import com.alexgreece45.marvelx.core.data.helper.handleApiResultNoTransformation
+import com.alexgreece45.marvelx.core.data.helper.handleApiResultNoTransformationWithData
+import com.alexgreece45.marvelx.core.network.clients.ApiClient
+import com.alexgreece45.marvelx.core.network.model.api.user.friend.ResponseFriend
+import com.alexgreece45.marvelx.model.model.user.UserId
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
+import org.koin.core.annotation.Single
 import kotlin.coroutines.CoroutineContext
 
 interface FriendRepository {
@@ -16,7 +18,7 @@ interface FriendRepository {
     /**
      * Retrieves the friends of the given user ID.
      */
-    suspend fun getFriends(userId: String): Flow<RepositoryResult<List<ResponseFriend>>>
+    suspend fun getFriends(userId: UserId): Flow<RepositoryResult<List<ResponseFriend>>>
 
     /**
      * Retrieves the friends of the current user.
@@ -26,19 +28,20 @@ interface FriendRepository {
     /**
      * Deletes the friend with the given ID.
      */
-    suspend fun deleteFriend(userId: String): Flow<Boolean>
+    suspend fun deleteFriend(userId: UserId): Flow<Boolean>
 }
 
-class FriendRepositoryImpl(
+@Single
+internal class FriendRepositoryImpl(
     private val apiClient: ApiClient,
     @IoDispatcher private val ioDispatcher: CoroutineContext
 ) : FriendRepository {
 
-    override suspend fun getFriends(userId: String): Flow<RepositoryResult<List<ResponseFriend>>> =
+    override suspend fun getFriends(userId: UserId): Flow<RepositoryResult<List<ResponseFriend>>> =
         flow {
             emitAll(
                 handleApiResultNoTransformationWithData(
-                    apiResult = apiClient.getUserFriends(userId),
+                    apiResult = apiClient.getUserFriends(userId.value),
                     ioDispatcher = ioDispatcher
                 )
             )
@@ -54,9 +57,9 @@ class FriendRepositoryImpl(
             )
         }
 
-    override suspend fun deleteFriend(userId: String): Flow<Boolean> = flow {
+    override suspend fun deleteFriend(userId: UserId): Flow<Boolean> = flow {
         handleApiResultNoTransformation(
-            apiResult = apiClient.deleteFriend(userId),
+            apiResult = apiClient.deleteFriend(userId.value),
             ioDispatcher = ioDispatcher
         ).collect { result ->
             emit(result is RepositoryResult.Success)

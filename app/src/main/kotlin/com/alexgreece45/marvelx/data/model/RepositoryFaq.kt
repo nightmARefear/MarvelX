@@ -1,7 +1,7 @@
 package com.alexgreece45.marvelx.data.model
 
-import com.alexgreece45.marvelx.network_logic.models_api.faq.ResponseFaq
-import com.alexgreece45.marvelx.network_logic.models_api.faq.ResponseFaqs
+import com.alexgreece45.marvelx.core.network.model.api.faq.ResponseFaq
+import com.alexgreece45.marvelx.core.network.model.api.faq.ResponseFaqs
 
 data class RepositoryFaq(
     val id: String,
@@ -10,9 +10,9 @@ data class RepositoryFaq(
     val order: Int
 )
 
-fun ResponseFaqs.toRepositoryFaqs(): List<RepositoryFaq> = this.faqs.map { it.toRepositoryFaq() }
+fun com.alexgreece45.marvelx.core.network.model.api.faq.ResponseFaqs.toRepositoryFaqs(): List<RepositoryFaq> = this.faqs.map { it.toRepositoryFaq() }
 
-private fun ResponseFaq.toRepositoryFaq(): RepositoryFaq =
+private fun com.alexgreece45.marvelx.core.network.model.api.faq.ResponseFaq.toRepositoryFaq(): RepositoryFaq =
     RepositoryFaq(
         id = id,
         title = title,

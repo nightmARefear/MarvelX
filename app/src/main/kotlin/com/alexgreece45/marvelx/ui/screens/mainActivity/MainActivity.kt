@@ -22,33 +22,37 @@ import androidx.activity.viewModels
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.navigation.NavController
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.controllers.AppLogger
-import com.alexgreece45.marvelx.controllers.PrefKeys
-import com.alexgreece45.marvelx.controllers.SecurityController
+import com.alexgreece45.marvelx.core.common.config.SecurityConfigLogic
+import com.alexgreece45.marvelx.core.common.logger.AppLogger
 import com.alexgreece45.marvelx.data.model.deepLink.DeepLinkAction
-import com.alexgreece45.marvelx.data.repository.UserRepository
 import com.alexgreece45.marvelx.notifications.constants.ConstantsNotifications
 import com.alexgreece45.marvelx.notifications.model.NotificationChannelData
 import com.alexgreece45.marvelx.notifications.model.NotificationChannelType
 import com.alexgreece45.marvelx.notifications.model.NotificationData
+import com.alexgreece45.marvelx.ui.components.effect.ObserveUiEffect
 import com.alexgreece45.marvelx.ui.components.effect.OneTimeLaunchedEffect
 import com.alexgreece45.marvelx.ui.helper.openDeepLinkAction
 import com.alexgreece45.marvelx.ui.navigation.NavArgHelper
+import com.alexgreece45.marvelx.ui.navigation.NavBackStackLogger
+import com.alexgreece45.marvelx.ui.navigation.NavGraph
 import com.alexgreece45.marvelx.ui.navigation.Screen
 import com.alexgreece45.marvelx.ui.navigation.models.NavArg
-import com.alexgreece45.marvelx.ui.navigation.router.RouterHost
-import com.alexgreece45.marvelx.ui.screens.home.models.HomeAlertDialogErrorType
 import com.alexgreece45.marvelx.ui.screens.mainActivity.model.MainActivityEffect
 import com.alexgreece45.marvelx.ui.screens.mainActivity.model.MainActivityEvent
 import com.alexgreece45.marvelx.ui.screens.splash.SplashContract.AlertDialogErrorType.InsecureApplication
-import com.alexgreece45.marvelx.ui.theme.MarvelXTheme
+import com.alexgreece45.marvelx.ui_theme.theme.MarvelXTheme
+import com.alexgreece45.marvelx.ui_theme.theme.util.SystemBarsThemeUtil
 import com.alexgreece45.marvelx.util.DateUtil
 import com.alexgreece45.marvelx.util.extensions.popUpToTop
 import com.chuckerteam.chucker.api.Chucker
@@ -58,31 +62,63 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 import org.koin.core.annotation.KoinExperimentalAPI
+import kotlin.time.Duration.Companion.milliseconds
 
-class MainActivity : ComponentActivity() {
+internal class MainActivity : ComponentActivity() {
 
     private val loggerTag = "MainActivity"
 
     private val appLogger: AppLogger by inject()
-    private val routerHost: RouterHost by inject()
-    private val securityController: SecurityController by inject()
+    private val securityConfigLogic: SecurityConfigLogic by inject()
     private val viewModel: MainActivityViewModel by viewModels()
-    private val prefKeys: PrefKeys by inject()
-    private val userRepository: UserRepository by inject()
     private val gson: Gson by inject()
+
+    private val navBackStackLogger: NavBackStackLogger by inject()
 
     var pendingDeepLinkAction: DeepLinkAction? = null
 
+    /**
+     * Indicates whether the navigation flow has started. It has the initial value of `false`.
+     */
+    var flowStarted: Boolean = false
+
+    @SuppressLint("RestrictedApi")
     @OptIn(KoinExperimentalAPI::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         appLogger.d(loggerTag) { "onCreate called." }
 
         setWindowSecurityFlags()
+
         setContent {
+            val navController = rememberNavController()
+            flowStarted = true
+
+            LaunchedEffect(Unit) {
+                viewModel.setEvent(MainActivityEvent.OnFlowStarted)
+            }
+
+            DisposableEffect(Unit) {
+                val destinationChangedListener =
+                    NavController.OnDestinationChangedListener { _, destination, _ ->
+                        viewModel.setEvent(MainActivityEvent.OnDestinationChanged(destination.route.orEmpty()))
+                    }
+
+                navController.addOnDestinationChangedListener(destinationChangedListener)
+
+                onDispose {
+                    navController.removeOnDestinationChangedListener(destinationChangedListener)
+                }
+            }
+
+            navBackStackLogger.LoggerView(navController)
+
             MarvelXTheme {
+                SystemBarsThemeUtil.applyDarkSystemBarsTheme(activity = this)
+
                 Surface(color = MaterialTheme.colors.background) {
-                    routerHost.StartFlow()
+                    NavGraph(navController = navController)
 
                     ChuckerPermissions()
 
@@ -90,47 +126,43 @@ class MainActivity : ComponentActivity() {
                         viewModel.setEvent(MainActivityEvent.LifecycleEvent.OnCreate)
                     }
 
-                    LaunchedEffect(Unit) {
-                        viewModel.uiEffect.collect { effect ->
-                            when (effect) {
-                                is MainActivityEffect.Navigation.NavigateToHomeScreenWithSessionExpired -> {
-                                    NavArgHelper.setArgument(
-                                        NavArg.HomeAlertDialogErrorType,
-                                        HomeAlertDialogErrorType.SessionExpired
+                    ObserveUiEffect(viewModel.uiEffect) { effect ->
+                        when (effect) {
+                            is MainActivityEffect.Navigation.NavigateToHomeScreen -> {
+                                // TODO: Resolve.
+//                                NavArgHelper.setArgument(
+//                                    NavArg.HomeAlertDialogErrorType,
+//                                    HomeAlertDialogErrorType.SessionExpired
+//                                )
+                                navController.navigate(Screen.HomeScreen.route) {
+                                    popUpToTop(navController)
+                                }
+                            }
+
+                            is MainActivityEffect.Navigation.NavigateToSplashScreenWithSecurityViolation -> {
+                                NavArgHelper.setArgument(
+                                    NavArg.SplashAlertDialogErrorType,
+                                    InsecureApplication(
+                                        securityViolation = effect.securityViolation
                                     )
-                                    routerHost.logout()
+                                )
+                                navController.navigate(Screen.SplashScreen.route) {
+                                    popUpToTop(navController)
                                 }
+                            }
 
-                                is MainActivityEffect.Navigation.NavigateToSplashScreenWithSecurityViolation -> {
-                                    NavArgHelper.setArgument(
-                                        NavArg.SplashAlertDialogErrorType,
-                                        InsecureApplication(
-                                            securityViolation = effect.securityViolation
-                                        )
-                                    )
-                                    routerHost.getNavController().let { navController ->
-                                        navController.navigate(Screen.SplashScreen.route) {
-                                            popUpToTop(navController)
-                                        }
-                                    }
+                            is MainActivityEffect.OpenOrCacheDeepLink -> {
+                                if (canCurrentRouteRunDeepLink(navController)) {
+                                    appLogger.d(loggerTag) { "opening deep link..." }
+                                    navController.openDeepLinkAction(effect.deepLinkAction)
+                                } else {
+                                    appLogger.d(loggerTag) { "caching deep link..." }
+                                    pendingDeepLinkAction = effect.deepLinkAction
                                 }
+                            }
 
-                                is MainActivityEffect.OpenOrCacheDeepLink -> {
-                                    if (routerHost.canCurrentRouteRunDeepLink()) {
-                                        appLogger.d(loggerTag) { "opening deep link..." }
-                                        openDeepLinkAction(
-                                            navController = routerHost.getNavController(),
-                                            deepLinkAction = effect.deepLinkAction
-                                        )
-                                    } else {
-                                        appLogger.d(loggerTag) { "caching deep link..." }
-                                        pendingDeepLinkAction = effect.deepLinkAction
-                                    }
-                                }
-
-                                is MainActivityEffect.ShowNotification -> {
-                                    showFcmNotification(effect.notificationData, this@MainActivity)
-                                }
+                            is MainActivityEffect.ShowNotification -> {
+                                showFcmNotification(effect.notificationData, this@MainActivity)
                             }
                         }
                     }
@@ -161,7 +193,7 @@ class MainActivity : ComponentActivity() {
         super.onResume()
 
         appLogger.d(loggerTag) { "onResume called." }
-        if (routerHost.flowStarted) {
+        if (flowStarted) {
             viewModel.setEvent(MainActivityEvent.LifecycleEvent.OnResume)
         }
     }
@@ -177,16 +209,14 @@ class MainActivity : ComponentActivity() {
         super.onUserInteraction()
 
         appLogger.d(loggerTag) { "onUserInteraction called." }
-        if (userRepository.isUserLoggedIn && prefKeys.shouldRememberUserSession()) {
-            viewModel.setEvent(MainActivityEvent.OnUserInteraction)
-        }
+        viewModel.setEvent(MainActivityEvent.OnUserInteraction)
     }
 
     override fun isInMultiWindowMode(): Boolean {
         appLogger.d(loggerTag) { "isInMultiWindowMode called." }
 
         val isInMultiWindowMode = super.isInMultiWindowMode()
-        if (isInMultiWindowMode && !securityController.shouldApplicationBeInMultiWindowMode()) {
+        if (isInMultiWindowMode && !securityConfigLogic.applicationMultiWindowMode) {
             viewModel.setEvent(MainActivityEvent.ApplicationInMultiWindowModeViolation)
         }
 
@@ -196,7 +226,7 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
 
-        if (routerHost.flowStarted) {
+        if (flowStarted) {
             handleDeepLink(intent)
         } else {
             delayDeepLinkHandling(intent)
@@ -213,13 +243,13 @@ class MainActivity : ComponentActivity() {
 
                         onFcmTokenReceived(task.result)
                     } catch (e: Exception) {
-                        appLogger.e(loggerTag) { "Failed to get FCM token:\n" + e.message.toString() }
+                        appLogger.e(loggerTag) { "Failed to get FCM token:\n" + e.localizedMessage.orEmpty() }
                     }
                 }.addOnFailureListener { _ ->
                     onFcmTokenReceived(null)
                 }
             } catch (e: Exception) {
-                appLogger.e(loggerTag) { "Failed to get FCM token:\n" + e.message.toString() }
+                appLogger.e(loggerTag) { "Failed to get FCM token:\n" + e.localizedMessage.orEmpty() }
                 onFcmTokenReceived(null)
             }
         }
@@ -332,9 +362,9 @@ class MainActivity : ComponentActivity() {
         lifecycleScope.launch {
             val maxCount = 20
             var count = 0
-            while (!routerHost.flowStarted && count <= maxCount) {
+            while (!flowStarted && count <= maxCount) {
                 count++
-                delay(250L)
+                delay(250L.milliseconds)
             }
 
             // Ensures that no more than 5 seconds have elapsed.
@@ -348,7 +378,7 @@ class MainActivity : ComponentActivity() {
      * Sets security flags for the [Window] of [MainActivity].
      */
     private fun setWindowSecurityFlags() {
-        if (securityController.isScreenCapturingBlocked()) {
+        if (securityConfigLogic.blockScreenCapture) {
             window.setFlags(
                 WindowManager.LayoutParams.FLAG_SECURE,
                 WindowManager.LayoutParams.FLAG_SECURE
@@ -356,20 +386,20 @@ class MainActivity : ComponentActivity() {
         }
 
         @SuppressLint("MissingPermission", "NewApi")
-        if (securityController.areOverlayWindowsHidden()) {
+        if (securityConfigLogic.hideOverlayWindows) {
             window.setHideOverlayWindows(true)
         }
     }
 
     /**
-     * Checks whether this application, through [SecurityController.shouldApplicationDrawOverlayWindows]
+     * Checks whether this application, through [SecurityConfigLogic.applicationDrawOverlayWindows]
      * should have the ability to draw overlay windows over other applications, and if it doesn't it
-     * checks if the application can has this ability. If it has it, then
+     * checks if the application has this ability. If it has it, then
      * [MainActivityEvent.ApplicationDrawOverlayWindowsViolation] is set.
      */
     @Composable
     private fun ShouldAppDrawOverlayWindows() {
-        if (securityController.shouldApplicationDrawOverlayWindows().not()) {
+        if (!securityConfigLogic.applicationDrawOverlayWindows) {
             LaunchedEffect(Unit) {
                 lifecycleScope.launch {
                     repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -426,4 +456,18 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+    /**
+     * Returns `true` if the current route is included in the auto-logout mechanism, otherwise
+     * `false`.
+     */
+    private fun isCurrentRouteIncludedInAutoLogout(navController: NavHostController): Boolean =
+        Screen.fromRoute(navController.currentDestination?.route.orEmpty())?.isIncludedInAutoLogout
+            ?: false
+
+    /**
+     * Examines whether the current route can open a deep link and returns the result as a [Boolean].
+     */
+    private fun canCurrentRouteRunDeepLink(navController: NavHostController): Boolean =
+        flowStarted && isCurrentRouteIncludedInAutoLogout(navController)
 }

@@ -69,4 +69,7 @@ object ConstantsUi {
      * The size for generic images in tiles, express in density-independent pixels (dp).
      */
     val GENERIC_IMAGE_TILE_SIZE = 60.dp
+
+    val LISTING_IMAGE_NORMAL_SIZE = 90.dp
+    val LISTING_IMAGE_BIG_SIZE = 120.dp
 }

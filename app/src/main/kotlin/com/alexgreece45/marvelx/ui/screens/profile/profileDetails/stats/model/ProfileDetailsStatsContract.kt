@@ -1,5 +1,6 @@
 package com.alexgreece45.marvelx.ui.screens.profile.profileDetails.stats.model
 
+import com.alexgreece45.marvelx.model.model.user.UserId
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
@@ -19,7 +20,7 @@ sealed interface ProfileDetailsStatsContract {
     data class State(
         val isLoading: Boolean = true,
 
-        val userId: String = "",
+        val userId: UserId = UserId.EMPTY,
         val selectedTab: ProfileDetailsStatsTab = ProfileDetailsStatsTab.getFirstTab(),
         val items: List<ProfileDetailsStatsItem> = emptyList(),
 

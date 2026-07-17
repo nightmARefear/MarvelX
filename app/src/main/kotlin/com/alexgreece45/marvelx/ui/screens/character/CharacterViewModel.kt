@@ -2,21 +2,22 @@ package com.alexgreece45.marvelx.ui.screens.character
 
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.domain.model_api.character.CharacterDomain
-import com.alexgreece45.marvelx.domain.model_api.character.toFavoriteCharacterEntity
-import com.alexgreece45.marvelx.domain.model_api.comic.ComicDomain
 import com.alexgreece45.marvelx.domain.interactors.CharacterInteractor
 import com.alexgreece45.marvelx.domain.interactors.DeleteFavoriteCharacterByIdPartialState
 import com.alexgreece45.marvelx.domain.interactors.GetCharacterComicsPartialState
 import com.alexgreece45.marvelx.domain.interactors.GetCharacterPartialState
 import com.alexgreece45.marvelx.domain.interactors.InsertFavoriteCharactersPartialState
 import com.alexgreece45.marvelx.domain.interactors.IsCharacterFavoriteByIdPartialState
+import com.alexgreece45.marvelx.domain.model_api.character.CharacterDomain
+import com.alexgreece45.marvelx.domain.model_api.character.toFavoriteCharacterEntity
+import com.alexgreece45.marvelx.domain.model_api.comic.ComicDomain
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
 import com.alexgreece45.marvelx.mvi.BaseViewModel
 import com.alexgreece45.marvelx.util.ResourceProvider
 import kotlinx.coroutines.launch
+import org.koin.android.annotation.KoinViewModel
 
 data class CharacterScreenErrorView(
     val errorMessage: String,
@@ -37,16 +38,19 @@ sealed class CharacterEvent : BaseEvent {
     data object OnArrowRightClick : CharacterEvent()
 }
 
-sealed class CharacterEffect : BaseEffect {
-    data object PopBackStack : CharacterEffect()
-    data class NavigateToComicScreen(val comicId: Int) : CharacterEffect()
+sealed interface CharacterEffect : BaseEffect {
+    sealed interface Navigation : CharacterEffect {
+        data object GoBack : Navigation
+        data class NavigateToComicScreen(val comicId: Int) : Navigation
+        data class NavigateToAllCharacterComicsScreen(
+            val characterId: Int,
+            val toolbarTitlePrefix: String
+        ) :
+            Navigation
+    }
 
-    data class NavigateToAllComicsScreen(val characterId: Int, val toolbarTitlePrefix: String) :
-        CharacterEffect()
-
-    data class DisplayError(val errorMessage: String) : CharacterEffect()
-
-    data class DisplayOnFavoriteClickMessage(val message: String) : CharacterEffect()
+    data class DisplayError(val errorMessage: String) : CharacterEffect
+    data class DisplayOnFavoriteClickMessage(val message: String) : CharacterEffect
 }
 
 data class CharacterState(
@@ -71,6 +75,7 @@ data class CharacterState(
     }
 }
 
+@KoinViewModel
 class CharacterViewModel(
     private val interactor: CharacterInteractor,
     private val resourceProvider: ResourceProvider
@@ -95,13 +100,13 @@ class CharacterViewModel(
 
             is CharacterEvent.OnBackClick -> {
                 setEffect {
-                    CharacterEffect.PopBackStack
+                    CharacterEffect.Navigation.GoBack
                 }
             }
 
             is CharacterEvent.OnComicClick -> {
                 setEffect {
-                    CharacterEffect.NavigateToComicScreen(comicId = event.comicId)
+                    CharacterEffect.Navigation.NavigateToComicScreen(comicId = event.comicId)
                 }
             }
 
@@ -112,7 +117,7 @@ class CharacterViewModel(
             CharacterEvent.OnArrowRightClick -> {
                 currentState.character?.let { characterDomain ->
                     setEffect {
-                        CharacterEffect.NavigateToAllComicsScreen(
+                        CharacterEffect.Navigation.NavigateToAllCharacterComicsScreen(
                             characterId = characterDomain.id,
                             toolbarTitlePrefix = if (characterDomain.name.endsWith("s")) characterDomain.name + "'" else characterDomain.name + "'s"
                         )

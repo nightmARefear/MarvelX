@@ -3,14 +3,6 @@ package com.alexgreece45.marvelx.util.extensions
 import java.text.DecimalFormat
 
 /**
- * Adds `0` as the start padding character so that the resulting length of the given [Int] is equal
- * to `2`.
- */
-fun Int.pad(): String {
-    return this.toString().padStart(2, '0')
-}
-
-/**
  * Formats this integer to a human-readable string with thousands separators and optional "K" abbreviation.
  *
  * Numbers below 10,000 are formatted with commas as thousands separators (e.g., "1,000").

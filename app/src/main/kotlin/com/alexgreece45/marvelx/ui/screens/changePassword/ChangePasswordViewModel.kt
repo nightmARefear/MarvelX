@@ -9,6 +9,7 @@ import com.alexgreece45.marvelx.mvi.BaseState
 import com.alexgreece45.marvelx.mvi.BaseViewModel
 import com.alexgreece45.marvelx.ui.components.model.ErrorButtonLayout
 import com.alexgreece45.marvelx.util.ResourceProvider
+import org.koin.android.annotation.KoinViewModel
 
 /**
  * All the error codes of the `ChangePasswordScreen` for error reporting by the users.
@@ -45,6 +46,7 @@ interface ChangePasswordContract {
     }
 }
 
+@KoinViewModel
 class ChangePasswordViewModel(
     private val resourceProvider: ResourceProvider,
     private val changePasswordInteractor: ChangePasswordInteractor

@@ -5,6 +5,7 @@ import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
 import com.alexgreece45.marvelx.ui.helper.createUriPatternForDeepLink
+import com.alexgreece45.marvelx.ui.screens.orders.orderDetails.model.OrderItemDetails
 
 /**
  * Represents a unique screen in this application. You can set the screen name through [baseRoute],
@@ -81,8 +82,11 @@ sealed class Screen(
          */
         fun matchDeepLinkScreenRoute(screenRoute: String): Screen? =
             when (screenRoute) {
-                ProfileScreen.baseRoute -> ProfileScreen
+                // TODO: Examine.
+//                ProfileScreen.baseRoute -> ProfileScreen
                 ProfileDetailsScreen.baseRoute -> ProfileDetailsScreen
+                // TODO: Examine.
+//                ListingDetailsScreen.baseRoute -> ListingDetailsScreen
                 else -> null
             }
 
@@ -100,7 +104,13 @@ sealed class Screen(
     data object IntroLoadingScreen :
         Screen(baseRoute = "introLoadingScreen", isIncludedInAutoLogout = false)
 
-    data object HomeScreen : Screen(baseRoute = "homeScreen", isIncludedInAutoLogout = false)
+    data object HomeScreen : Screen(
+        baseRoute = "homeScreen",
+        navArgs = listOf(NavItem.LogoutReason),
+        isIncludedInAutoLogout = false
+    ) {
+        fun createNavRoute(errorMessage: String): String = "$baseRoute/$errorMessage"
+    }
 
     data object LoginScreen :
         Screen(baseRoute = "loginScreen", isIncludedInAutoLogout = false)
@@ -164,15 +174,101 @@ sealed class Screen(
     }
 
     // Main screens --> Bottom Navigation
-    data object AllCharactersScreen : Screen(baseRoute = "allCharactersScreen")
-    data object AllFavoriteCharactersScreen : Screen(baseRoute = "allFavoriteCharactersScreen")
-    data object ProfileScreen : Screen(
-        baseRoute = "profileScreen",
-        navArgs = listOf(NavItem.QrCodeScanErrorMessage),
-        deepLinkArgs = listOf(NavDeepLinkItem.QrCodeScanErrorMessage)
+
+    // Marketplace.
+    data object ListingsByCategoryScreen : Screen(baseRoute = "listingsByCategoryScreen")
+
+    data object MyListingsScreen : Screen(baseRoute = "myListingsScreen")
+
+    data object CheckoutWizardScreen : Screen(baseRoute = "checkoutWizardScreen")
+
+    data object OrdersScreen : Screen(baseRoute = "ordersScreen")
+
+    data object OrderDetailsScreen : Screen(
+        baseRoute = "orderDetailsScreen",
+        navArgs = listOf(NavItem.OrderId),
+        deepLinkArgs = listOf(NavDeepLinkItem.OrderId)
     ) {
-        fun createNavRoute(qrCodeScanErrorMessage: String): String =
-            "$baseRoute/$qrCodeScanErrorMessage"
+        fun createNavRoute(orderId: String): String =
+            "$baseRoute/$orderId"
+    }
+
+    data object OrderItemTrackingHistoryScreen : Screen(
+        baseRoute = "orderItemTrackingHistoryScreen",
+        navArgs = listOf(
+            NavItem.OrderId,
+            NavItem.OrderItemId,
+            NavItem.SellerUserId,
+            NavItem.OrderItemTitle,
+            NavItem.OrderItemCoverImageUrl,
+            NavItem.OrderItemPriceLabel
+        ),
+    ) {
+        fun createNavRoute(
+            orderId: String,
+            orderItemId: String,
+            sellerUserId: String,
+            orderItemTitle: String,
+            orderItemCoverImageUrl: String,
+            orderItemPriceLabel: String
+        ): String =
+            "$baseRoute/$orderId/$orderItemId/$sellerUserId/$orderItemTitle/$orderItemCoverImageUrl/$orderItemPriceLabel"
+    }
+
+    data object RequestItemReturnScreen : Screen(
+        baseRoute = "requestItemReturnScreen",
+        navArgs = listOf(
+            NavItem.OrderId,
+            NavItem.OrderItemId,
+            NavItem.OrderItemTitle,
+            NavItem.OrderItemCoverImageUrl,
+            NavItem.OrderItemPriceLabel
+        )
+    ) {
+        fun createNavRoute(
+            orderId: String,
+            orderItemId: String,
+            orderItemTitle: String,
+            orderItemCoverImageUrl: String,
+            orderItemPriceLabel: String
+        ): String =
+            "$baseRoute/$orderId/$orderItemId/$orderItemTitle/$orderItemCoverImageUrl/$orderItemPriceLabel"
+    }
+
+    data object RequestItemRefundScreen : Screen(
+        baseRoute = "requestItemRefundScreen",
+        navArgs = listOf(
+            NavItem.OrderId,
+            NavItem.OrderItemId,
+            NavItem.OrderItemTitle,
+            NavItem.OrderItemCoverImageUrl,
+            NavItem.OrderItemPriceLabel
+        )
+    ) {
+        fun createNavRoute(
+            orderItemDetails: OrderItemDetails
+        ): String =
+            "$baseRoute/${orderItemDetails.orderId}/${orderItemDetails.orderItemId}/${orderItemDetails.orderItemTitle}/${orderItemDetails.orderItemCoverImageUrl}/${orderItemDetails.orderItemPriceLabel}"
+    }
+
+    data object OrderItemContactSupportScreen : Screen(
+        baseRoute = "orderItemContactSupportScreen",
+        navArgs = listOf(
+            NavItem.OrderId,
+            NavItem.OrderItemId,
+            NavItem.OrderItemTitle,
+            NavItem.OrderItemCoverImageUrl,
+            NavItem.OrderItemPriceLabel
+        )
+    ) {
+        fun createNavRoute(
+            orderId: String,
+            orderItemId: String,
+            orderItemTitle: String,
+            orderItemCoverImageUrl: String,
+            orderItemPriceLabel: String
+        ): String =
+            "$baseRoute/$orderId/$orderItemId/$orderItemTitle/$orderItemCoverImageUrl/$orderItemPriceLabel"
     }
 
     data object ProfileImageScreen : Screen(
@@ -243,23 +339,6 @@ sealed class Screen(
         fun createNavRoute(characterId: Int) = "$baseRoute/$characterId"
     }
 
-    data object AllCharacterComicsScreen : Screen(
-        baseRoute = "allCharacterComicsScreen",
-        navArgs = listOf(NavItem.CharacterId, NavItem.ToolbarTitlePrefix)
-    ) {
-        fun createNavRoute(
-            characterId: Int,
-            toolbarTitlePrefix: String
-        ): String = "$baseRoute/$characterId/$toolbarTitlePrefix"
-    }
-
-    data object ComicScreen : Screen(
-        baseRoute = "comicScreen",
-        navArgs = listOf(NavItem.ComicId)
-    ) {
-        fun createNavRoute(comicId: Int): String = "$baseRoute/$comicId"
-    }
-
     data object QrCodeScreen : Screen(
         baseRoute = "qrCodeScreen",
         navArgs = listOf(NavItem.PreviousScreenRoute)
@@ -293,6 +372,15 @@ enum class NavItem(val key: String, val type: NavType<*>) {
         key = NavItemKey.shouldShowAcceptFriendRequestDialog,
         type = NavType.BoolType
     ),
+    ListingId(key = NavItemKey.listingId, type = NavType.StringType),
+    OrderId(key = NavItemKey.orderId, type = NavType.StringType),
+    OrderItemId(key = NavItemKey.orderItemId, type = NavType.StringType),
+    OrderItemTitle(key = NavItemKey.orderItemTitle, type = NavType.StringType),
+    OrderItemCoverImageUrl(key = NavItemKey.orderItemCoverImageUrl, type = NavType.StringType),
+    OrderItemPriceLabel(key = NavItemKey.orderItemPriceLabel, type = NavType.StringType),
+    SellerUserId(key = NavItemKey.sellerUserId, type = NavType.StringType),
+    LogoutReason(key = NavItemKey.logoutReason, type = NavType.StringType),
+    CreateListingWizardMode(key = NavItemKey.createListingWizardMode, type = NavType.StringType)
 }
 
 /**
@@ -303,6 +391,7 @@ enum class NavDeepLinkItem(val key: String) {
     ListingId(key = NavItemKey.listingId),
     QrCodeScanErrorMessage(key = NavItemKey.qrCodeScanErrorMessage),
     ShouldShowAcceptFriendRequestDialog(key = NavItemKey.shouldShowAcceptFriendRequestDialog),
+    OrderId(key = NavItemKey.orderId),
 }
 
 /**
@@ -326,4 +415,13 @@ private object NavItemKey {
     const val previousScreenRoute = "previousScreenRoute"
     const val profileImageUrl = "profileImageUrl"
     const val shouldShowAcceptFriendRequestDialog = "shouldShowAcceptFriendRequestDialog"
+    const val orderId = "orderId"
+    const val orderItemId = "orderItemId"
+    const val orderItemTitle = "orderItemTitle"
+    const val orderItemCoverImageUrl = "orderCoverImageUrl"
+    const val orderItemPriceLabel = "orderItemPriceLabel"
+    const val sellerUserId = "sellerUserId"
+    const val logoutReason = "logoutReason"
+    const val createListingWizardMode = "createListingWizardMode"
+    const val checkoutWizardMode = "checkoutWizardMode"
 }

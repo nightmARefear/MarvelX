@@ -6,7 +6,9 @@ import com.alexgreece45.marvelx.domain.interactors.GetComicPartialState
 import com.alexgreece45.marvelx.mvi.BaseViewModel
 import com.alexgreece45.marvelx.ui.screens.comic.model.ComicContract
 import kotlinx.coroutines.launch
+import org.koin.android.annotation.KoinViewModel
 
+@KoinViewModel
 class ComicViewModel(
     private val interactor: ComicInteractor
 ) : BaseViewModel<ComicContract.Event, ComicContract.State, ComicContract.Effect>() {
@@ -26,7 +28,7 @@ class ComicViewModel(
 
             ComicContract.Event.OnBackClicked -> {
                 setEffect {
-                    ComicContract.Effect.PopBackStack
+                    ComicContract.Effect.Navigation.GoBack
                 }
             }
         }

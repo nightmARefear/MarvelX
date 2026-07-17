@@ -5,13 +5,14 @@ import androidx.compose.material.ChipColors
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Icon
+import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import com.alexgreece45.marvelx.ui.components.IconData
+import com.alexgreece45.marvelx.ui_theme.theme.values.customColors
 import com.alexgreece45.marvelx.util.constants.ConstantsUi
 
 /**
@@ -41,7 +42,7 @@ fun LoadingChip(
             if (isLoading) {
                 CircularProgressIndicator(
                     modifier = Modifier.size(ConstantsUi.MIN_ICON_SIZE),
-                    color = Color.White
+                    color = MaterialTheme.customColors.white
                 )
             } else {
                 Icon(

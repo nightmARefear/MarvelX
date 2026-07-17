@@ -1,27 +1,39 @@
 package com.alexgreece45.marvelx.data.repository
 
+import com.alexgreece45.marvelx.core.common.dispatchers.model.IoDispatcher
+import com.alexgreece45.marvelx.core.common.logger.AppLogger
+import com.alexgreece45.marvelx.core.data.helper.RepositoryResult
+import com.alexgreece45.marvelx.core.data.helper.handleApiResult
+import com.alexgreece45.marvelx.core.data.helper.handleApiResultNoTransformation
+import com.alexgreece45.marvelx.core.data.helper.handleApiResultNoTransformationNoFlow
+import com.alexgreece45.marvelx.core.data.helper.multi_part_builder.MultipartBuilder
+import com.alexgreece45.marvelx.core.data.helper.multi_part_builder.model.MultipartBuilderResult
+import com.alexgreece45.marvelx.core.data.helper.multi_part_builder.model.MultipartItem.Image
+import com.alexgreece45.marvelx.core.data.helper.multi_part_builder.model.MultipartResult
+import com.alexgreece45.marvelx.core.data.helper.multi_part_builder.model.toMultipartResult
+import com.alexgreece45.marvelx.core.network.clients.ApiClient
+import com.alexgreece45.marvelx.core.network.model.api.user.ResponseUserError
+import com.alexgreece45.marvelx.core.network.model.api.user.privacySettings.RequestPrivacySettings
+import com.alexgreece45.marvelx.core.network.model.api.user.privacySettings.ResponsePrivacySettings
+import com.alexgreece45.marvelx.core.network.model.api.user.profileDetails.RequestProfileDetailsUpdate
+import com.alexgreece45.marvelx.core.network.model.api.user.profileDetails.ResponseBasicProfileDetails
+import com.alexgreece45.marvelx.core.network.model.api.user.profileDetails.ResponseProfileDetails
+import com.alexgreece45.marvelx.core.network.model.api.user.profileDetails.ResponseProfileDetailsError
+import com.alexgreece45.marvelx.core.network.util.extensions.toSerialized
 import com.alexgreece45.marvelx.data.model.RepositoryPrivacySettings
+import com.alexgreece45.marvelx.data.model.profileDetails.RepositoryBasicProfileDetails
+import com.alexgreece45.marvelx.data.model.profileDetails.toData
 import com.alexgreece45.marvelx.data.model.toRepositoryPrivacySettings
-import com.alexgreece45.marvelx.data.repository.helper.RepositoryResult
-import com.alexgreece45.marvelx.data.repository.helper.handleApiResult
-import com.alexgreece45.marvelx.data.repository.helper.handleApiResultNoTransformation
 import com.alexgreece45.marvelx.data.repository.helper.parseUserError
-import com.alexgreece45.marvelx.dispatchers.IoDispatcher
-import com.alexgreece45.marvelx.network_logic.clients.ApiClient
-import com.alexgreece45.marvelx.network_logic.models_api.user.ResponseUserError
-import com.alexgreece45.marvelx.network_logic.models_api.user.privacySettings.RequestPrivacySettings
-import com.alexgreece45.marvelx.network_logic.models_api.user.privacySettings.ResponsePrivacySettings
-import com.alexgreece45.marvelx.network_logic.models_api.user.profileDetails.RequestProfileDetailsUpdate
-import com.alexgreece45.marvelx.network_logic.models_api.user.profileDetails.ResponseBasicProfileDetails
-import com.alexgreece45.marvelx.network_logic.models_api.user.profileDetails.ResponseProfileDetails
-import com.alexgreece45.marvelx.network_logic.models_api.user.profileDetails.ResponseProfileDetailsError
-import com.alexgreece45.marvelx.network_logic.util.extensions.toSerialized
+import com.alexgreece45.marvelx.model.model.generic.AttachedFileContentData
+import com.alexgreece45.marvelx.model.model.user.UserId
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
-import okhttp3.MultipartBody
+import org.koin.core.annotation.Single
 import kotlin.coroutines.CoroutineContext
 
 interface UserRepository {
@@ -29,7 +41,9 @@ interface UserRepository {
     /**
      * Gets the profile details of the given [userId].
      */
-    suspend fun getProfileDetails(userId: String): GetProfileDetailsRepositoryResponse
+    suspend fun getProfileDetails(userId: UserId): GetProfileDetailsRepositoryResponse
+
+    suspend fun getBasicProfileDetails(userId: UserId): RepositoryResult<RepositoryBasicProfileDetails>
 
     /**
      * Get the profile details of the current user.
@@ -49,13 +63,12 @@ interface UserRepository {
     /**
      * Updates the profile image of the current user.
      *
-     * @param imagePart The image data to be set as the new profile image, encapsulated in a
-     * [MultipartBody.Part].
+     * @param profileImage The image data to be set as the new profile image.
      */
     suspend fun updateUserProfileImage(
         userId: String,
-        imagePart: MultipartBody.Part
-    ): Flow<RepositoryResult<String>>
+        profileImage: AttachedFileContentData
+    ): UpdateProfileImageResult
 
     /**
      * Gets the privacy settings of the current user.
@@ -83,17 +96,22 @@ interface UserRepository {
     suspend fun setUserLoggedIn(loggedIn: Boolean)
 }
 
-class UserRepositoryImpl(
+@Single
+internal class UserRepositoryImpl(
     private val apiClient: ApiClient,
-    @IoDispatcher private val ioDispatcher: CoroutineContext
+    @IoDispatcher private val ioDispatcher: CoroutineContext,
+    private val multipartBuilder: MultipartBuilder,
+    private val appLogger: AppLogger
 ) : UserRepository {
+
+    private val loggerTag = "UserRepository"
 
     private var _isUserLoggedIn: MutableStateFlow<Boolean> = MutableStateFlow(false)
 
     override suspend fun getProfileDetails(
-        userId: String
+        userId: UserId
     ): GetProfileDetailsRepositoryResponse =
-        apiClient.getUserProfileDetails(userId)
+        apiClient.getUserProfileDetails(userId.value)
             .let { response ->
                 if (response.isSuccessful) {
                     GetProfileDetailsRepositoryResponse.Success(
@@ -107,6 +125,14 @@ class UserRepositoryImpl(
                     )
                 }
             }
+
+    override suspend fun getBasicProfileDetails(userId: UserId): RepositoryResult<RepositoryBasicProfileDetails> {
+        return handleApiResult(
+            apiResult = apiClient.getBasicProfileDetails(userId.value),
+            transformation = { this.toData() },
+            ioDispatcher = ioDispatcher
+        ).first()
+    }
 
     override suspend fun getCurrentUserProfileDetails(): Flow<GetCurrentUserProfileDetailsRepositoryResponse> =
         flow {
@@ -131,12 +157,13 @@ class UserRepositoryImpl(
         gender: String,
         email: String
     ): Flow<RepositoryResult<String>> = flow {
-        val request = RequestProfileDetailsUpdate(
-            firstName = firstName,
-            lastName = lastName,
-            gender = gender,
-            email = email
-        )
+        val request =
+            RequestProfileDetailsUpdate(
+                firstName = firstName,
+                lastName = lastName,
+                gender = gender,
+                email = email
+            )
         emitAll(
             handleApiResultNoTransformation(
                 apiResult = apiClient.updateCurrentUserProfileDetails(request),
@@ -147,19 +174,37 @@ class UserRepositoryImpl(
 
     override suspend fun updateUserProfileImage(
         userId: String,
-        imagePart: MultipartBody.Part
-    ): Flow<RepositoryResult<String>> =
-        flow {
-            emitAll(
-                handleApiResultNoTransformation(
-                    apiResult = apiClient.updateUserProfileImage(
-                        userId,
-                        imagePart
-                    ),
-                    ioDispatcher = ioDispatcher
+        profileImage: AttachedFileContentData
+    ): UpdateProfileImageResult {
+        return when (
+            val multipartBuilderResult = multipartBuilder.constructMultipartPart(
+                Image(
+                    partName = "profile_image",
+                    fileName = "profile_image",
+                    imageFileData = profileImage
                 )
             )
+        ) {
+            is MultipartBuilderResult.Success -> {
+                handleApiResultNoTransformationNoFlow(
+                    apiResult = apiClient.updateUserProfileImage(
+                        userId = userId,
+                        profileImage = multipartBuilderResult.data
+                    ),
+                    ioDispatcher = ioDispatcher,
+                    logError = { errorMessage -> appLogger.e(loggerTag) { errorMessage } }
+                ).toMultipartResult()
+            }
+
+            is MultipartBuilderResult.GenericError -> {
+                MultipartResult.GenericError(multipartBuilderResult.errorMessage)
+            }
+
+            MultipartBuilderResult.ImageProcessingError -> {
+                MultipartResult.ImageProcessingError
+            }
         }
+    }
 
     override suspend fun getPrivacySettings(): Flow<RepositoryResult<RepositoryPrivacySettings>> =
         flow {
@@ -209,3 +254,5 @@ sealed class GetProfileDetailsRepositoryResponse {
     data class Failed(val responseProfileDetailsError: ResponseProfileDetailsError) :
         GetProfileDetailsRepositoryResponse()
 }
+
+typealias UpdateProfileImageResult = MultipartResult<String>

@@ -14,7 +14,7 @@ sealed interface InteractorPartialState<out T> {
     /**
      * Indicates that an error occurred whilst retrieving the data. This is typically used when
      * the authentication fails, or when the app has sent invalid data; probably indicating a
-     * mis-match in API models, or something else.
+     * mismatch in API models, or something else.
      *
      * @param failureMessage    The failure message.
      */
@@ -32,4 +32,24 @@ sealed interface InteractorPartialState<out T> {
      * Indicates that a network-related issue occurred whilst retrieving the data.
      */
     data object NoInternetConnection : InteractorPartialState<Nothing>
+}
+
+inline fun <T> InteractorPartialState<T>.onSuccess(action: (T) -> Unit): InteractorPartialState<T> {
+    if (this is InteractorPartialState.Success) action(data)
+    return this
+}
+
+inline fun <T> InteractorPartialState<T>.onFailed(action: (failureMessage: String) -> Unit): InteractorPartialState<T> {
+    if (this is InteractorPartialState.Failed) action(failureMessage)
+    return this
+}
+
+inline fun <T> InteractorPartialState<T>.onError(action: (errorMessage: String) -> Unit): InteractorPartialState<T> {
+    if (this is InteractorPartialState.Error) action(errorMessage)
+    return this
+}
+
+inline fun <T> InteractorPartialState<T>.onNoInternetConnection(action: () -> Unit): InteractorPartialState<T> {
+    if (this is InteractorPartialState.NoInternetConnection) action()
+    return this
 }

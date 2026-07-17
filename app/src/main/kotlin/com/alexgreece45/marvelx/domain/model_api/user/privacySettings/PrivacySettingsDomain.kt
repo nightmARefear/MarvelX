@@ -1,8 +1,8 @@
 package com.alexgreece45.marvelx.domain.model_api.user.privacySettings
 
+import com.alexgreece45.marvelx.core.network.model.api.user.privacySettings.RequestPrivacySettings
+import com.alexgreece45.marvelx.core.network.model.api.user.privacySettings.ResponsePrivacySettings
 import com.alexgreece45.marvelx.data.model.RepositoryPrivacySettings
-import com.alexgreece45.marvelx.network_logic.models_api.user.privacySettings.RequestPrivacySettings
-import com.alexgreece45.marvelx.network_logic.models_api.user.privacySettings.ResponsePrivacySettings
 
 /**
  * The privacy settings of a user.

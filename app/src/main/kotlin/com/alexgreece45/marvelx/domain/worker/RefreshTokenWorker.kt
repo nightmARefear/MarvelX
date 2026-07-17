@@ -3,82 +3,80 @@ package com.alexgreece45.marvelx.domain.worker
 import android.content.Context
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import com.alexgreece45.marvelx.configuration.ConfigOauth
-import com.alexgreece45.marvelx.controllers.AppLogger
-import com.alexgreece45.marvelx.controllers.AuthController
-import com.alexgreece45.marvelx.dispatchers.IoDispatcher
-import com.alexgreece45.marvelx.domain.model_api.userAuthData.UserAuthData
-import com.alexgreece45.marvelx.network_logic.clients.RefreshTokenClient
+import com.alexgreece45.marvelx.core.common.config.ConfigOauthLogic
+import com.alexgreece45.marvelx.core.common.logger.AppLogger
+import com.alexgreece45.marvelx.core.data.repositories.UserSessionRepository
+import com.alexgreece45.marvelx.core.network.clients.RefreshTokenClient
+import com.alexgreece45.marvelx.model.model.AuthenticationTokens
 import com.alexgreece45.marvelx.util.DateUtil
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import kotlin.coroutines.CoroutineContext
 
 class RefreshTokenWorker(
     context: Context,
     workerParameters: WorkerParameters,
     private val refreshTokenClient: RefreshTokenClient,
-    private val authController: AuthController,
-    private val configOauth: ConfigOauth,
-    private val logger: AppLogger,
-    @IoDispatcher private val ioDispatcher: CoroutineContext, // TODO: Causes the worker to never actually run.
+    private val userSessionRepository: UserSessionRepository,
+    private val configOauthLogic: ConfigOauthLogic,
+    private val logger: AppLogger
 ) : CoroutineWorker(context, workerParameters) {
 
     private val loggerTag = "RefreshTokenWorker"
 
-    override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
-        try {
-            authController.getRefreshToken()?.let { refreshToken ->
-                val accessTokenExpirationUnix = authController.getAccessTokenExpiration()
-                val currentUnix = DateUtil.getEpochSeconds()
-                val totalSecondsRemainingFromExpiration = accessTokenExpirationUnix - currentUnix
-                val minutesRemainingFromExpiration = totalSecondsRemainingFromExpiration / 60
-                val secondsRemainingFromExpiration =
-                    totalSecondsRemainingFromExpiration - minutesRemainingFromExpiration * 60
+    override suspend fun doWork(): Result {
+        return try {
+            val refreshToken =
+                userSessionRepository.getRefreshToken() ?: return failure("Refresh token is null.")
 
-                // Check if the access token expires in the next 20 seconds.
-                if (totalSecondsRemainingFromExpiration <= 20) {
-                    var result: Result
+            val accessTokenExpirationUnix = userSessionRepository.getAccessTokenExpiration()
+            val currentUnix = DateUtil.getEpochSeconds()
+            val totalSecondsRemainingFromExpiration = accessTokenExpirationUnix - currentUnix
+            val minutesRemainingFromExpiration = totalSecondsRemainingFromExpiration / 60
+            val secondsRemainingFromExpiration =
+                totalSecondsRemainingFromExpiration - minutesRemainingFromExpiration * 60
 
-                    // Access token will expire within the next 20 seconds. Thus, refresh it.
-                    refreshTokenClient.refreshAccessToken(configOauth.clientId, refreshToken)
-                        .let { response ->
-                            result = if (response.isSuccessful) {
-                                response.body()?.let { tokenResponse ->
-                                    // Successfully retrieved new token.
+            // Check if the access token expires in the next 20 seconds.
+            if (totalSecondsRemainingFromExpiration <= 20) {
+                var result: Result
 
-                                    // Store token.
-                                    authController.setData(
-                                        UserAuthData(
-                                            accessToken = tokenResponse.accessToken,
-                                            accessExpiresIn = tokenResponse.accessExpiresIn.toLong(),
-                                            refreshToken = tokenResponse.refreshToken,
-                                            refreshExpiresIn = tokenResponse.refreshExpiresIn.toLong(),
-                                            tokenType = tokenResponse.tokenType
-                                        )
-                                    )
+                // Access token will expire within the next 20 seconds. Thus, refresh it.
+                val accessTokenResponse =
+                    refreshTokenClient.refreshAccessToken(configOauthLogic.clientId, refreshToken)
 
-                                    logger.d(loggerTag) { "Access token was successfully refreshed." }
-                                    Result.success()
-                                } ?: failure("Refresh access token body is null.")
-                            } else {
-                                failure("Refresh access token request failed.")
-                            }
-                        }
+                result = if (accessTokenResponse.isSuccessful) {
+                    val body = accessTokenResponse.body()
+                    if (body != null) {
+                        // Store token.
+                        userSessionRepository.setAuthenticationTokens(
+                            AuthenticationTokens(
+                                accessToken = body.accessToken,
+                                accessExpiresIn = body.accessExpiresIn.toLong(),
+                                refreshToken = body.refreshToken,
+                                refreshExpiresIn = body.refreshExpiresIn.toLong(),
+                                tokenType = body.tokenType
+                            )
+                        )
 
-                    // Return result.
-                    result
+                        logger.d(loggerTag) { "Access token was successfully refreshed." }
+                        Result.success()
+                    } else {
+                        failure("Refresh access token body is null.")
+
+                    }
                 } else {
-                    failure("Too soon to refresh token ($minutesRemainingFromExpiration'$secondsRemainingFromExpiration\" remaining).")
+                    failure("Refresh access token request failed.")
                 }
-            } ?: failure("Refresh token is null.")
+
+                // Return result.
+                result
+            } else {
+                failure("Too soon to refresh token ($minutesRemainingFromExpiration'$secondsRemainingFromExpiration\" remaining).")
+            }
         } catch (e: Exception) {
             failure(e.message.orEmpty())
         }
     }
 
     private fun failure(errorMessage: String): Result {
-        logger.e(loggerTag) { "(RefreshTokenWorker#doWork) error message: $errorMessage" }
+        logger.e(loggerTag) { "(doWork) error message: $errorMessage" }
         return Result.failure()
     }
 }

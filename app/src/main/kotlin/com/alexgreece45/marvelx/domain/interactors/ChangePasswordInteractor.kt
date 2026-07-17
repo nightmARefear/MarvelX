@@ -2,6 +2,7 @@ package com.alexgreece45.marvelx.domain.interactors
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import org.koin.core.annotation.Factory
 
 interface ChangePasswordInteractor {
     suspend fun updateUserPassword(
@@ -12,7 +13,8 @@ interface ChangePasswordInteractor {
     ): Flow<ChangePasswordUpdateUserPasswordPartialState>
 }
 
-class ChangePasswordInteractorImpl : ChangePasswordInteractor {
+@Factory
+internal class ChangePasswordInteractorImpl : ChangePasswordInteractor {
     override suspend fun updateUserPassword(
         requestIdEmail: String,
         requestIdPhoneNumber: String?,

@@ -168,6 +168,7 @@ fun Modifier.throttledClickable(
 fun Modifier.clickableNoRipple(
     enabled: Boolean = true,
     rippleShape: Shape? = null,
+    role: Role? = null,
     onClick: () -> Unit
 ): Modifier = composed {
     val interactionSource = remember { MutableInteractionSource() }
@@ -189,6 +190,7 @@ fun Modifier.clickableNoRipple(
         interactionSource = interactionSource,
         indication = indication,
         enabled = enabled,
+        role = role,
         onClick = onClick
     ).then(clipModifier)
 }
@@ -212,6 +214,21 @@ fun Modifier.filterTouchesWhenObscured(view: View): Modifier = pointerInput(Unit
 }
 
 /**
+ * Applies a border and padding to an image Modifier.
+ *
+ * @param borderWidth   The width of the border to apply.
+ * @param borderColor   The color of the border to apply.
+ * @param shape         The shape to apply.
+ *
+ * @return A Modifier that applies a circular border and padding to an image.
+ */
+fun Modifier.imageWithBorder(borderWidth: Dp, borderColor: Color, shape: Shape): Modifier =
+    this
+        .border(BorderStroke(width = borderWidth, color = borderColor), shape)
+        .padding(borderWidth)
+        .clip(shape)
+
+/**
  * Applies a circular border and padding to an image Modifier.
  *
  * @param borderWidth The width of the border to apply.
@@ -221,6 +238,4 @@ fun Modifier.filterTouchesWhenObscured(view: View): Modifier = pointerInput(Unit
  */
 fun Modifier.circularImageWithBorder(borderWidth: Dp, borderColor: Color): Modifier =
     this
-        .border(BorderStroke(width = borderWidth, color = borderColor), CircleShape)
-        .padding(borderWidth)
-        .clip(CircleShape)
+        .imageWithBorder(borderWidth, borderColor, CircleShape)

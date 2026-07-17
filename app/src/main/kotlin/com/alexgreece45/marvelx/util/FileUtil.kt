@@ -1,11 +1,10 @@
 package com.alexgreece45.marvelx.util
 
 import android.content.Context
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.net.Uri
 import android.provider.OpenableColumns
-import com.alexgreece45.marvelx.domain.model_generic.AttachedFileContentData
+import com.alexgreece45.marvelx.core.data.utils.FileUtil
+import com.alexgreece45.marvelx.model.model.generic.AttachedFileContentData
 
 /**
  * Contains utility functions for file-related operations.
@@ -13,8 +12,7 @@ import com.alexgreece45.marvelx.domain.model_generic.AttachedFileContentData
 object FileUtil {
 
     /**
-     * Attempts to create a [AttachedFileContentData] from the given uri. If an error occurred then `null`
-     * is returned instead.
+     * Retrieves the basic data of a file. More specifically, the uri, name, and the length in bytes.
      */
     fun getFileContentData(uri: Uri?, context: Context): AttachedFileContentData? {
         if (uri == null || uri.toString().isBlank()) {
@@ -26,7 +24,7 @@ object FileUtil {
             return null
         }
 
-        val fileContents = decodeBitmapFromFileUri(context, uri)
+        val fileContents = FileUtil.decodeBitmapFromFileUri(context, uri)
         if (fileContents == null) {
             return null
         }
@@ -57,21 +55,6 @@ object FileUtil {
             }
         }
         return null
-    }
-
-    /**
-     * Attempts to locate the file with the specified file URI and if found decodes it into a bitmap.
-     */
-    fun decodeBitmapFromFileUri(context: Context, uri: Uri): Bitmap? {
-        return try {
-            context.contentResolver
-                .openInputStream(uri)
-                ?.use { inputStream ->
-                    BitmapFactory.decodeStream(inputStream)
-                }
-        } catch (_: Exception) {
-            null
-        }
     }
 
     /**

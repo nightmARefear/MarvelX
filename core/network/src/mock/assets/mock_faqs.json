@@ -1,0 +1,16 @@
+{
+  "faqs": [
+    {
+      "id": "1",
+      "title": "What does the app do?",
+      "description": "This app is aimed at unifying people who share the same love for the Marvel characters. There is a marketplace where users can buy/sell merch, and personalized profiles for getting to know each other! ",
+      "order": 1
+    },
+    {
+      "id": "2",
+      "title": "Is the app free of use?",
+      "description": "Yes. There are no upfront or hidden charges.",
+      "order": 2
+    }
+  ]
+}

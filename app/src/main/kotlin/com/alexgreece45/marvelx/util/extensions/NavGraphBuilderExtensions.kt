@@ -44,4 +44,3 @@ fun NavGraphBuilder.composable(
         popExitTransition = popExitTransition,
         content = content
     )
-

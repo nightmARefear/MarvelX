@@ -1,6 +1,4 @@
 <resources>
-    // DEX CRC
-    <string name="dex_crc">F5CDaispuQfYSYVV5M4cVc7ratyB7wXpzvap7km3KcE=</string>
 
     // Generic
     // • Generic Texts
@@ -67,18 +65,16 @@
     <string name="splash_screen_alert_dialog_error_message_application_in_multi_window_mode">It has been detected that the application is running in multi-window mode which is forbidden.</string>
     <string name="splash_screen_alert_dialog_confirm_button">close</string>
 
-    // Session status
-    <string name="session_status_session_has_expired_alert_dialog_title">Session expired</string>
-    <string name="session_status_session_has_expired_alert_dialog_error_message">Your session has expired!</string>
-
     // Sorting
     <string name="close">close</string>
     <string name="sort_by">Sort by</string>
 
     // Bottom Navigation (Root Screen: AllCharactersScreen, Other Screens:
     AllFavoriteCharactersScreen, ProfileScreen)
+    <string name="bottom_navigation_label_marketplace">Marketplace</string>
     <string name="bottom_navigation_label_characters">Characters</string>
     <string name="bottom_navigation_label_favorites">Favorites</string>
+    <string name="bottom_navigation_label_cart">Cart</string>
     <string name="bottom_navigation_label_profile">Profile</string>
 
     // Validation rules.
@@ -185,17 +181,23 @@
 
     <string name="profile_screen_profile_banner_label_welcome_back">Welcome back, %1$s!</string>
     <string name="profile_screen_profile_banner_label_see_your_profile">See your profile</string>
+
     <string name="profile_screen_section_label_scan_qr_code">Scan QR Code</string>
     <string name="profile_screen_section_label_friends">Friends</string>
+    <string name="profile_screen_section_label_orders">Orders</string>
+    <string name="profile_screen_section_label_my_listings">My Listings</string>
     <string name="profile_screen_section_label_logout">Logout</string>
+
     <string name="profile_screen_bottom_sheet_label_view_profile_image">View profile image</string>
     <string name="profile_screen_bottom_sheet_label_upload_profile_image">Upload profile image</string>
+
     <string name="profile_screen_cropped_cropped_image_toolbar_title">Crop profile image</string>
     <string name="profile_screen_cropped_cropped_image_label_button_save">Save</string>
 
     <string name="profile_screen_content_description_cropped_image_new_profile_image">New profile image preview</string>
 
-    <string name="screen_profile_success_image_upload">The profile image has been successfully uploaded!</string>
+    <string name="screen_profile_success_image_upload_message">The profile image has been successfully uploaded!</string>
+    <string name="screen_profile_success_image_upload_action_label">OK</string>
 
     <string name="profile_screen_error_loading_profile_details">An error occurred while loading the profile details.</string>
     <string name="profile_screen_label_error_alert_dialog_cropped_image_title_exit">Discard changes?</string>
@@ -204,12 +206,14 @@
     <string name="profile_screen_label_error_alert_dialog_cropped_image_button_positive">Stay</string>
 
     <string name="screen_profile_error_image_select_reading">An error occurred whilst reading the image.</string>
-    <string name="screen_profile_error_image_select_too_big">Oops, this file is too large. Please choose a JPEG or PNG image smaller than or equal to %1$sMB.</string>
+    <string name="screen_profile_error_image_select_too_big">Oops, this file is too large. Please choose an image smaller than or equal to %1$sMB.</string>
     <string name="screen_profile_error_image_select_invalid_extension">Oops, this file extension is not supported. Please choose a JPEG or PNG image and try again.</string>
     <string name="screen_profile_error_image_upload">An error occurred whilst uploading the profile image.</string>
 
     <string name="screen_profile_error_image_crop">An error occurred whilst cropping the image.</string>
     <string name="screen_profile_error_image_crop_reading">An error occurred whilst reading the cropped image.</string>
+
+    <string name="screen_profile_content_description_orders_icon">Orders Icon</string>
 
     // Profile Image Screen
     <string name="profile_image_screen_toolbar_title">Profile Image of %1$s</string>
@@ -328,9 +332,16 @@
     <string name="intro_loading_screen_label_loading_stage_post_login_with_token">Setting up the application</string>
 
     // Home Screen
-    <string name="home_screen_toolbar_title">Home Screen</string>
-    <string name="home_screen_label_log_in_button">Login</string>
-    <string name="home_screen_label_sign_up_button">Signup</string>
+    <string name="screen_home_toolbar_title">Home Screen</string>
+
+    <string name="screen_home_alert_dialog_session_expired_title">Session expired</string>
+    <string name="screen_home_alert_dialog_session_expired_description">Your session has expired!</string>
+
+    <string name="screen_home_alert_dialog_user_logout_title">Logout</string>
+    <string name="screen_home_alert_dialog_user_logout_description">You have been successfully logged out!</string>
+
+    <string name="screen_home_login_button">Login</string>
+    <string name="screen_home_signup_button">Signup</string>
 
     // Login Screen
     <string name="login_screen_toolbar_title">Login</string>
@@ -420,10 +431,305 @@
     <string name="qr_code_screen_label_error_invalid_qr_code_type">Invalid QR code type. Try scanning another QR.</string>
     <string name="qr_code_screen_label_error_camera_binding_failed">Camera binding failed.</string>
 
+    // MyListingsScreen
+    <string name="screen_my_listings_header_title">My Listings</string>
+
+    <string name="screen_my_listings_fab_label">Create Listing</string>
+    <string name="screen_my_listings_bottom_sheet_item_edit">Edit listing</string>
+    <string name="screen_my_listings_bottom_sheet_item_delete">Delete listing</string>
+
+    <string name="screen_my_listings_no_listings_found_title">No listings were found.\nClick the button below to create one</string>
+    <string name="screen_my_listings_no_listings_found_button">Create listing</string>
+
+    <string name="screen_my_listings_success_deleting_listing">Successfully deleted the listing \"%1$s\"</string>
+
+    <string name="screen_my_listings_error_fetching_listings">An error occurred whilst fetching your listings.</string>
+    <string name="screen_my_listings_error_fetching_additional_listings">An error occurred whilst fetching additional listings.</string>
+    <string name="screen_my_listings_error_deleting_listing">An error occurred whilst deleting the listing \"%1$s\"</string>
+
+    <string name="screen_my_listings_content_description_more_actions_listing">more actions listing icon</string>
+    <string name="screen_my_listings_content_description_edit_listing">edit listing icon</string>
+    <string name="screen_my_listings_content_description_delete_listing">delete listing icon</string>
+
+    // CartScreen
+    <string name="screen_cart_toolbar_title">Cart</string>
+
+    <string name="screen_cart_empty_cart_title">Your cart is empty\nNavigate to the marketplace to add items</string>
+    <string name="screen_cart_empty_cart_button">Navigate To Marketplace</string>
+
+    <string name="screen_cart_checkout_items_title">Items</string>
+
+    <string name="screen_cart_checkout_summary_card_title_overview">Cart Summary</string>
+    <string name="screen_cart_checkout_summary_card_title_checkout">Order Summary</string>
+
+    <string name="screen_cart_sticky_bottom_button_proceed">Proceed To Checkout</string>
+    <string name="screen_cart_sticky_bottom_button_pay">Pay %1$s</string>
+
+    <string name="screen_cart_error_loading_cart">An error occurred whilst loading your cart</string>
+    <string name="screen_cart_error_loading_cart_summary">An error occurred whilst loading your cart summary</string>
+    <string name="screen_cart_error_adding_to_favorites">An error occurred whilst adding \"%1$s\" to your favorites</string>
+    <string name="screen_cart_error_removing_to_favorites">An error occurred whilst removing \"%1$s\" from your favorites</string>
+    <string name="screen_cart_error_removing_from_cart">An error occurred whilst removing \"%1$s\" from your cart</string>
+    <string name="screen_cart_error_placing_order">An error occurred whilst placing your order</string>
+
+    <string name="screen_cart_content_description_add_to_favorites">Add cart item to favorites icon</string>
+    <string name="screen_cart_content_description_remove_from_favorites">Remove cart item from favorites icon</string>
+
+    // CheckoutWizardScreen
+    <string name="screen_checkout_wizard_toolbar_title">Checkout:</string>
+
+    <string name="screen_checkout_wizard_step_label_shipping_details">Shipping Details</string>
+    <string name="screen_checkout_wizard_step_label_payment_details">Payment Details</string>
+    <string name="screen_checkout_wizard_step_label_overview">Overview</string>
+    <string name="screen_checkout_wizard_step_label_success">Success</string>
+
+    <string name="screen_checkout_wizard_sticky_bottom_button_next">Next</string>
+
+    <string name="screen_checkout_wizard_alert_dialog_title">Exit checkout</string>
+    <string name="screen_checkout_wizard_alert_dialog_message">Are you sure that you want to exit the checkout process? If you do so, all unsaved changes will be lost.</string>
+    <string name="screen_checkout_wizard_alert_dialog_button_negative">Cancel</string>
+    <string name="screen_checkout_wizard_alert_dialog_button_positive">Exit</string>
+
+    <string name="screen_checkout_wizard_error_action_not_supported">This action is not supported!</string>
+
+    // Checkout Wizard:: Shipping Details Screen
+    <string name="screen_checkout_shipping_details_label_first_name">First name</string>
+    <string name="screen_checkout_shipping_details_label_last_name">Last name</string>
+    <string name="screen_checkout_shipping_details_label_street_address">Street Address</string>
+    <string name="screen_checkout_shipping_details_label_floor_number">Floor Number</string>
+    <string name="screen_checkout_shipping_details_label_location_type">Location Type</string>
+    <string name="screen_checkout_shipping_details_label_city">City</string>
+    <string name="screen_checkout_shipping_details_label_zip_code">Zip Code</string>
+
+    <string name="screen_checkout_shipping_details_placeholder_first_name">John</string>
+    <string name="screen_checkout_shipping_details_placeholder_last_name">Doe</string>
+    <string name="screen_checkout_shipping_details_placeholder_street_address">Enter your street Address</string>
+    <string name="screen_checkout_shipping_details_placeholder_floor_number">1st Floor</string>
+    <string name="screen_checkout_shipping_details_placeholder_location_type">House</string>
+    <string name="screen_checkout_shipping_details_placeholder_city">Athens</string>
+    <string name="screen_checkout_shipping_details_placeholder_zip_code">34100</string>"
+
+    <string name="screen_checkout_shipping_details_error_input_blank">Input cannot be blank</string>
+    <string name="screen_checkout_shipping_details_error_input_zip_code_invalid">Only digits (0–9) are allowed</string>
+    <string name="screen_checkout_shipping_details_error_input_min_characters">The minimum allowed number of characters is %1$s</string>
+    <string name="screen_checkout_shipping_details_error_input_max_characters">The maximum allowed number of characters is %1$s</string>
+
+    // Checkout Wizard:: Payment Details Screen
+    <string name="screen_checkout_payment_details_label_cardholder_name">Cardholder\'s name</string>
+    <string name="screen_checkout_payment_details_label_card_number">Card number</string>
+    <string name="screen_checkout_payment_details_label_expiration_date">Expiration date</string>
+    <string name="screen_checkout_payment_details_label_cvv">CVV</string>
+
+    <string name="screen_checkout_payment_details_placeholder_cardholder_name">John Doe</string>
+    <string name="screen_checkout_payment_details_placeholder_card_number">1234 4567 8901 2345</string>
+    <string name="screen_checkout_payment_details_placeholder_CVV">123</string>
+
+    <string name="screen_checkout_payment_details_error_card_number_blank">Card number cannot be blank</string>
+    <string name="screen_checkout_payment_details_error_card_number_invalid">Invalid card number </string>
+    <string name="screen_checkout_payment_details_error_expiration_date_blank">Expiration date cannot be blank</string>
+    <string name="screen_checkout_payment_details_error_expiration_date_invalid">Invalid date</string>
+    <string name="screen_checkout_payment_details_error_cvv_blank">CVV cannot be blank</string>
+    <string name="screen_checkout_payment_details_error_cvv_invalid_length">CVV must be exactly 3 digits</string>
+
+    // Checkout Wizard:: Success Screen
+    <string name="screen_checkout_success_title">Order Placed Successfully!</string>
+
+    <string name="screen_checkout_success_subtitle_part_1">Thank you for your purchase. Your order number is</string>
+    <string name="screen_checkout_success_subtitle_part_2">#%1$s</string>
+    <string name="screen_checkout_success_subtitle_part_3">.</string>
+
+    <string name="screen_checkout_success_view_order_details_button">View Order Details</string>
+    <string name="screen_checkout_success_continue_shopping_button">Continue Shopping</string>
+
+    // OrdersScreen
+    <string name="screen_orders_toolbar_title">Orders</string>
+
+    <string name="screen_orders_order_id">Order %1$s</string>
+    <string name="screen_orders_order_order_date">Order Date: %1$s</string>
+    <string name="screen_orders_order_total_price">Total Price: %1$s</string>
+
+    <string name="screen_orders_empty_orders_found_title">No orders were found.\nNavigate to the marketplace to add items to your cart</string>
+    <string name="screen_orders_empty_orders_found_button">Navigate To Marketplace</string>
+
+    <string name="screen_orders_error_loading_orders">An error occurred whilst loading the orders.</string>
+
+    // OrderDetailsScreen
+    <string name="screen_order_details_toolbar_title">Order %1$s</string>
+
+    <string name="screen_order_details_title_order_status">Order Status</string>
+    <string name="screen_order_details_title_order_items">Order Items</string>
+
+    <string name="screen_order_details_order_item_card_tracking_id_label">Tracking ID: %1$s</string>
+    <string name="screen_order_details_order_item_card_button">View Details</string>
+
+    <string name="screen_order_details_order_summary_title">Order Summary</string>
+
+    <string name="screen_order_details_status_info_bottom_sheet_button">View Order Details</string>
+
+    <string name="screen_order_details_error">An error occurred whilst loading the order details for the order %1$s.</string>
+
+    // OrderItemTrackingHistoryScreen
+    <string name="screen_order_item_tracking_history_toolbar_title">Tracking History</string>
+
+    <string name="screen_order_item_tracking_history_title_current_status">CURRENT STATUS</string>
+    <string name="screen_order_item_tracking_history_title_estimated_delivery">Estimated Delivery</string>
+    <string name="screen_order_item_tracking_history_title_delivery_timeline">Delivery Timeline</string>
+
+    <string name="screen_order_item_tracking_history_label_order_ids">Order %1$s > Order Item %2$s</string>
+    <string name="screen_order_item_tracking_history_label_tracking_step_pending">Pending</string>
+
+    <string name="screen_order_item_tracking_history_seller_card_title">SELLER</string>
+    <string name="screen_order_item_tracking_history_seller_card_label_view_profile">View Profile</string>
+
+    <string name="screen_order_item_tracking_history_courier_card_title">Courier</string>
+    <string name="screen_order_item_tracking_history_courier_card_label_tracking_id">Tracking ID: %1$s</string>
+    <string name="screen_order_item_tracking_history_courier_card_button">View On Courier Website</string>
+
+    <string name="screen_order_item_tracking_history_delivery_details_card_title">Delivery Details</string>
+    <string name="screen_order_item_tracking_history_delivery_details_card_label_delivered_date">Delivered Date:</string>
+    <string name="screen_order_item_tracking_history_delivery_details_card_label_courier">Courier:</string>
+    <string name="screen_order_item_tracking_history_delivery_details_card_label_tracking_id">Tracking ID:</string>
+
+    // Return Card
+    <string name="screen_order_item_tracking_history_return_card_available_title">Return window open</string>
+    <string name="screen_order_item_tracking_history_return_card_available_description">You have until %1$s to return this item</string>
+
+    <string name="screen_order_item_tracking_history_return_card_expired_title">Return window closed</string>
+    <string name="screen_order_item_tracking_history_return_card_expired_description">The 30-day return period ended on %1$s</string>
+
+    <string name="screen_order_item_tracking_history_return_card_final_sale_title">Final Sale - No returns</string>
+    <string name="screen_order_item_tracking_history_return_card_final_sale_description">This clearance item was marked as final sale</string>
+    <string name="screen_order_item_tracking_history_return_card_final_sale_additional_description">All sales final • No returns or exchanges</string>
+
+    <string name="screen_order_item_tracking_history_return_card_pending_title">Return request pending</string>
+    <string name="screen_order_item_tracking_history_return_card_pending_description">The seller is reviewing your return request</string>
+
+    <string name="screen_order_item_tracking_history_return_card_rejected_title">Return request rejected</string>
+    <string name="screen_order_item_tracking_history_return_card_rejected_description">The seller has rejected your return request</string>
+    <string name="screen_order_item_tracking_history_return_card_rejected_action_button">View Response</string>
+
+    <string name="screen_order_item_tracking_history_return_card_accepted_title">Return request accepted</string>
+    <string name="screen_order_item_tracking_history_return_card_accepted_description">Your request has been accepted. Ship the item back to receive the correct one.</string>
+    <string name="screen_order_item_tracking_history_return_card_accepted_action_button">View Shipping Instructions</string>
+
+    <string name="screen_order_item_tracking_history_return_section_button_request_return">Request Return</string>
+    <string name="screen_order_item_tracking_history_return_section_button_view_return_request">View Request Return</string>
+    <string name="screen_order_item_tracking_history_return_section_button_view_tracking_history">View Tracking History</string>
+    <string name="screen_order_item_tracking_history_return_section_button_report_an_issue">Report An Issue</string>
+
+    // Refund Card
+    <string name="screen_order_item_tracking_history_refund_card_available_title">Refund window open</string>
+    <string name="screen_order_item_tracking_history_refund_card_available_description">You have until %1$s to refund this item</string>
+
+    <string name="screen_order_item_tracking_history_refund_card_expired_title">Refund window closed</string>
+    <string name="screen_order_item_tracking_history_refund_card_expired_description">The 30-day return period ended on %1$s</string>
+
+    <string name="screen_order_item_tracking_history_refund_card_final_sale_title">Final Sale - No refunds</string>
+    <string name="screen_order_item_tracking_history_refund_card_final_sale_description">This clearance item was marked as final sale</string>
+    <string name="screen_order_item_tracking_history_refund_card_final_sale_additional_description">All sales final • No refunds</string>
+
+    <string name="screen_order_item_tracking_history_refund_card_pending_title">Refund request pending</string>
+    <string name="screen_order_item_tracking_history_refund_card_pending_description">The seller is reviewing your refund request</string>
+
+    <string name="screen_order_item_tracking_history_refund_card_rejected_title">Refund request rejected</string>
+    <string name="screen_order_item_tracking_history_refund_card_rejected_description">The seller has rejected your refund request</string>
+    <string name="screen_order_item_tracking_history_refund_card_rejected_action_button">View Response</string>
+
+    <string name="screen_order_item_tracking_history_refund_card_accepted_title">Refund request accepted</string>
+    <string name="screen_order_item_tracking_history_refund_card_accepted_description">Your request has been accepted. Ship the item back to receive your refund.</string>
+    <string name="screen_order_item_tracking_history_refund_card_accepted_action_button">View Shipping Instructions</string>
+
+    <string name="screen_order_item_tracking_history_refund_section_button_request_refund">Request Refund</string>
+    <string name="screen_order_item_tracking_history_refund_section_button_view_refund_request">View Refund Request</string>
+
+    <string name="screen_order_item_tracking_history_extra_action_button_contact_support">Contact Support</string>
+    <string name="screen_order_item_tracking_history_extra_action_button_contact_seller">Contact Seller</string>
+
+    <string name="screen_order_item_tracking_history_toast_message_success_copying_to_clipboard">Successfully copied the tracking ID to the clipboard</string>
+
+    <string name="screen_order_item_tracking_history_error_label_no_data">No tracking history was found for the order %1$s and item %2$s.</string>
+    <string name="screen_order_item_tracking_history_error_label_fetching_data">An error occurred whilst loading the tracking history for the order %1$s and item %2$s.</string>
+    <string name="screen_order_item_tracking_history_error_label_fetching_seller_info">Error loading seller info.</string>
+
+    <string name="screen_order_item_tracking_history_error_button_no_data">Retry</string>
+    <string name="screen_order_item_tracking_history_error_button_fetching_data">Go Back</string>
+
+    <string name="screen_order_item_tracking_history_content_description_copy_tracking_id">copy tracking ID icon button</string>
+
+    // Request return screen
+    <string name="screen_request_item_return_toolbar_title">Request Return</string>
+
+    <string name="screen_request_return_reason_label">Return Reason</string>
+
+    <string name="screen_request_item_return_checkbox_request_refund">Request refund</string>
+
+    <string name="screen_request_item_return_description_title">Additional Details (Optional)</string>
+    <string name="screen_request_item_return_description_placeholder">Describe your return reason…</string>
+    <string name="screen_request_item_return_description_remaining_characters_label">remaining characters: %1$s/%2$s</string>
+
+    <string name="screen_request_item_return_mandatory_field_label">mandatory field</string>
+
+    <string name="screen_request_item_return_upload_images_title">Upload photos (optional)</string>
+    <string name="screen_request_item_return_upload_images_button">Upload photos</string>
+    <string name="screen_request_item_return_upload_images_helper_text">A maximum of %1$s images are allowed, up to %2$sMB each.</string>
+
+    <string name="screen_request_item_return_refund_dialog_title">Important Refund Information</string>
+    <string name="screen_request_item_return_refund_dialog_error_message">Please note that submitting a refund request does not automatically guarantee eligibility. We will carefully inspect your item after it is returned to determine if a full or partial refund can be issued, based on its condition.</string>
+    <string name="screen_request_item_return_refund_dialog_button_negative">Cancel</string>
+    <string name="screen_request_item_return_refund_dialog_button_positive">Continue</string>
+
+    <string name="screen_request_item_return_exit_dialog_title">Exit</string>
+    <string name="screen_request_item_return_exit_dialog_error_message">Are you sure that you want to exit the request item return process? If you do so, all saved progress will be lost.</string>
+    <string name="screen_request_item_return_exit_dialog_button_negative">Cancel</string>
+    <string name="screen_request_item_return_exit_dialog_button_positive">Exit</string>
+
+    <string name="screen_request_item_return_snackbar_image_selection_none_message">No images were selected</string>
+    <string name="screen_request_item_return_snackbar_image_selection_none_button">OK</string>
+
+    <string name="screen_request_item_return_snackbar_image_selection_failure_message">An error occurred whilst selecting the images</string>
+    <string name="screen_request_item_return_snackbar_image_selection_failure_button">OK</string>
+
+    // Errors.
+
+    <string name="screen_request_item_return_generic_error_message">An error occurred whilst fetching the details</string>
+    <string name="screen_request_item_return_generic_error_button">Try again</string>
+
+    <string name="screen_request_item_return_snackbar_error_submitting_item_return_message">An error occurred whilst submitting the item return</string>
+    <string name="screen_request_item_return_snackbar_error_submitting_item_return_button">Try again</string>
+
+    <string name="screen_request_return_description_error_max_characters">Description cannot be more than %1$s characters</string>
+    <string name="screen_request_item_return_refund_error_attaching_images_generic">An error occurred whilst attaching the images.</string>
+    <string name="screen_request_item_return_refund_error_attaching_images_invalid_extension">You can only attach JPEG and PNG images.</string>
+    <string name="screen_request_item_return_refund_error_attaching_images_over_max_count">You can only attach up to %1$s images.</string>
+    <string name="screen_request_item_return_refund_error_attaching_images_over_max_size">The maximum allowed image size is %1$s MB.</string>
+    <string name="screen_request_item_return_refund_error_attaching_images_existing_image">One of the selected images is already attached.</string>
+
+    <string name="screen_request_item_return_upload_image_button_content_description">upload image button</string>
+    <string name="screen_request_item_return_uploaded_image_content_description">Uploaded image %1$s</string>
+    <string name="screen_request_item_return_remove_image_button_content_description">remove attached image button</string>
+
+    <string name="screen_request_return_submit_button">Submit Return Request</string>
+
+    // `CheckoutDataCard`
+    <string name="checkout_info_card_shipping_details_title">Shipping Details</string>
+    <string name="checkout_info_card_payment_details_title">Payment Details</string>
+
+    <string name="checkout_info_card_label_card_ending">%1$s ending in %2$s</string>
+    <string name="checkout_info_card_label_payment_date">Payment Date:</string>
+    <string name="checkout_info_card_label_transaction_id">Transaction ID:</string>
+
+    <string name="checkout_info_card_content_description_edit_shipping_details">Edit shipping details icon</string>
+    <string name="checkout_info_card_content_description_edit_payment_details">Edit payment details icon</string>
+
+    // `OrderSummaryCard`
+    <string name="order_summary_card_label_subtotal">Subtotal:</string>
+    <string name="order_summary_card_label_shipping">Shipping:</string>
+    <string name="order_summary_card_label_total">Total:</string>
+
     // `OtpErrorCause` sealed class strings
     <string name="otp_error_cause_not_match">OTP is incorrect.</string>
     <string name="otp_error_cause_invalid_length">OTP must be 6 characters.</string>
-    <string name="otp_error_cause_expired">The entered code is expired. Request a new one. </string>
+    <string name="otp_error_cause_expired">The entered code is expired. Request a new one.</string>
     <string name="otp_error_cause_blocked">The OTP functionality has been blocked. \nTry again in: %1$s</string>
     <string name="otp_error_cause_internal_server_error">Internal server error.</string>
     <string name="otp_error_cause_invalid">Invalid OTP Error cause type \"%1$s\".</string>
@@ -431,6 +737,92 @@
     // `ResendOtpErrorCause` sealed class strings
     <string name="resend_otp_error_cause_user_not_found">The user was not found.</string>
     <string name="resend_otp_error_cause_too_soon">You have requested a new OTP code too soon. Try again in: %1$s</string>
+
+    // `ShippingLocationType` enum labels
+    <string name="shipping_location_type_house">House</string>
+    <string name="shipping_location_type_work">Work</string>
+    <string name="shipping_location_type_other">Other</string>
+
+    // `ShippingLocationFloorNumber` enum labels
+    <string name="shipping_location_floor_number_basement">Basement</string>
+    <string name="shipping_location_floor_number_ground_floor">Ground Floor</string>
+    <string name="shipping_location_floor_number_first_floor">1st Floor</string>
+    <string name="shipping_location_floor_number_second_floor">2nd Floor</string>
+    <string name="shipping_location_floor_number_third_floor">3rd Floor</string>
+    <string name="shipping_location_floor_number_fourth_floor">4th Floor</string>
+    <string name="shipping_location_floor_number_fifth_floor">5th Floor</string>
+    <string name="shipping_location_floor_number_sixth_floor">6th Floor</string>
+    <string name="shipping_location_floor_number_seventh_floor">7th Floor</string>
+    <string name="shipping_location_floor_number_eight_floor">8th Floor</string>
+    <string name="shipping_location_floor_number_ninth_floor">9th Floor</string>
+    <string name="shipping_location_floor_number_tenth_floor">10th Floor</string>
+    <string name="shipping_location_floor_number_tenth_plus_floor">10th+. Floor</string>
+
+    // `OrderCourierUi` enum labels
+    <string name="order_courier_ui_label_acs">ACS</string>
+    <string name="order_courier_ui_label_elta">Elta</string>
+    <string name="order_courier_ui_label_fedex">FedEx</string>
+
+    // `OrderStatusUi` enum labels
+    <string name="order_status_ui_label_processing">Processing</string>
+    <string name="order_status_ui_label_partially_shipped">Partially Shipped</string>
+    <string name="order_status_ui_label_shipped">Shipped</string>
+    <string name="order_status_ui_label_partially_delivered">Partially Delivered</string>
+    <string name="order_status_ui_label_delivered">Delivered</string>
+
+    // `OrderStatusUi` enum descriptions
+    <string name="order_status_ui_short_description_processing">All items are being processed</string>
+    <string name="order_status_ui_short_description_partially_shipped">%1$s of %2$s items shipped</string>
+    <string name="order_status_ui_short_description_shipped">All items shipped</string>
+    <string name="order_status_ui_short_description_partially_delivered">%1$s of %2$s items delivered</string>
+    <string name="order_status_ui_short_description_delivered">All items delivered</string>
+
+    <string name="order_status_ui_full_description_processing">We have received your order and the seller is currently preparing your items for shipment.</string>
+    <string name="order_status_ui_full_description_partially_shipped">Some items in your order are on their way, while others are still being prepared or are shipping separately.</string>
+    <string name="order_status_ui_full_description_shipped">All items in your order have been handed over to the shipping carrier and are on their way to you.</string>
+    <string name="order_status_ui_full_description_partially_delivered">Some items from your order have arrived at your address, but others are still in transit.</string>
+    <string name="order_status_ui_full_description_delivered">All items in your order have been successfully delivered. Enjoy your purchase!</string>
+
+    // `OrderItemStatusUi` enum labels
+    <string name="order_item_status_ui_label_processing">Processing</string>
+    <string name="order_item_status_ui_label_shipped">Shipped</string>
+    <string name="order_item_status_ui_label_departed_sorting_facility">Departed Sorting Facility</string>
+    <string name="order_item_status_ui_label_out_for_delivery">Out For Delivery</string>
+    <string name="order_item_status_ui_label_delivered">Delivered</string>
+
+    // `CardBrandUi` sealed interface labels
+    <string name="card_brand_label_mastercard">MasterCard</string>
+    <string name="card_brand_label_visa">Visa</string>
+    <string name="card_brand_label_maestro">Maestro</string>
+    <string name="card_brand_label_american_express">American Express</string>
+    <string name="card_brand_label_dinersclub">Diners Club</string>
+    <string name="card_brand_label_discover">Discover</string>
+    <string name="card_brand_label_unknown">Card</string>
+
+    <string name="card_brand_content_description_mastercard">MasterCard card brand icon</string>
+    <string name="card_brand_content_description_visa">Visa card brand icon</string>
+    <string name="card_brand_content_description_maestro">Maestro card brand icon</string>
+    <string name="card_brand_content_description_american_express">American Express card brand icon</string>
+    <string name="card_brand_content_description_dinersclub">Diners Club card brand icon</string>
+    <string name="card_brand_content_description_discover">Discover card brand icon</string>
+    <string name="card_brand_content_description_unknown">Unknown card brand icon</string>
+
+    // `OrderItemReturnReasonUi` enum labels
+    <string name="order_item_return_reason_defective">Item is defective or damaged</string>
+    <string name="order_item_return_reason_not_as_described">Item not as described</string>
+    <string name="order_item_return_reason_wrong_item">Wrong item received</string>
+    <string name="order_item_return_reason_changed_mind">Changed my mind</string>
+    <string name="order_item_return_reason_other">Other</string>
+
+    // `OrderItemReturnConditionUi` enum labels
+    <string name="order_item_return_condition_original_packaging_title">Unused with tags</string>
+    <string name="order_item_return_condition_original_packaging_description">Never used, original packaging intact</string>
+
+    <string name="order_item_return_condition_package_opened_title">Opened but unused</string>
+    <string name="order_item_return_condition_package_opened_description">Package opened but item not used</string>
+
+    <string name="order_item_return_condition_lightly_used_title">Gently used</string>
+    <string name="order_item_return_condition_lightly_used_description">Used once or twice, like new</string>
 
     // Input field errors
     <string name="input_field_error_blank_email">Email cannot be blank.</string>
@@ -466,8 +858,10 @@
     <string name="content_description_your_profile_image">Your profile image</string>
     <string name="content_description_add_friend">Add friend</string>
     <string name="content_description_unfriend">Unfriend</string>
-    <string name="content_description_friends">Friends</string>
+    <string name="content_description_friends">Friends icon</string>
+    <string name="content_description_listings">Listings icon</string>
     <string name="content_description_view_profile_image">View profile image</string>
     <string name="content_description_upload_profile_image">Upload profile image</string>
+    <string name="content_description_delete_search_term">Delete search term</string>
 
 </resources>

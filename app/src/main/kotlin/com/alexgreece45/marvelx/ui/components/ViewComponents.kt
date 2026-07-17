@@ -4,8 +4,10 @@ import androidx.activity.compose.BackHandler
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -20,12 +22,15 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyItemScope
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -58,7 +63,7 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.OutlinedButton
 import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Scaffold
-import androidx.compose.material.SnackbarHostState
+import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.material.TextButton
 import androidx.compose.material.TextField
@@ -74,7 +79,6 @@ import androidx.compose.material.primarySurface
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
-import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -115,12 +119,13 @@ import androidx.compose.ui.unit.toSize
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.zIndex
 import androidx.navigation.NavController
-import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.common_ui.snackbar.MarvelXSnackbar
+import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarConfig
 import com.alexgreece45.marvelx.ui.components.model.ErrorButtonType
-import com.alexgreece45.marvelx.ui.components.model.SnackbarStateData
-import com.alexgreece45.marvelx.ui.theme.values.customColors
+import com.alexgreece45.marvelx.ui_theme.theme.values.customColors
 import com.alexgreece45.marvelx.util.BOTTOM_NAVIGATION_BAR_ITEM_LABEL_MAX_LENGTH
 import com.alexgreece45.marvelx.util.BOTTOM_NAVIGATION_BAR_MAX_ITEMS
 import com.alexgreece45.marvelx.util.BOTTOM_NAVIGATION_BAR_MIN_ITEMS
@@ -132,10 +137,11 @@ import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.SPACING_TINY
 import com.alexgreece45.marvelx.util.THROTTLE_CLICKABLE_DEFAULT_DELAY
 import com.alexgreece45.marvelx.util.VSpacer
+import com.alexgreece45.marvelx.util.constants.ConstantsUi
 import com.alexgreece45.marvelx.util.constants.ConstantsZIndex
 import com.alexgreece45.marvelx.util.extensions.ClickState
+import com.alexgreece45.marvelx.util.extensions.applyContentScreenPaddings
 import com.alexgreece45.marvelx.util.extensions.applyPadding
-import com.alexgreece45.marvelx.util.extensions.applyPaddingValues
 import com.alexgreece45.marvelx.util.extensions.filterTouchesWhenObscured
 import com.alexgreece45.marvelx.util.extensions.screenPaddingsNone
 import com.alexgreece45.marvelx.util.extensions.throttledClickableIcon
@@ -259,7 +265,7 @@ private fun ThrottledBackHandler(
 // ==========================
 
 data class BottomBarItem(
-    val route: String,
+    val route: Any,
     @StringRes val label: Int,
     val iconData: IconData,
 )
@@ -276,6 +282,7 @@ data class BottomBarData(
 
 data class BottomNavigationBarData(
     val navController: NavController,
+    val rootItem: BottomBarItem,
     val items: List<BottomBarItem>,
     val backgroundColor: Color? = null,
     val topHorizontalColor: Color? = null,
@@ -341,11 +348,11 @@ private fun BottomBar(
 @Composable
 private fun BottomNavigationBar(
     navController: NavController,
+    rootItem: BottomBarItem,
     items: List<BottomBarItem>,
     backgroundColor: Color? = null,
     topHorizontalColor: Color? = null,
-    selectedItemTopHorizontalColor: Color? = null,
-    elevation: Dp = BottomNavigationDefaults.Elevation
+    selectedItemTopHorizontalColor: Color? = null
 ) {
     if (items.size < BOTTOM_NAVIGATION_BAR_MIN_ITEMS) throw RuntimeException("The minimum allowed bottom navigation bar items is $BOTTOM_NAVIGATION_BAR_MIN_ITEMS!")
     if (items.size > BOTTOM_NAVIGATION_BAR_MAX_ITEMS) throw RuntimeException("The maximum allowed bottom navigation bar items is $BOTTOM_NAVIGATION_BAR_MAX_ITEMS!")
@@ -353,101 +360,112 @@ private fun BottomNavigationBar(
         "The maximum allowed length for a bottom navigation bar's item label is $BOTTOM_NAVIGATION_BAR_ITEM_LABEL_MAX_LENGTH characters."
     )
 
+    val finalBackgroundColor = backgroundColor ?: MaterialTheme.customColors.transparent
+
     BottomNavigation(
-        backgroundColor = backgroundColor ?: MaterialTheme.colors.primarySurface,
-        contentColor = if (backgroundColor == null) contentColorFor(MaterialTheme.colors.primarySurface) else contentColorFor(
-            backgroundColor
-        ),
-        elevation = elevation
+        modifier = Modifier.navigationBarsPadding(),
+        backgroundColor = MaterialTheme.customColors.transparent,
+        contentColor = contentColorFor(finalBackgroundColor),
+        elevation = 0.dp
     ) {
         val navBackStackEntry by navController.currentBackStackEntryAsState()
-        val currentRoute = navBackStackEntry?.destination?.route
+        val currentDestination = navBackStackEntry?.destination
 
-        items.forEach { item ->
-            val isSelected = currentRoute == item.route
-            CompositionLocalProvider(
-                LocalContentAlpha provides ContentAlpha.high
-            ) {
-                // TODO: make these values configurable
-                val topHorizontalStrokeWidth = 1.dp
-                val selectedItemTopHorizontalStrokeWidth = topHorizontalStrokeWidth + 2.dp
-                val selectedItemTopHorizontalVerticalOffset =
-                    selectedItemTopHorizontalStrokeWidth - 0.75.dp
-                BottomNavigationItem(
-                    modifier = Modifier
-                        .then(
-                            Modifier
-                                .drawWithContent {
-                                    // Draws this item.
-                                    drawContent()
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            items.forEach { item ->
+                val isSelected = currentDestination?.hasRoute(item.route::class) == true
 
-                                    // Draws a horizontal line at the top of all the items.
-                                    topHorizontalColor?.let { lineColor ->
-                                        drawLine(
-                                            color = lineColor,
-                                            start = Offset(0f, 0f),
-                                            end = Offset(size.width, 0f),
-                                            strokeWidth = topHorizontalStrokeWidth.toPx(),
-                                            cap = StrokeCap.Butt
-                                        )
-                                    }
+                CompositionLocalProvider(
+                    LocalContentAlpha provides ContentAlpha.high
+                ) {
+                    // TODO: make these values configurable
+                    val topHorizontalStrokeWidth = 1.dp
+                    val selectedItemTopHorizontalStrokeWidth = topHorizontalStrokeWidth + 2.dp
+                    val selectedItemTopHorizontalVerticalOffset =
+                        selectedItemTopHorizontalStrokeWidth - 0.75.dp
+                    BottomNavigationItem(
+                        modifier = Modifier
+                            .then(
+                                Modifier
+                                    .drawWithContent {
+                                        // Draws this item.
+                                        drawContent()
 
-                                    // Draws a horizontal line at the top of the selected item.
-                                    selectedItemTopHorizontalColor?.let { lineColor ->
-                                        // TODO: Make these values configurable.
-                                        val startPositionX = size.width / 33
-                                        val endPositionX = size.width - startPositionX
-                                        if (isSelected) {
+                                        // Draws a horizontal line at the top of all the items.
+                                        topHorizontalColor?.let { lineColor ->
                                             drawLine(
                                                 color = lineColor,
-                                                start = Offset(
-                                                    x = startPositionX.toDp()
-                                                        .toPx(), // Indent the start of the line by the 1/33th (3.3%) of the total length of the top horizontal line of the item.
-                                                    y = selectedItemTopHorizontalVerticalOffset.toPx()
-                                                ),
-                                                end = Offset(
-                                                    x = endPositionX.toDp()
-                                                        .toPx(), // Indent the end of the line by total length of the top horizontal line of the item minus the start indent.
-                                                    y = selectedItemTopHorizontalVerticalOffset.toPx()
-                                                ),
-                                                strokeWidth = selectedItemTopHorizontalStrokeWidth.toPx(),
-                                                cap = StrokeCap.Round
+                                                start = Offset(0f, 0f),
+                                                end = Offset(size.width, 0f),
+                                                strokeWidth = topHorizontalStrokeWidth.toPx(),
+                                                cap = StrokeCap.Butt
                                             )
                                         }
+
+                                        // Draws a horizontal line at the top of the selected item.
+                                        selectedItemTopHorizontalColor?.let { lineColor ->
+                                            // TODO: Make these values configurable.
+                                            val startPositionX = size.width / 33
+                                            val endPositionX = size.width - startPositionX
+                                            if (isSelected) {
+                                                drawLine(
+                                                    color = lineColor,
+                                                    start = Offset(
+                                                        x = startPositionX.toDp()
+                                                            .toPx(), // Indent the start of the line by the 1/33th (3.3%) of the total length of the top horizontal line of the item.
+                                                        y = selectedItemTopHorizontalVerticalOffset.toPx()
+                                                    ),
+                                                    end = Offset(
+                                                        x = endPositionX.toDp()
+                                                            .toPx(), // Indent the end of the line by total length of the top horizontal line of the item minus the start indent.
+                                                        y = selectedItemTopHorizontalVerticalOffset.toPx()
+                                                    ),
+                                                    strokeWidth = selectedItemTopHorizontalStrokeWidth.toPx(),
+                                                    cap = StrokeCap.Round
+                                                )
+                                            }
+                                        }
                                     }
+                            ),
+                        icon = {
+                            Icon(
+                                painter = painterResource(item.iconData.iconResource),
+                                contentDescription = stringResource(item.iconData.contentDescription),
+                                modifier = Modifier.size(ConstantsUi.MIN_ICON_SIZE),
+                                tint = item.iconData.tint
+                                    ?: LocalContentColor.current.copy(alpha = LocalContentAlpha.current)
+                            )
+                        },
+                        label = {
+                            Text(
+                                text = stringResource(item.label),
+                                maxLines = 1,
+                                style = LocalTextStyle.current.copy(
+                                    fontSize = 10.sp,
+                                    letterSpacing = 0.1.sp
+                                )
+                            )
+                        },
+                        selected = isSelected,
+                        onClick = {
+                            // Navigate to different route ONLY.
+                            if (!isSelected) {
+                                navController.navigate(item.route) {
+                                    popUpTo(rootItem.route) {
+                                        saveState = true
+                                    }
+                                    launchSingleTop = true
+                                    restoreState = true
                                 }
-                        ),
-                    icon = {
-                        Icon(
-                            modifier = Modifier.size(24.dp),
-                            painter = painterResource(item.iconData.iconResource),
-                            contentDescription = stringResource(item.iconData.contentDescription),
-                            tint = item.iconData.tint
-                                ?: LocalContentColor.current.copy(alpha = LocalContentAlpha.current)
-                        )
-                    },
-                    label = {
-                        Text(
-                            text = stringResource(item.label)
-                        )
-                    },
-                    selected = isSelected,
-                    onClick = {
-                        // Navigate to different route ONLY.
-                        if (currentRoute != item.route) {
-                            navController.navigate(item.route) {
-                                // TODO: Make the start destination configurable either by the provided value if it's not null, otherwise by the first item's route.
-                                popUpTo(navController.graph.findStartDestination().id) {
-                                    saveState = true
-                                }
-                                launchSingleTop = true
-                                restoreState = true
                             }
-                        }
-                    },
-                    selectedContentColor = MaterialTheme.colors.error,
-                    unselectedContentColor = MaterialTheme.colors.primary.copy(alpha = ContentAlpha.medium)
-                )
+                        },
+                        selectedContentColor = MaterialTheme.customColors.genericRed,
+                        unselectedContentColor = MaterialTheme.colors.primary.copy(alpha = ContentAlpha.medium)
+                    )
+                }
             }
         }
     }
@@ -524,6 +542,8 @@ data class ExtendedFabData(
  * [toolbarActions] must be `null`.
  * @param paddingValues The padding values to apply on top of the scaffold's ones. Provide a non-null
  * value to override the default padding values that are provided within this composable.
+ * @param isInnerScreen Whether this screen is an inner-screen. If `true`, then system bar and
+ * bottom bar paddings are not applied.
  */
 @Composable
 fun ContentScreen(
@@ -536,29 +556,18 @@ fun ContentScreen(
     toolbarActionsContent: (@Composable RowScope.() -> Unit)? = null,
     bottomBarData: BottomBarData? = null,
     bottomNavigationBarData: BottomNavigationBarData? = null,
-    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
-    snackbarStateData: SnackbarStateData? = null,
+    snackbarConfig: SnackbarConfig? = null,
     fabData: FabData? = null,
     stickyBottom: @Composable (BoxScope.() -> Unit)? = null,
-    paddingValues: PaddingValues? = null,
+    paddingValues: PaddingValues = PaddingValues(DEFAULT_SCREEN_PADDING),
+    isInnerScreen: Boolean = false,
     content: @Composable (PaddingValues) -> Unit
 ) {
     if (toolbarActions != null && toolbarActionsContent != null) {
         throw IllegalArgumentException("You cannot use `toolbarActions` and `toolbarActionsContent` at the same time. Set either argument.")
     }
 
-    LaunchedEffect(snackbarStateData) {
-        snackbarStateData?.let {
-            snackbarHostState.showSnackbar(
-                message = it.message,
-                actionLabel = it.actionLabel,
-                duration = it.duration
-            )
-        }
-    }
-
     Scaffold(
-        scaffoldState = rememberScaffoldState(snackbarHostState = snackbarHostState),
         topBar = {
             if (showToolbar) {
                 Toolbar(
@@ -607,43 +616,62 @@ fun ContentScreen(
                 }
             }*/
 
-            bottomNavigationBarData?.let { bottomNavigationBarData ->
-                BottomNavigationBar(
-                    navController = bottomNavigationBarData.navController,
-                    items = bottomNavigationBarData.items,
-                    backgroundColor = bottomNavigationBarData.backgroundColor,
-                    topHorizontalColor = bottomNavigationBarData.topHorizontalColor,
-                    selectedItemTopHorizontalColor = bottomNavigationBarData.selectedItemTopHorizontalColor,
-                    elevation = bottomNavigationBarData.elevation
+            Surface(
+                color = bottomNavigationBarData?.backgroundColor
+                    ?: MaterialTheme.colors.primarySurface,
+                elevation = bottomNavigationBarData?.elevation ?: 0.dp
+            ) {
+                bottomNavigationBarData?.let { bottomNavigationBarData ->
+                    BottomNavigationBar(
+                        navController = bottomNavigationBarData.navController,
+                        rootItem = bottomNavigationBarData.rootItem,
+                        items = bottomNavigationBarData.items,
+                        backgroundColor = bottomNavigationBarData.backgroundColor,
+                        topHorizontalColor = bottomNavigationBarData.topHorizontalColor,
+                        selectedItemTopHorizontalColor = bottomNavigationBarData.selectedItemTopHorizontalColor
+                    )
+                }
+            }
+        },
+        snackbarHost = {
+            snackbarConfig?.let {
+                MarvelXSnackbar(
+                    snackbarHostState = snackbarConfig.snackbarHostState,
+                    snackbarStateData = snackbarConfig.snackbarStateData
                 )
             }
         },
         floatingActionButton = {
             if (!isLoading) {
                 fabData?.let { fabData ->
-                    when (fabData) {
-                        is NormalFabData -> {
-                            NormalFloatingActionButton(normalFabData = fabData)
-                        }
+                    Box(modifier = if (bottomNavigationBarData == null) Modifier.navigationBarsPadding() else Modifier) {
+                        when (fabData) {
+                            is NormalFabData -> {
+                                NormalFloatingActionButton(normalFabData = fabData)
+                            }
 
-                        is ExtendedFabData -> {
-                            CollapsibleExtendedFloatingActionButton(extendedFabData = fabData)
+                            is ExtendedFabData -> {
+                                CollapsibleExtendedFloatingActionButton(extendedFabData = fabData)
+                            }
                         }
                     }
                 }
             }
         }
     ) { scaffoldPaddingValues ->
+        val finalScaffoldingPaddings = scaffoldPaddingValues.applyContentScreenPaddings(
+            paddingValues = paddingValues,
+            isToolbarVisible = showToolbar,
+            isBottomBarVisible = bottomNavigationBarData != null,
+            isInnerScreen = isInnerScreen
+        )
+
         Column(modifier = Modifier.fillMaxSize()) {
             Box(modifier = Modifier.weight(1f)) {
                 if (isLoading) {
                     LoadingScreen()
                 }
-                content(
-                    if (paddingValues != null) scaffoldPaddingValues.applyPaddingValues(
-                        paddingValues = paddingValues
-                    ) else scaffoldPaddingValues.applyPadding()
-                )
+                content(finalScaffoldingPaddings)
             }
 
             // Sticky bottom.
@@ -653,11 +681,7 @@ fun ContentScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .zIndex(ConstantsZIndex.STICKY_BOTTOM)
-                            .padding(
-                                if (paddingValues != null) scaffoldPaddingValues.applyPaddingValues(
-                                    paddingValues = paddingValues
-                                ) else scaffoldPaddingValues.applyPadding()
-                            )
+                            .padding(finalScaffoldingPaddings)
                     ) {
                         stickyBottom()
                     }
@@ -685,6 +709,7 @@ private fun Toolbar(
     val keyboard = LocalSoftwareKeyboardController.current
 
     TopAppBar(
+        modifier = Modifier.statusBarsPadding(),
         backgroundColor = MaterialTheme.colors.background,
         elevation = 0.dp,
         contentPadding = screenPaddingsNone()
@@ -699,7 +724,6 @@ private fun Toolbar(
                             when (navigableAction) {
                                 is ScreenNavigableAction.Closeable -> navigableAction.onClose()
                                 is ScreenNavigableAction.Backable -> navigableAction.onBack()
-                                else -> {}
                             }
                         }
                     ) {
@@ -823,7 +847,7 @@ fun ContentScreenHeader(
 }
 
 @Composable
-fun NormalFloatingActionButton(
+private fun NormalFloatingActionButton(
     normalFabData: NormalFabData
 ) {
     val backgroundColor = normalFabData.backgroundColor ?: MaterialTheme.colors.secondary
@@ -845,7 +869,7 @@ fun NormalFloatingActionButton(
 }
 
 @Composable
-fun CollapsibleExtendedFloatingActionButton(
+private fun CollapsibleExtendedFloatingActionButton(
     extendedFabData: ExtendedFabData
 ) {
     val fabData = extendedFabData.normalFabData
@@ -947,10 +971,10 @@ fun SearchBar(
         colors = TextFieldDefaults.textFieldColors(
             textColor = textColor,
             backgroundColor = backgroundColor,
-            focusedIndicatorColor = Color.Transparent,
-            unfocusedIndicatorColor = Color.Transparent,
-            disabledIndicatorColor = Color.Transparent,
-            errorIndicatorColor = Color.Transparent,
+            focusedIndicatorColor = MaterialTheme.customColors.transparent,
+            unfocusedIndicatorColor = MaterialTheme.customColors.transparent,
+            disabledIndicatorColor = MaterialTheme.customColors.transparent,
+            errorIndicatorColor = MaterialTheme.customColors.transparent,
             placeholderColor = MaterialTheme.colors.onBackground.copy(alpha = 0.6f)
         )
     )
@@ -1128,10 +1152,11 @@ fun OutlinedTextFieldValidation(
     keyboardActions: KeyboardActions = KeyboardActions.Default,
     singleLine: Boolean = true,
     maxLines: Int = if (singleLine) 1 else Int.MAX_VALUE,
+    minLines: Int = 1,
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     shape: Shape = MaterialTheme.shapes.medium
 ) {
-    Box(modifier) {
+    Column(modifier) {
         OutlinedTextField(
             value = value,
             onValueChange = { newValue ->
@@ -1139,7 +1164,7 @@ fun OutlinedTextFieldValidation(
                     onValueChange(newValue)
                 }
             },
-            modifier = modifier,
+            modifier = Modifier.fillMaxWidth(),
             enabled = enabled,
             readOnly = readOnly,
             label = {
@@ -1165,6 +1190,7 @@ fun OutlinedTextFieldValidation(
             keyboardActions = keyboardActions,
             singleLine = singleLine,
             maxLines = maxLines,
+            minLines = minLines,
             interactionSource = interactionSource,
             shape = shape
         )
@@ -1172,14 +1198,12 @@ fun OutlinedTextFieldValidation(
         // Error
         AnimatedVisibility(
             visible = isError && errorMessage.isNotBlank(),
-            modifier = Modifier.align(Alignment.BottomStart),
-            enter = fadeIn(),
-            exit = fadeOut()
+            modifier = Modifier.padding(start = SPACING_SMALL.dp, top = SPACING_TINY.dp),
+            enter = fadeIn() + expandVertically(),
+            exit = fadeOut() + shrinkVertically()
         ) {
             Text(
                 text = errorMessage,
-                modifier = Modifier
-                    .padding(start = 10.dp, top = 66.dp),
                 color = MaterialTheme.colors.error,
                 style = MaterialTheme.typography.body2
             )
@@ -1210,7 +1234,9 @@ fun ExposedDropdownMenu(
     label: String,
     expanded: Boolean,
     modifier: Modifier = Modifier,
+    placeholder: String? = null,
     value: String? = "",
+    enabled: Boolean = true,
     maxLines: Int = 1,
     onDismissRequest: (() -> Unit)? = null,
     onExpandedChange: (() -> Unit)? = null,
@@ -1234,12 +1260,70 @@ fun ExposedDropdownMenu(
                 .onGloballyPositioned { coordinates ->
                     outlinedTextFieldSize = coordinates.size.toSize()
                 },
+            enabled = enabled,
             readOnly = true,
             label = {
                 Text(
                     text = label
                 )
             },
+            placeholder = {
+                placeholder?.let {
+                    Text(text = placeholder)
+                }
+            },
+            trailingIcon = {
+                ExposedDropdownMenuDefaults.TrailingIcon(
+                    expanded = expanded
+                )
+            },
+            maxLines = maxLines
+        )
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { onDismissRequest?.invoke() },
+            modifier = Modifier.width(with(density) { outlinedTextFieldSize.width.toDp() }),
+            content = content
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterialApi::class)
+@Composable
+fun ExposedDropdownMenu(
+    label: @Composable () -> Unit,
+    expanded: Boolean,
+    modifier: Modifier = Modifier,
+    placeholder: (@Composable () -> Unit)? = null,
+    value: String? = "",
+    enabled: Boolean = true,
+    maxLines: Int = 1,
+    onDismissRequest: (() -> Unit)? = null,
+    onExpandedChange: (() -> Unit)? = null,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    var outlinedTextFieldSize by remember { mutableStateOf(Size.Zero) }
+    val density = LocalDensity.current
+
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { onExpandedChange?.invoke() },
+        modifier = modifier
+    ) {
+        OutlinedTextField(
+            value = TextFieldValue(
+                text = value.orEmpty()
+            ),
+            onValueChange = {},
+            modifier = Modifier
+                .fillMaxWidth()
+                .onGloballyPositioned { coordinates ->
+                    outlinedTextFieldSize = coordinates.size.toSize()
+                },
+            enabled = enabled,
+            readOnly = true,
+            label = label,
+            placeholder = placeholder,
             trailingIcon = {
                 ExposedDropdownMenuDefaults.TrailingIcon(
                     expanded = expanded
@@ -1619,38 +1703,94 @@ fun SortingModalBottomSheetContent(
     }
 }
 
-// ======== START OF ========
-//        Error Screens
-// ==========================
 @Composable
-fun LazyItemScope.ContentErrorScreen(
-    errorMessage: String,
-    onRetryClick: () -> Unit
+fun GenericInfoScreen(
+    title: String,
+    titleColor: Color = Color.Unspecified,
+    buttonLabel: String,
+    modifier: Modifier,
+    onButtonClicked: () -> Unit
 ) {
     Column(
-        modifier = Modifier.fillParentMaxSize(),
-        verticalArrangement = Arrangement.Center,
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(SPACING_MEDIUM.dp, Alignment.CenterVertically),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = errorMessage,
+            text = title,
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.h4.copy(
-                color = MaterialTheme.colors.error
+                color = titleColor
             )
         )
 
-        VSpacer.Medium()
-
-        Button(
-            onClick = { onRetryClick() }
-        ) {
+        WrapButton(onClick = onButtonClicked) {
             Text(
-                text = stringResource(R.string.generic_retry_button).uppercase(),
+                text = buttonLabel,
                 style = MaterialTheme.typography.h5
             )
         }
     }
+}
+
+@Composable
+fun LazyItemScope.GenericLazyItemInfoScreen(
+    title: String,
+    titleColor: Color = Color.Unspecified,
+    buttonLabel: String,
+    onButtonClicked: () -> Unit
+) {
+    GenericInfoScreen(
+        title = title,
+        titleColor = titleColor,
+        buttonLabel = buttonLabel,
+        modifier = Modifier.fillParentMaxSize(),
+        onButtonClicked = onButtonClicked
+    )
+}
+
+// ======== START OF ========
+//        Error Screens
+// ==========================
+@Composable
+fun GenericErrorScreen(
+    errorMessage: String,
+    modifier: Modifier = Modifier,
+    buttonLabel: String? = null,
+    onErrorButtonClicked: () -> Unit
+) {
+    GenericInfoScreen(
+        title = errorMessage,
+        titleColor = MaterialTheme.colors.error,
+        buttonLabel = buttonLabel ?: stringResource(R.string.generic_retry_button),
+        modifier = modifier,
+        onButtonClicked = onErrorButtonClicked
+    )
+}
+
+@Composable
+fun LazyItemScope.LazyItemErrorScreen(
+    errorMessage: String,
+    modifier: Modifier,
+    onRetryClick: () -> Unit
+) {
+    GenericErrorScreen(
+        errorMessage = errorMessage,
+        modifier = modifier,
+        onErrorButtonClicked = onRetryClick
+    )
+}
+
+@Composable
+fun LazyItemScope.LazyItemContentErrorScreen(
+    errorMessage: String,
+    onRetryClick: () -> Unit
+) {
+    GenericErrorScreen(
+        errorMessage = errorMessage,
+        modifier = Modifier.fillParentMaxSize(),
+        onErrorButtonClicked = onRetryClick
+    )
 }
 
 @Composable
@@ -1688,10 +1828,32 @@ fun LazyItemScope.NoInternetErrorScreen(
 // ==========================
 
 /**
- * Detects scrolling up motion in a [LazyColumn]. Returns `true` if detected, otherwise `false`.
+ * Detects scrolling up motion in a [LazyGrid]. Returns `true` if detected, otherwise `false`.
  */
 @Composable
 fun LazyGridState.isScrollingUp(): Boolean {
+    var previousIndex by remember(this) {
+        mutableIntStateOf(firstVisibleItemIndex)
+    }
+    var previousScrollOffset by remember(this) {
+        mutableIntStateOf(firstVisibleItemScrollOffset)
+    }
+    return remember(this) {
+        derivedStateOf {
+            if (previousIndex != firstVisibleItemIndex) {
+                previousIndex > firstVisibleItemIndex
+            } else {
+                previousScrollOffset >= firstVisibleItemScrollOffset
+            }.also {
+                previousIndex = firstVisibleItemIndex
+                previousScrollOffset = firstVisibleItemScrollOffset
+            }
+        }
+    }.value
+}
+
+@Composable
+fun LazyListState.isScrollingUp(): Boolean {
     var previousIndex by remember(this) {
         mutableIntStateOf(firstVisibleItemIndex)
     }

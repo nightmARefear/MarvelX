@@ -1,15 +1,16 @@
 package com.alexgreece45.marvelx.ui.screens.character.allCharacterComicsScreen
 
 import androidx.lifecycle.viewModelScope
-import com.alexgreece45.marvelx.domain.model_api.comic.ComicDomain
 import com.alexgreece45.marvelx.domain.interactors.CharacterInteractor
 import com.alexgreece45.marvelx.domain.interactors.GetCharacterComicsPartialState
+import com.alexgreece45.marvelx.domain.model_api.comic.ComicDomain
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
 import com.alexgreece45.marvelx.mvi.BaseViewModel
 import com.alexgreece45.marvelx.ui.components.SortingType
 import kotlinx.coroutines.launch
+import org.koin.android.annotation.KoinViewModel
 
 data class AllCharacterComicsScreenErrorView(
     val errorMessage: String,
@@ -52,16 +53,19 @@ data class AllCharacterComicsState(
     }
 }
 
-sealed class AllCharacterComicsEffect : BaseEffect {
-    data object NavigateToCharacterScreen : AllCharacterComicsEffect()
-    data class NavigateToComicScreen(val comicId: Int) : AllCharacterComicsEffect()
+sealed interface AllCharacterComicsEffect : BaseEffect {
+    sealed interface Navigation : AllCharacterComicsEffect {
+        data object GoBack : Navigation
+        data class NavigateToComicScreen(val comicId: Int) : Navigation
+    }
 
-    sealed class BottomSheet : AllCharacterComicsEffect() {
-        data object Show : BottomSheet()
-        data object Hide : BottomSheet()
+    sealed interface BottomSheet : AllCharacterComicsEffect {
+        data object Show : BottomSheet
+        data object Hide : BottomSheet
     }
 }
 
+@KoinViewModel
 class AllCharacterComicsViewModel(
     private val interactor: CharacterInteractor
 ) : BaseViewModel<AllCharacterComicsEvent, AllCharacterComicsState, AllCharacterComicsEffect>() {
@@ -76,13 +80,13 @@ class AllCharacterComicsViewModel(
 
             AllCharacterComicsEvent.OnBackClick -> {
                 setEffect {
-                    AllCharacterComicsEffect.NavigateToCharacterScreen
+                    AllCharacterComicsEffect.Navigation.GoBack
                 }
             }
 
             is AllCharacterComicsEvent.OnComicClick -> {
                 setEffect {
-                    AllCharacterComicsEffect.NavigateToComicScreen(
+                    AllCharacterComicsEffect.Navigation.NavigateToComicScreen(
                         comicId = event.comicId
                     )
                 }

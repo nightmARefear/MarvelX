@@ -1,9 +1,8 @@
 package com.alexgreece45.marvelx.data.repository
 
-import com.alexgreece45.marvelx.network_logic.clients.RefreshTokenClient
-import com.alexgreece45.marvelx.network_logic.models_api.token.ResponseToken
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
+import com.alexgreece45.marvelx.core.network.clients.RefreshTokenClient
+import com.alexgreece45.marvelx.core.network.model.api.token.ResponseToken
+import org.koin.core.annotation.Single
 
 interface RefreshTokenRepository {
 
@@ -13,26 +12,24 @@ interface RefreshTokenRepository {
     suspend fun refreshAccessToken(
         clientId: String,
         refreshToken: String
-    ): Flow<TokenRefreshRepositoryResult>
+    ): TokenRefreshRepositoryResult
 }
 
+@Single
 class RefreshTokenRepositoryImpl(
     private val refreshTokenClient: RefreshTokenClient
 ) : RefreshTokenRepository {
+
     override suspend fun refreshAccessToken(
         clientId: String,
         refreshToken: String
-    ): Flow<TokenRefreshRepositoryResult> = flow {
-        refreshTokenClient.refreshAccessToken(clientId, refreshToken).let { response ->
+    ): TokenRefreshRepositoryResult {
+        return refreshTokenClient.refreshAccessToken(clientId, refreshToken).let { response ->
             if (response.isSuccessful) {
-                emit(
-                    TokenRefreshRepositoryResult.Success(responseToken = response.body())
-                )
+                TokenRefreshRepositoryResult.Success(responseToken = response.body())
             } else {
-                emit(
-                    TokenRefreshRepositoryResult.Failed(
-                        failureMessage = response.errorBody()?.string().orEmpty()
-                    )
+                TokenRefreshRepositoryResult.Failed(
+                    failureMessage = response.errorBody()?.string().orEmpty()
                 )
             }
         }

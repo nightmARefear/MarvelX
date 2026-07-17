@@ -3,13 +3,10 @@ package com.alexgreece45.marvelx.ui.screens.otp
 import androidx.core.text.isDigitsOnly
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.controllers.AuthController
-import com.alexgreece45.marvelx.controllers.PrefKeys
-import com.alexgreece45.marvelx.controllers.RefreshTokenController
 import com.alexgreece45.marvelx.controllers.TimerController
 import com.alexgreece45.marvelx.controllers.TimerStatus
-import com.alexgreece45.marvelx.controllers.WebsocketController
-import com.alexgreece45.marvelx.data.repository.UserRepository
+import com.alexgreece45.marvelx.core.data.repositories.UserSessionRepository
+import com.alexgreece45.marvelx.data.repository.AutoLogoutRepository
 import com.alexgreece45.marvelx.domain.interactors.AuthorizePartialState
 import com.alexgreece45.marvelx.domain.interactors.ForgotPasswordInteractor
 import com.alexgreece45.marvelx.domain.interactors.ForgotPasswordValidateOtpPartialState
@@ -32,12 +29,12 @@ import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
 import com.alexgreece45.marvelx.mvi.BaseViewModel
 import com.alexgreece45.marvelx.ui.components.model.ErrorButtonLayout
-import com.alexgreece45.marvelx.util.DateUtil
 import com.alexgreece45.marvelx.util.FormsValidationResult
 import com.alexgreece45.marvelx.util.ResourceProvider
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import org.koin.android.annotation.KoinViewModel
 
 /**
  * All the error codes of the `OtpScreen` for error reporting by the users.
@@ -74,14 +71,14 @@ private sealed class OtpScreenErrorCodes(val code: String) {
     }
 }
 
-data class OtpScreenErrorView(
+internal data class OtpScreenErrorView(
     val errorTitle: String,
     val errorSubtitle: String,
     val onCloseClicked: (() -> Unit)? = null,
     val errorButtonLayout: ErrorButtonLayout.Single
 )
 
-sealed class OtpEvent : BaseEvent {
+internal sealed class OtpEvent : BaseEvent {
     data class Init(
         val userId: String?,
         val otpFlowType: String?,
@@ -102,7 +99,7 @@ sealed class OtpEvent : BaseEvent {
     data object OnResendOtpButtonClick : OtpEvent()
 }
 
-data class OtpState(
+internal data class OtpState(
     // Base states.
     val isLoading: Boolean = true,
 
@@ -164,12 +161,12 @@ data class OtpState(
 
 ) : BaseState
 
-sealed class OtpEffect : BaseEffect {
+internal sealed class OtpEffect : BaseEffect {
     data object OtpFieldRequestFocus : OtpEffect()
     data object CloseKeyboardAndRemoveFocus : OtpEffect()
 
     sealed class Navigation : OtpEffect() {
-        data object PopBackStack : Navigation()
+        data object GoBack : Navigation()
 
         data class NavigateToChangePasswordScreen(
             val requestIdEmail: String,
@@ -184,18 +181,16 @@ sealed class OtpEffect : BaseEffect {
     data object SaveAutoFilledData : OtpEffect()
 }
 
-class OtpViewModel(
+@KoinViewModel
+internal class OtpViewModel(
     private val otpInteractor: OtpInteractor,
     private val loginInteractor: LoginInteractor,
     private val registerInteractor: RegisterInteractor,
     private val forgotPasswordInteractor: ForgotPasswordInteractor,
     private val resourceProvider: ResourceProvider,
-    private val prefKeys: PrefKeys,
+    private val userSessionRepository: UserSessionRepository,
     private val timerController: TimerController,
-    private val websocketController: WebsocketController,
-    private val authController: AuthController,
-    private val refreshTokenController: RefreshTokenController,
-    private val userRepository: UserRepository,
+    private val autoLogoutRepository: AutoLogoutRepository,
 ) : BaseViewModel<OtpEvent, OtpState, OtpEffect>() {
 
     /**
@@ -341,7 +336,7 @@ class OtpViewModel(
 
             OtpEvent.OnBackClick -> {
                 setEffect {
-                    OtpEffect.Navigation.PopBackStack
+                    OtpEffect.Navigation.GoBack
                 }
             }
 
@@ -727,34 +722,23 @@ class OtpViewModel(
                             // Token was successfully generated (in the server) and retrieved (in the client).
 
                             // Retrieve signing data.
-                            val accessTokenWithType =
-                                accessTokenPartialState.userAuthData.tokenType + " " + accessTokenPartialState.userAuthData.accessToken
-                            loginInteractor.postLogin(accessTokenWithType)
+                            loginInteractor.postLogin(accessTokenPartialState.authenticationTokens.accessTokenAndType)
                                 .collect { postLoginPartialState ->
                                     when (postLoginPartialState) {
                                         PostLoginPartialState.Success -> {
-                                            // Show auto-fill data save prompt (it saves the data from the login screen).
+                                            // Show autofill data save prompt (it saves the data from the login screen).
                                             setEffect {
                                                 OtpEffect.SaveAutoFilledData
                                             }
 
                                             // Save token info in device.
-                                            authController.setData(accessTokenPartialState.userAuthData)
-
-                                            // Start refresh token worker since the access token was successfully retrieved.
-                                            refreshTokenController.startWorker()
-
-                                            // Initialize websocket connection.
-                                            websocketController.init()
-
-                                            // Save current timestamp.
-                                            prefKeys.autoLogoutTimestamp = DateUtil.getUTCInstant()
-
-                                            // Save userId in device.
-                                            prefKeys.setUserId(currentState.userId)
+                                            userSessionRepository.setUserSession(
+                                                userId = currentState.userId,
+                                                authenticationTokens = accessTokenPartialState.authenticationTokens
+                                            )
 
                                             // Save remember user session flag.
-                                            prefKeys.setRememberUserSession(currentState.shouldRememberUserSession)
+                                            autoLogoutRepository.setRememberUserSession(currentState.shouldRememberUserSession)
 
                                             setEffect {
                                                 OtpEffect.Navigation.NavigateToAllCharactersScreen
@@ -1131,7 +1115,7 @@ class OtpViewModel(
                     errorSubtitle = errorMessage,
                     onCloseClicked = {
                         setEffect {
-                            OtpEffect.Navigation.PopBackStack
+                            OtpEffect.Navigation.GoBack
                         }
                     },
                     errorButtonLayout = ErrorButtonLayout.Single(
@@ -1143,7 +1127,7 @@ class OtpViewModel(
                         },
                         onPrimaryButtonClicked = {
                             setEffect {
-                                OtpEffect.Navigation.PopBackStack
+                                OtpEffect.Navigation.GoBack
                             }
                         }
                     )

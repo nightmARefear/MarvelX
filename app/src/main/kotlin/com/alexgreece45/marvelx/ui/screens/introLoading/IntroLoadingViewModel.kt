@@ -3,25 +3,26 @@ package com.alexgreece45.marvelx.ui.screens.introLoading
 import androidx.annotation.StringRes
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.controllers.AuthController
-import com.alexgreece45.marvelx.controllers.PrefKeys
-import com.alexgreece45.marvelx.controllers.RefreshTokenController
-import com.alexgreece45.marvelx.controllers.WebsocketController
+import com.alexgreece45.marvelx.core.data.repositories.UserSessionRepository
+import com.alexgreece45.marvelx.core.network.managers.SessionManager
+import com.alexgreece45.marvelx.core.network.managers.model.LogoutReason
+import com.alexgreece45.marvelx.core.network.storage.ConsecutiveFailedAuthenticationStorage
+import com.alexgreece45.marvelx.data.repository.AutoLogoutRepository
 import com.alexgreece45.marvelx.domain.interactors.LoginInteractor
 import com.alexgreece45.marvelx.domain.interactors.LoginWithTokenPartialState
-import com.alexgreece45.marvelx.domain.interactors.LogoutPartialState
 import com.alexgreece45.marvelx.domain.interactors.PostLoginPartialState
 import com.alexgreece45.marvelx.domain.interactors.RefreshAccessTokenPartialState
 import com.alexgreece45.marvelx.domain.interactors.RegisterInteractor
 import com.alexgreece45.marvelx.domain.model_api.otp.OtpFlowType
 import com.alexgreece45.marvelx.domain.model_api.user.VerificationStep
+import com.alexgreece45.marvelx.domain.usecases.RemoveUserCredentialsUseCase
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
 import com.alexgreece45.marvelx.mvi.BaseViewModel
-import com.alexgreece45.marvelx.util.DateUtil
 import com.alexgreece45.marvelx.util.ResourceProvider
 import kotlinx.coroutines.launch
+import org.koin.android.annotation.KoinViewModel
 
 sealed interface IntroLoadingContract {
     /**
@@ -65,18 +66,20 @@ sealed interface IntroLoadingContract {
     }
 }
 
-class IntroLoadingViewModel(
+@KoinViewModel
+internal class IntroLoadingViewModel(
     private val resourceProvider: ResourceProvider,
-    private val prefKeys: PrefKeys,
     private val registerInteractor: RegisterInteractor,
     private val loginInteractor: LoginInteractor,
-    private val authController: AuthController,
-    private val websocketController: WebsocketController,
-    private val refreshTokenController: RefreshTokenController
+    private val userSessionRepository: UserSessionRepository,
+    private val consecutiveFailedAuthenticationStorage: ConsecutiveFailedAuthenticationStorage,
+    private val sessionManager: SessionManager,
+    private val autoLogoutRepository: AutoLogoutRepository,
+    private val removeUserCredentialsUseCase: RemoveUserCredentialsUseCase,
 ) :
     BaseViewModel<IntroLoadingContract.Event, IntroLoadingContract.State, IntroLoadingContract.Effect>() {
-    override fun setInitialState(): IntroLoadingContract.State =
-        IntroLoadingContract.State()
+
+    override fun setInitialState(): IntroLoadingContract.State = IntroLoadingContract.State()
 
     override fun handleEvents(event: IntroLoadingContract.Event) {
         when (event) {
@@ -91,7 +94,7 @@ class IntroLoadingViewModel(
      * Resets the failed authentication related values.
      */
     private fun resetFailedAuthenticationValues() {
-        authController.currentConsecutiveFailedAuthenticationData = null
+        consecutiveFailedAuthenticationStorage.removeConsecutiveFailedAuthentication()
     }
 
     /**
@@ -106,30 +109,31 @@ class IntroLoadingViewModel(
             )
         }
 
-        if (!prefKeys.containsUserCredentials()) {
-            setEffect {
-                IntroLoadingContract.Effect.Navigation.NavigateToHomeScreenWithErrorMessage()
-            }
-            // TODO: Show error.
-            return
-        }
-
-        if (authController.isRefreshTokenExpired()) {
-            logout()
-            return
-        }
-
         viewModelScope.launch {
-            loginInteractor.refreshAccessToken().collect {
-                when (it) {
-                    is RefreshAccessTokenPartialState.Failed -> {
-                        // Couldn't refresh access token, so logout.
-                        logout()
-                    }
+            if (!userSessionRepository.hasUserSession()) {
+                setEffect {
+                    IntroLoadingContract.Effect.Navigation.NavigateToHomeScreenWithErrorMessage()
+                }
 
-                    is RefreshAccessTokenPartialState.Success -> {
-                        // Proceed with login.
-                        loginWithToken()
+                // TODO: Show error.
+
+                return@launch
+            }
+
+            if (userSessionRepository.isRefreshTokenExpired()) {
+                logout()
+            } else {
+                loginInteractor.refreshAccessToken().collect {
+                    when (it) {
+                        is RefreshAccessTokenPartialState.Failed -> {
+                            // Couldn't refresh access token, so logout.
+                            logout()
+                        }
+
+                        is RefreshAccessTokenPartialState.Success -> {
+                            // Proceed with login.
+                            loginWithToken()
+                        }
                     }
                 }
             }
@@ -145,11 +149,13 @@ class IntroLoadingViewModel(
          * or [VerificationStep.Invalid] was returned.
          */
         fun errorActions(errorMessage: String) {
-            authController.removeUserCredentials()
-            setEffect {
-                IntroLoadingContract.Effect.Navigation.NavigateToHomeScreenWithErrorMessage(
-                    errorMessage = errorMessage
-                )
+            viewModelScope.launch {
+                removeUserCredentialsUseCase()
+                setEffect {
+                    IntroLoadingContract.Effect.Navigation.NavigateToHomeScreenWithErrorMessage(
+                        errorMessage = errorMessage
+                    )
+                }
             }
         }
 
@@ -174,15 +180,10 @@ class IntroLoadingViewModel(
                                 // been generated in the `loginFlow` function.
                                 VerificationStep.None -> {
                                     // Retrieve sign data.
-                                    loginInteractor.postLogin(authController.getAccessToken())
+                                    loginInteractor.postLogin(userSessionRepository.getAccessTokenAndType())
                                         .collect { postLoginPartialState ->
                                             when (postLoginPartialState) {
                                                 PostLoginPartialState.Success -> {
-                                                    refreshTokenController.startWorker()
-                                                    websocketController.init()
-                                                    prefKeys.autoLogoutTimestamp =
-                                                        DateUtil.getUTCInstant()
-
                                                     setEffect {
                                                         IntroLoadingContract.Effect.Navigation.NavigateToAllCharactersScreen
                                                     }
@@ -196,12 +197,15 @@ class IntroLoadingViewModel(
                                 }
 
                                 VerificationStep.OtpEmail -> {
+                                    val userId = userSessionRepository.getUserId()
+                                    val shouldRememberUserSession =
+                                        autoLogoutRepository.getRememberUserSession()
                                     setEffect {
                                         IntroLoadingContract.Effect.Navigation.NavigateToOtpScreen(
-                                            userId = prefKeys.getUserId(),
+                                            userId = userId,
                                             otpFlowType = OtpFlowType.Register.key,
                                             verificationStep = verificationStep.key,
-                                            shouldRememberUserSession = prefKeys.shouldRememberUserSession()
+                                            shouldRememberUserSession = shouldRememberUserSession
                                         )
                                     }
                                 }
@@ -226,18 +230,6 @@ class IntroLoadingViewModel(
      * Logouts the user.
      */
     private fun logout() {
-        viewModelScope.launch {
-            loginInteractor.logout().collect {
-                when (it) {
-                    is LogoutPartialState.Failed, LogoutPartialState.Success -> {
-                        setEffect {
-                            IntroLoadingContract.Effect.Navigation.NavigateToHomeScreenWithErrorMessage(
-                                errorMessage = resourceProvider.getString(R.string.session_status_session_has_expired_alert_dialog_error_message)
-                            )
-                        }
-                    }
-                }
-            }
-        }
+        sessionManager.triggerLogout(LogoutReason.SESSION_EXPIRED)
     }
 }

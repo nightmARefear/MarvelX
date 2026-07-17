@@ -2,7 +2,6 @@ package com.alexgreece45.marvelx.mvi
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.alexgreece45.marvelx.controllers.AppLogger
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -10,14 +9,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 
 abstract class BaseViewModel<Event : BaseEvent, State : BaseState, Effect : BaseEffect> :
-    ViewModel(), KoinComponent {
-
-    protected val appLogger: AppLogger by inject()
+    ViewModel() {
 
     private val initialState: State by lazy { setInitialState() }
 
@@ -44,11 +40,6 @@ abstract class BaseViewModel<Event : BaseEvent, State : BaseState, Effect : Base
      */
     val uiEffect: Flow<Effect> = _effect.receiveAsFlow()
 
-    private val _viewStateHistory: Channel<State> = Channel()
-
-    val viewStateHistory: Flow<State>
-        get() = _viewStateHistory.receiveAsFlow()
-
     init {
         subscribeToEvents()
     }
@@ -56,7 +47,7 @@ abstract class BaseViewModel<Event : BaseEvent, State : BaseState, Effect : Base
     /**
      * Sets an effect.
      */
-    fun setEffect(builder: () -> Effect) {
+    protected fun setEffect(builder: () -> Effect) {
         val effectValue = builder()
         viewModelScope.launch {
             _effect.send(effectValue)
@@ -66,12 +57,10 @@ abstract class BaseViewModel<Event : BaseEvent, State : BaseState, Effect : Base
     /**
      * Sets the initial state value.
      */
-    abstract fun setInitialState(): State
+    protected abstract fun setInitialState(): State
 
     protected fun setState(reducer: State.() -> State) {
-        val newState = uiState.value.reducer()
-        _state.value = newState
-        notifyViewStateHistoryChanged(newState)
+        _state.update { oldState -> oldState.reducer() }
     }
 
     fun setEvent(event: Event) {
@@ -88,9 +77,5 @@ abstract class BaseViewModel<Event : BaseEvent, State : BaseState, Effect : Base
         }
     }
 
-    private fun notifyViewStateHistoryChanged(state: State) {
-        viewModelScope.launch { _viewStateHistory.send(state) }
-    }
-
-    abstract fun handleEvents(event: Event)
+    protected abstract fun handleEvents(event: Event)
 }

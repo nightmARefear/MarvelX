@@ -1,0 +1,106 @@
+<resources>
+    // Create Listing Wizard
+    <string name="screen_create_listing_wizard_screen_toolbar_title_create">Create listing:</string>
+    <string name="screen_create_listing_wizard_screen_toolbar_title_update">Update listing:</string>
+
+    <string name="screen_create_listing_wizard_screen_step_label_basic">Basic details</string>
+    <string name="screen_create_listing_wizard_screen_step_label_advanced">Advanced details</string>
+    <string name="screen_create_listing_wizard_screen_step_label_overview">Overview</string>
+
+    <string name="screen_create_listing_wizard_screen_sticky_bottom_button_next">Next</string>
+    <string name="screen_create_listing_wizard_screen_sticky_bottom_button_upload_new_listing">Create listing</string>
+    <string name="screen_create_listing_wizard_screen_sticky_bottom_button_upload_modified_listing">Update listing</string>
+
+    <string name="screen_create_listing_wizard_screen_alert_dialog_title_create">Exit listing creation</string>
+    <string name="screen_create_listing_wizard_screen_alert_dialog_title_update">Exit listing update</string>
+    <string name="screen_create_listing_wizard_screen_alert_dialog_message_create">Are you sure that you want to exit the listing creation? If you do so, all unsaved changes will be lost.</string>
+    <string name="screen_create_listing_wizard_screen_alert_dialog_message_update">Are you sure that you want to exit the listing update? If you do so, all unsaved changes will be lost.</string>
+    <string name="screen_create_listing_wizard_screen_alert_dialog_button_negative">Cancel</string>
+    <string name="screen_create_listing_wizard_screen_alert_dialog_button_positive">Exit</string>
+
+    <string name="screen_create_listing_wizard_screen_error_uploading_listing">An error occurred whilst uploading this listing.</string>
+    <string name="screen_create_listing_wizard_screen_error_reading_images">An error occurred whilst reading the attached images.</string>
+
+    // Create Listing Wizard --> BasicDetails
+    <string name="screen_create_listing_basic_details_label_title">Title</string>
+    <string name="screen_create_listing_basic_details_label_description">Description</string>
+    <string name="screen_create_listing_basic_details_label_category">Category</string>
+    <string name="screen_create_listing_basic_details_label_subcategory">Subcategory</string>
+
+    <string name="screen_create_listing_basic_details_placeholder_title">Enter the title of the item</string>
+    <string name="screen_create_listing_basic_details_placeholder_description">Describe what you are selling</string>
+
+    <string name="screen_create_listing_basic_details_cover_listing_image_label">Cover</string>
+    <string name="screen_create_listing_basic_details_uploaded_listing_image_title">uploaded listing image no.%1$s</string>
+    <string name="screen_create_listing_basic_details_attached_listing_image_title">attached listing image no.%1$s</string>
+    <string name="screen_create_listing_basic_details_no_selected_images">No images were selected.</string>
+    <string name="screen_create_listing_basic_details_button_upload_photos">Upload photos</string>
+    <string name="screen_create_listing_basic_details_images_helper_text_rearranging">Press and drag to rearrange</string>
+    <string name="screen_create_listing_basic_details_images_helper_text_limits">A maximum of %1$s images are allowed, up to %2$sMB each.</string>
+    <string name="screen_create_listing_basic_details_images_helper_text_cover_image">The first image will be used as the cover.</string>
+
+    <string name="screen_create_listing_basic_details_error_field_blank_title">Title cannot be blank.</string>
+    <string name="screen_create_listing_basic_details_error_field_blank_description">Description cannot be blank.</string>
+    <string name="screen_create_listing_basic_details_error_attaching_images_generic">An error occurred whilst attaching the images.</string>
+    <string name="screen_create_listing_basic_details_error_attaching_images_invalid_extension">You can only attach JPEG and PNG images.</string>
+    <string name="screen_create_listing_basic_details_error_attaching_images_over_max_count">You can only attach up to %1$s images.</string>
+    <string name="screen_create_listing_basic_details_error_attaching_images_over_max_size">The maximum allowed image size is %1$s MB.</string>
+    <string name="screen_create_listing_basic_details_error_attaching_images_existing_image">One of the selected images is already attached.</string>
+
+    <string name="screen_create_listing_basic_details_content_description_upload_listing_image">Upload listing image icon</string>
+    <string name="screen_create_listing_basic_details_content_description_delete_listing_image">Delete listing image icon</string>
+
+    // Create Listing Wizard --> AdvancedDetails
+    <string name="screen_create_listing_advanced_details_label_condition">Condition</string>
+    <string name="screen_create_listing_advanced_details_label_price">Price</string>
+    <string name="screen_create_listing_advanced_details_label_apparel_size">Apparel size</string>
+    <string name="screen_create_listing_advanced_details_label_color">Color</string>
+    <string name="screen_create_listing_advanced_details_label_material">Material</string>
+    <string name="screen_create_listing_advanced_details_label_capacity">Capacity</string>
+    <string name="screen_create_listing_advanced_details_label_dishwasher_safe">Dishwasher safe</string>
+    <string name="screen_create_listing_advanced_details_label_scale">Scale</string>
+    <string name="screen_create_listing_advanced_details_label_box_condition">Box Condition</string>
+    <string name="screen_create_listing_advanced_details_label_width">Width</string>
+    <string name="screen_create_listing_advanced_details_label_height">Height</string>
+    <string name="screen_create_listing_advanced_details_label_framed">Framed</string>
+    <string name="screen_create_listing_advanced_details_label_publisher">Publisher</string>
+    <string name="screen_create_listing_advanced_details_label_year">Year</string>
+    <string name="screen_create_listing_advanced_details_label_grade">Grade</string>
+    <string name="screen_create_listing_advanced_details_label_rarity">Rarity</string>
+    <string name="screen_create_listing_advanced_details_label_variant">Variant</string>
+
+    <string name="screen_create_listing_advanced_details_placeholder_price">Price of listing</string>
+    <string name="screen_create_listing_advanced_details_placeholder_color">Enter the color</string>
+    <string name="screen_create_listing_advanced_details_placeholder_capacity">Capacity Ml</string>
+    <string name="screen_create_listing_advanced_details_placeholder_width">Enter the width</string>
+    <string name="screen_create_listing_advanced_details_placeholder_height">Enter the height</string>
+    <string name="screen_create_listing_advanced_details_placeholder_publisher">Enter the publisher</string>
+    <string name="screen_create_listing_advanced_details_placeholder_year">Enter the year</string>
+
+    <string name="screen_create_listing_advanced_details_content_description_euro">Euro icon</string>
+
+    <string name="screen_create_listing_advanced_details_error_blank_color">Color cannot be blank</string>
+    <string name="screen_create_listing_advanced_details_error_blank_publisher">Publisher cannot be blank</string>
+    <string name="screen_create_listing_advanced_details_error_blank_year">Year cannot be blank</string>
+    <string name="screen_create_listing_advanced_details_error_invalid_price">Invalid price</string>
+    <string name="screen_create_listing_advanced_details_error_invalid_year">Invalid year</string>
+    <string name="screen_create_listing_advanced_details_error_below_minimum_ml_capacity">The minimum allowed capacity is %1$sMl</string>
+    <string name="screen_create_listing_advanced_details_error_over_maximum_ml_capacity">The minimum allowed capacity is %1$sMl</string>
+    <string name="screen_create_listing_advanced_details_error_below_min_price">The minimum allowed price is %1$s</string>
+    <string name="screen_create_listing_advanced_details_error_over_max_price">The maximum allowed price is %1$s</string>
+    <string name="screen_create_listing_advanced_details_error_below_min_year">The minimum allowed year is %1$s</string>
+    <string name="screen_create_listing_advanced_details_error_over_max_year">The maximum allowed year is %1$s</string>
+    <string name="screen_create_listing_advanced_details_error_generic_min_allowed_characters">The minimum allowed characters are %1$s</string>
+    <string name="screen_create_listing_advanced_details_error_generic_max_allowed_characters">The minimum allowed characters are %1$s</string>
+
+    // Create Listing Wizard --> Success
+    <string name="screen_create_listing_success_label_success_creation">The listing was successfully created!</string>
+    <string name="screen_create_listing_success_label_success_update">The listing was successfully updated!</string>
+    <string name="screen_create_listing_button_view_listing">View listing</string>
+
+    // enum values
+    <string name="listing_status_ui_label_draft">Draft</string>
+    <string name="listing_status_ui_label_active">Active</string>
+    <string name="listing_status_ui_label_reserved">Reserved</string>
+    <string name="listing_status_ui_label_sold">Sold</string>
+</resources>

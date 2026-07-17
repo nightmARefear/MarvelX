@@ -1,13 +1,23 @@
 package com.alexgreece45.marvelx.ui.screens.profile
 
+import androidx.compose.material.SnackbarDuration
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.configuration.ConfigLogic
-import com.alexgreece45.marvelx.controllers.PrefKeys
-import com.alexgreece45.marvelx.domain.helper.InteractorPartialState
+import com.alexgreece45.marvelx.common_ui.imageValidator.ImageValidator
+import com.alexgreece45.marvelx.common_ui.imageValidator.model.ImageValidationConfig
+import com.alexgreece45.marvelx.common_ui.imageValidator.model.ImageValidationError
+import com.alexgreece45.marvelx.common_ui.imageValidator.model.SingleImageValidationResult
+import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarActionData
+import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarNavigationPayload
+import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarStateData
+import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarType
+import com.alexgreece45.marvelx.core.common.config.ConfigLogic
+import com.alexgreece45.marvelx.core.common.logger.AppLogger
+import com.alexgreece45.marvelx.core.data.helper.multi_part_builder.model.MultipartResult
+import com.alexgreece45.marvelx.core.data.repositories.UserSessionRepository
 import com.alexgreece45.marvelx.domain.interactors.GetCurrentUserProfileDetailsPartialState
 import com.alexgreece45.marvelx.domain.interactors.UserInteractor
-import com.alexgreece45.marvelx.domain.model_generic.ReadFileContentData
+import com.alexgreece45.marvelx.model.model.generic.AttachedFileContentData
 import com.alexgreece45.marvelx.mvi.BaseViewModel
 import com.alexgreece45.marvelx.ui.components.AlertDialogButton
 import com.alexgreece45.marvelx.ui.components.IconData
@@ -22,21 +32,25 @@ import com.alexgreece45.marvelx.ui.screens.profile.model.ProfileErrorAlertDialog
 import com.alexgreece45.marvelx.ui.screens.profile.model.ProfileScreenErrorView
 import com.alexgreece45.marvelx.util.FileUtil
 import com.alexgreece45.marvelx.util.ResourceProvider
-import com.alexgreece45.marvelx.util.extensions.endsWithAnySuffix
-import com.alexgreece45.marvelx.util.extensions.toUrlEncoding
+import com.alexgreece45.marvelx.util.extensions.toSafeUrlEncoding
 import kotlinx.coroutines.launch
+import org.koin.android.annotation.KoinViewModel
 import java.util.UUID
-import kotlin.math.max
 
-
+@KoinViewModel
 class ProfileViewModel(
+    private val appLogger: AppLogger,
     private val resourceProvider: ResourceProvider,
     private val userInteractor: UserInteractor,
-    private val prefKeys: PrefKeys,
-    private val configLogic: ConfigLogic
+    private val configLogic: ConfigLogic,
+    private val userSessionRepository: UserSessionRepository,
+    private val imageValidator: ImageValidator
 ) :
     BaseViewModel<ProfileContract.Event, ProfileContract.State, ProfileContract.Effect>() {
+
     override fun setInitialState(): ProfileContract.State = ProfileContract.State()
+
+    private val loggerTag = "ProfileViewModel"
 
     override fun handleEvents(event: ProfileContract.Event) {
         when (event) {
@@ -49,6 +63,10 @@ class ProfileViewModel(
                 setEffect {
                     ProfileContract.Effect.OpenDeepLinkAction(event.deepLinkAction)
                 }
+            }
+
+            is ProfileContract.Event.OnSnackbarNavigationPayloadReceived -> {
+                onSnackbarNavigationPayloadReceived(event.snackbarNavigationPayload)
             }
 
             ProfileContract.Event.OnSettingsIconButtonClicked -> {
@@ -76,8 +94,13 @@ class ProfileViewModel(
             }
 
             ProfileContract.Event.OnSeeYourProfileClicked -> {
-                setEffect {
-                    ProfileContract.Effect.Navigation.NavigateToProfileDetailsScreen(prefKeys.getUserId())
+                viewModelScope.launch {
+                    val userId = userSessionRepository.getUserId()
+                    setEffect {
+                        ProfileContract.Effect.Navigation.NavigateToProfileDetailsScreen(
+                            userId
+                        )
+                    }
                 }
             }
 
@@ -107,41 +130,52 @@ class ProfileViewModel(
                     ProfileContract.Effect.Navigation.NavigateToProfileImageScreen(
                         currentState.profileDetails?.profileImageUrlData?.imageUrl
                             .orEmpty()
-                            .toUrlEncoding()
+                            .toSafeUrlEncoding("")
                     )
                 }
             }
 
             is ProfileContract.Event.ProfileImage.ImageSelectionEvent.OnSuccess -> {
                 val imageFileContentData = event.imageFileContentData
-                if (imageFileContentData == null) {
-                    showToastMessage(message = resourceProvider.getString(R.string.screen_profile_error_image_select_reading))
-                    return
-                }
 
-                if (!imageFileContentData.name.endsWithAnySuffix(suffixes = configLogic.supportedImageFileExtensions)) {
-                    showToastMessage(message = resourceProvider.getString(R.string.screen_profile_error_image_select_invalid_extension))
-                    return
-                }
-
-                if (imageFileContentData.bytesCount > configLogic.imageFileMaxSize) {
-                    showToastMessage(
-                        message = resourceProvider.getString(
-                            R.string.screen_profile_error_image_select_too_big,
-                            FileUtil.getMegabytesFromBytes(configLogic.imageFileMaxSize)
-                        )
+                val imageValidationResult = imageValidator.validateImage(
+                    image = imageFileContentData,
+                    config = ImageValidationConfig(
+                        allowedExtensions = configLogic.supportedImageFileExtensions,
+                        maxSizeMB = configLogic.imageFileMaxSize.toInt()
                     )
-                    return
-                }
+                )
+                when (imageValidationResult) {
+                    is SingleImageValidationResult.Success -> {
+                        val image = imageValidationResult.image
 
-                appLogger.d("ProfileViewModel") { "(OnImageSelected) selected image URI: ${imageFileContentData.uri}" }
-                setEffect {
-                    ProfileContract.Effect.OpenImageCropper(
-                        toolbarTitle = resourceProvider.getString(R.string.profile_screen_cropped_cropped_image_toolbar_title),
-                        minImageSize = 350,
-                        maxImageSize = 1250,
-                        imageUri = imageFileContentData.uri
-                    )
+                        appLogger.d(loggerTag) { "(OnImageSelected) selected image URI: ${image.uri}" }
+                        setEffect {
+                            ProfileContract.Effect.OpenImageCropper(
+                                toolbarTitle = resourceProvider.getString(R.string.profile_screen_cropped_cropped_image_toolbar_title),
+                                minImageSize = 350,
+                                maxImageSize = 1250,
+                                imageUri = image.uri
+                            )
+                        }
+                    }
+
+                    is SingleImageValidationResult.Error -> {
+                        val errorMessage = when (imageValidationResult.error) {
+                            ImageValidationError.OverMaxSize -> resourceProvider.getString(
+                                R.string.screen_profile_error_image_select_too_big,
+                                FileUtil.getMegabytesFromBytes(configLogic.imageFileMaxSize)
+                            )
+
+                            ImageValidationError.InvalidExtensionType -> resourceProvider.getString(
+                                R.string.screen_profile_error_image_select_invalid_extension
+                            )
+
+                            ImageValidationError.AttachmentError -> resourceProvider.getString(R.string.screen_profile_error_image_select_reading)
+                        }
+
+                        showErroneousSnackbar(errorMessage = errorMessage)
+                    }
                 }
             }
 
@@ -149,9 +183,11 @@ class ProfileViewModel(
 
             is ProfileContract.Event.ProfileImage.ImageCropEvent.OnSuccess -> {
                 if (event.imageFileContentData == null) {
-                    appLogger.e("ProfileViewModel") { "Error cropping image!" }
+                    appLogger.e(loggerTag) { "Error cropping image!" }
 
-                    showToastMessage(message = resourceProvider.getString(R.string.screen_profile_error_image_crop))
+                    showErroneousSnackbar(
+                        errorMessage = resourceProvider.getString(R.string.screen_profile_error_image_crop)
+                    )
                     setState {
                         copy(
                             croppedImageIsLoading = false,
@@ -161,7 +197,7 @@ class ProfileViewModel(
                     return
                 }
 
-                appLogger.d("ProfileViewModel") { "Image was successfully cropped!" }
+                appLogger.d(loggerTag) { "Image was successfully cropped!" }
                 setState {
                     copy(
                         croppedImageFileContentData = event.imageFileContentData
@@ -171,9 +207,11 @@ class ProfileViewModel(
 
             is ProfileContract.Event.ProfileImage.ImageCropEvent.OnFailure -> {
                 if (event.errorMessage?.contains("cancelled") == false) {
-                    appLogger.e("ProfileViewModel") { "Error cropping image!" }
+                    appLogger.e(loggerTag) { "Error cropping image!" }
 
-                    showToastMessage(message = resourceProvider.getString(R.string.screen_profile_error_image_crop))
+                    showErroneousSnackbar(
+                        errorMessage = resourceProvider.getString(R.string.screen_profile_error_image_crop)
+                    )
                     setState {
                         copy(
                             croppedImageIsLoading = false,
@@ -181,24 +219,6 @@ class ProfileViewModel(
                         )
                     }
                 }
-            }
-
-            is ProfileContract.Event.ProfileImage.OnCroppedImageFileContentRead -> {
-                val readFileContentData = event.croppedImageFileReadContentData
-                if (readFileContentData == null) {
-                    showToastMessage(message = resourceProvider.getString(R.string.screen_profile_error_image_crop_reading))
-                    setState {
-                        copy(
-                            croppedImageIsLoading = false,
-                            croppedImageFileContentData = null
-                        )
-                    }
-                    return
-                }
-
-                updateProfileImage(
-                    readFileContentData = readFileContentData
-                )
             }
 
             ProfileContract.Event.ProfileImage.CroppedImage.OnCloseClicked -> {
@@ -206,8 +226,26 @@ class ProfileViewModel(
             }
 
             ProfileContract.Event.ProfileImage.CroppedImage.OnSaveClicked -> {
-                readCroppedImageFileContentData()
+                onSaveButtonClicked()
             }
+        }
+    }
+
+    // Event functions.
+
+    private fun onSnackbarNavigationPayloadReceived(snackbarNavigationPayload: SnackbarNavigationPayload) {
+        with(snackbarNavigationPayload) {
+            showSnackbar(
+                message = message,
+                type = type,
+                duration = duration,
+                snackbarActionData = actionLabel?.let { label ->
+                    SnackbarActionData(
+                        label = label,
+                        onClick = { setEffect { ProfileContract.Effect.HideSnackbar } }
+                    )
+                }
+            )
         }
     }
 
@@ -276,6 +314,8 @@ class ProfileViewModel(
         }
     }
 
+    // Helper functions.
+
     /**
      * Initializes the sections.
      */
@@ -293,7 +333,7 @@ class ProfileViewModel(
                         isNavigable = false,
                         onClick = {
                             setEffect {
-                                ProfileContract.Effect.Navigation.NavigateToQrCodeScreen(Screen.ProfileScreen.baseRoute)
+                                ProfileContract.Effect.Navigation.NavigateToQrCodeScreen("profileScreen") // TODO: FIX!
                             }
                         }
                     ),
@@ -309,7 +349,33 @@ class ProfileViewModel(
                                 ProfileContract.Effect.Navigation.NavigateToFriendsScreen
                             }
                         }
-                    )
+                    ),
+                    SectionHeaderData(
+                        title = resourceProvider.getString(R.string.profile_screen_section_label_orders),
+                        iconData = IconData(
+                            iconResource = R.drawable.ic_orders,
+                            contentDescription = R.string.screen_profile_content_description_orders_icon
+                        ),
+                        isNavigable = true,
+                        onClick = {
+                            setEffect {
+                                ProfileContract.Effect.Navigation.NavigateToOrdersScreen
+                            }
+                        }
+                    ),
+                    SectionHeaderData(
+                        title = resourceProvider.getString(R.string.profile_screen_section_label_my_listings),
+                        iconData = IconData(
+                            iconResource = R.drawable.ic_listings,
+                            contentDescription = R.string.content_description_friends
+                        ),
+                        isNavigable = true,
+                        onClick = {
+                            setEffect {
+                                ProfileContract.Effect.Navigation.NavigateToMyListingsScreen
+                            }
+                        }
+                    ),
                 )
             )
         }
@@ -331,7 +397,7 @@ class ProfileViewModel(
                             ),
                             showBackgroundColor = true,
                         ),
-                        onClick = ProfileContract.Event.ProfileImage.BottomSheet.OnViewImageClicked
+                        onClickEvent = ProfileContract.Event.ProfileImage.BottomSheet.OnViewImageClicked
                     ),
                     BottomSheetContentItem(
                         title = resourceProvider.getString(R.string.profile_screen_bottom_sheet_label_upload_profile_image),
@@ -342,11 +408,59 @@ class ProfileViewModel(
                             ),
                             showBackgroundColor = true,
                         ),
-                        onClick = ProfileContract.Event.ProfileImage.BottomSheet.OnUploadImageClicked
+                        onClickEvent = ProfileContract.Event.ProfileImage.BottomSheet.OnUploadImageClicked
                     ),
                 )
             )
         }
+    }
+
+    private fun showSnackbar(
+        message: String,
+        type: SnackbarType,
+        duration: SnackbarDuration = SnackbarDuration.Short,
+        snackbarActionData: SnackbarActionData? = null
+    ) {
+        val uuid = UUID.randomUUID()
+
+        val snackbarStateData = SnackbarStateData(
+            uuid = uuid,
+            message = message,
+            type = type,
+            duration = duration,
+            snackbarActionData = snackbarActionData,
+            onDismiss = {
+                if (currentState.snackbarStateData?.uuid == uuid) {
+                    setState {
+                        copy(
+                            snackbarStateData = null
+                        )
+                    }
+                }
+            }
+        )
+
+        setState {
+            copy(
+                snackbarStateData = snackbarStateData
+            )
+        }
+        setEffect {
+            ProfileContract.Effect.ShowSnackbar(snackbarStateData)
+        }
+    }
+
+    private fun showErroneousSnackbar(
+        errorMessage: String,
+        duration: SnackbarDuration = SnackbarDuration.Short,
+        snackbarActionData: SnackbarActionData? = null
+    ) {
+        showSnackbar(
+            message = errorMessage,
+            type = SnackbarType.ERROR,
+            duration = duration,
+            snackbarActionData = snackbarActionData,
+        )
     }
 
     /**
@@ -434,7 +548,7 @@ class ProfileViewModel(
         }
     }
 
-    private fun readCroppedImageFileContentData() {
+    private fun onSaveButtonClicked() {
         when (val fileContentData = currentState.croppedImageFileContentData) {
             null -> {
                 setState {
@@ -452,12 +566,7 @@ class ProfileViewModel(
                     )
                 }
 
-                setEffect {
-                    ProfileContract.Effect.ReadCroppedImageFileContent(
-                        fileUri = fileContentData.uri,
-                        fileName = fileContentData.name
-                    )
-                }
+                updateProfileImage(fileContentData)
             }
         }
     }
@@ -465,45 +574,54 @@ class ProfileViewModel(
     /**
      * Updates the current profile image with the one that the user has cropped.
      */
-    private fun updateProfileImage(readFileContentData: ReadFileContentData) {
+    private fun updateProfileImage(newProfileImageData: AttachedFileContentData) {
         viewModelScope.launch {
-            userInteractor.updateUserProfileImage(profileImageReadFileContentData = readFileContentData)
-                .collect { result ->
-                    when (result) {
-                        is InteractorPartialState.Error<*>,
-                        is InteractorPartialState.Failed<*>,
-                        InteractorPartialState.NoInternetConnection -> {
-                            showToastMessage(message = resourceProvider.getString(R.string.screen_profile_error_image_upload))
-                            setState {
-                                copy(
-                                    croppedImageIsLoading = false,
-                                    croppedImageFileContentData = null
-                                )
-                            }
-                        }
-
-                        is InteractorPartialState.Success<*> -> {
-                            showToastMessage(message = resourceProvider.getString(R.string.screen_profile_success_image_upload))
-                            setState {
-                                copy(
-                                    croppedImageIsLoading = false,
-                                    croppedImageFileContentData = null,
-                                    profileDetails = profileDetails?.copy(
-                                        profileImageUrlData = profileDetails.profileImageUrlData.copy(
-                                            uuid = UUID.randomUUID()
-                                        )
-                                    )
-                                )
-                            }
-                        }
+            val result =
+                userInteractor.updateUserProfileImage(profileImageData = newProfileImageData)
+            when (result) {
+                is MultipartResult.GenericError,
+                is MultipartResult.NetworkError -> {
+                    showErroneousSnackbar(errorMessage = resourceProvider.getString(R.string.screen_profile_error_image_upload))
+                    setState {
+                        copy(
+                            croppedImageIsLoading = false,
+                            croppedImageFileContentData = null
+                        )
                     }
                 }
-        }
-    }
 
-    private fun showToastMessage(message: String) {
-        setEffect {
-            ProfileContract.Effect.ShowToastMessage(message = message)
+                MultipartResult.ImageProcessingError -> {
+                    showErroneousSnackbar(errorMessage = resourceProvider.getString(R.string.screen_profile_error_image_crop_reading))
+                    setState {
+                        copy(
+                            croppedImageIsLoading = false,
+                            croppedImageFileContentData = null
+                        )
+                    }
+                }
+
+                is MultipartResult.Success -> {
+                    showSnackbar(
+                        message = resourceProvider.getString(R.string.screen_profile_success_image_upload_message),
+                        type = SnackbarType.SUCCESS,
+                        snackbarActionData = SnackbarActionData(
+                            label = resourceProvider.getString(R.string.screen_profile_success_image_upload_action_label),
+                            onClick = { setEffect { ProfileContract.Effect.HideSnackbar } }
+                        )
+                    )
+                    setState {
+                        copy(
+                            croppedImageIsLoading = false,
+                            croppedImageFileContentData = null,
+                            profileDetails = profileDetails?.copy(
+                                profileImageUrlData = profileDetails.profileImageUrlData.copy(
+                                    uuid = UUID.randomUUID()
+                                )
+                            )
+                        )
+                    }
+                }
+            }
         }
     }
 }

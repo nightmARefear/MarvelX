@@ -1,6 +1,6 @@
 package com.alexgreece45.marvelx.data.repository
 
-import com.alexgreece45.marvelx.network_logic.clients.ApiClient
+import com.alexgreece45.marvelx.core.network.clients.ApiClient
 import kotlinx.coroutines.flow.Flow
 
 interface ChangePasswordRepository {

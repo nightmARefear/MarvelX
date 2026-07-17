@@ -2,7 +2,7 @@ package com.alexgreece45.marvelx.domain.model_websocket
 
 import com.alexgreece45.marvelx.controllers.model.websocket.WebsocketRequestType
 import com.alexgreece45.marvelx.controllers.model.websocket.WebsocketServerResponseType
-import com.alexgreece45.marvelx.network_logic.models_websocket.ResponseWebsocket
+import com.alexgreece45.marvelx.core.network.model.websocket.ResponseWebsocket
 import java.util.UUID
 
 /**

@@ -3,6 +3,8 @@ package com.alexgreece45.marvelx.ui.screens.profile.editProfileDetails
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarNavigationPayload
+import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarType
 import com.alexgreece45.marvelx.domain.helper.InteractorPartialState
 import com.alexgreece45.marvelx.domain.interactors.GetCurrentUserProfileDetailsPartialState
 import com.alexgreece45.marvelx.domain.interactors.UserInteractor
@@ -10,12 +12,11 @@ import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
 import com.alexgreece45.marvelx.mvi.BaseViewModel
-import com.alexgreece45.marvelx.network_logic.models_api.user.Gender
 import com.alexgreece45.marvelx.ui.components.AlertDialogButton
-import com.alexgreece45.marvelx.ui.components.model.SnackbarStateData
 import com.alexgreece45.marvelx.ui.components.model.ErrorButtonLayout
 import com.alexgreece45.marvelx.ui.components.model.ErrorButtonType
 import com.alexgreece45.marvelx.ui.helper.FieldValidationRules
+import com.alexgreece45.marvelx.ui.model.Gender
 import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.model.EditProfileDetailsItemUi
 import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.model.ProfileDetailsUi
 import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.model.toBasicProfileDetailsDomain
@@ -24,9 +25,8 @@ import com.alexgreece45.marvelx.util.FormValidationResult
 import com.alexgreece45.marvelx.util.FormValidator
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.Rule
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
+import org.koin.android.annotation.KoinViewModel
 
 sealed interface EditProfileDetailsContract {
     /**
@@ -92,16 +92,18 @@ sealed interface EditProfileDetailsContract {
 
         val alertDialogView: AlertDialogView? = null,
         val errorView: ErrorView? = null,
-        val snackbarStateData: SnackbarStateData? = null
     ) : BaseState
 
     sealed interface Effect : BaseEffect {
         sealed interface Navigation : Effect {
             data object NavigateUp : Navigation
+            data class NavigateUpWithSnackbarPayload(val snackbarNavigationPayload: SnackbarNavigationPayload) :
+                Navigation
         }
     }
 }
 
+@KoinViewModel
 class EditProfileDetailsViewModel(
     private val userInteractor: UserInteractor,
     private val fieldValidationRules: FieldValidationRules,
@@ -118,78 +120,66 @@ class EditProfileDetailsViewModel(
             }
 
             is EditProfileDetailsContract.Event.FirstNameField.OnValueChanged -> {
-                viewModelScope.launch {
-                    validateField(
-                        value = event.value,
-                        validationRules = fieldValidationRules.getFirstNameValidationRules()
-                    ).collect {
-                        setState {
-                            copy(
-                                profileDetailsUi = profileDetailsUi?.copy(
-                                    firstName = profileDetailsUi.firstName.copy(
-                                        currentValue = event.value,
-                                        validationResult = it
-                                    )
+                setState {
+                    copy(
+                        profileDetailsUi = profileDetailsUi?.copy(
+                            firstName = profileDetailsUi.firstName.copy(
+                                currentValue = event.value,
+                                validationResult = validateField(
+                                    value = event.value,
+                                    validationRules = fieldValidationRules.getFirstNameValidationRules()
                                 )
                             )
-                        }
-                        setState {
-                            copy(
-                                isSaveChangesButtonEnabled = shouldEnableSaveChangesButton()
-                            )
-                        }
-                    }
+                        )
+                    )
+                }
+                setState {
+                    copy(
+                        isSaveChangesButtonEnabled = shouldEnableSaveChangesButton()
+                    )
                 }
             }
 
             is EditProfileDetailsContract.Event.LastNameField.OnValueChanged -> {
-                viewModelScope.launch {
-                    validateField(
-                        value = event.value,
-                        validationRules = fieldValidationRules.getLastNameValidationRules()
-                    ).collect {
-                        setState {
-                            copy(
-                                profileDetailsUi = profileDetailsUi?.copy(
-                                    lastName = profileDetailsUi.lastName.copy(
-                                        currentValue = event.value,
-                                        validationResult = it
-                                    )
+                setState {
+                    copy(
+                        profileDetailsUi = profileDetailsUi?.copy(
+                            lastName = profileDetailsUi.lastName.copy(
+                                currentValue = event.value,
+                                validationResult = validateField(
+                                    value = event.value,
+                                    validationRules = fieldValidationRules.getLastNameValidationRules()
                                 )
                             )
-                        }
-                        setState {
-                            copy(
-                                isSaveChangesButtonEnabled = shouldEnableSaveChangesButton()
-                            )
-                        }
-                    }
+                        )
+                    )
+                }
+                setState {
+                    copy(
+                        isSaveChangesButtonEnabled = shouldEnableSaveChangesButton()
+                    )
                 }
             }
 
             is EditProfileDetailsContract.Event.GenderField.OnGenderSelected -> {
-                viewModelScope.launch {
-                    validateField(
-                        value = event.value.key,
-                        validationRules = fieldValidationRules.getGenderValidationRules()
-                    ).collect {
-                        setState {
-                            copy(
-                                profileDetailsUi = profileDetailsUi?.copy(
-                                    gender = profileDetailsUi.gender.copy(
-                                        currentValue = event.value,
-                                        validationResult = it
-                                    )
-                                ),
-                                isGenderDropDownExpanded = !isGenderDropDownExpanded
+                setState {
+                    copy(
+                        profileDetailsUi = profileDetailsUi?.copy(
+                            gender = profileDetailsUi.gender.copy(
+                                currentValue = event.value,
+                                validationResult = validateField(
+                                    value = event.value.key,
+                                    validationRules = fieldValidationRules.getGenderValidationRules()
+                                )
                             )
-                        }
-                        setState {
-                            copy(
-                                isSaveChangesButtonEnabled = shouldEnableSaveChangesButton()
-                            )
-                        }
-                    }
+                        ),
+                        isGenderDropDownExpanded = !isGenderDropDownExpanded
+                    )
+                }
+                setState {
+                    copy(
+                        isSaveChangesButtonEnabled = shouldEnableSaveChangesButton()
+                    )
                 }
             }
 
@@ -210,27 +200,23 @@ class EditProfileDetailsViewModel(
             }
 
             is EditProfileDetailsContract.Event.EmailField.OnValueChanged -> {
-                viewModelScope.launch {
-                    validateField(
-                        value = event.value,
-                        validationRules = fieldValidationRules.getEmailValidationRules()
-                    ).collect {
-                        setState {
-                            copy(
-                                profileDetailsUi = profileDetailsUi?.copy(
-                                    email = profileDetailsUi.email.copy(
-                                        currentValue = event.value,
-                                        validationResult = it
-                                    )
+                setState {
+                    copy(
+                        profileDetailsUi = profileDetailsUi?.copy(
+                            email = profileDetailsUi.email.copy(
+                                currentValue = event.value,
+                                validationResult = validateField(
+                                    value = event.value,
+                                    validationRules = fieldValidationRules.getEmailValidationRules()
                                 )
                             )
-                        }
-                        setState {
-                            copy(
-                                isSaveChangesButtonEnabled = shouldEnableSaveChangesButton()
-                            )
-                        }
-                    }
+                        )
+                    )
+                }
+                setState {
+                    copy(
+                        isSaveChangesButtonEnabled = shouldEnableSaveChangesButton()
+                    )
                 }
             }
 
@@ -400,57 +386,55 @@ class EditProfileDetailsViewModel(
         }
         currentState.profileDetailsUi?.toBasicProfileDetailsDomain()?.let { profileDetailsDomain ->
             viewModelScope.launch {
-                userInteractor.updateCurrentUserProfileDetails(profileDetailsDomain).collect {
-                    when (it) {
-                        is InteractorPartialState.Success -> {
-                            // TODO: Review snackbar handling.
-                            setState {
-                                copy(
-                                    snackbarStateData = SnackbarStateData(
-                                        message = resourceProvider.getString(R.string.edit_profile_details_screen_success_updating_profile_details)
-                                    )
-                                )
-                            }
-                            setEffect {
-                                EditProfileDetailsContract.Effect.Navigation.NavigateUp
-                            }
-                        }
-
-                        is InteractorPartialState.Failed, is InteractorPartialState.Error -> {
-                            setState {
-                                copy(
-                                    isLoading = false,
-                                    errorView = EditProfileDetailsContract.ErrorView(
-                                        errorTitle = resourceProvider.getString(R.string.edit_profile_details_screen_error_updating_profile_details),
-                                        errorSubtitle = resourceProvider.getString(R.string.internal_server_error),
-                                        onCloseClicked = EditProfileDetailsContract.Event.OnBackClicked,
-                                        errorButtonLayout = ErrorButtonLayout.Single(
-                                            primaryButtonLabel = resourceProvider.getString(R.string.generic_retry_button),
-                                            onPrimaryButtonClicked = ::updateProfileDetails
+                userInteractor.updateCurrentUserProfileDetails(profileDetailsDomain)
+                    .collect { result ->
+                        when (result) {
+                            is InteractorPartialState.Success -> {
+                                setEffect {
+                                    EditProfileDetailsContract.Effect.Navigation.NavigateUpWithSnackbarPayload(
+                                        SnackbarNavigationPayload(
+                                            message = resourceProvider.getString(R.string.edit_profile_details_screen_success_updating_profile_details),
+                                            type = SnackbarType.SUCCESS
                                         )
                                     )
-                                )
+                                }
                             }
-                        }
 
-                        is InteractorPartialState.NoInternetConnection -> {
-                            setState {
-                                copy(
-                                    isLoading = false,
-                                    errorView = EditProfileDetailsContract.ErrorView(
-                                        errorTitle = resourceProvider.getString(R.string.edit_profile_details_screen_error_updating_profile_details),
-                                        errorSubtitle = resourceProvider.getNoInternetConnectionMessage(),
-                                        onCloseClicked = EditProfileDetailsContract.Event.OnBackClicked,
-                                        errorButtonLayout = ErrorButtonLayout.Single(
-                                            primaryButtonLabel = resourceProvider.getString(R.string.generic_retry_button),
-                                            onPrimaryButtonClicked = ::updateProfileDetails
+                            is InteractorPartialState.Failed, is InteractorPartialState.Error -> {
+                                setState {
+                                    copy(
+                                        isLoading = false,
+                                        errorView = EditProfileDetailsContract.ErrorView(
+                                            errorTitle = resourceProvider.getString(R.string.edit_profile_details_screen_error_updating_profile_details),
+                                            errorSubtitle = resourceProvider.getString(R.string.internal_server_error),
+                                            onCloseClicked = EditProfileDetailsContract.Event.OnBackClicked,
+                                            errorButtonLayout = ErrorButtonLayout.Single(
+                                                primaryButtonLabel = resourceProvider.getString(R.string.generic_retry_button),
+                                                onPrimaryButtonClicked = ::updateProfileDetails
+                                            )
                                         )
                                     )
-                                )
+                                }
+                            }
+
+                            is InteractorPartialState.NoInternetConnection -> {
+                                setState {
+                                    copy(
+                                        isLoading = false,
+                                        errorView = EditProfileDetailsContract.ErrorView(
+                                            errorTitle = resourceProvider.getString(R.string.edit_profile_details_screen_error_updating_profile_details),
+                                            errorSubtitle = resourceProvider.getNoInternetConnectionMessage(),
+                                            onCloseClicked = EditProfileDetailsContract.Event.OnBackClicked,
+                                            errorButtonLayout = ErrorButtonLayout.Single(
+                                                primaryButtonLabel = resourceProvider.getString(R.string.generic_retry_button),
+                                                onPrimaryButtonClicked = ::updateProfileDetails
+                                            )
+                                        )
+                                    )
+                                }
                             }
                         }
                     }
-                }
             }
         }
     }
@@ -459,13 +443,11 @@ class EditProfileDetailsViewModel(
      * Validates the given [value] against the [validationRules] and emits the result as a
      * [FormValidationResult].
      */
-    private suspend fun validateField(
+    private fun validateField(
         value: String,
         validationRules: List<Rule>
-    ): Flow<FormValidationResult> = flow {
-        formValidator.validateForm(Form(mapOf(validationRules to value))).collect {
-            emit(it)
-        }
+    ): FormValidationResult {
+        return formValidator.validateForm(Form(mapOf(validationRules to value)))
     }
 
     /**

@@ -1,10 +1,12 @@
 package com.alexgreece45.marvelx.domain.interactors
 
-import com.alexgreece45.marvelx.controllers.AppLogger
-import com.alexgreece45.marvelx.controllers.PrefKeys
+import com.alexgreece45.marvelx.core.common.extensions.safeAsync
+import com.alexgreece45.marvelx.core.common.logger.AppLogger
+import com.alexgreece45.marvelx.core.data.repositories.UserSessionRepository
 import com.alexgreece45.marvelx.data.model.RepositoryPrivacySettings
 import com.alexgreece45.marvelx.data.repository.GetCurrentUserProfileDetailsRepositoryResponse
 import com.alexgreece45.marvelx.data.repository.GetProfileDetailsRepositoryResponse
+import com.alexgreece45.marvelx.data.repository.UpdateProfileImageResult
 import com.alexgreece45.marvelx.data.repository.UserRepository
 import com.alexgreece45.marvelx.domain.helper.InteractorPartialState
 import com.alexgreece45.marvelx.domain.helper.handleRepositoryResult
@@ -18,25 +20,21 @@ import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.ProfileDeta
 import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.toBasicProfileDetailsDomain
 import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.toProfileDetailsDomain
 import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.toProfileDetailsErrorDomain
-import com.alexgreece45.marvelx.domain.model_generic.ReadFileContentData
+import com.alexgreece45.marvelx.model.model.generic.AttachedFileContentData
+import com.alexgreece45.marvelx.model.model.user.UserId
 import com.alexgreece45.marvelx.util.ResourceProvider
-import com.alexgreece45.marvelx.util.extensions.getFileNameExtension
-import com.alexgreece45.marvelx.util.extensions.getMediaTypeFromFileName
-import com.alexgreece45.marvelx.util.extensions.safeAsync
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
-import okhttp3.MultipartBody
-import okhttp3.RequestBody.Companion.toRequestBody
 import okio.IOException
+import org.koin.core.annotation.Factory
 
 interface UserInteractor {
 
     /**
      * Gets the profile details of the given [userId].
      */
-    suspend fun getProfileDetails(userId: String): Flow<GetProfileDetailsPartialState>
+    suspend fun getProfileDetails(userId: UserId): Flow<GetProfileDetailsPartialState>
 
     /**
      * Gets the basic profile details of the current user.
@@ -51,9 +49,9 @@ interface UserInteractor {
     /**
      * Updates the profile image of the current user.
      *
-     * @param profileImageReadFileContentData The profile image content data.
+     * @param profileImageData The profile image content data.
      */
-    suspend fun updateUserProfileImage(profileImageReadFileContentData: ReadFileContentData): Flow<InteractorPartialState<String>>
+    suspend fun updateUserProfileImage(profileImageData: AttachedFileContentData): UpdateProfileImageResult
 
     /**
      * Gets the privacy settings of the current user.
@@ -66,14 +64,15 @@ interface UserInteractor {
     suspend fun updatePrivacySettings(privacySettingsDomain: PrivacySettingsDomain): Flow<InteractorPartialState<String>>
 }
 
-class UserInteractorImpl(
+@Factory
+internal class UserInteractorImpl(
     private val logger: AppLogger,
     private val resourceProvider: ResourceProvider,
     private val repository: UserRepository,
-    private val prefKeys: PrefKeys
+    private val userSessionRepository: UserSessionRepository
 ) : UserInteractor {
 
-    override suspend fun getProfileDetails(userId: String): Flow<GetProfileDetailsPartialState> =
+    override suspend fun getProfileDetails(userId: UserId): Flow<GetProfileDetailsPartialState> =
         flow {
             when (val profileDetailsResponse = repository.getProfileDetails(userId)) {
                 is GetProfileDetailsRepositoryResponse.Failed -> {
@@ -153,28 +152,12 @@ class UserInteractorImpl(
             }
         }
 
-    override suspend fun updateUserProfileImage(profileImageReadFileContentData: ReadFileContentData): Flow<InteractorPartialState<String>> =
-        flow {
-            val imageRequestBody = profileImageReadFileContentData.fileContent.toRequestBody(
-                profileImageReadFileContentData.fileName.getMediaTypeFromFileName()
-            )
-
-            val imagePart = MultipartBody.Part.createFormData(
-                name = "profile_image",
-                filename = "profile_image." + profileImageReadFileContentData.fileName.getFileNameExtension(),
-                body = imageRequestBody
-            )
-            repository.updateUserProfileImage(prefKeys.getUserId(), imagePart)
-                .collect { repositoryResult ->
-                    emitAll(handleRepositoryResultNoTransformation(repositoryResult))
-                }
-        }.catch {
-            logger.e("UserInteractor") { "(updateUserProfileImage) e: ${it.localizedMessage.orEmpty()}" }
-            when (it) {
-                is IllegalArgumentException -> InteractorPartialState.Error<String>(it.localizedMessage.orEmpty()) // Can be thrown from `.toRequestBody`.
-                else -> InteractorPartialState.Error<String>(resourceProvider.getGenericErrorMessage())
-            }
-        }
+    override suspend fun updateUserProfileImage(profileImageData: AttachedFileContentData): UpdateProfileImageResult {
+        return repository.updateUserProfileImage(
+            userId = userSessionRepository.getUserId(),
+            profileImage = profileImageData
+        )
+    }
 
     override suspend fun getPrivacySettings(): Flow<InteractorPartialState<PrivacySettingsDomain>> =
         flow {

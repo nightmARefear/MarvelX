@@ -1,23 +1,17 @@
 package com.alexgreece45.marvelx.ui.screens.home
 
-import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.domain.interactors.LoginInteractor
-import com.alexgreece45.marvelx.domain.interactors.LogoutPartialState
+import com.alexgreece45.marvelx.core.network.managers.model.LogoutReason
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
 import com.alexgreece45.marvelx.mvi.BaseViewModel
-import com.alexgreece45.marvelx.ui.navigation.NavArgHelper
-import com.alexgreece45.marvelx.ui.navigation.models.NavArg
-import com.alexgreece45.marvelx.ui.navigation.models.NavArgStatus
-import com.alexgreece45.marvelx.ui.screens.home.models.HomeAlertDialogErrorType
 import com.alexgreece45.marvelx.ui.screens.home.models.HomeAlertDialogErrorView
 import com.alexgreece45.marvelx.util.ResourceProvider
-import kotlinx.coroutines.launch
+import org.koin.android.annotation.KoinViewModel
 
 sealed class HomeEvent : BaseEvent {
-    data object Init : HomeEvent()
+    data class Init(val logoutReason: String?) : HomeEvent()
     data object OnBack : HomeEvent()
     data object OnLoginButtonClicked : HomeEvent()
     data object OnSignupButtonClicked : HomeEvent()
@@ -45,48 +39,36 @@ sealed interface HomeEffect : BaseEffect {
     }
 }
 
+@KoinViewModel
 class HomeViewModel(
     private val resourceProvider: ResourceProvider,
-    private val loginInteractor: LoginInteractor
 ) : BaseViewModel<HomeEvent, HomeState, HomeEffect>() {
     override fun setInitialState(): HomeState = HomeState()
 
     override fun handleEvents(event: HomeEvent) {
         when (event) {
             is HomeEvent.Init -> {
-                when (NavArgHelper.getArgument<NavArg.HomeLogout>(NavArg.HomeLogout)) {
-                    is NavArgStatus.Exists -> {
-                        setState {
-                            copy(
-                                isLoading = true
-                            )
-                        }
-                        viewModelScope.launch {
-                            loginInteractor.logout().collect {
-                                when (it) {
-                                    is LogoutPartialState.Failed -> {
-                                        setState {
-                                            copy(
-                                                isLoading = false
-                                            )
-                                        }
-                                    }
+                event.logoutReason?.let { stringifiedLogoutReason ->
+                    val logoutReason =
+                        LogoutReason.entries.firstOrNull { it.name == stringifiedLogoutReason }
+                            ?: return
 
-                                    LogoutPartialState.Success -> {
-                                        setState {
-                                            copy(
-                                                isLoading = false
-                                            )
-                                        }
-                                    }
-                                }
-                            }
+                    val (titleResId, descriptionResId) = when (logoutReason) {
+                        LogoutReason.SESSION_EXPIRED,
+                        LogoutReason.WEBSOCKET_ERROR,
+                        LogoutReason.SECURITY_VALIDATION_ERROR -> {
+                            R.string.screen_home_alert_dialog_session_expired_title to R.string.screen_home_alert_dialog_session_expired_description
+                        }
+
+                        LogoutReason.USER_TRIGGERED -> {
+                            R.string.screen_home_alert_dialog_user_logout_title to R.string.screen_home_alert_dialog_user_logout_description
                         }
                     }
 
-                    NavArgStatus.NotExists -> {
-                        performHomeAlertDialogErrorTypeNavArgOperations()
-                    }
+                    showAlertDialog(
+                        title = resourceProvider.getString(titleResId),
+                        description = resourceProvider.getString(descriptionResId)
+                    )
                 }
             }
 
@@ -110,51 +92,21 @@ class HomeViewModel(
         }
     }
 
-    private fun performHomeAlertDialogErrorTypeNavArgOperations() {
-        when (val homeAlertDialogErrorTypeNavArg =
-            NavArgHelper.getArgument<HomeAlertDialogErrorType>(NavArg.HomeAlertDialogErrorType)) {
-            is NavArgStatus.Exists -> {
-                showAlertDialog(homeAlertDialogErrorTypeNavArg.value)
-            }
-
-            NavArgStatus.NotExists -> {}
-        }
-    }
-
-    private fun showAlertDialog(homeAlertDialogErrorType: HomeAlertDialogErrorType) {
+    private fun showAlertDialog(title: String, description: String) {
         setState {
             copy(
-                alertDialogError = when (homeAlertDialogErrorType) {
-                    is HomeAlertDialogErrorType.HasError -> {
-                        homeAlertDialogErrorType.errorMessage?.let { errorMessage ->
-                            HomeAlertDialogErrorView(
-                                title = resourceProvider.getString(R.string.login_screen_error_view_title),
-                                errorMessage = errorMessage,
-                                buttonLabel = resourceProvider.getString(R.string.generic_ok_button),
-                                alertDialogOnClick = {
-                                    setState {
-                                        copy(
-                                            alertDialogError = null
-                                        )
-                                    }
-                                }
+                alertDialogError = HomeAlertDialogErrorView(
+                    title = title,
+                    description = description,
+                    buttonLabel = resourceProvider.getString(R.string.generic_ok_button),
+                    alertDialogOnClick = {
+                        setState {
+                            copy(
+                                alertDialogError = null
                             )
                         }
                     }
-
-                    HomeAlertDialogErrorType.SessionExpired -> HomeAlertDialogErrorView(
-                        title = resourceProvider.getString(R.string.session_status_session_has_expired_alert_dialog_title),
-                        errorMessage = resourceProvider.getString(R.string.session_status_session_has_expired_alert_dialog_error_message),
-                        buttonLabel = resourceProvider.getString(R.string.generic_close_button),
-                        alertDialogOnClick = {
-                            setState {
-                                copy(
-                                    alertDialogError = null
-                                )
-                            }
-                        }
-                    )
-                }
+                )
             )
         }
     }

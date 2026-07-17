@@ -1,13 +1,8 @@
 package com.alexgreece45.marvelx.ui.screens.profile.profileDetails
 
-import android.content.ClipData
-import android.content.Intent
-import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.core.FastOutLinearInEasing
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
@@ -21,13 +16,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Card
-import androidx.compose.material.Divider
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.ModalBottomSheetValue
+import androidx.compose.material.SnackbarHostState
 import androidx.compose.material.Text
-import androidx.compose.material.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -49,7 +43,6 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
@@ -57,9 +50,12 @@ import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.common_ui.extensions.hideSnackbar
+import com.alexgreece45.marvelx.common_ui.extensions.showSnackbarAndHandleResult
+import com.alexgreece45.marvelx.common_ui.previewAnnotation.ThemePreview
+import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarConfig
 import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.ProfileDetailsDomain
 import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.RelationshipStatusDomain
-import com.alexgreece45.marvelx.network_logic.models_api.user.Gender
 import com.alexgreece45.marvelx.ui.components.AlertDialogError
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.IconData
@@ -67,6 +63,7 @@ import com.alexgreece45.marvelx.ui.components.ModalBottomSheetContent
 import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
 import com.alexgreece45.marvelx.ui.components.ToolbarAction
 import com.alexgreece45.marvelx.ui.components.WrapAsyncImage
+import com.alexgreece45.marvelx.ui.components.WrapHorizontalDivider
 import com.alexgreece45.marvelx.ui.components.WrapModalBottomSheetLayout
 import com.alexgreece45.marvelx.ui.components.chips.AddFriendChip
 import com.alexgreece45.marvelx.ui.components.chips.CancelRequestChip
@@ -77,16 +74,20 @@ import com.alexgreece45.marvelx.ui.components.enforceMaxBrightness
 import com.alexgreece45.marvelx.ui.components.error.ContentErrorScreen
 import com.alexgreece45.marvelx.ui.components.modalBottomSheetContents.ModalBottomSheetContentItems
 import com.alexgreece45.marvelx.ui.components.model.BottomSheetContentItem
+import com.alexgreece45.marvelx.ui.components.rememberWrapModalBottomSheetState
+import com.alexgreece45.marvelx.ui.model.Gender
 import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.model.ProfileDetailsBottomSheetType
 import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.model.ProfileDetailsNestedErrorView
-import com.alexgreece45.marvelx.ui.theme.MarvelXTheme
-import com.alexgreece45.marvelx.ui.theme.values.customColors
+import com.alexgreece45.marvelx.ui_theme.theme.MarvelXTheme
+import com.alexgreece45.marvelx.ui_theme.theme.values.customColors
 import com.alexgreece45.marvelx.util.SPACING_MEDIUM
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.VSpacer
 import com.alexgreece45.marvelx.util.constants.ConstantsUi
 import com.alexgreece45.marvelx.util.extensions.circularImageWithBorder
 import com.alexgreece45.marvelx.util.extensions.hideIfVisible
+import com.alexgreece45.marvelx.util.extensions.setText
+import com.alexgreece45.marvelx.util.extensions.shareContentUrl
 import com.alexgreece45.marvelx.util.extensions.throttledClickable
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
@@ -94,7 +95,7 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun ProfileDetailsScreen(
+internal fun ProfileDetailsScreen(
     onEventSent: (ProfileDetailsContract.Event) -> Unit,
     state: ProfileDetailsContract.State,
     effect: Flow<ProfileDetailsContract.Effect>,
@@ -102,20 +103,13 @@ fun ProfileDetailsScreen(
     shouldShowAcceptFriendRequestDialog: Boolean,
     onNavigation: (ProfileDetailsContract.Effect.Navigation) -> Unit
 ) {
+
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     val clipboard = LocalClipboard.current
 
-    val modalBottomSheetState =
-        rememberModalBottomSheetState(
-            initialValue = ModalBottomSheetValue.Hidden,
-            // Allows to display a bottom sheet directly after the previous one.
-            animationSpec = tween(
-                durationMillis = 150,
-                easing = FastOutLinearInEasing
-            ),
-            skipHalfExpanded = true
-        )
+    val modalBottomSheetState = rememberWrapModalBottomSheetState()
+    val snackbarHostState = remember { SnackbarHostState() }
 
     /**
      * Whether to enforce the max screen brightness.
@@ -150,23 +144,25 @@ fun ProfileDetailsScreen(
             }
 
             is ProfileDetailsContract.Effect.ShareProfileUrl -> {
-                val share = Intent.createChooser(Intent().apply {
-                    action = Intent.ACTION_SEND
-//                    addCategory(Intent.CATEGORY_DEFAULT)
-//                    addCategory(Intent.CATEGORY_APP_MESSAGING)
-//                    addCategory(Intent.CATEGORY_BROWSABLE)
-                    putExtra(Intent.EXTRA_TEXT, uiEffect.url)
-                    putExtra(Intent.EXTRA_TITLE, uiEffect.intentTitle)
-                    type = "text/plain"
-                }, uiEffect.intentTitle)
-                context.startActivity(share)
+                context.shareContentUrl(
+                    url = uiEffect.url,
+                    title = uiEffect.intentTitle
+                )
             }
 
             is ProfileDetailsContract.Effect.SetClipboardText -> {
-                clipboard.nativeClipboard.setPrimaryClip(
-                    ClipData.newPlainText("copied text", uiEffect.text)
-                )
+                clipboard.setText(uiEffect.text)
                 Toast.makeText(context, uiEffect.toastMessage, Toast.LENGTH_SHORT).show()
+            }
+
+            is ProfileDetailsContract.Effect.ShowSnackbar -> {
+                coroutineScope.launch {
+                    snackbarHostState.showSnackbarAndHandleResult(uiEffect.snackbarStateData)
+                }
+            }
+
+            ProfileDetailsContract.Effect.HideSnackbar -> {
+                snackbarHostState.hideSnackbar()
             }
         }
     }
@@ -244,7 +240,10 @@ fun ProfileDetailsScreen(
                     )
                 )
             },
-            snackbarStateData = state.snackbarStateData,
+            snackbarConfig = SnackbarConfig(
+                snackbarHostState = snackbarHostState,
+                snackbarStateData = state.snackbarStateData
+            ),
         ) { paddingValues ->
             Column(
                 modifier = Modifier
@@ -404,10 +403,7 @@ fun ProfileDetailsScreen(
 
                             // Relationship status.
                             if (profileDetails.isDifferentUser) {
-                                Divider(
-                                    color = MaterialTheme.colors.onSurface,
-                                    thickness = 1.dp
-                                )
+                                WrapHorizontalDivider()
 
                                 when (profileDetails.relationshipStatus) {
                                     null -> {}
@@ -613,10 +609,7 @@ private fun NestedErrorView(
     }
 }
 
-@Preview(
-    apiLevel = 34,
-    uiMode = Configuration.UI_MODE_NIGHT_YES or Configuration.UI_MODE_TYPE_NORMAL,
-)
+@ThemePreview
 @Composable
 private fun ProfileDetailsScreenPreview() {
     MarvelXTheme {
@@ -635,10 +628,7 @@ private fun ProfileDetailsScreenPreview() {
     }
 }
 
-@Preview(
-    apiLevel = 34,
-    uiMode = Configuration.UI_MODE_NIGHT_YES or Configuration.UI_MODE_TYPE_NORMAL
-)
+@ThemePreview
 @Composable
 private fun ProfileDetailsScreenNestedErrorViewPreview() {
     MarvelXTheme {
@@ -661,10 +651,7 @@ private fun ProfileDetailsScreenNestedErrorViewPreview() {
     }
 }
 
-@Preview(
-    apiLevel = 34,
-    uiMode = Configuration.UI_MODE_NIGHT_YES or Configuration.UI_MODE_TYPE_NORMAL
-)
+@ThemePreview
 @Composable
 private fun ProfileDetailsScreenMoreActionBottomSheetPreview() {
     MarvelXTheme {
@@ -678,15 +665,15 @@ private fun ProfileDetailsScreenMoreActionBottomSheetPreview() {
                     BottomSheetContentItem(
                         title = stringResource(R.string.profile_details_screen_label_more_actions_block),
                         titleColor = MaterialTheme.customColors.genericRed,
-                        onClick = ProfileDetailsContract.Event.MoreActions.OnBlockClicked
+                        onClickEvent = ProfileDetailsContract.Event.MoreActions.OnBlockClicked
                     ),
                     BottomSheetContentItem(
                         title = stringResource(R.string.profile_details_screen_label_more_actions_share_profile),
-                        onClick = ProfileDetailsContract.Event.MoreActions.OnShareProfileClicked
+                        onClickEvent = ProfileDetailsContract.Event.MoreActions.OnShareProfileClicked
                     ),
                     BottomSheetContentItem(
                         title = stringResource(R.string.profile_details_screen_label_more_actions_show_qr_code),
-                        onClick = ProfileDetailsContract.Event.MoreActions.OnShowQrCodeClicked
+                        onClickEvent = ProfileDetailsContract.Event.MoreActions.OnShowQrCodeClicked
                     ),
                 ),
                 bottomSheetType = ProfileDetailsBottomSheetType.MoreActions

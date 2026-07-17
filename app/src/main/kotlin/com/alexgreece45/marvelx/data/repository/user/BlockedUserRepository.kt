@@ -1,18 +1,20 @@
 package com.alexgreece45.marvelx.data.repository.user
 
+import com.alexgreece45.marvelx.core.common.dispatchers.model.IoDispatcher
+import com.alexgreece45.marvelx.core.data.helper.RepositoryResult
+import com.alexgreece45.marvelx.core.data.helper.handleApiResultNoTransformation
+import com.alexgreece45.marvelx.core.data.helper.handleApiResultNoTransformationWithData
+import com.alexgreece45.marvelx.core.network.clients.ApiClient
+import com.alexgreece45.marvelx.core.network.model.api.user.block.ResponseBlockedUser
+import com.alexgreece45.marvelx.core.network.model.api.user.block.ResponseUserBlockResult
 import com.alexgreece45.marvelx.data.model.RepositoryUserBlockResult
 import com.alexgreece45.marvelx.data.model.toRepositoryUserBlock
-import com.alexgreece45.marvelx.data.repository.helper.RepositoryResult
-import com.alexgreece45.marvelx.data.repository.helper.handleApiResultNoTransformation
-import com.alexgreece45.marvelx.data.repository.helper.handleApiResultNoTransformationWithData
-import com.alexgreece45.marvelx.dispatchers.IoDispatcher
-import com.alexgreece45.marvelx.network_logic.clients.ApiClient
-import com.alexgreece45.marvelx.network_logic.models_api.user.block.ResponseBlockedUser
-import com.alexgreece45.marvelx.network_logic.models_api.user.block.ResponseUserBlockResult
+import com.alexgreece45.marvelx.model.model.user.UserId
 import com.google.gson.Gson
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
+import org.koin.core.annotation.Single
 import kotlin.coroutines.CoroutineContext
 
 interface BlockedUserRepository {
@@ -25,14 +27,15 @@ interface BlockedUserRepository {
     /**
      * Blocks the user with [userId].
      */
-    suspend fun blockUser(userId: String): Flow<BlockUserRepositoryResult>
+    suspend fun blockUser(userId: UserId): Flow<BlockUserRepositoryResult>
 
     /**
      * Unblocks the user with [userId].
      */
-    suspend fun unblockUser(userId: String): Flow<RepositoryResult<String>>
+    suspend fun unblockUser(userId: UserId): Flow<RepositoryResult<String>>
 }
 
+@Single
 class BlockedUserRepositoryImpl(
     private val apiClient: ApiClient,
     @IoDispatcher private val ioDispatcher: CoroutineContext
@@ -48,8 +51,8 @@ class BlockedUserRepositoryImpl(
             )
         }
 
-    override suspend fun blockUser(userId: String): Flow<BlockUserRepositoryResult> = flow {
-        apiClient.blockUser(userId).let { response ->
+    override suspend fun blockUser(userId: UserId): Flow<BlockUserRepositoryResult> = flow {
+        apiClient.blockUser(userId.value).let { response ->
             if (response.isSuccessful) {
                 emit(BlockUserRepositoryResult.Success)
             } else {
@@ -66,10 +69,10 @@ class BlockedUserRepositoryImpl(
         }
     }
 
-    override suspend fun unblockUser(userId: String): Flow<RepositoryResult<String>> = flow {
+    override suspend fun unblockUser(userId: UserId): Flow<RepositoryResult<String>> = flow {
         emitAll(
             handleApiResultNoTransformation(
-                apiResult = apiClient.unblockUser(userId),
+                apiResult = apiClient.unblockUser(userId.value),
                 ioDispatcher = ioDispatcher
             )
         )
