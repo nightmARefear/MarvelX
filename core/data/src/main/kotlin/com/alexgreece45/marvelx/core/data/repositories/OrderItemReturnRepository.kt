@@ -1,7 +1,6 @@
 package com.alexgreece45.marvelx.core.data.repositories
 
 import com.alexgreece45.marvelx.core.common.dispatchers.model.IoDispatcher
-import com.alexgreece45.marvelx.core.common.extensions.LOGGER_TAG
 import com.alexgreece45.marvelx.core.common.logger.AppLogger
 import com.alexgreece45.marvelx.core.data.helper.RepositoryResult
 import com.alexgreece45.marvelx.core.data.helper.handleApiResultNoFlow
@@ -46,6 +45,8 @@ internal class OrderItemReturnRepositoryImpl(
     private val multipartBuilder: MultipartBuilder,
     private val appLogger: AppLogger
 ) : OrderItemReturnRepository {
+
+    private val loggerTag = "OrderItemReturnRepository"
 
     override suspend fun getOrderItemReturn(
         orderId: OrderId,
@@ -123,7 +124,7 @@ internal class OrderItemReturnRepositoryImpl(
                     ),
                     transformation = { this.toDataState() },
                     ioDispatcher = ioDispatcher,
-                    logError = { errorMessage -> appLogger.e(LOGGER_TAG) { errorMessage } }
+                    logError = { errorMessage -> appLogger.e(loggerTag) { errorMessage } }
                 ).toMultipartResult()
             }
         }

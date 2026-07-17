@@ -29,7 +29,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.common_ui.util.safeLetComposable
+import com.alexgreece45.marvelx.core.common.extensions.minusMinutes
 import com.alexgreece45.marvelx.core.common.extensions.toListingFormat
+import com.alexgreece45.marvelx.core.data.model.listing.ListingId
 import com.alexgreece45.marvelx.data.model.marketplace.listing.EnumGeneric
 import com.alexgreece45.marvelx.domain.model_api.marketplace.listing.ListingDetailsDomain
 import com.alexgreece45.marvelx.domain.model_api.marketplace.listing.ListingDimensions
@@ -39,6 +41,7 @@ import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.ProfileDeta
 import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.RelationshipStatusDomain
 import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.UserStatsDomain
 import com.alexgreece45.marvelx.domain.model_generic.ReloadableImageUrlData
+import com.alexgreece45.marvelx.model.model.user.UserId
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.GenericErrorScreen
 import com.alexgreece45.marvelx.ui.components.IconData
@@ -76,13 +79,14 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 
 @Composable
-fun ListingDetailsScreen(
+internal fun ListingDetailsScreen(
     onEvent: (ListingDetailsContract.Event) -> Unit,
     state: ListingDetailsContract.State,
     effect: Flow<ListingDetailsContract.Effect>,
     onNavigation: (ListingDetailsContract.Effect.Navigation) -> Unit,
     listingId: String?,
-    createListingWizardMode: CreateListingWizardMode?
+    createListingWizardMode: CreateListingWizardMode?,
+    isInnerScreen: Boolean
 ) {
 
     val context = LocalContext.current
@@ -138,7 +142,8 @@ fun ListingDetailsScreen(
                     )
                 }
             }
-        }
+        },
+        isInnerScreen = isInnerScreen
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -695,18 +700,20 @@ private fun StickyBottom(
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES or Configuration.UI_MODE_TYPE_NORMAL)
 @Composable
 private fun ListingDetailsScreenPreview() {
+    val listingId = "1"
     val price = "150.20".toBigDecimal()
-    val postedAt = DateUtil.getUTCInstant().minusSeconds(60 * 10)
+    val postedAt = DateUtil.getUTCInstant().minusMinutes(10)
+
     MarvelXTheme {
         ListingDetailsScreen(
             onEvent = { },
             state = ListingDetailsContract.State(
                 isLoading = false,
                 mode = ListingDetailsMode.EXISTING,
-                listingId = "1",
+                listingId = listingId,
                 listing = ListingUi(
-                    listingId = "1",
-                    sellerUserId = "23223",
+                    listingId = listingId,
+                    sellerUserId = UserId("23223"),
                     category = EnumGeneric(
                         code = "drinkware",
                         label = "Drinkware"
@@ -799,7 +806,8 @@ private fun ListingDetailsScreenPreview() {
             effect = emptyFlow(),
             onNavigation = {},
             listingId = "1",
-            createListingWizardMode = null
+            createListingWizardMode = null,
+            isInnerScreen = false
         )
     }
 }

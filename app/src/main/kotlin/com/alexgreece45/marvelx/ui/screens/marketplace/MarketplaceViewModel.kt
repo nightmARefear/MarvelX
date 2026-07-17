@@ -2,6 +2,7 @@ package com.alexgreece45.marvelx.ui.screens.marketplace
 
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.configuration.ConfigPriceLogic
+import com.alexgreece45.marvelx.core.data.model.listing.ListingId
 import com.alexgreece45.marvelx.domain.helper.InteractorPartialState
 import com.alexgreece45.marvelx.domain.interactors.marketplace.MarketplaceInteractor
 import com.alexgreece45.marvelx.mvi.BaseViewModel

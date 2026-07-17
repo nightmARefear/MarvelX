@@ -1,6 +1,7 @@
 package com.alexgreece45.marvelx.ui.screens.marketplace.listingDetailsScreen.model
 
 import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.ProfileDetailsDomain
+import com.alexgreece45.marvelx.model.model.user.UserId
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
@@ -55,7 +56,7 @@ sealed interface ListingDetailsContract {
     sealed interface Effect : BaseEffect {
         sealed interface Navigation : Effect {
             data object GoBack : Navigation
-            data class NavigateToProfileDetailsScreen(val userId: String) : Navigation
+            data class NavigateToProfileDetailsScreen(val userId: UserId) : Navigation
             data class NavigateToEditListingScreen(val listingId: String) : Navigation
             data object GoToNextScreen : Navigation
         }

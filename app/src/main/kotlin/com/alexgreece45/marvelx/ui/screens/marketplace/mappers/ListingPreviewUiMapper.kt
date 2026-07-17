@@ -20,7 +20,7 @@ class ListingPreviewUiMapper(
         with(listingPreviewDomain) {
             try {
                 ListingPreviewUi(
-                    listingId = id,
+                    listingId = listingId,
                     title = title,
                     priceLabel = price.formatPrice(configPriceLogic.priceScale),
                     coverImageUrl = coverImageUrl,

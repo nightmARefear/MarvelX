@@ -28,7 +28,7 @@ class ComicViewModel(
 
             ComicContract.Event.OnBackClicked -> {
                 setEffect {
-                    ComicContract.Effect.PopBackStack
+                    ComicContract.Effect.Navigation.GoBack
                 }
             }
         }

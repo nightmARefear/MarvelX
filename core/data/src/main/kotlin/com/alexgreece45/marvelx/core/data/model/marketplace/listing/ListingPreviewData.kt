@@ -4,7 +4,7 @@ import com.alexgreece45.marvelx.core.network.model.api.marketplace.listing.Respo
 
 
 data class ListingPreviewData(
-    val id: String,
+    val listingId: String,
     val title: String,
     val price: String,
     val coverImageUrl: String,
@@ -13,7 +13,7 @@ data class ListingPreviewData(
 
 fun ResponseListingPreview.toData(): ListingPreviewData =
     ListingPreviewData(
-        id = listingId,
+        listingId = listingId,
         title = title,
         price = price,
         coverImageUrl = coverImageUrl,

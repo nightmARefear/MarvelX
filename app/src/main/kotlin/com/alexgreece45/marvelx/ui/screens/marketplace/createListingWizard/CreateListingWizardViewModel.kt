@@ -10,8 +10,6 @@ import com.alexgreece45.marvelx.domain.interactors.marketplace.listing.ListingIn
 import com.alexgreece45.marvelx.domain.model_api.marketplace.listing.UpdateListingDomain
 import com.alexgreece45.marvelx.mvi.BaseViewModel
 import com.alexgreece45.marvelx.ui.components.model.ErrorButtonLayout
-import com.alexgreece45.marvelx.ui.navigation.NavArgHelper
-import com.alexgreece45.marvelx.ui.navigation.models.NavArg
 import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.model.CreateListingWizardContract
 import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.model.CreateListingWizardContract.Effect.ShowToastMessage
 import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.model.CreateListingWizardErrorData
@@ -101,7 +99,7 @@ internal class CreateListingWizardViewModel(
     }
 
     private fun onBackButtonClicked() {
-        if (currentState.wizardMode == null || currentState.wizardStep == CreateListingWizardStep.SUCCESS) {
+        if (currentState.wizardMode == null) {
             setEffect {
                 CreateListingWizardContract.Effect.Navigation.ExitWizard
             }
@@ -151,23 +149,18 @@ internal class CreateListingWizardViewModel(
                     CreateListingWizardContract.Effect.Navigation.ExitWizard
                 }
             }
-
-            CreateListingWizardStep.SUCCESS -> {
-                setEffect {
-                    CreateListingWizardContract.Effect.Navigation.ExitWizard
-                }
-            }
         }
     }
 
     private fun onStickyBottomButtonClicked() {
+        // Next step is success.
+        if (currentState.wizardStep == CreateListingWizardStep.OVERVIEW) {
+            onSuccessStepOperations()
+            return
+        }
+
         CreateListingWizardStep.entries.firstOrNull { it.order == currentState.wizardStep.order + 1 }
             ?.let { newStep ->
-                if (newStep == CreateListingWizardStep.SUCCESS) {
-                    onSuccessStepOperations(newStep)
-                    return
-                }
-
                 val isNewStepOverview = newStep == CreateListingWizardStep.OVERVIEW
                 if (isNewStepOverview) {
                     setState {
@@ -217,7 +210,7 @@ internal class CreateListingWizardViewModel(
 
     private fun onNavigateToListingDetailsScreen(listingId: String) {
         setEffect {
-            CreateListingWizardContract.Effect.Navigation.NavigateToListingDetailsScreenAndExitWizard(
+            CreateListingWizardContract.Effect.Navigation.NavigateToListingDetailsScreen(
                 listingId
             )
         }
@@ -301,8 +294,6 @@ internal class CreateListingWizardViewModel(
         wizardMode: CreateListingWizardMode?,
         wizardStep: CreateListingWizardStep
     ): String {
-        if (wizardStep == CreateListingWizardStep.SUCCESS) return ""
-
         return resourceProvider.getString(
             if (wizardMode == CreateListingWizardMode.CREATE) {
                 R.string.screen_create_listing_wizard_screen_toolbar_title_create
@@ -330,15 +321,15 @@ internal class CreateListingWizardViewModel(
         }
     }
 
-    private fun onSuccessStepOperations(nextWizardStep: CreateListingWizardStep) {
+    private fun onSuccessStepOperations() {
         if (currentState.wizardMode == CreateListingWizardMode.CREATE) {
             uploadDraftListing()
         } else {
-            uploadModifiedListing(nextWizardStep)
+            uploadModifiedListing()
         }
     }
 
-    private fun uploadModifiedListing(nextWizardStep: CreateListingWizardStep) {
+    private fun uploadModifiedListing() {
         val listing = currentState.listingUi
         if (listing == null) {
             setEffect {
@@ -365,14 +356,10 @@ internal class CreateListingWizardViewModel(
             )
 
             if (wasModifiedListingUploaded) {
-                setState {
-                    copy(
-                        isLoading = false,
-                        toolbarTitle = getToolbarTitle(
-                            currentState.wizardMode,
-                            nextWizardStep
-                        ),
-                        wizardStep = nextWizardStep
+                setEffect {
+                    CreateListingWizardContract.Effect.Navigation.NavigateToCreateListingSuccessScreen(
+                        listingId = listing.listingId,
+                        wizardMode = CreateListingWizardMode.UPDATE
                     )
                 }
             } else {
@@ -450,17 +437,11 @@ internal class CreateListingWizardViewModel(
                 is MultipartResult.Success -> {
                     createListingWizardController.resetCreateListingData()
 
-                    NavArgHelper.setArgument(NavArg.NewListingId, createListingResult.data)
-
-                    val newWizardStep = CreateListingWizardStep.SUCCESS
-                    setState {
-                        copy(
-                            isLoading = false,
-                            toolbarTitle = getToolbarTitle(
-                                currentState.wizardMode,
-                                newWizardStep
-                            ),
-                            wizardStep = newWizardStep
+                    val listingId = createListingResult.data
+                    setEffect {
+                        CreateListingWizardContract.Effect.Navigation.NavigateToCreateListingSuccessScreen(
+                            listingId = listingId,
+                            wizardMode = CreateListingWizardMode.CREATE
                         )
                     }
                 }

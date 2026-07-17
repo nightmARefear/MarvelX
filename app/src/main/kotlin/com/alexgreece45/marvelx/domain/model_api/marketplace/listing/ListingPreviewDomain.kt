@@ -1,10 +1,11 @@
 package com.alexgreece45.marvelx.domain.model_api.marketplace.listing
 
+import com.alexgreece45.marvelx.core.data.model.listing.ListingId
 import com.alexgreece45.marvelx.core.data.model.marketplace.listing.ListingPreviewData
 import java.math.BigDecimal
 
 data class ListingPreviewDomain(
-    val id: String,
+    val listingId: String,
     val title: String,
     val price: BigDecimal,
     val coverImageUrl: String,
@@ -13,7 +14,7 @@ data class ListingPreviewDomain(
 
 fun ListingPreviewData.toDomain(): ListingPreviewDomain =
     ListingPreviewDomain(
-        id = id,
+        listingId = listingId,
         title = title,
         price = price.toBigDecimal(),
         coverImageUrl = coverImageUrl,

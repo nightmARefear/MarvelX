@@ -3,9 +3,9 @@ package com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
-import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -17,9 +17,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.data.model.cardBrand.CardBrandData
 import com.alexgreece45.marvelx.domain.model_api.order.OrderCheckoutInfoDomain
 import com.alexgreece45.marvelx.ui.components.AlertDialogButton
 import com.alexgreece45.marvelx.ui.components.AlertDialogError
@@ -29,13 +29,12 @@ import com.alexgreece45.marvelx.ui.components.WrapButton
 import com.alexgreece45.marvelx.ui.components.effect.ObserveUiEffect
 import com.alexgreece45.marvelx.ui.components.effect.OneTimeLaunchedEffect
 import com.alexgreece45.marvelx.ui.components.model.ErrorButtonType
-import com.alexgreece45.marvelx.ui.navigation.Screen
 import com.alexgreece45.marvelx.ui.screens.cart.CartScreen
 import com.alexgreece45.marvelx.ui.screens.cart.CartViewModel
 import com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.model.CheckoutWizardContract
 import com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.model.CheckoutWizardContract.Event.OnNavigationEvents.EditPaymentDetailsScreen
 import com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.model.CheckoutWizardContract.Event.OnNavigationEvents.EditShippingDetailsScreen
-import com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.model.CheckoutWizardContract.Event.OnNavigationEvents.ExternalScreen
+import com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.model.CheckoutWizardContract.Event.OnNavigationEvents.OnNavigateToMarketplaceScreen
 import com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.model.CheckoutWizardContract.Event.OnNavigationEvents.OrderDetailsScreen
 import com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.model.CheckoutWizardContract.Event.OnNavigationEvents.OrderSuccessScreen
 import com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.model.CheckoutWizardStep
@@ -52,12 +51,13 @@ import com.alexgreece45.marvelx.ui.screens.cart.model.CartContract
 import com.alexgreece45.marvelx.ui.screens.orders.model.CardBrandUi
 import com.alexgreece45.marvelx.ui.screens.orders.model.toData
 import com.alexgreece45.marvelx.ui_theme.theme.values.customColors
+import com.alexgreece45.marvelx.util.DEFAULT_SCREEN_PADDING
 import com.alexgreece45.marvelx.util.extensions.showToast
 import kotlinx.coroutines.flow.Flow
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun CheckoutWizardScreen(
+internal fun CheckoutWizardScreen(
     onEvent: (CheckoutWizardContract.Event) -> Unit,
     state: CheckoutWizardContract.State,
     effect: Flow<CheckoutWizardContract.Effect>,
@@ -118,21 +118,27 @@ fun CheckoutWizardScreen(
             {
                 WrapButton(
                     onClick = { onEvent(CheckoutWizardContract.Event.OnStickyBottomButtonClicked) },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(DEFAULT_SCREEN_PADDING),
                     enabled = state.stickyBottomButtonEnabled
                 ) {
                     Text(text = stringResource(R.string.screen_checkout_wizard_sticky_bottom_button_next))
                 }
             }
-        }
+        },
+        paddingValues = PaddingValues(0.dp)
     ) { paddingValues ->
         val layoutDirection = LocalLayoutDirection.current
+        val verticalPaddings = PaddingValues(
+            top = paddingValues.calculateTopPadding(),
+            bottom = paddingValues.calculateBottomPadding()
+        )
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(bottom = paddingValues.calculateBottomPadding())
-                .consumeWindowInsets(paddingValues)
+                .padding(verticalPaddings)
         ) {
             AnimatedVisibility(visible = state.wizardStep != CheckoutWizardStep.SUCCESS) {
                 LinearProgressIndicator(
@@ -146,9 +152,10 @@ fun CheckoutWizardScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(
-                        start = paddingValues.calculateStartPadding(layoutDirection),
-                        top = paddingValues.calculateTopPadding(),
-                        end = paddingValues.calculateEndPadding(layoutDirection)
+                        PaddingValues(
+                            start = paddingValues.calculateStartPadding(layoutDirection),
+                            end = paddingValues.calculateEndPadding(layoutDirection)
+                        )
                     )
             ) {
                 when (state.wizardStep) {
@@ -165,7 +172,11 @@ fun CheckoutWizardScreen(
                                 }
                             },
                             setStickyBottomButtonEnabled = {
-                                onEvent(CheckoutWizardContract.Event.SetStickyBottomButtonEnabled(it))
+                                onEvent(
+                                    CheckoutWizardContract.Event.SetStickyBottomButtonEnabled(
+                                        it
+                                    )
+                                )
                             },
                             showToastMessage = {
                                 onEvent(CheckoutWizardContract.Event.OnShowToastMessage(it))
@@ -186,7 +197,11 @@ fun CheckoutWizardScreen(
                                 }
                             },
                             setStickyBottomButtonEnabled = {
-                                onEvent(CheckoutWizardContract.Event.SetStickyBottomButtonEnabled(it))
+                                onEvent(
+                                    CheckoutWizardContract.Event.SetStickyBottomButtonEnabled(
+                                        it
+                                    )
+                                )
                             },
                             showToastMessage = {
                                 onEvent(CheckoutWizardContract.Event.OnShowToastMessage(it))
@@ -211,11 +226,7 @@ fun CheckoutWizardScreen(
                                     }
 
                                     CartContract.Effect.Navigation.GoToMarketplaceScreen -> {
-                                        onEvent(
-                                            ExternalScreen(
-                                                Screen.MarketplaceScreen
-                                            )
-                                        )
+                                        onEvent(OnNavigateToMarketplaceScreen)
                                     }
 
                                     CartContract.Effect.Navigation.GoToEditCheckoutShippingDetailsScreen -> {
@@ -280,7 +291,7 @@ fun CheckoutWizardScreen(
             }
 
             AlertDialogError(
-                isVisible = state.exitWizardAlertDialogVisible,
+                isVisible = state.alertDialogAction != null,
                 title = stringResource(R.string.screen_checkout_wizard_alert_dialog_title),
                 errorMessage = {
                     Text(text = stringResource(R.string.screen_checkout_wizard_alert_dialog_message))

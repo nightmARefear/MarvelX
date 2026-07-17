@@ -1,7 +1,9 @@
 package com.alexgreece45.marvelx.ui.screens.marketplace.model
 
+import com.alexgreece45.marvelx.core.data.model.listing.ListingId
 import com.alexgreece45.marvelx.data.model.marketplace.listing.EnumGeneric
 import com.alexgreece45.marvelx.domain.model_api.marketplace.listing.ListingDetailsDomain
+import com.alexgreece45.marvelx.model.model.user.UserId
 import com.alexgreece45.marvelx.ui.model_generic.BigDecimalUi
 import com.alexgreece45.marvelx.ui.model_generic.InstantUi
 
@@ -12,7 +14,7 @@ import com.alexgreece45.marvelx.ui.model_generic.InstantUi
  */
 data class ListingUi(
     val listingId: String,
-    val sellerUserId: String,
+    val sellerUserId: UserId,
     val category: EnumGeneric,
     val subcategory: EnumGeneric,
     val condition: EnumGeneric,

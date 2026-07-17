@@ -36,7 +36,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 
 @Composable
-fun CheckoutSuccessScreen(
+internal fun CheckoutSuccessScreen(
     onEvent: (CheckoutSuccessContract.Event) -> Unit,
     state: CheckoutSuccessContract.State,
     effect: Flow<CheckoutSuccessContract.Effect>,

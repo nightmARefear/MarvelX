@@ -21,6 +21,7 @@ import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.toBasicProf
 import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.toProfileDetailsDomain
 import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.toProfileDetailsErrorDomain
 import com.alexgreece45.marvelx.model.model.generic.AttachedFileContentData
+import com.alexgreece45.marvelx.model.model.user.UserId
 import com.alexgreece45.marvelx.util.ResourceProvider
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
@@ -33,7 +34,7 @@ interface UserInteractor {
     /**
      * Gets the profile details of the given [userId].
      */
-    suspend fun getProfileDetails(userId: String): Flow<GetProfileDetailsPartialState>
+    suspend fun getProfileDetails(userId: UserId): Flow<GetProfileDetailsPartialState>
 
     /**
      * Gets the basic profile details of the current user.
@@ -71,7 +72,7 @@ internal class UserInteractorImpl(
     private val userSessionRepository: UserSessionRepository
 ) : UserInteractor {
 
-    override suspend fun getProfileDetails(userId: String): Flow<GetProfileDetailsPartialState> =
+    override suspend fun getProfileDetails(userId: UserId): Flow<GetProfileDetailsPartialState> =
         flow {
             when (val profileDetailsResponse = repository.getProfileDetails(userId)) {
                 is GetProfileDetailsRepositoryResponse.Failed -> {

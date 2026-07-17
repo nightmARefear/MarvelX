@@ -30,7 +30,7 @@ fun ResponseMarketplaceCategorySection.toDomain(): MarketplaceCategorySectionDom
 
 fun ResponseListingPreview.toDomain(): ListingPreviewDomain =
     ListingPreviewDomain(
-        id = listingId,
+        listingId = listingId,
         title = title,
         price = price.toBigDecimal(),
         coverImageUrl = coverImageUrl,

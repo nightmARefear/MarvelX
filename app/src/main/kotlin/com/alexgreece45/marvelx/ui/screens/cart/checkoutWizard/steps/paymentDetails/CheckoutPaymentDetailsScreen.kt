@@ -2,16 +2,15 @@ package com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.steps.paymentDet
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
@@ -24,11 +23,11 @@ import com.alexgreece45.marvelx.ui.screens.marketplace.components.WizardTextInpu
 import com.alexgreece45.marvelx.ui.visual_transformations.VisualTransformationCardNumber
 import com.alexgreece45.marvelx.ui.visual_transformations.VisualTransformationExpirationDate
 import com.alexgreece45.marvelx.util.SPACING_MEDIUM
-import com.alexgreece45.marvelx.util.SPACING_TINY
+import com.alexgreece45.marvelx.util.SPACING_SMALL
 import kotlinx.coroutines.flow.Flow
 
 @Composable
-fun CheckoutPaymentDetailsScreen(
+internal fun CheckoutPaymentDetailsScreen(
     onEvent: (CheckoutPaymentDetailsContract.Event) -> Unit,
     state: CheckoutPaymentDetailsContract.State,
     effect: Flow<CheckoutPaymentDetailsContract.Effect>,
@@ -54,12 +53,13 @@ fun CheckoutPaymentDetailsScreen(
 
     ContentScreen(
         isLoading = state.isLoading,
-        paddingValues = PaddingValues(0.dp)
-    ) { _ ->
+        isInnerScreen = true
+    ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
+                .padding(paddingValues)
         ) {
             // Input fields.
             Column(
@@ -98,8 +98,7 @@ fun CheckoutPaymentDetailsScreen(
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(SPACING_TINY.dp),
-//                    verticalAlignment = Alignment.CenterVertically
+                    horizontalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp)
                 ) {
                     WizardTextInputField(
                         label = stringResource(R.string.screen_checkout_payment_details_label_expiration_date),

@@ -32,22 +32,31 @@ fun PaddingValues.applyPadding(padding: Dp = DEFAULT_SCREEN_PADDING): PaddingVal
 fun PaddingValues.applyContentScreenPaddings(
     paddingValues: PaddingValues,
     isToolbarVisible: Boolean,
-    isBottomBarVisible: Boolean
+    isBottomBarVisible: Boolean,
+    isInnerScreen: Boolean
 ): PaddingValues {
     val layoutDirection = LocalLayoutDirection.current
-    val windowInsetsPaddings = WindowInsets.systemBars.asPaddingValues()
-    val navigationBarsPaddings = WindowInsets.navigationBars.asPaddingValues()
+    val systemBarPaddings = WindowInsets.systemBars.asPaddingValues()
+    val navigationBarPaddings = WindowInsets.navigationBars.asPaddingValues()
 
     val topPadding = if (isToolbarVisible) {
         this.calculateTopPadding()
     } else {
-        windowInsetsPaddings.calculateTopPadding()
+        if (!isInnerScreen) {
+            systemBarPaddings.calculateTopPadding()
+        } else {
+            0.dp
+        }
     }
 
     val bottomPadding = if (isBottomBarVisible) {
         this.calculateBottomPadding()
     } else {
-        navigationBarsPaddings.calculateBottomPadding()
+        if (!isInnerScreen) {
+            navigationBarPaddings.calculateBottomPadding()
+        } else {
+            0.dp
+        }
     }
 
     return PaddingValues(

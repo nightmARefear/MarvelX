@@ -129,13 +129,12 @@ internal class ListingRepositoryImpl(
 
         return when (multipartBuilderResult) {
             is MultipartBuilderResult.Success -> {
-                when (
-                    val result = handleApiResultNoFlow(
-                        apiResult = listingClient.createListing(body = multipartBuilderResult.data),
-                        transformation = ResponseListingId::listingId,
-                        ioDispatcher = ioDispatcher
-                    )
-                ) {
+                val result = handleApiResultNoFlow(
+                    apiResult = listingClient.createListing(body = multipartBuilderResult.data),
+                    transformation = ResponseListingId::listingId,
+                    ioDispatcher = ioDispatcher
+                )
+                when (result) {
                     is RepositoryResult.Failed -> MultipartResult.GenericError(
                         result.failureMessage
                     )

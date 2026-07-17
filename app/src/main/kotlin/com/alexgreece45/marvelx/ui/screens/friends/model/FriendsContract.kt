@@ -3,6 +3,7 @@ package com.alexgreece45.marvelx.ui.screens.friends.model
 import com.alexgreece45.marvelx.domain.model_api.user.block.BlockedUserDomain
 import com.alexgreece45.marvelx.domain.model_api.user.friend.FriendDomain
 import com.alexgreece45.marvelx.domain.model_api.user.friendRequest.IncomingFriendRequestDomain
+import com.alexgreece45.marvelx.model.model.user.UserId
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
@@ -20,14 +21,14 @@ sealed interface FriendsContract {
         data class OnTabClicked(val tabIndex: Int) : Event
 
         sealed interface AllTabEvent : Event {
-            data class OnUserClicked(val userId: String) : AllTabEvent
-            data class OnRemoveClicked(val userId: String) : AllTabEvent
+            data class OnUserClicked(val userId: UserId) : AllTabEvent
+            data class OnRemoveClicked(val userId: UserId) : AllTabEvent
         }
 
         sealed interface RequestsTabEvent : Event {
-            data class OnUserClicked(val userId: String) : RequestsTabEvent
+            data class OnUserClicked(val userId: UserId) : RequestsTabEvent
             data class OnRequestAccepted(val incomingFriendRequest: IncomingFriendRequestDomain) : RequestsTabEvent
-            data class OnRequestDeclined(val userId: String) : RequestsTabEvent
+            data class OnRequestDeclined(val userId: UserId) : RequestsTabEvent
         }
 
         sealed interface BlockedTabEvent : Event {

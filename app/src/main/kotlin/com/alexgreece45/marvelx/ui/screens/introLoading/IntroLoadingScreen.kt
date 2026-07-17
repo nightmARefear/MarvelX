@@ -12,9 +12,8 @@ import androidx.navigation.NavController
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.effect.ObserveUiEffect
 import com.alexgreece45.marvelx.ui.components.effect.OneTimeLaunchedEffect
-import com.alexgreece45.marvelx.ui.navigation.NavArgHelper
 import com.alexgreece45.marvelx.ui.navigation.Screen
-import com.alexgreece45.marvelx.ui.navigation.models.NavArg
+import com.alexgreece45.marvelx.ui.screens.allCharacters.navigation.navigateToAllCharactersScreen
 import com.alexgreece45.marvelx.util.extensions.popUpToTop
 import kotlinx.coroutines.flow.Flow
 
@@ -44,9 +43,7 @@ fun IntroLoadingScreen(
             }
 
             IntroLoadingContract.Effect.Navigation.NavigateToAllCharactersScreen -> {
-                navController.navigate(Screen.AllCharactersScreen.route) {
-                    popUpToTop(navController)
-                }
+                navController.navigateToAllCharactersScreen(true)
             }
 
             is IntroLoadingContract.Effect.Navigation.NavigateToOtpScreen -> {

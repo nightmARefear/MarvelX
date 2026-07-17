@@ -2,7 +2,6 @@ package com.alexgreece45.marvelx.core.network.requestSigner
 
 import android.util.Base64
 import com.alexgreece45.marvelx.core.common.constants.ConstantsSecurity
-import com.alexgreece45.marvelx.core.common.extensions.LOGGER_TAG
 import com.alexgreece45.marvelx.core.common.logger.AppLogger
 import com.alexgreece45.marvelx.core.common.util.DateUtil
 import com.alexgreece45.marvelx.core.network.extensions.toJsonString
@@ -29,6 +28,8 @@ internal class RequestSignerImpl(
     private val signatureStorage: SignatureStorage
 ) : RequestSigner {
 
+    private val loggerTag = "RequestSigner"
+
     override fun addAuthenticationHeaders(
         requestBuilder: Request.Builder
     ): Request.Builder {
@@ -49,7 +50,7 @@ internal class RequestSignerImpl(
             )
         }.orEmpty()
 
-        logger.d(LOGGER_TAG) { "(createSessionSignature) xAuthSignature: $xAuthSignature" }
+        logger.d(loggerTag) { "(createSessionSignature) xAuthSignature: $xAuthSignature" }
 
         return requestBuilder
             .addHeader(

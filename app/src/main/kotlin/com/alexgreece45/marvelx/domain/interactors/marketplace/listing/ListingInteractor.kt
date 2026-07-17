@@ -15,6 +15,7 @@ import com.alexgreece45.marvelx.domain.model_api.marketplace.listing.toData
 import com.alexgreece45.marvelx.domain.model_api.marketplace.listing.toDomain
 import com.alexgreece45.marvelx.domain.model_api.myListing.MyListingDomain
 import com.alexgreece45.marvelx.domain.model_api.myListing.toDomain
+import com.alexgreece45.marvelx.model.model.user.UserId
 import org.koin.core.annotation.Factory
 
 interface ListingInteractor {

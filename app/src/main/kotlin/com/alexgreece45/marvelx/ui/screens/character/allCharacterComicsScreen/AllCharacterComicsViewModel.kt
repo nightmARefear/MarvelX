@@ -1,9 +1,9 @@
 package com.alexgreece45.marvelx.ui.screens.character.allCharacterComicsScreen
 
 import androidx.lifecycle.viewModelScope
-import com.alexgreece45.marvelx.domain.model_api.comic.ComicDomain
 import com.alexgreece45.marvelx.domain.interactors.CharacterInteractor
 import com.alexgreece45.marvelx.domain.interactors.GetCharacterComicsPartialState
+import com.alexgreece45.marvelx.domain.model_api.comic.ComicDomain
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
@@ -53,13 +53,15 @@ data class AllCharacterComicsState(
     }
 }
 
-sealed class AllCharacterComicsEffect : BaseEffect {
-    data object NavigateToCharacterScreen : AllCharacterComicsEffect()
-    data class NavigateToComicScreen(val comicId: Int) : AllCharacterComicsEffect()
+sealed interface AllCharacterComicsEffect : BaseEffect {
+    sealed interface Navigation : AllCharacterComicsEffect {
+        data object GoBack : Navigation
+        data class NavigateToComicScreen(val comicId: Int) : Navigation
+    }
 
-    sealed class BottomSheet : AllCharacterComicsEffect() {
-        data object Show : BottomSheet()
-        data object Hide : BottomSheet()
+    sealed interface BottomSheet : AllCharacterComicsEffect {
+        data object Show : BottomSheet
+        data object Hide : BottomSheet
     }
 }
 
@@ -78,13 +80,13 @@ class AllCharacterComicsViewModel(
 
             AllCharacterComicsEvent.OnBackClick -> {
                 setEffect {
-                    AllCharacterComicsEffect.NavigateToCharacterScreen
+                    AllCharacterComicsEffect.Navigation.GoBack
                 }
             }
 
             is AllCharacterComicsEvent.OnComicClick -> {
                 setEffect {
-                    AllCharacterComicsEffect.NavigateToComicScreen(
+                    AllCharacterComicsEffect.Navigation.NavigateToComicScreen(
                         comicId = event.comicId
                     )
                 }

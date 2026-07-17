@@ -1,7 +1,6 @@
 package com.alexgreece45.marvelx.data.repository
 
 import com.alexgreece45.marvelx.core.common.dispatchers.model.IoDispatcher
-import com.alexgreece45.marvelx.core.common.extensions.LOGGER_TAG
 import com.alexgreece45.marvelx.core.common.logger.AppLogger
 import com.alexgreece45.marvelx.core.data.helper.RepositoryResult
 import com.alexgreece45.marvelx.core.data.helper.handleApiResult
@@ -12,7 +11,6 @@ import com.alexgreece45.marvelx.core.data.helper.multi_part_builder.model.Multip
 import com.alexgreece45.marvelx.core.data.helper.multi_part_builder.model.MultipartItem.Image
 import com.alexgreece45.marvelx.core.data.helper.multi_part_builder.model.MultipartResult
 import com.alexgreece45.marvelx.core.data.helper.multi_part_builder.model.toMultipartResult
-import com.alexgreece45.marvelx.model.model.user.UserId
 import com.alexgreece45.marvelx.core.network.clients.ApiClient
 import com.alexgreece45.marvelx.core.network.model.api.user.ResponseUserError
 import com.alexgreece45.marvelx.core.network.model.api.user.privacySettings.RequestPrivacySettings
@@ -28,6 +26,7 @@ import com.alexgreece45.marvelx.data.model.profileDetails.toData
 import com.alexgreece45.marvelx.data.model.toRepositoryPrivacySettings
 import com.alexgreece45.marvelx.data.repository.helper.parseUserError
 import com.alexgreece45.marvelx.model.model.generic.AttachedFileContentData
+import com.alexgreece45.marvelx.model.model.user.UserId
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -42,7 +41,7 @@ interface UserRepository {
     /**
      * Gets the profile details of the given [userId].
      */
-    suspend fun getProfileDetails(userId: String): GetProfileDetailsRepositoryResponse
+    suspend fun getProfileDetails(userId: UserId): GetProfileDetailsRepositoryResponse
 
     suspend fun getBasicProfileDetails(userId: UserId): RepositoryResult<RepositoryBasicProfileDetails>
 
@@ -105,12 +104,14 @@ internal class UserRepositoryImpl(
     private val appLogger: AppLogger
 ) : UserRepository {
 
+    private val loggerTag = "UserRepository"
+
     private var _isUserLoggedIn: MutableStateFlow<Boolean> = MutableStateFlow(false)
 
     override suspend fun getProfileDetails(
-        userId: String
+        userId: UserId
     ): GetProfileDetailsRepositoryResponse =
-        apiClient.getUserProfileDetails(userId)
+        apiClient.getUserProfileDetails(userId.value)
             .let { response ->
                 if (response.isSuccessful) {
                     GetProfileDetailsRepositoryResponse.Success(
@@ -191,7 +192,7 @@ internal class UserRepositoryImpl(
                         profileImage = multipartBuilderResult.data
                     ),
                     ioDispatcher = ioDispatcher,
-                    logError = { errorMessage -> appLogger.e(LOGGER_TAG) { errorMessage } }
+                    logError = { errorMessage -> appLogger.e(loggerTag) { errorMessage } }
                 ).toMultipartResult()
             }
 

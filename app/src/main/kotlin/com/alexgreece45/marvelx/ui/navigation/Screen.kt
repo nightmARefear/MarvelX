@@ -82,9 +82,11 @@ sealed class Screen(
          */
         fun matchDeepLinkScreenRoute(screenRoute: String): Screen? =
             when (screenRoute) {
-                ProfileScreen.baseRoute -> ProfileScreen
+                // TODO: Examine.
+//                ProfileScreen.baseRoute -> ProfileScreen
                 ProfileDetailsScreen.baseRoute -> ProfileDetailsScreen
-                ListingDetailsScreen.baseRoute -> ListingDetailsScreen
+                // TODO: Examine.
+//                ListingDetailsScreen.baseRoute -> ListingDetailsScreen
                 else -> null
             }
 
@@ -174,26 +176,10 @@ sealed class Screen(
     // Main screens --> Bottom Navigation
 
     // Marketplace.
-    data object MarketplaceScreen : Screen(baseRoute = "marketplaceScreen")
     data object ListingsByCategoryScreen : Screen(baseRoute = "listingsByCategoryScreen")
-    data object ListingDetailsScreen : Screen(
-        baseRoute = "listingDetailsScreen",
-        navArgs = listOf(
-            NavItem.ListingId
-        ),
-        deepLinkArgs = listOf(NavDeepLinkItem.ListingId)
-    ) {
-        fun createNavRoute(listingId: String): String = "$baseRoute/$listingId"
-    }
-
-    data object CreateListingWizardScreen :
-        Screen(baseRoute = "createListingWizardScreen", navArgs = listOf(NavItem.ListingId)) {
-        fun createNavRoute(listingId: String? = ""): String = "$baseRoute/$listingId"
-    }
 
     data object MyListingsScreen : Screen(baseRoute = "myListingsScreen")
 
-    data object CartScreen : Screen(baseRoute = "cartScreen")
     data object CheckoutWizardScreen : Screen(baseRoute = "checkoutWizardScreen")
 
     data object OrdersScreen : Screen(baseRoute = "ordersScreen")
@@ -285,17 +271,6 @@ sealed class Screen(
             "$baseRoute/$orderId/$orderItemId/$orderItemTitle/$orderItemCoverImageUrl/$orderItemPriceLabel"
     }
 
-    data object AllCharactersScreen : Screen(baseRoute = "allCharactersScreen")
-    data object AllFavoriteCharactersScreen : Screen(baseRoute = "allFavoriteCharactersScreen")
-    data object ProfileScreen : Screen(
-        baseRoute = "profileScreen",
-        navArgs = listOf(NavItem.QrCodeScanErrorMessage),
-        deepLinkArgs = listOf(NavDeepLinkItem.QrCodeScanErrorMessage)
-    ) {
-        fun createNavRoute(qrCodeScanErrorMessage: String): String =
-            "$baseRoute/$qrCodeScanErrorMessage"
-    }
-
     data object ProfileImageScreen : Screen(
         baseRoute = "profileImageScreen",
         navArgs = listOf(NavItem.ProfileImageUrl)
@@ -364,23 +339,6 @@ sealed class Screen(
         fun createNavRoute(characterId: Int) = "$baseRoute/$characterId"
     }
 
-    data object AllCharacterComicsScreen : Screen(
-        baseRoute = "allCharacterComicsScreen",
-        navArgs = listOf(NavItem.CharacterId, NavItem.ToolbarTitlePrefix)
-    ) {
-        fun createNavRoute(
-            characterId: Int,
-            toolbarTitlePrefix: String
-        ): String = "$baseRoute/$characterId/$toolbarTitlePrefix"
-    }
-
-    data object ComicScreen : Screen(
-        baseRoute = "comicScreen",
-        navArgs = listOf(NavItem.ComicId)
-    ) {
-        fun createNavRoute(comicId: Int): String = "$baseRoute/$comicId"
-    }
-
     data object QrCodeScreen : Screen(
         baseRoute = "qrCodeScreen",
         navArgs = listOf(NavItem.PreviousScreenRoute)
@@ -422,6 +380,7 @@ enum class NavItem(val key: String, val type: NavType<*>) {
     OrderItemPriceLabel(key = NavItemKey.orderItemPriceLabel, type = NavType.StringType),
     SellerUserId(key = NavItemKey.sellerUserId, type = NavType.StringType),
     LogoutReason(key = NavItemKey.logoutReason, type = NavType.StringType),
+    CreateListingWizardMode(key = NavItemKey.createListingWizardMode, type = NavType.StringType)
 }
 
 /**
@@ -463,4 +422,6 @@ private object NavItemKey {
     const val orderItemPriceLabel = "orderItemPriceLabel"
     const val sellerUserId = "sellerUserId"
     const val logoutReason = "logoutReason"
+    const val createListingWizardMode = "createListingWizardMode"
+    const val checkoutWizardMode = "checkoutWizardMode"
 }

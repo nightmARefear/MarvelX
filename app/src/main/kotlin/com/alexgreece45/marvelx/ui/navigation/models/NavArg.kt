@@ -6,5 +6,4 @@ package com.alexgreece45.marvelx.ui.navigation.models
 sealed class NavArg(val key: String) {
     data object HomeAlertDialogErrorType : NavArg(key = "homeAlertDialogErrorType")
     data object SplashAlertDialogErrorType : NavArg(key = "splashAlertDialogErrorType")
-    data object NewListingId : NavArg(key = "newListingId")
 }

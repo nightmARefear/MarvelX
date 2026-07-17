@@ -119,7 +119,7 @@ import androidx.compose.ui.unit.toSize
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.zIndex
 import androidx.navigation.NavController
-import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.common_ui.snackbar.MarvelXSnackbar
@@ -265,7 +265,7 @@ private fun ThrottledBackHandler(
 // ==========================
 
 data class BottomBarItem(
-    val route: String,
+    val route: Any,
     @StringRes val label: Int,
     val iconData: IconData,
 )
@@ -282,6 +282,7 @@ data class BottomBarData(
 
 data class BottomNavigationBarData(
     val navController: NavController,
+    val rootItem: BottomBarItem,
     val items: List<BottomBarItem>,
     val backgroundColor: Color? = null,
     val topHorizontalColor: Color? = null,
@@ -347,6 +348,7 @@ private fun BottomBar(
 @Composable
 private fun BottomNavigationBar(
     navController: NavController,
+    rootItem: BottomBarItem,
     items: List<BottomBarItem>,
     backgroundColor: Color? = null,
     topHorizontalColor: Color? = null,
@@ -367,14 +369,15 @@ private fun BottomNavigationBar(
         elevation = 0.dp
     ) {
         val navBackStackEntry by navController.currentBackStackEntryAsState()
-        val currentRoute = navBackStackEntry?.destination?.route
+        val currentDestination = navBackStackEntry?.destination
 
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
             items.forEach { item ->
-                val isSelected = currentRoute == item.route
+                val isSelected = currentDestination?.hasRoute(item.route::class) == true
+
                 CompositionLocalProvider(
                     LocalContentAlpha provides ContentAlpha.high
                 ) {
@@ -449,10 +452,9 @@ private fun BottomNavigationBar(
                         selected = isSelected,
                         onClick = {
                             // Navigate to different route ONLY.
-                            if (currentRoute != item.route) {
+                            if (!isSelected) {
                                 navController.navigate(item.route) {
-                                    // TODO: Make the start destination configurable either by the provided value if it's not null, otherwise by the first item's route.
-                                    popUpTo(navController.graph.findStartDestination().id) {
+                                    popUpTo(rootItem.route) {
                                         saveState = true
                                     }
                                     launchSingleTop = true
@@ -540,6 +542,8 @@ data class ExtendedFabData(
  * [toolbarActions] must be `null`.
  * @param paddingValues The padding values to apply on top of the scaffold's ones. Provide a non-null
  * value to override the default padding values that are provided within this composable.
+ * @param isInnerScreen Whether this screen is an inner-screen. If `true`, then system bar and
+ * bottom bar paddings are not applied.
  */
 @Composable
 fun ContentScreen(
@@ -556,6 +560,7 @@ fun ContentScreen(
     fabData: FabData? = null,
     stickyBottom: @Composable (BoxScope.() -> Unit)? = null,
     paddingValues: PaddingValues = PaddingValues(DEFAULT_SCREEN_PADDING),
+    isInnerScreen: Boolean = false,
     content: @Composable (PaddingValues) -> Unit
 ) {
     if (toolbarActions != null && toolbarActionsContent != null) {
@@ -619,6 +624,7 @@ fun ContentScreen(
                 bottomNavigationBarData?.let { bottomNavigationBarData ->
                     BottomNavigationBar(
                         navController = bottomNavigationBarData.navController,
+                        rootItem = bottomNavigationBarData.rootItem,
                         items = bottomNavigationBarData.items,
                         backgroundColor = bottomNavigationBarData.backgroundColor,
                         topHorizontalColor = bottomNavigationBarData.topHorizontalColor,
@@ -656,7 +662,8 @@ fun ContentScreen(
         val finalScaffoldingPaddings = scaffoldPaddingValues.applyContentScreenPaddings(
             paddingValues = paddingValues,
             isToolbarVisible = showToolbar,
-            isBottomBarVisible = bottomNavigationBarData != null
+            isBottomBarVisible = bottomNavigationBarData != null,
+            isInnerScreen = isInnerScreen
         )
 
         Column(modifier = Modifier.fillMaxSize()) {

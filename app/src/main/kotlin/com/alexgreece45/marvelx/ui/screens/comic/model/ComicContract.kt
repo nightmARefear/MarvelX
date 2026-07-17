@@ -22,6 +22,8 @@ sealed interface ComicContract {
     ) : BaseState
 
     sealed interface Effect : BaseEffect {
-        data object PopBackStack : Effect
+        sealed interface Navigation : Effect {
+            data object GoBack : Navigation
+        }
     }
 }

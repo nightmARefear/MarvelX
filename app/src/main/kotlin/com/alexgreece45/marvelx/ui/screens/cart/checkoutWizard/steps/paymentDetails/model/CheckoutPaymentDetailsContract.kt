@@ -6,7 +6,6 @@ import com.alexgreece45.marvelx.mvi.BaseState
 import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.model.WizardInputFieldUi
 
 sealed interface CheckoutPaymentDetailsContract {
-
     sealed interface Event : BaseEvent {
 
         data object Init : Event
@@ -28,7 +27,7 @@ sealed interface CheckoutPaymentDetailsContract {
 
         val expirationDatePlaceholder: String = "",
 
-    ) : BaseState
+        ) : BaseState
 
     sealed interface Effect : BaseEffect {
 

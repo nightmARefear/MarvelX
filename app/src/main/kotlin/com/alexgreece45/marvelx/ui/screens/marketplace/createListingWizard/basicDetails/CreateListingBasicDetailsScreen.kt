@@ -77,7 +77,7 @@ import sh.calvin.reorderable.rememberReorderableLazyListState
 private val LISTING_IMAGE_SIZE = ConstantsUi.LISTING_IMAGE_BIG_SIZE
 
 @Composable
-fun CreateListingBasicDetailsScreen(
+internal fun CreateListingBasicDetailsScreen(
     onEvent: (CreateListingBasicDetailsContract.Event) -> Unit,
     state: CreateListingBasicDetailsContract.State,
     effect: Flow<CreateListingBasicDetailsContract.Effect>,
@@ -93,8 +93,8 @@ fun CreateListingBasicDetailsScreen(
     val reorderableLazyRowState = rememberReorderableLazyListState(lazyListState) { from, to ->
         onEvent(
             CreateListingBasicDetailsContract.Event.AttachedImageEvents.OnReordered(
-                from.index,
-                to.index
+                from = from.index,
+                to = to.index
             )
         )
 
@@ -157,7 +157,8 @@ fun CreateListingBasicDetailsScreen(
     }
 
     ContentScreen(
-        isLoading = state.isLoading
+        isLoading = state.isLoading,
+        isInnerScreen = true
     ) { paddingValues ->
         Column(
             modifier = Modifier

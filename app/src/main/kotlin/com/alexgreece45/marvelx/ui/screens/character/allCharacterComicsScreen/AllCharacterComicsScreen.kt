@@ -22,6 +22,7 @@ import androidx.compose.material.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -32,16 +33,17 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.domain.model_api.comic.ComicDomain
-import com.alexgreece45.marvelx.ui.components.LazyItemContentErrorScreen
 import com.alexgreece45.marvelx.ui.components.ContentScreen
+import com.alexgreece45.marvelx.ui.components.LazyItemContentErrorScreen
 import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
 import com.alexgreece45.marvelx.ui.components.SortingModalBottomSheetContent
 import com.alexgreece45.marvelx.ui.components.WrapModalBottomSheetLayout
+import com.alexgreece45.marvelx.ui.components.effect.ObserveUiEffect
 import com.alexgreece45.marvelx.util.DEFAULT_SCREEN_PADDING
 import com.alexgreece45.marvelx.util.HSpacer
 import com.alexgreece45.marvelx.util.VSpacer
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
@@ -49,11 +51,12 @@ fun AllCharacterComicsScreen(
     onEventSent: (AllCharacterComicsEvent) -> Unit,
     state: AllCharacterComicsState,
     effect: Flow<AllCharacterComicsEffect>,
-    popBackStack: () -> Unit,
-    navigateToComicScreen: (Int) -> Unit,
+    onNavigationEffect: (AllCharacterComicsEffect.Navigation) -> Unit,
     characterId: Int,
     toolbarTitlePrefix: String,
 ) {
+    val coroutineScope = rememberCoroutineScope()
+
     val modalBottomSheetState =
         rememberModalBottomSheetState(
             initialValue = ModalBottomSheetValue.Hidden,
@@ -61,32 +64,25 @@ fun AllCharacterComicsScreen(
             skipHalfExpanded = true
         )
 
-    LaunchedEffect(Unit) {
-        onEventSent(AllCharacterComicsEvent.Init(characterId = characterId))
-
-        effect.collect { effect ->
-            when (effect) {
-                AllCharacterComicsEffect.NavigateToCharacterScreen -> {
-                    popBackStack()
+    ObserveUiEffect(effect) { uiEffect ->
+        when (uiEffect) {
+            is AllCharacterComicsEffect.Navigation -> onNavigationEffect(uiEffect)
+            AllCharacterComicsEffect.BottomSheet.Show -> {
+                coroutineScope.launch {
+                    modalBottomSheetState.show()
                 }
+            }
 
-                is AllCharacterComicsEffect.NavigateToComicScreen -> {
-                    navigateToComicScreen(effect.comicId)
-                }
-
-                AllCharacterComicsEffect.BottomSheet.Hide -> {
-                    coroutineScope {
-                        modalBottomSheetState.hide()
-                    }
-                }
-
-                AllCharacterComicsEffect.BottomSheet.Show -> {
-                    coroutineScope {
-                        modalBottomSheetState.show()
-                    }
+            AllCharacterComicsEffect.BottomSheet.Hide -> {
+                coroutineScope.launch {
+                    modalBottomSheetState.hide()
                 }
             }
         }
+    }
+
+    LaunchedEffect(Unit) {
+        onEventSent(AllCharacterComicsEvent.Init(characterId = characterId))
     }
 
     WrapModalBottomSheetLayout(

@@ -1,5 +1,6 @@
 package com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.model
 
+import com.alexgreece45.marvelx.core.data.model.listing.ListingId
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
@@ -51,8 +52,11 @@ sealed interface CreateListingWizardContract {
     sealed interface Effect : BaseEffect {
         sealed interface Navigation : Effect {
             data object ExitWizard : Navigation
-            data class NavigateToListingDetailsScreenAndExitWizard(val listingId: String) :
-                Navigation
+            data class NavigateToListingDetailsScreen(val listingId: String) : Navigation
+            data class NavigateToCreateListingSuccessScreen(
+                val listingId: String,
+                val wizardMode: CreateListingWizardMode
+            ) : Navigation
         }
 
         data class InitBasicDetailsScreen(val updateListingBasicDetails: UpdateListingBasicDetails?) :

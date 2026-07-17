@@ -3,6 +3,7 @@ package com.alexgreece45.marvelx.ui.screens.cart
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.core.data.helper.RepositoryResult
+import com.alexgreece45.marvelx.core.data.model.listing.ListingId
 import com.alexgreece45.marvelx.data.repository.order.OrderRepository
 import com.alexgreece45.marvelx.domain.helper.InteractorPartialState
 import com.alexgreece45.marvelx.domain.interactors.cart.CartInteractor
@@ -292,11 +293,6 @@ class CartViewModel(
     }
 
     private fun placeOrder() {
-        setEffect {
-            CartContract.Effect.Navigation.GoToCheckoutSuccessScreen("123213321!@#K#J#!@J")
-        }
-        return // TODO: Remove return statement.
-
         setState {
             copy(
                 isLoading = true

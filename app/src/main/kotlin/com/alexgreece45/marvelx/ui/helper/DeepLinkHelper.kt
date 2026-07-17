@@ -16,7 +16,7 @@ import com.alexgreece45.marvelx.ui.screens.mainActivity.MainActivity
  * Opens the given deep link action and if the deep link action type is view then the backstack
  * is preserved, otherwise not.
  */
-fun openDeepLinkAction(navController: NavController, deepLinkAction: DeepLinkAction) {
+fun NavController.openDeepLinkAction(deepLinkAction: DeepLinkAction) {
     val deepLinkRequest = NavDeepLinkRequest.Builder
         .fromUri(
             generateComposableDeepLinkUri(
@@ -27,13 +27,13 @@ fun openDeepLinkAction(navController: NavController, deepLinkAction: DeepLinkAct
         .build()
 
     val navOptions = navOptions {
-        popUpTo(navController.graph.startDestinationId) {
+        popUpTo(graph.startDestinationId) {
             saveState = true
         }
         launchSingleTop = true
         restoreState = true
     }
-    navController.navigate(deepLinkRequest, navOptions)
+    navigate(deepLinkRequest, navOptions)
 }
 
 /**

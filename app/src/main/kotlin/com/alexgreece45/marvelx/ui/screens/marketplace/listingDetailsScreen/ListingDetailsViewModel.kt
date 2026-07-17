@@ -5,12 +5,14 @@ import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.configuration.models.DeepLinkWebUrl
 import com.alexgreece45.marvelx.controllers.createListingWizard.CreateListingWizardController
 import com.alexgreece45.marvelx.core.common.logger.AppLogger
+import com.alexgreece45.marvelx.core.data.model.listing.ListingId
 import com.alexgreece45.marvelx.core.data.repositories.UserSessionRepository
 import com.alexgreece45.marvelx.domain.helper.InteractorPartialState
 import com.alexgreece45.marvelx.domain.interactors.GetProfileDetailsPartialState
 import com.alexgreece45.marvelx.domain.interactors.UserInteractor
 import com.alexgreece45.marvelx.domain.interactors.cart.CartInteractor
 import com.alexgreece45.marvelx.domain.interactors.marketplace.listing.ListingInteractor
+import com.alexgreece45.marvelx.model.model.user.UserId
 import com.alexgreece45.marvelx.mvi.BaseViewModel
 import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.model.CreateListingWizardMode
 import com.alexgreece45.marvelx.ui.screens.marketplace.listingDetailsScreen.model.ListingDetailsContract
@@ -290,7 +292,7 @@ class ListingDetailsViewModel(
             }
 
             when (val sellerInfo =
-                userInteractor.getProfileDetails(userSessionRepository.getUserId())
+                userInteractor.getProfileDetails(UserId(userSessionRepository.getUserId()))
                     .first()) { // TODO: Add offline way to get cached profile details.
                 is GetProfileDetailsPartialState.Error,
                 is GetProfileDetailsPartialState.Failed,
@@ -329,11 +331,13 @@ class ListingDetailsViewModel(
                 }
 
                 is InteractorPartialState.Success -> {
-                    when (val listing =
-                        listingUiMapper.toUi(
-                            partialState.data,
-                            userSessionRepository.getUserId()
-                        )) {
+                    when (
+                        val listing =
+                            listingUiMapper.toUi(
+                                listing = partialState.data,
+                                currentUserId = userSessionRepository.getUserId()
+                            )
+                    ) {
                         null -> {
                             showGenericErrorMessage()
                         }

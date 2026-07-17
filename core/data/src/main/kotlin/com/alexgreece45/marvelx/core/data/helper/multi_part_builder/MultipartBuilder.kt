@@ -2,7 +2,6 @@ package com.alexgreece45.marvelx.core.data.helper.multi_part_builder
 
 import android.content.Context
 import com.alexgreece45.marvelx.core.common.dispatchers.model.IoDispatcher
-import com.alexgreece45.marvelx.core.common.extensions.LOGGER_TAG
 import com.alexgreece45.marvelx.core.common.logger.AppLogger
 import com.alexgreece45.marvelx.core.common.util.withContextCatchable
 import com.alexgreece45.marvelx.core.data.extensions.getFileNameExtension
@@ -38,11 +37,13 @@ internal class MultipartBuilderImpl(
     private val appLogger: AppLogger,
 ) : MultipartBuilder {
 
+    private val loggerTag = "MultipartBuilder"
+
     override suspend fun constructMultipartBody(items: List<MultipartItem>): MultipartBodyBuilderResult =
         withContextCatchable(
             context = ioDispatcher,
             onError = { errorMessage -> MultipartBuilderResult.GenericError(errorMessage) },
-            logError = { errorMessage -> appLogger.e(LOGGER_TAG) { errorMessage } }
+            logError = { errorMessage -> appLogger.e(loggerTag) { errorMessage } }
         ) {
             val builder = MultipartBody.Builder().setType(MultipartBody.FORM)
 

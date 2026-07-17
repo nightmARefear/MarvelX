@@ -1,6 +1,5 @@
 package com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -18,7 +17,6 @@ import com.alexgreece45.marvelx.ui.components.AlertDialogButton
 import com.alexgreece45.marvelx.ui.components.AlertDialogError
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction.Backable
-import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction.Closeable
 import com.alexgreece45.marvelx.ui.components.WrapButton
 import com.alexgreece45.marvelx.ui.components.effect.ObserveUiEffect
 import com.alexgreece45.marvelx.ui.components.model.ErrorButtonType
@@ -30,13 +28,9 @@ import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.basic
 import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.basicDetails.CreateListingBasicDetailsViewModel
 import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.basicDetails.model.CreateListingBasicDetailsContract.Event.Init
 import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.model.CreateListingWizardContract
-import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.model.CreateListingWizardContract.Event.OnNavigateToListingDetailsScreen
 import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.model.CreateListingWizardContract.Event.SetNextButtonEnabled
 import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.model.CreateListingWizardMode
 import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.model.CreateListingWizardStep
-import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.success.CreateListingSuccessScreen
-import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.success.CreateListingSuccessViewModel
-import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.success.model.CreateListingSuccessContract
 import com.alexgreece45.marvelx.ui.screens.marketplace.listingDetailsScreen.ListingDetailsScreen
 import com.alexgreece45.marvelx.ui.screens.marketplace.listingDetailsScreen.ListingDetailsViewModel
 import com.alexgreece45.marvelx.ui.screens.marketplace.listingDetailsScreen.model.ListingDetailsContract
@@ -86,14 +80,6 @@ internal fun CreateListingWizardScreen(
         isLoading = state.isLoading,
         navigableAction = when (state.wizardStep) {
             CreateListingWizardStep.BASIC_DETAILS,
-            CreateListingWizardStep.SUCCESS -> {
-                Closeable(
-                    onClose = {
-                        onEvent(CreateListingWizardContract.Event.OnCloseButtonClicked)
-                    }
-                )
-            }
-
             CreateListingWizardStep.ADVANCED_DETAILS,
             CreateListingWizardStep.OVERVIEW -> {
                 Backable(
@@ -108,38 +94,34 @@ internal fun CreateListingWizardScreen(
         },
         showToolbar = true,
         toolbarTitle = state.toolbarTitle,
-        stickyBottom = if (state.wizardStep == CreateListingWizardStep.SUCCESS) null else {
-            {
-                WrapButton(
-                    onClick = { onEvent(CreateListingWizardContract.Event.OnStickyBottomButtonClicked) },
-                    modifier = Modifier.fillMaxWidth(),
-                    enabled = state.isStickyBottomButtonEnabled
-                ) {
-                    Text(
-                        text = stringResource(
-                            if (state.wizardStep == CreateListingWizardStep.OVERVIEW) {
-                                if (state.wizardMode == CreateListingWizardMode.CREATE) {
-                                    R.string.screen_create_listing_wizard_screen_sticky_bottom_button_upload_new_listing
-                                } else {
-                                    R.string.screen_create_listing_wizard_screen_sticky_bottom_button_upload_modified_listing
-                                }
+        stickyBottom = {
+            WrapButton(
+                onClick = { onEvent(CreateListingWizardContract.Event.OnStickyBottomButtonClicked) },
+                modifier = Modifier.fillMaxWidth(),
+                enabled = state.isStickyBottomButtonEnabled
+            ) {
+                Text(
+                    text = stringResource(
+                        if (state.wizardStep == CreateListingWizardStep.OVERVIEW) {
+                            if (state.wizardMode == CreateListingWizardMode.CREATE) {
+                                R.string.screen_create_listing_wizard_screen_sticky_bottom_button_upload_new_listing
                             } else {
-                                R.string.screen_create_listing_wizard_screen_sticky_bottom_button_next
+                                R.string.screen_create_listing_wizard_screen_sticky_bottom_button_upload_modified_listing
                             }
-                        )
+                        } else {
+                            R.string.screen_create_listing_wizard_screen_sticky_bottom_button_next
+                        }
                     )
-                }
+                )
             }
         }
     ) { _ ->
         Column(modifier = Modifier.fillMaxSize()) {
-            AnimatedVisibility(visible = state.wizardStep != CreateListingWizardStep.SUCCESS) {
-                LinearProgressIndicator(
-                    progress = state.progress,
-                    modifier = Modifier.fillMaxWidth(),
-                    color = MaterialTheme.customColors.genericRed
-                )
-            }
+            LinearProgressIndicator(
+                progress = state.progress,
+                modifier = Modifier.fillMaxWidth(),
+                color = MaterialTheme.customColors.genericRed
+            )
 
             when (state.wizardStep) {
                 CreateListingWizardStep.BASIC_DETAILS -> {
@@ -218,28 +200,8 @@ internal fun CreateListingWizardScreen(
                             }
                         },
                         listingId = null,
-                        createListingWizardMode = createListingWizardState.wizardMode
-                    )
-                }
-
-                CreateListingWizardStep.SUCCESS -> {
-                    val createListingSuccessViewModel =
-                        koinViewModel<CreateListingSuccessViewModel>()
-                    CreateListingSuccessScreen(
-                        onEvent = createListingSuccessViewModel::setEvent,
-                        state = createListingSuccessViewModel.uiState.collectAsStateWithLifecycle().value,
-                        effect = createListingSuccessViewModel.uiEffect,
-                        onNavigation = { navigationEffect ->
-                            when (navigationEffect) {
-                                is CreateListingSuccessContract.Effect.Navigation.NavigateToListingDetailsScreen -> {
-                                    onEvent(
-                                        OnNavigateToListingDetailsScreen(
-                                            listingId = navigationEffect.listingId
-                                        )
-                                    )
-                                }
-                            }
-                        }
+                        createListingWizardMode = createListingWizardState.wizardMode,
+                        isInnerScreen = true
                     )
                 }
             }

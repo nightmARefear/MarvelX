@@ -35,7 +35,7 @@ import com.alexgreece45.marvelx.util.VSpacer
 import kotlinx.coroutines.flow.Flow
 
 @Composable
-fun CreateListingAdvancedDetailsScreen(
+internal fun CreateListingAdvancedDetailsScreen(
     onEvent: (CreateListingAdvancedDetailsContract.Event) -> Unit,
     state: CreateListingAdvancedDetailsContract.State,
     effect: Flow<CreateListingAdvancedDetailsContract.Effect>,
@@ -68,6 +68,7 @@ fun CreateListingAdvancedDetailsScreen(
 
     ContentScreen(
         isLoading = state.isLoading,
+        isInnerScreen = true
     ) { paddingValues ->
         Column(
             modifier = Modifier

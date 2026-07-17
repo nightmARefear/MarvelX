@@ -2,17 +2,16 @@ package com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard
 
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.mvi.BaseViewModel
-import com.alexgreece45.marvelx.ui.navigation.Screen
 import com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.model.CheckoutWizardContract
+import com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.model.CheckoutWizardExitAlertDialogAction
 import com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.model.CheckoutWizardStep
 import com.alexgreece45.marvelx.util.ResourceProvider
 import org.koin.android.annotation.KoinViewModel
 
 @KoinViewModel
-class CheckoutWizardViewModel(
+internal class CheckoutWizardViewModel(
     private val resourceProvider: ResourceProvider
-) :
-    BaseViewModel<CheckoutWizardContract.Event, CheckoutWizardContract.State, CheckoutWizardContract.Effect>() {
+) : BaseViewModel<CheckoutWizardContract.Event, CheckoutWizardContract.State, CheckoutWizardContract.Effect>() {
 
     override fun setInitialState(): CheckoutWizardContract.State = CheckoutWizardContract.State()
 
@@ -40,9 +39,7 @@ class CheckoutWizardViewModel(
                 event.orderId
             )
 
-            is CheckoutWizardContract.Event.OnNavigationEvents.ExternalScreen -> onNavigateToExternalScreen(
-                event.externalScreen
-            )
+            CheckoutWizardContract.Event.OnNavigationEvents.OnNavigateToMarketplaceScreen -> onNavigateToMarketplaceScreen()
 
             CheckoutWizardContract.Event.OnExitWizard -> onExitWizard()
         }
@@ -79,7 +76,7 @@ class CheckoutWizardViewModel(
             null -> {
                 setState {
                     copy(
-                        exitWizardAlertDialogVisible = true
+                        alertDialogAction = CheckoutWizardExitAlertDialogAction.EXIT_WIZARD
                     )
                 }
             }
@@ -99,11 +96,7 @@ class CheckoutWizardViewModel(
     private fun onCloseButtonClicked() {
         when (currentState.wizardStep) {
             CheckoutWizardStep.SHIPPING_DETAILS -> {
-                setState {
-                    copy(
-                        exitWizardAlertDialogVisible = true
-                    )
-                }
+                setAlertDialogAction(CheckoutWizardExitAlertDialogAction.EXIT_WIZARD)
             }
 
             CheckoutWizardStep.PAYMENT_DETAILS,
@@ -156,16 +149,21 @@ class CheckoutWizardViewModel(
     }
 
     private fun onAlertDialogPositiveButtonClicked() {
-        val screen = currentState.exitWizardAlertDialogPositiveActionScreen
+        val alertDialogAction = currentState.alertDialogAction ?: return
 
         hideExitWizardAlertDialog()
-        if (screen != null) {
-            setEffect {
-                CheckoutWizardContract.Effect.Navigation.NavigateToExternalScreen(screen)
+
+        when (alertDialogAction) {
+            CheckoutWizardExitAlertDialogAction.EXIT_WIZARD -> {
+                setEffect {
+                    CheckoutWizardContract.Effect.Navigation.ExitWizard
+                }
             }
-        } else {
-            setEffect {
-                CheckoutWizardContract.Effect.Navigation.ExitWizard
+
+            CheckoutWizardExitAlertDialogAction.NAVIGATE_TO_MARKETPLACE_SCREEN -> {
+                setEffect {
+                    CheckoutWizardContract.Effect.Navigation.NavigateToMarketplaceScreen
+                }
             }
         }
     }
@@ -222,13 +220,8 @@ class CheckoutWizardViewModel(
         }
     }
 
-    private fun onNavigateToExternalScreen(externalScreen: Screen) {
-        setState {
-            copy(
-                exitWizardAlertDialogVisible = true,
-                exitWizardAlertDialogPositiveActionScreen = externalScreen
-            )
-        }
+    private fun onNavigateToMarketplaceScreen() {
+        setAlertDialogAction(CheckoutWizardExitAlertDialogAction.NAVIGATE_TO_MARKETPLACE_SCREEN)
     }
 
     private fun onExitWizard() {
@@ -266,10 +259,13 @@ class CheckoutWizardViewModel(
     }
 
     private fun hideExitWizardAlertDialog() {
+        setAlertDialogAction(null)
+    }
+
+    private fun setAlertDialogAction(action: CheckoutWizardExitAlertDialogAction?) {
         setState {
             copy(
-                exitWizardAlertDialogVisible = false,
-                exitWizardAlertDialogPositiveActionScreen = null
+                alertDialogAction = action
             )
         }
     }

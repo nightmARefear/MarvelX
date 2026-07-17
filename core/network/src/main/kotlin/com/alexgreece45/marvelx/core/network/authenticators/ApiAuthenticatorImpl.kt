@@ -3,7 +3,6 @@ package com.alexgreece45.marvelx.core.network.authenticators
 import com.alexgreece45.marvelx.core.common.config.ConfigLogic
 import com.alexgreece45.marvelx.core.common.config.ConfigOauthLogic
 import com.alexgreece45.marvelx.core.common.dispatchers.model.IoDispatcher
-import com.alexgreece45.marvelx.core.common.extensions.LOGGER_TAG
 import com.alexgreece45.marvelx.core.common.extensions.differenceInMilliseconds
 import com.alexgreece45.marvelx.core.common.logger.AppLogger
 import com.alexgreece45.marvelx.core.common.util.DateUtil
@@ -45,6 +44,8 @@ internal class ApiAuthenticatorImpl(
     @IoDispatcher private val ioDispatcher: CoroutineContext,
     private val sessionManager: SessionManager,
 ) : Authenticator {
+
+    private val loggerTag = "ApiAuthenticator"
 
     /**
      * The request that caused the 401 error.
@@ -149,17 +150,17 @@ internal class ApiAuthenticatorImpl(
                         if (response.isSuccessful) {
                             when (val newResponseToken = response.body()) {
                                 null -> {
-                                    appLogger.e(LOGGER_TAG) { "(authenticate) error: Response body is null." }
+                                    appLogger.e(loggerTag) { "(authenticate) error: Response body is null." }
                                 }
 
                                 else -> {
                                     tokenStorage.setAuthenticationTokens(newResponseToken.toModel())
                                     responseToken = newResponseToken
-                                    appLogger.d(LOGGER_TAG) { "(authenticate) Success retrieving access token." }
+                                    appLogger.d(loggerTag) { "(authenticate) Success retrieving access token." }
                                 }
                             }
                         } else {
-                            appLogger.e(LOGGER_TAG) {
+                            appLogger.e(loggerTag) {
                                 "(authenticate) error: ${response.errorBody().toString()}"
                             }
                         }
@@ -172,7 +173,7 @@ internal class ApiAuthenticatorImpl(
 
         // If the difference in seconds is more than 7.5 seconds then treat it as an error.
         if (timeoutExceeded) {
-            appLogger.e(LOGGER_TAG) { "(authenticate) Timeout waiting for the token refresh." }
+            appLogger.e(loggerTag) { "(authenticate) Timeout waiting for the token refresh." }
 
             performLogoutOperations()
 

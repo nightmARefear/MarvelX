@@ -69,7 +69,7 @@ fun CartScreen(
         showToolbar = orderCheckoutInfo == null,
         toolbarTitle = stringResource(R.string.screen_cart_toolbar_title),
         bottomNavigationBarData = bottomNavigationBarData?.invoke(),
-        paddingValues = PaddingValues(if (orderCheckoutInfo == null) DEFAULT_SCREEN_PADDING else 0.dp)
+        isInnerScreen = orderCheckoutInfo != null
     ) { paddingValues ->
         LazyColumn(
             modifier = Modifier.fillMaxSize(),

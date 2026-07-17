@@ -1,5 +1,6 @@
 package com.alexgreece45.marvelx.domain.interactors.user
 
+import com.alexgreece45.marvelx.core.common.extensions.safeAsync
 import com.alexgreece45.marvelx.core.common.logger.AppLogger
 import com.alexgreece45.marvelx.core.data.repositories.UserSessionRepository
 import com.alexgreece45.marvelx.core.network.model.api.user.block.ResponseBlockedUser
@@ -12,8 +13,8 @@ import com.alexgreece45.marvelx.domain.model_api.user.block.BlockedUserDomain
 import com.alexgreece45.marvelx.domain.model_api.user.block.UserBlockResultType
 import com.alexgreece45.marvelx.domain.model_api.user.block.toBlockedUserDomainList
 import com.alexgreece45.marvelx.domain.model_api.user.block.toUserBlockResultDomain
+import com.alexgreece45.marvelx.model.model.user.UserId
 import com.alexgreece45.marvelx.util.ResourceProvider
-import com.alexgreece45.marvelx.core.common.extensions.safeAsync
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
@@ -30,12 +31,12 @@ interface BlockedUserInteractor {
     /**
      * Blocks the user with the given [userId].
      */
-    suspend fun blockUser(userId: String): Flow<BlockUserPartialState>
+    suspend fun blockUser(userId: UserId): Flow<BlockUserPartialState>
 
     /**
      * Blocks the user with the given [userId].
      */
-    suspend fun unblockUser(userId: String): Flow<InteractorPartialState<String>>
+    suspend fun unblockUser(userId: UserId): Flow<InteractorPartialState<String>>
 }
 
 @Factory
@@ -58,9 +59,9 @@ internal class BlockedUserInteractorImpl(
             }
         }
 
-    override suspend fun blockUser(userId: String): Flow<BlockUserPartialState> =
+    override suspend fun blockUser(userId: UserId): Flow<BlockUserPartialState> =
         flow {
-            if (userId == userSessionRepository.getUserId()) {
+            if (userId.value == userSessionRepository.getUserId()) {
                 emit(BlockUserPartialState.Failed(UserBlockResultType.SameUser))
                 return@flow
             }
@@ -89,7 +90,7 @@ internal class BlockedUserInteractorImpl(
             }
         }
 
-    override suspend fun unblockUser(userId: String): Flow<InteractorPartialState<String>> = flow {
+    override suspend fun unblockUser(userId: UserId): Flow<InteractorPartialState<String>> = flow {
         repository.unblockUser(userId).collect { repositoryResult ->
             emitAll(handleRepositoryResultNoTransformation(repositoryResult))
         }

@@ -2,6 +2,7 @@ package com.alexgreece45.marvelx.ui.screens.myListings
 
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.core.data.model.listing.ListingId
 import com.alexgreece45.marvelx.domain.helper.InteractorPartialState
 import com.alexgreece45.marvelx.domain.interactors.marketplace.listing.ListingInteractor
 import com.alexgreece45.marvelx.mvi.BaseViewModel

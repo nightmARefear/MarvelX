@@ -26,6 +26,7 @@ import com.alexgreece45.marvelx.domain.worker.RefreshTokenWorker
 import com.alexgreece45.marvelx.notifications.di.NotificationsModule
 import com.alexgreece45.marvelx.ui.helper.FieldValidationRules
 import com.alexgreece45.marvelx.ui.helper.FieldValidationRulesImpl
+import com.alexgreece45.marvelx.ui.navigation.NavBackStackLogger
 import com.alexgreece45.marvelx.ui.screens.cart.mappers.CartItemUiMapper
 import com.alexgreece45.marvelx.ui.screens.marketplace.mappers.ListingDetailsUiMapper
 import com.alexgreece45.marvelx.ui.screens.marketplace.mappers.ListingPreviewUiMapper
@@ -82,7 +83,6 @@ fun initKoin(marvelXApplication: MarvelXApplication) {
             workerModule,
             CommonUiModule().module,
             NotificationsModule().module,
-            ViewModelModule().module,
             UiModule().module,
         )
 //        monitoring()

@@ -28,7 +28,7 @@ import com.alexgreece45.marvelx.util.SPACING_MEDIUM
 import kotlinx.coroutines.flow.Flow
 
 @Composable
-fun CheckoutShippingDetailsScreen(
+internal fun CheckoutShippingDetailsScreen(
     onEvent: (CheckoutShippingDetailsContract.Event) -> Unit,
     state: CheckoutShippingDetailsContract.State,
     effect: Flow<CheckoutShippingDetailsContract.Effect>,
@@ -54,12 +54,13 @@ fun CheckoutShippingDetailsScreen(
 
     ContentScreen(
         isLoading = state.isLoading,
-        paddingValues = PaddingValues(0.dp)
-    ) { _ ->
+        isInnerScreen = true
+    ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
+                .padding(paddingValues)
         ) {
             Column(
                 modifier = Modifier.fillMaxWidth(),

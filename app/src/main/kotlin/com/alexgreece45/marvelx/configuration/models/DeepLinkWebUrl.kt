@@ -44,6 +44,6 @@ sealed class DeepLinkWebUrl(
     data object ListingDetails :
         DeepLinkWebUrl(
             suffix = "/listing/",
-            screenBaseRoute = Screen.ListingDetailsScreen.baseRoute
+            screenBaseRoute = "listingDetailsScreen"
         )
 }

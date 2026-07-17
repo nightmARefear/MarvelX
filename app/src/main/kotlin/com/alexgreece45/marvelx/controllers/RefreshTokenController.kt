@@ -7,7 +7,6 @@ import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequest
 import androidx.work.WorkManager
 import com.alexgreece45.marvelx.core.common.config.ConfigLogic
-import com.alexgreece45.marvelx.core.common.extensions.LOGGER_TAG
 import com.alexgreece45.marvelx.core.common.logger.AppLogger
 import com.alexgreece45.marvelx.domain.worker.RefreshTokenWorker
 import com.alexgreece45.marvelx.util.constants.ConstantsWorker
@@ -28,11 +27,13 @@ interface RefreshTokenController {
 }
 
 @Single
-class RefreshTokenControllerImpl(
+internal class RefreshTokenControllerImpl(
     private val context: Context,
     private val configLogic: ConfigLogic,
     private val logger: AppLogger
 ) : RefreshTokenController {
+
+    private val loggerTag = "RefreshTokenController"
 
     override fun startWorker() {
         try {
@@ -52,9 +53,9 @@ class RefreshTokenControllerImpl(
                     )
                     .build()
             )
-            logger.i(LOGGER_TAG) { "Refresh token worker started." }
+            logger.i(loggerTag) { "Refresh token worker started." }
         } catch (e: Exception) {
-            logger.e(LOGGER_TAG) {
+            logger.e(loggerTag) {
                 "Refresh token worker could NOT be started.\n" +
                         "(startWorker) error: $e"
             }
@@ -65,6 +66,6 @@ class RefreshTokenControllerImpl(
     override fun stopWorker() {
         WorkManager.getInstance(context)
             .cancelUniqueWork(ConstantsWorker.RefreshToken.WORKER_NAME)
-        logger.i(LOGGER_TAG) { "Refresh token worker stopped." }
+        logger.i(loggerTag) { "Refresh token worker stopped." }
     }
 }

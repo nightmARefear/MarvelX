@@ -1,7 +1,6 @@
 package com.alexgreece45.marvelx.data.repository.marketplace.listing.details
 
 import com.alexgreece45.marvelx.core.common.dispatchers.model.IoDispatcher
-import com.alexgreece45.marvelx.core.common.extensions.LOGGER_TAG
 import com.alexgreece45.marvelx.core.common.logger.AppLogger
 import com.alexgreece45.marvelx.core.network.clients.ListingClient
 import com.alexgreece45.marvelx.core.network.model.api.marketplace.listing.ResponseListingEnumGeneric
@@ -30,11 +29,13 @@ interface ListingDetailsRepository {
 }
 
 @Single
-class ListingDetailsRepositoryImpl(
+internal class ListingDetailsRepositoryImpl(
     private val listingClient: ListingClient,
     @IoDispatcher private val ioDispatcher: CoroutineContext,
     private val appLogger: AppLogger
 ) : ListingDetailsRepository {
+
+    private val loggerTag = "ListingDetailsRepository"
 
     private val scope = CoroutineScope(SupervisorJob() + ioDispatcher)
 
@@ -110,15 +111,15 @@ class ListingDetailsRepositoryImpl(
             operations.forEach { operation ->
                 when (val apiResult = operation.apiCall()) {
                     is ApiResult.Error -> {
-                        appLogger.d(LOGGER_TAG) { "An error occurred whilst initializing the cached listing ${operation.operationName}.\n" + apiResult.errorBody }
+                        appLogger.d(loggerTag) { "An error occurred whilst initializing the cached listing ${operation.operationName}.\n" + apiResult.errorBody }
                     }
 
                     is ApiResult.Failed -> {
-                        appLogger.d(LOGGER_TAG) { "An error occurred whilst initializing the cached listing ${operation.operationName}.\n" + apiResult.failureMessage }
+                        appLogger.d(loggerTag) { "An error occurred whilst initializing the cached listing ${operation.operationName}.\n" + apiResult.failureMessage }
                     }
 
                     ApiResult.NetworkError -> {
-                        appLogger.d(LOGGER_TAG) { "A network error occurred whilst initializing the cached listing ${operation.operationName}." }
+                        appLogger.d(loggerTag) { "A network error occurred whilst initializing the cached listing ${operation.operationName}." }
                     }
 
                     is ApiResult.Success -> {
@@ -126,7 +127,7 @@ class ListingDetailsRepositoryImpl(
                             val listingEnums = apiResult.body.map { it.toData() }
                             operation.cachedVariable.value = listingEnums
                         } catch (e: Exception) {
-                            appLogger.d(LOGGER_TAG) { "An error occurred whilst initializing the cached listing ${operation.operationName}.\n" + e.localizedMessage }
+                            appLogger.d(loggerTag) { "An error occurred whilst initializing the cached listing ${operation.operationName}.\n" + e.localizedMessage }
                         }
                     }
                 }

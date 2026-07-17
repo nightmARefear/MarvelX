@@ -11,6 +11,7 @@ import com.alexgreece45.marvelx.core.data.helper.RepositoryResult
 import com.alexgreece45.marvelx.data.model.deepLink.DeepLinkAction
 import com.alexgreece45.marvelx.data.repository.ImageRepository
 import com.alexgreece45.marvelx.data.repository.UserRepository
+import com.alexgreece45.marvelx.model.model.user.UserId
 import com.alexgreece45.marvelx.notifications.constants.ConstantsNotifications
 import com.alexgreece45.marvelx.notifications.model.NotificationChannelType
 import com.alexgreece45.marvelx.notifications.model.NotificationData
@@ -106,12 +107,14 @@ class PushNotificationsController(
                 }
             }
 
+            val rawUserId = messageData[ConstantsNotifications.USER_ID]!!
+
             NotificationData(
                 channelType = NotificationChannelType.getChannelByType(messageData[ConstantsNotifications.CHANNEL_TYPE]!!),
                 notificationId = messageData[ConstantsNotifications.NOTIFICATION_ID]!!.toInt(),
                 title = fcmNotification.title.orEmpty(),
                 body = fcmNotification.body.orEmpty(),
-                userId = messageData[ConstantsNotifications.USER_ID]!!,
+                userId = UserId(rawUserId),
                 imageBytes = imageBytes,
                 deepLinkAction = gson.fromJson(
                     messageData[ConstantsNotifications.DEEP_LINK_ACTION]!!,

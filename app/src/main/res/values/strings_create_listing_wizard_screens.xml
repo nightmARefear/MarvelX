@@ -6,7 +6,6 @@
     <string name="screen_create_listing_wizard_screen_step_label_basic">Basic details</string>
     <string name="screen_create_listing_wizard_screen_step_label_advanced">Advanced details</string>
     <string name="screen_create_listing_wizard_screen_step_label_overview">Overview</string>
-    <string name="screen_create_listing_wizard_screen_step_label_success">Success</string>
 
     <string name="screen_create_listing_wizard_screen_sticky_bottom_button_next">Next</string>
     <string name="screen_create_listing_wizard_screen_sticky_bottom_button_upload_new_listing">Create listing</string>

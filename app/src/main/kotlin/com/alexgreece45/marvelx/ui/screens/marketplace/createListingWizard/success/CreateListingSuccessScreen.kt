@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.LottieComposable
+import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
 import com.alexgreece45.marvelx.ui.components.WrapButton
 import com.alexgreece45.marvelx.ui.components.effect.ObserveUiEffect
 import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.success.model.CreateListingSuccessContract
@@ -26,25 +27,36 @@ import com.alexgreece45.marvelx.util.constants.ConstantsUi
 import kotlinx.coroutines.flow.Flow
 
 @Composable
-fun CreateListingSuccessScreen(
+internal fun CreateListingSuccessScreen(
     onEvent: (CreateListingSuccessContract.Event) -> Unit,
     state: CreateListingSuccessContract.State,
     effect: Flow<CreateListingSuccessContract.Effect>,
-    onNavigation: (CreateListingSuccessContract.Effect.Navigation) -> Unit
+    onNavigationEffect: (CreateListingSuccessContract.Effect.Navigation) -> Unit,
+    listingId: String,
+    wizardMode: String
 ) {
 
     ObserveUiEffect(effect) { uiEffect ->
         when (uiEffect) {
-            is CreateListingSuccessContract.Effect.Navigation -> onNavigation(uiEffect)
+            is CreateListingSuccessContract.Effect.Navigation -> onNavigationEffect(uiEffect)
         }
     }
 
     LaunchedEffect(Unit) {
-        onEvent(CreateListingSuccessContract.Event.Init)
+        onEvent(CreateListingSuccessContract.Event.Init(listingId, wizardMode))
     }
 
     ContentScreen(
-        isLoading = state.isLoading
+        isLoading = state.isLoading,
+        navigableAction = ScreenNavigableAction.Closeable(
+            onClose = {
+                onEvent(
+                    CreateListingSuccessContract.Event.OnBackClicked
+                )
+            }
+        ),
+        onBack = { onEvent(CreateListingSuccessContract.Event.OnBackClicked) },
+        showToolbar = true
     ) { paddingValues ->
         Column(
             modifier = Modifier

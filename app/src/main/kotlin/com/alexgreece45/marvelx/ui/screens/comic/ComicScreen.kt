@@ -35,7 +35,7 @@ fun ComicScreen(
     onEventSent: (event: ComicContract.Event) -> Unit,
     state: ComicContract.State,
     effect: Flow<ComicContract.Effect>,
-    popBackStack: () -> Unit,
+    onNavigationEffect: (ComicContract.Effect.Navigation) -> Unit,
     comicId: Int
 ) {
     LaunchedEffect(Unit) {
@@ -44,7 +44,7 @@ fun ComicScreen(
 
     ObserveUiEffect(effect) { uiEffect ->
         when (uiEffect) {
-            ComicContract.Effect.PopBackStack -> popBackStack()
+            is ComicContract.Effect.Navigation -> onNavigationEffect(uiEffect)
         }
     }
 

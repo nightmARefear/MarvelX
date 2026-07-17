@@ -14,8 +14,8 @@ sealed interface MarketplaceContract {
         data class OnListingClicked(val listingId: String) : Event
 
         sealed interface SearchBarEvents : Event {
-            data class OnSearchTermChanged(val searchTerm: String): SearchBarEvents
-            data object OnDeleteIconClicked: SearchBarEvents
+            data class OnSearchTermChanged(val searchTerm: String) : SearchBarEvents
+            data object OnDeleteIconClicked : SearchBarEvents
         }
     }
 

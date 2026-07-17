@@ -62,7 +62,7 @@ fun Context.getAndRemovePendingDeepLinkAction(): DeepLinkAction? {
 /**
  * Attempts to retrieve [MainActivity] from the [Context]. If it fails to do so, `null` is returned.
  */
-fun Context.getActivity(): MainActivity? = (this as? MainActivity)
+internal fun Context.getActivity(): MainActivity? = (this as? MainActivity)
 
 /**
  * Closes the [MainActivity].

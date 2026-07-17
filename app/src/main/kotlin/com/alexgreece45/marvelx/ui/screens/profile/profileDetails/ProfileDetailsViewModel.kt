@@ -23,6 +23,7 @@ import com.alexgreece45.marvelx.domain.model_api.user.friendRequest.DeleteFriend
 import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.ProfileDetailsDomain
 import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.ProfileDetailsErrorType
 import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.RelationshipStatusDomain
+import com.alexgreece45.marvelx.model.model.user.UserId
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
@@ -106,7 +107,7 @@ sealed interface ProfileDetailsContract {
         // Data.
         val isGenderDropDownExpanded: Boolean = false,
         val profileDetails: ProfileDetailsDomain? = null,
-        val userId: String = "",
+        val userId: UserId = UserId.EMPTY,
         val isGenderHidden: Boolean = false,
         val isEmailHidden: Boolean = false,
 
@@ -411,6 +412,8 @@ class ProfileDetailsViewModel(
      * Loads the profile details by user ID.
      */
     private fun loadProfileDetails(event: ProfileDetailsContract.Event.Init) {
+        val userId = UserId(event.userId)
+
         setState {
             copy(
                 isLoading = true,
@@ -418,7 +421,7 @@ class ProfileDetailsViewModel(
             )
         }
         viewModelScope.launch {
-            userInteractor.getProfileDetails(event.userId).collect {
+            userInteractor.getProfileDetails(userId).collect {
                 when (it) {
                     is GetProfileDetailsPartialState.Success -> {
                         initializeMoreActionItems(it.profileDetailsDomain.isDifferentUser)
@@ -427,7 +430,7 @@ class ProfileDetailsViewModel(
                                 isLoading = false,
                                 fullScreenErrorView = null,
                                 profileDetails = it.profileDetailsDomain,
-                                userId = event.userId,
+                                userId = userId,
                                 isGenderHidden = it.profileDetailsDomain.isDifferentUser && it.profileDetailsDomain.privacySettings != null && !it.profileDetailsDomain.privacySettings.isGenderVisible,
                                 isEmailHidden = it.profileDetailsDomain.isDifferentUser && it.profileDetailsDomain.privacySettings != null && !it.profileDetailsDomain.privacySettings.isEmailVisible,
                             )
@@ -908,7 +911,7 @@ class ProfileDetailsViewModel(
         setEffect {
             ProfileDetailsContract.Effect.Navigation.NavigateToProfileDetailsStatsScreen(
                 fullName = currentState.profileDetails?.basicProfileDetails?.fullName.orEmpty(),
-                userId = currentState.userId,
+                userId = currentState.userId.value,
                 tab = tab
             )
         }

@@ -2,7 +2,6 @@ package com.alexgreece45.marvelx.core.network.authenticators
 
 import com.alexgreece45.marvelx.core.common.config.ConfigLogic
 import com.alexgreece45.marvelx.core.common.config.ConfigOauthLogic
-import com.alexgreece45.marvelx.core.common.extensions.LOGGER_TAG
 import com.alexgreece45.marvelx.core.common.logger.AppLogger
 import com.alexgreece45.marvelx.core.network.di.model.RefreshTokenAuthenticator
 import com.alexgreece45.marvelx.core.network.managers.SessionManager
@@ -25,6 +24,8 @@ internal class RefreshTokenAuthenticatorImpl(
     private val sessionManager: SessionManager,
 ) : Authenticator {
 
+    private val loggerTag = "RefreshTokenAuthenticator"
+
     /**
      * This function is triggered when a 401 response is received. If the request's path is the
      * token one, then the user is instantly logged out.
@@ -38,7 +39,7 @@ internal class RefreshTokenAuthenticatorImpl(
 
         // If the path is the token path then logout.
         if (path == configOauthLogic.tokenPath) {
-            appLogger.e(LOGGER_TAG) { "(authenticate) An authorization error occurred whilst trying to refresh the access token." }
+            appLogger.e(loggerTag) { "(authenticate) An authorization error occurred whilst trying to refresh the access token." }
             sessionManager.triggerLogout(LogoutReason.SESSION_EXPIRED)
         }
         return null

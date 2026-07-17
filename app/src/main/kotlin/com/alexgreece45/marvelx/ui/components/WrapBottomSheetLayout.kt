@@ -1,6 +1,8 @@
 package com.alexgreece45.marvelx.ui.components
 
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.MaterialTheme
@@ -59,7 +61,7 @@ fun WrapModalBottomSheetLayout(
     }
 
     ModalBottomSheetLayout(
-        sheetContent = { sheetContent() },
+        sheetContent = { Box(modifier = Modifier.navigationBarsPadding()) { sheetContent() } },
         modifier = modifier,
         sheetState = sheetState,
         sheetGesturesEnabled = sheetGesturesEnabled,

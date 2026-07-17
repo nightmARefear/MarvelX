@@ -21,7 +21,7 @@ class CartItemUiMapper(
         with(listingPreviewDomain) {
             try {
                 CartItemUi(
-                    listingId = id,
+                    listingId = listingId,
                     title = title,
                     price = price,
                     priceLabel = price.formatPrice(configPriceLogic.priceScale),

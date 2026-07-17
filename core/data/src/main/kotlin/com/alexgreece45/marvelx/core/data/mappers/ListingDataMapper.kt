@@ -4,6 +4,7 @@ import com.alexgreece45.marvelx.core.data.model.marketplace.listing.ListingCateg
 import com.alexgreece45.marvelx.core.data.model.marketplace.listing.ListingData
 import com.alexgreece45.marvelx.core.network.model.api.marketplace.listing.ResponseListing
 import com.alexgreece45.marvelx.core.network.model.api.marketplace.listing.details.ResponseListingDetails
+import com.alexgreece45.marvelx.model.model.user.UserId
 import com.google.gson.Gson
 import org.koin.core.annotation.Single
 
@@ -68,7 +69,7 @@ internal class ListingDataMapper(
         return with(responseListing) {
             ListingData(
                 listingId = listingId,
-                sellerUserId = sellerUserId,
+                sellerUserId = UserId(sellerUserId),
                 categoryCode = categoryCode,
                 subcategoryCode = subcategoryCode,
                 conditionCode = conditionCode,

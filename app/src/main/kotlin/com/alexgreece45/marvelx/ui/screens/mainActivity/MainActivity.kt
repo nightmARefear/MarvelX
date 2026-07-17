@@ -44,6 +44,7 @@ import com.alexgreece45.marvelx.ui.components.effect.ObserveUiEffect
 import com.alexgreece45.marvelx.ui.components.effect.OneTimeLaunchedEffect
 import com.alexgreece45.marvelx.ui.helper.openDeepLinkAction
 import com.alexgreece45.marvelx.ui.navigation.NavArgHelper
+import com.alexgreece45.marvelx.ui.navigation.NavBackStackLogger
 import com.alexgreece45.marvelx.ui.navigation.NavGraph
 import com.alexgreece45.marvelx.ui.navigation.Screen
 import com.alexgreece45.marvelx.ui.navigation.models.NavArg
@@ -63,7 +64,7 @@ import org.koin.android.ext.android.inject
 import org.koin.core.annotation.KoinExperimentalAPI
 import kotlin.time.Duration.Companion.milliseconds
 
-class MainActivity : ComponentActivity() {
+internal class MainActivity : ComponentActivity() {
 
     private val loggerTag = "MainActivity"
 
@@ -72,6 +73,8 @@ class MainActivity : ComponentActivity() {
     private val viewModel: MainActivityViewModel by viewModels()
     private val gson: Gson by inject()
 
+    private val navBackStackLogger: NavBackStackLogger by inject()
+
     var pendingDeepLinkAction: DeepLinkAction? = null
 
     /**
@@ -79,6 +82,7 @@ class MainActivity : ComponentActivity() {
      */
     var flowStarted: Boolean = false
 
+    @SuppressLint("RestrictedApi")
     @OptIn(KoinExperimentalAPI::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -107,6 +111,8 @@ class MainActivity : ComponentActivity() {
                     navController.removeOnDestinationChangedListener(destinationChangedListener)
                 }
             }
+
+            navBackStackLogger.LoggerView(navController)
 
             MarvelXTheme {
                 SystemBarsThemeUtil.applyDarkSystemBarsTheme(activity = this)
@@ -148,10 +154,7 @@ class MainActivity : ComponentActivity() {
                             is MainActivityEffect.OpenOrCacheDeepLink -> {
                                 if (canCurrentRouteRunDeepLink(navController)) {
                                     appLogger.d(loggerTag) { "opening deep link..." }
-                                    openDeepLinkAction(
-                                        navController = navController,
-                                        deepLinkAction = effect.deepLinkAction
-                                    )
+                                    navController.openDeepLinkAction(effect.deepLinkAction)
                                 } else {
                                     appLogger.d(loggerTag) { "caching deep link..." }
                                     pendingDeepLinkAction = effect.deepLinkAction

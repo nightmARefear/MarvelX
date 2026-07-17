@@ -5,7 +5,6 @@ import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.controllers.RefreshTokenController
 import com.alexgreece45.marvelx.controllers.WebsocketController
 import com.alexgreece45.marvelx.core.common.config.ConfigOauthLogic
-import com.alexgreece45.marvelx.core.common.extensions.LOGGER_TAG
 import com.alexgreece45.marvelx.core.common.extensions.safeAsync
 import com.alexgreece45.marvelx.core.common.logger.AppLogger
 import com.alexgreece45.marvelx.core.common.util.DateUtil
@@ -79,6 +78,8 @@ class LoginInteractorImpl(
     private val websocketController: WebsocketController,
     private val refreshTokenController: RefreshTokenController,
 ) : LoginInteractor {
+
+    private val loggerTag = "LoginInteractor"
 
     private val codeVerifier by lazy {
         createCodeVerifier()
@@ -211,7 +212,7 @@ class LoginInteractorImpl(
                 }
             }
         }.safeAsync {
-            appLogger.e(LOGGER_TAG) { "(grandNewAccessToken) error: ${it.message.orEmpty()}" }
+            appLogger.e(loggerTag) { "(grandNewAccessToken) error: ${it.message.orEmpty()}" }
             when (it) {
                 is IOException -> GrandNewAccessTokenPartialState.Failed(
                     errorMessage = resourceProvider.getNoInternetConnectionMessage()

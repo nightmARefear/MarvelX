@@ -2,7 +2,6 @@ package com.alexgreece45.marvelx.core.network.signatureEngine
 
 import android.util.Base64
 import com.alexgreece45.marvelx.core.common.config.SecurityConfigLogic
-import com.alexgreece45.marvelx.core.common.extensions.LOGGER_TAG
 import com.alexgreece45.marvelx.core.common.logger.AppLogger
 import com.alexgreece45.marvelx.core.network.signatureEngine.model.SecureSecretKeySpec
 import com.alexgreece45.marvelx.model.model.Signature
@@ -66,6 +65,8 @@ internal class SignatureEngineImpl(
     private val securityConfigLogic: SecurityConfigLogic
 ) : SignatureEngine {
 
+    private val loggerTag = "SignatureEngine"
+
     override fun createSessionSignature(
         requestMethod: String,
         requestUrl: HttpUrl,
@@ -109,7 +110,7 @@ internal class SignatureEngineImpl(
             nonce,
             timestamp
         ).joinToString(payloadSeparator)
-        appLogger.d(LOGGER_TAG) { "payload: $payload" }
+        appLogger.d(loggerTag) { "payload: $payload" }
 
         return try {
             val signatureAlgorithm = signature.algorithm
@@ -125,7 +126,7 @@ internal class SignatureEngineImpl(
             keySpec.destroy()
             signature
         } catch (e: Exception) {
-            appLogger.e(LOGGER_TAG) { "(createSessionSignature) e: $e" }
+            appLogger.e(loggerTag) { "(createSessionSignature) e: $e" }
             ""
         }
     }

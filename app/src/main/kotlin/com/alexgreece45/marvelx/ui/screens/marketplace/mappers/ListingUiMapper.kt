@@ -3,11 +3,13 @@ package com.alexgreece45.marvelx.ui.screens.marketplace.mappers
 import com.alexgreece45.marvelx.configuration.ConfigPriceLogic
 import com.alexgreece45.marvelx.core.common.extensions.toListingFormat
 import com.alexgreece45.marvelx.core.common.logger.AppLogger
+import com.alexgreece45.marvelx.core.data.model.listing.ListingId
 import com.alexgreece45.marvelx.data.model.marketplace.listing.EnumGeneric
 import com.alexgreece45.marvelx.data.repository.marketplace.listing.ListingCategoryRepository
 import com.alexgreece45.marvelx.data.repository.marketplace.listing.details.ListingDetailsRepository
 import com.alexgreece45.marvelx.domain.model_api.marketplace.listing.ListingDomain
 import com.alexgreece45.marvelx.domain.model_api.marketplace.listing.ListingStatusDomain
+import com.alexgreece45.marvelx.model.model.user.UserId
 import com.alexgreece45.marvelx.ui.model_generic.BigDecimalUi
 import com.alexgreece45.marvelx.ui.model_generic.InstantUi
 import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.model.CreateListingUi
@@ -77,7 +79,7 @@ class ListingUiMapper(
                         value = updatedAt,
                         label = updatedAt?.toListingFormat() ?: "-"
                     ),
-                    canEdit = sellerUserId == currentUserId
+                    canEdit = sellerUserId == UserId(currentUserId)
                 )
             } catch (e: Exception) {
                 appLogger.e(loggerTag) { "An error occurred whilst converting `ListingDomain` to `ListingUi`.\n" + e.localizedMessage.orEmpty() }
@@ -95,7 +97,7 @@ class ListingUiMapper(
                 toUi(
                     listing = ListingDomain(
                         listingId = "",
-                        sellerUserId = currentUserId,
+                        sellerUserId = UserId(currentUserId),
                         categoryCode = category?.code.orEmpty(),
                         subcategoryCode = subcategory?.categoryCode.orEmpty(),
                         conditionCode = condition.code,

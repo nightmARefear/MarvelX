@@ -1,7 +1,6 @@
 package com.alexgreece45.marvelx.core.security.controllers
 
 import android.content.Context
-import com.alexgreece45.marvelx.core.common.extensions.LOGGER_TAG
 import com.alexgreece45.marvelx.core.common.logger.AppLogger
 import com.alexgreece45.marvelx.core.security.R
 import org.bouncycastle.jcajce.provider.digest.Blake2b
@@ -40,6 +39,8 @@ internal class AntiReverseEngineeringControllerImpl(
     private val appLogger: AppLogger
 ) : AntiReverseEngineeringController {
 
+    private val loggerTag = "AntiReverseEngineeringController"
+
     override fun isApplicationDexCrcValid(): Boolean {
         return try {
             val zipFile = ZipFile(context.packageCodePath)
@@ -60,7 +61,7 @@ internal class AntiReverseEngineeringControllerImpl(
             val signature = Base64.getEncoder().encodeToString(blake2Hash)
             signature == context.getString(R.string.dex_crc)
         } catch (e: Exception) {
-            appLogger.e(LOGGER_TAG) { "e: $e" }
+            appLogger.e(loggerTag) { "e: $e" }
             false
         }
     }

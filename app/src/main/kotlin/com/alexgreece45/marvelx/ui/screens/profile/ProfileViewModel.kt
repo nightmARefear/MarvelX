@@ -333,7 +333,7 @@ class ProfileViewModel(
                         isNavigable = false,
                         onClick = {
                             setEffect {
-                                ProfileContract.Effect.Navigation.NavigateToQrCodeScreen(Screen.ProfileScreen.baseRoute)
+                                ProfileContract.Effect.Navigation.NavigateToQrCodeScreen("profileScreen") // TODO: FIX!
                             }
                         }
                     ),

@@ -1,22 +1,31 @@
-package com.alexgreece45.marvelx.ui.navigation.cart
+package com.alexgreece45.marvelx.ui.screens.cart.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.composable
 import com.alexgreece45.marvelx.ui.components.BottomNavigationBarData
 import com.alexgreece45.marvelx.ui.navigation.Screen
 import com.alexgreece45.marvelx.ui.screens.cart.CartScreen
 import com.alexgreece45.marvelx.ui.screens.cart.CartViewModel
 import com.alexgreece45.marvelx.ui.screens.cart.model.CartContract
-import com.alexgreece45.marvelx.util.extensions.composable
+import com.alexgreece45.marvelx.ui.screens.marketplace.listingDetailsScreen.navigation.navigateToListingDetailsScreen
+import com.alexgreece45.marvelx.ui.screens.marketplace.navigation.navigateToMarketplaceScreen
+import kotlinx.serialization.Serializable
 import org.koin.androidx.compose.koinViewModel
 
-fun NavGraphBuilder.cartNavigation(
+@Serializable
+data object CartRoute
+
+fun NavController.navigateToCartScreen() = navigate(route = CartRoute)
+
+internal fun NavGraphBuilder.cartScreen(
     navController: NavHostController,
     bottomNavigationBarData: @Composable () -> BottomNavigationBarData
 ) {
-    composable(screen = Screen.CartScreen) {
+    composable<CartRoute> {
         val viewModel = koinViewModel<CartViewModel>()
         CartScreen(
             onEvent = viewModel::setEvent,
@@ -25,12 +34,10 @@ fun NavGraphBuilder.cartNavigation(
             onNavigationEffect = { navigationEffect ->
                 when (navigationEffect) {
                     CartContract.Effect.Navigation.GoBack -> navController.navigateUp()
-                    CartContract.Effect.Navigation.GoToMarketplaceScreen -> navController.navigate(
-                        Screen.CartScreen.route
-                    )
+                    CartContract.Effect.Navigation.GoToMarketplaceScreen -> navController.navigateToMarketplaceScreen()
 
-                    is CartContract.Effect.Navigation.GoToListingDetailsScreen -> navController.navigate(
-                        Screen.ListingDetailsScreen.createNavRoute(navigationEffect.listingId)
+                    is CartContract.Effect.Navigation.GoToListingDetailsScreen -> navController.navigateToListingDetailsScreen(
+                        navigationEffect.listingId
                     )
 
                     CartContract.Effect.Navigation.GoToCheckoutScreen -> navController.navigate(

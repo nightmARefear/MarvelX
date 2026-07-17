@@ -4,6 +4,6 @@ import org.koin.core.annotation.ComponentScan
 import org.koin.core.annotation.Module
 
 @Module
-@ComponentScan("com.alexgreece45.marvelx.ui.image")
+@ComponentScan("com.alexgreece45.marvelx.ui")
 //@Configuration
-class UiModule
+internal class UiModule
