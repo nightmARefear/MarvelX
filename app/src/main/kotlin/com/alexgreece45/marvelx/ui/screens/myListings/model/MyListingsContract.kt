@@ -34,7 +34,6 @@ sealed interface MyListingsContract {
         val isFetchingNewItems: Boolean = false,
 
         val currentPage: Int = 1,
-        val isScrollingInitialized: Boolean = false,
 
         val allListings: PersistentList<MyListingUi> = persistentListOf(),
 

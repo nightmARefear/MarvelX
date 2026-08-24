@@ -6,6 +6,7 @@ import com.alexgreece45.marvelx.common_ui.imageValidator.ImageValidator
 import com.alexgreece45.marvelx.common_ui.imageValidator.model.ImageValidationConfig
 import com.alexgreece45.marvelx.common_ui.imageValidator.model.ImageValidationError
 import com.alexgreece45.marvelx.common_ui.imageValidator.model.MultiImageValidationResult
+import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarType
 import com.alexgreece45.marvelx.controllers.createListingWizard.CreateListingWizardController
 import com.alexgreece45.marvelx.core.common.config.ConfigLogic
 import com.alexgreece45.marvelx.core.common.extensions.fromBytesToMb
@@ -315,6 +316,7 @@ class CreateListingBasicDetailsViewModel(
                         R.string.screen_create_listing_basic_details_error_attaching_images_over_max_size,
                         currentState.configurationData.maxImageSize.fromBytesToMb()
                     )
+
                     ImageValidationError.InvalidExtensionType -> resourceProvider.getString(R.string.screen_create_listing_basic_details_error_attaching_images_invalid_extension)
                     ImageValidationError.AttachmentError -> resourceProvider.getString(R.string.screen_create_listing_basic_details_error_attaching_images_generic)
                 }
@@ -323,15 +325,21 @@ class CreateListingBasicDetailsViewModel(
             MultiImageValidationResult.OverMaxCount -> resourceProvider.getString(R.string.screen_create_listing_basic_details_error_attaching_images_over_max_count)
             MultiImageValidationResult.AlreadyExists -> resourceProvider.getString(R.string.screen_create_listing_basic_details_error_attaching_images_existing_image)
         }
-        showToastMessage(errorMessage)
+        showSnackbar(message = errorMessage, snackbarType = SnackbarType.ERROR)
     }
 
     private fun onImagesSelectionFailure() {
-        showToastMessage(resourceProvider.getString(R.string.screen_create_listing_basic_details_error_attaching_images_generic))
+        showSnackbar(
+            message = resourceProvider.getString(R.string.screen_create_listing_basic_details_error_attaching_images_generic),
+            snackbarType = SnackbarType.ERROR
+        )
     }
 
     private fun onImagesNoSelection() {
-        showToastMessage(resourceProvider.getString(R.string.screen_create_listing_basic_details_no_selected_images))
+        showSnackbar(
+            message = resourceProvider.getString(R.string.screen_create_listing_basic_details_no_selected_images),
+            snackbarType = SnackbarType.INFO
+        )
     }
 
     private fun onUploadPhotosButtonClicked() {
@@ -439,9 +447,9 @@ class CreateListingBasicDetailsViewModel(
         )
     }
 
-    private fun showToastMessage(message: String) {
+    private fun showSnackbar(message: String, snackbarType: SnackbarType) {
         setEffect {
-            CreateListingBasicDetailsContract.Effect.ShowToastMessage(message)
+            CreateListingBasicDetailsContract.Effect.ShowSnackbar(message, snackbarType)
         }
     }
 }

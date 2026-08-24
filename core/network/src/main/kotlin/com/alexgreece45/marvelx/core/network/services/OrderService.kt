@@ -1,10 +1,14 @@
 package com.alexgreece45.marvelx.core.network.services
 
+import com.alexgreece45.marvelx.core.network.model.api.order.RequestPlaceOrder
 import com.alexgreece45.marvelx.core.network.model.api.order.ResponseOrder
 import com.alexgreece45.marvelx.core.network.model.api.order.ResponseOrderId
 import com.alexgreece45.marvelx.core.network.model.api.order.ResponseOrderPreview
+import com.alexgreece45.marvelx.core.network.model.api.order.item.ResponseOrderItem
 import com.alexgreece45.marvelx.core.network.model.api.order.item.ResponseOrderItemTrackingHistory
 import com.alexgreece45.marvelx.core.network.model.api.order.item.returnRequest.ResponseOrderItemReturn
+import com.alexgreece45.marvelx.core.network.model.api.order.item.returnRequest.ResponseOrderItemReturnEligibility
+import com.alexgreece45.marvelx.core.network.model.api.order.item.returnRequest.ResponseOrderItemReturnId
 import okhttp3.MultipartBody
 import retrofit2.Response
 import retrofit2.http.Body
@@ -18,10 +22,22 @@ internal interface OrderService {
     suspend fun getOrders(): Response<List<ResponseOrderPreview>>
 
     @POST("/api/private/marvelx/orders")
-    suspend fun placeOrder(): Response<ResponseOrderId>
+    suspend fun placeOrder(@Body requestPlaceOrder: RequestPlaceOrder): Response<ResponseOrderId>
 
     @GET("/api/private/marvelx/orders/{orderId}")
     suspend fun getOrderDetails(@Path(value = "orderId") orderId: String): Response<ResponseOrder>
+
+    @GET("/api/private/marvelx/orders/{orderId}/{orderItemId}/details")
+    suspend fun getOrderItemDetails(
+        @Path(value = "orderId") orderId: String,
+        @Path(value = "orderItemId") orderItemId: String,
+    ): Response<ResponseOrderItem>
+
+    @GET("/api/private/marvelx/orders/{orderId}/{orderItemId}/return-eligibility")
+    suspend fun getOrderItemReturnEligibility(
+        @Path(value = "orderId") orderId: String,
+        @Path(value = "orderItemId") orderItemId: String,
+    ): Response<ResponseOrderItemReturnEligibility>
 
     @GET("/api/private/marvelx/orders/{orderId}/{orderItemId}/tracking-history")
     suspend fun getOrderItemTrackingHistory(
@@ -40,5 +56,10 @@ internal interface OrderService {
         @Path(value = "orderId") orderId: String,
         @Path(value = "orderItemId") orderItemId: String,
         @Body body: MultipartBody
+    ): Response<ResponseOrderItemReturnId>
+
+    @GET("/api/private/marvelx/return-requests/{orderItemReturnId}")
+    suspend fun getOrderItemReturnById(
+        @Path(value = "orderItemReturnId") orderItemReturnId: String
     ): Response<ResponseOrderItemReturn>
 }

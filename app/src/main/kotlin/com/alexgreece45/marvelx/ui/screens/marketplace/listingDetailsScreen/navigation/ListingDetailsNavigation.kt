@@ -3,6 +3,7 @@ package com.alexgreece45.marvelx.ui.screens.marketplace.listingDetailsScreen.nav
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
+import androidx.navigation.NavOptionsBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.navDeepLink
 import androidx.navigation.navOptions
@@ -17,28 +18,23 @@ import org.koin.androidx.compose.koinViewModel
 private const val screenName = "listingDetailsScreen"
 
 @Serializable
-private data class ListingDetailsRoute(
+internal data class ListingDetailsRoute(
     val listingId: String? = ""
 )
 
 fun NavController.navigateToListingDetailsScreen(
     listingId: String,
-    clearBackStack: Boolean = false
+    navOptionsBuilder: (NavOptionsBuilder.() -> Unit)? = null
 ) = navigate(
     route = ListingDetailsRoute(listingId),
-    navOptions = navOptions {
-        if (clearBackStack) {
-            popUpTo<ListingDetailsRoute> {
-                inclusive = true
-            }
-        }
-    }
+    navOptions = navOptionsBuilder?.let { navOptions(it) }
 )
 
 internal fun NavGraphBuilder.listingDetailsScreen(
     goBack: () -> Unit,
     navigateToProfileDetailsScreen: (String) -> Unit,
-    navigateToEditListingScreen: (String) -> Unit
+    navigateToEditListingScreen: (String) -> Unit,
+    navigateToOrderItemManagementScreen: (orderId: String, orderItemId: String) -> Unit
 ) {
     composable<ListingDetailsRoute>(
         deepLinks = listOf(
@@ -52,6 +48,7 @@ internal fun NavGraphBuilder.listingDetailsScreen(
             onEvent = viewModel::setEvent,
             state = viewModel.uiState.collectAsStateWithLifecycle().value,
             effect = viewModel.uiEffect,
+            snackbarEffects = viewModel.snackbarEffects,
             onNavigation = { navigationEffect ->
                 when (navigationEffect) {
                     ListingDetailsContract.Effect.Navigation.GoBack -> goBack()
@@ -63,6 +60,17 @@ internal fun NavGraphBuilder.listingDetailsScreen(
                     is ListingDetailsContract.Effect.Navigation.NavigateToEditListingScreen -> navigateToEditListingScreen(
                         navigationEffect.listingId
                     )
+
+                    is ListingDetailsContract.Effect.Navigation.NavigateToOrderItemManagementScreen -> navigateToOrderItemManagementScreen(
+                        navigationEffect.orderId,
+                        navigationEffect.orderItemId
+                    )
+
+                    is ListingDetailsContract.Effect.Navigation.NavigateToOrderItemTrackingHistoryScreen -> {
+                        // TODO: `OrderItemTrackingHistoryScreen` currently requires additional
+                        //  pre-fetched preview data (title, cover image, price, seller user ID)
+                        //  that isn't available on this effect yet.
+                    }
 
                     ListingDetailsContract.Effect.Navigation.GoToNextScreen -> {}
                 }

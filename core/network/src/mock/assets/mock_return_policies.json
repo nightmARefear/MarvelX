@@ -1,0 +1,55 @@
+{
+  "returnPolicies": [
+    {
+      "header": "Standard Return Window",
+      "description": "You have 15 days from the date of delivery to request a return. Once this window closes, the transaction is considered final and refunds can no longer be processed.",
+      "items": []
+    },
+    {
+      "header": "Eligible Reasons for Return",
+      "description": "You may request a return if the item meets one of the following conditions:",
+      "items": [
+        "Damaged or Defective: The item arrived broken or is not functioning.",
+        "Not as Described: The item significantly differs from the listing details or photos.",
+        "Wrong Item Received: You received a completely different product."
+      ]
+    },
+    {
+      "header": "Shipping Fees & Responsibilities",
+      "description": "Return shipping costs depend on the reason for the return:",
+      "items": [
+        "Seller Error (Damaged/Not as Described): The seller covers the return shipping costs.",
+        "Buyer Preference: The buyer must pay for the return shipping label.",
+        "Original Shipping: Initial shipping fees are non-refundable unless the return is due to a seller error."
+      ]
+    },
+    {
+      "header": "Return Requirements",
+      "description": "To successfully receive your refund, the returned item must meet these criteria:",
+      "items": [
+        "The item must be in the exact condition it was received.",
+        "All original packaging, accessories, and documentation must be included.",
+        "No signs of additional wear, use, or damage.",
+        "Hygiene seals (if applicable) must remain completely intact."
+      ]
+    },
+    {
+      "header": "Final Sale Items",
+      "description": "Items clearly marked as 'Final Sale' at the time of purchase are strictly non-returnable and non-refundable, unless the item arrives severely damaged or is definitively not the item ordered.",
+      "items": [
+        "The item must be in the exact condition it was received.",
+        "All original packaging, accessories, and documentation must be included.",
+        "No signs of additional wear, use, or damage.",
+        "Hygiene seals (if applicable) must remain completely intact.",
+        "The item must be in the exact condition it was received.",
+        "All original packaging, accessories, and documentation must be included.",
+        "No signs of additional wear, use, or damage.",
+        "Hygiene seals (if applicable) must remain completely intact.",
+        "The item must be in the exact condition it was received.",
+        "All original packaging, accessories, and documentation must be included.",
+        "No signs of additional wear, use, or damage.",
+        "Hygiene seals (if applicable) must remain completely intact."
+      ]
+    }
+  ]
+}

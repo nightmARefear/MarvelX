@@ -25,9 +25,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.common_ui.util.ObserveUiEffect
+import com.alexgreece45.marvelx.core.common.util.flows.single_observer_flow.SingleObserverFlow
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
-import com.alexgreece45.marvelx.ui.components.effect.ObserveUiEffect
 import com.alexgreece45.marvelx.ui.components.effect.OneTimeLaunchedEffect
 import com.alexgreece45.marvelx.ui.components.error.ContentErrorScreen
 import com.alexgreece45.marvelx.ui.components.model.ErrorButtonLayout
@@ -37,21 +38,20 @@ import com.alexgreece45.marvelx.ui_theme.theme.MarvelXTheme
 import com.alexgreece45.marvelx.util.SPACING_LARGE
 import com.alexgreece45.marvelx.util.SPACING_MEDIUM
 import com.alexgreece45.marvelx.util.constants.ConstantsUi
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 
 @Composable
 fun FaqScreen(
     onEventSent: (event: FaqContract.Event) -> Unit,
     state: FaqContract.State,
-    effect: Flow<FaqContract.Effect>,
+    effect: SingleObserverFlow<FaqContract.Effect>,
     navigateUp: () -> Unit,
 ) {
     OneTimeLaunchedEffect {
         onEventSent(FaqContract.Event.Init)
     }
 
-    ObserveUiEffect(flow = effect) { uiEffect ->
+    ObserveUiEffect(flow = effect, tag = "FaqScreen") { uiEffect ->
         when (uiEffect) {
             FaqContract.Effect.Navigation.GoBack -> navigateUp()
         }
@@ -258,7 +258,7 @@ private fun FaqScreenPreview() {
                     ),
                 )
             ),
-            effect = emptyFlow(),
+            effect = SingleObserverFlow(emptyFlow()),
             navigateUp = {}
         )
     }

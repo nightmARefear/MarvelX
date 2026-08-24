@@ -1,6 +1,7 @@
 package com.alexgreece45.marvelx.ui.components
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
@@ -30,7 +31,6 @@ import com.alexgreece45.marvelx.util.extensions.noCache
  * @param onSuccess             Callback invoked when the image is successfully loaded.
  * @param onError               Callback invoked when the image request fails.
  * @param contentScale          How to scale the image content.
- * @param shadowData            Optional [ShadowData] to apply a shadow effect to the image.
  * @param isCacheDisabled       Whether the cache is disabled.
  */
 @Composable
@@ -45,21 +45,9 @@ fun WrapAsyncImage(
     onSuccess: ((AsyncImagePainter.State.Success) -> Unit)? = null,
     onError: ((AsyncImagePainter.State.Error) -> Unit)? = null,
     contentScale: ContentScale = ContentScale.Fit,
-    shadowData: ShadowData? = null,
     isCacheDisabled: Boolean = false,
 ) {
-    val shadowModifier = if (shadowData != null) {
-        Modifier
-            .shadow(
-                elevation = shadowData.elevation,
-                shape = shadowData.shape,
-                clip = shadowData.clip,
-                ambientColor = shadowData.ambientColor,
-                spotColor = shadowData.spotColor
-            )
-    } else Modifier
-
-    Box(modifier = boxModifier.then(shadowModifier)) {
+    Box(modifier = boxModifier) {
         AsyncImage(
             model = ImageRequest.Builder(LocalContext.current)
                 .data(imageUrl)

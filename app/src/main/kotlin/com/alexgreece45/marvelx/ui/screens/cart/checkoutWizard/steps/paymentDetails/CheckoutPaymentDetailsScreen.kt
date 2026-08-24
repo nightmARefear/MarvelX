@@ -1,5 +1,6 @@
 package com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.steps.paymentDetails
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -12,31 +13,32 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.common_ui.util.ObserveUiEffect
+import com.alexgreece45.marvelx.core.common.util.flows.single_observer_flow.SingleObserverFlow
 import com.alexgreece45.marvelx.ui.components.ContentScreen
-import com.alexgreece45.marvelx.ui.components.effect.ObserveUiEffect
 import com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.steps.paymentDetails.model.CheckoutPaymentDetailsContract
 import com.alexgreece45.marvelx.ui.screens.marketplace.components.WizardTextInputField
 import com.alexgreece45.marvelx.ui.visual_transformations.VisualTransformationCardNumber
 import com.alexgreece45.marvelx.ui.visual_transformations.VisualTransformationExpirationDate
 import com.alexgreece45.marvelx.util.SPACING_MEDIUM
 import com.alexgreece45.marvelx.util.SPACING_SMALL
-import kotlinx.coroutines.flow.Flow
 
 @Composable
 internal fun CheckoutPaymentDetailsScreen(
     onEvent: (CheckoutPaymentDetailsContract.Event) -> Unit,
     state: CheckoutPaymentDetailsContract.State,
-    effect: Flow<CheckoutPaymentDetailsContract.Effect>,
+    effect: SingleObserverFlow<CheckoutPaymentDetailsContract.Effect>,
     onNavigationEffect: (CheckoutPaymentDetailsContract.Effect.Navigation) -> Unit,
     setStickyBottomButtonEnabled: (Boolean) -> Unit,
     showToastMessage: (String) -> Unit
 ) {
 
-    ObserveUiEffect(effect) { uiEffect ->
+    ObserveUiEffect(flow = effect, tag = "CheckoutPaymentDetailsScreen") { uiEffect ->
         when (uiEffect) {
             is CheckoutPaymentDetailsContract.Effect.Navigation -> onNavigationEffect(uiEffect)
             is CheckoutPaymentDetailsContract.Effect.SetStickyBottomButtonEnabled -> setStickyBottomButtonEnabled(
@@ -69,7 +71,7 @@ internal fun CheckoutPaymentDetailsScreen(
                 WizardTextInputField(
                     label = stringResource(R.string.screen_checkout_payment_details_label_cardholder_name),
                     placeholder = stringResource(R.string.screen_checkout_payment_details_placeholder_cardholder_name),
-                    wizardInputField = state.cardholderName,
+                    wizardInputField = state.cardholderNameField,
                     onValueChanged = {
                         onEvent(
                             CheckoutPaymentDetailsContract.Event.OnCardholderNameChanged(
@@ -82,7 +84,16 @@ internal fun CheckoutPaymentDetailsScreen(
                 WizardTextInputField(
                     label = stringResource(R.string.screen_checkout_payment_details_label_card_number),
                     placeholder = stringResource(R.string.screen_checkout_payment_details_placeholder_card_number),
-                    wizardInputField = state.cardNumber,
+                    wizardInputField = state.cardNumberField,
+                    trailingIcon = {
+                        with(state.cardBrand) {
+                            Image(
+                                painter = painterResource(iconResId),
+                                contentDescription = stringResource(contentDescriptionResId),
+                                modifier = Modifier.padding(end = 12.dp)
+                            )
+                        }
+                    },
                     onValueChanged = {
                         onEvent(
                             CheckoutPaymentDetailsContract.Event.OnCardNumberChanged(
@@ -104,7 +115,7 @@ internal fun CheckoutPaymentDetailsScreen(
                         label = stringResource(R.string.screen_checkout_payment_details_label_expiration_date),
                         placeholder = state.expirationDatePlaceholder,
                         modifier = Modifier.weight(1f),
-                        wizardInputField = state.expirationDate,
+                        wizardInputField = state.expirationDateField,
                         onValueChanged = {
                             onEvent(
                                 CheckoutPaymentDetailsContract.Event.OnExpirationDateChanged(
@@ -122,7 +133,7 @@ internal fun CheckoutPaymentDetailsScreen(
                         label = stringResource(R.string.screen_checkout_payment_details_label_cvv),
                         placeholder = stringResource(R.string.screen_checkout_payment_details_placeholder_CVV),
                         modifier = Modifier.weight(1f),
-                        wizardInputField = state.cvv,
+                        wizardInputField = state.cvvField,
                         onValueChanged = {
                             onEvent(
                                 CheckoutPaymentDetailsContract.Event.OnCvvChanged(

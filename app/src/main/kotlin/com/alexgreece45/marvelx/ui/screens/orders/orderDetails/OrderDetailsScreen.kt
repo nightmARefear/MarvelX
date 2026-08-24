@@ -19,7 +19,6 @@ import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -34,15 +33,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.common_ui.util.ObserveUiEffect
+import com.alexgreece45.marvelx.core.common.util.flows.single_observer_flow.SingleObserverFlow
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.LazyItemContentErrorScreen
-import com.alexgreece45.marvelx.ui.components.ListingCard
 import com.alexgreece45.marvelx.ui.components.ModalBottomSheetContent
 import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
 import com.alexgreece45.marvelx.ui.components.WrapModalBottomSheetLayout
 import com.alexgreece45.marvelx.ui.components.WrapOutlinedButton
 import com.alexgreece45.marvelx.ui.components.checkoutDataCard.CheckoutInfoCard
-import com.alexgreece45.marvelx.ui.components.effect.ObserveUiEffect
+import com.alexgreece45.marvelx.ui.components.listing.ListingCard
 import com.alexgreece45.marvelx.ui.components.orderSumamaryCard.OrderSummaryCard
 import com.alexgreece45.marvelx.ui.components.rememberWrapModalBottomSheetState
 import com.alexgreece45.marvelx.ui.components.sections.SectionHeader
@@ -58,22 +58,19 @@ import com.alexgreece45.marvelx.util.SPACING_MEDIUM
 import com.alexgreece45.marvelx.util.SPACING_TINY
 import com.alexgreece45.marvelx.util.VSpacer
 import com.alexgreece45.marvelx.util.constants.ConstantsUi
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 
 @Composable
 internal fun OrderDetailsScreen(
     onEvent: (OrderDetailsContract.Event) -> Unit,
     state: OrderDetailsContract.State,
-    effect: Flow<OrderDetailsContract.Effect>,
-    onNavigationEffect: (OrderDetailsContract.Effect.Navigation) -> Unit,
-    orderId: String
+    effect: SingleObserverFlow<OrderDetailsContract.Effect>,
+    onNavigationEffect: (OrderDetailsContract.Effect.Navigation) -> Unit
 ) {
-
     val bottomSheetState = rememberWrapModalBottomSheetState()
     val coroutineScope = rememberCoroutineScope()
 
-    ObserveUiEffect(effect) { uiEffect ->
+    ObserveUiEffect(flow = effect, tag = "OrderDetailsScreen") { uiEffect ->
         when (uiEffect) {
             is OrderDetailsContract.Effect.Navigation -> onNavigationEffect(uiEffect)
             OrderDetailsContract.Effect.HideBottomSheet -> {
@@ -88,10 +85,6 @@ internal fun OrderDetailsScreen(
                 }
             }
         }
-    }
-
-    LaunchedEffect(Unit) {
-        onEvent(OrderDetailsContract.Event.Init(orderId))
     }
 
     WrapModalBottomSheetLayout(
@@ -161,10 +154,10 @@ internal fun OrderDetailsScreen(
 
                         items(
                             items = order.items,
-                            key = { item -> item.orderId.value }
+                            key = { item -> item.orderItemId.value }
                         ) { order ->
                             OrderItemCard(
-                                id = order.orderId.formatted,
+                                id = order.orderItemId.formatted,
                                 title = order.title,
                                 coverImageUrl = order.coverImageUrl,
                                 priceLabel = order.price.label,

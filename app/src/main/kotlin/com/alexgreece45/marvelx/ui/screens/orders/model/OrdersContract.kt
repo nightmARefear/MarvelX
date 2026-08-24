@@ -4,6 +4,7 @@ import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
 import com.alexgreece45.marvelx.ui.model_generic.UiState
+import kotlinx.collections.immutable.ImmutableList
 
 sealed interface OrdersContract {
 
@@ -30,7 +31,7 @@ sealed interface OrdersContract {
     }
 
     data class State(
-        val uiState: UiState<List<OrderPreviewUi>, Unit> = UiState.Loading,
+        val uiState: UiState<ImmutableList<OrderPreviewUi>, Unit> = UiState.Loading,
 
         val ordersBottomSheetType: OrdersBottomSheetType? = null,
     ) : BaseState

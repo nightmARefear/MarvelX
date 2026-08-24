@@ -2,15 +2,14 @@ package com.alexgreece45.marvelx.data.repository.cart
 
 import com.alexgreece45.marvelx.core.common.dispatchers.model.IoDispatcher
 import com.alexgreece45.marvelx.core.data.helper.RepositoryResult
-import com.alexgreece45.marvelx.core.data.helper.handleApiResult
-import com.alexgreece45.marvelx.core.data.helper.handleApiResultNoTransformationWithData
+import com.alexgreece45.marvelx.core.data.helper.handleApiResultNoFlow
+import com.alexgreece45.marvelx.core.data.helper.handleApiResultNoTransformationNoFlow
 import com.alexgreece45.marvelx.core.data.model.marketplace.listing.ListingPreviewData
 import com.alexgreece45.marvelx.core.data.model.marketplace.listing.toData
 import com.alexgreece45.marvelx.core.network.clients.ListingClient
 import com.alexgreece45.marvelx.data.model.cart.CartInfoData
 import com.alexgreece45.marvelx.data.model.cart.CartSummaryData
 import com.alexgreece45.marvelx.data.model.cart.toData
-import kotlinx.coroutines.flow.first
 import org.koin.core.annotation.Single
 import kotlin.coroutines.CoroutineContext
 
@@ -30,40 +29,40 @@ internal class CartRepositoryImpl(
 ) : CartRepository {
 
     override suspend fun getCartInfo(): RepositoryResult<CartInfoData> {
-        return handleApiResult(
-            apiResult = listingClient.getCartInfo(),
+        return handleApiResultNoFlow(
+            apiCall = listingClient::getCartInfo,
             transformation = { this.toData() },
             ioDispatcher = ioDispatcher
-        ).first()
+        )
     }
 
     override suspend fun getCartItems(): RepositoryResult<List<ListingPreviewData>> {
-        return handleApiResult(
-            apiResult = listingClient.getCartItems(),
+        return handleApiResultNoFlow(
+            apiCall = listingClient::getCartItems,
             transformation = { this.map { it.toData() } },
             ioDispatcher = ioDispatcher
-        ).first()
+        )
     }
 
     override suspend fun getCartSummary(): RepositoryResult<CartSummaryData> {
-        return handleApiResult(
-            apiResult = listingClient.getCartSummary(),
+        return handleApiResultNoFlow(
+            apiCall = listingClient::getCartSummary,
             transformation = { this.toData() },
             ioDispatcher = ioDispatcher
-        ).first()
+        )
     }
 
     override suspend fun addCartItem(listingId: String): Boolean {
-        return handleApiResultNoTransformationWithData(
-            apiResult = listingClient.addCartItem(listingId),
+        return handleApiResultNoTransformationNoFlow(
+            apiCall = { listingClient.addCartItem(listingId) },
             ioDispatcher = ioDispatcher
-        ).first() is RepositoryResult.Success
+        ) is RepositoryResult.Success
     }
 
     override suspend fun deleteCartItem(listingId: String): Boolean {
-        return handleApiResultNoTransformationWithData(
-            apiResult = listingClient.deleteCartItem(listingId),
+        return handleApiResultNoTransformationNoFlow(
+            apiCall = { listingClient.deleteCartItem(listingId) },
             ioDispatcher = ioDispatcher
-        ).first() is RepositoryResult.Success
+        ) is RepositoryResult.Success
     }
 }

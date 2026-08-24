@@ -1,9 +1,12 @@
 package com.alexgreece45.marvelx.core.common.extensions
 
 import java.time.Instant
+import java.time.LocalDate
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
+
+private val zoneId: ZoneId get() = ZoneId.systemDefault()
 
 fun Instant.minusMinutes(minutes: Long): Instant = this.minusSeconds(60 * minutes)
 fun Instant.minusHours(hours: Long): Instant = this.minusMinutes(60 * hours)
@@ -33,7 +36,9 @@ fun Instant.differenceInMinutes(instant: Instant): Long =
 /**
  * Converts this to a zoned date time using the system's default zone.
  */
-fun Instant.toZonedDateTime(): ZonedDateTime = this.atZone(ZoneId.systemDefault())
+fun Instant.toZonedDateTime(): ZonedDateTime = this.atZone(zoneId)
+
+fun Instant.toLocalDate(): LocalDate = this.toZonedDateTime().toLocalDate()
 
 fun Instant.toCustomFormat(pattern: String): String = try {
     this
@@ -62,13 +67,3 @@ fun Instant.toOrderFormatShort(): String = this.toCustomFormat("MMM dd yyyy")
  * Converts this to a full Order format.
  */
 fun Instant.toOrderFormatFull(): String = this.toCustomFormat("MMMM dd yyyy, HH:mm:ss")
-
-/**
- * Converts this to a short Order estimated delivery format.
- */
-fun Instant.toOrderEstimatedDeliveryFormatShort(): String = this.toCustomFormat("MMM dd")
-
-/**
- * Converts this to a full Order estimated delivery format.
- */
-fun Instant.toOrderEstimatedDeliveryFormatFull(): String = this.toCustomFormat("MMM dd, yyyy")

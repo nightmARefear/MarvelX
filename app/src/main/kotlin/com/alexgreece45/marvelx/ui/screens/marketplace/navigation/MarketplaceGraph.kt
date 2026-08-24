@@ -12,6 +12,7 @@ import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.succe
 import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.success.navigation.navigateToCreateListingSuccessScreen
 import com.alexgreece45.marvelx.ui.screens.marketplace.listingDetailsScreen.navigation.listingDetailsScreen
 import com.alexgreece45.marvelx.ui.screens.marketplace.listingDetailsScreen.navigation.navigateToListingDetailsScreen
+import com.alexgreece45.marvelx.ui.screens.orders.orderItemManagement.navigation.navigateToOrderItemManagementScreen
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -37,7 +38,8 @@ fun NavGraphBuilder.marketplaceGraph(
                     )
                 )
             },
-            navigateToEditListingScreen = navController::navigateToCreateListingWizardScreen
+            navigateToEditListingScreen = navController::navigateToCreateListingWizardScreen,
+            navigateToOrderItemManagementScreen = navController::navigateToOrderItemManagementScreen
         )
 
         createListingWizardScreen(
@@ -46,9 +48,6 @@ fun NavGraphBuilder.marketplaceGraph(
             navigateToCreateListingSuccessScreen = navController::navigateToCreateListingSuccessScreen
         )
 
-        createListingSuccessScreen(
-            navigateToListingDetailsScreen = navController::navigateToListingDetailsScreen,
-            exitWizard = navController::navigateUp
-        )
+        createListingSuccessScreen(navController = navController)
     }
 }

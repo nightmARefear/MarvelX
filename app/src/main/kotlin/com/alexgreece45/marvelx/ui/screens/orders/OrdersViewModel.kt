@@ -2,6 +2,7 @@ package com.alexgreece45.marvelx.ui.screens.orders
 
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.configuration.ConfigPriceLogic
+import com.alexgreece45.marvelx.core.common.extensions.toImmutableListOrEmpty
 import com.alexgreece45.marvelx.core.common.logger.AppLogger
 import com.alexgreece45.marvelx.domain.helper.InteractorPartialState
 import com.alexgreece45.marvelx.domain.interactors.order.OrderInteractor
@@ -123,7 +124,7 @@ class OrdersViewModel(
                     } else {
                         setState {
                             copy(
-                                uiState = UiState.Success(ordersUi)
+                                uiState = UiState.Success(ordersUi.toImmutableListOrEmpty())
                             )
                         }
                     }

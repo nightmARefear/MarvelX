@@ -11,5 +11,5 @@ enum class ListingCategoryCode(val code: String) {
     ACCESSORIES("accessories"),
     HOME("home"),
     COMICS("comics"),
-    CARDS("cards"),
+    CARDS("cards");
 }

@@ -1,7 +1,7 @@
 package com.alexgreece45.marvelx.ui.screens.orders.orderItemTrackingHistory.model
 
-import com.alexgreece45.marvelx.model.model.user.UserId
 import com.alexgreece45.marvelx.data.model.profileDetails.RepositoryBasicProfileDetails
+import com.alexgreece45.marvelx.model.model.user.UserId
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
@@ -10,23 +10,15 @@ import com.alexgreece45.marvelx.ui.screens.orders.model.item.OrderItemTrackingHi
 import com.alexgreece45.marvelx.ui.screens.orders.orderDetails.model.OrderItemDetails
 
 internal interface OrderItemTrackingHistoryContract {
-
     sealed interface Event : BaseEvent {
-        data class Init(
-            val orderId: String,
-            val orderItemId: String,
-            val orderItemTitle: String,
-            val orderItemCoverImageUrl: String,
-            val orderItemPriceLabel: String,
-            val sellerId: String
-        ) : Event
-
         data object OnBack : Event
 
         sealed interface CourierCardEvents : Event {
             data object OnCopyButtonClicked : CourierCardEvents
             data object OnViewOnCourierWebsiteButtonClicked : CourierCardEvents
         }
+
+        data object OnCurrentStatusClicked : Event
 
         sealed interface SellerDetailsCardEvents : Event {
             data object OnClicked : SellerDetailsCardEvents
@@ -42,6 +34,8 @@ internal interface OrderItemTrackingHistoryContract {
             data object OnContactSupportClicked : ExtraActionButtonEvents
             data object OnContactSellerClicked : ExtraActionButtonEvents
         }
+
+        data object OnBottomSheetDismissed : Event
     }
 
     data class State(
@@ -52,6 +46,8 @@ internal interface OrderItemTrackingHistoryContract {
         val sellerUserId: UserId = UserId.EMPTY,
 
         val orderItemTrackingHistoryUi: OrderItemTrackingHistoryUi? = null,
+
+        val isBottomSheetVisible: Boolean = false,
     ) : BaseState
 
     sealed interface Effect : BaseEffect {
@@ -60,18 +56,14 @@ internal interface OrderItemTrackingHistoryContract {
             data class GoToProfileDetailsScreen(val userId: String) : Navigation
             data class GoToRequestItemReturnScreen(
                 val orderId: String,
-                val orderItemId: String,
-                val orderItemTitle: String,
-                val orderItemCoverImageUrl: String,
-                val orderItemPriceLabel: String
+                val orderItemId: String
             ) : Navigation
-
-            data class GoToRequestItemRefundScreen(val orderItemDetails: OrderItemDetails) :
-                Navigation
 
             data class GoToContactSupportScreen(val orderItemDetails: OrderItemDetails) : Navigation
         }
 
         data class SetClipboardText(val toastMessage: String, val text: String) : Effect
+
+        data object ShowBottomSheet : Effect
     }
 }

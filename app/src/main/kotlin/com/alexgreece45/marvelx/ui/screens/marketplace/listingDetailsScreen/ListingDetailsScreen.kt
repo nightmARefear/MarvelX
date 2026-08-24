@@ -14,24 +14,27 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.ButtonDefaults
+import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarEffect
+import com.alexgreece45.marvelx.common_ui.util.ObserveUiEffect
 import com.alexgreece45.marvelx.common_ui.util.safeLetComposable
 import com.alexgreece45.marvelx.core.common.extensions.minusMinutes
 import com.alexgreece45.marvelx.core.common.extensions.toListingFormat
-import com.alexgreece45.marvelx.core.data.model.listing.ListingId
+import com.alexgreece45.marvelx.core.common.util.flows.single_observer_flow.SingleObserverFlow
 import com.alexgreece45.marvelx.data.model.marketplace.listing.EnumGeneric
 import com.alexgreece45.marvelx.domain.model_api.marketplace.listing.ListingDetailsDomain
 import com.alexgreece45.marvelx.domain.model_api.marketplace.listing.ListingDimensions
@@ -45,14 +48,11 @@ import com.alexgreece45.marvelx.model.model.user.UserId
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.GenericErrorScreen
 import com.alexgreece45.marvelx.ui.components.IconData
-import com.alexgreece45.marvelx.ui.components.InfoBox
 import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
 import com.alexgreece45.marvelx.ui.components.ToolbarAction
 import com.alexgreece45.marvelx.ui.components.WrapAsyncImage
 import com.alexgreece45.marvelx.ui.components.WrapButton
 import com.alexgreece45.marvelx.ui.components.WrapHorizontalPager
-import com.alexgreece45.marvelx.ui.components.effect.ObserveUiEffect
-import com.alexgreece45.marvelx.ui.components.icons.ProcessingRequestIconLottie
 import com.alexgreece45.marvelx.ui.model.Gender
 import com.alexgreece45.marvelx.ui.model_generic.BigDecimalUi
 import com.alexgreece45.marvelx.ui.model_generic.InstantUi
@@ -75,23 +75,22 @@ import com.alexgreece45.marvelx.util.extensions.clickableNoRipple
 import com.alexgreece45.marvelx.util.extensions.formatPrice
 import com.alexgreece45.marvelx.util.extensions.shareContentUrl
 import com.alexgreece45.marvelx.util.extensions.showToast
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 
 @Composable
 internal fun ListingDetailsScreen(
     onEvent: (ListingDetailsContract.Event) -> Unit,
     state: ListingDetailsContract.State,
-    effect: Flow<ListingDetailsContract.Effect>,
+    effect: SingleObserverFlow<ListingDetailsContract.Effect>,
+    snackbarEffects: SingleObserverFlow<SnackbarEffect>,
     onNavigation: (ListingDetailsContract.Effect.Navigation) -> Unit,
     listingId: String?,
     createListingWizardMode: CreateListingWizardMode?,
     isInnerScreen: Boolean
 ) {
-
     val context = LocalContext.current
 
-    ObserveUiEffect(effect) { uiEffect ->
+    ObserveUiEffect(flow = effect, tag = "ListingDetailsScreen") { uiEffect ->
         when (uiEffect) {
             is ListingDetailsContract.Effect.Navigation -> onNavigation(uiEffect)
             is ListingDetailsContract.Effect.ShowToastMessage -> {
@@ -124,21 +123,26 @@ internal fun ListingDetailsScreen(
         },
         showToolbar = state.showToolbar,
         toolbarTitle = state.toolbarTitle,
-        toolbarActions = getToolbarActions(
-            canEditListing = state.listing?.canEdit,
-            isListingFavorite = state.listing?.favorite,
-            mode = state.mode,
-            onToolbarActionButtonEvent = onEvent
-        ),
+        toolbarActions = if (state.mode == null || state.mode == ListingDetailsMode.OVERVIEW || state.listing?.status != ListingStatusUi.Active) null else {
+            with(state.listing) {
+                getToolbarActions(
+                    listingStatus = status,
+                    canEditListing = canEdit,
+                    isListingFavorite = favorite,
+                    onToolbarActionButtonEvent = onEvent
+                )
+            }
+        },
+        snackbarEffects = snackbarEffects,
         stickyBottom = {
             safeLetComposable(state.listing, state.mode) { listing, mode ->
-                if (mode == ListingDetailsMode.EXISTING
-                    && !listing.canEdit
-                ) {
-                    StickyBottom(
+                if (mode == ListingDetailsMode.EXISTING) {
+                    StickyBottomButton(
                         listingStatus = listing.status,
-                        buttonLoading = state.addToBasketButtonLoading,
-                        onButtonClicked = { onEvent(ListingDetailsContract.Event.OnStickyBottomButtonClicked) }
+                        isListingInCart = listing.cart,
+                        canEdit = listing.canEdit,
+                        buttonLoading = state.stickyBottomButtonLoading,
+                        onClick = { onEvent(ListingDetailsContract.Event.OnStickyBottomButtonClicked) }
                     )
                 }
             }
@@ -155,7 +159,7 @@ internal fun ListingDetailsScreen(
                 GenericErrorScreen(
                     errorMessage = stringResource(R.string.screen_listing_details_error_loading_listing),
                     modifier = Modifier.fillMaxSize(),
-                    onErrorButtonClicked = { onEvent(ListingDetailsContract.Event.OnErrorRetryButtonClicked) }
+                    onErrorButtonClick = { onEvent(ListingDetailsContract.Event.OnErrorRetryButtonClicked) }
                 )
                 return@ContentScreen
             }
@@ -199,7 +203,8 @@ private fun ListingView(
                 title = listing.title,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(150.dp)
+                    .height(150.dp),
+                contentScale = ContentScale.Fit
             )
         }
 
@@ -245,7 +250,7 @@ private fun ListingView(
 
         DateSection(
             label = stringResource(R.string.screen_listing_details_listing_updated_at),
-            formattedDate = listing.updatedAt.label
+            formattedDate = listing.updatedAt?.label ?: "-"
         )
 
         VSpacer.Medium()
@@ -321,7 +326,8 @@ private fun SellerInfoSection(profileImageUrl: String, fullName: String, onClick
                 .circularImageWithBorder(
                     borderWidth = ConstantsUi.IMAGE_BORDER_WIDTH,
                     borderColor = MaterialTheme.customColors.genericRed
-                )
+                ),
+            contentScale = ContentScale.Crop
         )
 
         Text(
@@ -585,115 +591,122 @@ private fun ColumnScope.CardDetailsSubSection(cardDetailsDomain: ListingDetailsD
 
 @Composable
 private fun getToolbarActions(
-    canEditListing: Boolean?,
-    isListingFavorite: Boolean?,
-    mode: ListingDetailsMode?,
+    listingStatus: ListingStatusUi,
+    canEditListing: Boolean,
+    isListingFavorite: Boolean,
     onToolbarActionButtonEvent: (ListingDetailsContract.Event.ToolbarActionButton) -> Unit
-): List<ToolbarAction>? {
-    if (canEditListing == null
-        || isListingFavorite == null
-        || mode == null
-        || mode == ListingDetailsMode.OVERVIEW
-    ) return null
+): List<ToolbarAction> {
+    val isListingActive = listingStatus == ListingStatusUi.Active
 
-    return listOf(
+    return buildList {
         if (canEditListing) {
-            ToolbarAction(
-                label = stringResource(R.string.screen_listing_details_toolbar_action_label_edit_listing),
-                order = 1,
-                iconData = IconData(
-                    iconResource = R.drawable.ic_edit,
-                    contentDescription = R.string.screen_listing_details_toolbar_action_label_edit_listing
-                ),
-                onClick = { onToolbarActionButtonEvent(ListingDetailsContract.Event.ToolbarActionButton.OnEditClicked) }
+            add(
+                ToolbarAction(
+                    label = stringResource(R.string.screen_listing_details_toolbar_action_label_edit_listing),
+                    order = 1,
+                    iconData = IconData(
+                        iconResource = R.drawable.ic_edit,
+                        contentDescription = R.string.screen_listing_details_toolbar_action_label_edit_listing,
+                        enabled = isListingActive
+                    ),
+                    onClick = { onToolbarActionButtonEvent(ListingDetailsContract.Event.ToolbarActionButton.OnEditClicked) }
+                )
             )
         } else {
+            if (listingStatus != ListingStatusUi.Active) return@buildList
+
             if (isListingFavorite) {
-                ToolbarAction(
-                    label = stringResource(R.string.screen_listing_details_toolbar_action_label_unfavorite_listing),
-                    order = 1,
-                    iconData = IconData(
-                        iconResource = R.drawable.ic_favorite_filled,
-                        contentDescription = R.string.screen_listing_details_toolbar_action_label_unfavorite_listing,
-                        tint = MaterialTheme.customColors.genericRed
-                    ),
-                    onClick = { onToolbarActionButtonEvent(ListingDetailsContract.Event.ToolbarActionButton.OnFavoriteClicked) }
+                add(
+                    ToolbarAction(
+                        label = stringResource(R.string.screen_listing_details_toolbar_action_label_unfavorite_listing),
+                        order = 1,
+                        iconData = IconData(
+                            iconResource = R.drawable.ic_favorite_filled,
+                            contentDescription = R.string.screen_listing_details_toolbar_action_label_unfavorite_listing,
+                            tint = MaterialTheme.customColors.genericRed
+                        ),
+                        onClick = { onToolbarActionButtonEvent(ListingDetailsContract.Event.ToolbarActionButton.OnFavoriteClicked) }
+                    )
                 )
             } else {
-                ToolbarAction(
-                    label = stringResource(R.string.screen_listing_details_toolbar_action_label_favorite_listing),
-                    order = 1,
-                    iconData = IconData(
-                        iconResource = R.drawable.ic_favorite_empty,
-                        contentDescription = R.string.screen_listing_details_toolbar_action_label_favorite_listing
-                    ),
-                    onClick = { onToolbarActionButtonEvent(ListingDetailsContract.Event.ToolbarActionButton.OnFavoriteClicked) }
+                add(
+                    ToolbarAction(
+                        label = stringResource(R.string.screen_listing_details_toolbar_action_label_favorite_listing),
+                        order = 1,
+                        iconData = IconData(
+                            iconResource = R.drawable.ic_favorite_empty,
+                            contentDescription = R.string.screen_listing_details_toolbar_action_label_favorite_listing
+                        ),
+                        onClick = { onToolbarActionButtonEvent(ListingDetailsContract.Event.ToolbarActionButton.OnFavoriteClicked) }
+                    )
                 )
             }
-        },
-        ToolbarAction(
-            label = stringResource(R.string.screen_listing_details_toolbar_action_label_share_listing),
-            order = 2,
-            iconData = IconData(
-                iconResource = R.drawable.ic_share,
-                contentDescription = R.string.screen_listing_details_toolbar_action_label_share_listing
-            ),
-            onClick = { onToolbarActionButtonEvent(ListingDetailsContract.Event.ToolbarActionButton.OnShareClicked) }
+        }
+
+        add(
+            ToolbarAction(
+                label = stringResource(R.string.screen_listing_details_toolbar_action_label_share_listing),
+                order = 2,
+                iconData = IconData(
+                    iconResource = R.drawable.ic_share,
+                    contentDescription = R.string.screen_listing_details_toolbar_action_label_share_listing,
+                    enabled = isListingActive
+                ),
+                onClick = { onToolbarActionButtonEvent(ListingDetailsContract.Event.ToolbarActionButton.OnShareClicked) }
+            )
         )
-    )
+    }
 }
 
 @Composable
-private fun StickyBottom(
+private fun StickyBottomButton(
     listingStatus: ListingStatusUi,
+    isListingInCart: Boolean,
+    canEdit: Boolean,
     buttonLoading: Boolean,
-    onButtonClicked: () -> Unit
+    onClick: () -> Unit
 ) {
+    val buttonColors = ButtonDefaults.buttonColors(
+        backgroundColor = MaterialTheme.customColors.genericRed,
+        contentColor = MaterialTheme.customColors.buttonContentWhite,
+
+        // We use the same colors as the enabled state in order to highlight the loading
+        // icon.
+        disabledBackgroundColor = MaterialTheme.customColors.genericRed,
+        disabledContentColor = MaterialTheme.customColors.buttonContentWhite
+    )
+
     when (listingStatus) {
         ListingStatusUi.Draft -> {}
 
         ListingStatusUi.Active -> {
+            if (canEdit) return
             WrapButton(
-                onClick = onButtonClicked,
+                onClick = onClick,
                 modifier = Modifier.fillMaxWidth(),
                 enabled = !buttonLoading,
-                colors = ButtonDefaults.buttonColors(
-                    backgroundColor = MaterialTheme.customColors.genericRed,
-                    contentColor = MaterialTheme.customColors.buttonContentWhite,
-
-                    // We use the same colors as the enabled state in order to highlight the loading
-                    // icon.
-                    disabledBackgroundColor = MaterialTheme.customColors.genericRed,
-                    disabledContentColor = MaterialTheme.customColors.buttonContentWhite
-                )
+                colors = buttonColors
             ) {
                 if (buttonLoading) {
-                    // TODO: Review icon.
-//                    CircularProgressIndicator(
-//                        modifier = Modifier.size(ConstantsUi.MIN_ICON_SIZE),
-//                        color = MaterialTheme.customColors.white
-//                    )
-                    ProcessingRequestIconLottie()
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(ConstantsUi.MIN_ICON_SIZE),
+                        color = MaterialTheme.customColors.white
+                    )
                 } else {
-                    Text(text = stringResource(R.string.screen_listing_details_sticky_bottom_button_add_to_basket))
+                    Text(text = stringResource(if (isListingInCart) R.string.screen_listing_details_sticky_bottom_button_remove_from_cart else R.string.screen_listing_details_sticky_bottom_button_add_to_cart))
                 }
             }
         }
 
-        ListingStatusUi.Reserved -> {
-            InfoBox(
-                backgroundColor = Color(0xA6D57500),
-                outlineColor = Color(0xFFD57500),
-                label = stringResource(R.string.screen_listing_details_sticky_bottom_label_reserved_listing),
-                iconData = IconData(
-                    iconResource = R.drawable.ic_error,
-                    contentDescription = R.string.screen_listing_details_content_description_info_icon
-                ),
-                modifier = Modifier.fillMaxWidth()
-            )
+        ListingStatusUi.Reserved, ListingStatusUi.Sold -> {
+            WrapButton(
+                onClick = onClick,
+                modifier = Modifier.fillMaxWidth(),
+                colors = buttonColors
+            ) {
+                Text(text = stringResource(if (canEdit) R.string.screen_listing_details_sticky_bottom_button_manage_order_item else R.string.screen_listing_details_sticky_bottom_button_view_order_item_details))
+            }
         }
-
-        ListingStatusUi.Sold -> {}
     }
 }
 
@@ -708,6 +721,7 @@ private fun ListingDetailsScreenPreview() {
         ListingDetailsScreen(
             onEvent = { },
             state = ListingDetailsContract.State(
+                stickyBottomButtonLoading = true,
                 isLoading = false,
                 mode = ListingDetailsMode.EXISTING,
                 listingId = listingId,
@@ -736,29 +750,29 @@ private fun ListingDetailsScreenPreview() {
                     coverImageUrl = "https://backend.alexandrosvoliotis.com/api/private/marvelx/user/1/profile-image",
                     imageUrls = listOf("https://backend.alexandrosvoliotis.com/api/private/marvelx/user/2/profile-image"),
                     selectedImageIndex = 0,
-//                    details = ListingDetailsDomain.DrinkwareDetailsDomain(
-//                        material = ListingEnumGeneric(
-//                            "ceramic",
-//                            "Ceramic"
-//                        ),
-//                        capacityMl = 500,
-//                        capacityMlLabel = "500Ml",
-//                        dishwasherSafe = true
-//                    ),
-//                    details = ListingDetailsDomain.CardDetailsDomain(
-//                        grade = ListingEnumGeneric(
-//                            code = "very_good",
-//                            label = "Very Good"
-//                        ),
-//                        rarity = ListingEnumGeneric(
-//                            code = "ultra_rare",
-//                            label = "Ultra Rare"
-//                        ),
-//                        variant = ListingEnumGeneric(
-//                            code = "holo",
-//                            label = "Holographic"
-//                        )
-//                    ),
+                    /* details = ListingDetailsDomain.DrinkwareDetailsDomain(
+                         material = ListingEnumGeneric(
+                             "ceramic",
+                             "Ceramic"
+                         ),
+                         capacityMl = 500,
+                         capacityMlLabel = "500Ml",
+                         dishwasherSafe = true
+                     ),
+                     details = ListingDetailsDomain.CardDetailsDomain(
+                         grade = ListingEnumGeneric(
+                             code = "very_good",
+                             label = "Very Good"
+                         ),
+                         rarity = ListingEnumGeneric(
+                             code = "ultra_rare",
+                             label = "Ultra Rare"
+                         ),
+                         variant = ListingEnumGeneric(
+                             code = "holo",
+                             label = "Holographic"
+                         )
+                     ),*/
                     details = ListingDetailsDomain.ArtDetailsDomain(
                         dimensions = ListingDimensions(
                             width = WizardInputFieldUi.Integer(integerValue = "10"),
@@ -767,16 +781,14 @@ private fun ListingDetailsScreenPreview() {
                         framed = true
                     ),
                     favorite = false,
-                    cart = false,
+                    cart = true,
                     postedAt = InstantUi(
                         value = postedAt,
                         label = postedAt.toListingFormat()
                     ),
-                    updatedAt = InstantUi(
-                        value = null,
-                        label = "-"
-                    ),
-                    canEdit = false
+                    updatedAt = null,
+                    canEdit = false,
+                    orderIds = null
                 ),
                 sellerProfileDetails = ProfileDetailsDomain(
                     basicProfileDetails = BasicProfileDetailsDomain(
@@ -803,7 +815,8 @@ private fun ListingDetailsScreenPreview() {
                     )
                 )
             ),
-            effect = emptyFlow(),
+            effect = SingleObserverFlow(emptyFlow()),
+            snackbarEffects = SingleObserverFlow(emptyFlow()),
             onNavigation = {},
             listingId = "1",
             createListingWizardMode = null,

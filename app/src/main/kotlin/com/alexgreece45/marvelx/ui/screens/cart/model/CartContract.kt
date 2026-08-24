@@ -1,6 +1,5 @@
 package com.alexgreece45.marvelx.ui.screens.cart.model
 
-import com.alexgreece45.marvelx.core.data.model.listing.ListingId
 import com.alexgreece45.marvelx.domain.model_api.order.OrderCheckoutInfoDomain
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
@@ -33,6 +32,7 @@ sealed interface CartContract {
     data class State(
         val isLoading: Boolean = true,
         val isSummaryLoading: Boolean = false,
+        val isCheckingOut: Boolean = false,
 
         val cartInfo: CartInfoUi? = null,
         val orderCheckoutInfo: OrderCheckoutInfoUi? = null,

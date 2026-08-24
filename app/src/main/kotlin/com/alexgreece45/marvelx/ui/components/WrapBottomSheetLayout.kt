@@ -2,8 +2,13 @@ package com.alexgreece45.marvelx.ui.components
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.ContentAlpha
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.ModalBottomSheetDefaults
@@ -17,9 +22,13 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.alexgreece45.marvelx.util.SPACING_MEDIUM
+import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.filter
 
 /**
  * A wrapper composable for the native [ModalBottomSheetLayout] providing the app's custom styling.
@@ -31,7 +40,6 @@ import com.alexgreece45.marvelx.util.SPACING_MEDIUM
 @Composable
 fun WrapModalBottomSheetLayout(
     sheetContent: @Composable () -> Unit,
-    modifier: Modifier = Modifier,
     sheetState: ModalBottomSheetState,
     sheetGesturesEnabled: Boolean = true,
     sheetShape: Shape = RoundedCornerShape(
@@ -42,27 +50,37 @@ fun WrapModalBottomSheetLayout(
     sheetBackgroundColor: Color = MaterialTheme.colors.surface,
     sheetContentColor: Color = contentColorFor(sheetBackgroundColor),
     scrimColor: Color = if (isSystemInDarkTheme()) MaterialTheme.colors.background.copy(alpha = 0.55f) else MaterialTheme.colors.onSurface.copy(
-        alpha = 0.4f
+        alpha = ContentAlpha.disabled
     ),
     onDismissed: (() -> Unit)? = null,
     content: @Composable () -> Unit
 ) {
-
-    onDismissed?.let {
-        LaunchedEffect(Unit) {
-            snapshotFlow {
-                sheetState.currentValue
-            }.collect { newBottomSheetStateValue ->
-                if (newBottomSheetStateValue == ModalBottomSheetValue.Hidden) {
-                    onDismissed()
-                }
+    LaunchedEffect(sheetState) {
+        snapshotFlow { sheetState.targetValue }
+            .drop(1)
+            .filter { newSheetState -> newSheetState == ModalBottomSheetValue.Hidden }
+            .collect {
+                onDismissed?.invoke()
             }
-        }
     }
 
+    val windowInfo = LocalWindowInfo.current
+    val density = LocalDensity.current
+
+    val totalScreenHeight = with(density) { windowInfo.containerSize.height.toDp() }
+    val statusBarHeight = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+    val toolbarHeight = 56.dp
+    val maxHeight = totalScreenHeight - statusBarHeight - toolbarHeight
+
     ModalBottomSheetLayout(
-        sheetContent = { Box(modifier = Modifier.navigationBarsPadding()) { sheetContent() } },
-        modifier = modifier,
+        sheetContent = {
+            Box(
+                modifier = Modifier
+                    .navigationBarsPadding()
+                    .heightIn(max = maxHeight),
+                content = { sheetContent() }
+            )
+        },
         sheetState = sheetState,
         sheetGesturesEnabled = sheetGesturesEnabled,
         sheetShape = sheetShape,

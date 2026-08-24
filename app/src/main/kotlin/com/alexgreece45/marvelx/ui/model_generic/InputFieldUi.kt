@@ -9,7 +9,7 @@ sealed interface InputFieldUi {
     val isValid: Boolean
     val isMandatory: Boolean
 
-    sealed class InputField(
+    sealed class TextField(
         open val value: String = "",
         open val validationResult: InputFieldValidationResult = InputFieldValidationResult.Uninitialized,
         open val validationRules: List<InputFieldRule> = emptyList(),
@@ -20,7 +20,7 @@ sealed interface InputFieldUi {
             get() = if (isMandatory) {
                 validationResult is InputFieldValidationResult.Success
             } else {
-                validationResult.isNotError
+                validationResult is InputFieldValidationResult.Uninitialized || validationResult is InputFieldValidationResult.Success
             }
     }
 
@@ -29,14 +29,14 @@ sealed interface InputFieldUi {
         override val validationResult: InputFieldValidationResult = InputFieldValidationResult.Uninitialized,
         override val validationRules: List<InputFieldRule> = emptyList(),
         override val isMandatory: Boolean
-    ) : InputField(value, validationResult, validationRules, isMandatory)
+    ) : TextField(value, validationResult, validationRules, isMandatory)
 
     data class Integer(
         val integerValue: String = "",
         val integerValidationResult: InputFieldValidationResult = InputFieldValidationResult.Uninitialized,
         val integerValidationRules: List<InputFieldRule> = emptyList(),
         override val isMandatory: Boolean
-    ) : InputField(
+    ) : TextField(
         value = integerValue,
         validationResult = integerValidationResult,
         validationRules = integerValidationRules,

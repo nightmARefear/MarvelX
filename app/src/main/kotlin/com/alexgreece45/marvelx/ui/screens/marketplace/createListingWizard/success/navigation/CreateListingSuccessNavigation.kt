@@ -3,37 +3,41 @@ package com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.succ
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
+import androidx.navigation.NavOptionsBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.navOptions
 import androidx.navigation.toRoute
-import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.navigation.CreateListingWizardRoute
 import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.success.CreateListingSuccessScreen
 import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.success.CreateListingSuccessViewModel
 import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.success.model.CreateListingSuccessContract
+import com.alexgreece45.marvelx.ui.screens.marketplace.listingDetailsScreen.navigation.ListingDetailsRoute
+import com.alexgreece45.marvelx.ui.screens.marketplace.listingDetailsScreen.navigation.navigateToListingDetailsScreen
 import kotlinx.serialization.Serializable
 import org.koin.androidx.compose.koinViewModel
 
 @Serializable
-private data class CreateListingSuccessRoute(
+internal data class CreateListingSuccessRoute(
     val listingId: String,
     val wizardMode: String
 )
 
 fun NavController.navigateToCreateListingSuccessScreen(
     listingId: String,
-    wizardMode: String
-) = navigate(
-    route = CreateListingSuccessRoute(listingId, wizardMode),
-    navOptions = navOptions {
-        popUpTo<CreateListingSuccessRoute> {
-            inclusive = true
+    wizardMode: String,
+    navOptionsBuilder: (NavOptionsBuilder.() -> Unit)?
+) {
+    val route = CreateListingSuccessRoute(listingId, wizardMode)
+    navigate(
+        route = route,
+        navOptions = navOptions {
+            navOptionsBuilder?.let { it() }
+            launchSingleTop = true
         }
-    }
-)
+    )
+}
 
 internal fun NavGraphBuilder.createListingSuccessScreen(
-    navigateToListingDetailsScreen: (String) -> Unit,
-    exitWizard: () -> Unit
+    navController: NavController
 ) {
     composable<CreateListingSuccessRoute> { navBackStackEntry ->
         val createListingSuccessRoute = navBackStackEntry.toRoute<CreateListingSuccessRoute>()
@@ -45,15 +49,21 @@ internal fun NavGraphBuilder.createListingSuccessScreen(
             effect = viewModel.uiEffect,
             onNavigationEffect = { navigationEffect ->
                 when (navigationEffect) {
-                    is CreateListingSuccessContract.Effect.Navigation.NavigateToListingDetailsScreen -> navigateToListingDetailsScreen(
+                    is CreateListingSuccessContract.Effect.Navigation.NavigateToListingDetailsScreenAndPopUpToSuccess -> navController.navigateToListingDetailsScreen(
                         navigationEffect.listingId.value
-                    )
+                    ) { popUpTo(createListingSuccessRoute) { inclusive = true } }
 
-                    CreateListingSuccessContract.Effect.Navigation.GoBack -> exitWizard()
+                    is CreateListingSuccessContract.Effect.Navigation.NavigateAndPopUpToListingDetailsScreen -> navController.navigateToListingDetailsScreen(
+                        navigationEffect.listingId.value
+                    ) {
+                        popUpTo(ListingDetailsRoute(navigationEffect.listingId.value)) {
+                            inclusive = true
+                        }
+                    }
+
+                    CreateListingSuccessContract.Effect.Navigation.GoBack -> navController.navigateUp()
                 }
-            },
-            listingId = createListingSuccessRoute.listingId,
-            wizardMode = createListingSuccessRoute.wizardMode,
+            }
         )
     }
 }

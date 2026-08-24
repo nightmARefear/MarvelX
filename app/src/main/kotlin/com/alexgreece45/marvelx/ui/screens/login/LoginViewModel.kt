@@ -146,6 +146,8 @@ class LoginViewModel(
             }
 
             LoginEvent.OnBack -> {
+                if (currentState.isLoading) return
+
                 setEffect {
                     LoginEffect.Navigation.PopBackStack
                 }

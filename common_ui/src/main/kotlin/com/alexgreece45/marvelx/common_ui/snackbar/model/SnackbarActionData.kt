@@ -2,9 +2,10 @@ package com.alexgreece45.marvelx.common_ui.snackbar.model
 
 /**
  * @param label The label of the action button of the snackbar.
- * @param onClick The action to perform when the action button of the snackbar is clicked.
+ * @param actionType The type of snackbar action type. If [SnackbarActionType.Hide] then the snackbar
+ * hides when the action button is clicked, otherwise a custom action is performed.
  */
 data class SnackbarActionData(
     val label: String,
-    val onClick: () -> Unit
+    val actionType: SnackbarActionType
 )

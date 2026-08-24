@@ -3,7 +3,9 @@ package com.alexgreece45.marvelx.ui.screens.orders.orderItemTrackingHistory.mode
 import androidx.annotation.StringRes
 import androidx.compose.runtime.Immutable
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.core.common.extensions.toImmutableListOrEmpty
 import com.alexgreece45.marvelx.ui.screens.orders.model.tracking.OrderTrackingHistoryItemUi
+import kotlinx.collections.immutable.ImmutableList
 
 @Immutable
 data class OrderItemTrackingStepUi(
@@ -17,7 +19,7 @@ fun mapToTrackingStepList(
     departedSortingFacility: OrderTrackingHistoryItemUi?,
     outForDelivery: OrderTrackingHistoryItemUi?,
     delivered: OrderTrackingHistoryItemUi?
-): List<OrderItemTrackingStepUi> {
+): ImmutableList<OrderItemTrackingStepUi> {
 
     val chronologicalSteps = listOf(
         Pair(R.string.order_item_status_ui_label_shipped, shipped),
@@ -41,5 +43,5 @@ fun mapToTrackingStepList(
             },
             data = data
         )
-    }
+    }.toImmutableListOrEmpty()
 }

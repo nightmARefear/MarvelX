@@ -1,13 +1,13 @@
 package com.alexgreece45.marvelx.domain.model_api.order.item
 
-import com.alexgreece45.marvelx.data.model.order.item.OrderItemData
+import com.alexgreece45.marvelx.core.data.model.order.item.OrderItemData
 import com.alexgreece45.marvelx.domain.model_api.order.OrderIdDomain
 import com.alexgreece45.marvelx.domain.model_api.order.OrderItemStatusDomain
 import com.alexgreece45.marvelx.domain.model_api.order.toDomain
 import java.math.BigDecimal
 
 data class OrderItemDomain(
-    val id: OrderIdDomain,
+    val orderItemId: OrderIdDomain,
     val sellerUserId: String,
     val title: String,
     val coverImageUrl: String,
@@ -17,7 +17,7 @@ data class OrderItemDomain(
 
 fun OrderItemData.toDomain(): OrderItemDomain =
     OrderItemDomain(
-        id = OrderIdDomain(id),
+        orderItemId = OrderIdDomain(orderItemId),
         sellerUserId = sellerUserId,
         title = title,
         coverImageUrl = coverImageUrl,

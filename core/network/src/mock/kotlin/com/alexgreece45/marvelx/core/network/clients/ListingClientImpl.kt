@@ -24,6 +24,7 @@ import kotlinx.coroutines.delay
 import okhttp3.MultipartBody
 import org.koin.core.annotation.Single
 import kotlin.random.Random
+import kotlin.random.nextInt
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
@@ -583,75 +584,21 @@ internal class ListingClientImpl(
     }
 
     override suspend fun getMarketplaceInfo(): ApiResult<ResponseMarketplace> {
+        val prices = listOf("20.25", "9999", "56.98", "15", "7.89", "100.5", "8.56", "6.99", "8.2")
         return ApiResult.Success(
             ResponseMarketplace(
                 promo = ResponseMarketplacePromoSection(
                     title = "Top Christmas Choices!",
-                    listings = listOf(
+                    listings = prices.mapIndexed { index, price ->
+                        val listingId = "${index + 1}"
                         ResponseListingPreview(
-                            listingId = "1",
-                            title = "Listing #1",
-                            price = "20.25",
-                            coverImageUrl = "https://backend.alexandrosvoliotis.com/api/private/marvelx/user/1/profile-image",
+                            listingId = listingId,
+                            title = "Listing #$listingId",
+                            price = price,
+                            coverImageUrl = "https://backend.alexandrosvoliotis.com/api/private/marvelx/user/$listingId/profile-image",
                             favorite = Random.nextBoolean()
-                        ),
-                        ResponseListingPreview(
-                            listingId = "2",
-                            title = "Listing #2",
-                            price = "23223",
-                            coverImageUrl = "https://backend.alexandrosvoliotis.com/api/private/marvelx/user/2/profile-image",
-                            favorite = Random.nextBoolean()
-                        ),
-                        ResponseListingPreview(
-                            listingId = "3",
-                            title = "Listing #3",
-                            price = "56.98",
-                            coverImageUrl = "https://backend.alexandrosvoliotis.com/api/private/marvelx/user/3/profile-image",
-                            favorite = Random.nextBoolean()
-                        ),
-                        ResponseListingPreview(
-                            listingId = "4",
-                            title = "Listing #1",
-                            price = "20.25",
-                            coverImageUrl = "https://backend.alexandrosvoliotis.com/api/private/marvelx/user/1/profile-image",
-                            favorite = Random.nextBoolean()
-                        ),
-                        ResponseListingPreview(
-                            listingId = "5",
-                            title = "Listing #2",
-                            price = "23223",
-                            coverImageUrl = "https://backend.alexandrosvoliotis.com/api/private/marvelx/user/2/profile-image",
-                            favorite = Random.nextBoolean()
-                        ),
-                        ResponseListingPreview(
-                            listingId = "6",
-                            title = "Listing #3",
-                            price = "56.98",
-                            coverImageUrl = "https://backend.alexandrosvoliotis.com/api/private/marvelx/user/3/profile-image",
-                            favorite = Random.nextBoolean()
-                        ),
-                        ResponseListingPreview(
-                            listingId = "345",
-                            title = "Listing #1",
-                            price = "20.25",
-                            coverImageUrl = "https://backend.alexandrosvoliotis.com/api/private/marvelx/user/1/profile-image",
-                            favorite = Random.nextBoolean()
-                        ),
-                        ResponseListingPreview(
-                            listingId = "3445",
-                            title = "Listing #2",
-                            price = "23223",
-                            coverImageUrl = "https://backend.alexandrosvoliotis.com/api/private/marvelx/user/2/profile-image",
-                            favorite = Random.nextBoolean()
-                        ),
-                        ResponseListingPreview(
-                            listingId = "345345",
-                            title = "Listing #3",
-                            price = "56.98",
-                            coverImageUrl = "https://backend.alexandrosvoliotis.com/api/private/marvelx/user/3/profile-image",
-                            favorite = Random.nextBoolean()
-                        ),
-                    )
+                        )
+                    }
                 ),
                 categories = listOf(
                     ResponseMarketplaceCategorySection(
@@ -772,7 +719,9 @@ internal class ListingClientImpl(
         return ApiResult.Success(
             ResponseListing(
                 listingId = listingId,
-                sellerUserId = "1",
+                sellerUserId = if ((listingId.toIntOrNull() ?: 0) % 2 == 0) "1" else Random.nextInt(
+                    2..10
+                ).toString(),
                 categoryCode = "drinkware",
                 subcategoryCode = "mug",
                 conditionCode = "mint",

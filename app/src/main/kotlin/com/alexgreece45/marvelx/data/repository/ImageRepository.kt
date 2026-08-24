@@ -25,7 +25,7 @@ class ImageRepositoryImpl(
 
     override suspend fun getImage(imageUrl: String): RepositoryResult<ByteArray> {
         return handleApiResultNoFlow(
-            apiResult = apiClient.getImage(imageUrl),
+            apiCall = { apiClient.getImage(imageUrl) },
             transformation = ResponseBody::toByteArray,
             ioDispatcher = ioDispatcher
         )

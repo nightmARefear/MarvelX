@@ -11,7 +11,7 @@ import androidx.compose.ui.unit.dp
 fun WrapHorizontalDivider(
     modifier: Modifier = Modifier,
     thickness: Dp = 1.dp,
-    startIndent: Dp = 0.dp,
+    startIndent: Dp = 0.dp
 ) {
     Divider(
         modifier = modifier,

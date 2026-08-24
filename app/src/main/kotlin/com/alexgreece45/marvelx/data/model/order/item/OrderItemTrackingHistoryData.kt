@@ -3,9 +3,9 @@ package com.alexgreece45.marvelx.data.model.order.item
 import com.alexgreece45.marvelx.core.network.model.api.order.item.ResponseOrderItemTrackingHistory
 import com.alexgreece45.marvelx.data.model.order.OrderCourierData
 import com.alexgreece45.marvelx.data.model.order.OrderEstimatedDeliveryDateRangeData
-import com.alexgreece45.marvelx.data.model.order.OrderItemStatusData
-import com.alexgreece45.marvelx.data.model.order.item.itemReturn.OrderItemReturnStatusData
-import com.alexgreece45.marvelx.data.model.order.item.refund.OrderItemRefundStatusData
+import com.alexgreece45.marvelx.core.data.model.order.item.OrderItemStatusData
+import com.alexgreece45.marvelx.data.model.order.item.itemReturn.OrderItemReturnEligibilityData
+import com.alexgreece45.marvelx.data.model.order.item.itemReturn.toData
 import com.alexgreece45.marvelx.data.model.order.toData
 import com.alexgreece45.marvelx.data.model.order.tracking.OrderTrackingInfoHistoryItemData
 import com.alexgreece45.marvelx.data.model.order.tracking.toData
@@ -19,10 +19,7 @@ data class OrderItemTrackingHistoryData(
     val departedSortingFacility: OrderTrackingInfoHistoryItemData?,
     val outForDelivery: OrderTrackingInfoHistoryItemData?,
     val delivered: OrderTrackingInfoHistoryItemData?,
-    val returnStatus: OrderItemReturnStatusData?,
-    val returnUntilDate: String?,
-    val refundStatus: OrderItemRefundStatusData?,
-    val refundUntilDate: String?,
+    val returnEligibility: OrderItemReturnEligibilityData
 )
 
 fun ResponseOrderItemTrackingHistory.toData(): OrderItemTrackingHistoryData =
@@ -35,8 +32,5 @@ fun ResponseOrderItemTrackingHistory.toData(): OrderItemTrackingHistoryData =
         departedSortingFacility = departedSortingFacility?.toData(),
         outForDelivery = outForDelivery?.toData(),
         delivered = delivered?.toData(),
-        returnStatus = OrderItemReturnStatusData.entries.first { it.key == returnStatus },
-        returnUntilDate = returnUntilDate,
-        refundStatus = OrderItemRefundStatusData.entries.first { it.key == refundStatus },
-        refundUntilDate = refundUntilDate
+        returnEligibility = returnEligibility.toData()
     )

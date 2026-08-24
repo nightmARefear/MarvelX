@@ -2,6 +2,7 @@ package com.alexgreece45.marvelx.ui.components.chips
 
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.ChipColors
+import androidx.compose.material.ChipDefaults
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Icon
@@ -11,7 +12,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.common_ui.previewAnnotation.ThemePreviewNoSystemUi
 import com.alexgreece45.marvelx.ui.components.IconData
+import com.alexgreece45.marvelx.ui_theme.theme.MarvelXTheme
 import com.alexgreece45.marvelx.ui_theme.theme.values.customColors
 import com.alexgreece45.marvelx.util.constants.ConstantsUi
 
@@ -56,5 +60,27 @@ fun LoadingChip(
         colors = colors
     ) {
         Text(text = label)
+    }
+}
+
+@OptIn(ExperimentalMaterialApi::class)
+@ThemePreviewNoSystemUi
+@Composable
+private fun LoadingChipLoadingTruePreview() {
+    MarvelXTheme {
+        LoadingChip(
+            onClick = { },
+            label = "Add Friend",
+            isLoading = true,
+            colors = ChipDefaults.chipColors(
+                backgroundColor = MaterialTheme.customColors.chipBackgroundColors.addFriend,
+                contentColor = MaterialTheme.customColors.white,
+                leadingIconContentColor = MaterialTheme.customColors.white
+            ),
+            leadingIconData = IconData(
+                iconResource = R.drawable.ic_add_friend,
+                contentDescription = 0
+            )
+        )
     }
 }

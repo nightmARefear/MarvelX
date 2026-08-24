@@ -22,10 +22,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.common_ui.util.ObserveUiEffect
+import com.alexgreece45.marvelx.core.common.util.flows.single_observer_flow.SingleObserverFlow
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
 import com.alexgreece45.marvelx.ui.components.WrapAsyncImage
-import com.alexgreece45.marvelx.ui.components.effect.ObserveUiEffect
 import com.alexgreece45.marvelx.ui.components.error.ContentErrorScreen
 import com.alexgreece45.marvelx.ui.components.model.ErrorButtonLayout
 import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.stats.model.ProfileDetailsStatsContract
@@ -37,14 +38,13 @@ import com.alexgreece45.marvelx.util.SPACING_MEDIUM
 import com.alexgreece45.marvelx.util.constants.ConstantsUi
 import com.alexgreece45.marvelx.util.extensions.circularImageWithBorder
 import com.alexgreece45.marvelx.util.extensions.clickableNoRipple
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 
 @Composable
 fun ProfileDetailsStatsScreen(
     onEventSent: (ProfileDetailsStatsContract.Event) -> Unit,
     state: ProfileDetailsStatsContract.State,
-    effect: Flow<ProfileDetailsStatsContract.Effect>,
+    effect: SingleObserverFlow<ProfileDetailsStatsContract.Effect>,
     fullName: String,
     userId: String,
     tabIndex: Int,
@@ -60,7 +60,7 @@ fun ProfileDetailsStatsScreen(
         )
     }
 
-    ObserveUiEffect(effect) { uiEffect ->
+    ObserveUiEffect(flow = effect, tag = "ProfileDetailsStatsScreen") { uiEffect ->
         when (uiEffect) {
             is ProfileDetailsStatsContract.Effect.Navigation -> {
                 onNavigationEffect(uiEffect)
@@ -192,7 +192,7 @@ private fun ProfileDetailsStatsScreenLoadingPreview() {
         ProfileDetailsStatsScreen(
             onEventSent = {},
             state = ProfileDetailsStatsContract.State(isLoading = false),
-            effect = emptyFlow(),
+            effect = SingleObserverFlow(emptyFlow()),
             fullName = "Alex Voliotis",
             userId = "1001",
             tabIndex = ProfileDetailsStatsTab.Listings.tabIndex,

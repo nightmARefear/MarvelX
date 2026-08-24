@@ -2,7 +2,6 @@ package com.alexgreece45.marvelx.util.extensions
 
 import android.view.View
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Indication
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -11,11 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.IconButton
 import androidx.compose.material.minimumInteractiveComponentSize
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.draw.clip
@@ -27,15 +22,10 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.alexgreece45.marvelx.util.THROTTLE_CLICKABLE_DEFAULT_DELAY
-import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
-
-data class ClickState(
-    val event: () -> Unit,
-    var currentTimeInMillis: Long
-)
+import kotlin.concurrent.atomics.AtomicLong
+import kotlin.concurrent.atomics.ExperimentalAtomicApi
 
 /**
  * Provides protection against clicking an Icon multiple times within a short period of time,
@@ -47,27 +37,23 @@ data class ClickState(
  * @param delay         The delay between click events.
  * @param enabled       Controls the enabled state. When `false`, [onClick], and this modifier will
  * appear disabled for accessibility services.
- * @param role          The type of user interface element. This is used by the accessibility
- * services.
  * @param onClickLabel  Semantic / accessibility label for the [onClick] action.
  * @param onClick       The action(s) to be invoked when a UI element is clicked.
  */
 fun Modifier.throttledClickableIcon(
     view: View,
-    interactionSource: MutableInteractionSource = MutableInteractionSource(),
     enabled: Boolean = true,
     onClickLabel: String? = null,
     delay: Long = THROTTLE_CLICKABLE_DEFAULT_DELAY,
     onClick: () -> Unit
 ) = throttledClickable(
     view = view,
-    interactionSource = interactionSource,
-    indication = null,
     enabled = enabled,
     role = Role.Button,
     onClickLabel = onClickLabel,
     delay = delay,
     isIcon = true,
+    showRipple = false,
     onClick = onClick,
 )
 
@@ -78,9 +64,6 @@ fun Modifier.throttledClickableIcon(
  * This [Modifier] allows this UI element to be clicked at the most once per the given [delay].
  *
  * @param view          The parent [View] of this UI element.
- * @param indication    The indication to show. Pass `null` to show the theme's default. __Note:__
- * if [showRipple] is `true` and [showRipple] is also `true`, then this [indication] is disregarded.
- * An internal one is used instead.
  * @param delay         The delay between click events.
  * @param enabled       Controls the enabled state. When `false`, [onClick], and this modifier will
  * appear disabled for accessibility services.
@@ -95,10 +78,9 @@ fun Modifier.throttledClickableIcon(
  * `true`.
  * @param onClick       The action(s) to be invoked when a UI element is clicked.
  */
+@OptIn(ExperimentalAtomicApi::class)
 fun Modifier.throttledClickable(
     view: View,
-    interactionSource: MutableInteractionSource = MutableInteractionSource(),
-    indication: Indication? = null,
     enabled: Boolean = true,
     role: Role? = null,
     onClickLabel: String? = null,
@@ -116,25 +98,7 @@ fun Modifier.throttledClickable(
         properties["onClick"] = onClick
     }
 ) {
-    var lastClicked: Long by remember { mutableLongStateOf(0) }
-
-    val debounceState = remember {
-        MutableSharedFlow<ClickState>(
-            replay = 0,
-            extraBufferCapacity = 1,
-            onBufferOverflow = BufferOverflow.DROP_OLDEST
-        )
-    }
-
-    LaunchedEffect(Unit) {
-        debounceState
-            .collect {
-                if (lastClicked <= 0 || (it.currentTimeInMillis - lastClicked) >= delay) {
-                    it.event()
-                    lastClicked = it.currentTimeInMillis
-                }
-            }
-    }
+    val lastClickedMillis = remember { AtomicLong(0) }
 
     var modifier: Modifier = Modifier
     if (isIcon) {
@@ -156,29 +120,28 @@ fun Modifier.throttledClickable(
         .then(clipModifier)
         .filterTouchesWhenObscured(view)
         .clickable(
-            interactionSource = interactionSource,
-            indication = LocalIndication.current, // TODO: To be fixed!!!!!!
+            interactionSource = remember { MutableInteractionSource() },
+            indication = if (showRipple) LocalIndication.current else null,
             enabled = enabled,
             onClickLabel = onClickLabel,
             role = if (isIcon) role ?: Role.Button else role,
-            onClick = { debounceState.tryEmit(ClickState(onClick, System.currentTimeMillis())) }
+            onClick = {
+                val currentTimeMillis = System.currentTimeMillis()
+                if (currentTimeMillis - lastClickedMillis.load() > THROTTLE_CLICKABLE_DEFAULT_DELAY) {
+                    lastClickedMillis.store(currentTimeMillis)
+                    onClick()
+                }
+            }
         )
 }
 
+@OptIn(ExperimentalAtomicApi::class)
 fun Modifier.clickableNoRipple(
     enabled: Boolean = true,
     rippleShape: Shape? = null,
     role: Role? = null,
     onClick: () -> Unit
 ): Modifier = composed {
-    val interactionSource = remember { MutableInteractionSource() }
-    val indication = if (rippleShape != null) {
-//        rememberRipple(bounded = true)
-        LocalIndication.current // TODO: To be fixed!
-    } else {
-        null
-    }
-
     // Clip content to the provided shape.
     val clipModifier = if (rippleShape != null) {
         Modifier.clip(rippleShape)
@@ -187,8 +150,8 @@ fun Modifier.clickableNoRipple(
     }
 
     clickable(
-        interactionSource = interactionSource,
-        indication = indication,
+        interactionSource = remember { MutableInteractionSource() },
+        indication = null,
         enabled = enabled,
         role = role,
         onClick = onClick

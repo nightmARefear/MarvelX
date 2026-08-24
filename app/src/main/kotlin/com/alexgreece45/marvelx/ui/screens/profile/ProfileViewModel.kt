@@ -1,16 +1,15 @@
 package com.alexgreece45.marvelx.ui.screens.profile
 
-import androidx.compose.material.SnackbarDuration
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.common_ui.imageValidator.ImageValidator
 import com.alexgreece45.marvelx.common_ui.imageValidator.model.ImageValidationConfig
 import com.alexgreece45.marvelx.common_ui.imageValidator.model.ImageValidationError
 import com.alexgreece45.marvelx.common_ui.imageValidator.model.SingleImageValidationResult
+import com.alexgreece45.marvelx.common_ui.snackbar.delegate.SnackbarDelegate
 import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarActionData
+import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarActionType
 import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarNavigationPayload
-import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarStateData
-import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarType
 import com.alexgreece45.marvelx.core.common.config.ConfigLogic
 import com.alexgreece45.marvelx.core.common.logger.AppLogger
 import com.alexgreece45.marvelx.core.data.helper.multi_part_builder.model.MultipartResult
@@ -25,7 +24,6 @@ import com.alexgreece45.marvelx.ui.components.model.BottomSheetContentItem
 import com.alexgreece45.marvelx.ui.components.model.BottomSheetContentItemIconData
 import com.alexgreece45.marvelx.ui.components.model.ErrorButtonType
 import com.alexgreece45.marvelx.ui.components.sections.model.SectionHeaderData
-import com.alexgreece45.marvelx.ui.navigation.Screen
 import com.alexgreece45.marvelx.ui.screens.profile.model.ProfileBottomSheetType
 import com.alexgreece45.marvelx.ui.screens.profile.model.ProfileContract
 import com.alexgreece45.marvelx.ui.screens.profile.model.ProfileErrorAlertDialog
@@ -37,16 +35,17 @@ import kotlinx.coroutines.launch
 import org.koin.android.annotation.KoinViewModel
 import java.util.UUID
 
-@KoinViewModel
+@KoinViewModel(binds = [ProfileViewModel::class])
 class ProfileViewModel(
     private val appLogger: AppLogger,
     private val resourceProvider: ResourceProvider,
     private val userInteractor: UserInteractor,
     private val configLogic: ConfigLogic,
     private val userSessionRepository: UserSessionRepository,
-    private val imageValidator: ImageValidator
-) :
-    BaseViewModel<ProfileContract.Event, ProfileContract.State, ProfileContract.Effect>() {
+    private val imageValidator: ImageValidator,
+    snackbarDelegate: SnackbarDelegate,
+) : BaseViewModel<ProfileContract.Event, ProfileContract.State, ProfileContract.Effect>(),
+    SnackbarDelegate by snackbarDelegate {
 
     override fun setInitialState(): ProfileContract.State = ProfileContract.State()
 
@@ -234,19 +233,7 @@ class ProfileViewModel(
     // Event functions.
 
     private fun onSnackbarNavigationPayloadReceived(snackbarNavigationPayload: SnackbarNavigationPayload) {
-        with(snackbarNavigationPayload) {
-            showSnackbar(
-                message = message,
-                type = type,
-                duration = duration,
-                snackbarActionData = actionLabel?.let { label ->
-                    SnackbarActionData(
-                        label = label,
-                        onClick = { setEffect { ProfileContract.Effect.HideSnackbar } }
-                    )
-                }
-            )
-        }
+        showCustomSnackbar(snackbarNavigationPayload)
     }
 
     /**
@@ -415,54 +402,6 @@ class ProfileViewModel(
         }
     }
 
-    private fun showSnackbar(
-        message: String,
-        type: SnackbarType,
-        duration: SnackbarDuration = SnackbarDuration.Short,
-        snackbarActionData: SnackbarActionData? = null
-    ) {
-        val uuid = UUID.randomUUID()
-
-        val snackbarStateData = SnackbarStateData(
-            uuid = uuid,
-            message = message,
-            type = type,
-            duration = duration,
-            snackbarActionData = snackbarActionData,
-            onDismiss = {
-                if (currentState.snackbarStateData?.uuid == uuid) {
-                    setState {
-                        copy(
-                            snackbarStateData = null
-                        )
-                    }
-                }
-            }
-        )
-
-        setState {
-            copy(
-                snackbarStateData = snackbarStateData
-            )
-        }
-        setEffect {
-            ProfileContract.Effect.ShowSnackbar(snackbarStateData)
-        }
-    }
-
-    private fun showErroneousSnackbar(
-        errorMessage: String,
-        duration: SnackbarDuration = SnackbarDuration.Short,
-        snackbarActionData: SnackbarActionData? = null
-    ) {
-        showSnackbar(
-            message = errorMessage,
-            type = SnackbarType.ERROR,
-            duration = duration,
-            snackbarActionData = snackbarActionData,
-        )
-    }
-
     /**
      * Shows the error view.
      */
@@ -601,12 +540,11 @@ class ProfileViewModel(
                 }
 
                 is MultipartResult.Success -> {
-                    showSnackbar(
+                    showSuccessSnackbar(
                         message = resourceProvider.getString(R.string.screen_profile_success_image_upload_message),
-                        type = SnackbarType.SUCCESS,
                         snackbarActionData = SnackbarActionData(
                             label = resourceProvider.getString(R.string.screen_profile_success_image_upload_action_label),
-                            onClick = { setEffect { ProfileContract.Effect.HideSnackbar } }
+                            actionType = SnackbarActionType.Hide
                         )
                     )
                     setState {

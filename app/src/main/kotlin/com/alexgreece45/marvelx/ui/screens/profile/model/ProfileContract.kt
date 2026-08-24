@@ -2,7 +2,6 @@ package com.alexgreece45.marvelx.ui.screens.profile.model
 
 import android.net.Uri
 import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarNavigationPayload
-import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarStateData
 import com.alexgreece45.marvelx.data.model.deepLink.DeepLinkAction
 import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.BasicProfileDetailsDomain
 import com.alexgreece45.marvelx.model.model.generic.AttachedFileContentData
@@ -113,7 +112,6 @@ sealed interface ProfileContract {
 
         val error: ProfileScreenErrorView? = null,
         val errorAlertDialog: ProfileErrorAlertDialog? = null,
-        val snackbarStateData: SnackbarStateData? = null,
     ) : BaseState
 
     sealed class Effect : BaseEffect {
@@ -151,8 +149,5 @@ sealed interface ProfileContract {
         ) : Effect()
 
         data class OpenDeepLinkAction(val deepLinkAction: DeepLinkAction) : Effect()
-
-        data class ShowSnackbar(val snackbarStateData: SnackbarStateData) : Effect()
-        data object HideSnackbar : Effect()
     }
 }

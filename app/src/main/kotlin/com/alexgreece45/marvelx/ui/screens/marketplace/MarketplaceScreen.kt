@@ -1,6 +1,8 @@
 package com.alexgreece45.marvelx.ui.screens.marketplace
 
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -9,9 +11,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Card
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
@@ -19,35 +22,41 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.common_ui.util.ObserveUiEffect
+import com.alexgreece45.marvelx.core.common.util.flows.single_observer_flow.SingleObserverFlow
 import com.alexgreece45.marvelx.ui.components.BottomNavigationBarData
 import com.alexgreece45.marvelx.ui.components.ContentScreen
+import com.alexgreece45.marvelx.ui.components.GenericErrorScreen
 import com.alexgreece45.marvelx.ui.components.GenericSearchBar
 import com.alexgreece45.marvelx.ui.components.WrapHorizontalPager
-import com.alexgreece45.marvelx.ui.components.effect.ObserveUiEffect
 import com.alexgreece45.marvelx.ui.components.icons.NavigateIcon
 import com.alexgreece45.marvelx.ui.screens.marketplace.components.ListingImage
 import com.alexgreece45.marvelx.ui.screens.marketplace.model.ListingPreviewUi
 import com.alexgreece45.marvelx.ui.screens.marketplace.model.MarketplaceContract
+import com.alexgreece45.marvelx.ui.screens.marketplace.model.MarketplaceUi
 import com.alexgreece45.marvelx.util.SPACING_LARGE
 import com.alexgreece45.marvelx.util.SPACING_MEDIUM
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.extensions.clickableNoRipple
-import kotlinx.coroutines.flow.Flow
 
 @Composable
 fun MarketplaceScreen(
     onEvent: (MarketplaceContract.Event) -> Unit,
     state: MarketplaceContract.State,
-    effect: Flow<MarketplaceContract.Effect>,
+    effect: SingleObserverFlow<MarketplaceContract.Effect>,
     onNavigation: (MarketplaceContract.Effect.Navigation) -> Unit,
     bottomNavigationBarData: @Composable () -> BottomNavigationBarData,
 ) {
+    val focusManager = LocalFocusManager.current
 
-    ObserveUiEffect(effect) { uiEffect ->
+    ObserveUiEffect(flow = effect, tag = "MarketplaceScreen") { uiEffect ->
         when (uiEffect) {
             is MarketplaceContract.Effect.Navigation -> {
                 onNavigation(uiEffect)
@@ -65,62 +74,93 @@ fun MarketplaceScreen(
         toolbarTitle = stringResource(R.string.screen_marketplace_toolbar_title),
         bottomNavigationBarData = bottomNavigationBarData()
     ) { paddingValues ->
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = paddingValues,
-            verticalArrangement = Arrangement.spacedBy(SPACING_LARGE.dp)
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .pointerInput(Unit) { detectTapGestures(onTap = { focusManager.clearFocus() }) }
+                .padding(paddingValues)
         ) {
-            item(key = "searchBar") {
-                GenericSearchBar(
-                    searchTerm = state.searchBarTerm,
-                    hint = stringResource(R.string.screen_marketplace_search_bar_hint),
-                    modifier = Modifier.fillMaxWidth(),
-                    onValueChange = {
-                        onEvent(MarketplaceContract.Event.SearchBarEvents.OnSearchTermChanged(it))
-                    },
-                    onDeleteIconClicked = {
-                        onEvent(MarketplaceContract.Event.SearchBarEvents.OnDeleteIconClicked)
-                    }
-                )
-            }
+            when {
+                state.isLoading -> {}
 
-            state.marketplaceUi?.let { marketplaceUi ->
-                marketplaceUi.promo?.let { promo ->
-                    item(key = "promoSection") {
-                        PromoSection(
-                            categoryTitle = promo.title,
-                            listingsCount = promo.listings.size,
-                            selectedListingIndex = promo.selectedListingIndex,
-                            onListingClicked = {
-                                onEvent(MarketplaceContract.Event.OnListingClicked(it))
-                            },
-                            onPageChanged = {
-                                onEvent(MarketplaceContract.Event.OnPromoCarouselScrolled(it))
-                            },
-                            getListingByPage = { promo.listings.getOrNull(it) }
+                state.hasError -> {
+                    BoxWithConstraints(modifier = Modifier.fillMaxWidth()) { // TODO: Investigate why it's not fullscreen.
+                        GenericErrorScreen(
+                            errorMessage = stringResource(R.string.screen_marketplace_generic_error_message),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(maxHeight),
+                            buttonLabel = stringResource(R.string.generic_retry_button),
+                            onErrorButtonClick = { onEvent(MarketplaceContract.Event.OnErrorButtonClicked) }
                         )
                     }
                 }
 
-                marketplaceUi.categories.forEach { categorySectionUi ->
-                    item(key = "categorySection_" + categorySectionUi.categoryCode) {
-                        ListingCategorySection(
-                            categoryTitle = categorySectionUi.title,
-                            listings = categorySectionUi.listings,
-                            onCategoryClicked = {
-                                onEvent(
-                                    MarketplaceContract.Event.OnCategoryClicked(
-                                        categorySectionUi.categoryCode
-                                    )
-                                )
-                            },
-                            onListingClicked = {
-                                onEvent(MarketplaceContract.Event.OnListingClicked(it))
-                            }
-                        )
-                    }
+                state.marketplaceUi != null -> {
+                    SuccessContent(
+                        searchBarTerm = state.searchBarTerm,
+                        marketplaceUi = state.marketplaceUi,
+                        onEvent = onEvent
+                    )
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun SuccessContent(
+    searchBarTerm: String,
+    marketplaceUi: MarketplaceUi,
+    onEvent: (MarketplaceContract.Event) -> Unit
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(SPACING_LARGE.dp)
+    ) {
+        GenericSearchBar(
+            searchTerm = searchBarTerm,
+            hint = stringResource(R.string.screen_marketplace_search_bar_hint),
+            modifier = Modifier.fillMaxWidth(),
+            onValueChange = {
+                onEvent(MarketplaceContract.Event.SearchBar.OnSearchTermChanged(it))
+            },
+            onDeleteIconClicked = {
+                onEvent(MarketplaceContract.Event.SearchBar.OnDeleteIconClicked)
+            }
+        )
+
+        marketplaceUi.promo?.let { promo ->
+            PromoSection(
+                categoryTitle = promo.title,
+                listingsCount = promo.listings.size,
+                selectedListingIndex = promo.selectedListingIndex,
+                onListingClicked = {
+                    onEvent(MarketplaceContract.Event.OnListingClicked(it))
+                },
+                onPageChanged = {
+                    onEvent(MarketplaceContract.Event.OnPromoCarouselScrolled(it))
+                },
+                getListingByPage = { promo.listings.getOrNull(it) }
+            )
+        }
+
+        marketplaceUi.categories.forEach { categorySectionUi ->
+            ListingCategorySection(
+                categoryTitle = categorySectionUi.title,
+                listings = categorySectionUi.listings,
+                onCategoryClicked = {
+                    onEvent(
+                        MarketplaceContract.Event.OnCategoryClicked(
+                            categorySectionUi.categoryCode
+                        )
+                    )
+                },
+                onListingClicked = {
+                    onEvent(MarketplaceContract.Event.OnListingClicked(it))
+                }
+            )
         }
     }
 }
@@ -246,7 +286,8 @@ private fun ListingPreviewItem(
         ListingImage(
             imageUrl = listingPreviewUi.coverImageUrl,
             title = listingPreviewUi.title,
-            modifier = imageModifier
+            modifier = imageModifier,
+            contentScale = if (isPromo) ContentScale.Fit else ContentScale.Crop
         )
 
         Text(text = listingPreviewUi.title)

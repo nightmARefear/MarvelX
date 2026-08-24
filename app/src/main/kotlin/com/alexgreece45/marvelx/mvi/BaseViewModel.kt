@@ -2,13 +2,13 @@ package com.alexgreece45.marvelx.mvi
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.alexgreece45.marvelx.core.common.util.flows.single_observer_flow.SingleObserverFlow
+import com.alexgreece45.marvelx.core.common.util.flows.single_observer_flow.receiveAsSingleObserverFlow
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -37,8 +37,10 @@ abstract class BaseViewModel<Event : BaseEvent, State : BaseState, Effect : Base
 
     /**
      * Used by the views to acquire the current effect.
+     *
+     * ### Note: Only one consumer is allowed.
      */
-    val uiEffect: Flow<Effect> = _effect.receiveAsFlow()
+    val uiEffect: SingleObserverFlow<Effect> = _effect.receiveAsSingleObserverFlow()
 
     init {
         subscribeToEvents()

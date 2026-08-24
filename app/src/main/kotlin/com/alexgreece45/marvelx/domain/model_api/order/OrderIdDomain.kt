@@ -16,4 +16,6 @@ value class OrderIdDomain(val value: String) {
     }
 }
 
+internal fun OrderId.toDomain(): OrderIdDomain = OrderIdDomain(this.value)
+
 internal fun OrderIdDomain.toData(): OrderId = OrderId(value)

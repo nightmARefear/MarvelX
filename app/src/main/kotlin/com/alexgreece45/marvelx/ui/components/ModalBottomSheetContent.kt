@@ -22,7 +22,7 @@ import com.alexgreece45.marvelx.util.SPACING_TINY
 import com.alexgreece45.marvelx.util.VSpacer
 
 /**
- * This [Composable] is used to draw the content of a modal bottom sheet. By default the drag handle
+ * This [Composable] is used to draw the content of a modal bottom sheet. By default, the drag handle
  * is always shown and has a standard padding from the top of this bottom sheet of [SPACING_MEDIUM]
  * .[dp], and if no value is provided for the padding values, a default one is used as well.
  *
@@ -38,9 +38,8 @@ fun ModalBottomSheetContent(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .navigationBarsPadding()
             .padding(
-                paddingValues = paddingValues ?: modalBottomSheetContentDefaultPaddingValues
+                paddingValues = paddingValues ?: ModalBottomSheetContentDefaults.paddingValues
             )
     ) {
         Box(
@@ -79,10 +78,13 @@ private fun ModalBottomSheetDragHandle() {
     }
 }
 
-private val modalBottomSheetContentDefaultPaddingValues: PaddingValues =
-    PaddingValues(
-        start = SPACING_MEDIUM.dp,
-        top = SPACING_SMALL.dp,
-        end = SPACING_MEDIUM.dp,
-        bottom = SPACING_MEDIUM.dp
-    )
+object ModalBottomSheetContentDefaults {
+
+    val paddingValues: PaddingValues =
+        PaddingValues(
+            start = SPACING_MEDIUM.dp,
+            top = SPACING_SMALL.dp,
+            end = SPACING_MEDIUM.dp,
+            bottom = SPACING_MEDIUM.dp
+        )
+}

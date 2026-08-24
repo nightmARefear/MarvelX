@@ -1,6 +1,10 @@
 <resources>
     <string name="screen_marketplace_toolbar_title">Marketplace</string>
 
-    <string name="screen_marketplace_content_description_listing">listing image: %1$s</string>
     <string name="screen_marketplace_search_bar_hint">Rare 2005 Spider-Man Limited Edition Mug</string>
+    <string name="screen_marketplace_search_no_results">No listings were found based on the search criteria…</string>
+
+    <string name="screen_marketplace_generic_error_message">An error occurred whilst loading the listings.</string>
+
+    <string name="screen_marketplace_content_description_listing">listing image: %1$s</string>
 </resources>

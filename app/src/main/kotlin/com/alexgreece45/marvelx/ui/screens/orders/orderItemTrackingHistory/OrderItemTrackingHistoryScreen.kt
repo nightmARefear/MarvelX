@@ -9,15 +9,19 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -29,11 +33,10 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
@@ -43,45 +46,53 @@ import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.common_ui.util.safeLetComposable
-import com.alexgreece45.marvelx.core.common.extensions.defaultFormat
+import com.alexgreece45.marvelx.common_ui.util.ObserveUiEffect
 import com.alexgreece45.marvelx.core.common.extensions.minusDays
 import com.alexgreece45.marvelx.core.common.extensions.plusDays
-import com.alexgreece45.marvelx.core.common.extensions.toOrderEstimatedDeliveryFormatFull
+import com.alexgreece45.marvelx.core.common.extensions.toLocalDate
+import com.alexgreece45.marvelx.core.common.util.DateUtil
+import com.alexgreece45.marvelx.core.common.util.flows.single_observer_flow.SingleObserverFlow
 import com.alexgreece45.marvelx.data.model.profileDetails.RepositoryBasicProfileDetails
 import com.alexgreece45.marvelx.domain.model_api.order.OrderEstimatedDeliveryDateRangeDomain
 import com.alexgreece45.marvelx.domain.model_api.order.OrderIdDomain
+import com.alexgreece45.marvelx.domain.model_api.order.item.itemReturn.OrderItemReturnEligibilityDomain
 import com.alexgreece45.marvelx.domain.model_api.order.item.itemReturn.OrderItemReturnStatusDomain
 import com.alexgreece45.marvelx.domain.model_api.order.item.refund.OrderItemRefundStatusDomain
 import com.alexgreece45.marvelx.domain.model_api.order.tracking.OrderTrackingHistoryItemDomain
+import com.alexgreece45.marvelx.model.model.user.UserId
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.GenericErrorScreen
-import com.alexgreece45.marvelx.ui.components.ListingCard
+import com.alexgreece45.marvelx.ui.components.ModalBottomSheetContent
 import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
 import com.alexgreece45.marvelx.ui.components.ThrottledIconButton
 import com.alexgreece45.marvelx.ui.components.WrapAsyncImage
 import com.alexgreece45.marvelx.ui.components.WrapHorizontalDivider
 import com.alexgreece45.marvelx.ui.components.WrapImage
+import com.alexgreece45.marvelx.ui.components.WrapModalBottomSheetLayout
 import com.alexgreece45.marvelx.ui.components.WrapOutlinedButton
-import com.alexgreece45.marvelx.ui.components.effect.ObserveUiEffect
 import com.alexgreece45.marvelx.ui.components.icons.NavigateIcon
 import com.alexgreece45.marvelx.ui.components.icons.ProcessingRequestIconLottie
+import com.alexgreece45.marvelx.ui.components.listing.ListingCard
+import com.alexgreece45.marvelx.ui.components.listing.ListingPriceLabel
+import com.alexgreece45.marvelx.ui.components.rememberWrapModalBottomSheetState
 import com.alexgreece45.marvelx.ui.components.sections.SectionHeader
 import com.alexgreece45.marvelx.ui.components.sections.SectionHeaderDefaults
 import com.alexgreece45.marvelx.ui.components.sections.SectionHeaderTitle
-import com.alexgreece45.marvelx.ui.model_generic.InstantUi
 import com.alexgreece45.marvelx.ui.model_generic.UiState
 import com.alexgreece45.marvelx.ui.model_generic.onError
 import com.alexgreece45.marvelx.ui.model_generic.onLoading
 import com.alexgreece45.marvelx.ui.model_generic.onSuccess
+import com.alexgreece45.marvelx.ui.screens.orders.components.OrderIdsLabel
 import com.alexgreece45.marvelx.ui.screens.orders.model.OrderCourierUi
 import com.alexgreece45.marvelx.ui.screens.orders.model.item.OrderItemStatusUi
 import com.alexgreece45.marvelx.ui.screens.orders.model.item.OrderItemTrackingHistoryUi
+import com.alexgreece45.marvelx.ui.screens.orders.model.item.itemReturn.toUi
 import com.alexgreece45.marvelx.ui.screens.orders.model.toUi
 import com.alexgreece45.marvelx.ui.screens.orders.model.tracking.OrderTrackingHistoryItemUi
 import com.alexgreece45.marvelx.ui.screens.orders.model.tracking.toUi
@@ -93,7 +104,6 @@ import com.alexgreece45.marvelx.ui.screens.orders.orderItemTrackingHistory.model
 import com.alexgreece45.marvelx.ui.screens.orders.orderItemTrackingHistory.model.mapToTrackingStepList
 import com.alexgreece45.marvelx.ui_theme.theme.MarvelXTheme
 import com.alexgreece45.marvelx.ui_theme.theme.values.customColors
-import com.alexgreece45.marvelx.util.DateUtil
 import com.alexgreece45.marvelx.util.SPACING_MEDIUM
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.SPACING_TINY
@@ -106,163 +116,173 @@ import com.alexgreece45.marvelx.util.extensions.showToast
 import com.alexgreece45.marvelx.util.extensions.withEuroSymbol
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.collections.immutable.toImmutableList
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.launch
+import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.random.Random
 import kotlin.random.nextLong
 
+@OptIn(ExperimentalAtomicApi::class)
 @Composable
 internal fun OrderItemTrackingHistoryScreen(
     onEvent: (OrderItemTrackingHistoryContract.Event) -> Unit,
     state: OrderItemTrackingHistoryContract.State,
-    effect: Flow<OrderItemTrackingHistoryContract.Effect>,
-    onNavigationEffect: (OrderItemTrackingHistoryContract.Effect.Navigation) -> Unit,
-    orderId: String,
-    orderItemId: String,
-    orderItemTitle: String,
-    orderItemCoverImageUrl: String,
-    orderItemPriceLabel: String,
-    sellerUserId: String,
+    effect: SingleObserverFlow<OrderItemTrackingHistoryContract.Effect>,
+    onNavigationEffect: (OrderItemTrackingHistoryContract.Effect.Navigation) -> Unit
 ) {
     val clipboard = LocalClipboard.current
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
 
-    ObserveUiEffect(effect) { uiEffect ->
+    val modalBottomSheetState = rememberWrapModalBottomSheetState()
+
+    ObserveUiEffect(flow = effect, tag = "OrderItemTrackingHistoryScreen") { uiEffect ->
         when (uiEffect) {
             is OrderItemTrackingHistoryContract.Effect.Navigation -> onNavigationEffect(uiEffect)
             is OrderItemTrackingHistoryContract.Effect.SetClipboardText -> {
                 clipboard.setText(uiEffect.text)
                 context.showToast(uiEffect.toastMessage)
             }
+
+            OrderItemTrackingHistoryContract.Effect.ShowBottomSheet -> {
+                coroutineScope.launch { modalBottomSheetState.show() }
+            }
         }
     }
 
-    LaunchedEffect(Unit) {
-        onEvent(
-            OrderItemTrackingHistoryContract.Event.Init(
-                orderId = orderId,
-                orderItemId = orderItemId,
-                orderItemTitle = orderItemTitle,
-                orderItemCoverImageUrl = orderItemCoverImageUrl,
-                orderItemPriceLabel = orderItemPriceLabel,
-                sellerId = sellerUserId,
-            )
-        )
-    }
-
-    ContentScreen(
-        isLoading = state.uiState.isLoading,
-        navigableAction = ScreenNavigableAction.Backable(
-            onBack = {
-                onEvent(OrderItemTrackingHistoryContract.Event.OnBack)
-            }
-        ),
-        onBack = {
-            onEvent(OrderItemTrackingHistoryContract.Event.OnBack)
-        },
-        showToolbar = true,
-        toolbarTitle = stringResource(R.string.screen_order_item_tracking_history_toolbar_title)
-    ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(paddingValues)
-        ) {
-            state.uiState
-                .onError { errorType ->
-                    val isErrorTypeNoData =
-                        errorType == OrderItemTrackingHistoryErrorType.NO_DATA
-
-                    GenericErrorScreen(
-                        errorMessage = stringResource(
-                            if (isErrorTypeNoData) R.string.screen_order_item_tracking_history_error_label_no_data else R.string.screen_order_item_tracking_history_error_label_fetching_data,
+    WrapModalBottomSheetLayout(
+        sheetContent = {
+            if (!state.isBottomSheetVisible) return@WrapModalBottomSheetLayout
+            ModalBottomSheetContent {
+                if (state.uiState is UiState.Success) {
+                    TrackingHistorySteps(state.uiState.data.steps)
+                } else {
+                    Text(
+                        text = stringResource(
+                            R.string.screen_order_item_tracking_history_error_label_fetching_data,
                             state.orderItemDetails.orderId.formatted,
                             state.orderItemDetails.orderItemId.formatted
                         ),
-                        buttonLabel = stringResource(if (isErrorTypeNoData) R.string.generic_go_back else R.string.generic_retry_button),
-                        onErrorButtonClicked = {
-                            onEvent(OrderItemTrackingHistoryContract.Event.OnErrorButtonClicked)
-                        }
+                        modifier = Modifier.fillMaxWidth(),
+                        color = MaterialTheme.colors.error,
+                        textAlign = TextAlign.Center,
+                        style = MaterialTheme.typography.h4
                     )
                 }
-                .onSuccess { orderItemTrackingHistoryUi ->
-                    val orderItemDetails = state.orderItemDetails
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(SPACING_MEDIUM.dp)
-                    ) {
-                        // Order IDs
-                        Text(
-                            text = stringResource(
-                                R.string.screen_order_item_tracking_history_label_order_ids,
-                                orderItemDetails.orderId.formatted,
-                                orderItemDetails.orderItemId.formatted
+            }
+        },
+        sheetState = modalBottomSheetState,
+        onDismissed = { onEvent(OrderItemTrackingHistoryContract.Event.OnBottomSheetDismissed) }
+    ) {
+        ContentScreen(
+            isLoading = state.uiState.isLoading,
+            navigableAction = ScreenNavigableAction.Backable(
+                onBack = {
+                    onEvent(OrderItemTrackingHistoryContract.Event.OnBack)
+                }
+            ),
+            onBack = {
+                onEvent(OrderItemTrackingHistoryContract.Event.OnBack)
+            },
+            showToolbar = true,
+            toolbarTitle = stringResource(R.string.screen_order_item_tracking_history_toolbar_title)
+        ) { paddingValues ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(paddingValues)
+            ) {
+                state.uiState
+                    .onError { errorType ->
+                        val isErrorTypeNoData =
+                            errorType == OrderItemTrackingHistoryErrorType.NO_DATA
+
+                        GenericErrorScreen(
+                            errorMessage = stringResource(
+                                if (isErrorTypeNoData) R.string.screen_order_item_tracking_history_error_label_no_data else R.string.screen_order_item_tracking_history_error_label_fetching_data,
+                                state.orderItemDetails.orderId.formatted,
+                                state.orderItemDetails.orderItemId.formatted
                             ),
-                            color = MaterialTheme.colors.onSurface.copy(alpha = ContentAlpha.medium)
-                        )
-
-                        OrderItemCard(
-                            title = orderItemDetails.orderItemTitle,
-                            coverImageUrl = orderItemDetails.orderItemCoverImageUrl,
-                            priceLabel = orderItemDetails.orderItemPriceLabel,
-                            status = orderItemTrackingHistoryUi.status,
-                            currentStepItem = orderItemTrackingHistoryUi.currentStepItem,
-                            sellerBasicProfileDetailsState = state.sellerDetailsUiState,
-                            onSellerCardClicked = {
-                                onEvent(OrderItemTrackingHistoryContract.Event.SellerDetailsCardEvents.OnClicked)
-                            },
-                            onSellerCardErrorButtonClicked = {
-                                onEvent(OrderItemTrackingHistoryContract.Event.SellerDetailsCardEvents.OnErrorButtonClicked)
-                            }
-                        )
-
-                        if (orderItemTrackingHistoryUi.status is OrderItemStatusUi.Delivered) {
-                            with(orderItemTrackingHistoryUi) {
-                                PostDeliverySection(
-                                    deliveryDateLabel = currentStepItem?.date?.label.orEmpty(),
-                                    courierUi = courier,
-                                    trackingId = trackingId,
-                                    returnUntilDateLabel = returnUntilDate?.label,
-                                    returnStatus = returnStatus,
-                                    refundStatus = refundStatus,
-                                    refundUntilDateLabel = refundUntilDate?.label,
-                                    onReturnActionButtonClicked = {
-                                        onEvent(OrderItemTrackingHistoryContract.Event.OnReturnActionButtonClicked)
-                                    },
-                                    onRefundActionButtonClicked = {
-                                        onEvent(OrderItemTrackingHistoryContract.Event.OnRefundActionButtonClicked)
-                                    }
-                                )
-                            }
-                        } else {
-                            CourierCard(
-                                trackingId = orderItemTrackingHistoryUi.trackingId,
-                                courierUi = orderItemTrackingHistoryUi.courier,
-                                onCopyButtonClicked = {
-                                    onEvent(OrderItemTrackingHistoryContract.Event.CourierCardEvents.OnCopyButtonClicked)
-                                },
-                                onViewOnCourierWebsiteButtonClicked = {
-                                    onEvent(OrderItemTrackingHistoryContract.Event.CourierCardEvents.OnViewOnCourierWebsiteButtonClicked)
-                                }
-                            )
-
-                            EstimatedDeliveryCard(estimatedDateRangeLabel = orderItemTrackingHistoryUi.estimatedDelivery.estimatedDateRangeLabel)
-
-                            TrackingHistorySteps(trackingSteps = orderItemTrackingHistoryUi.steps)
-                        }
-
-                        ExtraActionButtonsRow(
-                            onContactSupportButtonClicked = {
-                                onEvent(OrderItemTrackingHistoryContract.Event.ExtraActionButtonEvents.OnContactSupportClicked)
-                            },
-                            onContactSellerButtonClicked = {
-                                onEvent(OrderItemTrackingHistoryContract.Event.ExtraActionButtonEvents.OnContactSellerClicked)
+                            buttonLabel = stringResource(if (isErrorTypeNoData) R.string.generic_go_back else R.string.generic_retry_button),
+                            onErrorButtonClick = {
+                                onEvent(OrderItemTrackingHistoryContract.Event.OnErrorButtonClicked)
                             }
                         )
                     }
-                }
+                    .onSuccess { orderItemTrackingHistoryUi ->
+                        val orderItemDetails = state.orderItemDetails
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(SPACING_MEDIUM.dp)
+                        ) {
+                            OrderIdsLabel(
+                                orderId = orderItemDetails.orderId,
+                                orderItemId = orderItemDetails.orderItemId
+                            )
+
+                            OrderItemCard(
+                                title = orderItemDetails.orderItemTitle,
+                                coverImageUrl = orderItemDetails.orderItemCoverImageUrl,
+                                priceLabel = orderItemDetails.orderItemPriceLabel,
+                                status = orderItemTrackingHistoryUi.status,
+                                currentStepItem = orderItemTrackingHistoryUi.currentStepItem,
+                                sellerBasicProfileDetailsState = state.sellerDetailsUiState,
+                                onCurrentStatusClicked = { onEvent(OrderItemTrackingHistoryContract.Event.OnCurrentStatusClicked) },
+                                onSellerCardClick = {
+                                    onEvent(OrderItemTrackingHistoryContract.Event.SellerDetailsCardEvents.OnClicked)
+                                },
+                                onSellerCardErrorButtonClicked = {
+                                    onEvent(OrderItemTrackingHistoryContract.Event.SellerDetailsCardEvents.OnErrorButtonClicked)
+                                }
+                            )
+
+                            if (orderItemTrackingHistoryUi.status is OrderItemStatusUi.Delivered) {
+                                with(orderItemTrackingHistoryUi) {
+                                    PostDeliverySection(
+                                        deliveryDateLabel = currentStepItem?.date?.label.orEmpty(),
+                                        courierUi = courier,
+                                        trackingId = trackingId,
+                                        returnUntilDateLabel = returnEligibility.returnUntilDate.label,
+                                        returnStatus = returnEligibility.returnStatus,
+                                        refundStatus = returnEligibility.refundStatus,
+                                        refundUntilDateLabel = returnEligibility.refundUntilDate.label,
+                                        onReturnActionButtonClicked = {
+                                            onEvent(OrderItemTrackingHistoryContract.Event.OnReturnActionButtonClicked)
+                                        },
+                                        onRefundActionButtonClicked = {
+                                            onEvent(OrderItemTrackingHistoryContract.Event.OnRefundActionButtonClicked)
+                                        }
+                                    )
+                                }
+                            } else {
+                                CourierCard(
+                                    trackingId = orderItemTrackingHistoryUi.trackingId,
+                                    courierUi = orderItemTrackingHistoryUi.courier,
+                                    onCopyButtonClicked = {
+                                        onEvent(OrderItemTrackingHistoryContract.Event.CourierCardEvents.OnCopyButtonClicked)
+                                    },
+                                    onViewOnCourierWebsiteButtonClicked = {
+                                        onEvent(OrderItemTrackingHistoryContract.Event.CourierCardEvents.OnViewOnCourierWebsiteButtonClicked)
+                                    }
+                                )
+
+                                EstimatedDeliveryCard(estimatedDateRangeLabel = orderItemTrackingHistoryUi.estimatedDelivery.estimatedDateRangeLabel)
+
+                                TrackingHistorySteps(trackingSteps = orderItemTrackingHistoryUi.steps)
+                            }
+
+                            ExtraActionButtonsRow(
+                                onContactSupportButtonClicked = {
+                                    onEvent(OrderItemTrackingHistoryContract.Event.ExtraActionButtonEvents.OnContactSupportClicked)
+                                },
+                                onContactSellerButtonClicked = {
+                                    onEvent(OrderItemTrackingHistoryContract.Event.ExtraActionButtonEvents.OnContactSellerClicked)
+                                }
+                            )
+                        }
+                    }
+            }
         }
     }
 }
@@ -275,7 +295,8 @@ private fun OrderItemCard(
     status: OrderItemStatusUi,
     currentStepItem: OrderTrackingHistoryItemUi?,
     sellerBasicProfileDetailsState: UiState<RepositoryBasicProfileDetails, Unit>,
-    onSellerCardClicked: () -> Unit,
+    onCurrentStatusClicked: () -> Unit,
+    onSellerCardClick: () -> Unit,
     onSellerCardErrorButtonClicked: () -> Unit,
 ) {
     val statusColor = status.backgroundColor
@@ -304,12 +325,7 @@ private fun OrderItemCard(
     ) {
         ListingCard(
             title = title,
-            additionalTitleContent = {
-                Text(
-                    text = priceLabel,
-                    style = MaterialTheme.typography.subtitle1
-                )
-            },
+            additionalTitleContent = { ListingPriceLabel(price = priceLabel) },
             titleContentAlignment = Alignment.CenterVertically,
             coverImageUrl = coverImageUrl,
             trailingIcon = null,
@@ -317,13 +333,21 @@ private fun OrderItemCard(
                 VSpacer.Medium()
 
                 Column(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickableNoRipple(
+                            enabled = status is OrderItemStatusUi.Delivered,
+                            onClick = onCurrentStatusClicked
+                        ),
                     verticalArrangement = Arrangement.spacedBy(SPACING_MEDIUM.dp)
                 ) {
                     WrapHorizontalDivider()
 
                     // Current Status.
-                    Column(verticalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp)) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp)
+                    ) {
                         Text(
                             text = stringResource(R.string.screen_order_item_tracking_history_title_current_status),
                             color = MaterialTheme.colors.onSurface.copy(alpha = 0.5f)
@@ -335,14 +359,13 @@ private fun OrderItemCard(
                         ) {
                             Box(
                                 modifier = Modifier
+                                    .background(
+                                        color = statusColor.copy(alpha = 0.25f),
+                                        shape = CircleShape
+                                    )
+                                    .padding(6.dp)
                                     .size(SPACING_MEDIUM.dp)
                                     .background(color = statusColor, shape = CircleShape)
-                                    .drawBehind {
-                                        drawCircle(
-                                            color = statusColor.copy(alpha = 0.25f),
-                                            radius = size.width / 2 + 6.dp.toPx()
-                                        )
-                                    }
                             )
 
                             TrackingHistoryStepLabels(
@@ -365,7 +388,7 @@ private fun OrderItemCard(
 
                         SellerDetailsCard(
                             sellerBasicProfileDetailsState = sellerBasicProfileDetailsState,
-                            onClicked = onSellerCardClicked,
+                            onClicked = onSellerCardClick,
                             onErrorButtonClicked = onSellerCardErrorButtonClicked
                         )
                     }
@@ -396,7 +419,7 @@ private fun SellerDetailsCard(
             GenericErrorScreen(
                 errorMessage = stringResource(R.string.screen_order_item_tracking_history_error_label_fetching_seller_info),
                 modifier = Modifier.fillMaxWidth(),
-                onErrorButtonClicked = onErrorButtonClicked
+                onErrorButtonClick = onErrorButtonClicked
             )
         }
         .onSuccess { profileDetails ->
@@ -404,10 +427,11 @@ private fun SellerDetailsCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickableNoRipple(onClick = onClicked),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                horizontalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Row(
+                    modifier = Modifier.weight(1f),
                     horizontalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -425,6 +449,8 @@ private fun SellerDetailsCard(
                     Column {
                         Text(
                             text = profileDetails.fullName,
+                            overflow = TextOverflow.Ellipsis,
+                            maxLines = 3,
                             style = MaterialTheme.typography.subtitle1
                         )
 
@@ -436,7 +462,7 @@ private fun SellerDetailsCard(
                     }
                 }
 
-                NavigateIcon() // TODO: Icon not displayed if text is full width.
+                NavigateIcon()
             }
         }
 }
@@ -517,7 +543,8 @@ private fun CourierCard(
             }
         },
         enabled = false,
-    ) {}
+        onClick = {}
+    )
 }
 
 @Composable
@@ -530,8 +557,9 @@ private fun EstimatedDeliveryCard(estimatedDateRangeLabel: String) {
                 style = MaterialTheme.typography.subtitle1
             )
         },
-        enabled = false
-    ) {}
+        enabled = false,
+        onClick = {}
+    )
 }
 
 @Composable
@@ -540,9 +568,9 @@ private fun PostDeliverySection(
     courierUi: OrderCourierUi,
     trackingId: String,
     returnStatus: OrderItemReturnStatusDomain?,
-    returnUntilDateLabel: String?,
+    returnUntilDateLabel: String,
     refundStatus: OrderItemRefundStatusDomain?,
-    refundUntilDateLabel: String?,
+    refundUntilDateLabel: String,
     onReturnActionButtonClicked: () -> Unit,
     onRefundActionButtonClicked: () -> Unit,
 ) {
@@ -552,11 +580,8 @@ private fun PostDeliverySection(
         trackingId = trackingId
     )
 
-    if (refundStatus?.isProcessingStatus() == false) {
-        safeLetComposable(
-            returnStatus,
-            returnUntilDateLabel
-        ) { returnStatus, returnUntilDateLabel ->
+    if (refundStatus?.isProcessingStatus() == false || refundStatus != OrderItemRefundStatusDomain.REJECTED) {
+        if (returnStatus != null) {
             ReturnCard(
                 returnStatus = returnStatus,
                 returnUntilDateLabel = returnUntilDateLabel,
@@ -565,11 +590,8 @@ private fun PostDeliverySection(
         }
     }
 
-    if (returnStatus?.isProcessingStatus() == false) {
-        safeLetComposable(
-            refundStatus,
-            refundUntilDateLabel
-        ) { refundStatus, refundUntilDateLabel ->
+    if (returnStatus?.isProcessingStatus() == false || returnStatus != OrderItemReturnStatusDomain.REJECTED) {
+        if (refundStatus != null) {
             RefundCard(
                 refundStatus = refundStatus,
                 refundUntilDateLabel = refundUntilDateLabel,
@@ -632,15 +654,12 @@ private fun DeliveryDetailsRow(label: String, value: String, onClick: (() -> Uni
             }
 
             else -> {
-                Box(
-                    modifier = Modifier.clickableNoRipple(onClick = onClick)
-                ) {
-                    Text(
-                        text = value,
-                        color = MaterialTheme.customColors.linkTextColor,
-                        textDecoration = TextDecoration.Underline
-                    )
-                }
+                Text(
+                    text = value,
+                    modifier = Modifier.clickableNoRipple(onClick = onClick),
+                    color = MaterialTheme.customColors.linkTextColor,
+                    textDecoration = TextDecoration.Underline
+                )
             }
         }
     }
@@ -673,8 +692,12 @@ private fun ReturnCard(
         OrderItemReturnStatusDomain.EXPIRED -> {
             GenericCard(
                 titleLabel = stringResource(R.string.screen_order_item_tracking_history_return_card_expired_title),
-                additionalTitleContentLabel = stringResource(R.string.screen_order_item_tracking_history_return_card_expired_description),
+                additionalTitleContentLabel = stringResource(
+                    R.string.screen_order_item_tracking_history_return_card_expired_description,
+                    returnUntilDateLabel
+                ),
                 leadingIconResId = R.drawable.ic_lock,
+                leadingIconTint = MaterialTheme.customColors.white,
                 additionalContent = null
             )
         }
@@ -741,7 +764,7 @@ private fun ReturnCard(
             )
         }
 
-        OrderItemReturnStatusDomain.ACCEPTED -> {
+        OrderItemReturnStatusDomain.ITEM_REPLACED, OrderItemReturnStatusDomain.REFUNDED -> {
             GenericCard(
                 titleLabel = stringResource(R.string.screen_order_item_tracking_history_return_card_accepted_title),
                 additionalTitleContentLabel = stringResource(R.string.screen_order_item_tracking_history_return_card_accepted_description),
@@ -786,8 +809,12 @@ private fun RefundCard(
         OrderItemRefundStatusDomain.EXPIRED -> {
             GenericCard(
                 titleLabel = stringResource(R.string.screen_order_item_tracking_history_refund_card_expired_title),
-                additionalTitleContentLabel = stringResource(R.string.screen_order_item_tracking_history_refund_card_expired_description),
+                additionalTitleContentLabel = stringResource(
+                    R.string.screen_order_item_tracking_history_refund_card_expired_description,
+                    refundUntilDateLabel
+                ),
                 leadingIconResId = R.drawable.ic_lock,
+                leadingIconTint = MaterialTheme.customColors.white,
                 additionalContent = null
             )
         }
@@ -797,25 +824,24 @@ private fun RefundCard(
                 titleLabel = stringResource(R.string.screen_order_item_tracking_history_refund_card_final_sale_title),
                 additionalTitleContentLabel = stringResource(R.string.screen_order_item_tracking_history_refund_card_final_sale_description),
                 leadingIconResId = R.drawable.ic_lock,
+                leadingIconTint = MaterialTheme.customColors.white,
                 additionalContent = {
-                    val errorColor = MaterialTheme.colors.error
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .background(color = errorColor.copy(alpha = ContentAlpha.medium))
-                            .drawWithContent {
-                                drawContent()
-
-                                drawRect(
-                                    color = errorColor,
-                                    size = Size(SPACING_TINY.dp.toPx(), size.height)
-                                )
-                            }
-                            .padding(SPACING_MEDIUM.dp)
+                            .height(IntrinsicSize.Min)
+                            .background(color = MaterialTheme.colors.error.copy(alpha = ContentAlpha.medium))
                     ) {
+                        Box(
+                            modifier = Modifier
+                                .width(SPACING_TINY.dp)
+                                .fillMaxHeight()
+                                .background(MaterialTheme.colors.error)
+                        )
                         Text(
                             text = stringResource(R.string.screen_order_item_tracking_history_refund_card_final_sale_additional_description),
-                            color = errorColor
+                            modifier = Modifier.padding(SPACING_MEDIUM.dp),
+                            color = MaterialTheme.customColors.white
                         )
                     }
                 }
@@ -889,7 +915,7 @@ private fun GenericCard(
             )
         },
         leadingIcon = {
-            Image(
+            WrapImage(
                 painter = painterResource(leadingIconResId),
                 contentDescription = null,
                 modifier = Modifier.size(ConstantsUi.MIN_ICON_SIZE),
@@ -963,7 +989,7 @@ private fun ExtraActionButtonsRow(
                 horizontalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Image(
+                WrapImage(
                     painter = painterResource(R.drawable.ic_phone),
                     contentDescription = null,
                     modifier = Modifier.size(ConstantsUi.MIN_ICON_SIZE),
@@ -1003,33 +1029,37 @@ private fun TrackingHistorySteps(
                     // Circle indicator
                     Box(
                         modifier = Modifier
-                            .size(SPACING_MEDIUM.dp)
                             .then(
                                 when (step.state) {
                                     OrderItemTrackingStepState.COMPLETED -> {
-                                        Modifier.background(
-                                            color = completedColor,
-                                            shape = CircleShape
-                                        )
+                                        Modifier
+                                            .size(SPACING_MEDIUM.dp)
+                                            .background(
+                                                color = completedColor,
+                                                shape = CircleShape
+                                            )
                                     }
 
                                     OrderItemTrackingStepState.CURRENT -> {
                                         Modifier
-                                            .background(activeColor, CircleShape)
-                                            .drawBehind {
-                                                drawCircle(
-                                                    color = activeColor.copy(alpha = 0.25f),
-                                                    radius = size.width / 2 + 6.dp.toPx()
-                                                )
-                                            }
+                                            .requiredSize(28.dp) // 16.dp inner circle, 6.dp per side padding
+                                            .background(
+                                                color = activeColor.copy(alpha = 0.25f),
+                                                shape = CircleShape
+                                            )
+                                            .wrapContentSize(Alignment.Center)
+                                            .requiredSize(SPACING_MEDIUM.dp)
+                                            .background(color = activeColor, shape = CircleShape)
                                     }
 
                                     OrderItemTrackingStepState.NEXT -> {
-                                        Modifier.border(
-                                            width = 4.dp,
-                                            color = pendingColor,
-                                            shape = CircleShape
-                                        )
+                                        Modifier
+                                            .size(SPACING_MEDIUM.dp)
+                                            .border(
+                                                width = 4.dp,
+                                                color = pendingColor,
+                                                shape = CircleShape
+                                            )
                                     }
                                 }
                             )
@@ -1122,21 +1152,15 @@ private fun TrackingHistoryCardPreview() {
     val outForDeliveryDate = departedSortingFacilityDate.plusDays(2)
     val deliveredDate = outForDeliveryDate.plusDays(2)
 
-    val shipped = OrderTrackingHistoryItemUi(
+    val shipped = OrderTrackingHistoryItemDomain(
         location = "Thessaloniki",
-        date = InstantUi(
-            value = shippedDate,
-            label = shippedDate.toOrderEstimatedDeliveryFormatFull()
-        )
-    )
+        date = shippedDate
+    ).toUi()
 
-    val departedSortingFacility = OrderTrackingHistoryItemUi(
+    val departedSortingFacility = OrderTrackingHistoryItemDomain(
         location = "Larissa",
-        date = InstantUi(
-            value = departedSortingFacilityDate,
-            label = departedSortingFacilityDate.toOrderEstimatedDeliveryFormatFull()
-        )
-    )
+        date = departedSortingFacilityDate
+    ).toUi()
 
     val outForDelivery = null
 
@@ -1147,7 +1171,7 @@ private fun TrackingHistoryCardPreview() {
         departedSortingFacility,
         outForDelivery,
         delivered
-    ).toImmutableList()
+    )
 
     MarvelXTheme {
         Scaffold { paddingValues ->
@@ -1176,7 +1200,7 @@ private fun OrderItemTrackingHistoryScreenDeliveredPreview() {
     val orderItemTitle = "Super wow mug!"
     val orderItemCoverImageUrl = ""
     val orderItemPriceLabel = "150.20".withEuroSymbol()
-    val sellerUserId = "1"
+    val sellerUserId = UserId("1")
 
     val orderDateMinusDays = Random.nextLong(3L..10L)
     val estimatedDeliveryDateMinPlusDays = Random.nextLong(1L..3L)
@@ -1188,8 +1212,8 @@ private fun OrderItemTrackingHistoryScreenDeliveredPreview() {
 
     val deliveredDate = estimatedDeliveryDateMin.plusDays(1)
 
-    val returnUntilDate = deliveredDate.plusDays(30L)
-    val refundUntilDate = deliveredDate.plusDays(30L)
+    val returnUntilDate = deliveredDate.plusDays(30)
+    val refundUntilDate = deliveredDate.plusDays(30)
 
     MarvelXTheme {
         OrderItemTrackingHistoryScreen(
@@ -1200,8 +1224,8 @@ private fun OrderItemTrackingHistoryScreenDeliveredPreview() {
                         trackingId = "T1002350",
                         courier = OrderCourierUi.entries.random(),
                         estimatedDelivery = OrderEstimatedDeliveryDateRangeDomain(
-                            from = estimatedDeliveryDateMin,
-                            to = estimatedDeliveryDateMax
+                            from = estimatedDeliveryDateMin.toLocalDate(),
+                            to = estimatedDeliveryDateMax.toLocalDate()
                         ).toUi(),
                         status = OrderItemStatusUi.Delivered,
                         steps = persistentListOf(),
@@ -1209,16 +1233,12 @@ private fun OrderItemTrackingHistoryScreenDeliveredPreview() {
                             location = "Athens",
                             date = estimatedDeliveryDateMin.plusDays(1)
                         ).toUi(),
-                        returnStatus = OrderItemReturnStatusDomain.AVAILABLE,
-                        returnUntilDate = InstantUi(
-                            value = returnUntilDate,
-                            label = returnUntilDate.defaultFormat()
-                        ),
-                        refundStatus = OrderItemRefundStatusDomain.REJECTED,
-                        refundUntilDate = InstantUi(
-                            value = refundUntilDate,
-                            label = refundUntilDate.defaultFormat()
-                        )
+                        returnEligibility = OrderItemReturnEligibilityDomain(
+                            returnStatus = OrderItemReturnStatusDomain.AVAILABLE,
+                            returnUntilDate = returnUntilDate.toLocalDate(),
+                            refundStatus = OrderItemRefundStatusDomain.REJECTED,
+                            refundUntilDate = refundUntilDate.toLocalDate()
+                        ).toUi()
                     )
                 ),
                 sellerDetailsUiState = UiState.Success(
@@ -1234,16 +1254,11 @@ private fun OrderItemTrackingHistoryScreenDeliveredPreview() {
                     orderItemTitle = orderItemTitle,
                     orderItemCoverImageUrl = orderItemCoverImageUrl,
                     orderItemPriceLabel = orderItemPriceLabel
-                )
+                ),
+                sellerUserId = sellerUserId
             ),
-            effect = emptyFlow(),
-            onNavigationEffect = {},
-            orderId = orderId,
-            orderItemId = orderItemId,
-            orderItemTitle = orderItemTitle,
-            orderItemCoverImageUrl = orderItemCoverImageUrl,
-            orderItemPriceLabel = orderItemPriceLabel,
-            sellerUserId = sellerUserId
+            effect = SingleObserverFlow(emptyFlow()),
+            onNavigationEffect = {}
         )
     }
 }

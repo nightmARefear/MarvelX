@@ -27,7 +27,7 @@ interface FriendInteractor {
     /**
      * Deletes the friend with the given ID.
      */
-    suspend fun deleteFriend(userId: UserId): Flow<Boolean>
+    suspend fun deleteFriend(userId: UserId): Boolean
 
 }
 
@@ -60,6 +60,5 @@ internal class FriendInteractorImpl(
             }
         }
 
-    override suspend fun deleteFriend(userId: UserId): Flow<Boolean> =
-        repository.deleteFriend(userId)
+    override suspend fun deleteFriend(userId: UserId): Boolean = repository.deleteFriend(userId)
 }

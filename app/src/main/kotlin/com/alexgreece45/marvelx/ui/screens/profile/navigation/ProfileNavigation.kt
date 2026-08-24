@@ -1,14 +1,15 @@
 package com.alexgreece45.marvelx.ui.screens.profile.navigation
 
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import androidx.navigation.navDeepLink
 import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarNavigationPayload
+import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarType
 import com.alexgreece45.marvelx.ui.helper.getDeepLinkBasePath
 import com.alexgreece45.marvelx.ui.helper.openDeepLinkAction
+import com.alexgreece45.marvelx.ui.navigation.SavedStateHandleKeys
 import com.alexgreece45.marvelx.ui.navigation.Screen
 import com.alexgreece45.marvelx.ui.navigation.getBottomNavigationBarData
 import com.alexgreece45.marvelx.ui.screens.profile.ProfileScreen
@@ -21,8 +22,6 @@ private const val screenName = "profileScreen"
 
 @Serializable
 data class ProfileRoute(val qrCodeScanErrorMessage: String? = null)
-
-fun NavController.navigateToProfileScreen() = navigate(route = ProfileRoute())
 
 internal fun NavGraphBuilder.profileScreen(
     navController: NavHostController
@@ -37,13 +36,16 @@ internal fun NavGraphBuilder.profileScreen(
             onEventSent = viewModel::setEvent,
             state = viewModel.uiState.collectAsStateWithLifecycle().value,
             effect = viewModel.uiEffect,
+            snackbarEffects = viewModel.snackbarEffects,
             snackbarNavigationPayloadFlow = navBackStackEntry.savedStateHandle
                 .getStateFlow<SnackbarNavigationPayload?>(
-                    "snackbarNavigationPayload",
-                    null
+                    key = SavedStateHandleKeys.snackbarNavigationPayload,
+                    initialValue = null
                 ),
             onSnackbarNavigationPayloadConsumed = {
-                navBackStackEntry.savedStateHandle.remove<SnackbarNavigationPayload>("SnackbarNavigationPayload")
+                navBackStackEntry.savedStateHandle.remove<SnackbarNavigationPayload>(
+                    SavedStateHandleKeys.snackbarNavigationPayload
+                )
             },
             bottomNavigationBarData = { getBottomNavigationBarData(navController = navController) },
             onNavigation = { navigationEffect ->

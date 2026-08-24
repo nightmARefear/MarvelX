@@ -61,7 +61,7 @@ internal class InputFieldValidatorImpl(
 
             results
                 .firstOrNull()
-                ?: InputFieldValidationResult.Uninitialized // In case the rules list is empty.
+                ?: InputFieldValidationResult.Uninitialized // In case the rule list is empty.
         }
 
     private fun validateRule(

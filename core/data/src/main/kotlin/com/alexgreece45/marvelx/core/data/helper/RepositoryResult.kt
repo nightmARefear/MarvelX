@@ -35,3 +35,11 @@ inline fun <T> RepositoryResult<T>.onNetworkError(action: () -> Unit): Repositor
     if (this is RepositoryResult.NetworkError) action()
     return this
 }
+
+/**
+ * The action to perform when the result is erroneous.
+ */
+inline fun <T> RepositoryResult<T>.onError(action: () -> Unit): RepositoryResult<T> {
+    if (this is RepositoryResult.Failed || this is RepositoryResult.NetworkError) action()
+    return this
+}

@@ -156,6 +156,8 @@ internal class SignupViewModel(
     override fun handleEvents(event: SignupEvent) {
         when (event) {
             SignupEvent.OnBack -> {
+                if (currentState.isLoading) return
+
                 setEffect { SignupEffect.Navigation.GoBack }
             }
 

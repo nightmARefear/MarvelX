@@ -1,6 +1,7 @@
 package com.alexgreece45.marvelx.core.data.model.marketplace.listing
 
 import com.alexgreece45.marvelx.core.data.model.listing.ListingId
+import com.alexgreece45.marvelx.core.data.model.order.ListingOrderIds
 import com.alexgreece45.marvelx.core.network.model.api.marketplace.listing.details.ResponseListingDetails
 import com.alexgreece45.marvelx.model.model.user.UserId
 
@@ -23,5 +24,6 @@ data class ListingData(
     val favorite: Boolean,
     val cart: Boolean,
     val postedAt: String,
-    val updatedAt: String?
+    val updatedAt: String?,
+    val orderIds: ListingOrderIds?
 )

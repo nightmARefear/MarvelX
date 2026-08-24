@@ -22,40 +22,42 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.common_ui.util.ObserveUiEffect
+import com.alexgreece45.marvelx.core.common.util.flows.single_observer_flow.SingleObserverFlow
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.LottieComposable
+import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
 import com.alexgreece45.marvelx.ui.components.WrapButton
 import com.alexgreece45.marvelx.ui.components.WrapOutlinedButton
-import com.alexgreece45.marvelx.ui.components.effect.ObserveUiEffect
-import com.alexgreece45.marvelx.ui.components.effect.OneTimeLaunchedEffect
 import com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.steps.success.model.CheckoutSuccessContract
 import com.alexgreece45.marvelx.ui_theme.theme.MarvelXTheme
 import com.alexgreece45.marvelx.util.SPACING_MEDIUM
 import com.alexgreece45.marvelx.util.constants.ConstantsUi
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 
 @Composable
 internal fun CheckoutSuccessScreen(
     onEvent: (CheckoutSuccessContract.Event) -> Unit,
     state: CheckoutSuccessContract.State,
-    effect: Flow<CheckoutSuccessContract.Effect>,
-    onNavigationEffect: (CheckoutSuccessContract.Effect.Navigation) -> Unit,
-    orderId: String
+    effect: SingleObserverFlow<CheckoutSuccessContract.Effect>,
+    onNavigationEffect: (CheckoutSuccessContract.Effect.Navigation) -> Unit
 ) {
 
-    ObserveUiEffect(effect) { uiEffect ->
+    ObserveUiEffect(flow = effect, tag = "CheckoutSuccessScreen") { uiEffect ->
         when (uiEffect) {
             is CheckoutSuccessContract.Effect.Navigation -> onNavigationEffect(uiEffect)
         }
     }
 
-    OneTimeLaunchedEffect {
-        onEvent(CheckoutSuccessContract.Event.Init(orderId))
-    }
-
     ContentScreen(
         isLoading = state.isLoading,
+        navigableAction = ScreenNavigableAction.Closeable(onClose = {
+            onEvent(
+                CheckoutSuccessContract.Event.OnBack
+            )
+        }),
+        onBack = { onEvent(CheckoutSuccessContract.Event.OnBack) },
+        showToolbar = true,
         stickyBottom = {
             Column(
                 modifier = Modifier.fillMaxWidth()
@@ -128,7 +130,8 @@ internal fun CheckoutSuccessScreen(
     }
 }
 
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES or Configuration.UI_MODE_TYPE_NORMAL,
+@Preview(
+    uiMode = Configuration.UI_MODE_NIGHT_YES or Configuration.UI_MODE_TYPE_NORMAL,
     showSystemUi = true, showBackground = true
 )
 @Composable
@@ -141,9 +144,8 @@ private fun CheckoutSuccessScreenPreview() {
                 isLoading = false,
                 orderId = orderId
             ),
-            effect = emptyFlow(),
-            onNavigationEffect = {},
-            orderId = orderId
+            effect = SingleObserverFlow(emptyFlow()),
+            onNavigationEffect = {}
         )
     }
 }

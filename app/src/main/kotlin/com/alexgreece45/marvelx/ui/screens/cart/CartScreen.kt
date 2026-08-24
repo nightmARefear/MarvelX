@@ -2,12 +2,13 @@ package com.alexgreece45.marvelx.ui.screens.cart
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.ButtonDefaults
+import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
@@ -20,40 +21,39 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.common_ui.util.ObserveUiEffect
+import com.alexgreece45.marvelx.core.common.util.flows.single_observer_flow.SingleObserverFlow
 import com.alexgreece45.marvelx.domain.model_api.order.OrderCheckoutInfoDomain
 import com.alexgreece45.marvelx.ui.components.BottomNavigationBarData
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.GenericLazyItemInfoScreen
 import com.alexgreece45.marvelx.ui.components.LazyItemContentErrorScreen
 import com.alexgreece45.marvelx.ui.components.LazyItemErrorScreen
-import com.alexgreece45.marvelx.ui.components.ListingCard
 import com.alexgreece45.marvelx.ui.components.ThrottledIconButton
 import com.alexgreece45.marvelx.ui.components.WrapButton
 import com.alexgreece45.marvelx.ui.components.checkoutDataCard.CheckoutInfoCard
-import com.alexgreece45.marvelx.ui.components.effect.ObserveUiEffect
 import com.alexgreece45.marvelx.ui.components.icons.ProcessingRequestIconLottie
+import com.alexgreece45.marvelx.ui.components.listing.ListingCard
 import com.alexgreece45.marvelx.ui.components.orderSumamaryCard.OrderSummaryCard
 import com.alexgreece45.marvelx.ui.screens.cart.model.CartContract
 import com.alexgreece45.marvelx.ui_theme.theme.values.customColors
-import com.alexgreece45.marvelx.util.DEFAULT_SCREEN_PADDING
 import com.alexgreece45.marvelx.util.SPACING_MEDIUM
 import com.alexgreece45.marvelx.util.VSpacer
+import com.alexgreece45.marvelx.util.constants.ConstantsUi
 import com.alexgreece45.marvelx.util.extensions.showToast
-import kotlinx.coroutines.flow.Flow
 
 @Composable
 fun CartScreen(
     onEvent: (CartContract.Event) -> Unit,
     state: CartContract.State,
-    effect: Flow<CartContract.Effect>,
+    effect: SingleObserverFlow<CartContract.Effect>,
     onNavigationEffect: (CartContract.Effect.Navigation) -> Unit,
     bottomNavigationBarData: (@Composable () -> BottomNavigationBarData)?,
     orderCheckoutInfo: OrderCheckoutInfoDomain?,
 ) {
-
     val context = LocalContext.current
 
-    ObserveUiEffect(effect) { uiEffect ->
+    ObserveUiEffect(flow = effect, tag = "CartScreen") { uiEffect ->
         when (uiEffect) {
             is CartContract.Effect.Navigation -> onNavigationEffect(uiEffect)
             is CartContract.Effect.ShowToastMessage -> context.showToast(uiEffect.message)
@@ -193,17 +193,25 @@ fun CartScreen(
                         WrapButton(
                             onClick = { onEvent(CartContract.Event.OnCartSummaryButtonClicked) },
                             modifier = Modifier.fillMaxWidth(),
+                            enabled = !state.isCheckingOut,
                             colors = ButtonDefaults.buttonColors(
                                 backgroundColor = MaterialTheme.customColors.buttonBackgroundNegative,
                                 contentColor = MaterialTheme.customColors.buttonContentWhite
                             )
                         ) {
-                            Text(
-                                text = if (state.isCheckout) stringResource(
-                                    R.string.screen_cart_sticky_bottom_button_pay,
-                                    state.cartInfo.summary.totalPriceLabel
-                                ) else stringResource(R.string.screen_cart_sticky_bottom_button_proceed)
-                            )
+                            if (state.isCheckingOut) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(ConstantsUi.MIN_ICON_SIZE),
+                                    color = MaterialTheme.customColors.white
+                                )
+                            } else {
+                                Text(
+                                    text = if (state.isCheckout) stringResource(
+                                        R.string.screen_cart_sticky_bottom_button_pay,
+                                        state.cartInfo.summary.totalPriceLabel
+                                    ) else stringResource(R.string.screen_cart_sticky_bottom_button_proceed)
+                                )
+                            }
                         }
                     }
                 )

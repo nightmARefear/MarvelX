@@ -20,7 +20,6 @@ import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.ModalBottomSheetValue
-import androidx.compose.material.SnackbarHostState
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -50,10 +49,12 @@ import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.common_ui.extensions.hideSnackbar
-import com.alexgreece45.marvelx.common_ui.extensions.showSnackbarAndHandleResult
 import com.alexgreece45.marvelx.common_ui.previewAnnotation.ThemePreview
-import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarConfig
+import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarEffect
+import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarNavigationPayload
+import com.alexgreece45.marvelx.common_ui.util.ObserveUiEffect
+import com.alexgreece45.marvelx.common_ui.util.ObserveUiState
+import com.alexgreece45.marvelx.core.common.util.flows.single_observer_flow.SingleObserverFlow
 import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.ProfileDetailsDomain
 import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.RelationshipStatusDomain
 import com.alexgreece45.marvelx.ui.components.AlertDialogError
@@ -69,7 +70,6 @@ import com.alexgreece45.marvelx.ui.components.chips.AddFriendChip
 import com.alexgreece45.marvelx.ui.components.chips.CancelRequestChip
 import com.alexgreece45.marvelx.ui.components.chips.FriendsChip
 import com.alexgreece45.marvelx.ui.components.chips.IncomingFriendRequestChip
-import com.alexgreece45.marvelx.ui.components.effect.ObserveUiEffect
 import com.alexgreece45.marvelx.ui.components.enforceMaxBrightness
 import com.alexgreece45.marvelx.ui.components.error.ContentErrorScreen
 import com.alexgreece45.marvelx.ui.components.modalBottomSheetContents.ModalBottomSheetContentItems
@@ -89,7 +89,8 @@ import com.alexgreece45.marvelx.util.extensions.hideIfVisible
 import com.alexgreece45.marvelx.util.extensions.setText
 import com.alexgreece45.marvelx.util.extensions.shareContentUrl
 import com.alexgreece45.marvelx.util.extensions.throttledClickable
-import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.launch
 
@@ -98,18 +99,19 @@ import kotlinx.coroutines.launch
 internal fun ProfileDetailsScreen(
     onEventSent: (ProfileDetailsContract.Event) -> Unit,
     state: ProfileDetailsContract.State,
-    effect: Flow<ProfileDetailsContract.Effect>,
+    effect: SingleObserverFlow<ProfileDetailsContract.Effect>,
+    snackbarEffects: SingleObserverFlow<SnackbarEffect>,
     userId: String,
     shouldShowAcceptFriendRequestDialog: Boolean,
-    onNavigation: (ProfileDetailsContract.Effect.Navigation) -> Unit
+    onNavigation: (ProfileDetailsContract.Effect.Navigation) -> Unit,
+    snackbarNavigationPayloadFlow: StateFlow<SnackbarNavigationPayload?>,
+    onSnackbarNavigationPayloadConsumed: () -> Unit,
 ) {
-
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     val clipboard = LocalClipboard.current
 
     val modalBottomSheetState = rememberWrapModalBottomSheetState()
-    val snackbarHostState = remember { SnackbarHostState() }
 
     /**
      * Whether to enforce the max screen brightness.
@@ -120,6 +122,13 @@ internal fun ProfileDetailsScreen(
         onEventSent(ProfileDetailsContract.Event.Init(userId, shouldShowAcceptFriendRequestDialog))
     }
 
+    ObserveUiState(flow = snackbarNavigationPayloadFlow) { payload ->
+        payload?.let {
+            onSnackbarNavigationPayloadConsumed()
+            onEventSent(ProfileDetailsContract.Event.OnSnackbarNavigationPayloadReceived(payload))
+        }
+    }
+
     LaunchedEffect(modalBottomSheetState.currentValue, state.bottomSheetType) {
         shouldEnforceMaxBrightness =
             modalBottomSheetState.currentValue != ModalBottomSheetValue.Hidden
@@ -127,7 +136,7 @@ internal fun ProfileDetailsScreen(
         enforceMaxBrightness(context, shouldEnforceMaxBrightness)
     }
 
-    ObserveUiEffect(effect) { uiEffect ->
+    ObserveUiEffect(flow = effect, tag = "ProfileDetailsScreen") { uiEffect ->
         when (uiEffect) {
             is ProfileDetailsContract.Effect.Navigation -> onNavigation(uiEffect)
 
@@ -153,16 +162,6 @@ internal fun ProfileDetailsScreen(
             is ProfileDetailsContract.Effect.SetClipboardText -> {
                 clipboard.setText(uiEffect.text)
                 Toast.makeText(context, uiEffect.toastMessage, Toast.LENGTH_SHORT).show()
-            }
-
-            is ProfileDetailsContract.Effect.ShowSnackbar -> {
-                coroutineScope.launch {
-                    snackbarHostState.showSnackbarAndHandleResult(uiEffect.snackbarStateData)
-                }
-            }
-
-            ProfileDetailsContract.Effect.HideSnackbar -> {
-                snackbarHostState.hideSnackbar()
             }
         }
     }
@@ -240,10 +239,7 @@ internal fun ProfileDetailsScreen(
                     )
                 )
             },
-            snackbarConfig = SnackbarConfig(
-                snackbarHostState = snackbarHostState,
-                snackbarStateData = state.snackbarStateData
-            ),
+            snackbarEffects = snackbarEffects,
         ) { paddingValues ->
             Column(
                 modifier = Modifier
@@ -620,10 +616,13 @@ private fun ProfileDetailsScreenPreview() {
                 profileDetails = ProfileDetailsDomain.mockAnotherUser(),
                 isEmailHidden = true,
             ),
-            effect = emptyFlow(),
+            effect = SingleObserverFlow(emptyFlow()),
+            snackbarEffects = SingleObserverFlow(emptyFlow()),
             userId = "",
             shouldShowAcceptFriendRequestDialog = false,
-            onNavigation = {}
+            onNavigation = {},
+            snackbarNavigationPayloadFlow = MutableStateFlow(null),
+            onSnackbarNavigationPayloadConsumed = { }
         )
     }
 }
@@ -643,10 +642,13 @@ private fun ProfileDetailsScreenNestedErrorViewPreview() {
                     errorResourceId = R.raw.lottie_not_available
                 )
             ),
-            effect = emptyFlow(),
+            effect = SingleObserverFlow(emptyFlow()),
+            snackbarEffects = SingleObserverFlow(emptyFlow()),
             userId = "100",
             shouldShowAcceptFriendRequestDialog = false,
-            onNavigation = {}
+            onNavigation = {},
+            snackbarNavigationPayloadFlow = MutableStateFlow(null),
+            onSnackbarNavigationPayloadConsumed = {},
         )
     }
 }
@@ -678,10 +680,13 @@ private fun ProfileDetailsScreenMoreActionBottomSheetPreview() {
                 ),
                 bottomSheetType = ProfileDetailsBottomSheetType.MoreActions
             ),
-            effect = emptyFlow(),
+            effect = SingleObserverFlow(emptyFlow()),
+            snackbarEffects = SingleObserverFlow(emptyFlow()),
             userId = "101",
             shouldShowAcceptFriendRequestDialog = false,
-            onNavigation = {}
+            onNavigation = {},
+            snackbarNavigationPayloadFlow = MutableStateFlow(null),
+            onSnackbarNavigationPayloadConsumed = {}
         )
     }
 }

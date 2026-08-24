@@ -9,5 +9,5 @@ internal interface NavBackStackLogger {
      * Prints the nav back stack every time a navigation occurs.
      */
     @Composable
-    fun LoggerView(navController: NavController)
+    fun TrackBackStack(navController: NavController, showRouteId: Boolean)
 }

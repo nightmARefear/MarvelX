@@ -3,7 +3,6 @@ package com.alexgreece45.marvelx.ui.screens.marketplace.mappers
 import com.alexgreece45.marvelx.configuration.ConfigPriceLogic
 import com.alexgreece45.marvelx.core.common.extensions.toListingFormat
 import com.alexgreece45.marvelx.core.common.logger.AppLogger
-import com.alexgreece45.marvelx.core.data.model.listing.ListingId
 import com.alexgreece45.marvelx.data.model.marketplace.listing.EnumGeneric
 import com.alexgreece45.marvelx.data.repository.marketplace.listing.ListingCategoryRepository
 import com.alexgreece45.marvelx.data.repository.marketplace.listing.details.ListingDetailsRepository
@@ -27,7 +26,7 @@ class ListingUiMapper(
     private val configPriceLogic: ConfigPriceLogic,
 ) {
 
-    private val loggerTag = "ListingUiMapper"
+    private val loggerTag = this::class.simpleName
 
     fun toUi(
         listings: List<ListingDomain>,
@@ -75,11 +74,14 @@ class ListingUiMapper(
                         value = postedAt,
                         label = postedAt.toListingFormat()
                     ),
-                    updatedAt = InstantUi(
-                        value = updatedAt,
-                        label = updatedAt?.toListingFormat() ?: "-"
-                    ),
-                    canEdit = sellerUserId == UserId(currentUserId)
+                    updatedAt = updatedAt?.let {
+                        InstantUi(
+                            value = updatedAt,
+                            label = updatedAt.toListingFormat()
+                        )
+                    },
+                    canEdit = sellerUserId == UserId(currentUserId),
+                    orderIds = orderIds
                 )
             } catch (e: Exception) {
                 appLogger.e(loggerTag) { "An error occurred whilst converting `ListingDomain` to `ListingUi`.\n" + e.localizedMessage.orEmpty() }
@@ -111,7 +113,8 @@ class ListingUiMapper(
                         favorite = false,
                         cart = false,
                         postedAt = DateUtil.getUTCInstant(),
-                        updatedAt = null
+                        updatedAt = null,
+                        orderIds = null
                     ),
                     currentUserId = currentUserId
                 )

@@ -26,19 +26,20 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.common_ui.util.ObserveUiEffect
+import com.alexgreece45.marvelx.core.common.util.flows.single_observer_flow.SingleObserverFlow
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.ExtendedFabData
 import com.alexgreece45.marvelx.ui.components.GenericLazyItemInfoScreen
 import com.alexgreece45.marvelx.ui.components.IconData
 import com.alexgreece45.marvelx.ui.components.LazyItemContentErrorScreen
-import com.alexgreece45.marvelx.ui.components.ListingCard
 import com.alexgreece45.marvelx.ui.components.NormalFabData
 import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
 import com.alexgreece45.marvelx.ui.components.WrapModalBottomSheetLayout
 import com.alexgreece45.marvelx.ui.components.chips.WrapChip
-import com.alexgreece45.marvelx.ui.components.effect.ObserveUiEffect
 import com.alexgreece45.marvelx.ui.components.icons.ProcessingRequestIconLottie
 import com.alexgreece45.marvelx.ui.components.isScrollingUp
+import com.alexgreece45.marvelx.ui.components.listing.ListingCard
 import com.alexgreece45.marvelx.ui.components.modalBottomSheetContents.ModalBottomSheetContentItems
 import com.alexgreece45.marvelx.ui.components.model.BottomSheetContentItem
 import com.alexgreece45.marvelx.ui.components.model.BottomSheetContentItemIconData
@@ -52,23 +53,22 @@ import com.alexgreece45.marvelx.util.extensions.clickableNoRipple
 import com.alexgreece45.marvelx.util.extensions.hideIfVisible
 import com.alexgreece45.marvelx.util.extensions.showIfHidden
 import com.alexgreece45.marvelx.util.extensions.showToast
-import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 
 @Composable
 fun MyListingsScreen(
     onEvent: (MyListingsContract.Event) -> Unit,
     state: MyListingsContract.State,
-    effect: Flow<MyListingsContract.Effect>,
+    effect: SingleObserverFlow<MyListingsContract.Effect>,
     onNavigationEffect: (MyListingsContract.Effect.Navigation) -> Unit,
 ) {
-
     val context = LocalContext.current
     val lazyListState = rememberLazyListState()
     val modalBottomSheetCoroutineScope = rememberCoroutineScope()
     val modalBottomSheetState = rememberWrapModalBottomSheetState()
 
-    ObserveUiEffect(effect) { uiEffect ->
+    ObserveUiEffect(flow = effect, tag = "MyListingsScreen") { uiEffect ->
         when (uiEffect) {
             is MyListingsContract.Effect.Navigation -> onNavigationEffect(uiEffect)
             is MyListingsContract.Effect.ShowToastMessage -> context.showToast(uiEffect.message)
@@ -91,11 +91,11 @@ fun MyListingsScreen(
     }
 
     LaunchedEffect(lazyListState) {
-        snapshotFlow {
-            lazyListState.canScrollForward
-        }.collect {
-            onEvent(MyListingsContract.Event.OnEndOfListScrolled)
-        }
+        snapshotFlow { lazyListState.canScrollForward }
+            .drop(1)
+            .collect {
+                onEvent(MyListingsContract.Event.OnEndOfListScrolled)
+            }
     }
 
     WrapModalBottomSheetLayout(

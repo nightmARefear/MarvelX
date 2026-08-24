@@ -9,27 +9,26 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavController
+import com.alexgreece45.marvelx.common_ui.util.ObserveUiEffect
+import com.alexgreece45.marvelx.core.common.util.flows.single_observer_flow.SingleObserverFlow
 import com.alexgreece45.marvelx.ui.components.ContentScreen
-import com.alexgreece45.marvelx.ui.components.effect.ObserveUiEffect
 import com.alexgreece45.marvelx.ui.components.effect.OneTimeLaunchedEffect
 import com.alexgreece45.marvelx.ui.navigation.Screen
 import com.alexgreece45.marvelx.ui.screens.allCharacters.navigation.navigateToAllCharactersScreen
 import com.alexgreece45.marvelx.util.extensions.popUpToTop
-import kotlinx.coroutines.flow.Flow
 
 @Composable
 fun IntroLoadingScreen(
     navController: NavController,
     onEventSent: (IntroLoadingContract.Event) -> Unit,
     state: IntroLoadingContract.State,
-    effect: Flow<IntroLoadingContract.Effect>,
+    effect: SingleObserverFlow<IntroLoadingContract.Effect>,
 ) {
-
     OneTimeLaunchedEffect {
         onEventSent(IntroLoadingContract.Event.Init)
     }
 
-    ObserveUiEffect(effect) { uiEffect ->
+    ObserveUiEffect(flow = effect, tag = "IntroLoadingScreen") { uiEffect ->
         when (uiEffect) {
             is IntroLoadingContract.Effect.Navigation.NavigateToHomeScreenWithErrorMessage -> {
                 // TODO: Resolve.

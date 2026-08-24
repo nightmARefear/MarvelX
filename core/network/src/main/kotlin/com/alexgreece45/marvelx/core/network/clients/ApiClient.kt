@@ -16,6 +16,7 @@ import com.alexgreece45.marvelx.core.network.model.api.forgotPassword.phoneNumbe
 import com.alexgreece45.marvelx.core.network.model.api.forgotPassword.phoneNumber.ResponseForgotPasswordOtpBlockedPhoneNumber
 import com.alexgreece45.marvelx.core.network.model.api.jwtSensitiveUserData.RequestJwtSensitiveUserData
 import com.alexgreece45.marvelx.core.network.model.api.jwtSensitiveUserData.ResponseJwtSensitiveUserData
+import com.alexgreece45.marvelx.core.network.model.api.order.item.ResponseReturnPolicies
 import com.alexgreece45.marvelx.core.network.model.api.otp.OtpRequest
 import com.alexgreece45.marvelx.core.network.model.api.otp.OtpResponseSuccess
 import com.alexgreece45.marvelx.core.network.model.api.resendOtp.RequestResendOtp
@@ -108,4 +109,6 @@ interface ApiClient {
     suspend fun getImage(imageUrl: String): ApiResult<ResponseBody>
 
     suspend fun markNotificationAsOpened(): ApiResult<String>
+
+    suspend fun getReturnPolicies(): ApiResult<ResponseReturnPolicies>
 }

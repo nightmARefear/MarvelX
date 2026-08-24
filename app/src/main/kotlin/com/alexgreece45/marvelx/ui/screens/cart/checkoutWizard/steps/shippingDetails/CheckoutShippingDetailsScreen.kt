@@ -2,7 +2,6 @@ package com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.steps.shippingDe
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -18,26 +17,25 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.common_ui.util.ObserveUiEffect
+import com.alexgreece45.marvelx.core.common.util.flows.single_observer_flow.SingleObserverFlow
 import com.alexgreece45.marvelx.ui.components.ContentScreen
-import com.alexgreece45.marvelx.ui.components.ContentScreenHeader
 import com.alexgreece45.marvelx.ui.components.ExposedDropdownMenu
-import com.alexgreece45.marvelx.ui.components.effect.ObserveUiEffect
 import com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.steps.shippingDetails.model.CheckoutShippingDetailsContract
 import com.alexgreece45.marvelx.ui.screens.marketplace.components.WizardTextInputField
 import com.alexgreece45.marvelx.util.SPACING_MEDIUM
-import kotlinx.coroutines.flow.Flow
 
 @Composable
 internal fun CheckoutShippingDetailsScreen(
     onEvent: (CheckoutShippingDetailsContract.Event) -> Unit,
     state: CheckoutShippingDetailsContract.State,
-    effect: Flow<CheckoutShippingDetailsContract.Effect>,
+    effect: SingleObserverFlow<CheckoutShippingDetailsContract.Effect>,
     onNavigationEffect: (CheckoutShippingDetailsContract.Effect.Navigation) -> Unit,
     setStickyBottomButtonEnabled: (Boolean) -> Unit,
     showToastMessage: (String) -> Unit
 ) {
 
-    ObserveUiEffect(effect) { uiEffect ->
+    ObserveUiEffect(flow = effect, tag = "CheckoutShippingDetailsScreen") { uiEffect ->
         when (uiEffect) {
             is CheckoutShippingDetailsContract.Effect.Navigation -> onNavigationEffect(uiEffect)
             is CheckoutShippingDetailsContract.Effect.SetStickyBottomButtonEnabled -> setStickyBottomButtonEnabled(

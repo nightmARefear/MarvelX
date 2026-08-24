@@ -1,6 +1,5 @@
 package com.alexgreece45.marvelx.domain.model_api.marketplace.listing
 
-import com.alexgreece45.marvelx.core.data.model.listing.ListingId
 import com.alexgreece45.marvelx.model.model.user.UserId
 import java.math.BigDecimal
 import java.time.Instant
@@ -21,5 +20,6 @@ data class ListingDomain(
     val favorite: Boolean,
     val cart: Boolean,
     val postedAt: Instant,
-    val updatedAt: Instant?
+    val updatedAt: Instant?,
+    val orderIds: ListingOrderIdsDomain?
 )

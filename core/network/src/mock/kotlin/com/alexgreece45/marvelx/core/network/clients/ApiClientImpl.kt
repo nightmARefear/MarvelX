@@ -1,9 +1,6 @@
 package com.alexgreece45.marvelx.core.network.clients
 
 import android.content.Context
-import com.alexgreece45.marvelx.core.common.extensions.plusDays
-import com.alexgreece45.marvelx.core.common.extensions.plusMinutes
-import com.alexgreece45.marvelx.core.common.util.DateUtil
 import com.alexgreece45.marvelx.core.network.constants.TokenConstants
 import com.alexgreece45.marvelx.core.network.model.api.authorize.ResponseAuthorize
 import com.alexgreece45.marvelx.core.network.model.api.character.CharacterDataContainer
@@ -23,6 +20,7 @@ import com.alexgreece45.marvelx.core.network.model.api.forgotPassword.phoneNumbe
 import com.alexgreece45.marvelx.core.network.model.api.forgotPassword.phoneNumber.ResponseForgotPasswordOtpBlockedPhoneNumber
 import com.alexgreece45.marvelx.core.network.model.api.jwtSensitiveUserData.RequestJwtSensitiveUserData
 import com.alexgreece45.marvelx.core.network.model.api.jwtSensitiveUserData.ResponseJwtSensitiveUserData
+import com.alexgreece45.marvelx.core.network.model.api.order.item.ResponseReturnPolicies
 import com.alexgreece45.marvelx.core.network.model.api.otp.OtpRequest
 import com.alexgreece45.marvelx.core.network.model.api.otp.OtpResponseSuccess
 import com.alexgreece45.marvelx.core.network.model.api.resendOtp.RequestResendOtp
@@ -50,6 +48,7 @@ import com.alexgreece45.marvelx.core.network.model.generic.ApiResult
 import com.alexgreece45.marvelx.core.network.services.ApiService
 import com.alexgreece45.marvelx.core.network.util.executeApiServiceCall
 import com.google.gson.Gson
+import kotlinx.coroutines.delay
 import okhttp3.MultipartBody
 import okhttp3.ResponseBody
 import okhttp3.ResponseBody.Companion.toResponseBody
@@ -57,6 +56,7 @@ import org.koin.core.annotation.Single
 import retrofit2.Response
 import java.io.BufferedReader
 import java.io.InputStreamReader
+import kotlin.time.Duration.Companion.seconds
 
 @Single
 internal class ApiClientImpl(
@@ -444,6 +444,17 @@ internal class ApiClientImpl(
     }
 
     override suspend fun markNotificationAsOpened(): ApiResult<String> = ApiResult.Success("")
+
+    override suspend fun getReturnPolicies(): ApiResult<ResponseReturnPolicies> {
+        delay(1.5.seconds)
+
+        return ApiResult.Success(
+            gson.fromJson(
+                readFileContents("mock_return_policies.json"),
+                ResponseReturnPolicies::class.java
+            )
+        )
+    }
 
     private fun readFileContents(fileName: String): BufferedReader {
         return context.assets.open(fileName).bufferedReader()

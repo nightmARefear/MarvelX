@@ -23,7 +23,6 @@ internal fun NavGraphBuilder.allFavoriteCharactersScreen(
         AllFavoriteCharactersScreen(
             onEventSent = viewModel::setEvent,
             state = viewModel.uiState.collectAsStateWithLifecycle().value,
-            effect = viewModel.uiEffect,
             bottomNavigationBarData = { getBottomNavigationBarData(navController = navController) }
         )
     }

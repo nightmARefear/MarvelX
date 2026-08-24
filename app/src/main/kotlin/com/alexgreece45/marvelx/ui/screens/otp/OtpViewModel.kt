@@ -335,6 +335,8 @@ internal class OtpViewModel(
             }
 
             OtpEvent.OnBackClick -> {
+                if (currentState.isLoading) return
+
                 setEffect {
                     OtpEffect.Navigation.GoBack
                 }

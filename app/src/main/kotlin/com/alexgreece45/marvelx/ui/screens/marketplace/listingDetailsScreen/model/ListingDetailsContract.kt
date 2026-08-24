@@ -46,7 +46,7 @@ sealed interface ListingDetailsContract {
 
         val hasError: Boolean = false,
 
-        val addToBasketButtonLoading: Boolean = false,
+        val stickyBottomButtonLoading: Boolean = false,
     ) : BaseState {
 
         val showToolbar: Boolean get() = mode != ListingDetailsMode.OVERVIEW
@@ -58,6 +58,16 @@ sealed interface ListingDetailsContract {
             data object GoBack : Navigation
             data class NavigateToProfileDetailsScreen(val userId: UserId) : Navigation
             data class NavigateToEditListingScreen(val listingId: String) : Navigation
+            data class NavigateToOrderItemTrackingHistoryScreen(
+                val orderId: String,
+                val orderItemId: String
+            ) : Navigation
+
+            data class NavigateToOrderItemManagementScreen(
+                val orderId: String,
+                val orderItemId: String
+            ) : Navigation
+
             data object GoToNextScreen : Navigation
         }
 

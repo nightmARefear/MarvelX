@@ -4,11 +4,10 @@ import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
 
-sealed interface CheckoutSuccessContract {
+internal sealed interface CheckoutSuccessContract {
 
     sealed interface Event : BaseEvent {
-        data class Init(val orderId: String) : Event
-
+        data object OnBack : Event
         data object OnViewOrderDetailsButtonClicked : Event
         data object OnContinueShoppingButtonClicked : Event
     }
@@ -21,7 +20,7 @@ sealed interface CheckoutSuccessContract {
     sealed interface Effect : BaseEffect {
         sealed interface Navigation : Effect {
             data class NavigateToOrderDetailsScreen(val orderId: String) : Navigation
-            data object ExitWizard : Navigation
+            data object GoBack : Navigation
         }
     }
 }

@@ -3,7 +3,7 @@ package com.alexgreece45.marvelx.data.repository.marketplace.listing
 import com.alexgreece45.marvelx.core.common.dispatchers.model.IoDispatcher
 import com.alexgreece45.marvelx.core.common.logger.AppLogger
 import com.alexgreece45.marvelx.core.data.helper.RepositoryResult
-import com.alexgreece45.marvelx.core.data.helper.handleApiResult
+import com.alexgreece45.marvelx.core.data.helper.handleApiResultNoFlow
 import com.alexgreece45.marvelx.core.network.clients.ListingClient
 import com.alexgreece45.marvelx.data.model.marketplace.listing.ListingCategory
 import com.alexgreece45.marvelx.data.model.marketplace.listing.toData
@@ -14,7 +14,6 @@ import com.alexgreece45.marvelx.util.DateUtil
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import org.koin.core.annotation.Single
 import kotlin.coroutines.CoroutineContext
@@ -104,11 +103,11 @@ class ListingCategoryRepositoryImpl(
         }
 
     private suspend fun getListingCategories(): RepositoryResult<List<ListingCategory>> {
-        return handleApiResult(
-            apiResult = listingClient.getListingCategories(),
+        return handleApiResultNoFlow(
+            apiCall = listingClient::getListingCategories,
             transformation = { this.map { it.toData() } },
             ioDispatcher = ioDispatcher
-        ).first()
+        )
     }
 
     private suspend fun saveListingCategoriesToDatabase(listingCategories: List<ListingCategory>) {

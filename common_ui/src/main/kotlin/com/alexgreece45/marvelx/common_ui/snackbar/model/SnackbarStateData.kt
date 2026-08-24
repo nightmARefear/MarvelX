@@ -1,7 +1,7 @@
 package com.alexgreece45.marvelx.common_ui.snackbar.model
 
 import androidx.compose.material.SnackbarDuration
-import com.alexgreece45.marvelx.core.common.util.safeLet
+import androidx.compose.runtime.Immutable
 import java.util.UUID
 
 /**
@@ -12,33 +12,17 @@ import java.util.UUID
  * @param message The message to be displayed in the Snackbar.
  * @param type The type of this snackbar.
  * @param duration The duration of the Snackbar (default is [SnackbarDuration.Short]).
- * @param snackbarActionData   The action data for this snackbar.
+ * @param actionData The action data for this snackbar.
+ * @param enableDragToDismiss Allow drag to dismiss functionality for this snackbar.
  * @param onDismiss The actions to perform when this snackbar is dismissed.
  */
+@Immutable
 data class SnackbarStateData(
     val uuid: UUID,
     val message: String,
     val type: SnackbarType,
     val duration: SnackbarDuration = SnackbarDuration.Short,
-    val snackbarActionData: SnackbarActionData? = null,
-    val onDismiss: (() -> Unit)? = null
+    val actionData: SnackbarActionData? = null,
+    val enableDragToDismiss: Boolean = true,
+    val onDismiss: ((uuid: UUID) -> Unit)? = null
 )
-
-fun SnackbarNavigationPayload.toStateData(
-    uuid: UUID,
-    onAction: (() -> Unit)? = null,
-    onDismiss: () -> Unit
-): SnackbarStateData =
-    SnackbarStateData(
-        uuid = uuid,
-        message = this.message,
-        type = this.type,
-        duration = this.duration,
-        snackbarActionData = safeLet(actionLabel, onAction) { label, onAction ->
-            SnackbarActionData(
-                label = label,
-                onClick = onAction
-            )
-        },
-        onDismiss = onDismiss
-    )

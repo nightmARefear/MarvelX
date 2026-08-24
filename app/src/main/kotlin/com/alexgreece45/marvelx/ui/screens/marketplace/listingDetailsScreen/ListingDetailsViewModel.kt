@@ -2,10 +2,10 @@ package com.alexgreece45.marvelx.ui.screens.marketplace.listingDetailsScreen
 
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.common_ui.snackbar.delegate.SnackbarDelegate
 import com.alexgreece45.marvelx.configuration.models.DeepLinkWebUrl
 import com.alexgreece45.marvelx.controllers.createListingWizard.CreateListingWizardController
 import com.alexgreece45.marvelx.core.common.logger.AppLogger
-import com.alexgreece45.marvelx.core.data.model.listing.ListingId
 import com.alexgreece45.marvelx.core.data.repositories.UserSessionRepository
 import com.alexgreece45.marvelx.domain.helper.InteractorPartialState
 import com.alexgreece45.marvelx.domain.interactors.GetProfileDetailsPartialState
@@ -23,8 +23,8 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import org.koin.android.annotation.KoinViewModel
 
-@KoinViewModel
-class ListingDetailsViewModel(
+@KoinViewModel(binds = [ListingDetailsViewModel::class])
+internal class ListingDetailsViewModel(
     private val listingInteractor: ListingInteractor,
     private val listingUiMapper: ListingUiMapper,
     private val userInteractor: UserInteractor,
@@ -33,8 +33,9 @@ class ListingDetailsViewModel(
     private val createListingWizardController: CreateListingWizardController,
     private val cartInteractor: CartInteractor,
     private val appLogger: AppLogger,
-) :
-    BaseViewModel<ListingDetailsContract.Event, ListingDetailsContract.State, ListingDetailsContract.Effect>() {
+    snackbarDelegate: SnackbarDelegate,
+) : BaseViewModel<ListingDetailsContract.Event, ListingDetailsContract.State, ListingDetailsContract.Effect>(),
+    SnackbarDelegate by snackbarDelegate {
 
     override fun setInitialState(): ListingDetailsContract.State = ListingDetailsContract.State()
 
@@ -141,8 +142,8 @@ class ListingDetailsViewModel(
                                     isFavoriteButtonLoading = false
                                 )
                             }
-                            showToastMessage(
-                                message = resourceProvider.getString(R.string.screen_listing_details_error_removing_from_favorites)
+                            showErroneousSnackbar(
+                                errorMessage = resourceProvider.getString(R.string.screen_listing_details_error_removing_from_favorites)
                             )
                         }
                     } else {
@@ -160,8 +161,8 @@ class ListingDetailsViewModel(
                                     isFavoriteButtonLoading = false
                                 )
                             }
-                            showToastMessage(
-                                message = resourceProvider.getString(R.string.screen_listing_details_error_adding_to_favorites)
+                            showErroneousSnackbar(
+                                errorMessage = resourceProvider.getString(R.string.screen_listing_details_error_adding_to_favorites)
                             )
                         }
                     }
@@ -214,9 +215,29 @@ class ListingDetailsViewModel(
         val (isInCart, listingId) = (currentState.listing?.cart to currentState.listing?.listingId)
         if (isInCart == null || listingId == null) return
 
+        val orderIds = currentState.listing?.orderIds
+        if (orderIds != null) {
+            if (currentState.listing?.canEdit == true) {
+                setEffect {
+                    ListingDetailsContract.Effect.Navigation.NavigateToOrderItemManagementScreen(
+                        orderId = orderIds.orderId.value,
+                        orderItemId = orderIds.orderItemId.value
+                    )
+                }
+            } else {
+                setEffect {
+                    ListingDetailsContract.Effect.Navigation.NavigateToOrderItemTrackingHistoryScreen(
+                        orderId = orderIds.orderId.value,
+                        orderItemId = orderIds.orderItemId.value
+                    )
+                }
+            }
+            return
+        }
+
         setState {
             copy(
-                addToBasketButtonLoading = true
+                stickyBottomButtonLoading = true
             )
         }
         viewModelScope.launch {
@@ -224,39 +245,37 @@ class ListingDetailsViewModel(
                 if (cartInteractor.deleteCartItem(listingId)) {
                     setState {
                         copy(
-                            addToBasketButtonLoading = false,
-                            listing = listing?.copy(
-                                cart = false
-                            )
+                            stickyBottomButtonLoading = false,
+                            listing = listing?.copy(cart = false)
                         )
                     }
-                    showToastMessage(resourceProvider.getString(R.string.screen_listing_details_success_removing_from_cart))
+                    showSuccessSnackbar(message = resourceProvider.getString(R.string.screen_listing_details_success_removing_from_cart))
                 } else {
                     setState {
                         copy(
-                            addToBasketButtonLoading = false
+                            stickyBottomButtonLoading = false
                         )
                     }
-                    showToastMessage(resourceProvider.getString(R.string.screen_listing_details_error_removing_from_cart))
+                    showErroneousSnackbar(errorMessage = resourceProvider.getString(R.string.screen_listing_details_error_removing_from_cart))
                 }
             } else {
                 if (cartInteractor.addCartItem(listingId)) {
                     setState {
                         copy(
-                            addToBasketButtonLoading = false,
+                            stickyBottomButtonLoading = false,
                             listing = listing?.copy(
                                 cart = true
                             )
                         )
                     }
-                    showToastMessage(resourceProvider.getString(R.string.screen_listing_details_success_adding_to_cart))
+                    showSuccessSnackbar(resourceProvider.getString(R.string.screen_listing_details_success_adding_to_cart))
                 } else {
                     setState {
                         copy(
-                            addToBasketButtonLoading = false
+                            stickyBottomButtonLoading = false
                         )
                     }
-                    showToastMessage(resourceProvider.getString(R.string.screen_listing_details_error_adding_to_cart))
+                    showErroneousSnackbar(resourceProvider.getString(R.string.screen_listing_details_error_adding_to_cart))
                 }
             }
         }
@@ -378,13 +397,8 @@ class ListingDetailsViewModel(
         }
     }
 
-    private fun showToastMessage(message: String) {
-        setEffect {
-            ListingDetailsContract.Effect.ShowToastMessage(message)
-        }
-    }
-
     private fun exitWithError() {
+        // TODO: Convert to global snackbar.
         setEffect {
             ListingDetailsContract.Effect.ShowToastMessage(resourceProvider.getString(R.string.screen_listing_details_error_loading_listing))
         }

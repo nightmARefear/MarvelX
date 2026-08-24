@@ -6,6 +6,7 @@ sealed class UiState<out T, out R> {
     data class Success<T>(val data: T) : UiState<T, Nothing>()
 
     val isLoading: Boolean get() = this is Loading
+    val isError: Boolean get() = this is Error
 }
 
 inline fun <T, R> UiState<T, R>.onLoading(action: () -> Unit): UiState<T, R> {

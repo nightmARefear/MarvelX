@@ -1,6 +1,5 @@
 package com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -20,13 +19,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.common_ui.util.ObserveUiEffect
+import com.alexgreece45.marvelx.core.common.util.flows.single_observer_flow.SingleObserverFlow
 import com.alexgreece45.marvelx.domain.model_api.order.OrderCheckoutInfoDomain
 import com.alexgreece45.marvelx.ui.components.AlertDialogButton
 import com.alexgreece45.marvelx.ui.components.AlertDialogError
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
 import com.alexgreece45.marvelx.ui.components.WrapButton
-import com.alexgreece45.marvelx.ui.components.effect.ObserveUiEffect
 import com.alexgreece45.marvelx.ui.components.effect.OneTimeLaunchedEffect
 import com.alexgreece45.marvelx.ui.components.model.ErrorButtonType
 import com.alexgreece45.marvelx.ui.screens.cart.CartScreen
@@ -35,7 +35,6 @@ import com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.model.CheckoutWiz
 import com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.model.CheckoutWizardContract.Event.OnNavigationEvents.EditPaymentDetailsScreen
 import com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.model.CheckoutWizardContract.Event.OnNavigationEvents.EditShippingDetailsScreen
 import com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.model.CheckoutWizardContract.Event.OnNavigationEvents.OnNavigateToMarketplaceScreen
-import com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.model.CheckoutWizardContract.Event.OnNavigationEvents.OrderDetailsScreen
 import com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.model.CheckoutWizardContract.Event.OnNavigationEvents.OrderSuccessScreen
 import com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.model.CheckoutWizardStep
 import com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.steps.paymentDetails.CheckoutPaymentDetailsScreen
@@ -44,28 +43,23 @@ import com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.steps.paymentDeta
 import com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.steps.shippingDetails.CheckoutShippingDetailsScreen
 import com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.steps.shippingDetails.CheckoutShippingDetailsViewModel
 import com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.steps.shippingDetails.model.CheckoutShippingDetailsContract
-import com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.steps.success.CheckoutSuccessScreen
-import com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.steps.success.CheckoutSuccessViewModel
-import com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.steps.success.model.CheckoutSuccessContract
 import com.alexgreece45.marvelx.ui.screens.cart.model.CartContract
 import com.alexgreece45.marvelx.ui.screens.orders.model.CardBrandUi
 import com.alexgreece45.marvelx.ui.screens.orders.model.toData
 import com.alexgreece45.marvelx.ui_theme.theme.values.customColors
 import com.alexgreece45.marvelx.util.DEFAULT_SCREEN_PADDING
 import com.alexgreece45.marvelx.util.extensions.showToast
-import kotlinx.coroutines.flow.Flow
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
 internal fun CheckoutWizardScreen(
     onEvent: (CheckoutWizardContract.Event) -> Unit,
     state: CheckoutWizardContract.State,
-    effect: Flow<CheckoutWizardContract.Effect>,
+    effect: SingleObserverFlow<CheckoutWizardContract.Effect>,
     onNavigationEffect: (CheckoutWizardContract.Effect.Navigation) -> Unit,
     checkoutShippingDetailsViewModel: CheckoutShippingDetailsViewModel = koinViewModel(),
     checkoutPaymentDetailsViewModel: CheckoutPaymentDetailsViewModel = koinViewModel()
 ) {
-
     val checkoutShippingDetailsState =
         checkoutShippingDetailsViewModel.uiState.collectAsStateWithLifecycle().value
     val checkoutPaymentDetailsState =
@@ -73,7 +67,7 @@ internal fun CheckoutWizardScreen(
 
     val context = LocalContext.current
 
-    ObserveUiEffect(effect) { uiEffect ->
+    ObserveUiEffect(flow = effect, tag = "CheckoutWizardScreen") { uiEffect ->
         when (uiEffect) {
             is CheckoutWizardContract.Effect.Navigation -> onNavigationEffect(uiEffect)
             is CheckoutWizardContract.Effect.ShowToastMessage -> {
@@ -89,8 +83,7 @@ internal fun CheckoutWizardScreen(
     ContentScreen(
         isLoading = false,
         navigableAction = when (state.wizardStep) {
-            CheckoutWizardStep.SHIPPING_DETAILS,
-            CheckoutWizardStep.SUCCESS -> {
+            CheckoutWizardStep.SHIPPING_DETAILS -> {
                 ScreenNavigableAction.Closeable(
                     onClose = {
                         onEvent(CheckoutWizardContract.Event.OnCloseButtonClicked)
@@ -112,9 +105,7 @@ internal fun CheckoutWizardScreen(
         },
         showToolbar = true,
         toolbarTitle = state.toolbarTitle,
-        stickyBottom = if (state.wizardStep == CheckoutWizardStep.SUCCESS
-            || state.wizardStep == CheckoutWizardStep.OVERVIEW
-        ) null else {
+        stickyBottom = if (state.wizardStep == CheckoutWizardStep.OVERVIEW) null else {
             {
                 WrapButton(
                     onClick = { onEvent(CheckoutWizardContract.Event.OnStickyBottomButtonClicked) },
@@ -140,13 +131,11 @@ internal fun CheckoutWizardScreen(
                 .fillMaxSize()
                 .padding(verticalPaddings)
         ) {
-            AnimatedVisibility(visible = state.wizardStep != CheckoutWizardStep.SUCCESS) {
-                LinearProgressIndicator(
-                    progress = state.wizardProgress,
-                    modifier = Modifier.fillMaxWidth(),
-                    color = MaterialTheme.customColors.genericRed
-                )
-            }
+            LinearProgressIndicator(
+                progress = state.wizardProgress,
+                modifier = Modifier.fillMaxWidth(),
+                color = MaterialTheme.customColors.genericRed
+            )
 
             Box(
                 modifier = Modifier
@@ -211,7 +200,7 @@ internal fun CheckoutWizardScreen(
 
                     CheckoutWizardStep.OVERVIEW -> {
                         val cartViewModel = koinViewModel<CartViewModel>()
-                        val cardNumber = checkoutPaymentDetailsState.cardNumber.value
+                        val cardNumber = checkoutPaymentDetailsState.cardNumberField.value
 
                         CartScreen(
                             onEvent = cartViewModel::setEvent,
@@ -258,33 +247,6 @@ internal fun CheckoutWizardScreen(
                                 paymentDate = null,
                                 transactionId = null
                             )
-                        )
-                    }
-
-                    CheckoutWizardStep.SUCCESS -> {
-                        val checkoutSuccessViewModel = koinViewModel<CheckoutSuccessViewModel>()
-                        CheckoutSuccessScreen(
-                            onEvent = checkoutSuccessViewModel::setEvent,
-                            state = checkoutSuccessViewModel.uiState.collectAsStateWithLifecycle().value,
-                            effect = checkoutSuccessViewModel.uiEffect,
-                            onNavigationEffect = { navigationEffect ->
-                                when (navigationEffect) {
-                                    is CheckoutSuccessContract.Effect.Navigation.NavigateToOrderDetailsScreen -> {
-                                        onEvent(
-                                            OrderDetailsScreen(
-                                                navigationEffect.orderId
-                                            )
-                                        )
-                                    }
-
-                                    CheckoutSuccessContract.Effect.Navigation.ExitWizard -> {
-                                        onEvent(
-                                            CheckoutWizardContract.Event.OnExitWizard
-                                        )
-                                    }
-                                }
-                            },
-                            orderId = state.orderId
                         )
                     }
                 }

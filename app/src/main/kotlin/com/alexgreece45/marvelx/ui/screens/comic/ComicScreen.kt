@@ -19,22 +19,22 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.common_ui.util.ObserveUiEffect
+import com.alexgreece45.marvelx.core.common.util.flows.single_observer_flow.SingleObserverFlow
 import com.alexgreece45.marvelx.domain.model_api.comic.ComicDomain
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.ItemDescription
 import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
-import com.alexgreece45.marvelx.ui.components.effect.ObserveUiEffect
 import com.alexgreece45.marvelx.ui.screens.comic.model.ComicContract
 import com.alexgreece45.marvelx.util.HSpacer
 import com.alexgreece45.marvelx.util.SPACING_TINY
 import com.alexgreece45.marvelx.util.VSpacer
-import kotlinx.coroutines.flow.Flow
 
 @Composable
 fun ComicScreen(
     onEventSent: (event: ComicContract.Event) -> Unit,
     state: ComicContract.State,
-    effect: Flow<ComicContract.Effect>,
+    effect: SingleObserverFlow<ComicContract.Effect>,
     onNavigationEffect: (ComicContract.Effect.Navigation) -> Unit,
     comicId: Int
 ) {
@@ -42,7 +42,7 @@ fun ComicScreen(
         onEventSent(ComicContract.Event.Init(comicId))
     }
 
-    ObserveUiEffect(effect) { uiEffect ->
+    ObserveUiEffect(flow = effect, tag = "ComicScreen") { uiEffect ->
         when (uiEffect) {
             is ComicContract.Effect.Navigation -> onNavigationEffect(uiEffect)
         }

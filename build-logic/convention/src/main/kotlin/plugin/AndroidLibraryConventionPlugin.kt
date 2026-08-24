@@ -31,6 +31,8 @@ internal class AndroidLibraryConventionPlugin : Plugin<Project> {
                 // Enforces coroutine versions for all modules.
                 implementation(libs.library("kotlinx.coroutines.core"))
                 implementation(libs.library("kotlinx.coroutines.android"))
+
+                implementation(libs.library("kotlin-collections-immutable"))
             }
         }
     }

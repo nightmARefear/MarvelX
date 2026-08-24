@@ -29,8 +29,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.common_ui.util.ObserveUiEffect
 import com.alexgreece45.marvelx.core.common.extensions.plusDays
+import com.alexgreece45.marvelx.core.common.extensions.toLocalDate
 import com.alexgreece45.marvelx.core.common.extensions.toOrderFormatShort
+import com.alexgreece45.marvelx.core.common.util.flows.single_observer_flow.SingleObserverFlow
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.GenericLazyItemInfoScreen
 import com.alexgreece45.marvelx.ui.components.LazyItemContentErrorScreen
@@ -40,10 +43,10 @@ import com.alexgreece45.marvelx.ui.components.WrapButton
 import com.alexgreece45.marvelx.ui.components.WrapHorizontalDivider
 import com.alexgreece45.marvelx.ui.components.WrapModalBottomSheetLayout
 import com.alexgreece45.marvelx.ui.components.chips.WrapChip
-import com.alexgreece45.marvelx.ui.components.effect.ObserveUiEffect
 import com.alexgreece45.marvelx.ui.components.rememberWrapModalBottomSheetState
 import com.alexgreece45.marvelx.ui.model_generic.BigDecimalUi
 import com.alexgreece45.marvelx.ui.model_generic.InstantUi
+import com.alexgreece45.marvelx.ui.model_generic.LocalDateUi
 import com.alexgreece45.marvelx.ui.model_generic.UiState
 import com.alexgreece45.marvelx.ui.model_generic.onError
 import com.alexgreece45.marvelx.ui.model_generic.onSuccess
@@ -63,7 +66,7 @@ import com.alexgreece45.marvelx.util.VSpacer
 import com.alexgreece45.marvelx.util.constants.ConstantsUi
 import com.alexgreece45.marvelx.util.extensions.formatPrice
 import com.alexgreece45.marvelx.util.extensions.hideIfVisible
-import kotlinx.coroutines.flow.Flow
+import com.alexgreece45.marvelx.util.extensions.toOrderFormatShort
 import kotlinx.coroutines.launch
 
 private val LISTING_IMAGE_SIZE = ConstantsUi.LISTING_IMAGE_NORMAL_SIZE
@@ -72,14 +75,13 @@ private val LISTING_IMAGE_SIZE = ConstantsUi.LISTING_IMAGE_NORMAL_SIZE
 fun OrdersScreen(
     onEvent: (OrdersContract.Event) -> Unit,
     state: OrdersContract.State,
-    effect: Flow<OrdersContract.Effect>,
+    effect: SingleObserverFlow<OrdersContract.Effect>,
     onNavigationEffect: (OrdersContract.Effect.Navigation) -> Unit,
 ) {
-
     val coroutineScope = rememberCoroutineScope()
     val modalBottomSheetState = rememberWrapModalBottomSheetState()
 
-    ObserveUiEffect(effect) { uiEffect ->
+    ObserveUiEffect(flow = effect, tag = "OrdersScreen") { uiEffect ->
         when (uiEffect) {
             is OrdersContract.Effect.Navigation -> onNavigationEffect(uiEffect)
             OrdersContract.Effect.HideBottomSheet -> {
@@ -110,7 +112,7 @@ fun OrdersScreen(
                         OrderStatusInfoBottomSheetContent(
                             status = type.statusUi,
                             extraContent = {
-                                VSpacer.Custom(32)
+                                VSpacer.Custom(32.dp)
 
                                 WrapButton(
                                     onClick = {
@@ -322,14 +324,18 @@ private fun OrderCardPreview() {
                     label = orderDate.toOrderFormatShort()
                 ),
                 estimatedDeliveryDate = OrderEstimatedDeliveryDateRangeUi(
-                    from = InstantUi(
-                        value = deliveryDateMin,
-                        label = deliveryDateMin.toOrderFormatShort()
-                    ),
-                    to = InstantUi(
-                        value = deliveryDateMax,
-                        label = deliveryDateMax.toOrderFormatShort()
-                    )
+                    from = deliveryDateMin.toLocalDate().let {
+                        LocalDateUi(
+                            value = it,
+                            label = it.toOrderFormatShort()
+                        )
+                    },
+                    to = deliveryDateMax.toLocalDate().let {
+                        LocalDateUi(
+                            value = it,
+                            label = it.toOrderFormatShort()
+                        )
+                    }
                 ),
                 status = OrderStatusUi.Shipped,
                 price = BigDecimalUi(

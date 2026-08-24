@@ -1,7 +1,6 @@
 package com.alexgreece45.marvelx.ui.screens.friends
 
 import android.text.Html
-import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -27,14 +26,15 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.model.model.user.UserId
+import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarEffect
+import com.alexgreece45.marvelx.common_ui.util.ObserveUiEffect
+import com.alexgreece45.marvelx.core.common.util.flows.single_observer_flow.SingleObserverFlow
 import com.alexgreece45.marvelx.ui.components.AlertDialogButton
 import com.alexgreece45.marvelx.ui.components.AlertDialogError
 import com.alexgreece45.marvelx.ui.components.ContentScreen
@@ -44,7 +44,6 @@ import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
 import com.alexgreece45.marvelx.ui.components.WrapAsyncImage
 import com.alexgreece45.marvelx.ui.components.WrapButton
 import com.alexgreece45.marvelx.ui.components.WrapOutlinedButton
-import com.alexgreece45.marvelx.ui.components.effect.ObserveUiEffect
 import com.alexgreece45.marvelx.ui.components.error.ContentErrorScreenHeader
 import com.alexgreece45.marvelx.ui.components.model.ErrorButtonType
 import com.alexgreece45.marvelx.ui.screens.friends.model.FriendsContract
@@ -57,30 +56,22 @@ import com.alexgreece45.marvelx.util.constants.ConstantsUi
 import com.alexgreece45.marvelx.util.extensions.circularImageWithBorder
 import com.alexgreece45.marvelx.util.extensions.clickableNoRipple
 import com.alexgreece45.marvelx.util.extensions.toAnnotatedString
-import kotlinx.coroutines.flow.Flow
 
 @Composable
 fun FriendsScreen(
     onEventSent: (FriendsContract.Event) -> Unit,
     state: FriendsContract.State,
-    effect: Flow<FriendsContract.Effect>,
-    onNavigationEffect: (FriendsContract.Effect.Navigation) -> Unit
+    effect: SingleObserverFlow<FriendsContract.Effect>,
+    snackbarEffects: SingleObserverFlow<SnackbarEffect>,
+    onNavigationEffect: (FriendsContract.Effect.Navigation) -> Unit,
 ) {
-
-    val context = LocalContext.current
-
     LaunchedEffect(Unit) {
         onEventSent(FriendsContract.Event.Init)
     }
 
-    ObserveUiEffect(flow = effect) { uiEffect ->
+    ObserveUiEffect(flow = effect, tag = "FriendsScreen") { uiEffect ->
         when (uiEffect) {
             is FriendsContract.Effect.Navigation -> onNavigationEffect(uiEffect)
-            is FriendsContract.Effect.ShowToastMessage -> Toast.makeText(
-                context,
-                uiEffect.message,
-                Toast.LENGTH_LONG
-            ).show()
         }
     }
 
@@ -93,7 +84,8 @@ fun FriendsScreen(
         ),
         onBack = { onEventSent(FriendsContract.Event.OnSystemBack) },
         showToolbar = true,
-        toolbarTitle = stringResource(id = R.string.screen_friends_toolbar_title)
+        toolbarTitle = stringResource(id = R.string.screen_friends_toolbar_title),
+        snackbarEffects = snackbarEffects
     ) { paddingValues ->
         Column(
             modifier = Modifier

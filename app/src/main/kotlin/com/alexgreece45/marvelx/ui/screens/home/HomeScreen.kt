@@ -14,20 +14,20 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.common_ui.util.ObserveUiEffect
+import com.alexgreece45.marvelx.core.common.util.flows.single_observer_flow.SingleObserverFlow
 import com.alexgreece45.marvelx.ui.components.AlertDialogButton
 import com.alexgreece45.marvelx.ui.components.AlertDialogError
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.WrapButton
-import com.alexgreece45.marvelx.ui.components.effect.ObserveUiEffect
 import com.alexgreece45.marvelx.ui.components.effect.OneTimeLaunchedEffect
 import com.alexgreece45.marvelx.util.SPACING_SMALL
-import kotlinx.coroutines.flow.Flow
 
 @Composable
 internal fun HomeScreen(
     onEventSent: (event: HomeEvent) -> Unit,
     state: HomeState,
-    effect: Flow<HomeEffect>,
+    effect: SingleObserverFlow<HomeEffect>,
     onNavigationEffect: (HomeEffect.Navigation) -> Unit,
     logoutReason: String?,
 ) {
@@ -35,7 +35,7 @@ internal fun HomeScreen(
         onEventSent(HomeEvent.Init(logoutReason))
     }
 
-    ObserveUiEffect(effect) { uiEffect ->
+    ObserveUiEffect(flow = effect, tag = "HomeScreen") { uiEffect ->
         when (uiEffect) {
             is HomeEffect.Navigation -> onNavigationEffect(uiEffect)
         }

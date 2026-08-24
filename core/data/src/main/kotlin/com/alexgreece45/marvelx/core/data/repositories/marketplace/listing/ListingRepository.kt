@@ -3,7 +3,7 @@ package com.alexgreece45.marvelx.core.data.repositories.marketplace.listing
 import com.alexgreece45.marvelx.core.common.dispatchers.model.IoDispatcher
 import com.alexgreece45.marvelx.core.data.helper.RepositoryResult
 import com.alexgreece45.marvelx.core.data.helper.handleApiResultNoFlow
-import com.alexgreece45.marvelx.core.data.helper.handleApiResultNoTransformationWithData
+import com.alexgreece45.marvelx.core.data.helper.handleApiResultNoTransformationNoFlow
 import com.alexgreece45.marvelx.core.data.helper.multi_part_builder.MultipartBuilder
 import com.alexgreece45.marvelx.core.data.helper.multi_part_builder.model.MultipartBuilderResult
 import com.alexgreece45.marvelx.core.data.helper.multi_part_builder.model.MultipartItem
@@ -19,7 +19,6 @@ import com.alexgreece45.marvelx.core.network.clients.ListingClient
 import com.alexgreece45.marvelx.core.network.model.api.marketplace.listing.RequestUpdateListing
 import com.alexgreece45.marvelx.core.network.model.api.marketplace.listing.ResponseListingId
 import com.alexgreece45.marvelx.core.network.model.api.marketplace.listing.ResponseListingPreview
-import kotlinx.coroutines.flow.first
 import org.koin.core.annotation.Single
 import kotlin.coroutines.CoroutineContext
 
@@ -62,7 +61,7 @@ internal class ListingRepositoryImpl(
         categoryCode: String
     ): RepositoryResult<List<ListingData>> {
         return handleApiResultNoFlow(
-            apiResult = listingClient.getAllListingsByCategory(categoryCode),
+            apiCall = { listingClient.getAllListingsByCategory(categoryCode) },
             transformation = { this.map { listingDataMapper.toData(it) } },
             ioDispatcher = ioDispatcher
         )
@@ -70,7 +69,7 @@ internal class ListingRepositoryImpl(
 
     override suspend fun getCurrentUserListings(page: Int): RepositoryResult<List<MyListingData>> {
         return handleApiResultNoFlow(
-            apiResult = listingClient.getCurrentUserListings(page),
+            apiCall = { listingClient.getCurrentUserListings(page) },
             transformation = { this.map { it.toData() } },
             ioDispatcher = ioDispatcher
         )
@@ -81,7 +80,7 @@ internal class ListingRepositoryImpl(
         page: Int
     ): RepositoryResult<List<ListingPreviewData>> {
         return handleApiResultNoFlow(
-            apiResult = listingClient.getUserListings(userId, page),
+            apiCall = { listingClient.getUserListings(userId, page) },
             transformation = { this.map { it.toData() } },
             ioDispatcher = ioDispatcher
         )
@@ -89,7 +88,7 @@ internal class ListingRepositoryImpl(
 
     override suspend fun getListing(listingId: String): RepositoryResult<ListingData> {
         return handleApiResultNoFlow(
-            apiResult = listingClient.getListing(listingId),
+            apiCall = { listingClient.getListing(listingId) },
             transformation = listingDataMapper::toData,
             ioDispatcher = ioDispatcher
         )
@@ -130,7 +129,7 @@ internal class ListingRepositoryImpl(
         return when (multipartBuilderResult) {
             is MultipartBuilderResult.Success -> {
                 val result = handleApiResultNoFlow(
-                    apiResult = listingClient.createListing(body = multipartBuilderResult.data),
+                    apiCall = { listingClient.createListing(body = multipartBuilderResult.data) },
                     transformation = ResponseListingId::listingId,
                     ioDispatcher = ioDispatcher
                 )
@@ -157,37 +156,37 @@ internal class ListingRepositoryImpl(
         listingId: String,
         request: RequestUpdateListing
     ): Boolean {
-        return handleApiResultNoTransformationWithData(
-            apiResult = listingClient.updateListing(listingId, request),
+        return handleApiResultNoTransformationNoFlow(
+            apiCall = { listingClient.updateListing(listingId, request) },
             ioDispatcher = ioDispatcher
-        ).first() is RepositoryResult.Success
+        ) is RepositoryResult.Success
     }
 
     override suspend fun deleteListing(listingId: String): Boolean {
-        return handleApiResultNoTransformationWithData(
-            apiResult = listingClient.deleteListing(listingId),
+        return handleApiResultNoTransformationNoFlow(
+            apiCall = { listingClient.deleteListing(listingId) },
             ioDispatcher = ioDispatcher
-        ).first() is RepositoryResult.Success
+        ) is RepositoryResult.Success
     }
 
     override suspend fun addToFavorites(listingId: String): Boolean {
-        return handleApiResultNoTransformationWithData(
-            apiResult = listingClient.addToFavorites(listingId),
+        return handleApiResultNoTransformationNoFlow(
+            apiCall = { listingClient.addToFavorites(listingId) },
             ioDispatcher = ioDispatcher
-        ).first() is RepositoryResult.Success
+        ) is RepositoryResult.Success
     }
 
     override suspend fun removeFromFavorites(listingId: String): Boolean {
-        return handleApiResultNoTransformationWithData(
-            apiResult = listingClient.removeFromFavorites(listingId),
+        return handleApiResultNoTransformationNoFlow(
+            apiCall = { listingClient.removeFromFavorites(listingId) },
             ioDispatcher = ioDispatcher
-        ).first() is RepositoryResult.Success
+        ) is RepositoryResult.Success
     }
 
     override suspend fun getFavoriteListings(): RepositoryResult<List<ResponseListingPreview>> {
-        return handleApiResultNoTransformationWithData(
-            apiResult = listingClient.getFavoriteListings(),
+        return handleApiResultNoTransformationNoFlow(
+            apiCall = listingClient::getFavoriteListings,
             ioDispatcher = ioDispatcher
-        ).first()
+        )
     }
 }

@@ -3,14 +3,14 @@ package com.alexgreece45.marvelx.domain.interactors
 import com.alexgreece45.marvelx.core.common.extensions.safeAsync
 import com.alexgreece45.marvelx.core.common.logger.AppLogger
 import com.alexgreece45.marvelx.core.data.repositories.UserSessionRepository
-import com.alexgreece45.marvelx.data.model.RepositoryPrivacySettings
 import com.alexgreece45.marvelx.data.repository.GetCurrentUserProfileDetailsRepositoryResponse
 import com.alexgreece45.marvelx.data.repository.GetProfileDetailsRepositoryResponse
 import com.alexgreece45.marvelx.data.repository.UpdateProfileImageResult
 import com.alexgreece45.marvelx.data.repository.UserRepository
 import com.alexgreece45.marvelx.domain.helper.InteractorPartialState
-import com.alexgreece45.marvelx.domain.helper.handleRepositoryResult
+import com.alexgreece45.marvelx.domain.helper.handleRepositoryResultNoFlow
 import com.alexgreece45.marvelx.domain.helper.handleRepositoryResultNoTransformation
+import com.alexgreece45.marvelx.domain.helper.handleRepositoryResultNoTransformationNoFlow
 import com.alexgreece45.marvelx.domain.model_api.user.privacySettings.PrivacySettingsDomain
 import com.alexgreece45.marvelx.domain.model_api.user.privacySettings.toPrivacySettingsDomain
 import com.alexgreece45.marvelx.domain.model_api.user.privacySettings.toRequestPrivacySettings
@@ -24,7 +24,6 @@ import com.alexgreece45.marvelx.model.model.generic.AttachedFileContentData
 import com.alexgreece45.marvelx.model.model.user.UserId
 import com.alexgreece45.marvelx.util.ResourceProvider
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import okio.IOException
 import org.koin.core.annotation.Factory
@@ -44,7 +43,7 @@ interface UserInteractor {
     /**
      * Updates the profile details of the current user.
      */
-    suspend fun updateCurrentUserProfileDetails(profileDetails: BasicProfileDetailsDomain): Flow<InteractorPartialState<String>>
+    suspend fun updateCurrentUserProfileDetails(profileDetails: BasicProfileDetailsDomain): InteractorPartialState<String>
 
     /**
      * Updates the profile image of the current user.
@@ -56,7 +55,7 @@ interface UserInteractor {
     /**
      * Gets the privacy settings of the current user.
      */
-    suspend fun getPrivacySettings(): Flow<InteractorPartialState<PrivacySettingsDomain>>
+    suspend fun getPrivacySettings(): InteractorPartialState<PrivacySettingsDomain>
 
     /**
      * Updates the privacy settings of the current user.
@@ -140,17 +139,16 @@ internal class UserInteractorImpl(
             }
         }
 
-    override suspend fun updateCurrentUserProfileDetails(profileDetails: BasicProfileDetailsDomain): Flow<InteractorPartialState<String>> =
-        flow {
-            repository.updateCurrentUserProfileDetails(
-                firstName = profileDetails.firstName,
-                lastName = profileDetails.lastName,
-                gender = profileDetails.gender.key,
-                email = profileDetails.email
-            ).collect { repositoryResult ->
-                emitAll(handleRepositoryResultNoTransformation(repositoryResult))
-            }
-        }
+    override suspend fun updateCurrentUserProfileDetails(profileDetails: BasicProfileDetailsDomain): InteractorPartialState<String> {
+        val result = repository.updateCurrentUserProfileDetails(
+            firstName = profileDetails.firstName,
+            lastName = profileDetails.lastName,
+            gender = profileDetails.gender.key,
+            email = profileDetails.email
+        )
+
+        return handleRepositoryResultNoTransformationNoFlow(repositoryResult = result)
+    }
 
     override suspend fun updateUserProfileImage(profileImageData: AttachedFileContentData): UpdateProfileImageResult {
         return repository.updateUserProfileImage(
@@ -159,22 +157,17 @@ internal class UserInteractorImpl(
         )
     }
 
-    override suspend fun getPrivacySettings(): Flow<InteractorPartialState<PrivacySettingsDomain>> =
-        flow {
-            repository.getPrivacySettings().collect { repositoryResult ->
-                emitAll(
-                    handleRepositoryResult(
-                        repositoryResult,
-                        RepositoryPrivacySettings::toPrivacySettingsDomain
-                    )
-                )
-            }
-        }
+    override suspend fun getPrivacySettings(): InteractorPartialState<PrivacySettingsDomain> {
+        return handleRepositoryResultNoFlow(
+            repositoryResult = repository.getPrivacySettings(),
+            transformation = { this.toPrivacySettingsDomain() }
+        )
+    }
 
     override suspend fun updatePrivacySettings(privacySettingsDomain: PrivacySettingsDomain): Flow<InteractorPartialState<String>> =
         flow {
             repository.updatePrivacySettings(privacySettingsDomain.toRequestPrivacySettings())
-                .collect { repositoryResult ->
+                .let { repositoryResult ->
                     handleRepositoryResultNoTransformation(repositoryResult).collect {
                         emit(it)
                     }

@@ -125,7 +125,7 @@ class PrivacySettingsViewModel(
      */
     private fun init(event: PrivacySettingsEvent) {
         viewModelScope.launch {
-            userInteractor.getPrivacySettings().collect {
+            userInteractor.getPrivacySettings().let {
                 when (it) {
                     is InteractorPartialState.Error, is InteractorPartialState.Failed -> {
                         setState {

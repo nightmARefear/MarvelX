@@ -49,8 +49,7 @@ internal sealed interface CheckoutWizardContract {
         val orderId: String = ""
     ) : BaseState {
 
-        val showToolbar: Boolean get() = wizardStep != CheckoutWizardStep.SUCCESS
-        val wizardProgress: Float get() = wizardStep.order.toFloat() / CHECKOUT_WIZARD_TOTAL_STEPS.toFloat()
+        val wizardProgress: Float get() = (wizardStep.ordinal + 1) / CheckoutWizardStep.entries.size.toFloat()
     }
 
     sealed interface Effect : BaseEffect {
@@ -60,6 +59,7 @@ internal sealed interface CheckoutWizardContract {
             data object ExitWizard : Navigation
             data object NavigateToMarketplaceScreen : Navigation
             data class NavigateToOrderDetailsScreen(val orderId: String) : Navigation
+            data class NavigateToCheckoutSuccessScreen(val orderId: String) : Navigation
         }
     }
 }

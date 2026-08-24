@@ -1,17 +1,14 @@
 package com.alexgreece45.marvelx.domain.model_api.order.item
 
 import com.alexgreece45.marvelx.data.model.order.item.OrderItemTrackingHistoryData
+import com.alexgreece45.marvelx.domain.mappers.order.item.toDomain
 import com.alexgreece45.marvelx.domain.model_api.order.OrderCourierDomain
 import com.alexgreece45.marvelx.domain.model_api.order.OrderEstimatedDeliveryDateRangeDomain
 import com.alexgreece45.marvelx.domain.model_api.order.OrderItemStatusDomain
-import com.alexgreece45.marvelx.domain.model_api.order.item.itemReturn.OrderItemReturnStatusDomain
-import com.alexgreece45.marvelx.domain.model_api.order.item.itemReturn.toDomain
-import com.alexgreece45.marvelx.domain.model_api.order.item.refund.OrderItemRefundStatusDomain
-import com.alexgreece45.marvelx.domain.model_api.order.item.refund.toDomain
+import com.alexgreece45.marvelx.domain.model_api.order.item.itemReturn.OrderItemReturnEligibilityDomain
 import com.alexgreece45.marvelx.domain.model_api.order.toDomain
 import com.alexgreece45.marvelx.domain.model_api.order.tracking.OrderTrackingHistoryItemDomain
 import com.alexgreece45.marvelx.domain.model_api.order.tracking.toDomain
-import java.time.Instant
 
 data class OrderItemTrackingHistoryDomain(
     val trackingId: String,
@@ -22,17 +19,18 @@ data class OrderItemTrackingHistoryDomain(
     val departedSortingFacility: OrderTrackingHistoryItemDomain?,
     val outForDelivery: OrderTrackingHistoryItemDomain?,
     val delivered: OrderTrackingHistoryItemDomain?,
-    val returnStatus: OrderItemReturnStatusDomain?,
-    val returnUntilDate: Instant?,
-    val refundStatus: OrderItemRefundStatusDomain?,
-    val refundUntilDate: Instant?,
+    val returnEligibility: OrderItemReturnEligibilityDomain
 )
 
 fun OrderItemTrackingHistoryData.toDomain(): OrderItemTrackingHistoryDomain {
     if (delivered != null
-        && (returnStatus == null || returnUntilDate == null)
-        && (refundStatus == null || refundUntilDate == null)
-    ) throw IllegalStateException("Return and/or refund states cannot be 'null' when the delivery status is 'delivered'.")
+        && returnEligibility.returnStatus == null
+        && returnEligibility.refundStatus == null
+    ) {
+        throw IllegalStateException(
+            "Return and/or refund status states cannot be 'null' when the delivery status is 'delivered'."
+        )
+    }
 
     return OrderItemTrackingHistoryDomain(
         trackingId = trackingId,
@@ -43,9 +41,6 @@ fun OrderItemTrackingHistoryData.toDomain(): OrderItemTrackingHistoryDomain {
         departedSortingFacility = departedSortingFacility?.toDomain(),
         outForDelivery = outForDelivery?.toDomain(),
         delivered = delivered?.toDomain(),
-        returnStatus = returnStatus?.toDomain(),
-        returnUntilDate = Instant.parse(returnUntilDate),
-        refundStatus = refundStatus?.toDomain(),
-        refundUntilDate = Instant.parse(refundUntilDate)
+        returnEligibility = returnEligibility.toDomain()
     )
 }

@@ -5,7 +5,6 @@ import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
 import com.alexgreece45.marvelx.ui.helper.createUriPatternForDeepLink
-import com.alexgreece45.marvelx.ui.screens.orders.orderDetails.model.OrderItemDetails
 
 /**
  * Represents a unique screen in this application. You can set the screen name through [baseRoute],
@@ -183,73 +182,6 @@ sealed class Screen(
     data object CheckoutWizardScreen : Screen(baseRoute = "checkoutWizardScreen")
 
     data object OrdersScreen : Screen(baseRoute = "ordersScreen")
-
-    data object OrderDetailsScreen : Screen(
-        baseRoute = "orderDetailsScreen",
-        navArgs = listOf(NavItem.OrderId),
-        deepLinkArgs = listOf(NavDeepLinkItem.OrderId)
-    ) {
-        fun createNavRoute(orderId: String): String =
-            "$baseRoute/$orderId"
-    }
-
-    data object OrderItemTrackingHistoryScreen : Screen(
-        baseRoute = "orderItemTrackingHistoryScreen",
-        navArgs = listOf(
-            NavItem.OrderId,
-            NavItem.OrderItemId,
-            NavItem.SellerUserId,
-            NavItem.OrderItemTitle,
-            NavItem.OrderItemCoverImageUrl,
-            NavItem.OrderItemPriceLabel
-        ),
-    ) {
-        fun createNavRoute(
-            orderId: String,
-            orderItemId: String,
-            sellerUserId: String,
-            orderItemTitle: String,
-            orderItemCoverImageUrl: String,
-            orderItemPriceLabel: String
-        ): String =
-            "$baseRoute/$orderId/$orderItemId/$sellerUserId/$orderItemTitle/$orderItemCoverImageUrl/$orderItemPriceLabel"
-    }
-
-    data object RequestItemReturnScreen : Screen(
-        baseRoute = "requestItemReturnScreen",
-        navArgs = listOf(
-            NavItem.OrderId,
-            NavItem.OrderItemId,
-            NavItem.OrderItemTitle,
-            NavItem.OrderItemCoverImageUrl,
-            NavItem.OrderItemPriceLabel
-        )
-    ) {
-        fun createNavRoute(
-            orderId: String,
-            orderItemId: String,
-            orderItemTitle: String,
-            orderItemCoverImageUrl: String,
-            orderItemPriceLabel: String
-        ): String =
-            "$baseRoute/$orderId/$orderItemId/$orderItemTitle/$orderItemCoverImageUrl/$orderItemPriceLabel"
-    }
-
-    data object RequestItemRefundScreen : Screen(
-        baseRoute = "requestItemRefundScreen",
-        navArgs = listOf(
-            NavItem.OrderId,
-            NavItem.OrderItemId,
-            NavItem.OrderItemTitle,
-            NavItem.OrderItemCoverImageUrl,
-            NavItem.OrderItemPriceLabel
-        )
-    ) {
-        fun createNavRoute(
-            orderItemDetails: OrderItemDetails
-        ): String =
-            "$baseRoute/${orderItemDetails.orderId}/${orderItemDetails.orderItemId}/${orderItemDetails.orderItemTitle}/${orderItemDetails.orderItemCoverImageUrl}/${orderItemDetails.orderItemPriceLabel}"
-    }
 
     data object OrderItemContactSupportScreen : Screen(
         baseRoute = "orderItemContactSupportScreen",

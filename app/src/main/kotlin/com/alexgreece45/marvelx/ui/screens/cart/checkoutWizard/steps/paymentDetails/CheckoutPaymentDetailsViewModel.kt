@@ -64,7 +64,7 @@ class CheckoutPaymentDetailsViewModel(
             copy(
                 isLoading = false,
                 isInitialized = true,
-                cardNumber = WizardInputFieldUi.Text(
+                cardNumberField = WizardInputFieldUi.Text(
                     textValidationRules = listOf(
                         Rule.ValidateNotBlank(
                             errorMessage = resourceProvider.getString(R.string.screen_checkout_payment_details_error_card_number_blank)
@@ -74,7 +74,7 @@ class CheckoutPaymentDetailsViewModel(
                         )
                     )
                 ),
-                expirationDate = WizardInputFieldUi.Text(
+                expirationDateField = WizardInputFieldUi.Text(
                     textValidationRules = listOf(
                         Rule.ValidateNotBlank(
                             errorMessage = resourceProvider.getString(R.string.screen_checkout_payment_details_error_expiration_date_blank)
@@ -85,7 +85,7 @@ class CheckoutPaymentDetailsViewModel(
                         )
                     )
                 ),
-                cvv = WizardInputFieldUi.Text(
+                cvvField = WizardInputFieldUi.Text(
                     textValidationRules = listOf(
                         Rule.ValidateNotBlank(
                             errorMessage = resourceProvider.getString(R.string.screen_checkout_payment_details_error_cvv_blank)
@@ -104,9 +104,9 @@ class CheckoutPaymentDetailsViewModel(
     private fun onCardholderNameChanged(newCardholderName: String) {
         setState {
             copy(
-                cardholderName = cardholderName.copy(
+                cardholderNameField = cardholderNameField.copy(
                     textValue = newCardholderName,
-                    textValidationResult = formValidator.validateForm(Form(mapOf(cardholderName.textValidationRules to newCardholderName)))
+                    textValidationResult = formValidator.validateForm(Form(mapOf(cardholderNameField.textValidationRules to newCardholderName)))
                 )
             )
         }
@@ -117,9 +117,9 @@ class CheckoutPaymentDetailsViewModel(
         val filteredNewCardNumber = newCardNumber.take(16)
         setState {
             copy(
-                cardNumber = cardNumber.copy(
+                cardNumberField = cardNumberField.copy(
                     textValue = filteredNewCardNumber,
-                    textValidationResult = formValidator.validateForm(Form(mapOf(cardNumber.textValidationRules to filteredNewCardNumber)))
+                    textValidationResult = formValidator.validateForm(Form(mapOf(cardNumberField.textValidationRules to filteredNewCardNumber)))
                 )
             )
         }
@@ -130,9 +130,9 @@ class CheckoutPaymentDetailsViewModel(
         val filteredNewExpirationDate = newExpirationDate.take(4)
         setState {
             copy(
-                expirationDate = expirationDate.copy(
+                expirationDateField = expirationDateField.copy(
                     textValue = filteredNewExpirationDate,
-                    textValidationResult = formValidator.validateForm(Form(mapOf(expirationDate.textValidationRules to filteredNewExpirationDate)))
+                    textValidationResult = formValidator.validateForm(Form(mapOf(expirationDateField.textValidationRules to filteredNewExpirationDate)))
                 )
             )
         }
@@ -143,9 +143,9 @@ class CheckoutPaymentDetailsViewModel(
         val filteredNewCvv = newCvv.take(3)
         setState {
             copy(
-                cvv = cvv.copy(
+                cvvField = cvvField.copy(
                     textValue = filteredNewCvv,
-                    textValidationResult = formValidator.validateForm(Form(mapOf(cvv.textValidationRules to filteredNewCvv)))
+                    textValidationResult = formValidator.validateForm(Form(mapOf(cvvField.textValidationRules to filteredNewCvv)))
                 )
             )
         }
@@ -156,10 +156,10 @@ class CheckoutPaymentDetailsViewModel(
 
     private fun validateAllFields() {
         val allFieldsValid = with(currentState) {
-            cardholderName.isValid
-                    && cardNumber.isValid
-                    && expirationDate.isValid
-                    && cvv.isValid
+            cardholderNameField.isValid
+                    && cardNumberField.isValid
+                    && expirationDateField.isValid
+                    && cvvField.isValid
         }
         setEffect {
             CheckoutPaymentDetailsContract.Effect.SetStickyBottomButtonEnabled(allFieldsValid)

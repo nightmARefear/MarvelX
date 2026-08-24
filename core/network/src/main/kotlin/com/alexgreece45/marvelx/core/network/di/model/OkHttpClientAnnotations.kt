@@ -9,4 +9,4 @@ internal annotation class BackendOkHttpClient
 internal annotation class RefreshAuthTokenOkHttpClient
 
 @Named
-internal annotation class WebSocketOkHttpClient
+internal annotation class WebsocketOkHttpClient

@@ -3,8 +3,7 @@ package com.alexgreece45.marvelx.data.repository
 import com.alexgreece45.marvelx.core.common.dispatchers.model.IoDispatcher
 import com.alexgreece45.marvelx.core.common.logger.AppLogger
 import com.alexgreece45.marvelx.core.data.helper.RepositoryResult
-import com.alexgreece45.marvelx.core.data.helper.handleApiResult
-import com.alexgreece45.marvelx.core.data.helper.handleApiResultNoTransformation
+import com.alexgreece45.marvelx.core.data.helper.handleApiResultNoFlow
 import com.alexgreece45.marvelx.core.data.helper.handleApiResultNoTransformationNoFlow
 import com.alexgreece45.marvelx.core.data.helper.multi_part_builder.MultipartBuilder
 import com.alexgreece45.marvelx.core.data.helper.multi_part_builder.model.MultipartBuilderResult
@@ -30,8 +29,6 @@ import com.alexgreece45.marvelx.model.model.user.UserId
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.emitAll
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import org.koin.core.annotation.Single
 import kotlin.coroutines.CoroutineContext
@@ -58,7 +55,7 @@ interface UserRepository {
         lastName: String,
         gender: String,
         email: String
-    ): Flow<RepositoryResult<String>>
+    ): RepositoryResult<String>
 
     /**
      * Updates the profile image of the current user.
@@ -73,12 +70,12 @@ interface UserRepository {
     /**
      * Gets the privacy settings of the current user.
      */
-    suspend fun getPrivacySettings(): Flow<RepositoryResult<RepositoryPrivacySettings>>
+    suspend fun getPrivacySettings(): RepositoryResult<RepositoryPrivacySettings>
 
     /**
      * Updates the privacy settings of the current user.
      */
-    suspend fun updatePrivacySettings(requestPrivacySettings: RequestPrivacySettings): Flow<RepositoryResult<String>>
+    suspend fun updatePrivacySettings(requestPrivacySettings: RequestPrivacySettings): RepositoryResult<String>
 
     /**
      * Tracks whether the user is logged in via a reactive way.
@@ -127,11 +124,11 @@ internal class UserRepositoryImpl(
             }
 
     override suspend fun getBasicProfileDetails(userId: UserId): RepositoryResult<RepositoryBasicProfileDetails> {
-        return handleApiResult(
-            apiResult = apiClient.getBasicProfileDetails(userId.value),
+        return handleApiResultNoFlow(
+            apiCall = { apiClient.getBasicProfileDetails(userId.value) },
             transformation = { this.toData() },
             ioDispatcher = ioDispatcher
-        ).first()
+        )
     }
 
     override suspend fun getCurrentUserProfileDetails(): Flow<GetCurrentUserProfileDetailsRepositoryResponse> =
@@ -156,7 +153,7 @@ internal class UserRepositoryImpl(
         lastName: String,
         gender: String,
         email: String
-    ): Flow<RepositoryResult<String>> = flow {
+    ): RepositoryResult<String> {
         val request =
             RequestProfileDetailsUpdate(
                 firstName = firstName,
@@ -164,11 +161,10 @@ internal class UserRepositoryImpl(
                 gender = gender,
                 email = email
             )
-        emitAll(
-            handleApiResultNoTransformation(
-                apiResult = apiClient.updateCurrentUserProfileDetails(request),
-                ioDispatcher = ioDispatcher
-            )
+
+        return handleApiResultNoTransformationNoFlow(
+            apiCall = { apiClient.updateCurrentUserProfileDetails(request) },
+            ioDispatcher = ioDispatcher
         )
     }
 
@@ -187,10 +183,12 @@ internal class UserRepositoryImpl(
         ) {
             is MultipartBuilderResult.Success -> {
                 handleApiResultNoTransformationNoFlow(
-                    apiResult = apiClient.updateUserProfileImage(
-                        userId = userId,
-                        profileImage = multipartBuilderResult.data
-                    ),
+                    apiCall = {
+                        apiClient.updateUserProfileImage(
+                            userId = userId,
+                            profileImage = multipartBuilderResult.data
+                        )
+                    },
                     ioDispatcher = ioDispatcher,
                     logError = { errorMessage -> appLogger.e(loggerTag) { errorMessage } }
                 ).toMultipartResult()
@@ -206,28 +204,24 @@ internal class UserRepositoryImpl(
         }
     }
 
-    override suspend fun getPrivacySettings(): Flow<RepositoryResult<RepositoryPrivacySettings>> =
-        flow {
-            emitAll(
-                handleApiResult(
-                    apiResult = apiClient.getUserPrivacySettings(),
-                    transformation = ResponsePrivacySettings::toRepositoryPrivacySettings,
-                    ioDispatcher = ioDispatcher
-                )
-            )
-        }
+    override suspend fun getPrivacySettings(): RepositoryResult<RepositoryPrivacySettings> {
+        return handleApiResultNoFlow(
+            apiCall = apiClient::getUserPrivacySettings,
+            transformation = ResponsePrivacySettings::toRepositoryPrivacySettings,
+            ioDispatcher = ioDispatcher
+        )
+    }
 
-    override suspend fun updatePrivacySettings(requestPrivacySettings: RequestPrivacySettings): Flow<RepositoryResult<String>> =
-        flow {
-            emitAll(
-                handleApiResultNoTransformation(
-                    apiResult = apiClient.updateUserPrivacySettings(
-                        requestPrivacySettings
-                    ),
-                    ioDispatcher = ioDispatcher
+    override suspend fun updatePrivacySettings(requestPrivacySettings: RequestPrivacySettings): RepositoryResult<String> {
+        return handleApiResultNoTransformationNoFlow(
+            apiCall = {
+                apiClient.updateUserPrivacySettings(
+                    requestPrivacySettings
                 )
-            )
-        }
+            },
+            ioDispatcher = ioDispatcher
+        )
+    }
 
     override suspend fun getUserLoggedInFlow(): StateFlow<Boolean> = _isUserLoggedIn
 

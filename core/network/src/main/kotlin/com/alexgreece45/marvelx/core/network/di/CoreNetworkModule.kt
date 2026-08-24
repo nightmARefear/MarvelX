@@ -14,7 +14,7 @@ import com.alexgreece45.marvelx.core.network.di.model.RefreshAuthTokenOkHttpClie
 import com.alexgreece45.marvelx.core.network.di.model.RefreshTokenAuthenticator
 import com.alexgreece45.marvelx.core.network.di.model.RefreshTokenInterceptor
 import com.alexgreece45.marvelx.core.network.di.model.RefreshTokenRetrofit
-import com.alexgreece45.marvelx.core.network.di.model.WebSocketOkHttpClient
+import com.alexgreece45.marvelx.core.network.di.model.WebsocketOkHttpClient
 import com.alexgreece45.marvelx.core.network.di.model.WebsocketInterceptor
 import com.alexgreece45.marvelx.core.network.model.api.character.comic.ResponseComicPriceType
 import com.alexgreece45.marvelx.core.network.model.api.verification_step.ResponseVerificationStep
@@ -188,7 +188,7 @@ internal fun provideOkHttpClientForRefreshTokenClient(
  * Provides the [OkHttpClient] for the websocket client.
  */
 @Single
-@WebSocketOkHttpClient
+@WebsocketOkHttpClient
 internal fun provideOkHttpClientForWebsocketClient(
     context: Context,
     httpLoggingInterceptor: HttpLoggingInterceptor,

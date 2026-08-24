@@ -155,7 +155,7 @@ private fun ForgotPasswordScreenContent(
             .semantics { contentType = ContentType.EmailAddress }
             .fillMaxWidth(),
         label = stringResource(R.string.forgot_password_screen_input_field_label_email),
-        errorMessage = state.emailValidationResult.message,
+        errorText = state.emailValidationResult.message,
         isError = state.emailValidationResult.isValid.not() && state.emailValidationResult.message.isNotBlank(),
         keyboardOptions = KeyboardOptions(
             keyboardType = KeyboardType.Email,

@@ -19,20 +19,37 @@ import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavController
+import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.common_ui.util.ObserveUiEffect
 import com.alexgreece45.marvelx.core.common.config.SecurityConfigLogic
 import com.alexgreece45.marvelx.core.common.logger.AppLogger
 import com.alexgreece45.marvelx.data.model.deepLink.DeepLinkAction
@@ -40,7 +57,6 @@ import com.alexgreece45.marvelx.notifications.constants.ConstantsNotifications
 import com.alexgreece45.marvelx.notifications.model.NotificationChannelData
 import com.alexgreece45.marvelx.notifications.model.NotificationChannelType
 import com.alexgreece45.marvelx.notifications.model.NotificationData
-import com.alexgreece45.marvelx.ui.components.effect.ObserveUiEffect
 import com.alexgreece45.marvelx.ui.components.effect.OneTimeLaunchedEffect
 import com.alexgreece45.marvelx.ui.helper.openDeepLinkAction
 import com.alexgreece45.marvelx.ui.navigation.NavArgHelper
@@ -48,11 +64,30 @@ import com.alexgreece45.marvelx.ui.navigation.NavBackStackLogger
 import com.alexgreece45.marvelx.ui.navigation.NavGraph
 import com.alexgreece45.marvelx.ui.navigation.Screen
 import com.alexgreece45.marvelx.ui.navigation.models.NavArg
+import com.alexgreece45.marvelx.ui.screens.allCharacters.navigation.AllCharactersRoute
+import com.alexgreece45.marvelx.ui.screens.allFavoriteCharacters.navigation.AllFavoriteCharactersRoute
+import com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.steps.success.navigation.CheckoutSuccessRoute
+import com.alexgreece45.marvelx.ui.screens.cart.navigation.CartRoute
+import com.alexgreece45.marvelx.ui.screens.character.allCharacterComicsScreen.navigation.AllCharacterComicsRoute
+import com.alexgreece45.marvelx.ui.screens.character.navigation.CharacterRoute
+import com.alexgreece45.marvelx.ui.screens.comic.navigation.ComicRoute
 import com.alexgreece45.marvelx.ui.screens.mainActivity.model.MainActivityEffect
 import com.alexgreece45.marvelx.ui.screens.mainActivity.model.MainActivityEvent
+import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.navigation.CreateListingWizardRoute
+import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.success.navigation.CreateListingSuccessRoute
+import com.alexgreece45.marvelx.ui.screens.marketplace.listingDetailsScreen.navigation.ListingDetailsRoute
+import com.alexgreece45.marvelx.ui.screens.marketplace.navigation.MarketplaceRoute
+import com.alexgreece45.marvelx.ui.screens.orders.orderDetails.navigation.OrderDetailsRoute
+import com.alexgreece45.marvelx.ui.screens.orders.orderItemManagement.navigation.OrderItemManagementRoute
+import com.alexgreece45.marvelx.ui.screens.orders.orderItemTrackingHistory.navigation.OrderItemTrackingHistoryRoute
+import com.alexgreece45.marvelx.ui.screens.orders.requestReturn.navigation.RequestItemReturnRoute
+import com.alexgreece45.marvelx.ui.screens.orders.requestReturn.navigation.navigateToRequestItemReturnScreen
+import com.alexgreece45.marvelx.ui.screens.orders.requestReturn.success.navigation.RequestItemReturnSuccessRoute
+import com.alexgreece45.marvelx.ui.screens.profile.navigation.ProfileRoute
 import com.alexgreece45.marvelx.ui.screens.splash.SplashContract.AlertDialogErrorType.InsecureApplication
 import com.alexgreece45.marvelx.ui_theme.theme.MarvelXTheme
 import com.alexgreece45.marvelx.ui_theme.theme.util.SystemBarsThemeUtil
+import com.alexgreece45.marvelx.ui_theme.theme.values.customColors
 import com.alexgreece45.marvelx.util.DateUtil
 import com.alexgreece45.marvelx.util.extensions.popUpToTop
 import com.chuckerteam.chucker.api.Chucker
@@ -112,7 +147,7 @@ internal class MainActivity : ComponentActivity() {
                 }
             }
 
-            navBackStackLogger.LoggerView(navController)
+            navBackStackLogger.TrackBackStack(navController = navController, showRouteId = false)
 
             MarvelXTheme {
                 SystemBarsThemeUtil.applyDarkSystemBarsTheme(activity = this)
@@ -120,13 +155,41 @@ internal class MainActivity : ComponentActivity() {
                 Surface(color = MaterialTheme.colors.background) {
                     NavGraph(navController = navController)
 
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .safeDrawingPadding(),
+                        contentAlignment = Alignment.CenterEnd
+                    ) {
+                        IconButton(
+                            onClick = {
+//                            navController.navigate(Screen.OrderManagementScreen.route)
+//                            return@IconButton
+                                navController.navigateToRequestItemReturnScreen(
+                                    orderId = "1",
+                                    orderItemId = "B28"
+                                )
+//                                navController.navigateToRequestItemReturnSuccessScreen(orderItemReturnId = "RET-1003")
+                            }, modifier = Modifier
+                                .size(32.dp)
+                                .clip(shape = CircleShape)
+                                .background(Color.Cyan)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.BugReport,
+                                contentDescription = null,
+                                tint = MaterialTheme.customColors.white
+                            )
+                        }
+                    }
+
                     ChuckerPermissions()
 
                     OneTimeLaunchedEffect {
                         viewModel.setEvent(MainActivityEvent.LifecycleEvent.OnCreate)
                     }
 
-                    ObserveUiEffect(viewModel.uiEffect) { effect ->
+                    ObserveUiEffect(flow = viewModel.uiEffect, tag = "MainActivity") { effect ->
                         when (effect) {
                             is MainActivityEffect.Navigation.NavigateToHomeScreen -> {
                                 // TODO: Resolve.
@@ -457,13 +520,46 @@ internal class MainActivity : ComponentActivity() {
         }
     }
 
+    private val typeSafeRoutesIncludedInAutoLogout = listOf(
+        MarketplaceRoute::class,
+        ListingDetailsRoute::class,
+        CreateListingWizardRoute::class,
+        CreateListingSuccessRoute::class,
+        CharacterRoute::class,
+        CartRoute::class,
+        CheckoutSuccessRoute::class,
+        OrderDetailsRoute::class,
+        OrderItemTrackingHistoryRoute::class,
+        OrderItemManagementRoute::class,
+        RequestItemReturnRoute::class,
+        AllCharactersRoute::class,
+        ComicRoute::class,
+        AllCharactersRoute::class,
+        AllCharacterComicsRoute::class,
+        AllFavoriteCharactersRoute::class,
+        ProfileRoute::class,
+        RequestItemReturnRoute::class,
+        RequestItemReturnSuccessRoute::class,
+    )
+
     /**
      * Returns `true` if the current route is included in the auto-logout mechanism, otherwise
      * `false`.
      */
-    private fun isCurrentRouteIncludedInAutoLogout(navController: NavHostController): Boolean =
-        Screen.fromRoute(navController.currentDestination?.route.orEmpty())?.isIncludedInAutoLogout
+    private fun isCurrentRouteIncludedInAutoLogout(navController: NavHostController): Boolean {
+        val isCurrentRouteIncludedInAutoLogout =
+            typeSafeRoutesIncludedInAutoLogout.any { routeClass ->
+                navController.currentDestination?.hasRoute(
+                    routeClass
+                ) == true
+            }
+        if (isCurrentRouteIncludedInAutoLogout) {
+            return true
+        }
+
+        return Screen.fromRoute(navController.currentDestination?.route.orEmpty())?.isIncludedInAutoLogout
             ?: false
+    }
 
     /**
      * Examines whether the current route can open a deep link and returns the result as a [Boolean].

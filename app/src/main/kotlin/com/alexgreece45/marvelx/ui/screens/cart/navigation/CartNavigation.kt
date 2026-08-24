@@ -42,7 +42,7 @@ internal fun NavGraphBuilder.cartScreen(
 
                     CartContract.Effect.Navigation.GoToCheckoutScreen -> navController.navigate(
                         Screen.CheckoutWizardScreen.route
-                    )
+                    ) { launchSingleTop = true }
 
                     CartContract.Effect.Navigation.GoToEditCheckoutShippingDetailsScreen -> {}
                     CartContract.Effect.Navigation.GoToEditCheckoutPaymentDetailsScreen -> {}

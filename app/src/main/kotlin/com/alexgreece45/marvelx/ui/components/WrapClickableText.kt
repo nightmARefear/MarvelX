@@ -1,12 +1,12 @@
 package com.alexgreece45.marvelx.ui.components
 
 import androidx.compose.foundation.text.ClickableText
+import androidx.compose.material.LocalContentColor
 import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -37,6 +37,7 @@ fun WrapClickableText(
     modifier: Modifier = Modifier,
     text: String,
     textStyle: TextStyle,
+    nonClickableTextColor: Color = LocalContentColor.current,
     clickableStrings: List<ClickableString>
 ) {
     data class StringData(
@@ -106,7 +107,7 @@ fun WrapClickableText(
                     annotation = linkStringData.data,
                 )
                 withStyle(
-                    style = SpanStyle(
+                    style = textStyle.toSpanStyle().copy(
                         color = linkStringData.color ?: MaterialTheme.customColors.genericRed,
                         fontSize = linkStringData.fontSize ?: textStyle.fontSize,
                         fontWeight = linkStringData.fontWeight ?: textStyle.fontWeight
@@ -117,7 +118,13 @@ fun WrapClickableText(
                 pop()
             } else {
                 // Non-clickable string.
-                append(linkStringData.text)
+                withStyle(
+                    style = textStyle.toSpanStyle().copy(
+                        color = nonClickableTextColor
+                    )
+                ) {
+                    append(linkStringData.text)
+                }
             }
         }
     }

@@ -1033,9 +1033,7 @@ class CreateListingAdvancedDetailsViewModel(
 
     private fun showErrorAndGoToPreviousStep(errorMessage: String = resourceProvider.getGenericErrorMessage()) {
         setEffect {
-            CreateListingAdvancedDetailsContract.Effect.ShowToast(
-                message = errorMessage
-            )
+            CreateListingAdvancedDetailsContract.Effect.ShowErrorSnackbar(errorMessage = errorMessage)
         }
         setEffect {
             CreateListingAdvancedDetailsContract.Effect.GoToPreviousStep

@@ -387,7 +387,7 @@ class EditProfileDetailsViewModel(
         currentState.profileDetailsUi?.toBasicProfileDetailsDomain()?.let { profileDetailsDomain ->
             viewModelScope.launch {
                 userInteractor.updateCurrentUserProfileDetails(profileDetailsDomain)
-                    .collect { result ->
+                    .let { result ->
                         when (result) {
                             is InteractorPartialState.Success -> {
                                 setEffect {

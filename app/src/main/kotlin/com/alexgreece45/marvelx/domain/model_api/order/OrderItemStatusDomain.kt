@@ -1,6 +1,6 @@
 package com.alexgreece45.marvelx.domain.model_api.order
 
-import com.alexgreece45.marvelx.data.model.order.OrderItemStatusData
+import com.alexgreece45.marvelx.core.data.model.order.item.OrderItemStatusData
 
 enum class OrderItemStatusDomain {
     Processing,

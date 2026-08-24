@@ -7,18 +7,19 @@ import androidx.compose.material.LinearProgressIndicator
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarEffect
+import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarType
+import com.alexgreece45.marvelx.common_ui.util.ObserveUiEffect
+import com.alexgreece45.marvelx.core.common.util.flows.single_observer_flow.SingleObserverFlow
 import com.alexgreece45.marvelx.ui.components.AlertDialogButton
 import com.alexgreece45.marvelx.ui.components.AlertDialogError
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction.Backable
 import com.alexgreece45.marvelx.ui.components.WrapButton
-import com.alexgreece45.marvelx.ui.components.effect.ObserveUiEffect
 import com.alexgreece45.marvelx.ui.components.model.ErrorButtonType
 import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.advancedDetails.CreateListingAdvancedDetailsScreen
 import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.advancedDetails.CreateListingAdvancedDetailsViewModel
@@ -35,29 +36,25 @@ import com.alexgreece45.marvelx.ui.screens.marketplace.listingDetailsScreen.List
 import com.alexgreece45.marvelx.ui.screens.marketplace.listingDetailsScreen.ListingDetailsViewModel
 import com.alexgreece45.marvelx.ui.screens.marketplace.listingDetailsScreen.model.ListingDetailsContract
 import com.alexgreece45.marvelx.ui_theme.theme.values.customColors
-import com.alexgreece45.marvelx.util.extensions.showToast
-import kotlinx.coroutines.flow.Flow
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
 internal fun CreateListingWizardScreen(
     onEvent: (CreateListingWizardContract.Event) -> Unit,
     state: CreateListingWizardContract.State,
-    effect: Flow<CreateListingWizardContract.Effect>,
+    effect: SingleObserverFlow<CreateListingWizardContract.Effect>,
+    snackbarEffects: SingleObserverFlow<SnackbarEffect>,
     onNavigationEffect: (CreateListingWizardContract.Effect.Navigation) -> Unit,
-    listingId: String?,
     createListingWizardViewModel: CreateListingWizardViewModel = koinViewModel(),
     createListingBasicDetailsViewModel: CreateListingBasicDetailsViewModel = koinViewModel(),
     createListingAdvancedDetailsViewModel: CreateListingAdvancedDetailsViewModel = koinViewModel()
 ) {
-
-    val context = LocalContext.current
     val createListingWizardState =
         createListingWizardViewModel.uiState.collectAsStateWithLifecycle().value
     val createListingBasicDetailsState =
         createListingBasicDetailsViewModel.uiState.collectAsStateWithLifecycle().value
 
-    ObserveUiEffect(effect) { uiEffect ->
+    ObserveUiEffect(flow = effect, tag = "CreateListingWizardScreen") { uiEffect ->
         when (uiEffect) {
             is CreateListingWizardContract.Effect.Navigation -> onNavigationEffect(uiEffect)
             is CreateListingWizardContract.Effect.InitBasicDetailsScreen -> {
@@ -65,15 +62,7 @@ internal fun CreateListingWizardScreen(
                     Init(uiEffect.updateListingBasicDetails)
                 )
             }
-
-            is CreateListingWizardContract.Effect.ShowToastMessage -> {
-                context.showToast(uiEffect.message)
-            }
         }
-    }
-
-    LaunchedEffect(Unit) {
-        onEvent(CreateListingWizardContract.Event.Init(listingId))
     }
 
     ContentScreen(
@@ -94,6 +83,7 @@ internal fun CreateListingWizardScreen(
         },
         showToolbar = true,
         toolbarTitle = state.toolbarTitle,
+        snackbarEffects = snackbarEffects,
         stickyBottom = {
             WrapButton(
                 onClick = { onEvent(CreateListingWizardContract.Event.OnStickyBottomButtonClicked) },
@@ -129,10 +119,11 @@ internal fun CreateListingWizardScreen(
                         onEvent = createListingBasicDetailsViewModel::setEvent,
                         state = createListingBasicDetailsState,
                         effect = createListingBasicDetailsViewModel.uiEffect,
-                        showToastMessage = { message ->
+                        showSnackbar = { message, snackbarType ->
                             onEvent(
-                                CreateListingWizardContract.Event.OnShowToastMessage(
-                                    message
+                                CreateListingWizardContract.Event.OnShowSnackbar(
+                                    message = message,
+                                    snackbarType = snackbarType
                                 )
                             )
                         },
@@ -154,10 +145,11 @@ internal fun CreateListingWizardScreen(
                         onEvent = createListingAdvancedDetailsViewModel::setEvent,
                         state = createListingAdvancedDetailsViewModel.uiState.collectAsStateWithLifecycle().value,
                         effect = createListingAdvancedDetailsViewModel.uiEffect,
-                        showToastMessage = { message ->
+                        showErrorSnackbar = { errorMessage ->
                             onEvent(
-                                CreateListingWizardContract.Event.OnShowToastMessage(
-                                    message
+                                CreateListingWizardContract.Event.OnShowSnackbar(
+                                    message = errorMessage,
+                                    snackbarType = SnackbarType.ERROR
                                 )
                             )
                         },
@@ -186,6 +178,7 @@ internal fun CreateListingWizardScreen(
                         onEvent = listingDetailsViewModel::setEvent,
                         state = listingDetailsViewModel.uiState.collectAsStateWithLifecycle().value,
                         effect = listingDetailsViewModel.uiEffect,
+                        snackbarEffects = listingDetailsViewModel.snackbarEffects,
                         onNavigation = { navigationEffect ->
                             when (navigationEffect) {
                                 ListingDetailsContract.Effect.Navigation.GoBack -> {
@@ -197,6 +190,9 @@ internal fun CreateListingWizardScreen(
                                 ListingDetailsContract.Effect.Navigation.GoToNextScreen -> onEvent(
                                     CreateListingWizardContract.Event.OnStickyBottomButtonClicked
                                 )
+
+                                is ListingDetailsContract.Effect.Navigation.NavigateToOrderItemManagementScreen -> {}
+                                is ListingDetailsContract.Effect.Navigation.NavigateToOrderItemTrackingHistoryScreen -> {}
                             }
                         },
                         listingId = null,

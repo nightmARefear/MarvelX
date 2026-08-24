@@ -33,14 +33,12 @@ import com.alexgreece45.marvelx.ui.components.BottomNavigationBarData
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.SPACING_TINY
-import kotlinx.coroutines.flow.Flow
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun AllFavoriteCharactersScreen(
     onEventSent: (AllFavoriteCharactersEvent) -> Unit,
     state: AllFavoriteCharactersState,
-    effect: Flow<AllFavoriteCharactersEffect>,
     bottomNavigationBarData: @Composable () -> BottomNavigationBarData,
 ) {
     LaunchedEffect(Unit) {

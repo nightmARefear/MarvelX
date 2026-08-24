@@ -79,6 +79,7 @@ fun SectionHeader(
                 Modifier.clickableNoRipple(
                     enabled = enabled,
                     rippleShape = headerShape,
+                    role = Role.Button,
                     onClick = onClick
                 )
             }
@@ -133,11 +134,13 @@ fun SectionHeader(
 @Composable
 fun SectionHeaderTitle(
     title: String,
+    modifier: Modifier = Modifier,
     color: Color = Color.Unspecified,
     titleMaxLines: Int = SectionHeaderDefaults.TITLE_MAX_LINES
 ) {
     Text(
         text = title,
+        modifier = modifier,
         color = color,
         overflow = TextOverflow.Ellipsis,
         maxLines = titleMaxLines,

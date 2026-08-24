@@ -38,6 +38,11 @@ data class CustomColors(
     val linkTextColor: Color,
     val genericOrangeColor: Color,
     val snackbarBackgroundColors: SnackbarBackgroundColors,
+    val listingStatusColors: ListingStatusColors,
+    val infoStatusContainerColors: StatusContainerColors,
+    val warningStatusContainerColors: StatusContainerColors,
+    val errorStatusContainerColors: StatusContainerColors,
+    val successStatusContainerColors: StatusContainerColors,
 )
 
 /**
@@ -80,6 +85,19 @@ data class SnackbarBackgroundColors(
     val warning: Color,
     val error: Color,
     val success: Color
+)
+
+@Immutable
+data class ListingStatusColors(
+    val soldBackgroundColor: Color,
+    val soldOutlineColor: Color
+)
+
+@Immutable
+data class StatusContainerColors(
+    val backgroundColor: Color,
+    val outlineColor: Color,
+    val contentColor: Color
 )
 
 /**
@@ -134,6 +152,30 @@ internal fun customLightColors() = CustomColors(
         error = Color(0xFFD50000),
         success = Color(0xFF21F33D)
     ),
+    listingStatusColors = ListingStatusColors(
+        soldBackgroundColor = Color(0xA6B71C1C),
+        soldOutlineColor = Color(0xFFB71C1C)
+    ),
+    infoStatusContainerColors = StatusContainerColors(
+        backgroundColor = Color(0x1A3B82F6),
+        outlineColor = Color(0x4D3B82F6),
+        contentColor = Color(0xFF3B82F6)
+    ),
+    warningStatusContainerColors = StatusContainerColors(
+        backgroundColor = Color(0x1AFF9800),
+        outlineColor = Color(0x4DFF9800),
+        contentColor = Color(0xFFFF9800)
+    ),
+    errorStatusContainerColors = StatusContainerColors(
+        backgroundColor = Color(0x1AEF4444),
+        outlineColor = Color(0x4DEF4444),
+        contentColor = Color(0xFFEF4444)
+    ),
+    successStatusContainerColors = StatusContainerColors(
+        backgroundColor = Color(0x1A21F33D),
+        outlineColor = Color(0x4D21F33D),
+        contentColor = Color(0xFF21F33D)
+    ),
 )
 
 /**
@@ -187,6 +229,30 @@ internal fun customDarkColors() = CustomColors(
         warning = Color(0xFFFF9800),
         error = Color(0xFFD50000),
         success = Color(0xFF21F33D)
+    ),
+    listingStatusColors = ListingStatusColors(
+        soldBackgroundColor = Color(0xA6B71C1C),
+        soldOutlineColor = Color(0xFFB71C1C)
+    ),
+    infoStatusContainerColors = StatusContainerColors(
+        backgroundColor = Color(0x1A3B82F6),
+        outlineColor = Color(0x4D3B82F6),
+        contentColor = Color(0xFF3B82F6)
+    ),
+    warningStatusContainerColors = StatusContainerColors(
+        backgroundColor = Color(0x1AFF9800),
+        outlineColor = Color(0x4DFF9800),
+        contentColor = Color(0xFFFF9800)
+    ),
+    errorStatusContainerColors = StatusContainerColors(
+        backgroundColor = Color(0x1AEF4444),
+        outlineColor = Color(0x4DEF4444),
+        contentColor = Color(0xFFEF4444)
+    ),
+    successStatusContainerColors = StatusContainerColors(
+        backgroundColor = Color(0x1A21F33D),
+        outlineColor = Color(0x4D21F33D),
+        contentColor = Color(0xFF21F33D)
     ),
 )
 

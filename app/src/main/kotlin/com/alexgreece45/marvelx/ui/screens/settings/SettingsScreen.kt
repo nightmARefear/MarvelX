@@ -15,24 +15,24 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.common_ui.util.ObserveUiEffect
+import com.alexgreece45.marvelx.core.common.util.flows.single_observer_flow.SingleObserverFlow
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
-import com.alexgreece45.marvelx.ui.components.effect.ObserveUiEffect
 import com.alexgreece45.marvelx.ui.components.sections.SectionListHeader
 import com.alexgreece45.marvelx.ui.screens.settings.model.SettingsContract
 import com.alexgreece45.marvelx.ui_theme.theme.values.customColors
-import kotlinx.coroutines.flow.Flow
 
 @Composable
 fun SettingsScreen(
     onEvent: (SettingsContract.Event) -> Unit,
     state: SettingsContract.State,
-    effect: Flow<SettingsContract.Effect>,
+    effect: SingleObserverFlow<SettingsContract.Effect>,
     onNavigationEffect: (SettingsContract.Effect.Navigation) -> Unit
 ) {
     val context = LocalContext.current
 
-    ObserveUiEffect(flow = effect) { uiEffect ->
+    ObserveUiEffect(flow = effect, tag = "SettingsScreen") { uiEffect ->
         when (uiEffect) {
             is SettingsContract.Effect.Navigation -> onNavigationEffect(uiEffect)
             is SettingsContract.Effect.ShowToast -> {

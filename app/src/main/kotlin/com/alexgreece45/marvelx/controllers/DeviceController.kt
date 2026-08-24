@@ -43,22 +43,26 @@ class DeviceControllerImpl(
 
     private suspend fun registerDevice(fcmToken: String?): Boolean {
         return handleApiResultNoTransformationNoFlow(
-            apiResult = apiClient.registerDevice(
-                RequestRegisterDevice(
-                    fcmToken = fcmToken
+            apiCall = {
+                apiClient.registerDevice(
+                    RequestRegisterDevice(
+                        fcmToken = fcmToken
+                    )
                 )
-            ),
+            },
             ioDispatcher = ioDispatcher
         ) is RepositoryResult.Success
     }
 
     private suspend fun updateDevice(fcmToken: String?): Boolean {
         return handleApiResultNoTransformationNoFlow(
-            apiResult = apiClient.updateDevice(
-                RequestUpdateDevice(
-                    fcmToken = fcmToken
+            apiCall = {
+                apiClient.updateDevice(
+                    RequestUpdateDevice(
+                        fcmToken = fcmToken
+                    )
                 )
-            ),
+            },
             ioDispatcher = ioDispatcher
         ) is RepositoryResult.Success
     }

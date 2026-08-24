@@ -1,6 +1,8 @@
 package com.alexgreece45.marvelx.ui.screens.orders.orderDetails
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.toRoute
 import com.alexgreece45.marvelx.configuration.ConfigPriceLogic
 import com.alexgreece45.marvelx.core.common.logger.AppLogger
 import com.alexgreece45.marvelx.core.data.model.order.OrderId
@@ -13,6 +15,7 @@ import com.alexgreece45.marvelx.ui.screens.orders.model.item.OrderItemUi
 import com.alexgreece45.marvelx.ui.screens.orders.model.toUi
 import com.alexgreece45.marvelx.ui.screens.orders.orderDetails.model.OrderDetailsBottomSheetType
 import com.alexgreece45.marvelx.ui.screens.orders.orderDetails.model.OrderDetailsContract
+import com.alexgreece45.marvelx.ui.screens.orders.orderDetails.navigation.OrderDetailsRoute
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.extensions.toUrlEncoding
 import kotlinx.coroutines.launch
@@ -24,13 +27,18 @@ internal class OrderDetailsViewModel(
     private val configPriceLogic: ConfigPriceLogic,
     private val resourceProvider: ResourceProvider,
     private val appLogger: AppLogger,
+    savedStateHandle: SavedStateHandle,
 ) : BaseViewModel<OrderDetailsContract.Event, OrderDetailsContract.State, OrderDetailsContract.Effect>() {
+
+    init {
+        val route = savedStateHandle.toRoute<OrderDetailsRoute>()
+        init(orderId = route.orderId)
+    }
 
     override fun setInitialState(): OrderDetailsContract.State = OrderDetailsContract.State()
 
     override fun handleEvents(event: OrderDetailsContract.Event) {
         when (event) {
-            is OrderDetailsContract.Event.Init -> init(event.orderId)
             OrderDetailsContract.Event.OnBack -> onBack()
             OrderDetailsContract.Event.OnErrorButtonClicked -> onErrorButtonClicked()
             OrderDetailsContract.Event.OnOrderStatusBannerClicked -> onOrderStatusBannerClicked()
@@ -79,11 +87,11 @@ internal class OrderDetailsViewModel(
             setEffect {
                 OrderDetailsContract.Effect.Navigation.NavigateToOrderItemTrackingHistoryScreen(
                     orderId = currentState.orderId.value,
-                    sellerUserId = sellerUserId,
-                    orderItemId = orderId.value,
+                    orderItemId = orderItemId.value,
                     orderItemTitle = title,
                     orderItemCoverImageUrl = coverImageUrl.toUrlEncoding(),
-                    orderItemPriceLabel = price.label
+                    orderItemPriceLabel = price.label,
+                    sellerUserId = sellerUserId
                 )
             }
         }
