@@ -397,7 +397,8 @@ internal fun NavGraph(navController: NavHostController) {
                             navController.navigateToListingDetailsScreen(navigationEffect.listingId)
                         }
                     }
-                }
+                },
+                snackbarEffects = viewModel.snackbarEffects
             )
         }
 
@@ -465,6 +466,8 @@ internal fun NavGraph(navController: NavHostController) {
                         is OrdersContract.Effect.Navigation.GoToOrderDetailsScreen -> {
                             navController.navigateToOrderDetailsScreen(navigationEffect.orderId)
                         }
+
+                        OrdersContract.Effect.Navigation.GoToMarketplaceScreen -> navController.navigateToMarketplaceScreen()
                     }
                 },
             )

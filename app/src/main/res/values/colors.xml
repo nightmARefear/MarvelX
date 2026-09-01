@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="marvelx_primary">#FFFFFF</color>
+    <color name="marvelx_primary_variant">#CECECE</color>
+    <color name="marvelx_on_primary">#1B1314</color>
+    <color name="marvelx_secondary">#BC0000</color>
+    <color name="marvelx_secondary_variant">#A20000</color>
+    <color name="marvelx_on_secondary">#FAE5E5</color>
+    <color name="marvelx_background">#222222</color>
+    <color name="marvelx_on_background">#FFFFFF</color>
+    <color name="marvelx_surface">#3A3939</color>
+    <color name="marvelx_on_surface">#FFFFFF</color>
+    <color name="marvelx_error">#D50000</color>
+    <color name="marvelx_on_error">#000000</color>
+</resources>

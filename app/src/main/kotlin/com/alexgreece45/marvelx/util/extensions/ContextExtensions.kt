@@ -1,14 +1,17 @@
 package com.alexgreece45.marvelx.util.extensions
 
 import android.content.Context
+import android.content.ContextWrapper
 import android.content.Intent
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.net.Uri
 import android.provider.Settings
 import android.widget.Toast
+import androidx.fragment.app.FragmentActivity
 import com.alexgreece45.marvelx.data.model.deepLink.DeepLinkAction
 import com.alexgreece45.marvelx.ui.screens.mainActivity.MainActivity
+import com.alexgreece45.marvelx.util.extensions.model.ShareContentUrlData
 
 /**
  * Detects if this device has internet connection and returns `true` if it has otherwise `false`.
@@ -64,6 +67,17 @@ fun Context.getAndRemovePendingDeepLinkAction(): DeepLinkAction? {
  */
 internal fun Context.getActivity(): MainActivity? = (this as? MainActivity)
 
+fun Context.getFragmentActivity(): FragmentActivity? {
+    var currentContext = this
+    while (currentContext is ContextWrapper) {
+        if (currentContext is FragmentActivity) {
+            return currentContext
+        }
+        currentContext = currentContext.baseContext
+    }
+    return null
+}
+
 /**
  * Closes the [MainActivity].
  */
@@ -84,16 +98,16 @@ fun Context.openAppSettings() {
 /**
  * Shares a specific content's link.
  */
-fun Context.shareContentUrl(url: String, title: String) {
+fun Context.shareContentUrl(shareContentUrlData: ShareContentUrlData) {
     val intent = Intent().apply {
         action = Intent.ACTION_SEND
         type = "text/plain"
 
-        putExtra(Intent.EXTRA_TEXT, url)
-        putExtra(Intent.EXTRA_TITLE, title)
+        putExtra(Intent.EXTRA_TEXT, shareContentUrlData.url)
+        putExtra(Intent.EXTRA_TITLE, shareContentUrlData.title)
     }
 
-    val chooser = Intent.createChooser(intent, title).apply {
+    val chooser = Intent.createChooser(intent, shareContentUrlData.title).apply {
         addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     }
 

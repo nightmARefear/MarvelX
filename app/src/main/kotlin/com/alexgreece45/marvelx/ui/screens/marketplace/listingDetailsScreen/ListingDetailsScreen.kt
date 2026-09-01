@@ -72,7 +72,7 @@ import com.alexgreece45.marvelx.util.VSpacer
 import com.alexgreece45.marvelx.util.constants.ConstantsUi
 import com.alexgreece45.marvelx.util.extensions.circularImageWithBorder
 import com.alexgreece45.marvelx.util.extensions.clickableNoRipple
-import com.alexgreece45.marvelx.util.extensions.formatPrice
+import com.alexgreece45.marvelx.core.common.extensions.formatPrice
 import com.alexgreece45.marvelx.util.extensions.shareContentUrl
 import com.alexgreece45.marvelx.util.extensions.showToast
 import kotlinx.coroutines.flow.emptyFlow
@@ -98,7 +98,7 @@ internal fun ListingDetailsScreen(
             }
 
             is ListingDetailsContract.Effect.ShareListingUrl -> {
-                context.shareContentUrl(url = uiEffect.url, title = uiEffect.title)
+                context.shareContentUrl(shareContentUrlData = uiEffect.shareContentUrlData)
             }
         }
     }
@@ -749,7 +749,13 @@ private fun ListingDetailsScreenPreview() {
                     ),
                     coverImageUrl = "https://backend.alexandrosvoliotis.com/api/private/marvelx/user/1/profile-image",
                     imageUrls = listOf("https://backend.alexandrosvoliotis.com/api/private/marvelx/user/2/profile-image"),
-                    selectedImageIndex = 0,
+                    details = ListingDetailsDomain.ArtDetailsDomain(
+                        dimensions = ListingDimensions(
+                            width = WizardInputFieldUi.Integer(integerValue = "10"),
+                            height = WizardInputFieldUi.Integer(integerValue = "20"),
+                        ),
+                        framed = true
+                    ),
                     /* details = ListingDetailsDomain.DrinkwareDetailsDomain(
                          material = ListingEnumGeneric(
                              "ceramic",
@@ -773,20 +779,13 @@ private fun ListingDetailsScreenPreview() {
                              label = "Holographic"
                          )
                      ),*/
-                    details = ListingDetailsDomain.ArtDetailsDomain(
-                        dimensions = ListingDimensions(
-                            width = WizardInputFieldUi.Integer(integerValue = "10"),
-                            height = WizardInputFieldUi.Integer(integerValue = "20"),
-                        ),
-                        framed = true
-                    ),
-                    favorite = false,
-                    cart = true,
                     postedAt = InstantUi(
                         value = postedAt,
                         label = postedAt.toListingFormat()
                     ),
                     updatedAt = null,
+                    favorite = false,
+                    cart = true,
                     canEdit = false,
                     orderIds = null
                 ),

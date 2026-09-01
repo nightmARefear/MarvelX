@@ -27,7 +27,7 @@ internal fun themeColors(darkTheme: Boolean): ThemeColorsTemplate {
             surface = Color(0xFF3A3939),
             onSurface = Color(0xFFFFFFFF),
             error = Color(0xFFD50000),
-            onError = Color(0xFF000000),
+            onError = Color(0xFFFFFFFF),
             success = Color(0xFF00D500),
             onSuccess = Color(0xFFFFFFFF)
         ),
@@ -43,7 +43,7 @@ internal fun themeColors(darkTheme: Boolean): ThemeColorsTemplate {
             surface = Color(0xFF3A3939),
             onSurface = Color(0xFFFFFFFF),
             error = Color(0xFFD50000),
-            onError = Color(0xFF000000),
+            onError = Color(0xFFFFFFFF),
             success = Color(0xFF00D500),
             onSuccess = Color(0xFFFFFFFF)
         )

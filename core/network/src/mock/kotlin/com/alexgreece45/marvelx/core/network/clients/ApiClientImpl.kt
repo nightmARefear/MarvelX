@@ -281,8 +281,7 @@ internal class ApiClientImpl(
             )
         )
 
-    override suspend
-    fun postLogin(accessToken: String): Response<ResponsePostLogin> =
+    override suspend fun postLogin(accessToken: String): Response<ResponsePostLogin> =
         Response.success(
             200,
             ResponsePostLogin(

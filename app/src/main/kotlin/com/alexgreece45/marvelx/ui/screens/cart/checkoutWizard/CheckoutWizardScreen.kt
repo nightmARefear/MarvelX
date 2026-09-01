@@ -252,22 +252,23 @@ internal fun CheckoutWizardScreen(
                 }
             }
 
-            AlertDialogError(
-                isVisible = state.alertDialogAction != null,
-                title = stringResource(R.string.screen_checkout_wizard_alert_dialog_title),
-                errorMessage = {
-                    Text(text = stringResource(R.string.screen_checkout_wizard_alert_dialog_message))
-                },
-                confirmButton = AlertDialogButton(
-                    label = stringResource(R.string.screen_checkout_wizard_alert_dialog_button_positive),
-                    buttonType = ErrorButtonType.Contained,
-                    onClick = { onEvent(CheckoutWizardContract.Event.AlertDialogEvents.OnPositiveButtonClicked) }
-                ),
-                dismissButton = AlertDialogButton(
-                    label = stringResource(R.string.screen_checkout_wizard_alert_dialog_button_negative),
-                    onClick = { onEvent(CheckoutWizardContract.Event.AlertDialogEvents.OnNegativeButtonClicked) }
+            if (state.alertDialogAction != null) {
+                AlertDialogError(
+                    title = stringResource(R.string.screen_checkout_wizard_alert_dialog_title),
+                    errorMessage = {
+                        Text(text = stringResource(R.string.screen_checkout_wizard_alert_dialog_message))
+                    },
+                    confirmButton = AlertDialogButton(
+                        label = stringResource(R.string.screen_checkout_wizard_alert_dialog_button_positive),
+                        buttonType = ErrorButtonType.Contained,
+                        onClick = { onEvent(CheckoutWizardContract.Event.AlertDialogEvents.OnPositiveButtonClicked) }
+                    ),
+                    dismissButton = AlertDialogButton(
+                        label = stringResource(R.string.screen_checkout_wizard_alert_dialog_button_negative),
+                        onClick = { onEvent(CheckoutWizardContract.Event.AlertDialogEvents.OnNegativeButtonClicked) }
+                    )
                 )
-            )
+            }
         }
     }
 }

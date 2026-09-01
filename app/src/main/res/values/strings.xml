@@ -437,11 +437,19 @@
     <string name="screen_my_listings_fab_label">Create Listing</string>
     <string name="screen_my_listings_bottom_sheet_item_edit">Edit listing</string>
     <string name="screen_my_listings_bottom_sheet_item_delete">Delete listing</string>
+    <string name="screen_my_listings_bottom_sheet_item_share">Share listing</string>
 
     <string name="screen_my_listings_no_listings_found_title">No listings were found.\nClick the button below to create one</string>
     <string name="screen_my_listings_no_listings_found_button">Create listing</string>
 
+    <string name="screen_my_listings_delete_dialog_title">Delete listing?</string>
+    <string name="screen_my_listings_delete_dialog_message">Are you sure you want to permanently delete the listing \"%1$s\"? This action cannot be undone.</string>
+    <string name="screen_my_listings_delete_dialog_negative_button">Cancel</string>
+    <string name="screen_my_listings_delete_dialog_positive_button">Delete</string>
+
     <string name="screen_my_listings_success_deleting_listing">Successfully deleted the listing \"%1$s\"</string>
+
+    <string name="screen_my_listings_share_listing_title">Sharing listing %1$s</string>
 
     <string name="screen_my_listings_error_fetching_listings">An error occurred whilst fetching your listings.</string>
     <string name="screen_my_listings_error_fetching_additional_listings">An error occurred whilst fetching additional listings.</string>
@@ -450,6 +458,7 @@
     <string name="screen_my_listings_content_description_more_actions_listing">more actions listing icon</string>
     <string name="screen_my_listings_content_description_edit_listing">edit listing icon</string>
     <string name="screen_my_listings_content_description_delete_listing">delete listing icon</string>
+    <string name="screen_my_listings_content_description_share_listing">share listing icon</string>
 
     // CartScreen
     <string name="screen_cart_toolbar_title">Cart</string>
@@ -939,6 +948,13 @@
     <string name="order_item_return_status_pending">Return pending</string>
     <string name="order_item_return_status_item_replaced">Item replaced</string>
     <string name="order_item_return_status_refunded">Refunded</string>
+
+    // `ListingDateRangeOptionUi` enum labels
+    <string name="listing_date_range_option_all_label">Any time</string>
+    <string name="listing_date_range_option_last_24_hours_label">Last 24 hours</string>
+    <string name="listing_date_range_option_last_7_days_label">Last 7 days</string>
+    <string name="listing_date_range_option_last_30_days_label">Last 30 days</string>
+    <string name="listing_date_range_option_custom_label">Custom range</string>
 
     // Input field errors
     <string name="input_field_error_blank_email">Email cannot be blank.</string>

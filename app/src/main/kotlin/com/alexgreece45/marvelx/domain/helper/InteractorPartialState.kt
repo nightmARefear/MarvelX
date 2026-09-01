@@ -53,3 +53,13 @@ inline fun <T> InteractorPartialState<T>.onNoInternetConnection(action: () -> Un
     if (this is InteractorPartialState.NoInternetConnection) action()
     return this
 }
+
+inline fun <T> InteractorPartialState<T>.onAnyError(action: (errorMessage: String) -> Unit): InteractorPartialState<T> {
+    when (this) {
+        is InteractorPartialState.Failed -> action(failureMessage)
+        is InteractorPartialState.Error -> action(errorMessage)
+        InteractorPartialState.NoInternetConnection -> action("No internet.")
+        is InteractorPartialState.Success -> {}
+    }
+    return this
+}

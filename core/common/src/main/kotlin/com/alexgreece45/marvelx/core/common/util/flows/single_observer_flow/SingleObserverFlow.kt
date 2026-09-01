@@ -41,7 +41,7 @@ fun <T> Channel<T>.receiveAsSingleObserverFlow(): SingleObserverFlow<T> {
 
                 // If it fails, we know exactly who the culprit is!
                 val rogueCollector = activeCollector.load()
-                error(
+                throw IllegalStateException(
                     "CRITICAL: '$currentContextTag' tried to collect the effect flow, " +
                             "but '$rogueCollector' is already actively collecting it! " +
                             "You have overlapping collectors."

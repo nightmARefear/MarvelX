@@ -87,7 +87,6 @@ internal fun EditProfileDetailsScreen(
             item {
                 state.alertDialogView?.let { alertDialogView ->
                     AlertDialogError(
-                        isVisible = true,
                         title = alertDialogView.title,
                         errorMessage = { Text(text = alertDialogView.errorMessage) },
                         dismissButton = alertDialogView.dismissButton,

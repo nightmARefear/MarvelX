@@ -187,6 +187,7 @@ fun LoginScreen(
             )
             VSpacer.Tiny()
 
+            // TODO: Replace with "SecureTextField".
             // Password
             OutlinedTextFieldValidation(
                 value = state.password,

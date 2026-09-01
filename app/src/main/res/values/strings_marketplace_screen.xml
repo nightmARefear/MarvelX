@@ -2,9 +2,66 @@
     <string name="screen_marketplace_toolbar_title">Marketplace</string>
 
     <string name="screen_marketplace_search_bar_hint">Rare 2005 Spider-Man Limited Edition Mug</string>
-    <string name="screen_marketplace_search_no_results">No listings were found based on the search criteria…</string>
+    
+    <string name="screen_marketplace_sort_price_ascending_label">Price Ascending</string>
+    <string name="screen_marketplace_sort_price_descending_label">Price Descending</string>
+    <string name="screen_marketplace_sort_date_posted_ascending_label">Oldest First</string>
+    <string name="screen_marketplace_sort_date_posted_descending_label">Newest First</string>
+
+    <string name="screen_marketplace_filters_label">Filters</string>
+
+    <string name="screen_marketplace_filter_menu_title">Filters</string>
+
+    <string name="screen_marketplace_filter_menu_section_category_title">Item Category</string>
+    <string name="screen_marketplace_filter_menu_section_condition_title">Condition</string>
+
+    <string name="screen_marketplace_filter_menu_section_price_range_title">Price Range</string>
+    <string name="screen_marketplace_filter_menu_section_price_range_min_label">MIN (€)</string>
+    <string name="screen_marketplace_filter_menu_section_price_range_min_placeholder">10.20€</string>
+    <string name="screen_marketplace_filter_menu_section_price_range_min_collapsed_label">Min Price: %1$s</string>
+    <string name="screen_marketplace_filter_menu_section_price_range_max_label">MAX (€)</string>
+    <string name="screen_marketplace_filter_menu_section_price_range_max_placeholder">9999.99€</string>
+    <string name="screen_marketplace_filter_menu_section_price_range_max_collapsed_label">Max Price: %1$s</string>
+    <string name="screen_marketplace_filter_menu_section_price_range_collapsed_label">Price Range: %1$s - %2$s</string>
+
+    <string name="screen_marketplace_filter_menu_section_date_posted_title">Date Posted</string>
+
+    <string name="screen_marketplace_filter_menu_section_date_posted_custom_range_label">Date range</string>
+    <string name="screen_marketplace_filter_menu_section_date_posted_custom_range_picker_label">Select date range</string>
+    <string name="screen_marketplace_filter_menu_section_date_posted_custom_range_picker_negative_button">Dismiss</string>
+    <string name="screen_marketplace_filter_menu_section_date_posted_custom_range_picker_positive_button">Apply</string>
+
+
+    <string name="screen_marketplace_filter_menu_section_final_title">Final Sale</string>
+    <string name="screen_marketplace_filter_menu_section_final_checkbox_label">Show items that can\'t be returned or refunded.</string>
+    <string name="screen_marketplace_filter_menu_section_final_collapsed_yes_label">Final Sale: Yes</string>
+    <string name="screen_marketplace_filter_menu_section_final_collapsed_no_label">Final Sale: No</string>
+
+    <string name="screen_marketplace_filter_menu_negative_button_label">Clear</string>
+    <string name="screen_marketplace_filter_menu_negative_button_action_message">All filters have been reset</string>
+    <string name="screen_marketplace_filter_menu_positive_button_label">Apply Filters</string>
+
+    <string name="screen_marketplace_sort_bottom_sheet_title">Sort By</string>
+    <string name="screen_marketplace_sort_bottom_sheet_item_price_ascending_label">Price: Low ➔ High</string>
+    <string name="screen_marketplace_sort_bottom_sheet_item_price_descending_label">Price: High ➔ Low</string>
+    <string name="screen_marketplace_sort_bottom_sheet_item_date_posted_ascending_label">Oldest First</string>
+    <string name="screen_marketplace_sort_bottom_sheet_item_date_posted_descending_label">Newest First</string>
 
     <string name="screen_marketplace_generic_error_message">An error occurred whilst loading the listings.</string>
 
+    <string name="screen_marketplace_error_search_no_results">No results for \"%1$s\"</string>
+    <string name="screen_marketplace_error_search_no_results_additional_text">Try a different keyword or clear your filters.</string>
+
+    <string name="screen_marketplace_error_invalid_price">Invalid price</string>
+    <string name="screen_marketplace_error_below_min_price">The minimum allowed price is %1$s</string>
+    <string name="screen_marketplace_error_over_max_price">The maximum allowed price is %1$s</string>
+    <string name="screen_marketplace_error_price_range_check">Check price range</string>
+
+    <string name="screen_marketplace_error_date_range_select">Select date range</string>
+
     <string name="screen_marketplace_content_description_listing">listing image: %1$s</string>
+    <string name="screen_marketplace_content_description_close_sort_by_bottom_sheet_icon">close sort by bottom sheet icon</string>
+    <string name="screen_marketplace_content_description_close_filter_menu_bottom_sheet_icon">close filter menu bottom sheet icon</string>
+    <string name="screen_marketplace_content_description_change_to_grid_view_button">change to grid view button</string>
+    <string name="screen_marketplace_content_description_change_to_list_view_button">change to list view button</string>
 </resources>

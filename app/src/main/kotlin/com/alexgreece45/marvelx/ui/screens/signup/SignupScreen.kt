@@ -95,15 +95,16 @@ internal fun SignUpScreen(
                 .padding(paddingValues),
             verticalArrangement = Arrangement.spacedBy(SPACING_TINY.dp)
         ) {
-            AlertDialogError(
-                isVisible = state.isAlertDialogVisible,
-                title = state.alertDialogTitle,
-                errorMessage = { Text(text = state.alertDialogErrorMessage) },
-                confirmButton = AlertDialogButton(
-                    label = stringResource(R.string.generic_ok_button),
-                    onClick = { onEvent(SignupEvent.AlertDialogError.OnOkClick) }
+            if (state.isAlertDialogVisible) {
+                AlertDialogError(
+                    title = state.alertDialogTitle,
+                    errorMessage = { Text(text = state.alertDialogErrorMessage) },
+                    confirmButton = AlertDialogButton(
+                        label = stringResource(R.string.generic_ok_button),
+                        onClick = { onEvent(SignupEvent.AlertDialogError.OnOkClick) }
+                    )
                 )
-            )
+            }
 
             // First Name & Last Name
             Row(

@@ -34,5 +34,6 @@ fun ResponseListingPreview.toDomain(): ListingPreviewDomain =
         title = title,
         price = price.toBigDecimal(),
         coverImageUrl = coverImageUrl,
-        favorite = favorite
+        favorite = favorite,
+        cart = cart
     )

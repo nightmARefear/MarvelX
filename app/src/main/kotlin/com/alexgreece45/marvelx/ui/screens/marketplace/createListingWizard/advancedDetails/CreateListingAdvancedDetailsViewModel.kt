@@ -17,7 +17,7 @@ import com.alexgreece45.marvelx.util.FormValidationResult
 import com.alexgreece45.marvelx.util.FormValidator
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.Rule
-import com.alexgreece45.marvelx.util.extensions.formatPrice
+import com.alexgreece45.marvelx.core.common.extensions.formatPrice
 import org.koin.android.annotation.KoinViewModel
 
 @KoinViewModel

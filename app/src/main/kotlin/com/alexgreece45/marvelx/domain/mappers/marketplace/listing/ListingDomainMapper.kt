@@ -43,10 +43,10 @@ class ListingDomainMapper(
                 coverImageUrl = coverImageUrl,
                 imageUrls = imageUrls,
                 details = listingDetailsDomainMapper.toDomain(details),
-                favorite = favorite,
-                cart = cart,
                 postedAt = Instant.parse(postedAt),
                 updatedAt = updatedAt?.let { Instant.parse(it) },
+                favorite = favorite,
+                cart = cart,
                 orderIds = orderIds?.let {
                     ListingOrderIdsDomain(
                         orderId = it.orderId.toDomain(),

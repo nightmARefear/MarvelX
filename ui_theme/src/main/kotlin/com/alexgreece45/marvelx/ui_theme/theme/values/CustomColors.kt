@@ -59,6 +59,7 @@ data class ChipBackgroundColors(
     val listingActive: Color,
     val listingReserved: Color,
     val listingSold: Color,
+    val selected: Color,
 )
 
 @Immutable
@@ -118,6 +119,7 @@ internal fun customLightColors() = CustomColors(
         listingActive = Color(0xFF21F33D),
         listingReserved = Color(0xFFD56E00),
         listingSold = Color(0xFFD50000),
+        selected = Color(0xFFD50000),
     ),
     orderStatusBackgroundColors = OrderStatusBackgroundColors(
         processing = Color(0xFF2196F3),
@@ -196,6 +198,7 @@ internal fun customDarkColors() = CustomColors(
         listingActive = Color(0xFF21F33D),
         listingReserved = Color(0xFFD56E00),
         listingSold = Color(0xFFD50000),
+        selected = Color(0xFFD50000),
     ),
     orderStatusBackgroundColors = OrderStatusBackgroundColors(
         processing = Color(0xFF2196F3),

@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -33,6 +32,7 @@ import com.alexgreece45.marvelx.util.VSpacer
 @Composable
 fun ModalBottomSheetContent(
     paddingValues: PaddingValues? = null,
+    showDragHandle: Boolean = true,
     content: @Composable ColumnScope.() -> Unit
 ) {
     Column(
@@ -42,15 +42,18 @@ fun ModalBottomSheetContent(
                 paddingValues = paddingValues ?: ModalBottomSheetContentDefaults.paddingValues
             )
     ) {
-        Box(
-            modifier = Modifier.padding(
-                start = if (paddingValues != null) SPACING_MEDIUM.dp else 0.dp,
-                top = if (paddingValues != null) SPACING_SMALL.dp else 0.dp,
-                end = if (paddingValues != null) SPACING_MEDIUM.dp else 0.dp
-            )
-        ) {
-            ModalBottomSheetDragHandle()
+        if (showDragHandle) {
+            Box(
+                modifier = Modifier.padding(
+                    start = if (paddingValues != null) SPACING_MEDIUM.dp else 0.dp,
+                    top = if (paddingValues != null) SPACING_SMALL.dp else 0.dp,
+                    end = if (paddingValues != null) SPACING_MEDIUM.dp else 0.dp
+                )
+            ) {
+                ModalBottomSheetDragHandle()
+            }
         }
+
         VSpacer.Medium()
         content()
     }

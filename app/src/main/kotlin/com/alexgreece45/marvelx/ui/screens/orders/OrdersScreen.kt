@@ -64,7 +64,7 @@ import com.alexgreece45.marvelx.util.SPACING_MEDIUM
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.VSpacer
 import com.alexgreece45.marvelx.util.constants.ConstantsUi
-import com.alexgreece45.marvelx.util.extensions.formatPrice
+import com.alexgreece45.marvelx.core.common.extensions.formatPrice
 import com.alexgreece45.marvelx.util.extensions.hideIfVisible
 import com.alexgreece45.marvelx.util.extensions.toOrderFormatShort
 import kotlinx.coroutines.launch

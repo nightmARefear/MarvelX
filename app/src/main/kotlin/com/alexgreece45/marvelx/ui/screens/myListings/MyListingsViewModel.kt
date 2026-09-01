@@ -2,24 +2,31 @@ package com.alexgreece45.marvelx.ui.screens.myListings
 
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.common_ui.snackbar.delegate.SnackbarDelegate
+import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarActionData
+import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarActionType
+import com.alexgreece45.marvelx.configuration.models.DeepLinkWebUrl
 import com.alexgreece45.marvelx.domain.helper.InteractorPartialState
 import com.alexgreece45.marvelx.domain.interactors.marketplace.listing.ListingInteractor
 import com.alexgreece45.marvelx.mvi.BaseViewModel
+import com.alexgreece45.marvelx.ui.screens.myListings.model.DeleteListingDialogData
 import com.alexgreece45.marvelx.ui.screens.myListings.model.MyListingUi
 import com.alexgreece45.marvelx.ui.screens.myListings.model.MyListingsContract
-import com.alexgreece45.marvelx.ui.screens.myListings.model.MyListingsSelectedListingData
 import com.alexgreece45.marvelx.ui.screens.myListings.model.toUi
 import com.alexgreece45.marvelx.util.ResourceProvider
+import com.alexgreece45.marvelx.util.extensions.model.ShareContentUrlData
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import org.koin.android.annotation.KoinViewModel
 
-@KoinViewModel
+@KoinViewModel(binds = [MyListingsViewModel::class])
 class MyListingsViewModel(
     private val listingInteractor: ListingInteractor,
     private val resourceProvider: ResourceProvider,
-) : BaseViewModel<MyListingsContract.Event, MyListingsContract.State, MyListingsContract.Effect>() {
+    snackbarDelegate: SnackbarDelegate,
+) : BaseViewModel<MyListingsContract.Event, MyListingsContract.State, MyListingsContract.Effect>(),
+    SnackbarDelegate by snackbarDelegate {
 
     private var additionalListingsJob: Job? = null
 
@@ -37,8 +44,11 @@ class MyListingsViewModel(
                 event.listing
             )
 
-            MyListingsContract.Event.BottomSheetEvents.OnEditListingClicked -> onBottomSheetListingEditClicked()
-            MyListingsContract.Event.BottomSheetEvents.OnDeleteListingClicked -> onBottomSheetListingDeleteClicked()
+            MyListingsContract.Event.BottomSheet.OnEditListingClicked -> onBottomSheetListingEditClicked()
+            MyListingsContract.Event.BottomSheet.OnShareListingClicked -> onBottomSheetListingShareClicked()
+            MyListingsContract.Event.BottomSheet.OnDeleteListingClicked -> onBottomSheetListingDeleteClicked()
+            MyListingsContract.Event.OnDeleteListingDialogNegativeButtonClicked -> onDeleteListingDialogNegativeButtonClicked()
+            MyListingsContract.Event.OnDeleteListingDialogPositiveButtonClicked -> onDeleteListingDialogPositiveButtonClicked()
             MyListingsContract.Event.OnErrorButtonClicked -> onErrorButtonClicked()
         }
     }
@@ -56,7 +66,7 @@ class MyListingsViewModel(
     }
 
     private fun onBackClicked() {
-        if (currentState.selectedListingData != null) {
+        if (currentState.selectedListing != null) {
             hideBottomSheet()
         } else {
             setEffect {
@@ -101,37 +111,88 @@ class MyListingsViewModel(
     private fun onListingMoreActionsButtonClicked(listing: MyListingUi) {
         setState {
             copy(
-                selectedListingData = MyListingsSelectedListingData(
-                    listingId = listing.listingId,
-                    title = listing.title
-                )
+                selectedListing = listing
             )
         }
         setEffect {
-            MyListingsContract.Effect.BottomSheetEffects.Show
+            MyListingsContract.Effect.ShowBottomSheet
         }
     }
 
     private fun onBottomSheetListingEditClicked() {
-        val listingData = currentState.selectedListingData
+        val listing = currentState.selectedListing
 
         hideBottomSheet()
 
-        if (listingData == null) return
+        if (listing == null) return
 
         setEffect {
-            MyListingsContract.Effect.Navigation.GoToEditListingScreen(listingData.listingId)
+            MyListingsContract.Effect.Navigation.GoToEditListingScreen(listing.listingId)
+        }
+    }
+
+    private fun onBottomSheetListingShareClicked() {
+        val listing = currentState.selectedListing
+
+        hideBottomSheet()
+
+        if (listing != null) {
+            setEffect {
+                MyListingsContract.Effect.ShareListing(
+                    ShareContentUrlData(
+                        deepLinkWebUrl = DeepLinkWebUrl.ListingDetails,
+                        urlSuffix = listing.listingId,
+                        title = resourceProvider.getString(R.string.screen_my_listings_share_listing_title, listing.title),
+                    )
+                )
+            }
         }
     }
 
     private fun onBottomSheetListingDeleteClicked() {
-        val listingData = currentState.selectedListingData
+        if (currentState.deleteListingDialogData != null) {
+            // Another listing deletion informative dialog is currently visible.
+            // Silently drop this event, so the current dialog does not shift to the new one.
+            hideBottomSheet()
+            return
+        }
 
-        hideBottomSheet()
+        setEffect {
+            MyListingsContract.Effect.HideBottomSheet
+        }
 
-        if (listingData == null) return
+        setState {
+            copy(
+                selectedListing = null,
+                deleteListingDialogData = selectedListing?.let { selectedListing ->
+                    DeleteListingDialogData(
+                        listingId = selectedListing.listingId,
+                        title = selectedListing.title
+                    )
+                }
+            )
+        }
+    }
 
-        deleteListing(listingData)
+    private fun onDeleteListingDialogNegativeButtonClicked() {
+        setState {
+            copy(
+                deleteListingDialogData = null
+            )
+        }
+    }
+
+    private fun onDeleteListingDialogPositiveButtonClicked() {
+        val deleteListingDialogData = currentState.deleteListingDialogData
+
+        if (deleteListingDialogData != null) {
+            setState {
+                copy(
+                    deleteListingDialogData = null
+                )
+            }
+            deleteListing(deleteListingDialogData = deleteListingDialogData)
+        }
     }
 
     private fun onErrorButtonClicked() {
@@ -167,7 +228,13 @@ class MyListingsViewModel(
                     }
 
                     if (!isFetchingInitialListings) {
-                        showToastMessage(resourceProvider.getString(R.string.screen_my_listings_error_fetching_additional_listings))
+                        showErroneousSnackbar(
+                            errorMessage = resourceProvider.getString(R.string.screen_my_listings_error_fetching_additional_listings),
+                            snackbarActionData = SnackbarActionData(
+                                label = resourceProvider.getString(R.string.generic_ok_button),
+                                actionType = SnackbarActionType.Hide
+                            )
+                        )
                     }
                 }
 
@@ -192,13 +259,11 @@ class MyListingsViewModel(
         }
     }
 
-    private fun deleteListing(listingData: MyListingsSelectedListingData) {
-        val listingId = listingData.listingId
-
+    private fun deleteListing(deleteListingDialogData: DeleteListingDialogData) {
         setState {
             copy(
                 allListings = allListings.map { listing ->
-                    if (listing.listingId == listingId) {
+                    if (listing.listingId == deleteListingDialogData.listingId) {
                         listing.copy(isProcessing = true)
                     } else {
                         listing
@@ -208,25 +273,29 @@ class MyListingsViewModel(
         }
 
         viewModelScope.launch {
-            if (listingInteractor.deleteListing(listingId)) {
+            if (listingInteractor.deleteListing(deleteListingDialogData.listingId)) {
                 setState {
                     copy(
-                        allListings = allListings.filterNot { it.listingId == listingId }
+                        allListings = allListings.filterNot { it.listingId == deleteListingDialogData.listingId }
                             .toPersistentList()
                     )
                 }
 
-                showToastMessage(
-                    resourceProvider.getString(
+                showSuccessSnackbar(
+                    message = resourceProvider.getString(
                         R.string.screen_my_listings_success_deleting_listing,
-                        listingData.title
+                        deleteListingDialogData.title
+                    ),
+                    snackbarActionData = SnackbarActionData(
+                        label = resourceProvider.getString(R.string.generic_ok_button),
+                        actionType = SnackbarActionType.Hide
                     )
                 )
             } else {
                 setState {
                     copy(
                         allListings = allListings.map { listing ->
-                            if (listing.listingId == listingId) {
+                            if (listing.listingId == deleteListingDialogData.listingId) {
                                 listing.copy(isProcessing = false)
                             } else {
                                 listing
@@ -235,30 +304,28 @@ class MyListingsViewModel(
                     )
                 }
 
-                showToastMessage(
-                    resourceProvider.getString(
+                showErroneousSnackbar(
+                    errorMessage = resourceProvider.getString(
                         R.string.screen_my_listings_error_deleting_listing,
-                        listingData.title
+                        deleteListingDialogData.title
+                    ),
+                    snackbarActionData = SnackbarActionData(
+                        label = resourceProvider.getString(R.string.generic_ok_button),
+                        actionType = SnackbarActionType.Hide
                     )
                 )
             }
         }
     }
 
-    private fun showToastMessage(message: String) {
-        setEffect {
-            MyListingsContract.Effect.ShowToastMessage(message)
-        }
-    }
-
     private fun hideBottomSheet() {
         setState {
             copy(
-                selectedListingData = null
+                selectedListing = null
             )
         }
         setEffect {
-            MyListingsContract.Effect.BottomSheetEffects.Hide
+            MyListingsContract.Effect.HideBottomSheet
         }
     }
 }

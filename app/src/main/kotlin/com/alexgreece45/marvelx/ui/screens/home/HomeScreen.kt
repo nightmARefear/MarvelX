@@ -52,7 +52,6 @@ internal fun HomeScreen(
             item {
                 state.alertDialogError?.let { homeAlertDialogErrorView ->
                     AlertDialogError(
-                        isVisible = true,
                         title = homeAlertDialogErrorView.title,
                         errorMessage = { Text(text = homeAlertDialogErrorView.description) },
                         confirmButton = AlertDialogButton(

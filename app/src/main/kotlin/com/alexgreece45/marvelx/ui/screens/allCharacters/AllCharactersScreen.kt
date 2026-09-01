@@ -220,7 +220,7 @@ fun AllCharactersScreen(
                     verticalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp),
                     horizontalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp)
                 ) {
-                    item(span = { GridItemSpan(2) }) {
+                    item(span = { GridItemSpan(maxLineSpan) }) {
                         SearchBar(
                             searchTerm = state.searchBarTerm,
                             hint = stringResource(R.string.all_characters_screen_search_bar_hint),
@@ -239,7 +239,7 @@ fun AllCharactersScreen(
 
                     // If the search term does not match any character's name.
                     if (state.filteredCharacters.isEmpty()) {
-                        item(span = { GridItemSpan(2) }) {
+                        item(span = { GridItemSpan(maxLineSpan) }) {
                             Text(
                                 text = stringResource(R.string.all_characters_screen_error_no_characters_found_search),
                                 style = MaterialTheme.typography.h6

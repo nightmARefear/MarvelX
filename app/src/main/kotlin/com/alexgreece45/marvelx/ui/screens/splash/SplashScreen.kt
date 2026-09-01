@@ -79,7 +79,6 @@ fun SplashScreen(
         ) {
             state.error?.let { splashScreenError ->
                 AlertDialogError(
-                    isVisible = true,
                     title = splashScreenError.title,
                     errorMessage = { Text(text = splashScreenError.errorMessage) },
                     confirmButton = AlertDialogButton(

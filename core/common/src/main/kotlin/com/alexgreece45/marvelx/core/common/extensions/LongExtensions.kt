@@ -11,3 +11,8 @@ fun Long.fromBytesToMb(): Long = this / ONE_MB_BYTES
  * Converts the given number of megabytes (MB) to bytes.
  */
 fun Long.fromMbToBytes(): Long = this * ONE_MB_BYTES
+
+/**
+ * Converts these milliseconds to epoch days.
+ */
+fun Long.toEpochDays(): Long = this / 1000 / 3600 / 24

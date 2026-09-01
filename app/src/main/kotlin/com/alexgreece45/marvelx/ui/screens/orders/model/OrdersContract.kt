@@ -43,6 +43,7 @@ sealed interface OrdersContract {
         sealed interface Navigation : Effect {
             data object GoBack : Navigation
             data class GoToOrderDetailsScreen(val orderId: String) : Navigation
+            data object GoToMarketplaceScreen : Navigation
         }
     }
 }

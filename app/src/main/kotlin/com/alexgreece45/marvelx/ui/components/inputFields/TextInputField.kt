@@ -1,4 +1,4 @@
-package com.alexgreece45.marvelx.ui.components.textInputField
+package com.alexgreece45.marvelx.ui.components.inputFields
 
 import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -44,7 +44,7 @@ fun TextInputField(
         isError = inputField.validationResult.isError,
         visualTransformation = visualTransformation,
         keyboardOptions = keyboardOptions,
-        singleLine = false,
+        singleLine = maxLines == 1,
         minLines = minLines,
         maxLines = maxLines
     )

@@ -84,7 +84,7 @@ fun MarvelXSnackbar(
 }
 
 @Composable
-fun MarvelXSnackbarContent(snackbarStateData: SnackbarStateData, hideSnackbar: () -> Unit) {
+private fun MarvelXSnackbarContent(snackbarStateData: SnackbarStateData, hideSnackbar: () -> Unit) {
     Surface(
         modifier = Modifier
             .fillMaxWidth()

@@ -202,22 +202,23 @@ internal fun CreateListingWizardScreen(
                 }
             }
 
-            AlertDialogError(
-                isVisible = state.isAlertDialogVisible,
-                title = stringResource(
-                    if (state.wizardMode == CreateListingWizardMode.CREATE) R.string.screen_create_listing_wizard_screen_alert_dialog_title_create else R.string.screen_create_listing_wizard_screen_alert_dialog_title_update
-                ),
-                errorMessage = { Text(text = stringResource(if (state.wizardMode == CreateListingWizardMode.CREATE) R.string.screen_create_listing_wizard_screen_alert_dialog_message_create else R.string.screen_create_listing_wizard_screen_alert_dialog_message_update)) },
-                confirmButton = AlertDialogButton(
-                    label = stringResource(R.string.screen_create_listing_wizard_screen_alert_dialog_button_positive),
-                    buttonType = ErrorButtonType.Contained,
-                    onClick = { onEvent(CreateListingWizardContract.Event.AlertDialogEvents.OnPositiveButtonClicked) }
-                ),
-                dismissButton = AlertDialogButton(
-                    label = stringResource(R.string.screen_create_listing_wizard_screen_alert_dialog_button_negative),
-                    onClick = { onEvent(CreateListingWizardContract.Event.AlertDialogEvents.OnNegativeButtonClicked) }
+            if (state.isAlertDialogVisible) {
+                AlertDialogError(
+                    title = stringResource(
+                        if (state.wizardMode == CreateListingWizardMode.CREATE) R.string.screen_create_listing_wizard_screen_alert_dialog_title_create else R.string.screen_create_listing_wizard_screen_alert_dialog_title_update
+                    ),
+                    errorMessage = { Text(text = stringResource(if (state.wizardMode == CreateListingWizardMode.CREATE) R.string.screen_create_listing_wizard_screen_alert_dialog_message_create else R.string.screen_create_listing_wizard_screen_alert_dialog_message_update)) },
+                    confirmButton = AlertDialogButton(
+                        label = stringResource(R.string.screen_create_listing_wizard_screen_alert_dialog_button_positive),
+                        buttonType = ErrorButtonType.Contained,
+                        onClick = { onEvent(CreateListingWizardContract.Event.AlertDialogEvents.OnPositiveButtonClicked) }
+                    ),
+                    dismissButton = AlertDialogButton(
+                        label = stringResource(R.string.screen_create_listing_wizard_screen_alert_dialog_button_negative),
+                        onClick = { onEvent(CreateListingWizardContract.Event.AlertDialogEvents.OnNegativeButtonClicked) }
+                    )
                 )
-            )
+            }
         }
     }
 }

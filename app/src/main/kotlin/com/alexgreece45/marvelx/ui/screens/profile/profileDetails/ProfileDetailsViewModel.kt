@@ -40,6 +40,7 @@ import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.stats.model.Pr
 import com.alexgreece45.marvelx.ui_theme.theme.values.getErrorColor
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.constants.ConstantsUi
+import com.alexgreece45.marvelx.util.extensions.model.ShareContentUrlData
 import com.alexgreece45.marvelx.util.extensions.toUrlEncoding
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.MultiFormatWriter
@@ -134,7 +135,7 @@ sealed interface ProfileDetailsContract {
          */
         data object HideBottomSheet : Effect
 
-        data class ShareProfileUrl(val url: String, val intentTitle: String) : Effect
+        data class ShareProfileUrl(val shareContentUrlData: ShareContentUrlData) : Effect
 
         data class SetClipboardText(val toastMessage: String, val text: String) : Effect
 
@@ -221,10 +222,13 @@ class ProfileDetailsViewModel(
                 hideBottomSheet()
                 setEffect {
                     ProfileDetailsContract.Effect.ShareProfileUrl(
-                        url = DeepLinkWebUrl.ProfileDetails.webUrl + currentState.userId,
-                        intentTitle = resourceProvider.getString(
-                            resId = R.string.profile_details_screen_label_share_profile_intent_title,
-                            formatArgs = arrayOf(currentState.profileDetails?.basicProfileDetails?.fullName.orEmpty())
+                        ShareContentUrlData(
+                            deepLinkWebUrl = DeepLinkWebUrl.ProfileDetails,
+                            urlSuffix = currentState.userId.value,
+                            title = resourceProvider.getString(
+                                resId = R.string.profile_details_screen_label_share_profile_intent_title,
+                                formatArgs = arrayOf(currentState.profileDetails?.basicProfileDetails?.fullName.orEmpty())
+                            )
                         )
                     )
                 }

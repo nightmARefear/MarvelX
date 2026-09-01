@@ -1,9 +1,11 @@
 package com.alexgreece45.marvelx.core.network.clients
 
+import com.alexgreece45.marvelx.core.common.extensions.toInstant
 import com.alexgreece45.marvelx.core.common.util.DateUtil
 import com.alexgreece45.marvelx.core.network.model.ListingStatus
 import com.alexgreece45.marvelx.core.network.model.api.cart.ResponseCartInfo
 import com.alexgreece45.marvelx.core.network.model.api.cart.ResponseCartSummary
+import com.alexgreece45.marvelx.core.network.model.api.marketplace.ResponseFilteredListing
 import com.alexgreece45.marvelx.core.network.model.api.marketplace.ResponseMarketplace
 import com.alexgreece45.marvelx.core.network.model.api.marketplace.ResponseMarketplaceCategorySection
 import com.alexgreece45.marvelx.core.network.model.api.marketplace.ResponseMarketplacePromoSection
@@ -16,13 +18,17 @@ import com.alexgreece45.marvelx.core.network.model.api.marketplace.listing.Respo
 import com.alexgreece45.marvelx.core.network.model.api.marketplace.listing.ResponseListingSubcategory
 import com.alexgreece45.marvelx.core.network.model.api.myListing.ResponseMyListing
 import com.alexgreece45.marvelx.core.network.model.generic.ApiResult
+import com.alexgreece45.marvelx.core.network.model.marketplace.ListingSort
 import com.alexgreece45.marvelx.core.network.services.ListingService
 import com.alexgreece45.marvelx.core.network.util.executeApiServiceCall
 import com.alexgreece45.marvelx.core.network.util.executeApiServiceCallNoTransformation
+import com.alexgreece45.marvelx.core.network.utils.parsedPostedAt
+import com.alexgreece45.marvelx.core.network.utils.parsedPrice
 import com.google.gson.JsonObject
 import kotlinx.coroutines.delay
 import okhttp3.MultipartBody
 import org.koin.core.annotation.Single
+import java.time.LocalDate
 import kotlin.random.Random
 import kotlin.random.nextInt
 import kotlin.time.Duration.Companion.milliseconds
@@ -596,7 +602,8 @@ internal class ListingClientImpl(
                             title = "Listing #$listingId",
                             price = price,
                             coverImageUrl = "https://backend.alexandrosvoliotis.com/api/private/marvelx/user/$listingId/profile-image",
-                            favorite = Random.nextBoolean()
+                            favorite = Random.nextBoolean(),
+                            cart = Random.nextBoolean()
                         )
                     }
                 ),
@@ -610,7 +617,8 @@ internal class ListingClientImpl(
                                 title = "Listing #1",
                                 price = "56.98",
                                 coverImageUrl = "https://backend.alexandrosvoliotis.com/api/private/marvelx/user/3/profile-image",
-                                favorite = Random.nextBoolean()
+                                favorite = Random.nextBoolean(),
+                                cart = Random.nextBoolean()
                             )
                         )
                     ),
@@ -623,42 +631,48 @@ internal class ListingClientImpl(
                                 title = "Listing #1",
                                 price = "12.2589",
                                 coverImageUrl = "https://backend.alexandrosvoliotis.com/api/private/marvelx/user/2/profile-image",
-                                favorite = Random.nextBoolean()
+                                favorite = Random.nextBoolean(),
+                                cart = Random.nextBoolean()
                             ),
                             ResponseListingPreview(
                                 listingId = "3",
                                 title = "Listing #3",
                                 price = "56.9812",
                                 coverImageUrl = "https://backend.alexandrosvoliotis.com/api/private/marvelx/user/3/profile-image",
-                                favorite = Random.nextBoolean()
+                                favorite = Random.nextBoolean(),
+                                cart = Random.nextBoolean()
                             ),
                             ResponseListingPreview(
                                 listingId = "4",
                                 title = "Listing #1",
                                 price = "20.25",
                                 coverImageUrl = "https://backend.alexandrosvoliotis.com/api/private/marvelx/user/1/profile-image",
-                                favorite = Random.nextBoolean()
+                                favorite = Random.nextBoolean(),
+                                cart = Random.nextBoolean()
                             ),
                             ResponseListingPreview(
                                 listingId = "5",
                                 title = "Listing #2",
                                 price = "23223",
                                 coverImageUrl = "https://backend.alexandrosvoliotis.com/api/private/marvelx/user/2/profile-image",
-                                favorite = Random.nextBoolean()
+                                favorite = Random.nextBoolean(),
+                                cart = Random.nextBoolean()
                             ),
                             ResponseListingPreview(
                                 listingId = "6",
                                 title = "Listing #3",
                                 price = "56.98",
                                 coverImageUrl = "https://backend.alexandrosvoliotis.com/api/private/marvelx/user/3/profile-image",
-                                favorite = Random.nextBoolean()
+                                favorite = Random.nextBoolean(),
+                                cart = Random.nextBoolean()
                             ),
                             ResponseListingPreview(
                                 listingId = "345",
                                 title = "Listing #1",
                                 price = "20.25",
                                 coverImageUrl = "https://backend.alexandrosvoliotis.com/api/private/marvelx/user/1/profile-image",
-                                favorite = Random.nextBoolean()
+                                favorite = Random.nextBoolean(),
+                                cart = Random.nextBoolean()
                             ),
                         )
                     ),
@@ -707,7 +721,8 @@ internal class ListingClientImpl(
                     title = "Rare $year Spider-Man Limited Edition Mug",
                     price = Random.nextDouble(from = 5.0, until = 200.0).toString(),
                     coverImageUrl = "https://backend.alexandrosvoliotis.com/api/private/marvelx/user/${if (listingId % 2 == 0) 1 else 2}/profile-image",
-                    favorite = Random.nextBoolean()
+                    favorite = Random.nextBoolean(),
+                    cart = Random.nextBoolean()
                 )
             }
         )
@@ -739,12 +754,160 @@ internal class ListingClientImpl(
                     addProperty("capacityMl", "300")
                     addProperty("dishwasherSafe", true)
                 },
-                favorite = Random.nextBoolean(),
-                cart = Random.nextBoolean(),
                 postedAt = DateUtil.getUTCInstant().toString(),
-                updatedAt = null
+                updatedAt = null,
+                favorite = Random.nextBoolean(),
+                cart = Random.nextBoolean()
             )
         )
+    }
+
+    override suspend fun getFilteredListings(
+        searchQuery: String,
+        categoryIds: List<String>,
+        conditionIds: List<String>,
+        minPrice: String?,
+        maxPrice: String?,
+        datePostedKey: String,
+        customDateFrom: String?,
+        customDateTo: String?,
+        isFinalSale: Boolean,
+        sortKey: String
+    ): ApiResult<List<ResponseFilteredListing>> {
+        val mockDatabaseListings = listOf(
+            // --- The Similar Items (For price range & text search testing) ---
+            ResponseFilteredListing(
+                listingId = "1",
+                categoryCode = "comics",
+                conditionCode = "good",
+                title = "Amazing Spider-Man Vintage Comic #12",
+                price = "15.50",
+                coverImageUrl = "https://backend.alexandrosvoliotis.com/api/private/marvelx/user/4/profile-image",
+                postedAt = LocalDate.of(2026, 8, 30).toInstant().toString(),
+                isFinalSale = false,
+                favorite = false,
+                cart = Random.nextBoolean()
+            ),
+            ResponseFilteredListing(
+                listingId = "2",
+                categoryCode = "comics",
+                conditionCode = "very_good",
+                title = "Amazing Spider-Man Classic Comic #15",
+                price = "15.99",
+                coverImageUrl = "https://backend.alexandrosvoliotis.com/api/private/marvelx/user/4/profile-image",
+                postedAt = LocalDate.of(2026, 8, 28).toInstant().toString(),
+                isFinalSale = false,
+                favorite = true,
+                cart = Random.nextBoolean()
+            ),
+
+            // --- The Random Items ---
+            ResponseFilteredListing(
+                listingId = "3",
+                categoryCode = "drinkware",
+                conditionCode = "mint",
+                title = "Rare 2001 Spider-Man Limited Edition Mug",
+                price = "45.00",
+                coverImageUrl = "https://backend.alexandrosvoliotis.com/api/private/marvelx/user/4/profile-image",
+                postedAt = LocalDate.of(2026, 8, 25).toInstant().toString(),
+                isFinalSale = false,
+                favorite = true,
+                cart = Random.nextBoolean()
+            ),
+            ResponseFilteredListing(
+                listingId = "4",
+                categoryCode = "art",
+                conditionCode = "mint",
+                title = "Original Iron Man Mark V Blueprint Canvas - 24x36",
+                price = "120.00",
+                coverImageUrl = "https://backend.alexandrosvoliotis.com/api/private/marvelx/user/4/profile-image",
+                postedAt = LocalDate.of(2026, 6, 12).toInstant().toString(),
+                isFinalSale = true,
+                favorite = false,
+                cart = Random.nextBoolean()
+            ),
+            ResponseFilteredListing(
+                listingId = "5",
+                categoryCode = "apparel",
+                conditionCode = "fair",
+                title = "Wolverine Logan Distressed Leather Jacket - Men's L",
+                price = "85.00",
+                coverImageUrl = "https://backend.alexandrosvoliotis.com/api/private/marvelx/user/4/profile-image",
+                postedAt = LocalDate.of(2026, 8, 1).toInstant().toString(),
+                isFinalSale = false,
+                favorite = false,
+                cart = Random.nextBoolean()
+            )
+        )
+
+        val filteredListings = mockDatabaseListings.filter { item ->
+
+            // 1. Search Query
+            val matchesSearch = searchQuery.isBlank() ||
+                    item.title.contains(searchQuery, ignoreCase = true)
+
+            // 2. Multi-Select Chips
+            val matchesCategory = categoryIds.isEmpty() || item.categoryCode in categoryIds
+            val matchesCondition = conditionIds.isEmpty() || item.conditionCode in conditionIds
+
+            // 3. Price Range
+            val minPriceBigDecimal = minPrice?.toBigDecimalOrNull()
+            val maxPriceBigDecimal = maxPrice?.toBigDecimalOrNull()
+
+            val matchesPrices = when {
+                minPriceBigDecimal != null && maxPriceBigDecimal != null -> item.parsedPrice() in minPriceBigDecimal..maxPriceBigDecimal
+                minPriceBigDecimal != null -> item.parsedPrice() >= minPriceBigDecimal
+                maxPriceBigDecimal != null -> item.parsedPrice() <= maxPriceBigDecimal
+                else -> true
+            }
+
+            // 4. Date Posted
+            val today = DateUtil.getCurrentLocalDate()
+            val matchesDate = when (datePostedKey.uppercase()) {
+                "TODAY" -> item.parsedPostedAt().isEqual(today)
+                "LAST_7_DAYS" -> !item.parsedPostedAt().isBefore(today.minusDays(7))
+                "CUSTOM" -> {
+                    val from = customDateFrom?.let {
+                        runCatching { LocalDate.parse(it) }.getOrNull()
+                    }
+                    val to = customDateTo?.let {
+                        runCatching { LocalDate.parse(it) }.getOrNull()
+                    }
+
+                    val afterFrom = from == null || !item.parsedPostedAt().isBefore(from)
+                    val beforeTo = to == null || !item.parsedPostedAt().isAfter(to)
+
+                    afterFrom && beforeTo
+                }
+
+                else -> true // "ALL" or unrecognized key
+            }
+
+            // 5. Final Sale Toggle
+            // Assumes that if the user doesn't check the toggle, they want to see all items.
+            // If checked, they ONLY want to see final sale items.
+            val matchesFinalSale = if (isFinalSale) item.isFinalSale else true
+
+            matchesSearch
+                    && matchesCategory
+                    && matchesCondition
+                    && matchesPrices
+                    && matchesDate
+                    && matchesFinalSale
+
+        }.let { filteredList ->
+            val sortOption = ListingSort.entries.firstOrNull { it.key == sortKey }
+
+            when (sortOption) {
+                ListingSort.PRICE_ASCENDING -> filteredList.sortedBy { it.price }
+                ListingSort.PRICE_DESCENDING -> filteredList.sortedByDescending { it.price }
+                ListingSort.DATE_POSTED_ASCENDING -> filteredList.sortedBy { it.parsedPostedAt() }
+                ListingSort.DATE_POSTED_DESCENDING -> filteredList.sortedByDescending { it.parsedPostedAt() }
+                null -> filteredList // Fallback to the original order if the key is missing or invalid
+            }
+        }
+
+        return ApiResult.Success(filteredListings)
     }
 
     override suspend fun createListing(body: MultipartBody): ApiResult<ResponseListingId> =

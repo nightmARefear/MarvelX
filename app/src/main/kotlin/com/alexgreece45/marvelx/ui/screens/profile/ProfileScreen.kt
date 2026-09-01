@@ -312,7 +312,6 @@ fun ProfileScreen(
     // Alert Dialog error.
     state.errorAlertDialog?.let { errorAlertDialog ->
         AlertDialogError(
-            isVisible = true,
             title = errorAlertDialog.errorTitle,
             errorMessage = { Text(text = errorAlertDialog.errorSubtitle) },
             confirmButton = errorAlertDialog.alertDialogButtonPositive,

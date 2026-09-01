@@ -19,6 +19,7 @@ import com.alexgreece45.marvelx.ui.screens.marketplace.listingDetailsScreen.mode
 import com.alexgreece45.marvelx.ui.screens.marketplace.listingDetailsScreen.model.ListingDetailsMode
 import com.alexgreece45.marvelx.ui.screens.marketplace.mappers.ListingUiMapper
 import com.alexgreece45.marvelx.util.ResourceProvider
+import com.alexgreece45.marvelx.util.extensions.model.ShareContentUrlData
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import org.koin.android.annotation.KoinViewModel
@@ -175,10 +176,13 @@ internal class ListingDetailsViewModel(
         currentState.listing?.let { listing ->
             setEffect {
                 ListingDetailsContract.Effect.ShareListingUrl(
-                    url = DeepLinkWebUrl.ListingDetails.webUrl + listing.listingId,
-                    title = resourceProvider.getString(
-                        R.string.screen_listing_details_share_intent_title,
-                        listing.title
+                    ShareContentUrlData(
+                        deepLinkWebUrl = DeepLinkWebUrl.ListingDetails,
+                        urlSuffix = listing.listingId,
+                        title = resourceProvider.getString(
+                            R.string.screen_listing_details_share_intent_title,
+                            listing.title
+                        )
                     )
                 )
             }

@@ -1398,11 +1398,13 @@ fun WrapTextButton(
  * @param label The text label of the button.
  * @param buttonType The button type. For the dismiss button, the type is always
  * [ErrorButtonType.Text].
+ * @param buttonBackgroundColor The optional custom background color of the button.
  * @param onClick Callback to be invoked when the button is clicked.
  */
 data class AlertDialogButton(
     val label: String,
     val buttonType: ErrorButtonType = ErrorButtonType.defaultType,
+    val buttonBackgroundColor: Color? = null,
     val onClick: () -> Unit
 )
 
@@ -1410,7 +1412,6 @@ data class AlertDialogButton(
  * A wrapper for [AlertDialog] providing additional functionality and custom styling. Avoid using the
  * native one. Use this wrapper instead.
  *
- * @param isVisible         Defines whether this alert is visible.
  * @param title             The title of this dialog.
  * @param errorMessage      The error message of this dialog.
  * @param dismissButton     The dismiss button of this dialog. Can be `null`.
@@ -1427,7 +1428,6 @@ data class AlertDialogButton(
  */
 @Composable
 fun AlertDialogError(
-    isVisible: Boolean,
     title: String,
     errorMessage: @Composable () -> Unit,
     dismissButton: AlertDialogButton? = null,
@@ -1438,7 +1438,6 @@ fun AlertDialogError(
     properties: DialogProperties = DialogProperties(),
     onDismissRequest: (() -> Unit)? = null
 ) {
-    if (!isVisible) return
     AlertDialog(
         title = {
             Text(
@@ -1457,7 +1456,14 @@ fun AlertDialogError(
         },
         dismissButton = {
             dismissButton?.let { button ->
-                WrapTextButton(onClick = button.onClick) {
+                WrapTextButton(
+                    onClick = button.onClick,
+                    colors = button.buttonBackgroundColor?.let {
+                        ButtonDefaults.textButtonColors(
+                            backgroundColor = button.buttonBackgroundColor
+                        )
+                    } ?: ButtonDefaults.textButtonColors()
+                ) {
                     Text(
                         text = button.label
                     )
@@ -1468,7 +1474,13 @@ fun AlertDialogError(
             confirmButton.let { button ->
                 when (button.buttonType) {
                     ErrorButtonType.Contained -> {
-                        WrapButton(onClick = button.onClick) {
+                        WrapButton(
+                            onClick = button.onClick,
+                            colors = button.buttonBackgroundColor?.let {
+                                ButtonDefaults.buttonColors(
+                                    backgroundColor = button.buttonBackgroundColor
+                                )
+                            } ?: ButtonDefaults.buttonColors()) {
                             Text(
                                 text = button.label
                             )
@@ -1476,7 +1488,13 @@ fun AlertDialogError(
                     }
 
                     ErrorButtonType.Outlined -> {
-                        WrapOutlinedButton(onClick = button.onClick) {
+                        WrapOutlinedButton(
+                            onClick = button.onClick,
+                            colors = button.buttonBackgroundColor?.let {
+                                ButtonDefaults.outlinedButtonColors(
+                                    backgroundColor = button.buttonBackgroundColor
+                                )
+                            } ?: ButtonDefaults.outlinedButtonColors()) {
                             Text(
                                 text = button.label
                             )
@@ -1484,7 +1502,13 @@ fun AlertDialogError(
                     }
 
                     ErrorButtonType.Text -> {
-                        WrapTextButton(onClick = button.onClick) {
+                        WrapTextButton(
+                            onClick = button.onClick,
+                            colors = button.buttonBackgroundColor?.let {
+                                ButtonDefaults.textButtonColors(
+                                    backgroundColor = button.buttonBackgroundColor
+                                )
+                            } ?: ButtonDefaults.textButtonColors()) {
                             Text(
                                 text = button.label
                             )
@@ -1603,7 +1627,7 @@ fun SortingModalBottomSheetContent(
             IconButton(onClick = onCloseClick) {
                 Icon(
                     modifier = Modifier
-                        .size(SPACING_LARGE.dp)
+                        .size(ConstantsUi.MIN_ICON_SIZE)
                         .drawBehind {
                             drawCircle(
                                 color = circleBackgroundColor,

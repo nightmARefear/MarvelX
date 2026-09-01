@@ -104,7 +104,7 @@ import com.alexgreece45.marvelx.ui.components.rememberWrapModalBottomSheetState
 import com.alexgreece45.marvelx.ui.components.sections.SectionHeader
 import com.alexgreece45.marvelx.ui.components.sections.SectionHeaderRow
 import com.alexgreece45.marvelx.ui.components.sections.SectionHeaderTitle
-import com.alexgreece45.marvelx.ui.components.textInputField.TextInputField
+import com.alexgreece45.marvelx.ui.components.inputFields.TextInputField
 import com.alexgreece45.marvelx.ui.model_generic.BigDecimalUi
 import com.alexgreece45.marvelx.ui.model_generic.InputFieldUi
 import com.alexgreece45.marvelx.ui.model_generic.LocalDateUi
@@ -130,7 +130,7 @@ import com.alexgreece45.marvelx.util.SPACING_TINY
 import com.alexgreece45.marvelx.util.VSpacer
 import com.alexgreece45.marvelx.util.constants.ConstantsUi
 import com.alexgreece45.marvelx.util.extensions.clickableNoRipple
-import com.alexgreece45.marvelx.util.extensions.formatPrice
+import com.alexgreece45.marvelx.core.common.extensions.formatPrice
 import com.alexgreece45.marvelx.util.extensions.hideIfVisible
 import com.alexgreece45.marvelx.util.extensions.showIfHidden
 import com.alexgreece45.marvelx.util.extensions.throttledClickable
@@ -297,7 +297,6 @@ internal fun RequestItemReturnScreen(
                         ) {
                             state.dialogType?.let { dialogType ->
                                 AlertDialogError(
-                                    isVisible = true,
                                     title = stringResource(dialogType.titleResId),
                                     errorMessage = {
                                         Text(

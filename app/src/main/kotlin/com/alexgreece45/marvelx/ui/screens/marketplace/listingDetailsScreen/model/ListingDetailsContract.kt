@@ -7,6 +7,7 @@ import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
 import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.model.CreateListingWizardMode
 import com.alexgreece45.marvelx.ui.screens.marketplace.model.ListingUi
+import com.alexgreece45.marvelx.util.extensions.model.ShareContentUrlData
 
 sealed interface ListingDetailsContract {
 
@@ -72,6 +73,6 @@ sealed interface ListingDetailsContract {
         }
 
         data class ShowToastMessage(val message: String) : Effect
-        data class ShareListingUrl(val url: String, val title: String) : Effect
+        data class ShareListingUrl(val shareContentUrlData: ShareContentUrlData) : Effect
     }
 }

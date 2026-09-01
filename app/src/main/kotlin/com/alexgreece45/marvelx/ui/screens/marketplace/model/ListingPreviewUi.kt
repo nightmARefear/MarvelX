@@ -5,5 +5,6 @@ data class ListingPreviewUi(
     val title: String,
     val priceLabel: String,
     val coverImageUrl: String,
-    val favorite: Boolean
+    val favorite: Boolean,
+    val cart: Boolean
 )

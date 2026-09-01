@@ -3,6 +3,7 @@ package com.alexgreece45.marvelx.ui.screens.myListings.model
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
+import com.alexgreece45.marvelx.util.extensions.model.ShareContentUrlData
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 
@@ -21,10 +22,14 @@ sealed interface MyListingsContract {
             data class OnMoreActionsButtonClicked(val listing: MyListingUi) : ListingEvents
         }
 
-        sealed interface BottomSheetEvents : Event {
-            data object OnEditListingClicked : BottomSheetEvents
-            data object OnDeleteListingClicked : BottomSheetEvents
+        sealed interface BottomSheet : Event {
+            data object OnEditListingClicked : BottomSheet
+            data object OnShareListingClicked : BottomSheet
+            data object OnDeleteListingClicked : BottomSheet
         }
+
+        data object OnDeleteListingDialogNegativeButtonClicked : Event
+        data object OnDeleteListingDialogPositiveButtonClicked : Event
 
         data object OnErrorButtonClicked : Event
     }
@@ -37,8 +42,10 @@ sealed interface MyListingsContract {
 
         val allListings: PersistentList<MyListingUi> = persistentListOf(),
 
-        val selectedListingData: MyListingsSelectedListingData? = null,
-        val error: Boolean = false
+        val selectedListing: MyListingUi? = null,
+
+        val error: Boolean = false,
+        val deleteListingDialogData: DeleteListingDialogData? = null,
     ) : BaseState
 
     sealed interface Effect : BaseEffect {
@@ -49,11 +56,9 @@ sealed interface MyListingsContract {
             data class GoToEditListingScreen(val listingId: String) : Navigation
         }
 
-        sealed interface BottomSheetEffects : Effect {
-            data object Hide : BottomSheetEffects
-            data object Show : BottomSheetEffects
-        }
+        data object HideBottomSheet : Effect
+        data object ShowBottomSheet : Effect
 
-        data class ShowToastMessage(val message: String) : Effect
+        data class ShareListing(val shareContentUrlData: ShareContentUrlData) : Effect
     }
 }

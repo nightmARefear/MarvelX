@@ -19,6 +19,7 @@ import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -99,7 +100,7 @@ import org.koin.android.ext.android.inject
 import org.koin.core.annotation.KoinExperimentalAPI
 import kotlin.time.Duration.Companion.milliseconds
 
-internal class MainActivity : ComponentActivity() {
+internal class MainActivity : AppCompatActivity() {
 
     private val loggerTag = "MainActivity"
 
@@ -155,7 +156,8 @@ internal class MainActivity : ComponentActivity() {
                 Surface(color = MaterialTheme.colors.background) {
                     NavGraph(navController = navController)
 
-                    Box(
+                    // TODO: To be removed.
+                    /*Box(
                         modifier = Modifier
                             .fillMaxSize()
                             .safeDrawingPadding(),
@@ -181,7 +183,7 @@ internal class MainActivity : ComponentActivity() {
                                 tint = MaterialTheme.customColors.white
                             )
                         }
-                    }
+                    }*/
 
                     ChuckerPermissions()
 

@@ -2,6 +2,7 @@ package com.alexgreece45.marvelx.core.network.clients
 
 import com.alexgreece45.marvelx.core.common.extensions.minusDays
 import com.alexgreece45.marvelx.core.common.extensions.plusDays
+import com.alexgreece45.marvelx.core.common.extensions.toLocalDate
 import com.alexgreece45.marvelx.core.common.util.DateUtil
 import com.alexgreece45.marvelx.core.network.model.CardBrand
 import com.alexgreece45.marvelx.core.network.model.api.order.ResponseOrder
@@ -39,10 +40,12 @@ internal class OrderClientImpl : OrderClient {
     override suspend fun getOrders(): ApiResult<List<ResponseOrderPreview>> {
         return ApiResult.Success(
             (1..10).map { index ->
-                val currentDate = DateUtil.getCurrentLocalDate()
+                val currentDate = DateUtil.getUTCInstant()
                 val orderDate = currentDate.minusDays(Random.nextLong(2L..4))
-                val estimatedDeliveryDateMin = orderDate.plusDays(Random.nextLong(2L..4))
-                val estimatedDeliveryDateMax = orderDate.plusDays(Random.nextLong(5L..7))
+                val estimatedDeliveryDateMin =
+                    orderDate.plusDays(Random.nextLong(2L..4)).toLocalDate()
+                val estimatedDeliveryDateMax =
+                    orderDate.plusDays(Random.nextLong(5L..7)).toLocalDate()
                 val price = BigDecimal.valueOf(Random.nextDouble(10.50, 100.00))
 
                 ResponseOrderPreview(
@@ -112,8 +115,10 @@ internal class OrderClientImpl : OrderClient {
         val estimatedDeliveryDateMaxPlusDays = Random.nextLong(1L..5L)
 
         val orderDate = DateUtil.getUTCInstant().minusDays(orderDateMinusDays)
-        val estimatedDeliveryDateMin = orderDate.plusDays(estimatedDeliveryDateMinPlusDays)
-        val estimatedDeliveryDateMax = orderDate.plusDays(estimatedDeliveryDateMaxPlusDays)
+        val estimatedDeliveryDateMin =
+            orderDate.plusDays(estimatedDeliveryDateMinPlusDays).toLocalDate()
+        val estimatedDeliveryDateMax =
+            orderDate.plusDays(estimatedDeliveryDateMaxPlusDays).toLocalDate()
 
         return ApiResult.Success(
             ResponseOrder(
@@ -174,15 +179,16 @@ internal class OrderClientImpl : OrderClient {
         val returnStatus = OrderItemReturnStatus.entries.random()
 
         val returnUntilDate =
-            delivered?.plusDays(30L)?.toString() ?: estimatedDeliveryTo.plusDays(30L).toString()
+            delivered?.toLocalDate()?.plusDays(30L)?.toString() ?: estimatedDeliveryTo.toLocalDate()
+                .plusDays(30L).toString()
 
         return ApiResult.Success(
             ResponseOrderItemTrackingHistory(
                 trackingId = (orderId + orderItemId).toList().shuffled().joinToString(""),
                 courier = OrderCourier.entries.random().code,
                 estimatedDelivery = ResponseOrderEstimatedDeliveryDateRange(
-                    from = estimatedDeliveryFrom.toString(),
-                    to = estimatedDeliveryTo.toString()
+                    from = estimatedDeliveryFrom.toLocalDate().toString(),
+                    to = estimatedDeliveryTo.toLocalDate().toString()
                 ),
                 shipped = ResponseOrderTrackingHistoryItem(
                     location = locations.random(),

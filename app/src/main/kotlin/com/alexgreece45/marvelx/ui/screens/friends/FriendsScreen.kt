@@ -266,7 +266,6 @@ fun FriendsScreen(
 
             state.dialogView?.let { dialog ->
                 AlertDialogError(
-                    isVisible = true,
                     title = dialog.title,
                     errorMessage = {
                         if (dialog.doesSubtitleContainBold) {

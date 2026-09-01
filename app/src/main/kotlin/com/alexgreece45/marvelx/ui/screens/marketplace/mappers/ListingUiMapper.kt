@@ -15,7 +15,7 @@ import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.model
 import com.alexgreece45.marvelx.ui.screens.marketplace.model.ListingUi
 import com.alexgreece45.marvelx.ui.screens.marketplace.model.toUi
 import com.alexgreece45.marvelx.util.DateUtil
-import com.alexgreece45.marvelx.util.extensions.formatPrice
+import com.alexgreece45.marvelx.core.common.extensions.formatPrice
 
 // TODO: Revisit in future.
 class ListingUiMapper(
@@ -68,8 +68,6 @@ class ListingUiMapper(
                     coverImageUrl = coverImageUrl,
                     imageUrls = imageUrls,
                     details = details,
-                    favorite = favorite,
-                    cart = cart,
                     postedAt = InstantUi(
                         value = postedAt,
                         label = postedAt.toListingFormat()
@@ -80,6 +78,8 @@ class ListingUiMapper(
                             label = updatedAt.toListingFormat()
                         )
                     },
+                    favorite = favorite,
+                    cart = cart,
                     canEdit = sellerUserId == UserId(currentUserId),
                     orderIds = orderIds
                 )
@@ -110,10 +110,10 @@ class ListingUiMapper(
                         coverImageUrl = attachedImages.first().uri.toString(),
                         imageUrls = attachedImages.drop(1).map { it.uri.toString() },
                         details = listingDetailsUiMapper.toDomain(listingDetails!!)!!,
-                        favorite = false,
-                        cart = false,
                         postedAt = DateUtil.getUTCInstant(),
                         updatedAt = null,
+                        favorite = false,
+                        cart = false,
                         orderIds = null
                     ),
                     currentUserId = currentUserId

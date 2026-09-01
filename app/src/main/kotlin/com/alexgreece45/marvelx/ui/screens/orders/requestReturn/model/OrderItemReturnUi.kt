@@ -9,7 +9,7 @@ import com.alexgreece45.marvelx.core.data.model.order.item.OrderItemReturnMethod
 import com.alexgreece45.marvelx.core.data.model.order.item.OrderItemReturnReason
 import com.alexgreece45.marvelx.ui.model_generic.BigDecimalUi
 import com.alexgreece45.marvelx.ui.model_generic.LocalDateUi
-import com.alexgreece45.marvelx.util.extensions.formatPrice
+import com.alexgreece45.marvelx.core.common.extensions.formatPrice
 import kotlinx.collections.immutable.ImmutableList
 
 @Immutable

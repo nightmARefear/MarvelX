@@ -82,10 +82,10 @@ internal class ListingDataMapper(
                 coverImageUrl = coverImageUrl,
                 imageUrls = imageUrls,
                 details = listingDetails,
-                favorite = favorite,
-                cart = cart,
                 postedAt = postedAt,
                 updatedAt = updatedAt,
+                favorite = favorite,
+                cart = cart,
                 orderIds = orderIds?.let {
                     ListingOrderIds(
                         OrderId(it.orderId),

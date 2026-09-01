@@ -153,10 +153,7 @@ internal fun ProfileDetailsScreen(
             }
 
             is ProfileDetailsContract.Effect.ShareProfileUrl -> {
-                context.shareContentUrl(
-                    url = uiEffect.url,
-                    title = uiEffect.intentTitle
-                )
+                context.shareContentUrl(shareContentUrlData = uiEffect.shareContentUrlData)
             }
 
             is ProfileDetailsContract.Effect.SetClipboardText -> {
@@ -458,7 +455,6 @@ internal fun ProfileDetailsScreen(
 
     state.alertDialogError?.let { alertDialogData ->
         AlertDialogError(
-            isVisible = true,
             title = alertDialogData.errorTitle,
             errorMessage = { Text(text = alertDialogData.errorSubtitle) },
             dismissButton = alertDialogData.dismissAlertDialogButton,

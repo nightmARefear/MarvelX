@@ -41,8 +41,8 @@ class OrdersViewModel(
                 event.orderId
             )
 
-            OrdersContract.Event.OnEmptyOrdersButtonClicked -> {}
-            OrdersContract.Event.OnErrorButtonClicked -> {}
+            OrdersContract.Event.OnEmptyOrdersButtonClicked -> onEmptyOrdersButtonClicked()
+            OrdersContract.Event.OnErrorButtonClicked -> onErrorButtonClicked()
         }
     }
 
@@ -87,6 +87,16 @@ class OrdersViewModel(
         setEffect {
             OrdersContract.Effect.Navigation.GoToOrderDetailsScreen(orderId)
         }
+    }
+
+    private fun onEmptyOrdersButtonClicked() {
+        setEffect {
+            OrdersContract.Effect.Navigation.GoToMarketplaceScreen
+        }
+    }
+
+    private fun onErrorButtonClicked() {
+        getOrders()
     }
 
     // Helper functions.
