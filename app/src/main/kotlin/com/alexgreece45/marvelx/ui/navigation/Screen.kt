@@ -5,6 +5,7 @@ import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
 import com.alexgreece45.marvelx.ui.helper.createUriPatternForDeepLink
+import com.alexgreece45.marvelx.ui.screens.marketplace.listingDetailsScreen.ListingDetailsScreen
 
 /**
  * Represents a unique screen in this application. You can set the screen name through [baseRoute],

@@ -302,7 +302,7 @@ class AllCharactersViewModel(
                                     }
 
                                     is GetFavoriteCharacterIdsPartialState.Failed -> {
-                                        // Could not retrieve favorite characters data.
+                                        // Could not retrieve favorite characters' data.
                                         setState {
                                             copy(
                                                 isLoading = false,

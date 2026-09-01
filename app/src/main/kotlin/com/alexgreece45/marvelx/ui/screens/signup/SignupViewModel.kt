@@ -105,7 +105,7 @@ data class SignupState(
 sealed class SignupEffect : BaseEffect {
     sealed class Navigation : SignupEffect() {
         data object GoBack : Navigation()
-        data object NavigateToAllCharactersScreen : Navigation()
+        data object NavigateToDashboardScreen : Navigation()
         data class NavigateToOtpScreen(
             val userId: String,
             val otpFlowType: String = OtpFlowType.Register.key,
@@ -490,7 +490,7 @@ internal class SignupViewModel(
                                         autoLogoutRepository.setRememberUserSession(true)
 
                                         setEffect {
-                                            SignupEffect.Navigation.NavigateToAllCharactersScreen
+                                            SignupEffect.Navigation.NavigateToDashboardScreen
                                         }
                                     }
 

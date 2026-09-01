@@ -89,11 +89,11 @@ internal class MarketplaceViewModel(
                         event.listingId
                     )
 
-                    is MarketplaceContract.Event.Listing.OnAddToComparison -> onListingComparisonClicked(
+                    is MarketplaceContract.Event.Listing.OnComparisonClicked -> onListingComparisonClicked(
                         event.listingId
                     )
 
-                    is MarketplaceContract.Event.Listing.OnAddToCartClicked -> onListingAddToCartClicked(
+                    is MarketplaceContract.Event.Listing.OnCartClicked -> onListingAddToCartClicked(
                         event.listingId
                     )
                 }

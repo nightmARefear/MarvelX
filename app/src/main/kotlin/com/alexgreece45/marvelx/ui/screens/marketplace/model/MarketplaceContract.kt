@@ -18,8 +18,8 @@ internal sealed interface MarketplaceContract {
         sealed class Listing(open val listingId: String) : Event {
             data class OnClicked(override val listingId: String) : Listing(listingId)
             data class OnFavoriteClicked(override val listingId: String) : Listing(listingId)
-            data class OnAddToComparison(override val listingId: String) : Listing(listingId)
-            data class OnAddToCartClicked(override val listingId: String) : Listing(listingId)
+            data class OnComparisonClicked(override val listingId: String) : Listing(listingId)
+            data class OnCartClicked(override val listingId: String) : Listing(listingId)
         }
 
         sealed interface SearchBar : Event {

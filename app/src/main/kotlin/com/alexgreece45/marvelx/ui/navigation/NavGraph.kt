@@ -7,7 +7,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
-import androidx.navigation.navOptions
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarNavigationPayload
 import com.alexgreece45.marvelx.ui.components.BottomBarItem
@@ -15,10 +14,7 @@ import com.alexgreece45.marvelx.ui.components.BottomNavigationBarData
 import com.alexgreece45.marvelx.ui.components.IconData
 import com.alexgreece45.marvelx.ui.helper.openDeepLinkAction
 import com.alexgreece45.marvelx.ui.screens.allCharacters.navigation.AllCharactersRoute
-import com.alexgreece45.marvelx.ui.screens.allCharacters.navigation.allCharactersScreen
-import com.alexgreece45.marvelx.ui.screens.allCharacters.navigation.navigateToAllCharactersScreen
 import com.alexgreece45.marvelx.ui.screens.allFavoriteCharacters.navigation.AllFavoriteCharactersRoute
-import com.alexgreece45.marvelx.ui.screens.allFavoriteCharacters.navigation.allFavoriteCharactersScreen
 import com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.CheckoutWizardScreen
 import com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.CheckoutWizardViewModel
 import com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.model.CheckoutWizardContract
@@ -26,14 +22,14 @@ import com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.steps.shippingDet
 import com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.steps.success.navigation.checkoutSuccessScreen
 import com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.steps.success.navigation.navigateToCheckoutSuccessScreen
 import com.alexgreece45.marvelx.ui.screens.cart.navigation.CartRoute
-import com.alexgreece45.marvelx.ui.screens.cart.navigation.cartScreen
 import com.alexgreece45.marvelx.ui.screens.changePassword.ChangePasswordScreen
 import com.alexgreece45.marvelx.ui.screens.character.allCharacterComicsScreen.navigation.allCharacterComicsScreen
 import com.alexgreece45.marvelx.ui.screens.character.allCharacterComicsScreen.navigation.navigateToAllCharacterComicsScreen
 import com.alexgreece45.marvelx.ui.screens.character.navigation.characterScreen
-import com.alexgreece45.marvelx.ui.screens.character.navigation.navigateToCharacterScreen
 import com.alexgreece45.marvelx.ui.screens.comic.navigation.comicScreen
 import com.alexgreece45.marvelx.ui.screens.comic.navigation.navigateToComicScreen
+import com.alexgreece45.marvelx.ui.screens.dashboard.navigation.dashboardGraph
+import com.alexgreece45.marvelx.ui.screens.dashboard.navigation.navigateToDashboardScreen
 import com.alexgreece45.marvelx.ui.screens.forgotPasswordScreen.ForgotPasswordScreen
 import com.alexgreece45.marvelx.ui.screens.forgotPasswordScreen.forgotPasswordValidateEmailScreen.ForgotPasswordValidateEmailScreen
 import com.alexgreece45.marvelx.ui.screens.friends.FriendsScreen
@@ -54,8 +50,6 @@ import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.succe
 import com.alexgreece45.marvelx.ui.screens.marketplace.listingDetailsScreen.navigation.listingDetailsScreen
 import com.alexgreece45.marvelx.ui.screens.marketplace.listingDetailsScreen.navigation.navigateToListingDetailsScreen
 import com.alexgreece45.marvelx.ui.screens.marketplace.navigation.MarketplaceRoute
-import com.alexgreece45.marvelx.ui.screens.marketplace.navigation.marketplaceScreen
-import com.alexgreece45.marvelx.ui.screens.marketplace.navigation.navigateToMarketplaceScreen
 import com.alexgreece45.marvelx.ui.screens.myListings.MyListingsScreen
 import com.alexgreece45.marvelx.ui.screens.myListings.MyListingsViewModel
 import com.alexgreece45.marvelx.ui.screens.myListings.model.MyListingsContract
@@ -79,7 +73,6 @@ import com.alexgreece45.marvelx.ui.screens.profile.editProfileDetails.EditProfil
 import com.alexgreece45.marvelx.ui.screens.profile.image.ProfileImageScreen
 import com.alexgreece45.marvelx.ui.screens.profile.image.ProfileImageViewModel
 import com.alexgreece45.marvelx.ui.screens.profile.navigation.ProfileRoute
-import com.alexgreece45.marvelx.ui.screens.profile.navigation.profileScreen
 import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.ProfileDetailsContract
 import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.ProfileDetailsScreen
 import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.ProfileDetailsViewModel
@@ -180,10 +173,6 @@ internal fun NavGraph(navController: NavHostController) {
                                 )
                             }
                         }
-
-                        HomeEffect.Navigation.NavigateToAllCharactersScreen -> {
-                            navController.navigateToAllCharactersScreen(clearBackStack = true)
-                        }
                     }
                 }
             )
@@ -224,8 +213,8 @@ internal fun NavGraph(navController: NavHostController) {
                             navController.navigate(Screen.ForgotPasswordScreen.route)
                         }
 
-                        is LoginEffect.Navigation.NavigateToAllCharactersScreen -> {
-                            navController.navigateToAllCharactersScreen(clearBackStack = true)
+                        is LoginEffect.Navigation.NavigateToDashboardScreen -> {
+                            navController.navigateToDashboardScreen()
                         }
                     }
                 }
@@ -274,8 +263,8 @@ internal fun NavGraph(navController: NavHostController) {
                             navController.navigateUp()
                         }
 
-                        SignupEffect.Navigation.NavigateToAllCharactersScreen -> {
-                            navController.navigateToAllCharactersScreen(true)
+                        SignupEffect.Navigation.NavigateToDashboardScreen -> {
+                            navController.navigateToDashboardScreen()
                         }
 
                         is SignupEffect.Navigation.NavigateToOtpScreen -> {
@@ -307,8 +296,8 @@ internal fun NavGraph(navController: NavHostController) {
                             navController.navigateUp()
                         }
 
-                        OtpEffect.Navigation.NavigateToAllCharactersScreen -> {
-                            navController.navigateToAllCharactersScreen(true)
+                        OtpEffect.Navigation.NavigateToDashboardScreen -> {
+                            navController.navigateToDashboardScreen()
                         }
 
                         is OtpEffect.Navigation.NavigateToChangePasswordScreen -> {
@@ -332,6 +321,9 @@ internal fun NavGraph(navController: NavHostController) {
             )
         }
 
+        // Bottom nav screens.
+        dashboardGraph(navController)
+
         // Main screens.
 
         // TODO: Resolve later.
@@ -340,10 +332,10 @@ internal fun NavGraph(navController: NavHostController) {
 //            bottomNavigationBarData = { getBottomNavigationBarData(navController) }
 //        )
 
-        marketplaceScreen(
-            navigateToListingDetailsScreen = navController::navigateToListingDetailsScreen,
-            bottomNavigationBarData = { getBottomNavigationBarData(navController) }
-        )
+//        marketplaceScreen(
+//            navigateToListingDetailsScreen = navController::navigateToListingDetailsScreen,
+//            bottomNavigationBarData = { getBottomNavigationBarData(navController) }
+//        )
 
         listingDetailsScreen(
             goBack = navController::navigateUp,
@@ -402,10 +394,11 @@ internal fun NavGraph(navController: NavHostController) {
             )
         }
 
-        cartScreen(
-            navController = navController,
-            bottomNavigationBarData = { getBottomNavigationBarData(navController) }
-        )
+//        cartScreen(
+//            navController = navController,
+//            rootNavController = navController,
+//            bottomNavigationBarData = { getBottomNavigationBarData(navController) }
+//        )
 
         composable(screen = Screen.CheckoutWizardScreen) {
             val viewModel = koinViewModel<CheckoutWizardViewModel>()
@@ -417,7 +410,7 @@ internal fun NavGraph(navController: NavHostController) {
                     when (navigationEffect) {
                         CheckoutWizardContract.Effect.Navigation.ExitWizard -> navController.navigateUp()
                         CheckoutWizardContract.Effect.Navigation.NavigateToMarketplaceScreen -> {
-                            navController.navigateToMarketplaceScreen(clearBackStack = true)
+                            navController.navigateToDashboardScreen()
                         }
 
                         is CheckoutWizardContract.Effect.Navigation.NavigateToOrderDetailsScreen -> {
@@ -467,7 +460,7 @@ internal fun NavGraph(navController: NavHostController) {
                             navController.navigateToOrderDetailsScreen(navigationEffect.orderId)
                         }
 
-                        OrdersContract.Effect.Navigation.GoToMarketplaceScreen -> navController.navigateToMarketplaceScreen()
+                        OrdersContract.Effect.Navigation.GoToMarketplaceScreen -> navController.navigateToDashboardScreen()
                     }
                 },
             )
@@ -486,20 +479,20 @@ internal fun NavGraph(navController: NavHostController) {
 
         requestItemReturnSuccessScreen(navController = navController)
 
-        allCharactersScreen(
-            navController = navController,
-            navigateToCharacterScreen = { characterId ->
-                navController.navigateToCharacterScreen(
-                    characterId = characterId,
-                    navOptionsBuilder = {
-                        navOptions {
-                            launchSingleTop = true
-                        }
-                    }
-                )
-            },
-            openDeepLinkAction = navController::openDeepLinkAction
-        )
+//        allCharactersScreen(
+//            navController = navController,
+//            navigateToCharacterScreen = { characterId ->
+//                navController.navigateToCharacterScreen(
+//                    characterId = characterId,
+//                    navOptionsBuilder = {
+//                        navOptions {
+//                            launchSingleTop = true
+//                        }
+//                    }
+//                )
+//            },
+//            openDeepLinkAction = navController::openDeepLinkAction
+//        )
 
         comicScreen(goBack = navController::navigateUp)
 
@@ -510,7 +503,7 @@ internal fun NavGraph(navController: NavHostController) {
             }
         )
 
-        allFavoriteCharactersScreen(navController)
+//        allFavoriteCharactersScreen(navController)
 
         composable(
             screen = Screen.FriendsScreen,
@@ -539,7 +532,10 @@ internal fun NavGraph(navController: NavHostController) {
             )
         }
 
-        profileScreen(navController)
+//        profileScreen(
+//            navController = navController,
+//            rootNavController = navController
+//        )
 
         composable(
             screen = Screen.ProfileImageScreen,
@@ -574,7 +570,7 @@ internal fun NavGraph(navController: NavHostController) {
                 ) ?: false,
                 onNavigation = { navigationEffect ->
                     when (navigationEffect) {
-                        ProfileDetailsContract.Effect.Navigation.PopBackStack -> navController.navigateUp()
+                        ProfileDetailsContract.Effect.Navigation.PopBackStack -> navController.navigateToDashboardScreen()
 
                         is ProfileDetailsContract.Effect.Navigation.NavigateToProfileImageScreen -> {
                             navController.navigate(

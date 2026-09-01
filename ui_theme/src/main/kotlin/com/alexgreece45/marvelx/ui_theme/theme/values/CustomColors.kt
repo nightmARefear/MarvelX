@@ -43,6 +43,7 @@ data class CustomColors(
     val warningStatusContainerColors: StatusContainerColors,
     val errorStatusContainerColors: StatusContainerColors,
     val successStatusContainerColors: StatusContainerColors,
+    val creamWhite: Color,
 )
 
 /**
@@ -123,7 +124,7 @@ internal fun customLightColors() = CustomColors(
     ),
     orderStatusBackgroundColors = OrderStatusBackgroundColors(
         processing = Color(0xFF2196F3),
-        partiallyShipped = Color(0xFFE65100),
+        partiallyShipped = Color(0xFFFFB74D),
         shipped = Color(0xFFFF9800),
         partiallyDelivered = Color(0xFF81C784),
         delivered = Color(0xFF4CAF50)
@@ -178,6 +179,7 @@ internal fun customLightColors() = CustomColors(
         outlineColor = Color(0x4D21F33D),
         contentColor = Color(0xFF21F33D)
     ),
+    creamWhite = Color(0xFFFFFDD0),
 )
 
 /**
@@ -202,7 +204,7 @@ internal fun customDarkColors() = CustomColors(
     ),
     orderStatusBackgroundColors = OrderStatusBackgroundColors(
         processing = Color(0xFF2196F3),
-        partiallyShipped = Color(0xFFD56E00),
+        partiallyShipped = Color(0xFFFFB74D),
         shipped = Color(0xFFD56E00),
         partiallyDelivered = Color(0xFF21F33D),
         delivered = Color(0xFF21F33D)
@@ -257,6 +259,7 @@ internal fun customDarkColors() = CustomColors(
         outlineColor = Color(0x4D21F33D),
         contentColor = Color(0xFF21F33D)
     ),
+    creamWhite = Color(0xFFFFFDD0),
 )
 
 val LocalCustomColors = staticCompositionLocalOf { customLightColors() }

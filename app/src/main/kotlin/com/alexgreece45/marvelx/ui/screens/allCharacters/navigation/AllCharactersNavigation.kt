@@ -15,16 +15,6 @@ import org.koin.androidx.compose.koinViewModel
 @Serializable
 data object AllCharactersRoute
 
-fun NavController.navigateToAllCharactersScreen(
-    clearBackStack: Boolean
-) = this.let { navController ->
-    navController.navigate(AllCharactersRoute) {
-        if (clearBackStack) {
-            popUpToTop(navController)
-        }
-    }
-}
-
 internal fun NavGraphBuilder.allCharactersScreen(
     navController: NavController,
     navigateToCharacterScreen: (characterId: Int) -> Unit,

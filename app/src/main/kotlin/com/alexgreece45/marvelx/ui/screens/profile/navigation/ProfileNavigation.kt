@@ -24,7 +24,8 @@ private const val screenName = "profileScreen"
 data class ProfileRoute(val qrCodeScanErrorMessage: String? = null)
 
 internal fun NavGraphBuilder.profileScreen(
-    navController: NavHostController
+    navController: NavHostController,
+    rootNavController: NavHostController
 ) {
     composable<ProfileRoute>(
         deepLinks = listOf(
@@ -50,16 +51,16 @@ internal fun NavGraphBuilder.profileScreen(
             bottomNavigationBarData = { getBottomNavigationBarData(navController = navController) },
             onNavigation = { navigationEffect ->
                 when (navigationEffect) {
-                    ProfileContract.Effect.Navigation.NavigateUp -> navController.navigateUp()
+                    ProfileContract.Effect.Navigation.NavigateUp -> rootNavController.navigateUp()
 
                     is ProfileContract.Effect.Navigation.NavigateToProfileImageScreen -> {
-                        navController.navigate(
+                        rootNavController.navigate(
                             Screen.ProfileImageScreen.createNavRoute(navigationEffect.profileImageUrl)
                         )
                     }
 
                     is ProfileContract.Effect.Navigation.NavigateToProfileDetailsScreen -> {
-                        navController.navigate(
+                        rootNavController.navigate(
                             Screen.ProfileDetailsScreen.createNavRoute(
                                 userId = navigationEffect.userId
                             )
@@ -67,7 +68,7 @@ internal fun NavGraphBuilder.profileScreen(
                     }
 
                     is ProfileContract.Effect.Navigation.NavigateToQrCodeScreen -> {
-                        navController.navigate(
+                        rootNavController.navigate(
                             Screen.QrCodeScreen.createNavRoute(
                                 navigationEffect.previousScreenRoute
                             )
@@ -75,23 +76,23 @@ internal fun NavGraphBuilder.profileScreen(
                     }
 
                     ProfileContract.Effect.Navigation.NavigateToSettingsScreen -> {
-                        navController.navigate(Screen.SettingsScreen.route)
+                        rootNavController.navigate(Screen.SettingsScreen.route)
                     }
 
                     ProfileContract.Effect.Navigation.NavigateToFriendsScreen -> {
-                        navController.navigate(Screen.FriendsScreen.route)
+                        rootNavController.navigate(Screen.FriendsScreen.route)
                     }
 
                     ProfileContract.Effect.Navigation.NavigateToMyListingsScreen -> {
-                        navController.navigate(Screen.MyListingsScreen.route)
+                        rootNavController.navigate(Screen.MyListingsScreen.route)
                     }
 
                     ProfileContract.Effect.Navigation.NavigateToOrdersScreen -> {
-                        navController.navigate(Screen.OrdersScreen.route)
+                        rootNavController.navigate(Screen.OrdersScreen.route)
                     }
                 }
             },
-            openDeepLinkAction = navController::openDeepLinkAction
+            openDeepLinkAction = rootNavController::openDeepLinkAction
         )
     }
 }

@@ -96,7 +96,7 @@ sealed class LoginEffect : BaseEffect {
 
         data object NavigateToForgotPasswordScreen : Navigation()
 
-        data class NavigateToAllCharactersScreen(val userId: String) : Navigation()
+        data class NavigateToDashboardScreen(val userId: String) : Navigation()
 
         data class NavigateToOtpScreen(
             val userId: String,

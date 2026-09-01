@@ -72,6 +72,7 @@ import com.alexgreece45.marvelx.ui.screens.cart.navigation.CartRoute
 import com.alexgreece45.marvelx.ui.screens.character.allCharacterComicsScreen.navigation.AllCharacterComicsRoute
 import com.alexgreece45.marvelx.ui.screens.character.navigation.CharacterRoute
 import com.alexgreece45.marvelx.ui.screens.comic.navigation.ComicRoute
+import com.alexgreece45.marvelx.ui.screens.dashboard.navigation.DashboardRoute
 import com.alexgreece45.marvelx.ui.screens.mainActivity.model.MainActivityEffect
 import com.alexgreece45.marvelx.ui.screens.mainActivity.model.MainActivityEvent
 import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.navigation.CreateListingWizardRoute
@@ -523,6 +524,7 @@ internal class MainActivity : AppCompatActivity() {
     }
 
     private val typeSafeRoutesIncludedInAutoLogout = listOf(
+        DashboardRoute::class,
         MarketplaceRoute::class,
         ListingDetailsRoute::class,
         CreateListingWizardRoute::class,

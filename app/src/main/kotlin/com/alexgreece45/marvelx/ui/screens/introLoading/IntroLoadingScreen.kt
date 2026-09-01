@@ -14,7 +14,7 @@ import com.alexgreece45.marvelx.core.common.util.flows.single_observer_flow.Sing
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.effect.OneTimeLaunchedEffect
 import com.alexgreece45.marvelx.ui.navigation.Screen
-import com.alexgreece45.marvelx.ui.screens.allCharacters.navigation.navigateToAllCharactersScreen
+import com.alexgreece45.marvelx.ui.screens.dashboard.navigation.navigateToDashboardScreen
 import com.alexgreece45.marvelx.util.extensions.popUpToTop
 
 @Composable
@@ -41,8 +41,8 @@ fun IntroLoadingScreen(
                 }
             }
 
-            IntroLoadingContract.Effect.Navigation.NavigateToAllCharactersScreen -> {
-                navController.navigateToAllCharactersScreen(true)
+            IntroLoadingContract.Effect.Navigation.NavigateToDashboardScreen -> {
+                navController.navigateToDashboardScreen()
             }
 
             is IntroLoadingContract.Effect.Navigation.NavigateToOtpScreen -> {

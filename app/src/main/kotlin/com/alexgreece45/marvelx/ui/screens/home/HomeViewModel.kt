@@ -34,8 +34,6 @@ sealed interface HomeEffect : BaseEffect {
             val verificationStep: String,
             val shouldRememberUserSession: Boolean
         ) : Navigation()
-
-        data object NavigateToAllCharactersScreen : Navigation()
     }
 }
 

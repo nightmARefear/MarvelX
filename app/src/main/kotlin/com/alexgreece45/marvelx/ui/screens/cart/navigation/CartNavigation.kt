@@ -11,6 +11,7 @@ import com.alexgreece45.marvelx.ui.navigation.Screen
 import com.alexgreece45.marvelx.ui.screens.cart.CartScreen
 import com.alexgreece45.marvelx.ui.screens.cart.CartViewModel
 import com.alexgreece45.marvelx.ui.screens.cart.model.CartContract
+import com.alexgreece45.marvelx.ui.screens.dashboard.navigation.navigateToDashboardScreen
 import com.alexgreece45.marvelx.ui.screens.marketplace.listingDetailsScreen.navigation.navigateToListingDetailsScreen
 import com.alexgreece45.marvelx.ui.screens.marketplace.navigation.navigateToMarketplaceScreen
 import kotlinx.serialization.Serializable
@@ -23,6 +24,7 @@ fun NavController.navigateToCartScreen() = navigate(route = CartRoute)
 
 internal fun NavGraphBuilder.cartScreen(
     navController: NavHostController,
+    rootNavController: NavHostController,
     bottomNavigationBarData: @Composable () -> BottomNavigationBarData
 ) {
     composable<CartRoute> {
@@ -34,13 +36,13 @@ internal fun NavGraphBuilder.cartScreen(
             onNavigationEffect = { navigationEffect ->
                 when (navigationEffect) {
                     CartContract.Effect.Navigation.GoBack -> navController.navigateUp()
-                    CartContract.Effect.Navigation.GoToMarketplaceScreen -> navController.navigateToMarketplaceScreen()
+                    CartContract.Effect.Navigation.GoToMarketplaceScreen -> navController.navigateToDashboardScreen()
 
-                    is CartContract.Effect.Navigation.GoToListingDetailsScreen -> navController.navigateToListingDetailsScreen(
+                    is CartContract.Effect.Navigation.GoToListingDetailsScreen -> rootNavController.navigateToListingDetailsScreen(
                         navigationEffect.listingId
                     )
 
-                    CartContract.Effect.Navigation.GoToCheckoutScreen -> navController.navigate(
+                    CartContract.Effect.Navigation.GoToCheckoutScreen -> rootNavController.navigate(
                         Screen.CheckoutWizardScreen.route
                     ) { launchSingleTop = true }
 

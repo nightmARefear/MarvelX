@@ -63,6 +63,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
@@ -449,16 +450,16 @@ internal fun MarketplaceScreen(
                                                                         )
                                                                     )
                                                                 },
-                                                                onAddToComparisonClick = {
+                                                                onComparisonClick = {
                                                                     onEvent(
-                                                                        MarketplaceContract.Event.Listing.OnAddToComparison(
+                                                                        MarketplaceContract.Event.Listing.OnComparisonClicked(
                                                                             listingId = listing.listingId
                                                                         )
                                                                     )
                                                                 },
-                                                                onAddToCartClick = {
+                                                                onCartClick = {
                                                                     onEvent(
-                                                                        MarketplaceContract.Event.Listing.OnAddToCartClicked(
+                                                                        MarketplaceContract.Event.Listing.OnCartClicked(
                                                                             listingId = listing.listingId
                                                                         )
                                                                     )
@@ -780,8 +781,8 @@ private fun FilteredListingItem(
     listingsLayout: MarketplaceListingsLayout,
     onListingClick: () -> Unit,
     onFavoriteClick: () -> Unit,
-    onAddToComparisonClick: () -> Unit,
-    onAddToCartClick: () -> Unit
+    onComparisonClick: () -> Unit,
+    onCartClick: () -> Unit
 ) {
     val modifier =
         if (listingsLayout == MarketplaceListingsLayout.GRID) Modifier.fillMaxWidth() else Modifier
@@ -804,23 +805,17 @@ private fun FilteredListingItem(
                             Modifier.width(120.dp)
                         }
                     }
-                    .height(height = 160.dp)
+                    .height(height = 180.dp)
             )
 
             // Favorite & Compare icons.
             Column(
                 modifier = Modifier.align(Alignment.TopEnd),
-                verticalArrangement = Arrangement.spacedBy(SPACING_TINY.dp)
+//                verticalArrangement = Arrangement.spacedBy(SPACING_TINY.dp)
             ) {
-                IconButton(onClick = onFavoriteClick) {
-                    Box(
-                        modifier = Modifier
-                            .background(
-                                color = MaterialTheme.customColors.white,
-                                shape = CircleShape
-                            )
-                            .padding(SPACING_TINY.dp)
-                    ) {
+                FilteredListingItemImageActionButton(
+                    onClick = onFavoriteClick,
+                    icon = {
                         if (filteredListing.favorite) {
                             Icon(
                                 painter = painterResource(R.drawable.ic_favorite_filled),
@@ -835,17 +830,11 @@ private fun FilteredListingItem(
                             )
                         }
                     }
-                }
+                )
 
-                IconButton(onClick = onAddToComparisonClick) {
-                    Box(
-                        modifier = Modifier
-                            .background(
-                                color = MaterialTheme.customColors.white,
-                                shape = CircleShape
-                            )
-                            .padding(SPACING_TINY.dp)
-                    ) {
+                FilteredListingItemImageActionButton(
+                    onClick = onComparisonClick,
+                    icon = {
                         Icon(
                             painter = painterResource(UiThemeDrawable.ic_compare),
                             contentDescription = null,
@@ -853,29 +842,22 @@ private fun FilteredListingItem(
                             tint = MaterialTheme.customColors.black
                         )
                     }
-                }
+                )
             }
 
             // Add to basket icon.
-            IconButton(
-                onClick = onAddToCartClick,
-                modifier = Modifier.align(Alignment.BottomEnd)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .background(
-                            color = MaterialTheme.customColors.white,
-                            shape = CircleShape
-                        )
-                        .padding(SPACING_TINY.dp)
-                ) {
+            FilteredListingItemImageActionButton(
+                modifier = Modifier.align(Alignment.BottomEnd),
+                iconBackgroundColor = Color(0x1A21F33D),
+                onClick = onCartClick,
+                icon = {
                     Icon(
-                        painter = painterResource(R.drawable.ic_add_friend),
+                        painter = painterResource(R.drawable.ic_cart),
                         contentDescription = null,
-                        tint = MaterialTheme.customColors.genericRed
+                        tint = MaterialTheme.customColors.black
                     )
                 }
-            }
+            )
         }
 
         // Listing details.
@@ -891,6 +873,26 @@ private fun FilteredListingItem(
                 style = MaterialTheme.typography.body2
             )
         }
+    }
+}
+
+@Composable
+private fun FilteredListingItemImageActionButton(
+    modifier: Modifier = Modifier,
+    iconBackgroundColor: Color = MaterialTheme.customColors.creamWhite,
+    onClick: () -> Unit,
+    icon: @Composable () -> Unit
+) {
+    IconButton(onClick = onClick, modifier = modifier) {
+        Box(
+            modifier = Modifier
+                .background(
+                    color = iconBackgroundColor,
+                    shape = CircleShape
+                )
+                .padding(SPACING_TINY.dp),
+            content = { icon() }
+        )
     }
 }
 
