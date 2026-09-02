@@ -10,26 +10,6 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.lifecycle.repeatOnLifecycle
-import kotlinx.coroutines.flow.Flow
-
-/**
- * Collects values from a [Flow] in a lifecycle-aware manner. The collection is automatically paused
- * and resumed according to the lifecycle of the composable. Values are collected only when the
- * composable is at least in the `STARTED` state.
- *
- * @param flow          The [Flow] to collect values from.
- * @param onUiEffect    The callback to be invoked for each collected value.
- */
-@Composable
-fun <T> ObserveUiEffect(flow: Flow<T>, onUiEffect: (T) -> Unit) {
-    val lifecycleOwner = LocalLifecycleOwner.current
-    LaunchedEffect(flow, lifecycleOwner.lifecycle) {
-        lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-            flow.collect(onUiEffect)
-        }
-    }
-}
 
 /**
  * Executes the given [block] when the lifecycle event is [lifecycleEvent].

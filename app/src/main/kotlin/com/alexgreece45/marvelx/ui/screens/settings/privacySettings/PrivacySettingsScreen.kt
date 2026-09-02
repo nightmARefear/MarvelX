@@ -18,6 +18,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.common_ui.util.ObserveUiEffect
+import com.alexgreece45.marvelx.core.common.util.flows.single_observer_flow.SingleObserverFlow
 import com.alexgreece45.marvelx.domain.model_api.user.privacySettings.PrivacySettingsDomain
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
@@ -27,23 +29,22 @@ import com.alexgreece45.marvelx.ui.components.model.ErrorButtonLayout
 import com.alexgreece45.marvelx.ui_theme.theme.MarvelXTheme
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.VSpacer
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 
 @Composable
 fun PrivacySettingsScreen(
     onEventSent: (PrivacySettingsEvent) -> Unit,
     state: PrivacySettingsState,
-    effect: Flow<PrivacySettingsEffect>,
+    effect: SingleObserverFlow<PrivacySettingsEffect>,
     popBackStack: () -> Unit
 ) {
     LaunchedEffect(Unit) {
         onEventSent(PrivacySettingsEvent.Init)
+    }
 
-        effect.collect { effect ->
-            when (effect) {
-                PrivacySettingsEffect.Navigation.PopBackStack -> popBackStack()
-            }
+    ObserveUiEffect(flow = effect, tag = "PrivacySettingsScreen") { uiEffect ->
+        when (uiEffect) {
+            PrivacySettingsEffect.Navigation.PopBackStack -> popBackStack()
         }
     }
 
@@ -210,7 +211,7 @@ private fun PrivacySettingsScreenPreview() {
                     isEmailVisible = true
                 )
             ),
-            effect = emptyFlow(),
+            effect = SingleObserverFlow(emptyFlow()),
             popBackStack = {}
         )
     }

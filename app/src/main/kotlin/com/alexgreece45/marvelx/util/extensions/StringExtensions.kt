@@ -1,7 +1,7 @@
 package com.alexgreece45.marvelx.util.extensions
 
-import androidx.core.net.toUri
 import java.math.BigInteger
+import java.net.URLDecoder
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
@@ -142,7 +142,7 @@ fun String.toSafeUrlEncoding(defaultValue: String): String =
 /**
  * Decodes this string from url encoding to UTF-8.
  */
-fun String.decodeFromUrl(): String = this.toUri().toString()
+fun String.decodeFromUrl(): String = URLDecoder.decode(this, StandardCharsets.UTF_8.toString())
 
 /**
  * Safely decodes this url encoded string to UTF-8. If an exception occurs, [defaultValue] is

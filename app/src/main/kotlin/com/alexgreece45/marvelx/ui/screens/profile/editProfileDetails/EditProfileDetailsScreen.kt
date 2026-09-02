@@ -17,6 +17,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.common_ui.util.ObserveUiEffect
+import com.alexgreece45.marvelx.core.common.util.flows.single_observer_flow.SingleObserverFlow
 import com.alexgreece45.marvelx.ui.components.AlertDialogError
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.ExposedDropdownMenu
@@ -24,7 +26,6 @@ import com.alexgreece45.marvelx.ui.components.OutlinedTextFieldValidation
 import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
 import com.alexgreece45.marvelx.ui.components.ThrottledIconButton
 import com.alexgreece45.marvelx.ui.components.WrapButton
-import com.alexgreece45.marvelx.ui.components.effect.ObserveUiEffect
 import com.alexgreece45.marvelx.ui.components.error.ContentErrorScreen
 import com.alexgreece45.marvelx.ui.model.Gender
 import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.model.EditProfileDetailsItemUi
@@ -33,20 +34,19 @@ import com.alexgreece45.marvelx.util.SPACING_TINY
 import com.alexgreece45.marvelx.util.VSpacer
 import com.valentinilk.shimmer.ShimmerBounds
 import com.valentinilk.shimmer.rememberShimmer
-import kotlinx.coroutines.flow.Flow
 
 @Composable
 internal fun EditProfileDetailsScreen(
     onEventSent: (event: EditProfileDetailsContract.Event) -> Unit,
     state: EditProfileDetailsContract.State,
-    effect: Flow<EditProfileDetailsContract.Effect>,
+    effect: SingleObserverFlow<EditProfileDetailsContract.Effect>,
     onNavigationEffect: (EditProfileDetailsContract.Effect.Navigation) -> Unit
 ) {
     LaunchedEffect(Unit) {
         onEventSent(EditProfileDetailsContract.Event.Init)
     }
 
-    ObserveUiEffect(effect) { uiEffect ->
+    ObserveUiEffect(flow = effect, tag = "EditProfileDetailsScreen") { uiEffect ->
         when (uiEffect) {
             is EditProfileDetailsContract.Effect.Navigation -> onNavigationEffect(uiEffect)
         }
@@ -87,7 +87,6 @@ internal fun EditProfileDetailsScreen(
             item {
                 state.alertDialogView?.let { alertDialogView ->
                     AlertDialogError(
-                        isVisible = true,
                         title = alertDialogView.title,
                         errorMessage = { Text(text = alertDialogView.errorMessage) },
                         dismissButton = alertDialogView.dismissButton,
@@ -200,7 +199,7 @@ private fun <T : Any> ProfileDetailsItem(
                 )
             }
         },
-        errorMessage = editProfileDetailsItemUi.validationResult.message,
+        errorText = editProfileDetailsItemUi.validationResult.message,
         isError = !editProfileDetailsItemUi.validationResult.isValid && editProfileDetailsItemUi.validationResult.message.isNotBlank(),
         keyboardOptions = KeyboardOptions(keyboardType = editProfileDetailsItemUi.keyboardType)
     )

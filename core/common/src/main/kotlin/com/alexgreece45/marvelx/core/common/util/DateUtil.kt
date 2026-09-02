@@ -35,7 +35,7 @@ object DateUtil {
     fun getYearMonth(): YearMonth = YearMonth.now()
 
     /**
-     * Converts the given [minutes] and [seconds] into a human readable format.
+     * Converts the given [minutes] and [seconds] into a human-readable format.
      *
      * ### Examples:
      *

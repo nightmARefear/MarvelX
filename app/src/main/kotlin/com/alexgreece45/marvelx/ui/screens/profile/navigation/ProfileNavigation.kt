@@ -1,14 +1,15 @@
 package com.alexgreece45.marvelx.ui.screens.profile.navigation
 
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import androidx.navigation.navDeepLink
 import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarNavigationPayload
+import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarType
 import com.alexgreece45.marvelx.ui.helper.getDeepLinkBasePath
 import com.alexgreece45.marvelx.ui.helper.openDeepLinkAction
+import com.alexgreece45.marvelx.ui.navigation.SavedStateHandleKeys
 import com.alexgreece45.marvelx.ui.navigation.Screen
 import com.alexgreece45.marvelx.ui.navigation.getBottomNavigationBarData
 import com.alexgreece45.marvelx.ui.screens.profile.ProfileScreen
@@ -22,10 +23,9 @@ private const val screenName = "profileScreen"
 @Serializable
 data class ProfileRoute(val qrCodeScanErrorMessage: String? = null)
 
-fun NavController.navigateToProfileScreen() = navigate(route = ProfileRoute())
-
 internal fun NavGraphBuilder.profileScreen(
-    navController: NavHostController
+    navController: NavHostController,
+    rootNavController: NavHostController
 ) {
     composable<ProfileRoute>(
         deepLinks = listOf(
@@ -37,27 +37,30 @@ internal fun NavGraphBuilder.profileScreen(
             onEventSent = viewModel::setEvent,
             state = viewModel.uiState.collectAsStateWithLifecycle().value,
             effect = viewModel.uiEffect,
+            snackbarEffects = viewModel.snackbarEffects,
             snackbarNavigationPayloadFlow = navBackStackEntry.savedStateHandle
                 .getStateFlow<SnackbarNavigationPayload?>(
-                    "snackbarNavigationPayload",
-                    null
+                    key = SavedStateHandleKeys.snackbarNavigationPayload,
+                    initialValue = null
                 ),
             onSnackbarNavigationPayloadConsumed = {
-                navBackStackEntry.savedStateHandle.remove<SnackbarNavigationPayload>("SnackbarNavigationPayload")
+                navBackStackEntry.savedStateHandle.remove<SnackbarNavigationPayload>(
+                    SavedStateHandleKeys.snackbarNavigationPayload
+                )
             },
             bottomNavigationBarData = { getBottomNavigationBarData(navController = navController) },
             onNavigation = { navigationEffect ->
                 when (navigationEffect) {
-                    ProfileContract.Effect.Navigation.NavigateUp -> navController.navigateUp()
+                    ProfileContract.Effect.Navigation.NavigateUp -> rootNavController.navigateUp()
 
                     is ProfileContract.Effect.Navigation.NavigateToProfileImageScreen -> {
-                        navController.navigate(
+                        rootNavController.navigate(
                             Screen.ProfileImageScreen.createNavRoute(navigationEffect.profileImageUrl)
                         )
                     }
 
                     is ProfileContract.Effect.Navigation.NavigateToProfileDetailsScreen -> {
-                        navController.navigate(
+                        rootNavController.navigate(
                             Screen.ProfileDetailsScreen.createNavRoute(
                                 userId = navigationEffect.userId
                             )
@@ -65,7 +68,7 @@ internal fun NavGraphBuilder.profileScreen(
                     }
 
                     is ProfileContract.Effect.Navigation.NavigateToQrCodeScreen -> {
-                        navController.navigate(
+                        rootNavController.navigate(
                             Screen.QrCodeScreen.createNavRoute(
                                 navigationEffect.previousScreenRoute
                             )
@@ -73,23 +76,23 @@ internal fun NavGraphBuilder.profileScreen(
                     }
 
                     ProfileContract.Effect.Navigation.NavigateToSettingsScreen -> {
-                        navController.navigate(Screen.SettingsScreen.route)
+                        rootNavController.navigate(Screen.SettingsScreen.route)
                     }
 
                     ProfileContract.Effect.Navigation.NavigateToFriendsScreen -> {
-                        navController.navigate(Screen.FriendsScreen.route)
+                        rootNavController.navigate(Screen.FriendsScreen.route)
                     }
 
                     ProfileContract.Effect.Navigation.NavigateToMyListingsScreen -> {
-                        navController.navigate(Screen.MyListingsScreen.route)
+                        rootNavController.navigate(Screen.MyListingsScreen.route)
                     }
 
                     ProfileContract.Effect.Navigation.NavigateToOrdersScreen -> {
-                        navController.navigate(Screen.OrdersScreen.route)
+                        rootNavController.navigate(Screen.OrdersScreen.route)
                     }
                 }
             },
-            openDeepLinkAction = navController::openDeepLinkAction
+            openDeepLinkAction = rootNavController::openDeepLinkAction
         )
     }
 }

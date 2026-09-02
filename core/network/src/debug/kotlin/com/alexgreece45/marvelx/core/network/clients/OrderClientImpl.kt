@@ -1,10 +1,13 @@
 package com.alexgreece45.marvelx.core.network.clients
 
+import com.alexgreece45.marvelx.core.network.model.api.order.RequestPlaceOrder
 import com.alexgreece45.marvelx.core.network.model.api.order.ResponseOrder
 import com.alexgreece45.marvelx.core.network.model.api.order.ResponseOrderId
 import com.alexgreece45.marvelx.core.network.model.api.order.ResponseOrderPreview
+import com.alexgreece45.marvelx.core.network.model.api.order.item.ResponseOrderItem
 import com.alexgreece45.marvelx.core.network.model.api.order.item.ResponseOrderItemTrackingHistory
 import com.alexgreece45.marvelx.core.network.model.api.order.item.returnRequest.ResponseOrderItemReturn
+import com.alexgreece45.marvelx.core.network.model.api.order.item.returnRequest.ResponseOrderItemReturnId
 import com.alexgreece45.marvelx.core.network.model.generic.ApiResult
 import com.alexgreece45.marvelx.core.network.services.OrderService
 import com.alexgreece45.marvelx.core.network.util.executeApiServiceCall
@@ -24,6 +27,13 @@ internal class OrderClientImpl(
         return executeApiServiceCall { orderService.getOrderDetails(orderId) }
     }
 
+    override suspend fun getOrderItemDetails(
+        orderId: String,
+        orderItemId: String
+    ): ApiResult<ResponseOrderItem> {
+        return executeApiServiceCall { orderService.getOrderItemDetails(orderId, orderItemId) }
+    }
+
     override suspend fun getOrderItemTrackingHistory(
         orderId: String,
         orderItemId: String
@@ -38,7 +48,7 @@ internal class OrderClientImpl(
 
     override suspend fun placeOrder(): ApiResult<ResponseOrderId> {
         return executeApiServiceCall {
-            orderService.placeOrder()
+            orderService.placeOrder(RequestPlaceOrder(emptyList()))
         }
     }
 
@@ -58,13 +68,19 @@ internal class OrderClientImpl(
         orderId: String,
         orderItemId: String,
         requestOrderItemReturn: MultipartBody
-    ): ApiResult<ResponseOrderItemReturn> {
+    ): ApiResult<ResponseOrderItemReturnId> {
         return executeApiServiceCall {
             orderService.submitOrderItemReturn(
                 orderId = orderId,
                 orderItemId = orderItemId,
                 body = requestOrderItemReturn
             )
+        }
+    }
+
+    override suspend fun getOrderItemReturnById(orderItemReturnId: String): ApiResult<ResponseOrderItemReturn> {
+        return executeApiServiceCall {
+            orderService.getOrderItemReturnById(orderItemReturnId = orderItemReturnId)
         }
     }
 }

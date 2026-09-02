@@ -1,6 +1,6 @@
 package com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.model
 
-import com.alexgreece45.marvelx.core.data.model.listing.ListingId
+import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarType
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
@@ -10,13 +10,12 @@ import com.alexgreece45.marvelx.ui.screens.marketplace.model.UpdateListingBasicD
 sealed interface CreateListingWizardContract {
 
     sealed interface Event : BaseEvent {
-        data class Init(val listingId: String?) : Event
 
         data object OnBackButtonClicked : Event
         data object OnCloseButtonClicked : Event
         data object OnStickyBottomButtonClicked : Event
 
-        data class OnShowToastMessage(val message: String) : Event
+        data class OnShowSnackbar(val message: String, val snackbarType: SnackbarType) : Event
 
         data class SetNextButtonEnabled(val enabled: Boolean) : Event
 
@@ -61,7 +60,5 @@ sealed interface CreateListingWizardContract {
 
         data class InitBasicDetailsScreen(val updateListingBasicDetails: UpdateListingBasicDetails?) :
             Effect
-
-        data class ShowToastMessage(val message: String) : Effect
     }
 }

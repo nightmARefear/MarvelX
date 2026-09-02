@@ -1,8 +1,8 @@
 package com.alexgreece45.marvelx.ui.screens.marketplace.model
 
-import com.alexgreece45.marvelx.core.data.model.listing.ListingId
 import com.alexgreece45.marvelx.data.model.marketplace.listing.EnumGeneric
 import com.alexgreece45.marvelx.domain.model_api.marketplace.listing.ListingDetailsDomain
+import com.alexgreece45.marvelx.domain.model_api.marketplace.listing.ListingOrderIdsDomain
 import com.alexgreece45.marvelx.model.model.user.UserId
 import com.alexgreece45.marvelx.ui.model_generic.BigDecimalUi
 import com.alexgreece45.marvelx.ui.model_generic.InstantUi
@@ -26,11 +26,12 @@ data class ListingUi(
     val imageUrls: List<String>,
     val selectedImageIndex: Int = 0,
     val details: ListingDetailsDomain,
+    val postedAt: InstantUi,
+    val updatedAt: InstantUi?,
     val favorite: Boolean,
     val cart: Boolean,
-    val postedAt: InstantUi,
-    val updatedAt: InstantUi,
-    val canEdit: Boolean
+    val canEdit: Boolean,
+    val orderIds: ListingOrderIdsDomain?
 ) {
 
     val allImageUrls: List<String>

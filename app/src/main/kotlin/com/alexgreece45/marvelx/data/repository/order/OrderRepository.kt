@@ -4,6 +4,8 @@ import com.alexgreece45.marvelx.core.common.dispatchers.model.IoDispatcher
 import com.alexgreece45.marvelx.core.data.helper.RepositoryResult
 import com.alexgreece45.marvelx.core.data.helper.handleApiResultNoFlow
 import com.alexgreece45.marvelx.core.data.model.order.OrderId
+import com.alexgreece45.marvelx.core.data.model.order.item.OrderItemData
+import com.alexgreece45.marvelx.core.data.model.order.item.toData
 import com.alexgreece45.marvelx.core.network.clients.OrderClient
 import com.alexgreece45.marvelx.data.model.order.OrderData
 import com.alexgreece45.marvelx.data.model.order.OrderPreviewData
@@ -14,15 +16,19 @@ import org.koin.core.annotation.Single
 import kotlin.coroutines.CoroutineContext
 
 interface OrderRepository {
-
     suspend fun getOrders(): RepositoryResult<List<OrderPreviewData>>
     suspend fun getOrderDetails(orderId: OrderId): RepositoryResult<OrderData>
+    suspend fun getOrderItemDetails(
+        orderId: OrderId,
+        orderItemId: OrderId
+    ): RepositoryResult<OrderItemData>
+
     suspend fun getOrderItemTrackingHistory(
         orderId: OrderId,
         orderItemId: OrderId
     ): RepositoryResult<OrderItemTrackingHistoryData>
 
-    suspend fun placeOrder(): RepositoryResult<String>
+    suspend fun placeOrder(): RepositoryResult<OrderId>
 }
 
 @Single
@@ -33,7 +39,7 @@ internal class OrderRepositoryImpl(
 
     override suspend fun getOrders(): RepositoryResult<List<OrderPreviewData>> {
         return handleApiResultNoFlow(
-            apiResult = orderClient.getOrders(),
+            apiCall = { orderClient.getOrders() },
             transformation = { this.map { it.toData() } },
             ioDispatcher = ioDispatcher
         )
@@ -41,7 +47,18 @@ internal class OrderRepositoryImpl(
 
     override suspend fun getOrderDetails(orderId: OrderId): RepositoryResult<OrderData> {
         return handleApiResultNoFlow(
-            apiResult = orderClient.getOrderDetails(orderId.value),
+            apiCall = { orderClient.getOrderDetails(orderId.value) },
+            transformation = { this.toData() },
+            ioDispatcher = ioDispatcher
+        )
+    }
+
+    override suspend fun getOrderItemDetails(
+        orderId: OrderId,
+        orderItemId: OrderId
+    ): RepositoryResult<OrderItemData> {
+        return handleApiResultNoFlow(
+            apiCall = { orderClient.getOrderItemDetails(orderId.value, orderItemId.value) },
             transformation = { this.toData() },
             ioDispatcher = ioDispatcher
         )
@@ -52,16 +69,16 @@ internal class OrderRepositoryImpl(
         orderItemId: OrderId
     ): RepositoryResult<OrderItemTrackingHistoryData> {
         return handleApiResultNoFlow(
-            apiResult = orderClient.getOrderItemTrackingHistory(orderId.value, orderItemId.value),
+            apiCall = { orderClient.getOrderItemTrackingHistory(orderId.value, orderItemId.value) },
             transformation = { this.toData() },
             ioDispatcher = ioDispatcher
         )
     }
 
-    override suspend fun placeOrder(): RepositoryResult<String> {
+    override suspend fun placeOrder(): RepositoryResult<OrderId> {
         return handleApiResultNoFlow(
-            apiResult = orderClient.placeOrder(),
-            transformation = { this.orderId },
+            apiCall = orderClient::placeOrder,
+            transformation = { OrderId(this.orderId) },
             ioDispatcher = ioDispatcher
         )
     }

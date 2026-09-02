@@ -6,8 +6,8 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.core.graphics.createBitmap
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarStateData
-import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarType
+import com.alexgreece45.marvelx.common_ui.snackbar.delegate.SnackbarDelegate
+import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarNavigationPayload
 import com.alexgreece45.marvelx.configuration.models.DeepLinkWebUrl
 import com.alexgreece45.marvelx.core.common.dispatchers.model.IoDispatcher
 import com.alexgreece45.marvelx.core.common.logger.AppLogger
@@ -40,6 +40,7 @@ import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.stats.model.Pr
 import com.alexgreece45.marvelx.ui_theme.theme.values.getErrorColor
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.constants.ConstantsUi
+import com.alexgreece45.marvelx.util.extensions.model.ShareContentUrlData
 import com.alexgreece45.marvelx.util.extensions.toUrlEncoding
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.MultiFormatWriter
@@ -47,12 +48,14 @@ import com.google.zxing.WriterException
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.koin.android.annotation.KoinViewModel
-import java.util.UUID
 import kotlin.coroutines.CoroutineContext
 
 sealed interface ProfileDetailsContract {
     sealed interface Event : BaseEvent {
         data class Init(val userId: String, val shouldShowAcceptFriendRequestDialog: Boolean) :
+            Event
+
+        data class OnSnackbarNavigationPayloadReceived(val snackbarNavigationPayload: SnackbarNavigationPayload) :
             Event
 
         data object OnBackClicked : Event
@@ -112,7 +115,6 @@ sealed interface ProfileDetailsContract {
         val isEmailHidden: Boolean = false,
 
         // Errors.
-        val snackbarStateData: SnackbarStateData? = null,
         val alertDialogError: ProfileDetailsAlertDialogErrorData? = null,
         val fullScreenErrorView: ProfileDetailsFullScreenErrorView? = null,
 
@@ -133,10 +135,7 @@ sealed interface ProfileDetailsContract {
          */
         data object HideBottomSheet : Effect
 
-        data class ShowSnackbar(val snackbarStateData: SnackbarStateData) : Effect
-        data object HideSnackbar : Effect
-
-        data class ShareProfileUrl(val url: String, val intentTitle: String) : Effect
+        data class ShareProfileUrl(val shareContentUrlData: ShareContentUrlData) : Effect
 
         data class SetClipboardText(val toastMessage: String, val text: String) : Effect
 
@@ -157,7 +156,7 @@ sealed interface ProfileDetailsContract {
     }
 }
 
-@KoinViewModel
+@KoinViewModel(binds = [ProfileDetailsViewModel::class])
 class ProfileDetailsViewModel(
     private val userInteractor: UserInteractor,
     private val resourceProvider: ResourceProvider,
@@ -167,7 +166,9 @@ class ProfileDetailsViewModel(
     private val notificationRepository: NotificationRepository,
     private val appLogger: AppLogger,
     @IoDispatcher private val ioDispatcher: CoroutineContext,
-) : BaseViewModel<ProfileDetailsContract.Event, ProfileDetailsContract.State, ProfileDetailsContract.Effect>() {
+    snackbarDelegate: SnackbarDelegate
+) : BaseViewModel<ProfileDetailsContract.Event, ProfileDetailsContract.State, ProfileDetailsContract.Effect>(),
+    SnackbarDelegate by snackbarDelegate {
 
     override fun setInitialState(): ProfileDetailsContract.State =
         ProfileDetailsContract.State()
@@ -177,6 +178,10 @@ class ProfileDetailsViewModel(
             is ProfileDetailsContract.Event.Init -> {
                 loadProfileDetails(event)
             }
+
+            is ProfileDetailsContract.Event.OnSnackbarNavigationPayloadReceived -> onSnackbarNavigationPayloadReceived(
+                event.snackbarNavigationPayload
+            )
 
             ProfileDetailsContract.Event.OnBackClicked -> {
                 setEffect {
@@ -217,10 +222,13 @@ class ProfileDetailsViewModel(
                 hideBottomSheet()
                 setEffect {
                     ProfileDetailsContract.Effect.ShareProfileUrl(
-                        url = DeepLinkWebUrl.ProfileDetails.webUrl + currentState.userId,
-                        intentTitle = resourceProvider.getString(
-                            resId = R.string.profile_details_screen_label_share_profile_intent_title,
-                            formatArgs = arrayOf(currentState.profileDetails?.basicProfileDetails?.fullName.orEmpty())
+                        ShareContentUrlData(
+                            deepLinkWebUrl = DeepLinkWebUrl.ProfileDetails,
+                            urlSuffix = currentState.userId.value,
+                            title = resourceProvider.getString(
+                                resId = R.string.profile_details_screen_label_share_profile_intent_title,
+                                formatArgs = arrayOf(currentState.profileDetails?.basicProfileDetails?.fullName.orEmpty())
+                            )
                         )
                     )
                 }
@@ -537,6 +545,10 @@ class ProfileDetailsViewModel(
         }
     }
 
+    private fun onSnackbarNavigationPayloadReceived(snackbarNavigationPayload: SnackbarNavigationPayload) {
+        showCustomSnackbar(snackbarNavigationPayload)
+    }
+
     /**
      * Initializes the more actions item bottom sheet only once. Some menu items may not be shown
      * based on the given [isDifferentUser].
@@ -618,10 +630,7 @@ class ProfileDetailsViewModel(
                 when (it) {
                     is BlockUserPartialState.Success -> {
                         // TODO: Use global snackbar.
-                        showSnackbar(
-                            message = resourceProvider.getString(R.string.profile_details_screen_label_success_block_user),
-                            type = SnackbarType.SUCCESS
-                        )
+                        showSuccessSnackbar(message = resourceProvider.getString(R.string.profile_details_screen_label_success_block_user))
                         setEffect {
                             ProfileDetailsContract.Effect.Navigation.PopBackStack
                         }
@@ -635,7 +644,7 @@ class ProfileDetailsViewModel(
                                         isLoading = false
                                     )
                                 }
-                                showErroneousSnackbar(message = resourceProvider.getString(R.string.profile_details_screen_error_blocking_user_generic))
+                                showErroneousSnackbar(errorMessage = resourceProvider.getString(R.string.profile_details_screen_error_blocking_user_generic))
                             }
 
                             UserBlockResultType.SameUser -> {
@@ -644,10 +653,7 @@ class ProfileDetailsViewModel(
                                         isLoading = false
                                     )
                                 }
-                                showSnackbar(
-                                    message = resourceProvider.getString(R.string.profile_details_screen_error_blocking_user_same_user),
-                                    type = SnackbarType.INFO
-                                )
+                                showInfoSnackbar(message = resourceProvider.getString(R.string.profile_details_screen_error_blocking_user_same_user))
                             }
                         }
                     }
@@ -658,7 +664,7 @@ class ProfileDetailsViewModel(
                                 isLoading = false
                             )
                         }
-                        showErroneousSnackbar(message = resourceProvider.getString(R.string.profile_details_screen_error_blocking_user_generic))
+                        showErroneousSnackbar(errorMessage = resourceProvider.getString(R.string.profile_details_screen_error_blocking_user_generic))
                     }
                 }
             }
@@ -699,7 +705,7 @@ class ProfileDetailsViewModel(
                                 isRelationshipStatusChipLoading = false
                             )
                         }
-                        showErroneousSnackbar(message = resourceProvider.getString(R.string.profile_details_screen_error_deleting_friend_request))
+                        showErroneousSnackbar(errorMessage = resourceProvider.getString(R.string.profile_details_screen_error_deleting_friend_request))
                     }
                 }
             }
@@ -760,7 +766,7 @@ class ProfileDetailsViewModel(
         hideAlertDialogError()
 
         viewModelScope.launch {
-            friendRepository.deleteFriend(currentState.userId).collect { wasDeleted ->
+            friendRepository.deleteFriend(currentState.userId).let { wasDeleted ->
                 when (wasDeleted) {
                     true -> {
                         setState {
@@ -782,7 +788,7 @@ class ProfileDetailsViewModel(
                                 isRelationshipStatusChipLoading = false
                             )
                         }
-                        showErroneousSnackbar(message = resourceProvider.getString(R.string.profile_details_screen_error_deleting_friend))
+                        showErroneousSnackbar(errorMessage = resourceProvider.getString(R.string.profile_details_screen_error_deleting_friend))
                     }
                 }
             }
@@ -858,49 +864,6 @@ class ProfileDetailsViewModel(
             copy(
                 alertDialogError = null
             )
-        }
-    }
-
-    /**
-     * Shows the snackbar with the given [message].
-     */
-    private fun showSnackbar(message: String, type: SnackbarType) {
-        val newSnackbarUuid = UUID.randomUUID()
-        val snackbarStateData = SnackbarStateData(
-            uuid = newSnackbarUuid,
-            message = message,
-            type = type,
-            onDismiss = {
-                if (currentState.snackbarStateData?.uuid == newSnackbarUuid) {
-                    setState {
-                        copy(
-                            snackbarStateData = null
-                        )
-                    }
-                }
-            }
-        )
-
-        setState {
-            copy(
-                snackbarStateData = snackbarStateData
-            )
-        }
-        setEffect {
-            ProfileDetailsContract.Effect.ShowSnackbar(snackbarStateData)
-        }
-    }
-
-    private fun showErroneousSnackbar(message: String) {
-        showSnackbar(
-            message = message,
-            type = SnackbarType.ERROR
-        )
-    }
-
-    private fun hideSnackbar() {
-        setEffect {
-            ProfileDetailsContract.Effect.HideSnackbar
         }
     }
 

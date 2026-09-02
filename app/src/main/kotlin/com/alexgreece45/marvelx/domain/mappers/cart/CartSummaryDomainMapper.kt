@@ -3,7 +3,7 @@ package com.alexgreece45.marvelx.domain.mappers.cart
 import com.alexgreece45.marvelx.configuration.ConfigPriceLogic
 import com.alexgreece45.marvelx.data.model.cart.CartSummaryData
 import com.alexgreece45.marvelx.domain.model_api.cart.CartSummaryDomain
-import com.alexgreece45.marvelx.util.extensions.formatPrice
+import com.alexgreece45.marvelx.core.common.extensions.formatPrice
 
 class CartSummaryDomainMapper(
     private val configPriceLogic: ConfigPriceLogic

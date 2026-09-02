@@ -173,7 +173,7 @@ internal sealed class OtpEffect : BaseEffect {
             val requestIdPhoneNumber: String?
         ) : Navigation()
 
-        data object NavigateToAllCharactersScreen : Navigation()
+        data object NavigateToDashboardScreen : Navigation()
     }
 
     data object OnUserSensitiveDataReceived : OtpEffect()
@@ -335,6 +335,8 @@ internal class OtpViewModel(
             }
 
             OtpEvent.OnBackClick -> {
+                if (currentState.isLoading) return
+
                 setEffect {
                     OtpEffect.Navigation.GoBack
                 }
@@ -741,7 +743,7 @@ internal class OtpViewModel(
                                             autoLogoutRepository.setRememberUserSession(currentState.shouldRememberUserSession)
 
                                             setEffect {
-                                                OtpEffect.Navigation.NavigateToAllCharactersScreen
+                                                OtpEffect.Navigation.NavigateToDashboardScreen
                                             }
                                         }
 

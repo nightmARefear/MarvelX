@@ -27,7 +27,9 @@ sealed interface FriendsContract {
 
         sealed interface RequestsTabEvent : Event {
             data class OnUserClicked(val userId: UserId) : RequestsTabEvent
-            data class OnRequestAccepted(val incomingFriendRequest: IncomingFriendRequestDomain) : RequestsTabEvent
+            data class OnRequestAccepted(val incomingFriendRequest: IncomingFriendRequestDomain) :
+                RequestsTabEvent
+
             data class OnRequestDeclined(val userId: UserId) : RequestsTabEvent
         }
 
@@ -65,7 +67,5 @@ sealed interface FriendsContract {
             data object GoBack : Navigation
             data class NavigateToProfileDetailsScreen(val userId: String) : Navigation
         }
-
-        data class ShowToastMessage(val message: String) : Effect
     }
 }

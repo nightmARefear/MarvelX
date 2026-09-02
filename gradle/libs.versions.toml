@@ -224,6 +224,7 @@ app-ui = [
     "google-accompanist-permissions",
     "google-accompanist-placeholder",
     "google-accompanist-systemuicontroller",
+    "material"
 ]
 
 app-ui-debug = [

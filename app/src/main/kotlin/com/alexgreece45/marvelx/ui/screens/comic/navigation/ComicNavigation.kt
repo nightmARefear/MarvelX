@@ -13,7 +13,7 @@ import kotlinx.serialization.Serializable
 import org.koin.androidx.compose.koinViewModel
 
 @Serializable
-private data class ComicRoute(val comicId: Int = -1)
+internal data class ComicRoute(val comicId: Int = -1)
 
 fun NavController.navigateToComicScreen(comicId: Int) =
     navigate(

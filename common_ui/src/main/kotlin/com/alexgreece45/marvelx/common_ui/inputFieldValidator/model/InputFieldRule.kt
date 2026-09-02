@@ -53,18 +53,15 @@ sealed class InputFieldRule(val errorMsg: String) {
     ) : InputFieldRule(errorMessage)
 
     data class ValidateBigDecimal(
-        val scale: Int,
         val errorMessage: String
     ) : InputFieldRule(errorMessage)
 
     data class ValidateOverMinimumBigDecimalValue(
-        val scale: Int,
         val minValue: BigDecimal,
         val errorMessage: String
     ) : InputFieldRule(errorMessage)
 
     data class ValidateUnderMaximumBigDecimalValue(
-        val scale: Int,
         val maxValue: BigDecimal,
         val errorMessage: String
     ) : InputFieldRule(errorMessage)
@@ -76,6 +73,5 @@ sealed class InputFieldRule(val errorMsg: String) {
     data class ValidateCardNumberExpirationDate(
         val errorMessage: String,
         val currentYearMonth: YearMonth
-    ) :
-        InputFieldRule(errorMessage)
+    ) : InputFieldRule(errorMessage)
 }

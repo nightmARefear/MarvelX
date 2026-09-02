@@ -34,6 +34,8 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.common_ui.util.ObserveUiEffect
+import com.alexgreece45.marvelx.core.common.util.flows.single_observer_flow.SingleObserverFlow
 import com.alexgreece45.marvelx.ui.components.AlertDialogButton
 import com.alexgreece45.marvelx.ui.components.AlertDialogError
 import com.alexgreece45.marvelx.ui.components.ContentScreen
@@ -41,24 +43,22 @@ import com.alexgreece45.marvelx.ui.components.ExposedDropdownMenu
 import com.alexgreece45.marvelx.ui.components.OutlinedTextFieldValidation
 import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
 import com.alexgreece45.marvelx.ui.components.WrapButton
-import com.alexgreece45.marvelx.ui.components.effect.ObserveUiEffect
 import com.alexgreece45.marvelx.ui.model.Gender
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.SPACING_TINY
-import kotlinx.coroutines.flow.Flow
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 internal fun SignUpScreen(
     onEvent: (SignupEvent) -> Unit,
     state: SignupState,
-    effect: Flow<SignupEffect>,
+    effect: SingleObserverFlow<SignupEffect>,
     onNavigationEffect: (SignupEffect.Navigation) -> Unit
 ) {
     val focusManager = LocalFocusManager.current
     val keyboard = LocalSoftwareKeyboardController.current
 
-    ObserveUiEffect(effect) { uiEffect ->
+    ObserveUiEffect(flow = effect, tag = "SignupScreen") { uiEffect ->
         when (uiEffect) {
             is SignupEffect.ShowAlertDialogError -> {
                 onEvent(
@@ -83,9 +83,7 @@ internal fun SignUpScreen(
 
     ContentScreen(
         isLoading = state.isLoading,
-        navigableAction = ScreenNavigableAction.Backable(
-            onBack = { onEvent(SignupEvent.OnDoneClick) }
-        ),
+        navigableAction = ScreenNavigableAction.Backable(onBack = { onEvent(SignupEvent.OnBack) }),
         onBack = { onEvent(SignupEvent.OnBack) },
         showToolbar = true,
         toolbarTitle = stringResource(R.string.sign_up_screen_toolbar_title)
@@ -97,15 +95,16 @@ internal fun SignUpScreen(
                 .padding(paddingValues),
             verticalArrangement = Arrangement.spacedBy(SPACING_TINY.dp)
         ) {
-            AlertDialogError(
-                isVisible = state.isAlertDialogVisible,
-                title = state.alertDialogTitle,
-                errorMessage = { Text(text = state.alertDialogErrorMessage) },
-                confirmButton = AlertDialogButton(
-                    label = stringResource(R.string.generic_ok_button),
-                    onClick = { onEvent(SignupEvent.AlertDialogError.OnOkClick) }
+            if (state.isAlertDialogVisible) {
+                AlertDialogError(
+                    title = state.alertDialogTitle,
+                    errorMessage = { Text(text = state.alertDialogErrorMessage) },
+                    confirmButton = AlertDialogButton(
+                        label = stringResource(R.string.generic_ok_button),
+                        onClick = { onEvent(SignupEvent.AlertDialogError.OnOkClick) }
+                    )
                 )
-            )
+            }
 
             // First Name & Last Name
             Row(
@@ -120,7 +119,7 @@ internal fun SignUpScreen(
                     },
                     modifier = Modifier.weight(1f),
                     label = stringResource(R.string.generic_label_first_name),
-                    errorMessage = state.firstNameValidationResult.messages.firstOrNull()
+                    errorText = state.firstNameValidationResult.messages.firstOrNull()
                         .orEmpty(),
                     isError = !state.firstNameValidationResult.isValid &&
                             state.firstNameValidationResult.messages.firstOrNull() != null,
@@ -142,7 +141,7 @@ internal fun SignUpScreen(
                     },
                     modifier = Modifier.weight(1f),
                     label = stringResource(R.string.generic_label_last_name),
-                    errorMessage = state.lastNameValidationResult.messages.firstOrNull()
+                    errorText = state.lastNameValidationResult.messages.firstOrNull()
                         .orEmpty(),
                     isError = !state.lastNameValidationResult.isValid &&
                             state.lastNameValidationResult.messages.firstOrNull() != null,
@@ -199,7 +198,7 @@ internal fun SignUpScreen(
                     .fillMaxWidth()
                     .semantics { contentType = ContentType.EmailAddress },
                 label = stringResource(R.string.generic_label_email),
-                errorMessage = state.emailValidationResult.messages.firstOrNull().orEmpty(),
+                errorText = state.emailValidationResult.messages.firstOrNull().orEmpty(),
                 isError = !state.emailValidationResult.isValid &&
                         state.emailValidationResult.messages.firstOrNull() != null,
                 keyboardOptions = KeyboardOptions(
@@ -242,7 +241,7 @@ internal fun SignUpScreen(
                         }
                     }
                 },
-                errorMessage = state.passwordValidationResult.messages.firstOrNull()
+                errorText = state.passwordValidationResult.messages.firstOrNull()
                     .orEmpty(),
                 isError = !state.passwordValidationResult.isValid &&
                         state.passwordValidationResult.messages.firstOrNull() != null,

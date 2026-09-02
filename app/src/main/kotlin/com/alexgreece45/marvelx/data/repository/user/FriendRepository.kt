@@ -2,7 +2,7 @@ package com.alexgreece45.marvelx.data.repository.user
 
 import com.alexgreece45.marvelx.core.common.dispatchers.model.IoDispatcher
 import com.alexgreece45.marvelx.core.data.helper.RepositoryResult
-import com.alexgreece45.marvelx.core.data.helper.handleApiResultNoTransformation
+import com.alexgreece45.marvelx.core.data.helper.handleApiResultNoTransformationNoFlow
 import com.alexgreece45.marvelx.core.data.helper.handleApiResultNoTransformationWithData
 import com.alexgreece45.marvelx.core.network.clients.ApiClient
 import com.alexgreece45.marvelx.core.network.model.api.user.friend.ResponseFriend
@@ -28,7 +28,7 @@ interface FriendRepository {
     /**
      * Deletes the friend with the given ID.
      */
-    suspend fun deleteFriend(userId: UserId): Flow<Boolean>
+    suspend fun deleteFriend(userId: UserId): Boolean
 }
 
 @Single
@@ -41,7 +41,7 @@ internal class FriendRepositoryImpl(
         flow {
             emitAll(
                 handleApiResultNoTransformationWithData(
-                    apiResult = apiClient.getUserFriends(userId.value),
+                    apiCall = { apiClient.getUserFriends(userId.value) },
                     ioDispatcher = ioDispatcher
                 )
             )
@@ -51,18 +51,16 @@ internal class FriendRepositoryImpl(
         flow {
             emitAll(
                 handleApiResultNoTransformationWithData(
-                    apiResult = apiClient.getFriends(),
+                    apiCall = apiClient::getFriends,
                     ioDispatcher = ioDispatcher
                 )
             )
         }
 
-    override suspend fun deleteFriend(userId: UserId): Flow<Boolean> = flow {
-        handleApiResultNoTransformation(
-            apiResult = apiClient.deleteFriend(userId.value),
+    override suspend fun deleteFriend(userId: UserId): Boolean {
+        return handleApiResultNoTransformationNoFlow(
+            apiCall = { apiClient.deleteFriend(userId.value) },
             ioDispatcher = ioDispatcher
-        ).collect { result ->
-            emit(result is RepositoryResult.Success)
-        }
+        ) is RepositoryResult.Success
     }
 }

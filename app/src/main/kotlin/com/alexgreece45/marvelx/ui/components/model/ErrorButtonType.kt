@@ -3,7 +3,7 @@ package com.alexgreece45.marvelx.ui.components.model
 import com.alexgreece45.marvelx.ui.components.AlertDialogError
 
 /**
- * Defines the type of an error button used in [AlertDialogError].
+ * Defines the type of error button used in [AlertDialogError].
  */
 sealed class ErrorButtonType {
     /**

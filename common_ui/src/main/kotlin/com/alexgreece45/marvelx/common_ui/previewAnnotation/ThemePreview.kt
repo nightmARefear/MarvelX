@@ -9,3 +9,10 @@ import androidx.compose.ui.tooling.preview.Preview
     showSystemUi = true, showBackground = true
 )
 annotation class ThemePreview
+
+@Preview(
+    apiLevel = 37,
+    uiMode = Configuration.UI_MODE_NIGHT_YES or Configuration.UI_MODE_TYPE_NORMAL,
+    showBackground = true
+)
+annotation class ThemePreviewNoSystemUi

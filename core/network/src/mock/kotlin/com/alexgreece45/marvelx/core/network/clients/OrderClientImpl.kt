@@ -2,14 +2,9 @@ package com.alexgreece45.marvelx.core.network.clients
 
 import com.alexgreece45.marvelx.core.common.extensions.minusDays
 import com.alexgreece45.marvelx.core.common.extensions.plusDays
+import com.alexgreece45.marvelx.core.common.extensions.toLocalDate
 import com.alexgreece45.marvelx.core.common.util.DateUtil
 import com.alexgreece45.marvelx.core.network.model.CardBrand
-import com.alexgreece45.marvelx.core.network.model.OrderCourier
-import com.alexgreece45.marvelx.core.network.model.OrderItemCondition
-import com.alexgreece45.marvelx.core.network.model.OrderItemReturnReason
-import com.alexgreece45.marvelx.core.network.model.OrderItemReturnStatus
-import com.alexgreece45.marvelx.core.network.model.OrderItemStatus
-import com.alexgreece45.marvelx.core.network.model.OrderStatus
 import com.alexgreece45.marvelx.core.network.model.api.order.ResponseOrder
 import com.alexgreece45.marvelx.core.network.model.api.order.ResponseOrderCheckoutInfo
 import com.alexgreece45.marvelx.core.network.model.api.order.ResponseOrderEstimatedDeliveryDateRange
@@ -18,9 +13,20 @@ import com.alexgreece45.marvelx.core.network.model.api.order.ResponseOrderPrevie
 import com.alexgreece45.marvelx.core.network.model.api.order.item.ResponseOrderItem
 import com.alexgreece45.marvelx.core.network.model.api.order.item.ResponseOrderItemTrackingHistory
 import com.alexgreece45.marvelx.core.network.model.api.order.item.returnRequest.ResponseOrderItemReturn
+import com.alexgreece45.marvelx.core.network.model.api.order.item.returnRequest.ResponseOrderItemReturnEligibility
+import com.alexgreece45.marvelx.core.network.model.api.order.item.returnRequest.ResponseOrderItemReturnId
 import com.alexgreece45.marvelx.core.network.model.api.order.tracking.ResponseOrderTrackingHistoryItem
 import com.alexgreece45.marvelx.core.network.model.api.order.tracking.ResponseOrderTrackingInfo
 import com.alexgreece45.marvelx.core.network.model.generic.ApiResult
+import com.alexgreece45.marvelx.core.network.model.order.OrderCourier
+import com.alexgreece45.marvelx.core.network.model.order.OrderStatus
+import com.alexgreece45.marvelx.core.network.model.order.item.OrderItemReturnCondition
+import com.alexgreece45.marvelx.core.network.model.order.item.OrderItemReturnMethod
+import com.alexgreece45.marvelx.core.network.model.order.item.OrderItemReturnReason
+import com.alexgreece45.marvelx.core.network.model.order.item.OrderItemReturnStatus
+import com.alexgreece45.marvelx.core.network.model.order.item.OrderItemStatus
+import com.alexgreece45.marvelx.core.network.model.order.item.refund.OrderItemRefundStatus
+import com.alexgreece45.marvelx.core.network.utils.MultipartBodyUtils
 import okhttp3.MultipartBody
 import org.koin.core.annotation.Single
 import java.math.BigDecimal
@@ -36,8 +42,10 @@ internal class OrderClientImpl : OrderClient {
             (1..10).map { index ->
                 val currentDate = DateUtil.getUTCInstant()
                 val orderDate = currentDate.minusDays(Random.nextLong(2L..4))
-                val estimatedDeliveryDateMin = orderDate.plusDays(Random.nextLong(2L..4))
-                val estimatedDeliveryDateMax = orderDate.plusDays(Random.nextLong(5L..7))
+                val estimatedDeliveryDateMin =
+                    orderDate.plusDays(Random.nextLong(2L..4)).toLocalDate()
+                val estimatedDeliveryDateMax =
+                    orderDate.plusDays(Random.nextLong(5L..7)).toLocalDate()
                 val price = BigDecimal.valueOf(Random.nextDouble(10.50, 100.00))
 
                 ResponseOrderPreview(
@@ -83,7 +91,7 @@ internal class OrderClientImpl : OrderClient {
             val userId = Random.nextInt(1..3).toString()
 
             ResponseOrderItem(
-                id = "B${index + 1}",
+                orderItemId = "B${index + 1}",
                 sellerUserId = userId,
                 title = "Wow item $index",
                 coverImageUrl = "https://backend.alexandrosvoliotis.com/api/private/marvelx/user/$userId/profile-image",
@@ -107,8 +115,10 @@ internal class OrderClientImpl : OrderClient {
         val estimatedDeliveryDateMaxPlusDays = Random.nextLong(1L..5L)
 
         val orderDate = DateUtil.getUTCInstant().minusDays(orderDateMinusDays)
-        val estimatedDeliveryDateMin = orderDate.plusDays(estimatedDeliveryDateMinPlusDays)
-        val estimatedDeliveryDateMax = orderDate.plusDays(estimatedDeliveryDateMaxPlusDays)
+        val estimatedDeliveryDateMin =
+            orderDate.plusDays(estimatedDeliveryDateMinPlusDays).toLocalDate()
+        val estimatedDeliveryDateMax =
+            orderDate.plusDays(estimatedDeliveryDateMaxPlusDays).toLocalDate()
 
         return ApiResult.Success(
             ResponseOrder(
@@ -143,6 +153,13 @@ internal class OrderClientImpl : OrderClient {
         )
     }
 
+    override suspend fun getOrderItemDetails(
+        orderId: String,
+        orderItemId: String
+    ): ApiResult<ResponseOrderItem> {
+        return OrderClientConstants.getOrderItemDetails(orderItemId = orderItemId)
+    }
+
     override suspend fun getOrderItemTrackingHistory(
         orderId: String,
         orderItemId: String
@@ -161,13 +178,17 @@ internal class OrderClientImpl : OrderClient {
 
         val returnStatus = OrderItemReturnStatus.entries.random()
 
+        val returnUntilDate =
+            delivered?.toLocalDate()?.plusDays(30L)?.toString() ?: estimatedDeliveryTo.toLocalDate()
+                .plusDays(30L).toString()
+
         return ApiResult.Success(
             ResponseOrderItemTrackingHistory(
                 trackingId = (orderId + orderItemId).toList().shuffled().joinToString(""),
                 courier = OrderCourier.entries.random().code,
                 estimatedDelivery = ResponseOrderEstimatedDeliveryDateRange(
-                    from = estimatedDeliveryFrom.toString(),
-                    to = estimatedDeliveryTo.toString()
+                    from = estimatedDeliveryFrom.toLocalDate().toString(),
+                    to = estimatedDeliveryTo.toLocalDate().toString()
                 ),
                 shipped = ResponseOrderTrackingHistoryItem(
                     location = locations.random(),
@@ -194,14 +215,16 @@ internal class OrderClientImpl : OrderClient {
                         date = it.toString()
                     )
                 },
-                returnStatus = returnStatus.key,
-                returnUntilDate = delivered?.toString(),
-                refundStatus = if (returnStatus.isProcessingStatus()) OrderItemReturnStatus
-                    .entries
-                    .filterNot { it.isProcessingStatus() }
-                    .random()
-                    .key else OrderItemReturnStatus.entries.random().key,
-                refundUntilDate = delivered?.toString()
+                returnEligibility = ResponseOrderItemReturnEligibility(
+                    returnStatus = returnStatus.key,
+                    returnUntilDate = returnUntilDate,
+                    refundStatus = if (returnStatus.isProcessingStatus()) OrderItemReturnStatus
+                        .entries
+                        .filterNot { it.isProcessingStatus() }
+                        .random()
+                        .key else OrderItemReturnStatus.entries.random().key,
+                    refundUntilDate = returnUntilDate
+                ),
             )
         )
     }
@@ -215,38 +238,18 @@ internal class OrderClientImpl : OrderClient {
         orderItemId: String
     ): ApiResult<ResponseOrderItemReturn> {
         return if (orderId == "1") {
+            submittedOrderItemReturn?.let {
+                submittedOrderItemReturn = null
+                return ApiResult.Success(it)
+            }
+
             if (orderItemId == "B2") {
-                ApiResult.Success(
-                    ResponseOrderItemReturn(
-                        status = OrderItemReturnStatus.PENDING.key,
-                        returnReason = OrderItemReturnReason.CHANGED_MIND.key,
-                        description = "I have changed my mind regarding this item. I want my money back!",
-                        attachedImageUrls = listOf(),
-                        condition = OrderItemCondition.FAIR.key
-                    )
-                )
+                ApiResult.Success(OrderClientConstants.responseOrderItemReturns["RET-1000"]!!)
             } else {
-                ApiResult.Success(
-                    ResponseOrderItemReturn(
-                        status = OrderItemReturnStatus.AVAILABLE.key,
-                        returnReason = OrderItemReturnReason.WRONG_ITEM.key,
-                        description = "I have received something completely different to what I ordered. I want the correct item!",
-                        attachedImageUrls = listOf(),
-                        condition = OrderItemCondition.VERY_GOOD.key
-                    )
-                )
+                ApiResult.Success(OrderClientConstants.responseOrderItemReturns["RET-1001"]!!)
             }
         } else {
-            ApiResult.Success(
-                ResponseOrderItemReturn(
-                    status = OrderItemReturnStatus.REFUNDED.key,
-                    returnReason = OrderItemReturnReason.DEFECTIVE.key,
-                    description = "The item that I received was in really bad shape. I want my money back!",
-                    attachedImageUrls = listOf(),
-                    condition = OrderItemCondition.BAD.key,
-                    sellerMessage = "The courier must have messed up the package."
-                )
-            )
+            ApiResult.Success(OrderClientConstants.responseOrderItemReturns["RET-1002"]!!)
         }
     }
 
@@ -254,15 +257,127 @@ internal class OrderClientImpl : OrderClient {
         orderId: String,
         orderItemId: String,
         requestOrderItemReturn: MultipartBody
-    ): ApiResult<ResponseOrderItemReturn> {
-        // TODO: Make returned values match the provided ones.
+    ): ApiResult<ResponseOrderItemReturnId> {
+        val orderItem = OrderClientConstants.getOrderItemDetails("1").body
+        val orderItemReturnId = "RET-1003"
+        val requestRefund = MultipartBodyUtils.getMultipartValueByName(
+            multipartBody = requestOrderItemReturn,
+            targetPartName = "requestRefund"
+        )!! == "true"
+
+        submittedOrderItemReturn = ResponseOrderItemReturn(
+            orderItemReturnId = orderItemReturnId,
+            orderItem = orderItem,
+            returnStatus = OrderItemReturnStatus.PENDING.key,
+            returnUntilDate = DateUtil.getCurrentLocalDate().plusDays(15).toString(),
+            refundStatus = if (requestRefund) OrderItemRefundStatus.PENDING.key else OrderItemRefundStatus.AVAILABLE.key,
+            returnReason = MultipartBodyUtils.getMultipartValueByName(
+                multipartBody = requestOrderItemReturn,
+                targetPartName = "returnReason"
+            )!!,
+            description = MultipartBodyUtils.getMultipartValueByName(
+                multipartBody = requestOrderItemReturn,
+                targetPartName = "description"
+            ),
+            attachedImageUrls = listOf(), // not supported
+            condition = MultipartBodyUtils.getMultipartValueByName(
+                multipartBody = requestOrderItemReturn,
+                targetPartName = "itemCondition"
+            )!!,
+            sellerMessage = null, // not applicable
+            returnMethod = MultipartBodyUtils.getMultipartValueByName(
+                multipartBody = requestOrderItemReturn,
+                targetPartName = "returnMethod"
+            )!!,
+            refundAmount = if (MultipartBodyUtils.getMultipartValueByName(
+                    multipartBody = requestOrderItemReturn,
+                    targetPartName = "requestRefund"
+                )!! == "true"
+            ) {
+                orderItem.price
+            } else null,
+            submittedAt = DateUtil.getCurrentLocalDate().minusDays(1).toString()
+        )
+
+        return ApiResult.Success(ResponseOrderItemReturnId(orderItemReturnId))
+    }
+
+    override suspend fun getOrderItemReturnById(orderItemReturnId: String): ApiResult<ResponseOrderItemReturn> {
+        return ApiResult.Success(if (submittedOrderItemReturn?.orderItemReturnId == orderItemReturnId) submittedOrderItemReturn!! else OrderClientConstants.responseOrderItemReturns[orderItemReturnId]!!)
+    }
+}
+
+var submittedOrderItemReturn: ResponseOrderItemReturn? = null
+
+private object OrderClientConstants {
+    private val responseOrderItem: ResponseOrderItem = getOrderItemDetails("1").body
+    val responseOrderItemReturns: HashMap<String, ResponseOrderItemReturn> =
+        hashMapOf<String, ResponseOrderItemReturn>().apply {
+            putAll(
+                listOf(
+                    "RET-1000" to ResponseOrderItemReturn(
+                        orderItemReturnId = "RET-1000",
+                        orderItem = responseOrderItem,
+                        returnStatus = OrderItemReturnStatus.PENDING.key,
+                        returnUntilDate = DateUtil.getCurrentLocalDate().plusDays(10).toString(),
+                        refundStatus = OrderItemRefundStatus.AVAILABLE.key,
+                        returnReason = OrderItemReturnReason.NOT_AS_DESCRIBED.key,
+                        description = "The item looks nothing like the photos!",
+                        attachedImageUrls = listOf(),
+                        condition = OrderItemReturnCondition.ORIGINAL_PACKAGING.key
+                    ),
+                    "RET-1001" to ResponseOrderItemReturn(
+                        orderItemReturnId = "RET-1001",
+                        orderItem = responseOrderItem,
+                        returnStatus = OrderItemReturnStatus.AVAILABLE.key,
+                        returnUntilDate = DateUtil.getCurrentLocalDate().plusDays(12).toString(),
+                        refundStatus = OrderItemRefundStatus.AVAILABLE.key,
+                        returnReason = null,
+                        description = null,
+                        attachedImageUrls = listOf(),
+                        condition = null
+                    ),
+                    "RET-1002" to ResponseOrderItemReturn(
+                        orderItemReturnId = "RET-1002",
+                        orderItem = responseOrderItem,
+                        returnStatus = OrderItemReturnStatus.REFUNDED.key,
+                        returnUntilDate = DateUtil.getCurrentLocalDate().plusDays(8).toString(),
+                        refundStatus = OrderItemRefundStatus.ACCEPTED.key,
+                        returnReason = OrderItemReturnReason.DEFECTIVE.key,
+                        description = "The item that I received was in really bad shape. I want my money back!",
+                        attachedImageUrls = listOf(),
+                        condition = OrderItemReturnCondition.PACKAGE_OPENED.key,
+                        sellerMessage = "The courier must have messed up the package."
+                    ),
+                    "RET-1003" to ResponseOrderItemReturn(
+                        orderItemReturnId = "RET-1003",
+                        orderItem = responseOrderItem,
+                        returnStatus = OrderItemReturnStatus.PENDING.key,
+                        returnUntilDate = DateUtil.getCurrentLocalDate().plusDays(5).toString(),
+                        refundStatus = OrderItemRefundStatus.AVAILABLE.key,
+                        returnReason = OrderItemReturnReason.WRONG_ITEM.key,// requestOrderItemReturn.reason,
+                        description = "RETURN_DESCRIPTION",//requestOrderItemReturn.description,
+                        attachedImageUrls = listOf(""), // TODO: Add dummy image in the future.
+                        condition = OrderItemReturnCondition.PACKAGE_OPENED.key, //requestOrderItemReturn.conditionCode
+                        returnMethod = OrderItemReturnMethod.PREPAID_RETURN_LABEL.key,
+                        refundAmount = Random.nextDouble(5.0, 100.0).toString(),
+                        submittedAt = DateUtil.getCurrentLocalDate().minusDays(1).toString()
+                    )
+                )
+            )
+        }
+
+
+    fun getOrderItemDetails(orderItemId: String): ApiResult.Success<ResponseOrderItem> {
+        val sellerUserId = if (orderItemId.toInt() % 2 == 0) "1" else "2"
         return ApiResult.Success(
-            ResponseOrderItemReturn(
-                status = OrderItemReturnStatus.PENDING.key,
-                returnReason = OrderItemReturnReason.CHANGED_MIND.key,// requestOrderItemReturn.reason,
-                description = "RETURN_DESCRIPTION",//requestOrderItemReturn.description,
-                attachedImageUrls = listOf(""), // TODO: Add dummy image in the future.
-                condition = OrderItemCondition.FAIR.key //requestOrderItemReturn.conditionCode
+            ResponseOrderItem(
+                orderItemId = orderItemId,
+                sellerUserId = sellerUserId,
+                title = "wow cup!!!",
+                coverImageUrl = "https://backend.alexandrosvoliotis.com/api/private/marvelx/user/$sellerUserId/profile-image",
+                status = OrderItemStatus.Processing.code,
+                price = Random.nextDouble(5.0, 100.0).toString()
             )
         )
     }

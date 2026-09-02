@@ -8,7 +8,7 @@ import com.alexgreece45.marvelx.ui.screens.orders.model.item.OrderItemUi
 import com.alexgreece45.marvelx.ui.screens.orders.model.item.toUi
 import com.alexgreece45.marvelx.ui.screens.orders.model.tracking.OrderTrackingInfoUi
 import com.alexgreece45.marvelx.ui.screens.orders.model.tracking.toUi
-import com.alexgreece45.marvelx.util.extensions.formatPrice
+import com.alexgreece45.marvelx.core.common.extensions.formatPrice
 
 internal data class OrderUi(
     val orderId: OrderIdDomain,

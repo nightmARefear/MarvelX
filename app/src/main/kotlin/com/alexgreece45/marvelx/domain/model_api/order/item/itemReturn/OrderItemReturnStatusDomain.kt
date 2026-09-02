@@ -1,6 +1,6 @@
 package com.alexgreece45.marvelx.domain.model_api.order.item.itemReturn
 
-import com.alexgreece45.marvelx.data.model.order.item.itemReturn.OrderItemReturnStatusData
+import com.alexgreece45.marvelx.core.data.model.order.item.OrderItemReturnStatus
 
 enum class OrderItemReturnStatusDomain {
     AVAILABLE,
@@ -8,17 +8,21 @@ enum class OrderItemReturnStatusDomain {
     FINAL_SALE,
     PENDING,
     REJECTED,
-    ACCEPTED;
+    ITEM_REPLACED,
+    REFUNDED;
 
-    fun isProcessingStatus(): Boolean = this == PENDING || this == ACCEPTED
+    fun isProcessingStatus(): Boolean = this == PENDING
+            || this == ITEM_REPLACED
+            || this == REFUNDED
 }
 
-fun OrderItemReturnStatusData.toDomain(): OrderItemReturnStatusDomain =
+fun OrderItemReturnStatus.toDomain(): OrderItemReturnStatusDomain =
     when (this) {
-        OrderItemReturnStatusData.AVAILABLE -> OrderItemReturnStatusDomain.AVAILABLE
-        OrderItemReturnStatusData.EXPIRED -> OrderItemReturnStatusDomain.EXPIRED
-        OrderItemReturnStatusData.FINAL_SALE -> OrderItemReturnStatusDomain.FINAL_SALE
-        OrderItemReturnStatusData.PENDING -> OrderItemReturnStatusDomain.PENDING
-        OrderItemReturnStatusData.REJECTED -> OrderItemReturnStatusDomain.REJECTED
-        OrderItemReturnStatusData.ACCEPTED -> OrderItemReturnStatusDomain.ACCEPTED
+        OrderItemReturnStatus.AVAILABLE -> OrderItemReturnStatusDomain.AVAILABLE
+        OrderItemReturnStatus.EXPIRED -> OrderItemReturnStatusDomain.EXPIRED
+        OrderItemReturnStatus.FINAL_SALE -> OrderItemReturnStatusDomain.FINAL_SALE
+        OrderItemReturnStatus.PENDING -> OrderItemReturnStatusDomain.PENDING
+        OrderItemReturnStatus.REJECTED -> OrderItemReturnStatusDomain.REJECTED
+        OrderItemReturnStatus.ITEM_REPLACED -> OrderItemReturnStatusDomain.ITEM_REPLACED
+        OrderItemReturnStatus.REFUNDED -> OrderItemReturnStatusDomain.REFUNDED
     }

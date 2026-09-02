@@ -23,17 +23,17 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.common_ui.util.ObserveUiEffect
+import com.alexgreece45.marvelx.core.common.util.flows.single_observer_flow.SingleObserverFlow
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
 import com.alexgreece45.marvelx.ui.components.WrapButton
-import com.alexgreece45.marvelx.ui.components.effect.ObserveUiEffect
 import com.alexgreece45.marvelx.ui.components.effect.OneTimeLaunchedEffect
 import com.alexgreece45.marvelx.ui.components.error.ContentErrorScreen
 import com.alexgreece45.marvelx.ui.components.otpTextField.OtpTextField
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.SPACING_TINY
 import com.alexgreece45.marvelx.util.VSpacer
-import kotlinx.coroutines.flow.Flow
 
 /**
  * The OTP (One Time Password) screen is used to double-check the user's identity when signing up or
@@ -47,7 +47,7 @@ import kotlinx.coroutines.flow.Flow
 internal fun OtpScreen(
     onEventSent: (event: OtpEvent) -> Unit,
     state: OtpState,
-    effect: Flow<OtpEffect>,
+    effect: SingleObserverFlow<OtpEffect>,
     onNavigationEffect: (OtpEffect.Navigation) -> Unit,
     userId: String?,
     otpFlowType: String?,
@@ -73,7 +73,7 @@ internal fun OtpScreen(
         )
     }
 
-    ObserveUiEffect(effect) { uiEffect ->
+    ObserveUiEffect(flow = effect, tag = "OtpScreen") { uiEffect ->
         when (uiEffect) {
             is OtpEffect.Navigation -> onNavigationEffect(uiEffect)
 

@@ -2,6 +2,7 @@ package com.alexgreece45.marvelx.ui.screens.friends
 
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.common_ui.snackbar.delegate.SnackbarDelegate
 import com.alexgreece45.marvelx.core.common.logger.AppLogger
 import com.alexgreece45.marvelx.domain.helper.InteractorPartialState
 import com.alexgreece45.marvelx.domain.interactors.GetProfileDetailsPartialState
@@ -27,7 +28,7 @@ import kotlinx.coroutines.launch
 import org.koin.android.annotation.KoinViewModel
 import java.time.Instant
 
-@KoinViewModel
+@KoinViewModel(binds = [FriendsViewModel::class])
 internal class FriendsViewModel(
     private val resourceProvider: ResourceProvider,
     private val userInteractor: UserInteractor,
@@ -36,7 +37,9 @@ internal class FriendsViewModel(
     private val blockedUserInteractor: BlockedUserInteractor,
     private val appLogger: AppLogger,
     private val pushNotificationsController: PushNotificationsController,
-) : BaseViewModel<FriendsContract.Event, FriendsContract.State, FriendsContract.Effect>() {
+    snackbarDelegate: SnackbarDelegate
+) : BaseViewModel<FriendsContract.Event, FriendsContract.State, FriendsContract.Effect>(),
+    SnackbarDelegate by snackbarDelegate {
 
     private val loggerTag = "FriendsViewModel"
 
@@ -520,35 +523,31 @@ internal class FriendsViewModel(
 
     private fun removeFriend(userId: UserId) {
         viewModelScope.launch {
-            friendInteractor.deleteFriend(userId).collect { wasFriendDeleted ->
-                if (wasFriendDeleted) {
-                    setEffect {
-                        FriendsContract.Effect.ShowToastMessage(
-                            message = resourceProvider.getString(
-                                R.string.screen_friends_success_deleting_friend
-                            )
-                        )
-                    }
+            val wasFriendDeleted = friendInteractor.deleteFriend(userId)
+            if (!wasFriendDeleted) {
+                showErroneousSnackbar(
+                    errorMessage = resourceProvider.getString(R.string.screen_friends_error_deleting_friend)
+                )
+                return@launch
+            }
 
-                    setState {
-                        copy(
-                            isTabRefreshing = true
-                        )
-                    }
+            showInfoSnackbar(
+                message = resourceProvider.getString(
+                    R.string.screen_friends_success_deleting_friend
+                )
+            )
 
-                    setState {
-                        copy(
-                            isTabRefreshing = false,
-                            allFriends = allFriends.filterNot { friend -> friend.userId == userId }
-                        )
-                    }
-                } else {
-                    setEffect {
-                        FriendsContract.Effect.ShowToastMessage(
-                            message = resourceProvider.getString(R.string.screen_friends_error_deleting_friend)
-                        )
-                    }
-                }
+            setState {
+                copy(
+                    isTabRefreshing = true
+                )
+            }
+
+            setState {
+                copy(
+                    isTabRefreshing = false,
+                    allFriends = allFriends.filterNot { friend -> friend.userId == userId }
+                )
             }
         }
     }
@@ -558,13 +557,11 @@ internal class FriendsViewModel(
             friendRequestInteractor.acceptFriendRequest(userId = incomingFriendRequest.userId)
                 .collect { wasFriendRequestAccepted ->
                     if (wasFriendRequestAccepted) {
-                        setEffect {
-                            FriendsContract.Effect.ShowToastMessage(
-                                message = resourceProvider.getString(
-                                    R.string.screen_friends_success_accepting_friend_request
-                                )
+                        showSuccessSnackbar(
+                            message = resourceProvider.getString(
+                                R.string.screen_friends_success_accepting_friend_request
                             )
-                        }
+                        )
 
                         setState {
                             copy(
@@ -592,11 +589,7 @@ internal class FriendsViewModel(
                             )
                         }
                     } else {
-                        setEffect {
-                            FriendsContract.Effect.ShowToastMessage(
-                                message = resourceProvider.getString(R.string.screen_friends_error_accepting_friend_request)
-                            )
-                        }
+                        showErroneousSnackbar(errorMessage = resourceProvider.getString(R.string.screen_friends_error_accepting_friend_request))
                     }
                 }
         }
@@ -609,13 +602,11 @@ internal class FriendsViewModel(
                 deleteFriendRequestType = DeleteFriendRequestType.RECEIVER
             ).collect { wasFriendRequestDeleted ->
                 if (wasFriendRequestDeleted) {
-                    setEffect {
-                        FriendsContract.Effect.ShowToastMessage(
-                            message = resourceProvider.getString(
-                                R.string.screen_friends_success_declining_friend_request
-                            )
+                    showInfoSnackbar(
+                        message = resourceProvider.getString(
+                            R.string.screen_friends_success_declining_friend_request
                         )
-                    }
+                    )
 
                     setState {
                         copy(
@@ -630,11 +621,7 @@ internal class FriendsViewModel(
                         )
                     }
                 } else {
-                    setEffect {
-                        FriendsContract.Effect.ShowToastMessage(
-                            message = resourceProvider.getString(R.string.screen_friends_error_declining_friend_request)
-                        )
-                    }
+                    showErroneousSnackbar(errorMessage = resourceProvider.getString(R.string.screen_friends_error_declining_friend_request))
                 }
             }
         }
@@ -643,26 +630,20 @@ internal class FriendsViewModel(
     private fun unblockUser(userId: UserId) {
         viewModelScope.launch {
             blockedUserInteractor.unblockUser(userId)
-                .collect { result ->
+                .let { result ->
                     when (result) {
                         is InteractorPartialState.Error,
                         is InteractorPartialState.Failed,
                         InteractorPartialState.NoInternetConnection -> {
-                            setEffect {
-                                FriendsContract.Effect.ShowToastMessage(
-                                    message = resourceProvider.getString(R.string.screen_friends_error_unblocking_user)
-                                )
-                            }
+                            showErroneousSnackbar(errorMessage = resourceProvider.getString(R.string.screen_friends_error_unblocking_user))
                         }
 
                         is InteractorPartialState.Success -> {
-                            setEffect {
-                                FriendsContract.Effect.ShowToastMessage(
-                                    message = resourceProvider.getString(
-                                        R.string.screen_friends_success_unblocking_user
-                                    )
+                            showInfoSnackbar(
+                                message = resourceProvider.getString(
+                                    R.string.screen_friends_success_unblocking_user
                                 )
-                            }
+                            )
 
                             setState {
                                 copy(

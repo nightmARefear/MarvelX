@@ -26,22 +26,27 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarEffect
+import com.alexgreece45.marvelx.common_ui.util.ObserveUiEffect
+import com.alexgreece45.marvelx.core.common.util.flows.single_observer_flow.SingleObserverFlow
+import com.alexgreece45.marvelx.ui.components.AlertDialogButton
+import com.alexgreece45.marvelx.ui.components.AlertDialogError
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.ExtendedFabData
 import com.alexgreece45.marvelx.ui.components.GenericLazyItemInfoScreen
 import com.alexgreece45.marvelx.ui.components.IconData
 import com.alexgreece45.marvelx.ui.components.LazyItemContentErrorScreen
-import com.alexgreece45.marvelx.ui.components.ListingCard
 import com.alexgreece45.marvelx.ui.components.NormalFabData
 import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
 import com.alexgreece45.marvelx.ui.components.WrapModalBottomSheetLayout
 import com.alexgreece45.marvelx.ui.components.chips.WrapChip
-import com.alexgreece45.marvelx.ui.components.effect.ObserveUiEffect
 import com.alexgreece45.marvelx.ui.components.icons.ProcessingRequestIconLottie
 import com.alexgreece45.marvelx.ui.components.isScrollingUp
+import com.alexgreece45.marvelx.ui.components.listing.ListingCard
 import com.alexgreece45.marvelx.ui.components.modalBottomSheetContents.ModalBottomSheetContentItems
 import com.alexgreece45.marvelx.ui.components.model.BottomSheetContentItem
 import com.alexgreece45.marvelx.ui.components.model.BottomSheetContentItemIconData
+import com.alexgreece45.marvelx.ui.components.model.ErrorButtonType
 import com.alexgreece45.marvelx.ui.components.rememberWrapModalBottomSheetState
 import com.alexgreece45.marvelx.ui.screens.marketplace.model.ListingStatusUi
 import com.alexgreece45.marvelx.ui.screens.myListings.model.MyListingsContract
@@ -50,38 +55,41 @@ import com.alexgreece45.marvelx.util.SPACING_MEDIUM
 import com.alexgreece45.marvelx.util.constants.ConstantsUi
 import com.alexgreece45.marvelx.util.extensions.clickableNoRipple
 import com.alexgreece45.marvelx.util.extensions.hideIfVisible
+import com.alexgreece45.marvelx.util.extensions.shareContentUrl
 import com.alexgreece45.marvelx.util.extensions.showIfHidden
-import com.alexgreece45.marvelx.util.extensions.showToast
-import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 
 @Composable
 fun MyListingsScreen(
     onEvent: (MyListingsContract.Event) -> Unit,
     state: MyListingsContract.State,
-    effect: Flow<MyListingsContract.Effect>,
+    effect: SingleObserverFlow<MyListingsContract.Effect>,
     onNavigationEffect: (MyListingsContract.Effect.Navigation) -> Unit,
+    snackbarEffects: SingleObserverFlow<SnackbarEffect>,
 ) {
-
     val context = LocalContext.current
     val lazyListState = rememberLazyListState()
     val modalBottomSheetCoroutineScope = rememberCoroutineScope()
     val modalBottomSheetState = rememberWrapModalBottomSheetState()
 
-    ObserveUiEffect(effect) { uiEffect ->
+    ObserveUiEffect(flow = effect, tag = "MyListingsScreen") { uiEffect ->
         when (uiEffect) {
             is MyListingsContract.Effect.Navigation -> onNavigationEffect(uiEffect)
-            is MyListingsContract.Effect.ShowToastMessage -> context.showToast(uiEffect.message)
-            MyListingsContract.Effect.BottomSheetEffects.Hide -> {
+            MyListingsContract.Effect.HideBottomSheet -> {
                 modalBottomSheetCoroutineScope.launch {
                     modalBottomSheetState.hideIfVisible()
                 }
             }
 
-            MyListingsContract.Effect.BottomSheetEffects.Show -> {
+            MyListingsContract.Effect.ShowBottomSheet -> {
                 modalBottomSheetCoroutineScope.launch {
                     modalBottomSheetState.showIfHidden()
                 }
+            }
+
+            is MyListingsContract.Effect.ShareListing -> {
+                context.shareContentUrl(uiEffect.shareContentUrlData)
             }
         }
     }
@@ -91,16 +99,16 @@ fun MyListingsScreen(
     }
 
     LaunchedEffect(lazyListState) {
-        snapshotFlow {
-            lazyListState.canScrollForward
-        }.collect {
-            onEvent(MyListingsContract.Event.OnEndOfListScrolled)
-        }
+        snapshotFlow { lazyListState.canScrollForward }
+            .drop(1)
+            .collect {
+                onEvent(MyListingsContract.Event.OnEndOfListScrolled)
+            }
     }
 
     WrapModalBottomSheetLayout(
         sheetContent = {
-            if (state.selectedListingData != null) {
+            if (state.selectedListing != null) {
                 ModalBottomSheetContent(onBottomSheetEvent = onEvent)
             }
         },
@@ -123,7 +131,8 @@ fun MyListingsScreen(
                     iconResource = R.drawable.ic_edit,
                     onClick = { onEvent(MyListingsContract.Event.OnFabButtonClicked) }
                 )
-            )
+            ),
+            snackbarEffects = snackbarEffects
         ) { paddingValues ->
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
@@ -152,6 +161,35 @@ fun MyListingsScreen(
                         )
                     }
                     return@LazyColumn
+                }
+
+                state.deleteListingDialogData?.let { deleteListingDialogData ->
+                    item(key = "deleteListingDialog") {
+                        AlertDialogError(
+                            title = stringResource(
+                                R.string.screen_my_listings_delete_dialog_title,
+                                deleteListingDialogData.title
+                            ),
+                            errorMessage = {
+                                Text(
+                                    text = stringResource(
+                                        R.string.screen_my_listings_delete_dialog_message,
+                                        deleteListingDialogData.title
+                                    )
+                                )
+                            },
+                            dismissButton = AlertDialogButton(
+                                label = stringResource(R.string.screen_my_listings_delete_dialog_negative_button),
+                                onClick = { onEvent(MyListingsContract.Event.OnDeleteListingDialogNegativeButtonClicked) }
+                            ),
+                            confirmButton = AlertDialogButton(
+                                label = stringResource(R.string.screen_my_listings_delete_dialog_positive_button),
+                                buttonType = ErrorButtonType.Contained,
+                                buttonBackgroundColor = MaterialTheme.colors.error,
+                                onClick = { onEvent(MyListingsContract.Event.OnDeleteListingDialogPositiveButtonClicked) }
+                            )
+                        )
+                    }
                 }
 
                 items(
@@ -195,12 +233,12 @@ fun MyListingsScreen(
 }
 
 @Composable
-private fun ModalBottomSheetContent(onBottomSheetEvent: (MyListingsContract.Event.BottomSheetEvents) -> Unit) {
+private fun ModalBottomSheetContent(onBottomSheetEvent: (MyListingsContract.Event.BottomSheet) -> Unit) {
     ModalBottomSheetContentItems(
         bottomSheetContentItems = listOf(
             BottomSheetContentItem(
                 title = stringResource(R.string.screen_my_listings_bottom_sheet_item_edit),
-                onClickEvent = MyListingsContract.Event.BottomSheetEvents.OnEditListingClicked,
+                onClickEvent = MyListingsContract.Event.BottomSheet.OnEditListingClicked,
                 leadingIconData = BottomSheetContentItemIconData(
                     iconData = IconData(
                         iconResource = R.drawable.ic_edit,
@@ -209,9 +247,19 @@ private fun ModalBottomSheetContent(onBottomSheetEvent: (MyListingsContract.Even
                 )
             ),
             BottomSheetContentItem(
+                title = stringResource(R.string.screen_my_listings_bottom_sheet_item_share),
+                onClickEvent = MyListingsContract.Event.BottomSheet.OnShareListingClicked,
+                leadingIconData = BottomSheetContentItemIconData(
+                    iconData = IconData(
+                        iconResource = R.drawable.ic_share,
+                        contentDescription = R.string.screen_my_listings_content_description_share_listing
+                    )
+                )
+            ),
+            BottomSheetContentItem(
                 title = stringResource(R.string.screen_my_listings_bottom_sheet_item_delete),
                 titleColor = MaterialTheme.customColors.genericRed,
-                onClickEvent = MyListingsContract.Event.BottomSheetEvents.OnDeleteListingClicked,
+                onClickEvent = MyListingsContract.Event.BottomSheet.OnDeleteListingClicked,
                 leadingIconData = BottomSheetContentItemIconData(
                     iconData = IconData(
                         iconResource = R.drawable.ic_delete,

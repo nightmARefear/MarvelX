@@ -52,3 +52,7 @@ network_security_config_backup.xml
 *.txt
 
 /app/kotzilla.json
+
+*.md
+
+/docs

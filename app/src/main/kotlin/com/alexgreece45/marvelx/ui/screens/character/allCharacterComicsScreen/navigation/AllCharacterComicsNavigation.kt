@@ -12,7 +12,7 @@ import kotlinx.serialization.Serializable
 import org.koin.androidx.compose.koinViewModel
 
 @Serializable
-private data class AllCharacterComicsRoute(
+internal data class AllCharacterComicsRoute(
     val characterId: Int = -1,
     val toolbarTitlePrefix: String = ""
 )

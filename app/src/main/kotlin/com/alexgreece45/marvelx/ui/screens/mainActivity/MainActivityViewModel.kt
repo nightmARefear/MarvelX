@@ -53,7 +53,7 @@ import java.time.Instant
 import java.time.format.DateTimeParseException
 import kotlin.coroutines.CoroutineContext
 
-@KoinViewModel
+@KoinViewModel(binds = [MainActivityViewModel::class])
 class MainActivityViewModel :
     BaseViewModel<MainActivityEvent, MainActivityState, MainActivityEffect>(), KoinComponent {
 

@@ -2,9 +2,8 @@ package com.alexgreece45.marvelx.data.repository
 
 import com.alexgreece45.marvelx.core.common.dispatchers.model.IoDispatcher
 import com.alexgreece45.marvelx.core.data.helper.RepositoryResult
-import com.alexgreece45.marvelx.core.data.helper.handleApiResultNoTransformation
+import com.alexgreece45.marvelx.core.data.helper.handleApiResultNoTransformationNoFlow
 import com.alexgreece45.marvelx.core.network.clients.ApiClient
-import kotlinx.coroutines.flow.first
 import org.koin.core.annotation.Single
 import kotlin.coroutines.CoroutineContext
 
@@ -20,9 +19,9 @@ class NotificationRepositoryImpl(
 ) : NotificationRepository {
 
     override suspend fun markIncomingFriendRequestAsRead(): Boolean {
-        return handleApiResultNoTransformation(
-            apiResult = apiClient.markNotificationAsOpened(),
+        return handleApiResultNoTransformationNoFlow(
+            apiCall = apiClient::markNotificationAsOpened,
             ioDispatcher = ioDispatcher
-        ).first() is RepositoryResult.Success
+        ) is RepositoryResult.Success
     }
 }

@@ -9,8 +9,10 @@
     <string name="screen_listing_details_listing_posted_at">Posted at: </string>
     <string name="screen_listing_details_listing_updated_at">Updated at: </string>
     <string name="screen_listing_details_share_intent_title">Sharing listing %1$s</string>
-    <string name="screen_listing_details_sticky_bottom_button_add_to_basket">Add to basket</string>
-    <string name="screen_listing_details_sticky_bottom_label_reserved_listing">This item is currently reserved by another buyer.</string>
+    <string name="screen_listing_details_sticky_bottom_button_add_to_cart">Add to cart</string>
+    <string name="screen_listing_details_sticky_bottom_button_remove_from_cart">Remove from cart</string>
+    <string name="screen_listing_details_sticky_bottom_button_view_order_item_details">View Item Order Details</string>
+    <string name="screen_listing_details_sticky_bottom_button_manage_order_item">Manage Order Item</string>
 
     <string name="screen_listing_details_listing_details_label_color">Color: %1$s</string>
     <string name="screen_listing_details_listing_details_label_dimensions">Dimensions\nWidth: %1$s cm\nHeight: %2$s cm</string>
@@ -26,6 +28,9 @@
     <string name="screen_listing_details_listing_details_label_not_dishwasher_safe">Not Dishwasher Safe</string>
     <string name="screen_listing_details_listing_details_label_framed">Framed</string>
     <string name="screen_listing_details_listing_details_label_not_framed">Not Framed</string>
+    
+    <string name="screen_listing_details_buyer_info_box_title">You bought this item</string>
+    <string name="screen_listing_details_buyer_info_box_description">You boug</string>
 
     <string name="screen_listing_details_success_adding_to_cart">Successfully added to cart</string>
     <string name="screen_listing_details_success_removing_from_cart">Successfully removed from cart</string>

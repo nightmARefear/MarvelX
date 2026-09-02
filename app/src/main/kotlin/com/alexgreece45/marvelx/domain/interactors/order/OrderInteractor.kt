@@ -7,6 +7,7 @@ import com.alexgreece45.marvelx.domain.helper.handleRepositoryResultNoFlow
 import com.alexgreece45.marvelx.domain.model_api.order.OrderDomain
 import com.alexgreece45.marvelx.domain.model_api.order.OrderIdDomain
 import com.alexgreece45.marvelx.domain.model_api.order.OrderPreviewDomain
+import com.alexgreece45.marvelx.domain.model_api.order.item.OrderItemDomain
 import com.alexgreece45.marvelx.domain.model_api.order.item.OrderItemTrackingHistoryDomain
 import com.alexgreece45.marvelx.domain.model_api.order.item.toDomain
 import com.alexgreece45.marvelx.domain.model_api.order.toData
@@ -17,12 +18,17 @@ interface OrderInteractor {
 
     suspend fun getOrders(): InteractorPartialState<List<OrderPreviewDomain>>
     suspend fun getOrderDetails(orderId: OrderId): InteractorPartialState<OrderDomain>
+    suspend fun getOrderItemDetails(
+        orderId: OrderId,
+        orderItemId: OrderId
+    ): InteractorPartialState<OrderItemDomain>
+
     suspend fun getOrderItemTrackingHistory(
         orderId: OrderIdDomain,
         orderItemId: OrderIdDomain
     ): InteractorPartialState<OrderItemTrackingHistoryDomain>
 
-    suspend fun placeOrder(): InteractorPartialState<String>
+    suspend fun placeOrder(): InteractorPartialState<OrderIdDomain>
 }
 
 @Factory
@@ -44,6 +50,16 @@ internal class OrderInteractorImpl(
         )
     }
 
+    override suspend fun getOrderItemDetails(
+        orderId: OrderId,
+        orderItemId: OrderId
+    ): InteractorPartialState<OrderItemDomain> {
+        return handleRepositoryResultNoFlow(
+            repositoryResult = orderRepository.getOrderItemDetails(orderId, orderItemId),
+            transformation = { this.toDomain() }
+        )
+    }
+
     override suspend fun getOrderItemTrackingHistory(
         orderId: OrderIdDomain,
         orderItemId: OrderIdDomain
@@ -57,10 +73,10 @@ internal class OrderInteractorImpl(
         )
     }
 
-    override suspend fun placeOrder(): InteractorPartialState<String> {
+    override suspend fun placeOrder(): InteractorPartialState<OrderIdDomain> {
         return handleRepositoryResultNoFlow(
             repositoryResult = orderRepository.placeOrder(),
-            transformation = { this }
+            transformation = { this.toDomain() }
         )
     }
 }

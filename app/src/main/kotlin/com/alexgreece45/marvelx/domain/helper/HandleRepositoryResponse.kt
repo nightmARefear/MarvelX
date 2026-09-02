@@ -49,7 +49,7 @@ fun <R : Any, D : Any> handleRepositoryResult(
  * [D].
  */
 fun <R : Any, D : Any> handleRepositoryResultNoFlow(
-    repositoryResult: RepositoryResult<R>,
+    repositoryResult: RepositoryResult<R>, // TODO: Replace with function invocation.
     transformation: R.() -> D,
     logError: ((String) -> Unit)? = null
 ): InteractorPartialState<D> =
@@ -126,18 +126,18 @@ fun handleRepositoryResultNoTransformationNoFlow(
     }
 
 /**
- * Handles the given repository [repositoryResult] and returns the appropriate [InteractorPartialState].
+ * Handles the given repository call and returns the appropriate [InteractorPartialState].
  * No data transformation is performed. If the result was successful then
  * [InteractorPartialState.Success] is returned with the appropriate data.
  *
- * @param repositoryResult The repository result.
+ * @param repositoryCall The repository result.
  */
 fun <T : Any> handleRepositoryResultNoTransformationNoFlowWithData(
-    repositoryResult: RepositoryResult<T>,
+    repositoryCall: () -> RepositoryResult<T>,
     logError: ((String) -> Unit)? = null
 ): InteractorPartialState<T> =
     try {
-        when (repositoryResult) {
+        when (val repositoryResult = repositoryCall()) {
             is RepositoryResult.Failed -> InteractorPartialState.Failed(repositoryResult.failureMessage)
             is RepositoryResult.Success -> InteractorPartialState.Success(
                 repositoryResult.data

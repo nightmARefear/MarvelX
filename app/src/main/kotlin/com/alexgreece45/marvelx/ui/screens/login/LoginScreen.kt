@@ -55,13 +55,14 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.coroutineScope
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.common_ui.util.ObserveUiEffect
+import com.alexgreece45.marvelx.core.common.util.flows.single_observer_flow.SingleObserverFlow
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.OutlinedTextFieldValidation
 import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
 import com.alexgreece45.marvelx.ui.components.WrapButton
 import com.alexgreece45.marvelx.ui.components.WrapClickableText
 import com.alexgreece45.marvelx.ui.components.WrapOutlinedButton
-import com.alexgreece45.marvelx.ui.components.effect.ObserveUiEffect
 import com.alexgreece45.marvelx.ui.components.error.ContentErrorScreen
 import com.alexgreece45.marvelx.ui.components.line.HorizontalLine
 import com.alexgreece45.marvelx.ui.components.model.ClickableString
@@ -73,7 +74,6 @@ import com.alexgreece45.marvelx.util.VSpacer
 import com.alexgreece45.marvelx.util.constants.ConstantsUi
 import com.alexgreece45.marvelx.util.extensions.clickableNoRipple
 import com.google.android.gms.auth.api.identity.Identity
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalComposeUiApi::class)
@@ -81,10 +81,9 @@ import kotlinx.coroutines.launch
 fun LoginScreen(
     onEventSent: (event: LoginEvent) -> Unit,
     state: LoginState,
-    effect: Flow<LoginEffect>,
+    effect: SingleObserverFlow<LoginEffect>,
     onNavigationEffect: (LoginEffect.Navigation) -> Unit
 ) {
-
     val context = LocalContext.current
     val keyboard = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
@@ -94,7 +93,7 @@ fun LoginScreen(
         onEventSent(LoginEvent.Init)
     }
 
-    ObserveUiEffect(effect) { uiEffect ->
+    ObserveUiEffect(flow = effect, tag = "LoginScreen") { uiEffect ->
         when (uiEffect) {
             is LoginEffect.Navigation -> onNavigationEffect(uiEffect)
 
@@ -132,7 +131,6 @@ fun LoginScreen(
                 contentAlignment = Alignment.Center
             ) {
                 WrapClickableText(
-                    modifier = Modifier.fillMaxWidth(),
                     text = stringResource(R.string.login_screen_do_not_have_an_account),
                     textStyle = TextStyle(
                         fontSize = MaterialTheme.typography.subtitle1.fontSize,
@@ -147,7 +145,8 @@ fun LoginScreen(
                                 onEventSent(LoginEvent.OnSignupTextClicked)
                             }
                         )
-                    )
+                    ),
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
         }
@@ -173,7 +172,7 @@ fun LoginScreen(
                         contentDescription = stringResource(R.string.content_description_person)
                     )
                 },
-                errorMessage = state.emailValidationResult.messages.firstOrNull()
+                errorText = state.emailValidationResult.messages.firstOrNull()
                     .orEmpty(),
                 isError = state.emailValidationResult.isValid.not() && state.emailValidationResult.messages.firstOrNull() != null,
                 keyboardOptions = KeyboardOptions(
@@ -188,6 +187,7 @@ fun LoginScreen(
             )
             VSpacer.Tiny()
 
+            // TODO: Replace with "SecureTextField".
             // Password
             OutlinedTextFieldValidation(
                 value = state.password,
@@ -219,7 +219,7 @@ fun LoginScreen(
                         }
                     }
                 },
-                errorMessage = state.passwordValidationResult.messages.firstOrNull().orEmpty(),
+                errorText = state.passwordValidationResult.messages.firstOrNull().orEmpty(),
                 isError = !state.passwordValidationResult.isValid && state.passwordValidationResult.messages.firstOrNull() != null,
                 visualTransformation = if (state.isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(

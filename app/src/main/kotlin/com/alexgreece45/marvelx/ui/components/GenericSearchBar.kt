@@ -9,10 +9,13 @@ import androidx.compose.material.Text
 import androidx.compose.material.TextField
 import androidx.compose.material.TextFieldDefaults
 import androidx.compose.material.contentColorFor
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
@@ -42,8 +45,21 @@ fun GenericSearchBar(
                 style = MaterialTheme.typography.h6
             )
         },
-        trailingIcon = {
-            if (searchTerm.isNotBlank()) {
+        leadingIcon = if (searchTerm.isBlank()) {
+            null
+        } else {
+            {
+                Icon(
+                    painter = rememberVectorPainter(image = Icons.Filled.Search),
+                    contentDescription = null,
+                    tint = MaterialTheme.customColors.white
+                )
+            }
+        },
+        trailingIcon = if (searchTerm.isBlank()) {
+            null
+        } else {
+            {
                 val circleBackgroundColor = MaterialTheme.colors.background
                 IconButton(
                     onClick = onDeleteIconClicked

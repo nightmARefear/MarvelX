@@ -2,6 +2,7 @@ package com.alexgreece45.marvelx.configuration
 
 import org.koin.core.annotation.Single
 import java.math.BigDecimal
+import java.math.RoundingMode
 
 /**
  * All configuration for prices.
@@ -12,6 +13,8 @@ interface ConfigPriceLogic {
      * The scale for prices.
      */
     val priceScale: Int
+
+    val roundingMode: RoundingMode
 
     /**
      * The minimum price.
@@ -30,9 +33,12 @@ internal class ConfigPriceLogicImpl : ConfigPriceLogic {
     override val priceScale: Int
         get() = 2
 
+    override val roundingMode: RoundingMode
+        get() = RoundingMode.HALF_UP
+
     override val minimumPrice: BigDecimal
-        get() = "0.99".toBigDecimalOrNull() ?: BigDecimal.ZERO
+        get() = "0.99".toBigDecimal()
 
     override val maximumPrice: BigDecimal
-        get() = "9999.99".toBigDecimalOrNull() ?: BigDecimal.ZERO
+        get() = "9999.99".toBigDecimal()
 }

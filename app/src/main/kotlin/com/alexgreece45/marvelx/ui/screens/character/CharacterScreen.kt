@@ -37,6 +37,8 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.common_ui.util.ObserveUiEffect
+import com.alexgreece45.marvelx.core.common.util.flows.single_observer_flow.SingleObserverFlow
 import com.alexgreece45.marvelx.domain.model_api.character.CharacterDomain
 import com.alexgreece45.marvelx.domain.model_api.comic.ComicDomain
 import com.alexgreece45.marvelx.ui.components.ContentScreen
@@ -45,25 +47,23 @@ import com.alexgreece45.marvelx.ui.components.ItemDescription
 import com.alexgreece45.marvelx.ui.components.LazyItemContentErrorScreen
 import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
 import com.alexgreece45.marvelx.ui.components.ToolbarAction
-import com.alexgreece45.marvelx.ui.components.effect.ObserveUiEffect
 import com.alexgreece45.marvelx.ui_theme.theme.values.customColors
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.VSpacer
 import com.alexgreece45.marvelx.util.constants.ConstantsUi.IMAGE_BORDER_WIDTH
 import com.alexgreece45.marvelx.util.extensions.showToast
-import kotlinx.coroutines.flow.Flow
 
 @Composable
 fun CharacterScreen(
     onEventSent: (event: CharacterEvent) -> Unit,
     state: CharacterState,
-    effect: Flow<CharacterEffect>,
+    effect: SingleObserverFlow<CharacterEffect>,
     onNavigationEffect: (CharacterEffect.Navigation) -> Unit,
     characterId: Int,
 ) {
     val context = LocalContext.current
 
-    ObserveUiEffect(effect) { uiEffect ->
+    ObserveUiEffect(flow = effect, tag = "CharacterScreen") { uiEffect ->
         when (uiEffect) {
             is CharacterEffect.Navigation -> onNavigationEffect(uiEffect)
             is CharacterEffect.DisplayError -> {
@@ -196,7 +196,7 @@ private fun CharacterItem(
                 .crossfade(true)
                 .build(),
             contentDescription = "${character.name}'s image",
-            contentScale = ContentScale.Fit,
+            contentScale = ContentScale.Crop,
             error = painterResource(R.drawable.ic_broken_image)
         )
 

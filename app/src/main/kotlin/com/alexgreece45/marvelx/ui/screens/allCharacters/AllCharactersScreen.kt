@@ -5,7 +5,6 @@ import android.widget.Toast
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
@@ -39,6 +38,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -47,27 +47,26 @@ import androidx.lifecycle.Lifecycle
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.data.model.deepLink.DeepLinkAction
+import com.alexgreece45.marvelx.common_ui.util.ObserveUiEffect
+import com.alexgreece45.marvelx.core.common.util.flows.single_observer_flow.SingleObserverFlow
 import com.alexgreece45.marvelx.ui.components.BottomNavigationBarData
-import com.alexgreece45.marvelx.ui.components.LazyItemContentErrorScreen
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.ExtendedFabData
+import com.alexgreece45.marvelx.ui.components.LazyItemContentErrorScreen
 import com.alexgreece45.marvelx.ui.components.NormalFabData
 import com.alexgreece45.marvelx.ui.components.PullRefreshable
 import com.alexgreece45.marvelx.ui.components.SearchBar
 import com.alexgreece45.marvelx.ui.components.SortingModalBottomSheetContent
 import com.alexgreece45.marvelx.ui.components.WrapModalBottomSheetLayout
 import com.alexgreece45.marvelx.ui.components.effect.DisposableEffectWithLifecycle
-import com.alexgreece45.marvelx.ui.components.effect.ObserveUiEffect
 import com.alexgreece45.marvelx.ui.components.isScrollingUp
 import com.alexgreece45.marvelx.ui.screens.allCharacters.uiModel.CharacterCardUi
 import com.alexgreece45.marvelx.ui_theme.theme.values.customColors
 import com.alexgreece45.marvelx.util.DEFAULT_SCREEN_PADDING
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.SPACING_TINY
-import com.alexgreece45.marvelx.util.extensions.getAndRemovePendingDeepLinkAction
 import com.alexgreece45.marvelx.util.extensions.hideIfVisible
-import kotlinx.coroutines.flow.Flow
+import com.alexgreece45.marvelx.util.extensions.throttledClickable
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterialApi::class)
@@ -75,9 +74,8 @@ import kotlinx.coroutines.launch
 fun AllCharactersScreen(
     onEventSent: (AllCharactersEvent) -> Unit,
     state: AllCharactersState,
-    effect: Flow<AllCharactersEffect>,
+    effect: SingleObserverFlow<AllCharactersEffect>,
     navigateToCharacterScreen: (characterId: Int) -> Unit,
-    openDeepLinkAction: (DeepLinkAction) -> Unit,
     bottomNavigationBarData: @Composable () -> BottomNavigationBarData,
 ) {
     val modalBottomSheetState = rememberModalBottomSheetState(
@@ -95,10 +93,6 @@ fun AllCharactersScreen(
     val keyboard = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
 
-    LaunchedEffect(Unit) {
-        onEventSent(AllCharactersEvent.Init(context.getAndRemovePendingDeepLinkAction()))
-    }
-
     LaunchedEffect(initLock) {
         if (!state.isFirstLaunch) {
             onEventSent(AllCharactersEvent.LoadFavoriteCharacters)
@@ -113,7 +107,7 @@ fun AllCharactersScreen(
         }
     }
 
-    ObserveUiEffect(flow = effect) { uiEffect ->
+    ObserveUiEffect(flow = effect, tag = "AllCharactersScreen") { uiEffect ->
         when (uiEffect) {
             is AllCharactersEffect.Navigation.NavigateToCharacterScreen -> {
                 initLock = Unit
@@ -151,10 +145,6 @@ fun AllCharactersScreen(
             AllCharactersEffect.CloseKeyboardAndRemoveFocus -> {
                 keyboard?.hide()
                 focusManager.clearFocus()
-            }
-
-            is AllCharactersEffect.Navigation.OpenDeepLinkAction -> {
-                openDeepLinkAction(uiEffect.deepLinkAction)
             }
         }
     }
@@ -219,7 +209,7 @@ fun AllCharactersScreen(
                     verticalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp),
                     horizontalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp)
                 ) {
-                    item(span = { GridItemSpan(2) }) {
+                    item(span = { GridItemSpan(maxLineSpan) }) {
                         SearchBar(
                             searchTerm = state.searchBarTerm,
                             hint = stringResource(R.string.all_characters_screen_search_bar_hint),
@@ -238,7 +228,7 @@ fun AllCharactersScreen(
 
                     // If the search term does not match any character's name.
                     if (state.filteredCharacters.isEmpty()) {
-                        item(span = { GridItemSpan(2) }) {
+                        item(span = { GridItemSpan(maxLineSpan) }) {
                             Text(
                                 text = stringResource(R.string.all_characters_screen_error_no_characters_found_search),
                                 style = MaterialTheme.typography.h6
@@ -286,7 +276,7 @@ private fun CharacterItem(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
+            .throttledClickable(onClick = onClick, view = LocalView.current)
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
             // Image.

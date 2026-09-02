@@ -32,17 +32,17 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.common_ui.util.ObserveUiEffect
+import com.alexgreece45.marvelx.core.common.util.flows.single_observer_flow.SingleObserverFlow
 import com.alexgreece45.marvelx.domain.model_api.comic.ComicDomain
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.LazyItemContentErrorScreen
 import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
 import com.alexgreece45.marvelx.ui.components.SortingModalBottomSheetContent
 import com.alexgreece45.marvelx.ui.components.WrapModalBottomSheetLayout
-import com.alexgreece45.marvelx.ui.components.effect.ObserveUiEffect
 import com.alexgreece45.marvelx.util.DEFAULT_SCREEN_PADDING
 import com.alexgreece45.marvelx.util.HSpacer
 import com.alexgreece45.marvelx.util.VSpacer
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterialApi::class)
@@ -50,7 +50,7 @@ import kotlinx.coroutines.launch
 fun AllCharacterComicsScreen(
     onEventSent: (AllCharacterComicsEvent) -> Unit,
     state: AllCharacterComicsState,
-    effect: Flow<AllCharacterComicsEffect>,
+    effect: SingleObserverFlow<AllCharacterComicsEffect>,
     onNavigationEffect: (AllCharacterComicsEffect.Navigation) -> Unit,
     characterId: Int,
     toolbarTitlePrefix: String,
@@ -64,7 +64,7 @@ fun AllCharacterComicsScreen(
             skipHalfExpanded = true
         )
 
-    ObserveUiEffect(effect) { uiEffect ->
+    ObserveUiEffect(flow = effect, tag = "AllCharacterComicsScreen") { uiEffect ->
         when (uiEffect) {
             is AllCharacterComicsEffect.Navigation -> onNavigationEffect(uiEffect)
             AllCharacterComicsEffect.BottomSheet.Show -> {
@@ -166,7 +166,7 @@ fun AllCharacterComicsScreen(
                     }
                 }
 
-                item { VSpacer.Custom(height = 10) }
+                item { VSpacer.Custom(height = 10.dp) }
 
                 itemsIndexed(
                     items = state.comics,

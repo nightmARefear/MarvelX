@@ -20,40 +20,40 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.common_ui.util.ObserveUiEffect
+import com.alexgreece45.marvelx.core.common.util.flows.single_observer_flow.SingleObserverFlow
 import com.alexgreece45.marvelx.data.model.marketplace.listing.EnumGeneric
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.ExposedDropdownMenu
 import com.alexgreece45.marvelx.ui.components.OutlinedTextFieldValidation
 import com.alexgreece45.marvelx.ui.components.WrapCheckbox
-import com.alexgreece45.marvelx.ui.components.effect.ObserveUiEffect
 import com.alexgreece45.marvelx.ui.screens.marketplace.components.WizardTextInputField
 import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.advancedDetails.model.CreateListingAdvancedDetailsContract
 import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.advancedDetails.model.CreateListingAdvancedDetailsScreenData
 import com.alexgreece45.marvelx.ui.screens.marketplace.model.ListingDetailsUi
 import com.alexgreece45.marvelx.util.SPACING_MEDIUM
 import com.alexgreece45.marvelx.util.VSpacer
-import kotlinx.coroutines.flow.Flow
 
 @Composable
 internal fun CreateListingAdvancedDetailsScreen(
     onEvent: (CreateListingAdvancedDetailsContract.Event) -> Unit,
     state: CreateListingAdvancedDetailsContract.State,
-    effect: Flow<CreateListingAdvancedDetailsContract.Effect>,
-    showToastMessage: (String) -> Unit,
+    effect: SingleObserverFlow<CreateListingAdvancedDetailsContract.Effect>,
+    showErrorSnackbar: (errorMessage: String) -> Unit,
     goToPreviousStep: () -> Unit,
     setNextButtonEnabled: (Boolean) -> Unit,
     createListingAdvancedDetailsScreenData: CreateListingAdvancedDetailsScreenData
 ) {
 
-    ObserveUiEffect(effect) { uiEffect ->
+    ObserveUiEffect(flow = effect, tag = "Screen") { uiEffect ->
         when (uiEffect) {
             CreateListingAdvancedDetailsContract.Effect.GoToPreviousStep -> goToPreviousStep()
             is CreateListingAdvancedDetailsContract.Effect.SetNextButtonEnabled -> setNextButtonEnabled(
                 uiEffect.enabled
             )
 
-            is CreateListingAdvancedDetailsContract.Effect.ShowToast -> {
-                showToastMessage(uiEffect.message)
+            is CreateListingAdvancedDetailsContract.Effect.ShowErrorSnackbar -> {
+                showErrorSnackbar(uiEffect.errorMessage)
             }
         }
     }
@@ -812,7 +812,7 @@ private fun PriceView(
                 contentDescription = stringResource(R.string.screen_create_listing_advanced_details_content_description_euro)
             )
         },
-        errorMessage = priceField.validationResult.message,
+        errorText = priceField.validationResult.message,
         isError = !priceField.validationResult.isValid,
     )
 }

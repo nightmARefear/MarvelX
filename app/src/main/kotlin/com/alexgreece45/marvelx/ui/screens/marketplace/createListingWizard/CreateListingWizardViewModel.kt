@@ -1,7 +1,11 @@
 package com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.toRoute
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.common_ui.snackbar.delegate.SnackbarDelegate
+import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarType
 import com.alexgreece45.marvelx.controllers.createListingWizard.CreateListingWizardController
 import com.alexgreece45.marvelx.core.data.helper.multi_part_builder.model.MultipartResult
 import com.alexgreece45.marvelx.core.data.repositories.UserSessionRepository
@@ -11,11 +15,11 @@ import com.alexgreece45.marvelx.domain.model_api.marketplace.listing.UpdateListi
 import com.alexgreece45.marvelx.mvi.BaseViewModel
 import com.alexgreece45.marvelx.ui.components.model.ErrorButtonLayout
 import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.model.CreateListingWizardContract
-import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.model.CreateListingWizardContract.Effect.ShowToastMessage
 import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.model.CreateListingWizardErrorData
 import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.model.CreateListingWizardMode
 import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.model.CreateListingWizardStep
 import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.model.toDomain
+import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.navigation.CreateListingWizardRoute
 import com.alexgreece45.marvelx.ui.screens.marketplace.mappers.ListingDetailsUiMapper
 import com.alexgreece45.marvelx.ui.screens.marketplace.mappers.ListingUiMapper
 import com.alexgreece45.marvelx.ui.screens.marketplace.model.UpdateListingBasicDetails
@@ -23,27 +27,37 @@ import com.alexgreece45.marvelx.util.ResourceProvider
 import kotlinx.coroutines.launch
 import org.koin.android.annotation.KoinViewModel
 
-@KoinViewModel
+@KoinViewModel(binds = [CreateListingWizardViewModel::class])
 internal class CreateListingWizardViewModel(
     private val listingInteractor: ListingInteractor,
     private val resourceProvider: ResourceProvider,
     private val listingUiMapper: ListingUiMapper,
     private val createListingWizardController: CreateListingWizardController,
     private val listingDetailsUiMapper: ListingDetailsUiMapper,
-    private val userSessionRepository: UserSessionRepository
-) : BaseViewModel<CreateListingWizardContract.Event, CreateListingWizardContract.State, CreateListingWizardContract.Effect>() {
+    private val userSessionRepository: UserSessionRepository,
+    savedStateHandle: SavedStateHandle,
+    snackbarDelegate: SnackbarDelegate,
+) : BaseViewModel<CreateListingWizardContract.Event, CreateListingWizardContract.State, CreateListingWizardContract.Effect>(),
+    SnackbarDelegate by snackbarDelegate {
+
+    init {
+        init(savedStateHandle.toRoute<CreateListingWizardRoute>().listingId)
+    }
 
     override fun setInitialState(): CreateListingWizardContract.State =
         CreateListingWizardContract.State()
 
     override fun handleEvents(event: CreateListingWizardContract.Event) {
         when (event) {
-            is CreateListingWizardContract.Event.Init -> init(event.listingId)
             CreateListingWizardContract.Event.OnBackButtonClicked -> onBackButtonClicked()
             CreateListingWizardContract.Event.OnCloseButtonClicked -> onCloseButtonClicked()
             CreateListingWizardContract.Event.OnStickyBottomButtonClicked -> onStickyBottomButtonClicked()
 
-            is CreateListingWizardContract.Event.OnShowToastMessage -> onShowToastMessage(event.message)
+            is CreateListingWizardContract.Event.OnShowSnackbar -> onShowSnackbar(
+                event.message,
+                event.snackbarType
+            )
+
             is CreateListingWizardContract.Event.SetNextButtonEnabled -> setNextButtonEnabled(event.enabled)
 
             CreateListingWizardContract.Event.AlertDialogEvents.OnNegativeButtonClicked -> onAlertDialogNegativeButtonClicked()
@@ -142,9 +156,7 @@ internal class CreateListingWizardViewModel(
 
             CreateListingWizardStep.ADVANCED_DETAILS, CreateListingWizardStep.OVERVIEW -> {
                 // Should never occur, but just in case.
-                setEffect {
-                    ShowToastMessage(resourceProvider.getGenericErrorMessage())
-                }
+                showErroneousSnackbar(errorMessage = resourceProvider.getGenericErrorMessage())
                 setEffect {
                     CreateListingWizardContract.Effect.Navigation.ExitWizard
                 }
@@ -181,6 +193,10 @@ internal class CreateListingWizardViewModel(
                     )
                 }
             }
+    }
+
+    private fun onShowSnackbar(message: String, snackbarType: SnackbarType) {
+        showCustomSnackbar(message = message, type = snackbarType)
     }
 
     private fun onAlertDialogNegativeButtonClicked() {
@@ -307,12 +323,6 @@ internal class CreateListingWizardViewModel(
         )
     }
 
-    private fun onShowToastMessage(message: String) {
-        setEffect {
-            ShowToastMessage(message)
-        }
-    }
-
     private fun setNextButtonEnabled(enabled: Boolean) {
         setState {
             copy(
@@ -332,11 +342,9 @@ internal class CreateListingWizardViewModel(
     private fun uploadModifiedListing() {
         val listing = currentState.listingUi
         if (listing == null) {
-            setEffect {
-                ShowToastMessage(
-                    message = resourceProvider.getString(R.string.screen_create_listing_wizard_screen_error_uploading_listing)
-                )
-            }
+            showErroneousSnackbar(
+                errorMessage = resourceProvider.getString(R.string.screen_create_listing_wizard_screen_error_uploading_listing)
+            )
             return
         }
 
@@ -368,11 +376,7 @@ internal class CreateListingWizardViewModel(
                         isLoading = false
                     )
                 }
-                setEffect {
-                    ShowToastMessage(
-                        message = resourceProvider.getString(R.string.screen_create_listing_wizard_screen_error_uploading_listing)
-                    )
-                }
+                showErroneousSnackbar(errorMessage = resourceProvider.getString(R.string.screen_create_listing_wizard_screen_error_uploading_listing))
             }
         }
     }
@@ -380,22 +384,14 @@ internal class CreateListingWizardViewModel(
     private fun uploadDraftListing() {
         val createListing = currentState.createListingUi
         if (createListing == null || createListing.listingDetails == null) {
-            setEffect {
-                ShowToastMessage(
-                    message = resourceProvider.getString(R.string.screen_create_listing_wizard_screen_error_uploading_listing)
-                )
-            }
+            showErroneousSnackbar(errorMessage = resourceProvider.getString(R.string.screen_create_listing_wizard_screen_error_uploading_listing))
             return
         }
 
         viewModelScope.launch {
             val listingDetailsDomain = listingDetailsUiMapper.toDomain(createListing.listingDetails)
             if (listingDetailsDomain == null) {
-                setEffect {
-                    ShowToastMessage(
-                        message = resourceProvider.getString(R.string.screen_create_listing_wizard_screen_error_uploading_listing)
-                    )
-                }
+                showErroneousSnackbar(errorMessage = resourceProvider.getString(R.string.screen_create_listing_wizard_screen_error_uploading_listing))
                 return@launch
             }
 
@@ -414,11 +410,7 @@ internal class CreateListingWizardViewModel(
                         )
                     }
 
-                    setEffect {
-                        ShowToastMessage(
-                            message = resourceProvider.getString(R.string.screen_create_listing_wizard_screen_error_uploading_listing)
-                        )
-                    }
+                    showErroneousSnackbar(errorMessage = resourceProvider.getString(R.string.screen_create_listing_wizard_screen_error_uploading_listing))
                 }
 
                 MultipartResult.ImageProcessingError -> {
@@ -427,11 +419,7 @@ internal class CreateListingWizardViewModel(
                             isLoading = false
                         )
                     }
-                    setEffect {
-                        ShowToastMessage(
-                            message = resourceProvider.getString(R.string.screen_create_listing_wizard_screen_error_reading_images)
-                        )
-                    }
+                    showErroneousSnackbar(errorMessage = resourceProvider.getString(R.string.screen_create_listing_wizard_screen_error_reading_images))
                 }
 
                 is MultipartResult.Success -> {

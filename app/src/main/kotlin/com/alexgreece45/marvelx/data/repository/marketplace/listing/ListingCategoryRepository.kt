@@ -3,8 +3,9 @@ package com.alexgreece45.marvelx.data.repository.marketplace.listing
 import com.alexgreece45.marvelx.core.common.dispatchers.model.IoDispatcher
 import com.alexgreece45.marvelx.core.common.logger.AppLogger
 import com.alexgreece45.marvelx.core.data.helper.RepositoryResult
-import com.alexgreece45.marvelx.core.data.helper.handleApiResult
+import com.alexgreece45.marvelx.core.data.helper.handleApiResultNoFlow
 import com.alexgreece45.marvelx.core.network.clients.ListingClient
+import com.alexgreece45.marvelx.data.model.marketplace.listing.EnumGeneric
 import com.alexgreece45.marvelx.data.model.marketplace.listing.ListingCategory
 import com.alexgreece45.marvelx.data.model.marketplace.listing.toData
 import com.alexgreece45.marvelx.database.ListingCategoryDao
@@ -14,7 +15,6 @@ import com.alexgreece45.marvelx.util.DateUtil
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import org.koin.core.annotation.Single
 import kotlin.coroutines.CoroutineContext
@@ -27,6 +27,11 @@ interface ListingCategoryRepository {
      * Retrieves the listing categories.
      */
     val listingCategories: List<ListingCategory>
+
+    /**
+     * Returns all the listing category codes.
+     */
+    val listingCategoryCodes: List<EnumGeneric>
 }
 
 @Single
@@ -88,6 +93,15 @@ class ListingCategoryRepositoryImpl(
 
     override val listingCategories: List<ListingCategory> get() = _cachedCategories.value
 
+    override val listingCategoryCodes: List<EnumGeneric>
+        get() = listingCategories.mapIndexed { index, category ->
+            EnumGeneric(
+                code = category.code,
+                label = category.label,
+                sortOrder = index + 1
+            )
+        }
+
     private suspend fun getCachedCategories(): RepositoryResult<List<ListingCategory>> =
         try {
             val categories = listingCategoryDao.getAllCategories()
@@ -104,11 +118,11 @@ class ListingCategoryRepositoryImpl(
         }
 
     private suspend fun getListingCategories(): RepositoryResult<List<ListingCategory>> {
-        return handleApiResult(
-            apiResult = listingClient.getListingCategories(),
+        return handleApiResultNoFlow(
+            apiCall = listingClient::getListingCategories,
             transformation = { this.map { it.toData() } },
             ioDispatcher = ioDispatcher
-        ).first()
+        )
     }
 
     private suspend fun saveListingCategoriesToDatabase(listingCategories: List<ListingCategory>) {

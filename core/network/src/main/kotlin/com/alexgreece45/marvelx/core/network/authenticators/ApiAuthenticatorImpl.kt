@@ -31,7 +31,7 @@ import kotlin.time.Duration.Companion.seconds
  * The authenticator class for all the API calls of the MarvelX backend. It is triggered when a 401
  * response is received.
  */
-@Single(binds = [Authenticator::class])
+@Single
 @ApiAuthenticator
 internal class ApiAuthenticatorImpl(
     private val appLogger: AppLogger,

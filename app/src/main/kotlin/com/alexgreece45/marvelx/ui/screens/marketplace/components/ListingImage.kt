@@ -1,10 +1,12 @@
 package com.alexgreece45.marvelx.ui.screens.marketplace.components
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.ui.components.WrapAsyncImage
@@ -17,7 +19,9 @@ import com.alexgreece45.marvelx.ui_theme.theme.values.customColors
 fun ListingImage(
     imageUrl: String,
     title: String,
-    modifier: Modifier = Modifier
+    @SuppressLint("ModifierParameter") boxModifier: Modifier = Modifier,
+    modifier: Modifier = Modifier,
+    contentScale: ContentScale = ContentScale.Crop
 ) {
     WrapAsyncImage(
         imageUrl = imageUrl,
@@ -26,8 +30,9 @@ fun ListingImage(
             title
         ),
         modifier = modifier,
-        boxModifier = Modifier
+        boxModifier = boxModifier
             .clip(shape = MaterialTheme.shapes.medium)
-            .background(color = MaterialTheme.customColors.white)
+            .background(color = MaterialTheme.customColors.white),
+        contentScale = contentScale
     )
 }

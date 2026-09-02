@@ -3,13 +3,16 @@ package com.alexgreece45.marvelx.ui.model_generic
 import com.alexgreece45.marvelx.common_ui.inputFieldValidator.model.InputFieldRule
 import com.alexgreece45.marvelx.common_ui.inputFieldValidator.model.InputFieldValidationResult
 import com.alexgreece45.marvelx.data.model.marketplace.listing.EnumGeneric
+import com.alexgreece45.marvelx.core.common.extensions.formatPrice
+import java.math.BigDecimal
+import java.math.RoundingMode
 
 sealed interface InputFieldUi {
 
     val isValid: Boolean
     val isMandatory: Boolean
 
-    sealed class InputField(
+    sealed class TextField(
         open val value: String = "",
         open val validationResult: InputFieldValidationResult = InputFieldValidationResult.Uninitialized,
         open val validationRules: List<InputFieldRule> = emptyList(),
@@ -20,7 +23,7 @@ sealed interface InputFieldUi {
             get() = if (isMandatory) {
                 validationResult is InputFieldValidationResult.Success
             } else {
-                validationResult.isNotError
+                validationResult is InputFieldValidationResult.Uninitialized || validationResult is InputFieldValidationResult.Success
             }
     }
 
@@ -29,21 +32,21 @@ sealed interface InputFieldUi {
         override val validationResult: InputFieldValidationResult = InputFieldValidationResult.Uninitialized,
         override val validationRules: List<InputFieldRule> = emptyList(),
         override val isMandatory: Boolean
-    ) : InputField(value, validationResult, validationRules, isMandatory)
+    ) : TextField(value, validationResult, validationRules, isMandatory)
 
     data class Integer(
-        val integerValue: String = "",
-        val integerValidationResult: InputFieldValidationResult = InputFieldValidationResult.Uninitialized,
-        val integerValidationRules: List<InputFieldRule> = emptyList(),
+        override val value: String = "",
+        override val validationResult: InputFieldValidationResult = InputFieldValidationResult.Uninitialized,
+        override val validationRules: List<InputFieldRule> = emptyList(),
         override val isMandatory: Boolean
-    ) : InputField(
-        value = integerValue,
-        validationResult = integerValidationResult,
-        validationRules = integerValidationRules,
+    ) : TextField(
+        value = value,
+        validationResult = validationResult,
+        validationRules = validationRules,
         isMandatory = isMandatory
     ) {
 
-        val parsedValue: Int? get() = integerValue.toIntOrNull()
+        val parsedValue: Int? get() = value.toIntOrNull()
 
         override val isValid: Boolean
             get() {
@@ -54,6 +57,44 @@ sealed interface InputFieldUi {
                 }
 
                 return isIntegerFormatValid && super.isValid
+            }
+    }
+
+    data class Price(
+        override val value: String = "",
+        override val validationResult: InputFieldValidationResult = InputFieldValidationResult.Uninitialized,
+        override val validationRules: List<InputFieldRule> = emptyList(),
+        override val isMandatory: Boolean,
+        val priceScale: Int = 2,
+        val roundingMode: RoundingMode = RoundingMode.HALF_UP
+    ) : TextField(
+        value = value,
+        validationResult = validationResult,
+        validationRules = validationRules,
+        isMandatory = isMandatory
+    ) {
+        val parsedValue: BigDecimal?
+            get() = value.toBigDecimalOrNull()?.setScale(
+                priceScale,
+                roundingMode
+            )
+
+        val formattedValue: String
+            get() = if (parsedValue != null) (parsedValue as BigDecimal).formatPrice(
+                scale = priceScale,
+                roundingMode = roundingMode,
+                withEuroSymbol = false
+            ) else super.value
+
+        override val isValid: Boolean
+            get() {
+                val isBigDecimalFormatValid = if (isMandatory) {
+                    parsedValue != null
+                } else {
+                    value.isEmpty() || parsedValue != null
+                }
+
+                return isBigDecimalFormatValid && super.isValid
             }
     }
 

@@ -61,7 +61,7 @@ sealed interface IntroLoadingContract {
                 val shouldRememberUserSession: Boolean
             ) : Navigation
 
-            data object NavigateToAllCharactersScreen : Navigation
+            data object NavigateToDashboardScreen : Navigation
         }
     }
 }
@@ -185,7 +185,7 @@ internal class IntroLoadingViewModel(
                                             when (postLoginPartialState) {
                                                 PostLoginPartialState.Success -> {
                                                     setEffect {
-                                                        IntroLoadingContract.Effect.Navigation.NavigateToAllCharactersScreen
+                                                        IntroLoadingContract.Effect.Navigation.NavigateToDashboardScreen
                                                     }
                                                 }
 

@@ -34,7 +34,7 @@ class FriendRequestRepositoryImpl(
         flow {
             emitAll(
                 handleApiResultNoTransformationWithData(
-                    apiResult = apiClient.getIncomingFriendRequests(),
+                    apiCall = { apiClient.getIncomingFriendRequests() },
                     ioDispatcher = ioDispatcher
                 )
             )
@@ -42,7 +42,7 @@ class FriendRequestRepositoryImpl(
 
     override suspend fun sendFriendRequest(userId: UserId): Flow<Boolean> = flow {
         handleApiResultNoTransformation(
-            apiResult = apiClient.sendFriendRequest(userId.value),
+            apiCall = { apiClient.sendFriendRequest(userId.value) },
             ioDispatcher = ioDispatcher
         ).collect { result ->
             emit(result is RepositoryResult.Success)
@@ -51,7 +51,7 @@ class FriendRequestRepositoryImpl(
 
     override suspend fun acceptFriendRequest(userId: UserId): Flow<Boolean> = flow {
         handleApiResultNoTransformation(
-            apiResult = apiClient.acceptFriendRequest(userId.value),
+            apiCall = { apiClient.acceptFriendRequest(userId.value) },
             ioDispatcher = ioDispatcher
         ).collect { result ->
             emit(result is RepositoryResult.Success)
@@ -60,7 +60,7 @@ class FriendRequestRepositoryImpl(
 
     override suspend fun deleteFriendRequest(userId: UserId, type: String): Flow<Boolean> = flow {
         handleApiResultNoTransformation(
-            apiResult = apiClient.deleteFriendRequest(userId.value, type),
+            apiCall = { apiClient.deleteFriendRequest(userId.value, type) },
             ioDispatcher = ioDispatcher
         ).collect { result ->
             emit(result is RepositoryResult.Success)

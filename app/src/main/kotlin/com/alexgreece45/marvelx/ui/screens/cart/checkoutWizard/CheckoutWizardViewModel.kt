@@ -5,6 +5,7 @@ import com.alexgreece45.marvelx.mvi.BaseViewModel
 import com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.model.CheckoutWizardContract
 import com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.model.CheckoutWizardExitAlertDialogAction
 import com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.model.CheckoutWizardStep
+import com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.model.CheckoutWizardStepDirection
 import com.alexgreece45.marvelx.util.ResourceProvider
 import org.koin.android.annotation.KoinViewModel
 
@@ -31,7 +32,7 @@ internal class CheckoutWizardViewModel(
             CheckoutWizardContract.Event.OnActionNotSupported -> onActionNotSupported()
             CheckoutWizardContract.Event.OnNavigationEvents.EditShippingDetailsScreen -> onNavigateToEditShippingDetailsScreen()
             CheckoutWizardContract.Event.OnNavigationEvents.EditPaymentDetailsScreen -> onNavigateToEditPaymentDetailsScreen()
-            is CheckoutWizardContract.Event.OnNavigationEvents.OrderSuccessScreen -> onNavigateToOrderSuccessScreen(
+            is CheckoutWizardContract.Event.OnNavigationEvents.OrderSuccessScreen -> onNavigateToCheckoutSuccessScreen(
                 event.orderId
             )
 
@@ -63,34 +64,7 @@ internal class CheckoutWizardViewModel(
     }
 
     private fun onBackButtonClicked() {
-        val currentStep = currentState.wizardStep
-        if (currentStep == CheckoutWizardStep.SUCCESS) {
-            setEffect {
-                CheckoutWizardContract.Effect.Navigation.ExitWizard
-            }
-            return
-        }
-
-        when (val newStep =
-            CheckoutWizardStep.entries.firstOrNull { step -> step.order == currentStep.order - 1 }) {
-            null -> {
-                setState {
-                    copy(
-                        alertDialogAction = CheckoutWizardExitAlertDialogAction.EXIT_WIZARD
-                    )
-                }
-            }
-
-            else -> {
-                setState {
-                    copy(
-                        toolbarTitle = getToolbarTitle(newStep),
-                        wizardStep = newStep,
-                        stickyBottomButtonEnabled = true
-                    )
-                }
-            }
-        }
+        navigateToStep(CheckoutWizardStepDirection.PREVIOUS)
     }
 
     private fun onCloseButtonClicked() {
@@ -106,42 +80,11 @@ internal class CheckoutWizardViewModel(
                     CheckoutWizardContract.Effect.ShowToastMessage(resourceProvider.getGenericErrorMessage())
                 }
             }
-
-            CheckoutWizardStep.SUCCESS -> {
-                setEffect {
-                    CheckoutWizardContract.Effect.Navigation.ExitWizard
-                }
-            }
         }
     }
 
     private fun onStickyBottomButtonClicked() {
-        val currentStep = currentState.wizardStep
-        if (currentStep == CheckoutWizardStep.SUCCESS) {
-            setEffect {
-                CheckoutWizardContract.Effect.Navigation.ExitWizard
-            }
-            return
-        }
-
-        when (val newStep =
-            CheckoutWizardStep.entries.firstOrNull { step -> step.order == currentStep.order + 1 }) {
-            null -> {
-                setEffect {
-                    CheckoutWizardContract.Effect.ShowToastMessage(resourceProvider.getGenericErrorMessage())
-                }
-            }
-
-            else -> {
-                setState {
-                    copy(
-                        toolbarTitle = getToolbarTitle(newStep),
-                        wizardStep = newStep,
-                        stickyBottomButtonEnabled = false
-                    )
-                }
-            }
-        }
+        navigateToStep(CheckoutWizardStepDirection.NEXT)
     }
 
     private fun onAlertDialogNegativeButtonClicked() {
@@ -202,15 +145,9 @@ internal class CheckoutWizardViewModel(
         }
     }
 
-    private fun onNavigateToOrderSuccessScreen(orderId: String) {
-        val newStep = CheckoutWizardStep.SUCCESS
-        setState {
-            copy(
-                toolbarTitle = getToolbarTitle(newStep),
-                wizardStep = newStep,
-                stickyBottomButtonEnabled = true,
-                orderId = orderId
-            )
+    private fun onNavigateToCheckoutSuccessScreen(orderId: String) {
+        setEffect {
+            CheckoutWizardContract.Effect.Navigation.NavigateToCheckoutSuccessScreen(orderId)
         }
     }
 
@@ -238,14 +175,12 @@ internal class CheckoutWizardViewModel(
      * Returns the toolbar title based on the wizard step.
      */
     private fun getToolbarTitle(step: CheckoutWizardStep): String {
-        if (step == CheckoutWizardStep.SUCCESS) return ""
         return resourceProvider.getString(R.string.screen_checkout_wizard_toolbar_title) + " " +
                 resourceProvider.getString(
                     when (step) {
                         CheckoutWizardStep.SHIPPING_DETAILS -> R.string.screen_checkout_wizard_step_label_shipping_details
                         CheckoutWizardStep.PAYMENT_DETAILS -> R.string.screen_checkout_wizard_step_label_payment_details
                         CheckoutWizardStep.OVERVIEW -> R.string.screen_checkout_wizard_step_label_overview
-                        CheckoutWizardStep.SUCCESS -> R.string.screen_checkout_wizard_step_label_success
                     }
                 )
     }
@@ -266,6 +201,20 @@ internal class CheckoutWizardViewModel(
         setState {
             copy(
                 alertDialogAction = action
+            )
+        }
+    }
+
+    private fun navigateToStep(wizardStepDirection: CheckoutWizardStepDirection) {
+        val newStep = when (wizardStepDirection) {
+            CheckoutWizardStepDirection.PREVIOUS -> currentState.wizardStep.previousStep
+            CheckoutWizardStepDirection.NEXT -> currentState.wizardStep.nextStep
+        }
+        setState {
+            copy(
+                toolbarTitle = getToolbarTitle(step = newStep),
+                wizardStep = newStep,
+                stickyBottomButtonEnabled = wizardStepDirection == CheckoutWizardStepDirection.PREVIOUS
             )
         }
     }

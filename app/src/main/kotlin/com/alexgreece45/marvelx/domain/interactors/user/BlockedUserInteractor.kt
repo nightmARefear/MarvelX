@@ -8,7 +8,7 @@ import com.alexgreece45.marvelx.data.repository.user.BlockUserRepositoryResult
 import com.alexgreece45.marvelx.data.repository.user.BlockedUserRepository
 import com.alexgreece45.marvelx.domain.helper.InteractorPartialState
 import com.alexgreece45.marvelx.domain.helper.handleRepositoryResult
-import com.alexgreece45.marvelx.domain.helper.handleRepositoryResultNoTransformation
+import com.alexgreece45.marvelx.domain.helper.handleRepositoryResultNoTransformationNoFlow
 import com.alexgreece45.marvelx.domain.model_api.user.block.BlockedUserDomain
 import com.alexgreece45.marvelx.domain.model_api.user.block.UserBlockResultType
 import com.alexgreece45.marvelx.domain.model_api.user.block.toBlockedUserDomainList
@@ -36,7 +36,7 @@ interface BlockedUserInteractor {
     /**
      * Blocks the user with the given [userId].
      */
-    suspend fun unblockUser(userId: UserId): Flow<InteractorPartialState<String>>
+    suspend fun unblockUser(userId: UserId): InteractorPartialState<String>
 }
 
 @Factory
@@ -90,10 +90,8 @@ internal class BlockedUserInteractorImpl(
             }
         }
 
-    override suspend fun unblockUser(userId: UserId): Flow<InteractorPartialState<String>> = flow {
-        repository.unblockUser(userId).collect { repositoryResult ->
-            emitAll(handleRepositoryResultNoTransformation(repositoryResult))
-        }
+    override suspend fun unblockUser(userId: UserId): InteractorPartialState<String> {
+        return handleRepositoryResultNoTransformationNoFlow(repository.unblockUser(userId))
     }
 }
 

@@ -3,7 +3,9 @@ package com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.navi
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
+import androidx.navigation.NavOptionsBuilder
 import androidx.navigation.compose.composable
+import androidx.navigation.navOptions
 import androidx.navigation.toRoute
 import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.CreateListingWizardScreen
 import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.CreateListingWizardViewModel
@@ -17,12 +19,15 @@ internal data class CreateListingWizardRoute(
 )
 
 fun NavController.navigateToCreateListingWizardScreen(listingId: String?) =
-    navigate(CreateListingWizardRoute(listingId))
+    navigate(
+        route = CreateListingWizardRoute(listingId),
+        navOptions = navOptions { launchSingleTop = true }
+    )
 
 fun NavGraphBuilder.createListingWizardScreen(
     goBack: () -> Unit,
-    navigateToListingDetailsScreen: (listingId: String, clearBackStack: Boolean) -> Unit,
-    navigateToCreateListingSuccessScreen: (listingId: String, wizardMode: String) -> Unit
+    navigateToListingDetailsScreen: (listingId: String, NavOptionsBuilder.() -> Unit) -> Unit,
+    navigateToCreateListingSuccessScreen: (listingId: String, wizardMode: String, navOptionsBuilder: NavOptionsBuilder.() -> Unit) -> Unit
 ) {
     composable<CreateListingWizardRoute> { navBackStackEntry ->
         val route = navBackStackEntry.toRoute<CreateListingWizardRoute>()
@@ -32,25 +37,28 @@ fun NavGraphBuilder.createListingWizardScreen(
             onEvent = viewModel::setEvent,
             state = viewModel.uiState.collectAsStateWithLifecycle().value,
             effect = viewModel.uiEffect,
+            snackbarEffects = viewModel.snackbarEffects,
             onNavigationEffect = { navigationEffect ->
                 when (navigationEffect) {
                     CreateListingWizardContract.Effect.Navigation.ExitWizard -> goBack()
                     is CreateListingWizardContract.Effect.Navigation.NavigateToListingDetailsScreen -> {
                         navigateToListingDetailsScreen(
-                            navigationEffect.listingId,
-                            true
-                        )
+                            navigationEffect.listingId
+                        ) {
+                            popUpTo(route) { inclusive = true }
+                        }
                     }
 
                     is CreateListingWizardContract.Effect.Navigation.NavigateToCreateListingSuccessScreen -> {
                         navigateToCreateListingSuccessScreen(
                             navigationEffect.listingId,
                             navigationEffect.wizardMode.name
-                        )
+                        ) {
+                            popUpTo(route) { inclusive = true }
+                        }
                     }
                 }
-            },
-            listingId = route.listingId
+            }
         )
     }
 }

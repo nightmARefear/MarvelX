@@ -7,5 +7,6 @@ data class ResponseListingPreview(
     @SerializedName("title") val title: String,
     @SerializedName("price") val price: String,
     @SerializedName("coverImageUrl") val coverImageUrl: String,
-    @SerializedName("favorite") val favorite: Boolean
+    @SerializedName("favorite") val favorite: Boolean,
+    @SerializedName("cart") val cart: Boolean
 )

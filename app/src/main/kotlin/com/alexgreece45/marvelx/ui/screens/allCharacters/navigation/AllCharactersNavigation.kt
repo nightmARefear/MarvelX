@@ -8,22 +8,11 @@ import com.alexgreece45.marvelx.data.model.deepLink.DeepLinkAction
 import com.alexgreece45.marvelx.ui.navigation.getBottomNavigationBarData
 import com.alexgreece45.marvelx.ui.screens.allCharacters.AllCharactersScreen
 import com.alexgreece45.marvelx.ui.screens.allCharacters.AllCharactersViewModel
-import com.alexgreece45.marvelx.util.extensions.popUpToTop
 import kotlinx.serialization.Serializable
 import org.koin.androidx.compose.koinViewModel
 
 @Serializable
 data object AllCharactersRoute
-
-fun NavController.navigateToAllCharactersScreen(
-    clearBackStack: Boolean
-) = this.let { navController ->
-    navController.navigate(AllCharactersRoute) {
-        if (clearBackStack) {
-            popUpToTop(navController)
-        }
-    }
-}
 
 internal fun NavGraphBuilder.allCharactersScreen(
     navController: NavController,
@@ -37,7 +26,6 @@ internal fun NavGraphBuilder.allCharactersScreen(
             state = viewModel.uiState.collectAsStateWithLifecycle().value,
             effect = viewModel.uiEffect,
             navigateToCharacterScreen = navigateToCharacterScreen,
-            openDeepLinkAction = openDeepLinkAction,
             bottomNavigationBarData = { getBottomNavigationBarData(navController = navController) }
         )
     }

@@ -32,13 +32,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.common_ui.util.ObserveUiEffect
+import com.alexgreece45.marvelx.core.common.util.flows.single_observer_flow.SingleObserverFlow
+import com.alexgreece45.marvelx.data.model.deepLink.DeepLinkAction
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.LottieComposable
 import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
 import com.alexgreece45.marvelx.ui.components.WrapButton
-import com.alexgreece45.marvelx.ui.components.effect.ObserveUiEffect
 import com.alexgreece45.marvelx.ui.components.effect.OneTimeLaunchedEffect
-import com.alexgreece45.marvelx.data.model.deepLink.DeepLinkAction
 import com.alexgreece45.marvelx.ui_theme.theme.values.customColors
 import com.alexgreece45.marvelx.util.QrCodeAnalyzer
 import com.alexgreece45.marvelx.util.SPACING_SMALL
@@ -49,13 +50,12 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.accompanist.permissions.shouldShowRationale
-import kotlinx.coroutines.flow.Flow
 
 @Composable
 fun QrCodeScanScreen(
     onEventSent: (QrCodeScanContract.Event) -> Unit,
     state: QrCodeScanContract.State,
-    effect: Flow<QrCodeScanContract.Effect>,
+    effect: SingleObserverFlow<QrCodeScanContract.Effect>,
     previousScreenRoute: String,
     onNavigation: (QrCodeScanContract.Effect.Navigation) -> Unit,
     navigateUpAndOpenDeepLinkAction: (DeepLinkAction) -> Unit,
@@ -67,7 +67,7 @@ fun QrCodeScanScreen(
         QrCodeScanContract.Event.Init(previousScreenRoute)
     }
 
-    ObserveUiEffect(effect) { uiEffect ->
+    ObserveUiEffect(flow = effect, tag = "QrCodeScanScreen") { uiEffect ->
         when (uiEffect) {
             is QrCodeScanContract.Effect.Navigation -> onNavigation(uiEffect)
 

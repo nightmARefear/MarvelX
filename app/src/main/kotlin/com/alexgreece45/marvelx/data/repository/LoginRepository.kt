@@ -104,7 +104,7 @@ class LoginRepositoryImpl(
         clientId: String,
         refreshToken: String
     ): RepositoryResult<String> = handleApiResultNoTransformationNoFlow(
-        apiResult = apiClient.logout(clientId, refreshToken),
+        apiCall = { apiClient.logout(clientId, refreshToken) },
         ioDispatcher = ioDispatcher
     )
 

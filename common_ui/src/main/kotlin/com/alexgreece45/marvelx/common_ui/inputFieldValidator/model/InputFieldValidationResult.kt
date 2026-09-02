@@ -6,10 +6,7 @@ sealed interface InputFieldValidationResult {
     data object Success : InputFieldValidationResult
     data class Error(val errorMessage: String) : InputFieldValidationResult
 
-    /**
-     * Calculates whether this result type is not erroneous.
-     */
-    val isNotError: Boolean get() = this is Uninitialized || this is Success
+    val isError: Boolean get() = this is Error
 
     companion object {
         val EmptyError = Error("")

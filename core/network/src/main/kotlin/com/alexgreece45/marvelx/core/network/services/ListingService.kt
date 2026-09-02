@@ -73,6 +73,20 @@ internal interface ListingService {
         @Path("listingId") listingId: String
     ): Response<ResponseListing>
 
+    @GET("/api/private/marvelx/listings/search")
+    suspend fun getFilteredListings(
+        @Query("searchQuery") searchQuery: String,
+        @Query("categoryIds") categoryIds: List<String>,
+        @Query("conditionIds") conditionIds: List<String>,
+        @Query("minPrice") minPrice: String?,
+        @Query("maxPrice") maxPrice: String?,
+        @Query("datePostedKey") datePostedKey: String,
+        @Query("customDateFrom") customDateFrom: String?,
+        @Query("customDateTo") customDateTo: String?,
+        @Query("isFinalSale") isFinalSale: Boolean,
+        @Query("sortKey") sortKey: String
+    ): Response<List<ResponseListingPreview>>
+
     @POST("/api/private/marvelx/listings")
     suspend fun createListing(
         @Body body: MultipartBody

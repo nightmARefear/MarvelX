@@ -1,7 +1,6 @@
 package com.alexgreece45.marvelx.common_ui.extensions
 
 import androidx.compose.material.SnackbarHostState
-import androidx.compose.material.SnackbarResult
 import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarStateData
 
 /**
@@ -11,17 +10,13 @@ suspend fun SnackbarHostState.showSnackbarAndHandleResult(snackbarStateData: Sna
     this.currentSnackbarData?.dismiss()
 
     try {
-        val snackbarResult = this.showSnackbar(
+        this.showSnackbar(
             message = snackbarStateData.message,
-            actionLabel = snackbarStateData.snackbarActionData?.label,
+            actionLabel = snackbarStateData.actionData?.label,
             duration = snackbarStateData.duration
         )
-
-        if (snackbarResult == SnackbarResult.ActionPerformed) {
-            snackbarStateData.snackbarActionData?.onClick?.invoke()
-        }
     } finally {
-        snackbarStateData.onDismiss?.invoke()
+        snackbarStateData.onDismiss?.invoke(snackbarStateData.uuid)
     }
 }
 

@@ -1,6 +1,7 @@
 package com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.basicDetails.model
 
 import android.net.Uri
+import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarType
 import com.alexgreece45.marvelx.data.model.marketplace.listing.ListingCategory
 import com.alexgreece45.marvelx.data.model.marketplace.listing.ListingSubcategory
 import com.alexgreece45.marvelx.model.model.generic.AttachedFileContentData
@@ -92,7 +93,7 @@ sealed interface CreateListingBasicDetailsContract {
     sealed interface Effect : BaseEffect {
         data object GoToPreviousStep : Effect
         data object OpenPhotoPicker : Effect
-        data class ShowToastMessage(val message: String) : Effect
+        data class ShowSnackbar(val message: String, val snackbarType: SnackbarType) : Effect
         data object OnImagesReordered : Effect
 
         data class SetNextButtonEnabled(val enabled: Boolean) : Effect

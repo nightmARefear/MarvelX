@@ -437,11 +437,19 @@
     <string name="screen_my_listings_fab_label">Create Listing</string>
     <string name="screen_my_listings_bottom_sheet_item_edit">Edit listing</string>
     <string name="screen_my_listings_bottom_sheet_item_delete">Delete listing</string>
+    <string name="screen_my_listings_bottom_sheet_item_share">Share listing</string>
 
     <string name="screen_my_listings_no_listings_found_title">No listings were found.\nClick the button below to create one</string>
     <string name="screen_my_listings_no_listings_found_button">Create listing</string>
 
+    <string name="screen_my_listings_delete_dialog_title">Delete listing?</string>
+    <string name="screen_my_listings_delete_dialog_message">Are you sure you want to permanently delete the listing \"%1$s\"? This action cannot be undone.</string>
+    <string name="screen_my_listings_delete_dialog_negative_button">Cancel</string>
+    <string name="screen_my_listings_delete_dialog_positive_button">Delete</string>
+
     <string name="screen_my_listings_success_deleting_listing">Successfully deleted the listing \"%1$s\"</string>
+
+    <string name="screen_my_listings_share_listing_title">Sharing listing %1$s</string>
 
     <string name="screen_my_listings_error_fetching_listings">An error occurred whilst fetching your listings.</string>
     <string name="screen_my_listings_error_fetching_additional_listings">An error occurred whilst fetching additional listings.</string>
@@ -450,6 +458,7 @@
     <string name="screen_my_listings_content_description_more_actions_listing">more actions listing icon</string>
     <string name="screen_my_listings_content_description_edit_listing">edit listing icon</string>
     <string name="screen_my_listings_content_description_delete_listing">delete listing icon</string>
+    <string name="screen_my_listings_content_description_share_listing">share listing icon</string>
 
     // CartScreen
     <string name="screen_cart_toolbar_title">Cart</string>
@@ -481,7 +490,6 @@
     <string name="screen_checkout_wizard_step_label_shipping_details">Shipping Details</string>
     <string name="screen_checkout_wizard_step_label_payment_details">Payment Details</string>
     <string name="screen_checkout_wizard_step_label_overview">Overview</string>
-    <string name="screen_checkout_wizard_step_label_success">Success</string>
 
     <string name="screen_checkout_wizard_sticky_bottom_button_next">Next</string>
 
@@ -575,7 +583,6 @@
     <string name="screen_order_item_tracking_history_title_estimated_delivery">Estimated Delivery</string>
     <string name="screen_order_item_tracking_history_title_delivery_timeline">Delivery Timeline</string>
 
-    <string name="screen_order_item_tracking_history_label_order_ids">Order %1$s > Order Item %2$s</string>
     <string name="screen_order_item_tracking_history_label_tracking_step_pending">Pending</string>
 
     <string name="screen_order_item_tracking_history_seller_card_title">SELLER</string>
@@ -590,22 +597,22 @@
     <string name="screen_order_item_tracking_history_delivery_details_card_label_courier">Courier:</string>
     <string name="screen_order_item_tracking_history_delivery_details_card_label_tracking_id">Tracking ID:</string>
 
-    // Return Card
+    // OrderItemTrackingHistoryScreen :: Return Card
     <string name="screen_order_item_tracking_history_return_card_available_title">Return window open</string>
-    <string name="screen_order_item_tracking_history_return_card_available_description">You have until %1$s to return this item</string>
+    <string name="screen_order_item_tracking_history_return_card_available_description">You have until %1$s to return this item.</string>
 
     <string name="screen_order_item_tracking_history_return_card_expired_title">Return window closed</string>
-    <string name="screen_order_item_tracking_history_return_card_expired_description">The 30-day return period ended on %1$s</string>
+    <string name="screen_order_item_tracking_history_return_card_expired_description">The 30-day return period ended on %1$s.</string>
 
     <string name="screen_order_item_tracking_history_return_card_final_sale_title">Final Sale - No returns</string>
-    <string name="screen_order_item_tracking_history_return_card_final_sale_description">This clearance item was marked as final sale</string>
+    <string name="screen_order_item_tracking_history_return_card_final_sale_description">This clearance item was marked as final sale.</string>
     <string name="screen_order_item_tracking_history_return_card_final_sale_additional_description">All sales final • No returns or exchanges</string>
 
     <string name="screen_order_item_tracking_history_return_card_pending_title">Return request pending</string>
-    <string name="screen_order_item_tracking_history_return_card_pending_description">The seller is reviewing your return request</string>
+    <string name="screen_order_item_tracking_history_return_card_pending_description">The seller is reviewing your return request.</string>
 
     <string name="screen_order_item_tracking_history_return_card_rejected_title">Return request rejected</string>
-    <string name="screen_order_item_tracking_history_return_card_rejected_description">The seller has rejected your return request</string>
+    <string name="screen_order_item_tracking_history_return_card_rejected_description">The seller has rejected your return request.</string>
     <string name="screen_order_item_tracking_history_return_card_rejected_action_button">View Response</string>
 
     <string name="screen_order_item_tracking_history_return_card_accepted_title">Return request accepted</string>
@@ -617,22 +624,22 @@
     <string name="screen_order_item_tracking_history_return_section_button_view_tracking_history">View Tracking History</string>
     <string name="screen_order_item_tracking_history_return_section_button_report_an_issue">Report An Issue</string>
 
-    // Refund Card
+    // OrderItemTrackingHistoryScreen :: Refund Card
     <string name="screen_order_item_tracking_history_refund_card_available_title">Refund window open</string>
-    <string name="screen_order_item_tracking_history_refund_card_available_description">You have until %1$s to refund this item</string>
+    <string name="screen_order_item_tracking_history_refund_card_available_description">You have until %1$s to refund this item.</string>
 
     <string name="screen_order_item_tracking_history_refund_card_expired_title">Refund window closed</string>
-    <string name="screen_order_item_tracking_history_refund_card_expired_description">The 30-day return period ended on %1$s</string>
+    <string name="screen_order_item_tracking_history_refund_card_expired_description">The 30-day return period ended on %1$s.</string>
 
     <string name="screen_order_item_tracking_history_refund_card_final_sale_title">Final Sale - No refunds</string>
-    <string name="screen_order_item_tracking_history_refund_card_final_sale_description">This clearance item was marked as final sale</string>
+    <string name="screen_order_item_tracking_history_refund_card_final_sale_description">This clearance item was marked as final sale.</string>
     <string name="screen_order_item_tracking_history_refund_card_final_sale_additional_description">All sales final • No refunds</string>
 
     <string name="screen_order_item_tracking_history_refund_card_pending_title">Refund request pending</string>
     <string name="screen_order_item_tracking_history_refund_card_pending_description">The seller is reviewing your refund request</string>
 
     <string name="screen_order_item_tracking_history_refund_card_rejected_title">Refund request rejected</string>
-    <string name="screen_order_item_tracking_history_refund_card_rejected_description">The seller has rejected your refund request</string>
+    <string name="screen_order_item_tracking_history_refund_card_rejected_description">The seller has rejected your refund request.</string>
     <string name="screen_order_item_tracking_history_refund_card_rejected_action_button">View Response</string>
 
     <string name="screen_order_item_tracking_history_refund_card_accepted_title">Refund request accepted</string>
@@ -647,6 +654,7 @@
 
     <string name="screen_order_item_tracking_history_toast_message_success_copying_to_clipboard">Successfully copied the tracking ID to the clipboard</string>
 
+    // OrderItemTrackingHistoryScreen :: Errors
     <string name="screen_order_item_tracking_history_error_label_no_data">No tracking history was found for the order %1$s and item %2$s.</string>
     <string name="screen_order_item_tracking_history_error_label_fetching_data">An error occurred whilst loading the tracking history for the order %1$s and item %2$s.</string>
     <string name="screen_order_item_tracking_history_error_label_fetching_seller_info">Error loading seller info.</string>
@@ -656,48 +664,103 @@
 
     <string name="screen_order_item_tracking_history_content_description_copy_tracking_id">copy tracking ID icon button</string>
 
-    // Request return screen
-    <string name="screen_request_item_return_toolbar_title">Request Return</string>
+    // OrderItemManagementScreen
+    <string name="screen_order_item_management_toolbar_title">Manage Order Item</string>
 
-    <string name="screen_request_return_reason_label">Return Reason</string>
+    <string name="screen_order_item_management_label_order_ids">Order #%1$s > Order Item #%2$s</string>
+    <string name="screen_order_item_management_label_current_status">CURRENT STATUS</string>
+
+    <string name="screen_order_item_management_dropdown_label_new_status">New Status</string>
+    <string name="screen_order_item_management_button_apply_status">Apply Status</string>
+
+    <string name="screen_order_item_management_toast_message_status_updated">Successfully updated the order item status</string>
+
+    <string name="screen_order_item_management_error_label_fetching_data">An error occurred whilst loading the details for the order %1$s and item %2$s.</string>
+
+    // Request Item Return Screen
+    <string name="screen_request_item_return_toolbar_title">Request Return</string>
+    <string name="screen_request_item_return_wizard_step_return_reason_toolbar_title">Return Reason</string>
+    <string name="screen_request_item_return_wizard_step_return_details_toolbar_title">Return Details</string>
+    <string name="screen_request_item_return_wizard_step_overview_toolbar_title">Overview</string>
+
+    <string name="screen_request_item_return_return_reason_label">Return Reason</string>
+    <string name="screen_request_item_return_return_reason_warning_box_title">%1$s days remaining</string>
+    <string name="screen_request_item_return_return_reason_warning_box_description">Return window closes %1$s</string>
+
+    <string name="screen_request_item_return_return_reason_other_textfield_label">Describe the reason</string>
 
     <string name="screen_request_item_return_checkbox_request_refund">Request refund</string>
+    <string name="screen_request_item_return_checkbox_request_refund_not_available_message">This item is final sale and cannot be refunded.</string>
+
+    // Request Item Return Screen :: Return Details Section
+    <string name="screen_request_item_return_return_condition_label">Return Condition</string>
+    <string name="screen_request_item_return_return_details_requirements_title">Return Requirements</string>
+    <string name="screen_request_item_return_return_details_requirements_label_1">Item must be in original packaging</string>
+    <string name="screen_request_item_return_return_details_requirements_label_2">All accessories and documentation included</string>
+    <string name="screen_request_item_return_return_details_requirements_label_3">No signs of wear or damage</string>
 
     <string name="screen_request_item_return_description_title">Additional Details (Optional)</string>
     <string name="screen_request_item_return_description_placeholder">Describe your return reason…</string>
     <string name="screen_request_item_return_description_remaining_characters_label">remaining characters: %1$s/%2$s</string>
 
-    <string name="screen_request_item_return_mandatory_field_label">mandatory field</string>
-
     <string name="screen_request_item_return_upload_images_title">Upload photos (optional)</string>
     <string name="screen_request_item_return_upload_images_button">Upload photos</string>
     <string name="screen_request_item_return_upload_images_helper_text">A maximum of %1$s images are allowed, up to %2$sMB each.</string>
 
+    <string name="screen_request_item_return_mandatory_field_label">mandatory field</string>
+
+    // Request Item Return Screen :: Overview Section
+    <string name="screen_request_item_return_overview_choice_return">Return Reason</string>
+    <string name="screen_request_item_return_overview_choice_condition">Item Condition</string>
+    <string name="screen_request_item_return_overview_choice_attached_images">Images</string>
+    <string name="screen_request_item_return_overview_choice_attached_images_count">%1$s attached</string>
+
+    <string name="screen_request_item_return_method_label">Choose Return Method</string>
+
+    <string name="screen_request_item_overview_refund_box_label">Expected Refund</string>
+    <string name="screen_request_item_overview_refund_box_subtotal_label">Subtotal</string>
+    <string name="screen_request_item_overview_refund_box_return_shipping_label">Return Shipping</string>
+    <string name="screen_request_item_overview_refund_box_total_refund_label">Total Refund</string>
+    <string name="screen_request_item_overview_refund_box_total_refund_description">Refund will be processed to your original payment method within 3–5 business days after we receive the item.</string>
+
+    <string name="screen_request_item_return_sticky_bottom_checkbox_label">I confirm that the item is in its original condition with all accessories and packaging, and I agree to the Return Policy.</string>
+    <string name="screen_request_item_return_sticky_bottom_checkbox_label_clickable_text">Return Policy</string>
+    <string name="screen_request_item_return_sticky_bottom_button_next">Next</string>
+    <string name="screen_request_item_return_sticky_bottom_button_submit">Submit Return Request</string>
+
+    // Request Item Return Screen :: Request Policy Bottom Sheet
+    <string name="screen_request_item_return_bottom_sheet_title">MarvelX Return Policy</string>
+    <string name="screen_request_item_return_bottom_sheet_error_loading">An error occurred whilst loading the return policies.</string>
+
+    // Request Item Return Screen :: Refund Dialog
     <string name="screen_request_item_return_refund_dialog_title">Important Refund Information</string>
     <string name="screen_request_item_return_refund_dialog_error_message">Please note that submitting a refund request does not automatically guarantee eligibility. We will carefully inspect your item after it is returned to determine if a full or partial refund can be issued, based on its condition.</string>
     <string name="screen_request_item_return_refund_dialog_button_negative">Cancel</string>
     <string name="screen_request_item_return_refund_dialog_button_positive">Continue</string>
 
+    // Request Item Return Screen :: Exit Dialog
     <string name="screen_request_item_return_exit_dialog_title">Exit</string>
     <string name="screen_request_item_return_exit_dialog_error_message">Are you sure that you want to exit the request item return process? If you do so, all saved progress will be lost.</string>
     <string name="screen_request_item_return_exit_dialog_button_negative">Cancel</string>
     <string name="screen_request_item_return_exit_dialog_button_positive">Exit</string>
 
+    // Request Item Return Screen :: Snackbar
     <string name="screen_request_item_return_snackbar_image_selection_none_message">No images were selected</string>
     <string name="screen_request_item_return_snackbar_image_selection_none_button">OK</string>
 
     <string name="screen_request_item_return_snackbar_image_selection_failure_message">An error occurred whilst selecting the images</string>
     <string name="screen_request_item_return_snackbar_image_selection_failure_button">OK</string>
 
-    // Errors.
-
+    // Request Item Return Screen :: Errors
+    <string name="screen_request_item_return_unknown_error_message">An error occurred</string>
     <string name="screen_request_item_return_generic_error_message">An error occurred whilst fetching the details</string>
-    <string name="screen_request_item_return_generic_error_button">Try again</string>
+    <string name="screen_request_item_return_error_loading_return_screen">An error occurred whilst loading the order item return screen.</string>
 
     <string name="screen_request_item_return_snackbar_error_submitting_item_return_message">An error occurred whilst submitting the item return</string>
     <string name="screen_request_item_return_snackbar_error_submitting_item_return_button">Try again</string>
 
-    <string name="screen_request_return_description_error_max_characters">Description cannot be more than %1$s characters</string>
+    <string name="screen_request_item_return_error_return_reason_other_text_blank">Description cannot be blank</string>
+    <string name="screen_request_item_return_error_description_blank">Description cannot be blank</string>
     <string name="screen_request_item_return_refund_error_attaching_images_generic">An error occurred whilst attaching the images.</string>
     <string name="screen_request_item_return_refund_error_attaching_images_invalid_extension">You can only attach JPEG and PNG images.</string>
     <string name="screen_request_item_return_refund_error_attaching_images_over_max_count">You can only attach up to %1$s images.</string>
@@ -708,7 +771,44 @@
     <string name="screen_request_item_return_uploaded_image_content_description">Uploaded image %1$s</string>
     <string name="screen_request_item_return_remove_image_button_content_description">remove attached image button</string>
 
-    <string name="screen_request_return_submit_button">Submit Return Request</string>
+    // Request Item Return Success Screen
+    <string name="screen_request_item_return_success_toolbar_title">Return Submitted</string>
+
+    <string name="screen_request_item_return_success_main_content_return_title">Return Request Submitted!</string>
+    <string name="screen_request_item_return_success_main_content_return_description">Your return request has been sent to the seller. </string>
+    <string name="screen_request_item_return_success_main_content_return_description_extra_prepaid_shipping_label">You\'ll receive an email with your prepaid shipping label within 24 hours.</string>
+
+    <string name="screen_request_item_return_success_main_content_refund_title">Refund Request Submitted!</string>
+    <string name="screen_request_item_return_success_main_content_refund_description">Your refund request has been sent to the seller. You\'ll receive an email with your prepaid shipping label within 24 hours.</string>
+    <string name="screen_request_item_return_success_main_content_refund_description_extra_prepaid_shipping_label">You\'ll receive an email with your prepaid shipping label within 24 hours.</string>
+
+    <string name="screen_request_item_return_success_details_return_title">RETURN REQUEST DETAILS</string>
+    <string name="screen_request_item_return_success_details_refund_title">REFUND REQUEST DETAILS</string>
+
+    <string name="screen_request_item_return_success_details_request_id">Request ID</string>
+    <string name="screen_request_item_return_success_details_status">Status</string>
+    <string name="screen_request_item_return_success_details_expected_refund">Expected Refund</string>
+    <string name="screen_request_item_return_success_details_submitted">Submitted</string>
+
+    <string name="screen_request_item_return_success_next_steps_title">Next Steps</string>
+
+    <string name="screen_request_item_return_success_next_steps_prepaid_shipping_label_step_1">1. Wait for shipping label email (within 24 hours)</string>
+    <string name="screen_request_item_return_success_next_steps_prepaid_shipping_label_step_2">2. Pack item in original packaging</string>
+    <string name="screen_request_item_return_success_next_steps_prepaid_shipping_label_step_3">3. Print and attach shipping label</string>
+    <string name="screen_request_item_return_success_next_steps_prepaid_shipping_label_step_4">4. Drop off at any courier location</string>
+    <string name="screen_request_item_return_success_next_steps_prepaid_shipping_label_step_5">5. Track return shipment in your orders</string>
+
+    <string name="screen_request_item_return_success_next_steps_courier_pickup_step_1">1. Wait for pickup confirmation email (within 24 hours)</string>
+    <string name="screen_request_item_return_success_next_steps_courier_pickup_step_2">2. Pack item securely in original packaging</string>
+    <string name="screen_request_item_return_success_next_steps_courier_pickup_step_3">3. The courier will bring the return label upon arrival</string>
+    <string name="screen_request_item_return_success_next_steps_courier_pickup_step_4">4. Hand over the package to the courier</string>
+    <string name="screen_request_item_return_success_next_steps_courier_pickup_step_5">5. Track return shipment in your orders</string>
+
+    <string name="screen_request_item_return_success_sticky_bottom_button_view_return_status">View Return Status</string>
+    <string name="screen_request_item_return_success_sticky_bottom_button_view_refund_status">View Refund Status</string>
+
+    <string name="screen_request_item_return_success_generic_error_message">An error occurred whilst fetching the return details</string>
+
 
     // `CheckoutDataCard`
     <string name="checkout_info_card_shipping_details_title">Shipping Details</string>
@@ -722,9 +822,9 @@
     <string name="checkout_info_card_content_description_edit_payment_details">Edit payment details icon</string>
 
     // `OrderSummaryCard`
-    <string name="order_summary_card_label_subtotal">Subtotal:</string>
-    <string name="order_summary_card_label_shipping">Shipping:</string>
-    <string name="order_summary_card_label_total">Total:</string>
+    <string name="order_summary_card_label_subtotal">Subtotal</string>
+    <string name="order_summary_card_label_shipping">Shipping</string>
+    <string name="order_summary_card_label_total">Total</string>
 
     // `OtpErrorCause` sealed class strings
     <string name="otp_error_cause_not_match">OTP is incorrect.</string>
@@ -808,11 +908,17 @@
     <string name="card_brand_content_description_unknown">Unknown card brand icon</string>
 
     // `OrderItemReturnReasonUi` enum labels
-    <string name="order_item_return_reason_defective">Item is defective or damaged</string>
-    <string name="order_item_return_reason_not_as_described">Item not as described</string>
-    <string name="order_item_return_reason_wrong_item">Wrong item received</string>
-    <string name="order_item_return_reason_changed_mind">Changed my mind</string>
-    <string name="order_item_return_reason_other">Other</string>
+    <string name="order_item_return_reason_defective_title">Damaged or Defective</string>
+    <string name="order_item_return_reason_defective_description">Item arrived broken or not working</string>
+
+    <string name="order_item_return_reason_not_as_described_title">Not as Described</string>
+    <string name="order_item_return_reason_not_as_described_description">Doesn\'t match listing details</string>
+
+    <string name="order_item_return_reason_wrong_item_title">Wrong Item Received</string>
+    <string name="order_item_return_reason_wrong_item_description">Received different product</string>
+
+    <string name="order_item_return_reason_other_title">Other</string>
+    <string name="order_item_return_reason_other_description">Describe in detail</string>
 
     // `OrderItemReturnConditionUi` enum labels
     <string name="order_item_return_condition_original_packaging_title">Unused with tags</string>
@@ -823,6 +929,32 @@
 
     <string name="order_item_return_condition_lightly_used_title">Gently used</string>
     <string name="order_item_return_condition_lightly_used_description">Used once or twice, like new</string>
+
+    // `OrderItemReturnMethodUi` enum labels
+    <string name="order_item_return_method_prepaid_return_label_title">Prepaid Return Label</string>
+    <string name="order_item_return_method_prepaid_return_label_description">We\'ll email you a shipping label. Drop off at any courier location.</string>
+
+    <string name="order_item_return_method_request_pickup_title">Request Pickup</string>
+    <string name="order_item_return_method_request_pickup_description">Courier will collect the item from your address.</string>
+
+    // `OrderIdsLabel` labels
+    <string name="order_ids_label">Order %1$s > Order Item %2$s</string>
+
+    // `OrderItemReturnStatusUi` enum labels
+    <string name="order_item_return_status_available">Available for return</string>
+    <string name="order_item_return_status_expired">Return window expired</string>
+    <string name="order_item_return_status_final_sale">Final sale</string>
+    <string name="order_item_return_status_rejected">Return rejected</string>
+    <string name="order_item_return_status_pending">Return pending</string>
+    <string name="order_item_return_status_item_replaced">Item replaced</string>
+    <string name="order_item_return_status_refunded">Refunded</string>
+
+    // `ListingDateRangeOptionUi` enum labels
+    <string name="listing_date_range_option_all_label">Any time</string>
+    <string name="listing_date_range_option_last_24_hours_label">Last 24 hours</string>
+    <string name="listing_date_range_option_last_7_days_label">Last 7 days</string>
+    <string name="listing_date_range_option_last_30_days_label">Last 30 days</string>
+    <string name="listing_date_range_option_custom_label">Custom range</string>
 
     // Input field errors
     <string name="input_field_error_blank_email">Email cannot be blank.</string>

@@ -22,19 +22,19 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
-import androidx.compose.material.SnackbarHostState
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.graphics.drawscope.Fill
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
@@ -43,10 +43,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.rememberNavController
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.common_ui.extensions.hideSnackbar
-import com.alexgreece45.marvelx.common_ui.extensions.showSnackbarAndHandleResult
-import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarConfig
+import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarEffect
 import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarNavigationPayload
+import com.alexgreece45.marvelx.common_ui.util.ObserveUiEffect
+import com.alexgreece45.marvelx.common_ui.util.ObserveUiState
+import com.alexgreece45.marvelx.core.common.util.flows.single_observer_flow.SingleObserverFlow
 import com.alexgreece45.marvelx.data.model.deepLink.DeepLinkAction
 import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.ProfileDetailsDomain
 import com.alexgreece45.marvelx.domain.model_generic.ReloadableImageUrlData
@@ -59,13 +60,11 @@ import com.alexgreece45.marvelx.ui.components.ToolbarAction
 import com.alexgreece45.marvelx.ui.components.WrapAsyncImage
 import com.alexgreece45.marvelx.ui.components.WrapModalBottomSheetLayout
 import com.alexgreece45.marvelx.ui.components.WrapTextButton
-import com.alexgreece45.marvelx.ui.components.effect.ObserveUiEffect
 import com.alexgreece45.marvelx.ui.components.error.ContentErrorScreen
 import com.alexgreece45.marvelx.ui.components.icons.NavigateIcon
 import com.alexgreece45.marvelx.ui.components.modalBottomSheetContents.ModalBottomSheetContentItems
 import com.alexgreece45.marvelx.ui.components.model.BottomSheetContentItem
 import com.alexgreece45.marvelx.ui.components.model.ErrorButtonLayout
-import com.alexgreece45.marvelx.ui.components.model.ShadowData
 import com.alexgreece45.marvelx.ui.components.rememberWrapModalBottomSheetState
 import com.alexgreece45.marvelx.ui.components.sections.SectionListHeader
 import com.alexgreece45.marvelx.ui.components.sections.model.SectionHeaderData
@@ -89,7 +88,9 @@ import com.canhub.cropper.CropImageContract
 import com.canhub.cropper.CropImageContractOptions
 import com.canhub.cropper.CropImageOptions
 import com.canhub.cropper.CropImageView
-import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.launch
 
@@ -98,8 +99,9 @@ import kotlinx.coroutines.launch
 fun ProfileScreen(
     onEventSent: (ProfileContract.Event) -> Unit,
     state: ProfileContract.State,
-    effect: Flow<ProfileContract.Effect>,
-    snackbarNavigationPayloadFlow: Flow<SnackbarNavigationPayload?>,
+    effect: SingleObserverFlow<ProfileContract.Effect>,
+    snackbarEffects: SingleObserverFlow<SnackbarEffect>,
+    snackbarNavigationPayloadFlow: StateFlow<SnackbarNavigationPayload?>,
     onSnackbarNavigationPayloadConsumed: () -> Unit,
     bottomNavigationBarData: @Composable () -> BottomNavigationBarData,
     onNavigation: (ProfileContract.Effect.Navigation) -> Unit,
@@ -112,7 +114,6 @@ fun ProfileScreen(
 
     val coroutineScope = rememberCoroutineScope()
     val modalBottomSheetState = rememberWrapModalBottomSheetState()
-    val snackbarHostState = remember { SnackbarHostState() }
 
     val singlePhotoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia(),
@@ -154,14 +155,14 @@ fun ProfileScreen(
         onEventSent(ProfileContract.Event.Init(context.getAndRemovePendingDeepLinkAction()))
     }
 
-    ObserveUiEffect(snackbarNavigationPayloadFlow) { payload ->
+    ObserveUiState(flow = snackbarNavigationPayloadFlow) { payload ->
         payload?.let {
             onSnackbarNavigationPayloadConsumed()
             onEventSent(ProfileContract.Event.OnSnackbarNavigationPayloadReceived(payload))
         }
     }
 
-    ObserveUiEffect(effect) { uiEffect ->
+    ObserveUiEffect(flow = effect, tag = "ProfileScreen") { uiEffect ->
         when (uiEffect) {
             is ProfileContract.Effect.Navigation -> {
                 onNavigation(uiEffect)
@@ -209,16 +210,6 @@ fun ProfileScreen(
                     modalBottomSheetState.hideIfVisible()
                 }
             }
-
-            is ProfileContract.Effect.ShowSnackbar -> {
-                coroutineScope.launch {
-                    snackbarHostState.showSnackbarAndHandleResult(uiEffect.snackbarStateData)
-                }
-            }
-
-            ProfileContract.Effect.HideSnackbar -> {
-                snackbarHostState.hideSnackbar()
-            }
         }
     }
 
@@ -255,10 +246,7 @@ fun ProfileScreen(
                 )
             ),
             bottomNavigationBarData = bottomNavigationBarData(),
-            snackbarConfig = SnackbarConfig(
-                snackbarHostState = snackbarHostState,
-                snackbarStateData = state.snackbarStateData
-            ),
+            snackbarEffects = snackbarEffects,
             paddingValues = PaddingValues()
         ) { paddingValues ->
             Column(
@@ -324,7 +312,6 @@ fun ProfileScreen(
     // Alert Dialog error.
     state.errorAlertDialog?.let { errorAlertDialog ->
         AlertDialogError(
-            isVisible = true,
             title = errorAlertDialog.errorTitle,
             errorMessage = { Text(text = errorAlertDialog.errorSubtitle) },
             confirmButton = errorAlertDialog.alertDialogButtonPositive,
@@ -426,17 +413,18 @@ private fun ProfileBanner(
                         borderWidth = ConstantsUi.IMAGE_BORDER_WIDTH,
                         borderColor = MaterialTheme.customColors.genericRed
                     ),
-                placeholder = painterResource(R.drawable.ic_person),
-                error = painterResource(R.drawable.ic_person),
-                onSuccess = { onProfileImageEventSent(ProfileContract.Event.ProfileImage.OnLoaded) },
-                onError = { onProfileImageEventSent(ProfileContract.Event.ProfileImage.OnLoaded) },
-                shadowData = ShadowData(
+                boxModifier = Modifier.shadow(
                     elevation = ConstantsUi.ProfileScreen.PROFILE_IMAGE_ELEVATION,
                     shape = CircleShape,
                     clip = true,
                     ambientColor = MaterialTheme.customColors.genericRed,
                     spotColor = MaterialTheme.customColors.genericRed
                 ),
+                placeholder = painterResource(R.drawable.ic_person),
+                error = painterResource(R.drawable.ic_person),
+                onSuccess = { onProfileImageEventSent(ProfileContract.Event.ProfileImage.OnLoaded) },
+                onError = { onProfileImageEventSent(ProfileContract.Event.ProfileImage.OnLoaded) },
+                contentScale = ContentScale.Crop,
                 isCacheDisabled = true
             )
 
@@ -528,8 +516,9 @@ private fun ProfileScreenPreview() {
                 ),
                 profileDetails = profileDetails.basicProfileDetails
             ),
-            effect = emptyFlow(),
-            snackbarNavigationPayloadFlow = emptyFlow(),
+            effect = SingleObserverFlow(emptyFlow()),
+            snackbarEffects = SingleObserverFlow(emptyFlow()),
+            snackbarNavigationPayloadFlow = MutableStateFlow(null).asStateFlow(),
             onSnackbarNavigationPayloadConsumed = {},
             bottomNavigationBarData = { getBottomNavigationBarData(navController = rememberNavController()) },
             onNavigation = {},

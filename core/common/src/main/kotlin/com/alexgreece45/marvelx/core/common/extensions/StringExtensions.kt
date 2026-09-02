@@ -14,3 +14,5 @@ fun String.endsWithAnySuffix(suffixes: List<String>, ignoreCase: Boolean = true)
         )
     }
 }
+
+fun String.withEuroSymbol(): String = "$this€"

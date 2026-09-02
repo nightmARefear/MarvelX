@@ -26,7 +26,7 @@ internal class FaqsRepositoryImpl(
 
     override suspend fun getFaqs(): RepositoryResult<List<RepositoryFaq>> {
         return handleApiResultNoFlow(
-            apiResult = apiClient.getFaqs(),
+            apiCall = apiClient::getFaqs,
             transformation = ResponseFaqs::toRepositoryFaqs,
             ioDispatcher = ioDispatcher
         )

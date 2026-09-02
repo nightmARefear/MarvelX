@@ -2,7 +2,7 @@ package com.alexgreece45.marvelx.data.repository.user
 
 import com.alexgreece45.marvelx.core.common.dispatchers.model.IoDispatcher
 import com.alexgreece45.marvelx.core.data.helper.RepositoryResult
-import com.alexgreece45.marvelx.core.data.helper.handleApiResultNoTransformation
+import com.alexgreece45.marvelx.core.data.helper.handleApiResultNoTransformationNoFlow
 import com.alexgreece45.marvelx.core.data.helper.handleApiResultNoTransformationWithData
 import com.alexgreece45.marvelx.core.network.clients.ApiClient
 import com.alexgreece45.marvelx.core.network.model.api.user.block.ResponseBlockedUser
@@ -32,7 +32,7 @@ interface BlockedUserRepository {
     /**
      * Unblocks the user with [userId].
      */
-    suspend fun unblockUser(userId: UserId): Flow<RepositoryResult<String>>
+    suspend fun unblockUser(userId: UserId): RepositoryResult<String>
 }
 
 @Single
@@ -45,7 +45,7 @@ class BlockedUserRepositoryImpl(
         flow {
             emitAll(
                 handleApiResultNoTransformationWithData(
-                    apiResult = apiClient.getBlockedUsers(),
+                    apiCall = apiClient::getBlockedUsers,
                     ioDispatcher = ioDispatcher
                 )
             )
@@ -69,12 +69,10 @@ class BlockedUserRepositoryImpl(
         }
     }
 
-    override suspend fun unblockUser(userId: UserId): Flow<RepositoryResult<String>> = flow {
-        emitAll(
-            handleApiResultNoTransformation(
-                apiResult = apiClient.unblockUser(userId.value),
-                ioDispatcher = ioDispatcher
-            )
+    override suspend fun unblockUser(userId: UserId): RepositoryResult<String> {
+        return handleApiResultNoTransformationNoFlow(
+            apiCall = { apiClient.unblockUser(userId.value) },
+            ioDispatcher = ioDispatcher
         )
     }
 }

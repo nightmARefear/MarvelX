@@ -3,23 +3,25 @@ package com.alexgreece45.marvelx.core.data.repositories.marketplace.listing
 import com.alexgreece45.marvelx.core.common.dispatchers.model.IoDispatcher
 import com.alexgreece45.marvelx.core.data.helper.RepositoryResult
 import com.alexgreece45.marvelx.core.data.helper.handleApiResultNoFlow
-import com.alexgreece45.marvelx.core.data.helper.handleApiResultNoTransformationWithData
+import com.alexgreece45.marvelx.core.data.helper.handleApiResultNoTransformationNoFlow
 import com.alexgreece45.marvelx.core.data.helper.multi_part_builder.MultipartBuilder
 import com.alexgreece45.marvelx.core.data.helper.multi_part_builder.model.MultipartBuilderResult
 import com.alexgreece45.marvelx.core.data.helper.multi_part_builder.model.MultipartItem
 import com.alexgreece45.marvelx.core.data.helper.multi_part_builder.model.MultipartResult
 import com.alexgreece45.marvelx.core.data.mappers.ListingDataMapper
+import com.alexgreece45.marvelx.core.data.model.marketplace.ListingSort
+import com.alexgreece45.marvelx.core.data.model.marketplace.MarketplaceSearchCriteria
 import com.alexgreece45.marvelx.core.data.model.marketplace.listing.CreateListingData
 import com.alexgreece45.marvelx.core.data.model.marketplace.listing.ListingData
 import com.alexgreece45.marvelx.core.data.model.marketplace.listing.ListingPreviewData
 import com.alexgreece45.marvelx.core.data.model.marketplace.listing.toData
 import com.alexgreece45.marvelx.core.data.model.myListing.MyListingData
 import com.alexgreece45.marvelx.core.data.model.myListing.toData
+import com.alexgreece45.marvelx.core.data.repositories.marketplace.listing.model.FilteredListing
+import com.alexgreece45.marvelx.core.data.repositories.marketplace.listing.model.toData
 import com.alexgreece45.marvelx.core.network.clients.ListingClient
 import com.alexgreece45.marvelx.core.network.model.api.marketplace.listing.RequestUpdateListing
 import com.alexgreece45.marvelx.core.network.model.api.marketplace.listing.ResponseListingId
-import com.alexgreece45.marvelx.core.network.model.api.marketplace.listing.ResponseListingPreview
-import kotlinx.coroutines.flow.first
 import org.koin.core.annotation.Single
 import kotlin.coroutines.CoroutineContext
 
@@ -35,6 +37,13 @@ interface ListingRepository {
     ): RepositoryResult<List<ListingPreviewData>>
 
     suspend fun getListing(listingId: String): RepositoryResult<ListingData>
+
+    suspend fun getFilteredListings(
+        searchQuery: String,
+        searchCriteria: MarketplaceSearchCriteria,
+        sort: ListingSort
+    ): RepositoryResult<List<FilteredListing>>
+
     suspend fun createListing(createListingData: CreateListingData): MultipartResult<String>
 
     suspend fun updateListing(
@@ -47,7 +56,7 @@ interface ListingRepository {
     suspend fun addToFavorites(listingId: String): Boolean
     suspend fun removeFromFavorites(listingId: String): Boolean
 
-    suspend fun getFavoriteListings(): RepositoryResult<List<ResponseListingPreview>>
+    suspend fun getFavoriteListings(): RepositoryResult<List<ListingPreviewData>>
 }
 
 @Single
@@ -62,7 +71,7 @@ internal class ListingRepositoryImpl(
         categoryCode: String
     ): RepositoryResult<List<ListingData>> {
         return handleApiResultNoFlow(
-            apiResult = listingClient.getAllListingsByCategory(categoryCode),
+            apiCall = { listingClient.getAllListingsByCategory(categoryCode) },
             transformation = { this.map { listingDataMapper.toData(it) } },
             ioDispatcher = ioDispatcher
         )
@@ -70,7 +79,7 @@ internal class ListingRepositoryImpl(
 
     override suspend fun getCurrentUserListings(page: Int): RepositoryResult<List<MyListingData>> {
         return handleApiResultNoFlow(
-            apiResult = listingClient.getCurrentUserListings(page),
+            apiCall = { listingClient.getCurrentUserListings(page) },
             transformation = { this.map { it.toData() } },
             ioDispatcher = ioDispatcher
         )
@@ -81,7 +90,7 @@ internal class ListingRepositoryImpl(
         page: Int
     ): RepositoryResult<List<ListingPreviewData>> {
         return handleApiResultNoFlow(
-            apiResult = listingClient.getUserListings(userId, page),
+            apiCall = { listingClient.getUserListings(userId, page) },
             transformation = { this.map { it.toData() } },
             ioDispatcher = ioDispatcher
         )
@@ -89,8 +98,33 @@ internal class ListingRepositoryImpl(
 
     override suspend fun getListing(listingId: String): RepositoryResult<ListingData> {
         return handleApiResultNoFlow(
-            apiResult = listingClient.getListing(listingId),
+            apiCall = { listingClient.getListing(listingId) },
             transformation = listingDataMapper::toData,
+            ioDispatcher = ioDispatcher
+        )
+    }
+
+    override suspend fun getFilteredListings(
+        searchQuery: String,
+        searchCriteria: MarketplaceSearchCriteria,
+        sort: ListingSort
+    ): RepositoryResult<List<FilteredListing>> {
+        return handleApiResultNoFlow(
+            apiCall = {
+                listingClient.getFilteredListings(
+                    searchQuery = searchQuery,
+                    categoryIds = searchCriteria.categoryIds,
+                    conditionIds = searchCriteria.conditionIds,
+                    minPrice = searchCriteria.minPrice,
+                    maxPrice = searchCriteria.maxPrice,
+                    datePostedKey = searchCriteria.datePosted.key,
+                    customDateFrom = searchCriteria.datedPostedCustomRange?.from,
+                    customDateTo = searchCriteria.datedPostedCustomRange?.to,
+                    isFinalSale = searchCriteria.isFinalSale,
+                    sortKey = sort.key
+                )
+            },
+            transformation = { this.map { it.toData() } },
             ioDispatcher = ioDispatcher
         )
     }
@@ -130,7 +164,7 @@ internal class ListingRepositoryImpl(
         return when (multipartBuilderResult) {
             is MultipartBuilderResult.Success -> {
                 val result = handleApiResultNoFlow(
-                    apiResult = listingClient.createListing(body = multipartBuilderResult.data),
+                    apiCall = { listingClient.createListing(body = multipartBuilderResult.data) },
                     transformation = ResponseListingId::listingId,
                     ioDispatcher = ioDispatcher
                 )
@@ -157,37 +191,38 @@ internal class ListingRepositoryImpl(
         listingId: String,
         request: RequestUpdateListing
     ): Boolean {
-        return handleApiResultNoTransformationWithData(
-            apiResult = listingClient.updateListing(listingId, request),
+        return handleApiResultNoTransformationNoFlow(
+            apiCall = { listingClient.updateListing(listingId, request) },
             ioDispatcher = ioDispatcher
-        ).first() is RepositoryResult.Success
+        ) is RepositoryResult.Success
     }
 
     override suspend fun deleteListing(listingId: String): Boolean {
-        return handleApiResultNoTransformationWithData(
-            apiResult = listingClient.deleteListing(listingId),
+        return handleApiResultNoTransformationNoFlow(
+            apiCall = { listingClient.deleteListing(listingId) },
             ioDispatcher = ioDispatcher
-        ).first() is RepositoryResult.Success
+        ) is RepositoryResult.Success
     }
 
     override suspend fun addToFavorites(listingId: String): Boolean {
-        return handleApiResultNoTransformationWithData(
-            apiResult = listingClient.addToFavorites(listingId),
+        return handleApiResultNoTransformationNoFlow(
+            apiCall = { listingClient.addToFavorites(listingId) },
             ioDispatcher = ioDispatcher
-        ).first() is RepositoryResult.Success
+        ) is RepositoryResult.Success
     }
 
     override suspend fun removeFromFavorites(listingId: String): Boolean {
-        return handleApiResultNoTransformationWithData(
-            apiResult = listingClient.removeFromFavorites(listingId),
+        return handleApiResultNoTransformationNoFlow(
+            apiCall = { listingClient.removeFromFavorites(listingId) },
             ioDispatcher = ioDispatcher
-        ).first() is RepositoryResult.Success
+        ) is RepositoryResult.Success
     }
 
-    override suspend fun getFavoriteListings(): RepositoryResult<List<ResponseListingPreview>> {
-        return handleApiResultNoTransformationWithData(
-            apiResult = listingClient.getFavoriteListings(),
+    override suspend fun getFavoriteListings(): RepositoryResult<List<ListingPreviewData>> {
+        return handleApiResultNoFlow(
+            apiCall = listingClient::getFavoriteListings,
+            transformation = { this.map { it.toData() } },
             ioDispatcher = ioDispatcher
-        ).first()
+        )
     }
 }

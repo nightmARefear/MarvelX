@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -22,7 +21,7 @@ import com.alexgreece45.marvelx.util.SPACING_TINY
 import com.alexgreece45.marvelx.util.VSpacer
 
 /**
- * This [Composable] is used to draw the content of a modal bottom sheet. By default the drag handle
+ * This [Composable] is used to draw the content of a modal bottom sheet. By default, the drag handle
  * is always shown and has a standard padding from the top of this bottom sheet of [SPACING_MEDIUM]
  * .[dp], and if no value is provided for the padding values, a default one is used as well.
  *
@@ -33,25 +32,28 @@ import com.alexgreece45.marvelx.util.VSpacer
 @Composable
 fun ModalBottomSheetContent(
     paddingValues: PaddingValues? = null,
+    showDragHandle: Boolean = true,
     content: @Composable ColumnScope.() -> Unit
 ) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .navigationBarsPadding()
             .padding(
-                paddingValues = paddingValues ?: modalBottomSheetContentDefaultPaddingValues
+                paddingValues = paddingValues ?: ModalBottomSheetContentDefaults.paddingValues
             )
     ) {
-        Box(
-            modifier = Modifier.padding(
-                start = if (paddingValues != null) SPACING_MEDIUM.dp else 0.dp,
-                top = if (paddingValues != null) SPACING_SMALL.dp else 0.dp,
-                end = if (paddingValues != null) SPACING_MEDIUM.dp else 0.dp
-            )
-        ) {
-            ModalBottomSheetDragHandle()
+        if (showDragHandle) {
+            Box(
+                modifier = Modifier.padding(
+                    start = if (paddingValues != null) SPACING_MEDIUM.dp else 0.dp,
+                    top = if (paddingValues != null) SPACING_SMALL.dp else 0.dp,
+                    end = if (paddingValues != null) SPACING_MEDIUM.dp else 0.dp
+                )
+            ) {
+                ModalBottomSheetDragHandle()
+            }
         }
+
         VSpacer.Medium()
         content()
     }
@@ -79,10 +81,13 @@ private fun ModalBottomSheetDragHandle() {
     }
 }
 
-private val modalBottomSheetContentDefaultPaddingValues: PaddingValues =
-    PaddingValues(
-        start = SPACING_MEDIUM.dp,
-        top = SPACING_SMALL.dp,
-        end = SPACING_MEDIUM.dp,
-        bottom = SPACING_MEDIUM.dp
-    )
+object ModalBottomSheetContentDefaults {
+
+    val paddingValues: PaddingValues =
+        PaddingValues(
+            start = SPACING_MEDIUM.dp,
+            top = SPACING_SMALL.dp,
+            end = SPACING_MEDIUM.dp,
+            bottom = SPACING_MEDIUM.dp
+        )
+}

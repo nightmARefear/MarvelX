@@ -61,7 +61,7 @@ internal class InputFieldValidatorImpl(
 
             results
                 .firstOrNull()
-                ?: InputFieldValidationResult.Uninitialized // In case the rules list is empty.
+                ?: InputFieldValidationResult.Uninitialized // In case the rule list is empty.
         }
 
     private fun validateRule(
@@ -126,17 +126,15 @@ internal class InputFieldValidatorImpl(
                 maxValue = inputFieldRule.maxValue
             )
 
-            is InputFieldRule.ValidateBigDecimal -> isBigDecimalValid(value, inputFieldRule.scale)
+            is InputFieldRule.ValidateBigDecimal -> isBigDecimalValid(value)
 
             is InputFieldRule.ValidateOverMinimumBigDecimalValue -> isBigDecimalOverMinValue(
                 value = value,
-                scale = inputFieldRule.scale,
                 minValue = inputFieldRule.minValue
             )
 
             is InputFieldRule.ValidateUnderMaximumBigDecimalValue -> isBigDecimalBelowMaxValue(
-                value,
-                scale = inputFieldRule.scale,
+                value = value,
                 maxValue = inputFieldRule.maxValue
             )
 
@@ -189,22 +187,19 @@ internal class InputFieldValidatorImpl(
     private fun isIntegerBelowMaxValue(value: String, maxValue: Int): Boolean =
         value.toIntOrNull()?.let { it <= maxValue } ?: false
 
-    private fun isBigDecimalValid(value: String, scale: Int): Boolean =
-        value.toBigDecimalOrNull()?.takeIf { it.scale() <= scale } != null
+    private fun isBigDecimalValid(value: String): Boolean = value.toBigDecimalOrNull() != null
 
     private fun isBigDecimalOverMinValue(
         value: String,
-        scale: Int,
         minValue: BigDecimal
     ): Boolean =
-        value.toBigDecimalOrNull()?.takeIf { it.scale() <= scale }?.let { it >= minValue } ?: false
+        value.toBigDecimalOrNull()?.let { it >= minValue } ?: false
 
     private fun isBigDecimalBelowMaxValue(
         value: String,
-        scale: Int,
         maxValue: BigDecimal
     ): Boolean =
-        value.toBigDecimalOrNull()?.takeIf { it.scale() <= scale }?.let { it <= maxValue } ?: false
+        value.toBigDecimalOrNull()?.let { it <= maxValue } ?: false
 
     private fun isCardNumberValueValid(value: String): Boolean {
         if (value.length != 16 || value.any { !it.isDigit() }) return false

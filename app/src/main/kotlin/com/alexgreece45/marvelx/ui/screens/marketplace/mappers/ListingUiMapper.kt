@@ -3,7 +3,6 @@ package com.alexgreece45.marvelx.ui.screens.marketplace.mappers
 import com.alexgreece45.marvelx.configuration.ConfigPriceLogic
 import com.alexgreece45.marvelx.core.common.extensions.toListingFormat
 import com.alexgreece45.marvelx.core.common.logger.AppLogger
-import com.alexgreece45.marvelx.core.data.model.listing.ListingId
 import com.alexgreece45.marvelx.data.model.marketplace.listing.EnumGeneric
 import com.alexgreece45.marvelx.data.repository.marketplace.listing.ListingCategoryRepository
 import com.alexgreece45.marvelx.data.repository.marketplace.listing.details.ListingDetailsRepository
@@ -16,7 +15,7 @@ import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.model
 import com.alexgreece45.marvelx.ui.screens.marketplace.model.ListingUi
 import com.alexgreece45.marvelx.ui.screens.marketplace.model.toUi
 import com.alexgreece45.marvelx.util.DateUtil
-import com.alexgreece45.marvelx.util.extensions.formatPrice
+import com.alexgreece45.marvelx.core.common.extensions.formatPrice
 
 // TODO: Revisit in future.
 class ListingUiMapper(
@@ -27,7 +26,7 @@ class ListingUiMapper(
     private val configPriceLogic: ConfigPriceLogic,
 ) {
 
-    private val loggerTag = "ListingUiMapper"
+    private val loggerTag = this::class.simpleName
 
     fun toUi(
         listings: List<ListingDomain>,
@@ -69,17 +68,20 @@ class ListingUiMapper(
                     coverImageUrl = coverImageUrl,
                     imageUrls = imageUrls,
                     details = details,
-                    favorite = favorite,
-                    cart = cart,
                     postedAt = InstantUi(
                         value = postedAt,
                         label = postedAt.toListingFormat()
                     ),
-                    updatedAt = InstantUi(
-                        value = updatedAt,
-                        label = updatedAt?.toListingFormat() ?: "-"
-                    ),
-                    canEdit = sellerUserId == UserId(currentUserId)
+                    updatedAt = updatedAt?.let {
+                        InstantUi(
+                            value = updatedAt,
+                            label = updatedAt.toListingFormat()
+                        )
+                    },
+                    favorite = favorite,
+                    cart = cart,
+                    canEdit = sellerUserId == UserId(currentUserId),
+                    orderIds = orderIds
                 )
             } catch (e: Exception) {
                 appLogger.e(loggerTag) { "An error occurred whilst converting `ListingDomain` to `ListingUi`.\n" + e.localizedMessage.orEmpty() }
@@ -108,10 +110,11 @@ class ListingUiMapper(
                         coverImageUrl = attachedImages.first().uri.toString(),
                         imageUrls = attachedImages.drop(1).map { it.uri.toString() },
                         details = listingDetailsUiMapper.toDomain(listingDetails!!)!!,
+                        postedAt = DateUtil.getUTCInstant(),
+                        updatedAt = null,
                         favorite = false,
                         cart = false,
-                        postedAt = DateUtil.getUTCInstant(),
-                        updatedAt = null
+                        orderIds = null
                     ),
                     currentUserId = currentUserId
                 )

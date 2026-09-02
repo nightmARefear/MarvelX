@@ -48,18 +48,21 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarType
+import com.alexgreece45.marvelx.common_ui.util.ObserveUiEffect
+import com.alexgreece45.marvelx.core.common.util.flows.single_observer_flow.SingleObserverFlow
 import com.alexgreece45.marvelx.model.model.generic.AttachedFileContentData
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.ExposedDropdownMenu
 import com.alexgreece45.marvelx.ui.components.ThrottledIconButton
 import com.alexgreece45.marvelx.ui.components.chips.WrapChip
-import com.alexgreece45.marvelx.ui.components.effect.ObserveUiEffect
 import com.alexgreece45.marvelx.ui.screens.marketplace.components.ListingImage
 import com.alexgreece45.marvelx.ui.screens.marketplace.components.WizardTextInputField
 import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.basicDetails.model.CreateListingBasicDetailsContract
 import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.model.CreateListingWizardMode
 import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.model.WizardInputFieldUi
 import com.alexgreece45.marvelx.ui_theme.theme.MarvelXTheme
+import com.alexgreece45.marvelx.ui_theme.theme.import_aliases.UiThemeDrawable
 import com.alexgreece45.marvelx.ui_theme.theme.values.customColors
 import com.alexgreece45.marvelx.util.FileUtil
 import com.alexgreece45.marvelx.util.SPACING_MEDIUM
@@ -68,7 +71,6 @@ import com.alexgreece45.marvelx.util.SPACING_TINY
 import com.alexgreece45.marvelx.util.VSpacer
 import com.alexgreece45.marvelx.util.constants.ConstantsUi
 import com.alexgreece45.marvelx.util.extensions.throttledClickable
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.ReorderableLazyListState
@@ -80,8 +82,8 @@ private val LISTING_IMAGE_SIZE = ConstantsUi.LISTING_IMAGE_BIG_SIZE
 internal fun CreateListingBasicDetailsScreen(
     onEvent: (CreateListingBasicDetailsContract.Event) -> Unit,
     state: CreateListingBasicDetailsContract.State,
-    effect: Flow<CreateListingBasicDetailsContract.Effect>,
-    showToastMessage: (String) -> Unit,
+    effect: SingleObserverFlow<CreateListingBasicDetailsContract.Effect>,
+    showSnackbar: (message: String, snackbarType: SnackbarType) -> Unit,
     goToPreviousStep: () -> Unit,
     setNextButtonEnabled: (Boolean) -> Unit
 ) {
@@ -131,7 +133,7 @@ internal fun CreateListingBasicDetailsScreen(
         }
     )
 
-    ObserveUiEffect(effect) { uiEffect ->
+    ObserveUiEffect(flow = effect, tag = "CreateListingBasicDetailsScreen") { uiEffect ->
         when (uiEffect) {
             is CreateListingBasicDetailsContract.Effect.GoToPreviousStep -> goToPreviousStep()
             is CreateListingBasicDetailsContract.Effect.SetNextButtonEnabled -> setNextButtonEnabled(
@@ -142,8 +144,9 @@ internal fun CreateListingBasicDetailsScreen(
                 multiPhotoPickerLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
             }
 
-            is CreateListingBasicDetailsContract.Effect.ShowToastMessage -> showToastMessage(
-                uiEffect.message
+            is CreateListingBasicDetailsContract.Effect.ShowSnackbar -> showSnackbar(
+                uiEffect.message,
+                uiEffect.snackbarType
             )
 
             CreateListingBasicDetailsContract.Effect.OnImagesReordered -> {
@@ -225,7 +228,7 @@ internal fun CreateListingBasicDetailsScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Icon(
-                                painter = painterResource(R.drawable.ic_info),
+                                painter = painterResource(UiThemeDrawable.ic_info),
                                 contentDescription = null
                             )
 
@@ -526,8 +529,8 @@ private fun CreateListingBasicDetailsScreenPreview() {
                     )
                 )
             ),
-            effect = emptyFlow(),
-            showToastMessage = {},
+            effect = SingleObserverFlow(emptyFlow()),
+            showSnackbar = { _, _ -> },
             goToPreviousStep = {},
             setNextButtonEnabled = {}
         )

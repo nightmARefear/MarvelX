@@ -13,6 +13,7 @@ import androidx.compose.ui.res.stringResource
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.ui.components.WrapHorizontalDivider
 import com.alexgreece45.marvelx.ui.components.sections.SectionHeader
+import com.alexgreece45.marvelx.ui.components.sections.SectionHeaderRow
 import com.alexgreece45.marvelx.util.VSpacer
 
 @Composable
@@ -27,16 +28,16 @@ fun OrderSummaryCard(
         title = title,
         additionalTitleContent = {
             Column(modifier = Modifier.fillMaxWidth()) {
-                OrderSummaryPriceRow(
-                    label = stringResource(R.string.order_summary_card_label_subtotal),
-                    price = subtotalPrice
+                SectionHeaderRow(
+                    startLabel = stringResource(R.string.order_summary_card_label_subtotal),
+                    endLabel = subtotalPrice
                 )
 
                 VSpacer.Small()
 
-                OrderSummaryPriceRow(
-                    label = stringResource(R.string.order_summary_card_label_shipping),
-                    price = shippingPrice
+                SectionHeaderRow(
+                    startLabel = stringResource(R.string.order_summary_card_label_shipping),
+                    endLabel = shippingPrice
                 )
 
                 VSpacer.Small()
@@ -63,23 +64,7 @@ fun OrderSummaryCard(
             }
         },
         additionalContent = additionalContent,
-        enabled = false
-    ) {}
-}
-
-@Composable
-private fun OrderSummaryPriceRow(label: String, price: String) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = label
-        )
-
-        Text(
-            text = price
-        )
-    }
+        enabled = false,
+        onClick = {}
+    )
 }

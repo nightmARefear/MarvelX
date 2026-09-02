@@ -8,7 +8,8 @@ data class ListingPreviewData(
     val title: String,
     val price: String,
     val coverImageUrl: String,
-    val favorite: Boolean
+    val favorite: Boolean,
+    val cart: Boolean
 )
 
 fun ResponseListingPreview.toData(): ListingPreviewData =
@@ -17,5 +18,6 @@ fun ResponseListingPreview.toData(): ListingPreviewData =
         title = title,
         price = price,
         coverImageUrl = coverImageUrl,
-        favorite = favorite
+        favorite = favorite,
+        cart = cart
     )

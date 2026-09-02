@@ -1,15 +1,15 @@
 package com.alexgreece45.marvelx.domain.model_api.order
 
 import com.alexgreece45.marvelx.data.model.order.OrderEstimatedDeliveryDateRangeData
-import java.time.Instant
+import java.time.LocalDate
 
 data class OrderEstimatedDeliveryDateRangeDomain(
-    val from: Instant,
-    val to: Instant
+    val from: LocalDate,
+    val to: LocalDate
 )
 
 fun OrderEstimatedDeliveryDateRangeData.toDomain(): OrderEstimatedDeliveryDateRangeDomain =
     OrderEstimatedDeliveryDateRangeDomain(
-        from = Instant.parse(from),
-        to = Instant.parse(to)
+        from = LocalDate.parse(from),
+        to = LocalDate.parse(to)
     )

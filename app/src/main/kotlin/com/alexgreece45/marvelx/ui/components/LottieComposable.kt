@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
+import androidx.compose.material.LocalContentColor
 import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -19,6 +20,7 @@ import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
+import com.alexgreece45.marvelx.ui_theme.theme.values.LocalCustomColors
 import com.alexgreece45.marvelx.util.extensions.clickableNoRipple
 
 /**
@@ -68,6 +70,13 @@ fun LottieComposable(
         Column(
             modifier = Modifier
                 .then(clipModifier)
+//                .let{
+//                    if (backgroundColor != null) {
+//                        Modifier.background(backgroundColor)
+//                    } else {
+//                        Modifier
+//                    }
+//                }
                 .background(backgroundColor ?: MaterialTheme.colors.background)
                 .clickableNoRipple(onClick = {}),
             verticalArrangement = verticalArrangement,

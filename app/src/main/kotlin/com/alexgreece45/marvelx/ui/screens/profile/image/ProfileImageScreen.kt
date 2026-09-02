@@ -1,6 +1,5 @@
 package com.alexgreece45.marvelx.ui.screens.profile.image
 
-import android.content.res.Configuration
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -15,27 +14,26 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.common_ui.previewAnnotation.ThemePreview
+import com.alexgreece45.marvelx.common_ui.util.ObserveUiEffect
+import com.alexgreece45.marvelx.core.common.util.flows.single_observer_flow.SingleObserverFlow
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
 import com.alexgreece45.marvelx.ui.components.WrapAsyncImage
-import com.alexgreece45.marvelx.ui.components.effect.ObserveUiEffect
 import com.alexgreece45.marvelx.ui.components.error.ContentErrorScreen
 import com.alexgreece45.marvelx.ui.screens.profile.image.model.ProfileImageContract
 import com.alexgreece45.marvelx.ui_theme.theme.MarvelXTheme
 import com.alexgreece45.marvelx.ui_theme.theme.values.customColors
 import com.alexgreece45.marvelx.util.constants.ConstantsUi
 import com.alexgreece45.marvelx.util.extensions.circularImageWithBorder
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 
 @Composable
 fun ProfileImageScreen(
     onEventSent: (ProfileImageContract.Event) -> Unit,
     state: ProfileImageContract.State,
-    effect: Flow<ProfileImageContract.Effect>,
+    effect: SingleObserverFlow<ProfileImageContract.Effect>,
     navigateUp: () -> Unit,
     profileImageUrl: String,
 ) {
@@ -43,7 +41,7 @@ fun ProfileImageScreen(
         onEventSent(ProfileImageContract.Event.Init(profileImageUrl))
     }
 
-    ObserveUiEffect(effect) { uiEffect ->
+    ObserveUiEffect(flow = effect, tag = "ProfileImageScreen") { uiEffect ->
         when (uiEffect) {
             ProfileImageContract.Effect.Navigation.NavigateUp -> {
                 navigateUp()
@@ -112,7 +110,7 @@ private fun ProfileImageScreenPreview() {
                 isLoading = false,
                 profileImageUrl = ""
             ),
-            effect = emptyFlow(),
+            effect = SingleObserverFlow(emptyFlow()),
             navigateUp = {},
             profileImageUrl = "1"
         )

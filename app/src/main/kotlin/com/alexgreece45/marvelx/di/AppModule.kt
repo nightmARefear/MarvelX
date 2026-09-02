@@ -26,8 +26,8 @@ import com.alexgreece45.marvelx.domain.worker.RefreshTokenWorker
 import com.alexgreece45.marvelx.notifications.di.NotificationsModule
 import com.alexgreece45.marvelx.ui.helper.FieldValidationRules
 import com.alexgreece45.marvelx.ui.helper.FieldValidationRulesImpl
-import com.alexgreece45.marvelx.ui.navigation.NavBackStackLogger
 import com.alexgreece45.marvelx.ui.screens.cart.mappers.CartItemUiMapper
+import com.alexgreece45.marvelx.ui.screens.marketplace.mappers.FilteredListingUiMapper
 import com.alexgreece45.marvelx.ui.screens.marketplace.mappers.ListingDetailsUiMapper
 import com.alexgreece45.marvelx.ui.screens.marketplace.mappers.ListingPreviewUiMapper
 import com.alexgreece45.marvelx.ui.screens.marketplace.mappers.ListingUiMapper
@@ -112,6 +112,7 @@ private val mapperModule = module {
     singleOf(::MarketplaceUiMapper)
     singleOf(::CartItemUiMapper)
     singleOf(::CartSummaryDomainMapper)
+    singleOf(::FilteredListingUiMapper)
 }
 
 private val formValidatorModule = module {

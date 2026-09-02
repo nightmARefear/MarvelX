@@ -65,7 +65,7 @@ sealed class CardBrandUi(
 
     companion object {
         private fun asList(): List<CardBrandUi> =
-            listOf(MasterCard, MaestroCard, Visa, AmericanExpress, DinersClub, Discover, Unknown)
+            listOf(MasterCard, MaestroCard, Visa, AmericanExpress, DinersClub, Discover)
 
         fun getCardBrandUi(cardNumber: String): CardBrandUi =
             asList().firstOrNull { brand ->

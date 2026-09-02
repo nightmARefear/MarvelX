@@ -9,41 +9,33 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.common_ui.util.ObserveUiEffect
+import com.alexgreece45.marvelx.core.common.util.flows.single_observer_flow.SingleObserverFlow
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.LottieComposable
 import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
 import com.alexgreece45.marvelx.ui.components.WrapButton
-import com.alexgreece45.marvelx.ui.components.effect.ObserveUiEffect
 import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.success.model.CreateListingSuccessContract
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.constants.ConstantsUi
-import kotlinx.coroutines.flow.Flow
 
 @Composable
 internal fun CreateListingSuccessScreen(
     onEvent: (CreateListingSuccessContract.Event) -> Unit,
     state: CreateListingSuccessContract.State,
-    effect: Flow<CreateListingSuccessContract.Effect>,
+    effect: SingleObserverFlow<CreateListingSuccessContract.Effect>,
     onNavigationEffect: (CreateListingSuccessContract.Effect.Navigation) -> Unit,
-    listingId: String,
-    wizardMode: String
 ) {
-
-    ObserveUiEffect(effect) { uiEffect ->
+    ObserveUiEffect(flow = effect, tag = "CreateListingSuccessScreen") { uiEffect ->
         when (uiEffect) {
             is CreateListingSuccessContract.Effect.Navigation -> onNavigationEffect(uiEffect)
         }
-    }
-
-    LaunchedEffect(Unit) {
-        onEvent(CreateListingSuccessContract.Event.Init(listingId, wizardMode))
     }
 
     ContentScreen(

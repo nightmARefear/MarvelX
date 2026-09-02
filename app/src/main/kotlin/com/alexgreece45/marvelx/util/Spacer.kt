@@ -27,10 +27,7 @@ object VSpacer {
     fun Large() = Spacer(modifier = Modifier.height(height = SPACING_LARGE.dp))
 
     @Composable
-    fun Custom(height: Int) = Spacer(modifier = Modifier.height(height = height.dp))
-
-    @Composable
-    fun Custom(height: Float) = Spacer(modifier = Modifier.height(height = height.dp))
+    fun Custom(height: Dp) = Spacer(modifier = Modifier.height(height = height))
 }
 
 object HSpacer {
@@ -45,12 +42,6 @@ object HSpacer {
 
     @Composable
     fun Large() = Spacer(modifier = Modifier.width(width = SPACING_LARGE.dp))
-
-    @Composable
-    fun Custom(width: Int) = Spacer(modifier = Modifier.width(width = width.dp))
-
-    @Composable
-    fun Custom(width: Float) = Spacer(modifier = Modifier.width(width = width.dp))
 
     @Composable
     fun Custom(width: Dp) = Spacer(modifier = Modifier.width(width = width))

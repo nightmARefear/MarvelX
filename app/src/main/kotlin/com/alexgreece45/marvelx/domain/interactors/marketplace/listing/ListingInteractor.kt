@@ -1,21 +1,28 @@
 package com.alexgreece45.marvelx.domain.interactors.marketplace.listing
 
+import com.alexgreece45.marvelx.configuration.ConfigPriceLogic
+import com.alexgreece45.marvelx.core.common.extensions.formatPrice
 import com.alexgreece45.marvelx.core.data.helper.multi_part_builder.model.MultipartResult
+import com.alexgreece45.marvelx.core.data.model.marketplace.ListingSort
 import com.alexgreece45.marvelx.core.data.repositories.marketplace.listing.ListingRepository
+import com.alexgreece45.marvelx.data.repository.marketplace.listing.ListingCategoryRepository
+import com.alexgreece45.marvelx.data.repository.marketplace.listing.details.ListingDetailsRepository
 import com.alexgreece45.marvelx.domain.helper.InteractorPartialState
 import com.alexgreece45.marvelx.domain.helper.handleRepositoryResultNoFlow
 import com.alexgreece45.marvelx.domain.mappers.marketplace.listing.ListingDomainMapper
 import com.alexgreece45.marvelx.domain.mappers.marketplace.listing.toRequest
-import com.alexgreece45.marvelx.domain.mappers.marketplace.toDomain
+import com.alexgreece45.marvelx.domain.model_api.marketplace.FilteredListingDomain
+import com.alexgreece45.marvelx.domain.model_api.marketplace.MarketplaceSearchCriteriaDomain
 import com.alexgreece45.marvelx.domain.model_api.marketplace.listing.CreateListingDomain
 import com.alexgreece45.marvelx.domain.model_api.marketplace.listing.ListingDomain
 import com.alexgreece45.marvelx.domain.model_api.marketplace.listing.ListingPreviewDomain
 import com.alexgreece45.marvelx.domain.model_api.marketplace.listing.UpdateListingDomain
 import com.alexgreece45.marvelx.domain.model_api.marketplace.listing.toData
 import com.alexgreece45.marvelx.domain.model_api.marketplace.listing.toDomain
+import com.alexgreece45.marvelx.domain.model_api.marketplace.toData
+import com.alexgreece45.marvelx.domain.model_api.marketplace.toDomain
 import com.alexgreece45.marvelx.domain.model_api.myListing.MyListingDomain
 import com.alexgreece45.marvelx.domain.model_api.myListing.toDomain
-import com.alexgreece45.marvelx.model.model.user.UserId
 import org.koin.core.annotation.Factory
 
 interface ListingInteractor {
@@ -30,6 +37,13 @@ interface ListingInteractor {
     ): InteractorPartialState<List<ListingPreviewDomain>>
 
     suspend fun getListing(listingId: String): InteractorPartialState<ListingDomain>
+
+    suspend fun getFilteredListings(
+        searchQuery: String,
+        searchCriteria: MarketplaceSearchCriteriaDomain,
+        sort: ListingSort
+    ): InteractorPartialState<List<FilteredListingDomain>>
+
     suspend fun createListing(createListingDomain: CreateListingDomain): MultipartResult<String>
     suspend fun updateListing(
         listingId: String,
@@ -47,7 +61,10 @@ interface ListingInteractor {
 @Factory
 internal class ListingInteractorImpl(
     private val listingRepository: ListingRepository,
-    private val listingDomainMapper: ListingDomainMapper
+    private val listingDomainMapper: ListingDomainMapper,
+    private val configPriceLogic: ConfigPriceLogic,
+    private val listingCategoryRepository: ListingCategoryRepository,
+    private val listingDetailsRepository: ListingDetailsRepository,
 ) : ListingInteractor {
 
     override suspend fun getAllListingsByCategory(categoryCode: String): InteractorPartialState<List<ListingDomain>> {
@@ -78,6 +95,37 @@ internal class ListingInteractorImpl(
         return handleRepositoryResultNoFlow(
             repositoryResult = listingRepository.getListing(listingId),
             transformation = listingDomainMapper::toDomain
+        )
+    }
+
+    override suspend fun getFilteredListings(
+        searchQuery: String,
+        searchCriteria: MarketplaceSearchCriteriaDomain,
+        sort: ListingSort
+    ): InteractorPartialState<List<FilteredListingDomain>> {
+        return handleRepositoryResultNoFlow(
+            repositoryResult = listingRepository.getFilteredListings(
+                searchQuery = searchQuery,
+                searchCriteria = searchCriteria.toData(
+                    formatPrice = {
+                        it?.formatPrice(
+                            scale = configPriceLogic.priceScale,
+                            roundingMode = configPriceLogic.roundingMode
+                        )
+                    }
+                ),
+                sort = sort
+            ),
+            transformation = {
+                val categories = listingCategoryRepository.listingCategoryCodes
+                val conditions = listingDetailsRepository.listingConditions
+                this.map { listing ->
+                    listing.toDomain(
+                        mapCategory = { categories.first { it.code == listing.categoryCode } },
+                        mapCondition = { conditions.first { it.code == listing.conditionCode } }
+                    )
+                }
+            }
         )
     }
 

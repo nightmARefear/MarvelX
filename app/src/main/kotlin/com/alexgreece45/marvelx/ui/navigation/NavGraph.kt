@@ -7,30 +7,29 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
-import androidx.navigation.navOptions
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarNavigationPayload
 import com.alexgreece45.marvelx.ui.components.BottomBarItem
 import com.alexgreece45.marvelx.ui.components.BottomNavigationBarData
 import com.alexgreece45.marvelx.ui.components.IconData
 import com.alexgreece45.marvelx.ui.helper.openDeepLinkAction
 import com.alexgreece45.marvelx.ui.screens.allCharacters.navigation.AllCharactersRoute
-import com.alexgreece45.marvelx.ui.screens.allCharacters.navigation.allCharactersScreen
-import com.alexgreece45.marvelx.ui.screens.allCharacters.navigation.navigateToAllCharactersScreen
 import com.alexgreece45.marvelx.ui.screens.allFavoriteCharacters.navigation.AllFavoriteCharactersRoute
-import com.alexgreece45.marvelx.ui.screens.allFavoriteCharacters.navigation.allFavoriteCharactersScreen
 import com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.CheckoutWizardScreen
 import com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.CheckoutWizardViewModel
 import com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.model.CheckoutWizardContract
 import com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.steps.shippingDetails.CheckoutShippingDetailsViewModel
+import com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.steps.success.navigation.checkoutSuccessScreen
+import com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.steps.success.navigation.navigateToCheckoutSuccessScreen
 import com.alexgreece45.marvelx.ui.screens.cart.navigation.CartRoute
-import com.alexgreece45.marvelx.ui.screens.cart.navigation.cartScreen
 import com.alexgreece45.marvelx.ui.screens.changePassword.ChangePasswordScreen
 import com.alexgreece45.marvelx.ui.screens.character.allCharacterComicsScreen.navigation.allCharacterComicsScreen
 import com.alexgreece45.marvelx.ui.screens.character.allCharacterComicsScreen.navigation.navigateToAllCharacterComicsScreen
 import com.alexgreece45.marvelx.ui.screens.character.navigation.characterScreen
-import com.alexgreece45.marvelx.ui.screens.character.navigation.navigateToCharacterScreen
 import com.alexgreece45.marvelx.ui.screens.comic.navigation.comicScreen
 import com.alexgreece45.marvelx.ui.screens.comic.navigation.navigateToComicScreen
+import com.alexgreece45.marvelx.ui.screens.dashboard.navigation.dashboardGraph
+import com.alexgreece45.marvelx.ui.screens.dashboard.navigation.navigateToDashboardScreen
 import com.alexgreece45.marvelx.ui.screens.forgotPasswordScreen.ForgotPasswordScreen
 import com.alexgreece45.marvelx.ui.screens.forgotPasswordScreen.forgotPasswordValidateEmailScreen.ForgotPasswordValidateEmailScreen
 import com.alexgreece45.marvelx.ui.screens.friends.FriendsScreen
@@ -51,23 +50,20 @@ import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.succe
 import com.alexgreece45.marvelx.ui.screens.marketplace.listingDetailsScreen.navigation.listingDetailsScreen
 import com.alexgreece45.marvelx.ui.screens.marketplace.listingDetailsScreen.navigation.navigateToListingDetailsScreen
 import com.alexgreece45.marvelx.ui.screens.marketplace.navigation.MarketplaceRoute
-import com.alexgreece45.marvelx.ui.screens.marketplace.navigation.marketplaceScreen
-import com.alexgreece45.marvelx.ui.screens.marketplace.navigation.navigateToMarketplaceScreen
 import com.alexgreece45.marvelx.ui.screens.myListings.MyListingsScreen
 import com.alexgreece45.marvelx.ui.screens.myListings.MyListingsViewModel
 import com.alexgreece45.marvelx.ui.screens.myListings.model.MyListingsContract
 import com.alexgreece45.marvelx.ui.screens.orders.OrdersScreen
 import com.alexgreece45.marvelx.ui.screens.orders.OrdersViewModel
 import com.alexgreece45.marvelx.ui.screens.orders.model.OrdersContract
-import com.alexgreece45.marvelx.ui.screens.orders.orderDetails.OrderDetailsScreen
-import com.alexgreece45.marvelx.ui.screens.orders.orderDetails.OrderDetailsViewModel
-import com.alexgreece45.marvelx.ui.screens.orders.orderDetails.model.OrderDetailsContract
-import com.alexgreece45.marvelx.ui.screens.orders.orderItemTrackingHistory.OrderItemTrackingHistoryScreen
-import com.alexgreece45.marvelx.ui.screens.orders.orderItemTrackingHistory.OrderItemTrackingHistoryViewModel
-import com.alexgreece45.marvelx.ui.screens.orders.orderItemTrackingHistory.model.OrderItemTrackingHistoryContract
-import com.alexgreece45.marvelx.ui.screens.orders.requestReturn.RequestItemReturnScreen
-import com.alexgreece45.marvelx.ui.screens.orders.requestReturn.RequestItemReturnViewModel
-import com.alexgreece45.marvelx.ui.screens.orders.requestReturn.model.RequestItemReturnContract
+import com.alexgreece45.marvelx.ui.screens.orders.orderDetails.navigation.navigateToOrderDetailsScreen
+import com.alexgreece45.marvelx.ui.screens.orders.orderDetails.navigation.orderDetailsScreen
+import com.alexgreece45.marvelx.ui.screens.orders.orderItemManagement.navigation.navigateToOrderItemManagementScreen
+import com.alexgreece45.marvelx.ui.screens.orders.orderItemManagement.navigation.orderItemManagementScreen
+import com.alexgreece45.marvelx.ui.screens.orders.orderItemTrackingHistory.navigation.navigateToOrderItemTrackingHistoryScreen
+import com.alexgreece45.marvelx.ui.screens.orders.orderItemTrackingHistory.navigation.orderItemTrackingHistoryScreen
+import com.alexgreece45.marvelx.ui.screens.orders.requestReturn.navigation.requestItemReturnScreen
+import com.alexgreece45.marvelx.ui.screens.orders.requestReturn.success.navigation.requestItemReturnSuccessScreen
 import com.alexgreece45.marvelx.ui.screens.otp.OtpEffect
 import com.alexgreece45.marvelx.ui.screens.otp.OtpScreen
 import com.alexgreece45.marvelx.ui.screens.otp.OtpViewModel
@@ -77,7 +73,6 @@ import com.alexgreece45.marvelx.ui.screens.profile.editProfileDetails.EditProfil
 import com.alexgreece45.marvelx.ui.screens.profile.image.ProfileImageScreen
 import com.alexgreece45.marvelx.ui.screens.profile.image.ProfileImageViewModel
 import com.alexgreece45.marvelx.ui.screens.profile.navigation.ProfileRoute
-import com.alexgreece45.marvelx.ui.screens.profile.navigation.profileScreen
 import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.ProfileDetailsContract
 import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.ProfileDetailsScreen
 import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.ProfileDetailsViewModel
@@ -178,10 +173,6 @@ internal fun NavGraph(navController: NavHostController) {
                                 )
                             }
                         }
-
-                        HomeEffect.Navigation.NavigateToAllCharactersScreen -> {
-                            navController.navigateToAllCharactersScreen(clearBackStack = true)
-                        }
                     }
                 }
             )
@@ -222,8 +213,8 @@ internal fun NavGraph(navController: NavHostController) {
                             navController.navigate(Screen.ForgotPasswordScreen.route)
                         }
 
-                        is LoginEffect.Navigation.NavigateToAllCharactersScreen -> {
-                            navController.navigateToAllCharactersScreen(clearBackStack = true)
+                        is LoginEffect.Navigation.NavigateToDashboardScreen -> {
+                            navController.navigateToDashboardScreen()
                         }
                     }
                 }
@@ -272,8 +263,8 @@ internal fun NavGraph(navController: NavHostController) {
                             navController.navigateUp()
                         }
 
-                        SignupEffect.Navigation.NavigateToAllCharactersScreen -> {
-                            navController.navigateToAllCharactersScreen(true)
+                        SignupEffect.Navigation.NavigateToDashboardScreen -> {
+                            navController.navigateToDashboardScreen()
                         }
 
                         is SignupEffect.Navigation.NavigateToOtpScreen -> {
@@ -305,8 +296,8 @@ internal fun NavGraph(navController: NavHostController) {
                             navController.navigateUp()
                         }
 
-                        OtpEffect.Navigation.NavigateToAllCharactersScreen -> {
-                            navController.navigateToAllCharactersScreen(true)
+                        OtpEffect.Navigation.NavigateToDashboardScreen -> {
+                            navController.navigateToDashboardScreen()
                         }
 
                         is OtpEffect.Navigation.NavigateToChangePasswordScreen -> {
@@ -330,6 +321,9 @@ internal fun NavGraph(navController: NavHostController) {
             )
         }
 
+        // Bottom nav screens.
+        dashboardGraph(navController)
+
         // Main screens.
 
         // TODO: Resolve later.
@@ -338,10 +332,10 @@ internal fun NavGraph(navController: NavHostController) {
 //            bottomNavigationBarData = { getBottomNavigationBarData(navController) }
 //        )
 
-        marketplaceScreen(
-            navigateToListingDetailsScreen = navController::navigateToListingDetailsScreen,
-            bottomNavigationBarData = { getBottomNavigationBarData(navController) }
-        )
+//        marketplaceScreen(
+//            navigateToListingDetailsScreen = navController::navigateToListingDetailsScreen,
+//            bottomNavigationBarData = { getBottomNavigationBarData(navController) }
+//        )
 
         listingDetailsScreen(
             goBack = navController::navigateUp,
@@ -352,7 +346,8 @@ internal fun NavGraph(navController: NavHostController) {
                     )
                 )
             },
-            navigateToEditListingScreen = navController::navigateToCreateListingWizardScreen
+            navigateToEditListingScreen = navController::navigateToCreateListingWizardScreen,
+            navigateToOrderItemManagementScreen = navController::navigateToOrderItemManagementScreen
         )
 
         createListingWizardScreen(
@@ -361,10 +356,7 @@ internal fun NavGraph(navController: NavHostController) {
             navigateToCreateListingSuccessScreen = navController::navigateToCreateListingSuccessScreen
         )
 
-        createListingSuccessScreen(
-            navigateToListingDetailsScreen = navController::navigateToListingDetailsScreen,
-            exitWizard = navController::navigateUp
-        )
+        createListingSuccessScreen(navController = navController)
 
         characterScreen(
             goBack = navController::navigateUp,
@@ -397,14 +389,16 @@ internal fun NavGraph(navController: NavHostController) {
                             navController.navigateToListingDetailsScreen(navigationEffect.listingId)
                         }
                     }
-                }
+                },
+                snackbarEffects = viewModel.snackbarEffects
             )
         }
 
-        cartScreen(
-            navController = navController,
-            bottomNavigationBarData = { getBottomNavigationBarData(navController) }
-        )
+//        cartScreen(
+//            navController = navController,
+//            rootNavController = navController,
+//            bottomNavigationBarData = { getBottomNavigationBarData(navController) }
+//        )
 
         composable(screen = Screen.CheckoutWizardScreen) {
             val viewModel = koinViewModel<CheckoutWizardViewModel>()
@@ -416,23 +410,38 @@ internal fun NavGraph(navController: NavHostController) {
                     when (navigationEffect) {
                         CheckoutWizardContract.Effect.Navigation.ExitWizard -> navController.navigateUp()
                         CheckoutWizardContract.Effect.Navigation.NavigateToMarketplaceScreen -> {
-                            navController.navigateToMarketplaceScreen(clearBackStack = true)
+                            navController.navigateToDashboardScreen()
                         }
 
                         is CheckoutWizardContract.Effect.Navigation.NavigateToOrderDetailsScreen -> {
-                            val route =
-                                Screen.OrderDetailsScreen.createNavRoute(navigationEffect.orderId)
-                            navController.navigate(route) {
-                                popUpTo(route) {
-                                    inclusive = true
+                            navController.navigateToOrderDetailsScreen(
+                                orderId = navigationEffect.orderId,
+                                navOptionsBuilder = {
+                                    popUpTo(Screen.CheckoutWizardScreen) {
+                                        inclusive = true
+                                    }
                                 }
-                            }
+                            )
+                        }
+
+                        is CheckoutWizardContract.Effect.Navigation.NavigateToCheckoutSuccessScreen -> {
+                            navController.navigateToCheckoutSuccessScreen(
+                                orderId = navigationEffect.orderId,
+                                navOptionsBuilder = {
+                                    popUpTo(Screen.CheckoutWizardScreen.route) { inclusive = true }
+                                }
+                            )
                         }
                     }
                 },
                 checkoutShippingDetailsViewModel = koinViewModel<CheckoutShippingDetailsViewModel>()
             )
         }
+
+        checkoutSuccessScreen(
+            goBack = navController::navigateUp,
+            navigateToOrderDetailsScreen = navController::navigateToOrderDetailsScreen
+        )
 
         composable(
             screen = Screen.OrdersScreen,
@@ -448,123 +457,42 @@ internal fun NavGraph(navController: NavHostController) {
                     when (navigationEffect) {
                         OrdersContract.Effect.Navigation.GoBack -> navController.navigateUp()
                         is OrdersContract.Effect.Navigation.GoToOrderDetailsScreen -> {
-                            navController.navigate(
-                                Screen.OrderDetailsScreen.createNavRoute(
-                                    navigationEffect.orderId
-                                )
-                            )
+                            navController.navigateToOrderDetailsScreen(navigationEffect.orderId)
                         }
+
+                        OrdersContract.Effect.Navigation.GoToMarketplaceScreen -> navController.navigateToDashboardScreen()
                     }
                 },
             )
         }
 
-        composable(screen = Screen.OrderDetailsScreen) { navBackStackEntry ->
-            val viewModel = koinViewModel<OrderDetailsViewModel>()
-            OrderDetailsScreen(
-                onEvent = viewModel::setEvent,
-                state = viewModel.uiState.collectAsStateWithLifecycle().value,
-                effect = viewModel.uiEffect,
-                onNavigationEffect = { navigationEffect ->
-                    when (navigationEffect) {
-                        OrderDetailsContract.Effect.Navigation.GoBack -> navController.navigateUp()
-                        is OrderDetailsContract.Effect.Navigation.NavigateToOrderItemTrackingHistoryScreen -> navController.navigate(
-                            Screen.OrderItemTrackingHistoryScreen.createNavRoute(
-                                orderId = navigationEffect.orderId,
-                                orderItemId = navigationEffect.orderItemId,
-                                sellerUserId = navigationEffect.sellerUserId,
-                                orderItemTitle = navigationEffect.orderItemTitle,
-                                orderItemCoverImageUrl = navigationEffect.orderItemCoverImageUrl,
-                                orderItemPriceLabel = navigationEffect.orderItemPriceLabel
-                            )
-                        )
-                    }
-                },
-                orderId = navBackStackEntry.arguments?.getString(NavItem.OrderId.key).orEmpty()
-            )
-        }
-
-        composable(screen = Screen.OrderItemTrackingHistoryScreen) { navBackStackEntry ->
-            val viewModel = koinViewModel<OrderItemTrackingHistoryViewModel>()
-            OrderItemTrackingHistoryScreen(
-                onEvent = viewModel::setEvent,
-                state = viewModel.uiState.collectAsStateWithLifecycle().value,
-                effect = viewModel.uiEffect,
-                onNavigationEffect = { navigationEffect ->
-                    when (navigationEffect) {
-                        OrderItemTrackingHistoryContract.Effect.Navigation.GoBack -> navController.navigateUp()
-                        is OrderItemTrackingHistoryContract.Effect.Navigation.GoToProfileDetailsScreen -> navController.navigate(
-                            Screen.ProfileDetailsScreen.createNavRoute(navigationEffect.userId)
-                        )
-
-                        is OrderItemTrackingHistoryContract.Effect.Navigation.GoToRequestItemReturnScreen -> navController.navigate(
-                            Screen.RequestItemReturnScreen.createNavRoute(
-                                orderId = navigationEffect.orderId,
-                                orderItemId = navigationEffect.orderItemId,
-                                orderItemTitle = navigationEffect.orderItemTitle,
-                                orderItemCoverImageUrl = navigationEffect.orderItemCoverImageUrl,
-                                orderItemPriceLabel = navigationEffect.orderItemPriceLabel
-                            )
-                        )
-
-                        is OrderItemTrackingHistoryContract.Effect.Navigation.GoToRequestItemRefundScreen -> navController.navigate(
-                            Screen.RequestItemRefundScreen.createNavRoute(orderItemDetails = navigationEffect.orderItemDetails)
-                        )
-
-                        is OrderItemTrackingHistoryContract.Effect.Navigation.GoToContactSupportScreen -> TODO()
-                    }
-                },
-                orderId = navBackStackEntry.arguments?.getString(NavItem.OrderId.key).orEmpty(),
-                orderItemId = navBackStackEntry.arguments?.getString(NavItem.OrderItemId.key)
-                    .orEmpty(),
-                orderItemTitle = navBackStackEntry.arguments?.getString(NavItem.OrderItemTitle.key)
-                    .orEmpty(),
-                orderItemCoverImageUrl = navBackStackEntry.arguments?.getString(NavItem.OrderItemCoverImageUrl.key)
-                    .orEmpty(),
-                orderItemPriceLabel = navBackStackEntry.arguments?.getString(NavItem.OrderItemPriceLabel.key)
-                    .orEmpty(),
-                sellerUserId = navBackStackEntry.arguments?.getString(NavItem.SellerUserId.key)
-                    .orEmpty()
-            )
-        }
-
-        composable(screen = Screen.RequestItemReturnScreen) { navBackStackEntry ->
-            val viewModel = koinViewModel<RequestItemReturnViewModel>()
-            RequestItemReturnScreen(
-                onEvent = viewModel::setEvent,
-                state = viewModel.uiState.collectAsStateWithLifecycle().value,
-                effect = viewModel.uiEffect,
-                onNavigationEffect = { navigationEffect ->
-                    when (navigationEffect) {
-                        RequestItemReturnContract.Effect.Navigation.GoBack -> navController.navigateUp()
-                    }
-                },
-                orderId = navBackStackEntry.arguments?.getString(NavItem.OrderId.key).orEmpty(),
-                orderItemId = navBackStackEntry.arguments?.getString(NavItem.OrderItemId.key)
-                    .orEmpty(),
-                orderItemTitle = navBackStackEntry.arguments?.getString(NavItem.OrderItemTitle.key)
-                    .orEmpty(),
-                orderItemCoverImageUrl = navBackStackEntry.arguments?.getString(NavItem.OrderItemCoverImageUrl.key)
-                    .orEmpty(),
-                orderItemPriceLabel = navBackStackEntry.arguments?.getString(NavItem.OrderItemPriceLabel.key)
-                    .orEmpty()
-            )
-        }
-
-        allCharactersScreen(
-            navController = navController,
-            navigateToCharacterScreen = { characterId ->
-                navController.navigateToCharacterScreen(
-                    characterId = characterId,
-                    navOptionsBuilder = {
-                        navOptions {
-                            launchSingleTop = true
-                        }
-                    }
-                )
-            },
-            openDeepLinkAction = navController::openDeepLinkAction
+        orderDetailsScreen(
+            goBack = navController::navigateUp,
+            navigateToOrderItemTrackingHistoryScreen = navController::navigateToOrderItemTrackingHistoryScreen
         )
+
+        orderItemTrackingHistoryScreen(navController = navController)
+
+        orderItemManagementScreen(navController = navController)
+
+        requestItemReturnScreen(navController = navController)
+
+        requestItemReturnSuccessScreen(navController = navController)
+
+//        allCharactersScreen(
+//            navController = navController,
+//            navigateToCharacterScreen = { characterId ->
+//                navController.navigateToCharacterScreen(
+//                    characterId = characterId,
+//                    navOptionsBuilder = {
+//                        navOptions {
+//                            launchSingleTop = true
+//                        }
+//                    }
+//                )
+//            },
+//            openDeepLinkAction = navController::openDeepLinkAction
+//        )
 
         comicScreen(goBack = navController::navigateUp)
 
@@ -575,7 +503,7 @@ internal fun NavGraph(navController: NavHostController) {
             }
         )
 
-        allFavoriteCharactersScreen(navController)
+//        allFavoriteCharactersScreen(navController)
 
         composable(
             screen = Screen.FriendsScreen,
@@ -587,6 +515,7 @@ internal fun NavGraph(navController: NavHostController) {
                 onEventSent = viewModel::setEvent,
                 state = viewModel.uiState.collectAsStateWithLifecycle().value,
                 effect = viewModel.uiEffect,
+                snackbarEffects = viewModel.snackbarEffects,
                 onNavigationEffect = { navigationEffect ->
                     when (navigationEffect) {
                         FriendsContract.Effect.Navigation.GoBack -> {
@@ -603,7 +532,10 @@ internal fun NavGraph(navController: NavHostController) {
             )
         }
 
-        profileScreen(navController)
+//        profileScreen(
+//            navController = navController,
+//            rootNavController = navController
+//        )
 
         composable(
             screen = Screen.ProfileImageScreen,
@@ -631,15 +563,14 @@ internal fun NavGraph(navController: NavHostController) {
                 onEventSent = viewModel::setEvent,
                 state = viewModel.uiState.collectAsStateWithLifecycle().value,
                 effect = viewModel.uiEffect,
+                snackbarEffects = viewModel.snackbarEffects,
                 userId = navBackStackEntry.arguments?.getString(NavItem.UserId.key).orEmpty(),
                 shouldShowAcceptFriendRequestDialog = navBackStackEntry.arguments?.getBoolean(
                     NavItem.ShouldShowAcceptFriendRequestDialog.key
                 ) ?: false,
                 onNavigation = { navigationEffect ->
                     when (navigationEffect) {
-                        ProfileDetailsContract.Effect.Navigation.PopBackStack -> {
-                            navController.navigateUp()
-                        }
+                        ProfileDetailsContract.Effect.Navigation.PopBackStack -> navController.navigateToDashboardScreen()
 
                         is ProfileDetailsContract.Effect.Navigation.NavigateToProfileImageScreen -> {
                             navController.navigate(
@@ -664,6 +595,16 @@ internal fun NavGraph(navController: NavHostController) {
                         }
                     }
                 },
+                snackbarNavigationPayloadFlow = navBackStackEntry.savedStateHandle
+                    .getStateFlow<SnackbarNavigationPayload?>(
+                        key = SavedStateHandleKeys.snackbarNavigationPayload,
+                        initialValue = null
+                    ),
+                onSnackbarNavigationPayloadConsumed = {
+                    navBackStackEntry.savedStateHandle.remove<SnackbarNavigationPayload>(
+                        SavedStateHandleKeys.snackbarNavigationPayload
+                    )
+                }
             )
         }
 
@@ -712,7 +653,7 @@ internal fun NavGraph(navController: NavHostController) {
                         }
 
                         is EditProfileDetailsContract.Effect.Navigation.NavigateUpWithSnackbarPayload -> {
-                            navController.previousBackStackEntry?.savedStateHandle["snackbarNavigationPayload"] =
+                            navController.previousBackStackEntry?.savedStateHandle[SavedStateHandleKeys.snackbarNavigationPayload] =
                                 navigationEffect.snackbarNavigationPayload
                             navController.navigateUp()
                         }

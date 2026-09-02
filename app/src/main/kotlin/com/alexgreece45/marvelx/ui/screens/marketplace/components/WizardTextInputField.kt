@@ -10,6 +10,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import com.alexgreece45.marvelx.ui.components.OutlinedTextFieldValidation
 import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.model.WizardInputFieldUi
 
+// TODO: Checkout "TextInputField."
 @Composable
 fun WizardTextInputField(
     label: String,
@@ -33,7 +34,7 @@ fun WizardTextInputField(
         label = label,
         placeholder = placeholder,
         trailingIcon = trailingIcon,
-        errorMessage = wizardInputField.validationResult.message,
+        errorText = wizardInputField.validationResult.message,
         isError = !wizardInputField.validationResult.isValid,
         visualTransformation = visualTransformation,
         keyboardOptions = keyboardOptions,

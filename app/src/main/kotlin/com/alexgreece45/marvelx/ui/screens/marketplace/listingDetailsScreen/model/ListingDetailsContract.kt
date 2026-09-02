@@ -7,6 +7,7 @@ import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
 import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.model.CreateListingWizardMode
 import com.alexgreece45.marvelx.ui.screens.marketplace.model.ListingUi
+import com.alexgreece45.marvelx.util.extensions.model.ShareContentUrlData
 
 sealed interface ListingDetailsContract {
 
@@ -46,7 +47,7 @@ sealed interface ListingDetailsContract {
 
         val hasError: Boolean = false,
 
-        val addToBasketButtonLoading: Boolean = false,
+        val stickyBottomButtonLoading: Boolean = false,
     ) : BaseState {
 
         val showToolbar: Boolean get() = mode != ListingDetailsMode.OVERVIEW
@@ -58,10 +59,20 @@ sealed interface ListingDetailsContract {
             data object GoBack : Navigation
             data class NavigateToProfileDetailsScreen(val userId: UserId) : Navigation
             data class NavigateToEditListingScreen(val listingId: String) : Navigation
+            data class NavigateToOrderItemTrackingHistoryScreen(
+                val orderId: String,
+                val orderItemId: String
+            ) : Navigation
+
+            data class NavigateToOrderItemManagementScreen(
+                val orderId: String,
+                val orderItemId: String
+            ) : Navigation
+
             data object GoToNextScreen : Navigation
         }
 
         data class ShowToastMessage(val message: String) : Effect
-        data class ShareListingUrl(val url: String, val title: String) : Effect
+        data class ShareListingUrl(val shareContentUrlData: ShareContentUrlData) : Effect
     }
 }

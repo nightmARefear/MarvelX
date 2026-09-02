@@ -15,5 +15,6 @@ internal enum class RequestItemReturnWizardStep {
 
     companion object {
         val INITIAL_STEP = RETURN_REASON
+        val TOTAL_STEPS = entries.size
     }
 }

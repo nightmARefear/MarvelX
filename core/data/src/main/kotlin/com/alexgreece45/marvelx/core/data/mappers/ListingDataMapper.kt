@@ -2,6 +2,8 @@ package com.alexgreece45.marvelx.core.data.mappers
 
 import com.alexgreece45.marvelx.core.data.model.marketplace.listing.ListingCategoryCode
 import com.alexgreece45.marvelx.core.data.model.marketplace.listing.ListingData
+import com.alexgreece45.marvelx.core.data.model.order.ListingOrderIds
+import com.alexgreece45.marvelx.core.data.model.order.OrderId
 import com.alexgreece45.marvelx.core.network.model.api.marketplace.listing.ResponseListing
 import com.alexgreece45.marvelx.core.network.model.api.marketplace.listing.details.ResponseListingDetails
 import com.alexgreece45.marvelx.model.model.user.UserId
@@ -80,10 +82,16 @@ internal class ListingDataMapper(
                 coverImageUrl = coverImageUrl,
                 imageUrls = imageUrls,
                 details = listingDetails,
+                postedAt = postedAt,
+                updatedAt = updatedAt,
                 favorite = favorite,
                 cart = cart,
-                postedAt = postedAt,
-                updatedAt = updatedAt
+                orderIds = orderIds?.let {
+                    ListingOrderIds(
+                        OrderId(it.orderId),
+                        OrderId(it.orderItemId)
+                    )
+                }
             )
         }
     }

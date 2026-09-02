@@ -38,6 +38,12 @@ data class CustomColors(
     val linkTextColor: Color,
     val genericOrangeColor: Color,
     val snackbarBackgroundColors: SnackbarBackgroundColors,
+    val listingStatusColors: ListingStatusColors,
+    val infoStatusContainerColors: StatusContainerColors,
+    val warningStatusContainerColors: StatusContainerColors,
+    val errorStatusContainerColors: StatusContainerColors,
+    val successStatusContainerColors: StatusContainerColors,
+    val creamWhite: Color,
 )
 
 /**
@@ -54,6 +60,7 @@ data class ChipBackgroundColors(
     val listingActive: Color,
     val listingReserved: Color,
     val listingSold: Color,
+    val selected: Color,
 )
 
 @Immutable
@@ -82,6 +89,19 @@ data class SnackbarBackgroundColors(
     val success: Color
 )
 
+@Immutable
+data class ListingStatusColors(
+    val soldBackgroundColor: Color,
+    val soldOutlineColor: Color
+)
+
+@Immutable
+data class StatusContainerColors(
+    val backgroundColor: Color,
+    val outlineColor: Color,
+    val contentColor: Color
+)
+
 /**
  * The custom light colors.
  */
@@ -100,10 +120,11 @@ internal fun customLightColors() = CustomColors(
         listingActive = Color(0xFF21F33D),
         listingReserved = Color(0xFFD56E00),
         listingSold = Color(0xFFD50000),
+        selected = Color(0xFFD50000),
     ),
     orderStatusBackgroundColors = OrderStatusBackgroundColors(
         processing = Color(0xFF2196F3),
-        partiallyShipped = Color(0xFFE65100),
+        partiallyShipped = Color(0xFFFFB74D),
         shipped = Color(0xFFFF9800),
         partiallyDelivered = Color(0xFF81C784),
         delivered = Color(0xFF4CAF50)
@@ -134,6 +155,31 @@ internal fun customLightColors() = CustomColors(
         error = Color(0xFFD50000),
         success = Color(0xFF21F33D)
     ),
+    listingStatusColors = ListingStatusColors(
+        soldBackgroundColor = Color(0xA6B71C1C),
+        soldOutlineColor = Color(0xFFB71C1C)
+    ),
+    infoStatusContainerColors = StatusContainerColors(
+        backgroundColor = Color(0x1A3B82F6),
+        outlineColor = Color(0x4D3B82F6),
+        contentColor = Color(0xFF3B82F6)
+    ),
+    warningStatusContainerColors = StatusContainerColors(
+        backgroundColor = Color(0x1AFF9800),
+        outlineColor = Color(0x4DFF9800),
+        contentColor = Color(0xFFFF9800)
+    ),
+    errorStatusContainerColors = StatusContainerColors(
+        backgroundColor = Color(0x1AEF4444),
+        outlineColor = Color(0x4DEF4444),
+        contentColor = Color(0xFFEF4444)
+    ),
+    successStatusContainerColors = StatusContainerColors(
+        backgroundColor = Color(0x1A21F33D),
+        outlineColor = Color(0x4D21F33D),
+        contentColor = Color(0xFF21F33D)
+    ),
+    creamWhite = Color(0xFFFFFDD0),
 )
 
 /**
@@ -154,10 +200,11 @@ internal fun customDarkColors() = CustomColors(
         listingActive = Color(0xFF21F33D),
         listingReserved = Color(0xFFD56E00),
         listingSold = Color(0xFFD50000),
+        selected = Color(0xFFD50000),
     ),
     orderStatusBackgroundColors = OrderStatusBackgroundColors(
         processing = Color(0xFF2196F3),
-        partiallyShipped = Color(0xFFD56E00),
+        partiallyShipped = Color(0xFFFFB74D),
         shipped = Color(0xFFD56E00),
         partiallyDelivered = Color(0xFF21F33D),
         delivered = Color(0xFF21F33D)
@@ -188,6 +235,31 @@ internal fun customDarkColors() = CustomColors(
         error = Color(0xFFD50000),
         success = Color(0xFF21F33D)
     ),
+    listingStatusColors = ListingStatusColors(
+        soldBackgroundColor = Color(0xA6B71C1C),
+        soldOutlineColor = Color(0xFFB71C1C)
+    ),
+    infoStatusContainerColors = StatusContainerColors(
+        backgroundColor = Color(0x1A3B82F6),
+        outlineColor = Color(0x4D3B82F6),
+        contentColor = Color(0xFF3B82F6)
+    ),
+    warningStatusContainerColors = StatusContainerColors(
+        backgroundColor = Color(0x1AFF9800),
+        outlineColor = Color(0x4DFF9800),
+        contentColor = Color(0xFFFF9800)
+    ),
+    errorStatusContainerColors = StatusContainerColors(
+        backgroundColor = Color(0x1AEF4444),
+        outlineColor = Color(0x4DEF4444),
+        contentColor = Color(0xFFEF4444)
+    ),
+    successStatusContainerColors = StatusContainerColors(
+        backgroundColor = Color(0x1A21F33D),
+        outlineColor = Color(0x4D21F33D),
+        contentColor = Color(0xFF21F33D)
+    ),
+    creamWhite = Color(0xFFFFFDD0),
 )
 
 val LocalCustomColors = staticCompositionLocalOf { customLightColors() }

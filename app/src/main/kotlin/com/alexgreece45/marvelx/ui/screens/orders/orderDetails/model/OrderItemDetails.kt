@@ -1,7 +1,9 @@
 package com.alexgreece45.marvelx.ui.screens.orders.orderDetails.model
 
+import androidx.compose.runtime.Immutable
 import com.alexgreece45.marvelx.domain.model_api.order.OrderIdDomain
 
+@Immutable
 data class OrderItemDetails(
     val orderId: OrderIdDomain,
     val orderItemId: OrderIdDomain,

@@ -137,6 +137,6 @@ sealed interface CreateListingAdvancedDetailsContract {
 
         data object GoToPreviousStep : Effect
         data class SetNextButtonEnabled(val enabled: Boolean) : Effect
-        data class ShowToast(val message: String) : Effect
+        data class ShowErrorSnackbar(val errorMessage: String) : Effect
     }
 }

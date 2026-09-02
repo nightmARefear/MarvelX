@@ -1,7 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.MarvelX" parent="android:Theme.Material.Light.NoActionBar">
-        <item name="android:statusBarColor" />
+    <style name="Theme.MarvelX" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <item name="android:statusBarColor">@android:color/transparent</item>
+    </style>
+
+    <style name="MarvelXDateRangePickerTheme" parent="ThemeOverlay.MaterialComponents.MaterialCalendar">
+        <item name="colorPrimary">@color/marvelx_secondary</item>
+        <item name="colorOnPrimary">@color/marvelx_on_secondary</item>
+        <item name="colorSurface">@color/marvelx_surface</item>
+        <item name="colorOnSurface">@color/marvelx_on_surface</item>
     </style>
 </resources>
