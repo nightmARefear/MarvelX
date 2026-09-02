@@ -49,7 +49,6 @@ import coil.request.ImageRequest
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.common_ui.util.ObserveUiEffect
 import com.alexgreece45.marvelx.core.common.util.flows.single_observer_flow.SingleObserverFlow
-import com.alexgreece45.marvelx.data.model.deepLink.DeepLinkAction
 import com.alexgreece45.marvelx.ui.components.BottomNavigationBarData
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.ExtendedFabData
@@ -66,7 +65,6 @@ import com.alexgreece45.marvelx.ui_theme.theme.values.customColors
 import com.alexgreece45.marvelx.util.DEFAULT_SCREEN_PADDING
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.SPACING_TINY
-import com.alexgreece45.marvelx.util.extensions.getAndRemovePendingDeepLinkAction
 import com.alexgreece45.marvelx.util.extensions.hideIfVisible
 import com.alexgreece45.marvelx.util.extensions.throttledClickable
 import kotlinx.coroutines.launch
@@ -78,7 +76,6 @@ fun AllCharactersScreen(
     state: AllCharactersState,
     effect: SingleObserverFlow<AllCharactersEffect>,
     navigateToCharacterScreen: (characterId: Int) -> Unit,
-    openDeepLinkAction: (DeepLinkAction) -> Unit,
     bottomNavigationBarData: @Composable () -> BottomNavigationBarData,
 ) {
     val modalBottomSheetState = rememberModalBottomSheetState(
@@ -95,10 +92,6 @@ fun AllCharactersScreen(
 
     val keyboard = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
-
-    LaunchedEffect(Unit) {
-        onEventSent(AllCharactersEvent.Init(context.getAndRemovePendingDeepLinkAction()))
-    }
 
     LaunchedEffect(initLock) {
         if (!state.isFirstLaunch) {
@@ -152,10 +145,6 @@ fun AllCharactersScreen(
             AllCharactersEffect.CloseKeyboardAndRemoveFocus -> {
                 keyboard?.hide()
                 focusManager.clearFocus()
-            }
-
-            is AllCharactersEffect.Navigation.OpenDeepLinkAction -> {
-                openDeepLinkAction(uiEffect.deepLinkAction)
             }
         }
     }

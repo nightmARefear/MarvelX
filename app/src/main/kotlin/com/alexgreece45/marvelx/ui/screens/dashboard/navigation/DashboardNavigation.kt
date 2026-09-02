@@ -1,6 +1,5 @@
 package com.alexgreece45.marvelx.ui.screens.dashboard.navigation
 
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
@@ -25,7 +24,6 @@ internal fun NavGraphBuilder.dashboardGraph(navController: NavHostController) =
         val viewModel = koinViewModel<DashboardViewModel>()
         DashboardScreen(
             onEvent = viewModel::setEvent,
-            state = viewModel.uiState.collectAsStateWithLifecycle().value,
             effect = viewModel.uiEffect,
             rootNavController = navController
         )

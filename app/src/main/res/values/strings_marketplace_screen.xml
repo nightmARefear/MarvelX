@@ -2,6 +2,8 @@
     <string name="screen_marketplace_toolbar_title">Marketplace</string>
 
     <string name="screen_marketplace_search_bar_hint">Rare 2005 Spider-Man Limited Edition Mug</string>
+
+    <string name="screen_marketplace_filtered_listing_remove_from_cart_button">Remove from cart</string>
     
     <string name="screen_marketplace_sort_price_ascending_label">Price Ascending</string>
     <string name="screen_marketplace_sort_price_descending_label">Price Descending</string>

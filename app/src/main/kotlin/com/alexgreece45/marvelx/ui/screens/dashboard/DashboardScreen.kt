@@ -26,7 +26,6 @@ import com.alexgreece45.marvelx.util.extensions.getAndRemovePendingDeepLinkActio
 @Composable
 fun DashboardScreen(
     onEvent: (DashboardContract.Event) -> Unit,
-    state: DashboardContract.State,
     effect: SingleObserverFlow<DashboardContract.Effect>,
     rootNavController: NavHostController,
 ) {

@@ -782,11 +782,11 @@ internal class ListingClientImpl(
                 conditionCode = "good",
                 title = "Amazing Spider-Man Vintage Comic #12",
                 price = "15.50",
-                coverImageUrl = "https://backend.alexandrosvoliotis.com/api/private/marvelx/user/4/profile-image",
+                coverImageUrl = "https://backend.alexandrosvoliotis.com/api/private/marvelx/user/1/profile-image",
                 postedAt = LocalDate.of(2026, 8, 30).toInstant().toString(),
                 isFinalSale = false,
                 favorite = false,
-                cart = Random.nextBoolean()
+                cart = true
             ),
             ResponseFilteredListing(
                 listingId = "2",
@@ -794,11 +794,11 @@ internal class ListingClientImpl(
                 conditionCode = "very_good",
                 title = "Amazing Spider-Man Classic Comic #15",
                 price = "15.99",
-                coverImageUrl = "https://backend.alexandrosvoliotis.com/api/private/marvelx/user/4/profile-image",
+                coverImageUrl = "https://backend.alexandrosvoliotis.com/api/private/marvelx/user/2/profile-image",
                 postedAt = LocalDate.of(2026, 8, 28).toInstant().toString(),
                 isFinalSale = false,
                 favorite = true,
-                cart = Random.nextBoolean()
+                cart = false
             ),
 
             // --- The Random Items ---
@@ -808,11 +808,11 @@ internal class ListingClientImpl(
                 conditionCode = "mint",
                 title = "Rare 2001 Spider-Man Limited Edition Mug",
                 price = "45.00",
-                coverImageUrl = "https://backend.alexandrosvoliotis.com/api/private/marvelx/user/4/profile-image",
+                coverImageUrl = "https://backend.alexandrosvoliotis.com/api/private/marvelx/user/2/profile-image",
                 postedAt = LocalDate.of(2026, 8, 25).toInstant().toString(),
                 isFinalSale = false,
                 favorite = true,
-                cart = Random.nextBoolean()
+                cart = false
             ),
             ResponseFilteredListing(
                 listingId = "4",
@@ -820,7 +820,7 @@ internal class ListingClientImpl(
                 conditionCode = "mint",
                 title = "Original Iron Man Mark V Blueprint Canvas - 24x36",
                 price = "120.00",
-                coverImageUrl = "https://backend.alexandrosvoliotis.com/api/private/marvelx/user/4/profile-image",
+                coverImageUrl = "https://backend.alexandrosvoliotis.com/api/private/marvelx/user/1/profile-image",
                 postedAt = LocalDate.of(2026, 6, 12).toInstant().toString(),
                 isFinalSale = true,
                 favorite = false,

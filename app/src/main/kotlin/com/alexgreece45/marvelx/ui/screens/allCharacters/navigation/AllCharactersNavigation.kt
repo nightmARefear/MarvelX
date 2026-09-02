@@ -8,7 +8,6 @@ import com.alexgreece45.marvelx.data.model.deepLink.DeepLinkAction
 import com.alexgreece45.marvelx.ui.navigation.getBottomNavigationBarData
 import com.alexgreece45.marvelx.ui.screens.allCharacters.AllCharactersScreen
 import com.alexgreece45.marvelx.ui.screens.allCharacters.AllCharactersViewModel
-import com.alexgreece45.marvelx.util.extensions.popUpToTop
 import kotlinx.serialization.Serializable
 import org.koin.androidx.compose.koinViewModel
 
@@ -27,7 +26,6 @@ internal fun NavGraphBuilder.allCharactersScreen(
             state = viewModel.uiState.collectAsStateWithLifecycle().value,
             effect = viewModel.uiEffect,
             navigateToCharacterScreen = navigateToCharacterScreen,
-            openDeepLinkAction = openDeepLinkAction,
             bottomNavigationBarData = { getBottomNavigationBarData(navController = navController) }
         )
     }

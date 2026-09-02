@@ -38,6 +38,7 @@ import com.alexgreece45.marvelx.ui.screens.marketplace.model.MarketplaceSearchCr
 import com.alexgreece45.marvelx.ui.screens.marketplace.model.SelectableOption
 import com.alexgreece45.marvelx.ui.screens.marketplace.model.toDomain
 import com.alexgreece45.marvelx.util.ResourceProvider
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.collectLatest
@@ -204,15 +205,28 @@ internal class MarketplaceViewModel(
     }
 
     private fun onListingFavoriteClicked(listingId: String) {
-
+        // TODO: Add API call.
     }
 
     private fun onListingComparisonClicked(listingId: String) {
-
+        // TODO: Add API call.
     }
 
     private fun onListingAddToCartClicked(listingId: String) {
-
+        // TODO: Add API call.
+        setState {
+            copy(
+                searchUiState = if (searchUiState !is UiState.Success) searchUiState else searchUiState.copy(
+                    data = searchUiState.data.map { filteredListing ->
+                        if (filteredListing.listingId == listingId) {
+                            filteredListing.copy(cart = !filteredListing.cart)
+                        } else {
+                            filteredListing
+                        }
+                    }.toImmutableList()
+                )
+            )
+        }
     }
 
     private fun onSearchBarClicked() {

@@ -33,6 +33,7 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Badge
@@ -77,6 +78,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.util.Pair
@@ -105,6 +107,7 @@ import com.alexgreece45.marvelx.ui.components.WrapCheckbox
 import com.alexgreece45.marvelx.ui.components.WrapHorizontalPager
 import com.alexgreece45.marvelx.ui.components.WrapImage
 import com.alexgreece45.marvelx.ui.components.WrapModalBottomSheetLayout
+import com.alexgreece45.marvelx.ui.components.WrapTextButton
 import com.alexgreece45.marvelx.ui.components.chips.WrapChip
 import com.alexgreece45.marvelx.ui.components.icons.NavigateIcon
 import com.alexgreece45.marvelx.ui.components.rememberWrapModalBottomSheetState
@@ -317,8 +320,8 @@ internal fun MarketplaceScreen(
                                     .fillMaxWidth()
                                     .pointerInput(Unit) { detectTapGestures(onTap = { focusManager.clearFocus() }) },
                                 contentPadding = paddingValues,
-                                verticalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp),
-                                horizontalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp)
+                                verticalArrangement = Arrangement.spacedBy(SPACING_MEDIUM.dp),
+                                horizontalArrangement = Arrangement.spacedBy(SPACING_MEDIUM.dp)
                             ) {
                                 item(key = "searchBar", span = { GridItemSpan(maxLineSpan) }) {
                                     with(state) {
@@ -784,94 +787,164 @@ private fun FilteredListingItem(
     onComparisonClick: () -> Unit,
     onCartClick: () -> Unit
 ) {
-    val modifier =
-        if (listingsLayout == MarketplaceListingsLayout.GRID) Modifier.fillMaxWidth() else Modifier
     Column(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxWidth()
-            .clickableNoRipple(onClick = onListingClick),
+            .clickable(onClick = onListingClick),
         verticalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp)
     ) {
-        // Image & action buttons.
-        Box {
-            ListingImage(
-                imageUrl = filteredListing.coverImageUrl,
-                title = filteredListing.title,
+        // Listing details (only in list view), image & action buttons.
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(SPACING_MEDIUM.dp)
+        ) {
+            // Image & action buttons.
+            Box(
                 modifier = Modifier
-                    .let {
+                    .clip(shape = MaterialTheme.shapes.medium)
+                    .background(color = MaterialTheme.customColors.white)
+                    .then(
                         if (listingsLayout == MarketplaceListingsLayout.GRID) {
                             Modifier.fillMaxWidth()
                         } else {
-                            Modifier.width(120.dp)
+                            Modifier.width(140.dp)
                         }
-                    }
-                    .height(height = 180.dp)
-            )
-
-            // Favorite & Compare icons.
-            Column(
-                modifier = Modifier.align(Alignment.TopEnd),
-//                verticalArrangement = Arrangement.spacedBy(SPACING_TINY.dp)
+                    )
+                    .height(180.dp),
+                contentAlignment = Alignment.Center
             ) {
-                FilteredListingItemImageActionButton(
-                    onClick = onFavoriteClick,
-                    icon = {
-                        if (filteredListing.favorite) {
+                ListingImage(
+                    imageUrl = filteredListing.coverImageUrl,
+                    title = filteredListing.title,
+                    modifier = Modifier
+                        .padding(SPACING_MEDIUM.dp)
+                        .clip(shape = MaterialTheme.shapes.medium)
+                )
+
+                // Favorite & Compare icons.
+                Column(
+                    modifier = Modifier.align(Alignment.TopEnd),
+                    verticalArrangement = Arrangement.spacedBy(SPACING_TINY.dp)
+                ) {
+                    FilteredListingItemImageActionButton(
+                        onClick = onFavoriteClick,
+                        icon = {
+                            if (filteredListing.favorite) {
+                                Icon(
+                                    painter = painterResource(R.drawable.ic_favorite_filled),
+                                    contentDescription = null,
+                                    tint = MaterialTheme.customColors.genericRed
+                                )
+                            } else {
+                                Icon(
+                                    painter = painterResource(R.drawable.ic_favorite_empty),
+                                    contentDescription = null,
+                                    tint = MaterialTheme.customColors.black
+                                )
+                            }
+                        }
+                    )
+
+                    FilteredListingItemImageActionButton(
+                        onClick = onComparisonClick,
+                        icon = {
                             Icon(
-                                painter = painterResource(R.drawable.ic_favorite_filled),
+                                painter = painterResource(UiThemeDrawable.ic_compare),
                                 contentDescription = null,
-                                tint = MaterialTheme.customColors.genericRed
-                            )
-                        } else {
-                            Icon(
-                                painter = painterResource(R.drawable.ic_favorite_empty),
-                                contentDescription = null,
+                                modifier = Modifier.rotate(30f),
                                 tint = MaterialTheme.customColors.black
                             )
                         }
-                    }
-                )
-
-                FilteredListingItemImageActionButton(
-                    onClick = onComparisonClick,
-                    icon = {
-                        Icon(
-                            painter = painterResource(UiThemeDrawable.ic_compare),
-                            contentDescription = null,
-                            modifier = Modifier.rotate(45f),
-                            tint = MaterialTheme.customColors.black
-                        )
-                    }
-                )
-            }
-
-            // Add to basket icon.
-            FilteredListingItemImageActionButton(
-                modifier = Modifier.align(Alignment.BottomEnd),
-                iconBackgroundColor = Color(0x1A21F33D),
-                onClick = onCartClick,
-                icon = {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_cart),
-                        contentDescription = null,
-                        tint = MaterialTheme.customColors.black
                     )
                 }
-            )
+
+                // Add to cart icon.
+                AnimatedContent(
+                    targetState = filteredListing.cart,
+                    modifier = Modifier.align(Alignment.BottomEnd),
+                    contentAlignment = Alignment.BottomEnd,
+                    transitionSpec = {
+                        fadeIn(animationSpec = tween(durationMillis = 500)) togetherWith
+                                fadeOut(animationSpec = tween(durationMillis = 300)) using
+                                SizeTransform { _, _ ->
+                                    tween(durationMillis = 500)
+                                }
+                    },
+                    label = "AddToCartAnimation"
+                ) { cart ->
+                    if (cart) {
+                        WrapTextButton(
+                            onClick = onCartClick,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(32.dp),
+                            shape = RoundedCornerShape(
+                                topStart = SPACING_MEDIUM.dp,
+                                topEnd = SPACING_MEDIUM.dp
+                            ),
+                            colors = ButtonDefaults.textButtonColors(
+                                backgroundColor = Color(
+                                    0xD821F33D
+                                )
+                            )
+                        ) {
+                            Text(text = stringResource(R.string.screen_marketplace_filtered_listing_remove_from_cart_button))
+                        }
+                    } else {
+                        Box(
+                            modifier = Modifier
+                                .align(Alignment.BottomEnd)
+                                .clip(RoundedCornerShape(topStart = SPACING_MEDIUM.dp))
+                                .background(color = Color(0xD821F33D))
+                                .clickableNoRipple(onClick = onCartClick)
+                                .height(32.dp)
+                                .padding(horizontal = SPACING_SMALL.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                painter = painterResource(R.drawable.ic_cart),
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp),
+                                tint = Color(0xFF386641)
+                            )
+                        }
+                    }
+                }
+            }
+
+            if (listingsLayout == MarketplaceListingsLayout.LIST) {
+                Column(verticalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp)) {
+                    Text(
+                        text = filteredListing.title,
+                        overflow = TextOverflow.Ellipsis
+                    )
+
+                    Text(
+                        text = filteredListing.price.label,
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.body2
+                    )
+                }
+            }
         }
 
         // Listing details.
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp)
-        ) {
-            Text(text = filteredListing.title)
+        if (listingsLayout == MarketplaceListingsLayout.GRID) {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp)
+            ) {
+                Text(
+                    text = filteredListing.title,
+                    overflow = TextOverflow.Ellipsis
+                )
 
-            Text(
-                text = filteredListing.price.label,
-                fontWeight = FontWeight.Bold,
-                style = MaterialTheme.typography.body2
-            )
+                Text(
+                    text = filteredListing.price.label,
+                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.body2
+                )
+            }
         }
     }
 }
@@ -887,7 +960,7 @@ private fun FilteredListingItemImageActionButton(
         Box(
             modifier = Modifier
                 .background(
-                    color = iconBackgroundColor,
+                    color = iconBackgroundColor.copy(alpha = ContentAlpha.disabled),
                     shape = CircleShape
                 )
                 .padding(SPACING_TINY.dp),
@@ -1517,6 +1590,7 @@ private fun MarketplaceScreenSearchPreview() {
                     categories = emptyList(),
                 ),
                 mode = MarketplaceMode.SEARCH,
+                listingsLayout = MarketplaceListingsLayout.LIST,
                 searchUiState = UiState.Success(
                     data = persistentListOf(
                         FilteredListingUi(

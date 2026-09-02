@@ -2,7 +2,6 @@ package com.alexgreece45.marvelx.ui.screens.allCharacters
 
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.data.model.deepLink.DeepLinkAction
 import com.alexgreece45.marvelx.database.FavoriteCharacterEntity
 import com.alexgreece45.marvelx.domain.interactors.CharacterInteractor
 import com.alexgreece45.marvelx.domain.interactors.DeleteFavoriteCharacterByIdPartialState
@@ -24,7 +23,6 @@ import kotlinx.coroutines.launch
 import org.koin.android.annotation.KoinViewModel
 
 sealed interface AllCharactersEvent : BaseEvent {
-    data class Init(val deepLinkAction: DeepLinkAction?) : AllCharactersEvent
 
     /**
      * Pull to refresh.
@@ -52,7 +50,6 @@ sealed interface AllCharactersEvent : BaseEvent {
 sealed interface AllCharactersEffect : BaseEffect {
     sealed interface Navigation : AllCharactersEffect {
         data class NavigateToCharacterScreen(val characterId: Int) : Navigation
-        data class OpenDeepLinkAction(val deepLinkAction: DeepLinkAction) : Navigation
     }
 
     sealed interface FavoriteCharacter : AllCharactersEffect {
@@ -104,6 +101,11 @@ class AllCharactersViewModel(
     private val interactor: CharacterInteractor,
     private val resourceProvider: ResourceProvider,
 ) : BaseViewModel<AllCharactersEvent, AllCharactersState, AllCharactersEffect>() {
+
+    init {
+        initView()
+    }
+
     override fun setInitialState(): AllCharactersState =
         AllCharactersState(
             isLoading = true,
@@ -117,18 +119,6 @@ class AllCharactersViewModel(
 
     override fun handleEvents(event: AllCharactersEvent) {
         when (event) {
-            is AllCharactersEvent.Init -> {
-                if (event.deepLinkAction != null) {
-                    setEffect {
-                        AllCharactersEffect.Navigation.OpenDeepLinkAction(
-                            deepLinkAction = event.deepLinkAction
-                        )
-                    }
-                } else {
-                    initView()
-                }
-            }
-
             AllCharactersEvent.OnRefresh -> {
                 pullToRefresh()
             }
