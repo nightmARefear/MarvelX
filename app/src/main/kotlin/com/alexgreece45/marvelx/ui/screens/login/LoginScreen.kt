@@ -61,11 +61,11 @@ import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.OutlinedTextFieldValidation
 import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
 import com.alexgreece45.marvelx.ui.components.WrapButton
-import com.alexgreece45.marvelx.ui.components.WrapClickableText
+import com.alexgreece45.marvelx.common_ui.components.WrapClickableText
 import com.alexgreece45.marvelx.ui.components.WrapOutlinedButton
 import com.alexgreece45.marvelx.ui.components.error.ContentErrorScreen
 import com.alexgreece45.marvelx.ui.components.line.HorizontalLine
-import com.alexgreece45.marvelx.ui.components.model.ClickableString
+import com.alexgreece45.marvelx.common_ui.components.model.ClickableString
 import com.alexgreece45.marvelx.ui.screens.login.model.LoginWithGoogleResult
 import com.alexgreece45.marvelx.ui.screens.login.model.LoginWithIntentWithGoogleResult
 import com.alexgreece45.marvelx.util.HSpacer

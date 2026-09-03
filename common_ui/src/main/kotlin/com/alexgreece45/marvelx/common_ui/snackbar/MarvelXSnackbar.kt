@@ -27,8 +27,11 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import com.alexgreece45.marvelx.common_ui.components.WrapClickableText
+import com.alexgreece45.marvelx.common_ui.components.model.ClickableString
 import com.alexgreece45.marvelx.common_ui.extensions.hideSnackbar
 import com.alexgreece45.marvelx.common_ui.extensions.showSnackbarAndHandleResult
+import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarActionData
 import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarActionType
 import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarEffect
 import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarStateData
@@ -112,12 +115,13 @@ private fun MarvelXSnackbarContent(snackbarStateData: SnackbarStateData, hideSna
             )
         ) {
             if (snackbarStateData.actionData != null) {
-                SnackbarSimpleAction(
-                    snackbarStateData = snackbarStateData,
+                ActionSnackbar(
+                    message = snackbarStateData.message,
+                    actionData = snackbarStateData.actionData,
                     hideSnackbar = hideSnackbar
                 )
             } else {
-                SnackbarSimple(
+                MessageSnackbar(
                     message = snackbarStateData.message,
                     modifier = Modifier.padding(vertical = 16.dp)
                 )
@@ -129,32 +133,43 @@ private fun MarvelXSnackbarContent(snackbarStateData: SnackbarStateData, hideSna
 /**
  * Function that composes a snackbar with a message and an action button.
  *
- * @see SnackbarSimple()
+ * @see MessageSnackbar()
  */
 @Composable
-private fun SnackbarSimpleAction(snackbarStateData: SnackbarStateData, hideSnackbar: () -> Unit) {
+private fun ActionSnackbar(
+    message: String,
+    actionData: SnackbarActionData,
+    hideSnackbar: () -> Unit
+) {
+    if (actionData.isHyperlink) {
+        HyperlinkSnackbar(
+            message = message,
+            actionData = actionData,
+            hideSnackbar = hideSnackbar
+        )
+        return
+    }
+
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(6.dp)
     ) {
-        SnackbarSimple(
-            message = snackbarStateData.message,
+        MessageSnackbar(
+            message = message,
             modifier = Modifier.weight(1f)
         )
 
-        snackbarStateData.actionData?.let { actionData ->
-            TextButton(
-                onClick = {
-                    when (val actionType = actionData.actionType) {
-                        SnackbarActionType.Hide -> hideSnackbar()
-                        is SnackbarActionType.Custom -> actionType.onAction.invoke()
-                    }
-                },
-            ) {
-                Text(
-                    text = actionData.label
-                )
-            }
+        TextButton(
+            onClick = {
+                when (val actionType = actionData.actionType) {
+                    SnackbarActionType.Hide -> hideSnackbar()
+                    is SnackbarActionType.Custom -> actionType.onAction.invoke()
+                }
+            },
+        ) {
+            Text(
+                text = actionData.label
+            )
         }
     }
 }
@@ -162,16 +177,40 @@ private fun SnackbarSimpleAction(snackbarStateData: SnackbarStateData, hideSnack
 /**
  * Function that composes a snackbar with a message.
  *
- * @see SnackbarSimpleAction
+ * @see ActionSnackbar
  */
 @Composable
-private fun SnackbarSimple(message: String, modifier: Modifier) {
+private fun MessageSnackbar(message: String, modifier: Modifier) {
     return Text(
         text = message,
         modifier = modifier,
         overflow = TextOverflow.Ellipsis,
         maxLines = 2,
         style = MaterialTheme.typography.h6
+    )
+}
+
+@Composable
+private fun HyperlinkSnackbar(
+    message: String,
+    actionData: SnackbarActionData,
+    hideSnackbar: () -> Unit
+) {
+    WrapClickableText(
+        text = message,
+        textStyle = MaterialTheme.typography.h6,
+        clickableStrings = listOf(
+            ClickableString(
+                text = actionData.label,
+                onClick = {
+                    when (val actionType = actionData.actionType) {
+                        SnackbarActionType.Hide -> hideSnackbar()
+                        is SnackbarActionType.Custom -> actionType.onAction.invoke()
+                    }
+                }
+            )
+        ),
+        modifier = Modifier.fillMaxWidth()
     )
 }
 

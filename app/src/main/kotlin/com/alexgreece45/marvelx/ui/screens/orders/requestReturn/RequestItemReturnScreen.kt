@@ -70,8 +70,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.common_ui.components.statusBox.InfoContainer
-import com.alexgreece45.marvelx.common_ui.components.statusBox.StatusContainer
+import com.alexgreece45.marvelx.common_ui.components.statusContainer.InfoContainer
+import com.alexgreece45.marvelx.common_ui.components.statusContainer.StatusContainer
 import com.alexgreece45.marvelx.common_ui.previewAnnotation.ThemePreview
 import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarEffect
 import com.alexgreece45.marvelx.common_ui.util.ObserveUiEffect
@@ -92,13 +92,13 @@ import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
 import com.alexgreece45.marvelx.ui.components.ThrottledIconButton
 import com.alexgreece45.marvelx.ui.components.WrapAsyncImage
 import com.alexgreece45.marvelx.ui.components.WrapButton
-import com.alexgreece45.marvelx.ui.components.WrapClickableText
+import com.alexgreece45.marvelx.common_ui.components.WrapClickableText
 import com.alexgreece45.marvelx.ui.components.WrapHorizontalDivider
 import com.alexgreece45.marvelx.ui.components.WrapImage
 import com.alexgreece45.marvelx.ui.components.WrapModalBottomSheetLayout
 import com.alexgreece45.marvelx.ui.components.listing.ListingCard
 import com.alexgreece45.marvelx.ui.components.listing.ListingPriceLabel
-import com.alexgreece45.marvelx.ui.components.model.ClickableString
+import com.alexgreece45.marvelx.common_ui.components.model.ClickableString
 import com.alexgreece45.marvelx.ui.components.model.ErrorButtonType
 import com.alexgreece45.marvelx.ui.components.rememberWrapModalBottomSheetState
 import com.alexgreece45.marvelx.ui.components.sections.SectionHeader

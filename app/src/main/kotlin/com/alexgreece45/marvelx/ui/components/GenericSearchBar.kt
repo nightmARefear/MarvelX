@@ -45,16 +45,12 @@ fun GenericSearchBar(
                 style = MaterialTheme.typography.h6
             )
         },
-        leadingIcon = if (searchTerm.isBlank()) {
-            null
-        } else {
-            {
-                Icon(
-                    painter = rememberVectorPainter(image = Icons.Filled.Search),
-                    contentDescription = null,
-                    tint = MaterialTheme.customColors.white
-                )
-            }
+        leadingIcon = {
+            Icon(
+                painter = rememberVectorPainter(image = Icons.Filled.Search),
+                contentDescription = null,
+                tint = MaterialTheme.customColors.white
+            )
         },
         trailingIcon = if (searchTerm.isBlank()) {
             null

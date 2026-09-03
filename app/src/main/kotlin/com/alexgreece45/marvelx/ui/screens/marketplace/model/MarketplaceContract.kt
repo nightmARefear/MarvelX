@@ -5,12 +5,12 @@ import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
 import com.alexgreece45.marvelx.ui.model_generic.UiState
-import kotlinx.collections.immutable.ImmutableList
 
 internal sealed interface MarketplaceContract {
 
     sealed interface Event : BaseEvent {
         data object Init : Event
+        data object OnBackClicked : Event
         data object OnRefresh : Event
         data class OnPromoCarouselScrolled(val newIndex: Int) : Event
         data class OnCategoryClicked(val categoryCode: String) : Event
@@ -80,7 +80,7 @@ internal sealed interface MarketplaceContract {
         val listingsLayout: MarketplaceListingsLayout = MarketplaceListingsLayout.GRID,
 
         // Searching.
-        val searchUiState: UiState<ImmutableList<FilteredListingUi>, Unit> = UiState.Loading,
+        val searchUiState: UiState<List<FilteredListingUi>, Unit> = UiState.Loading,
 
         val searchQuery: String = "",
 
@@ -94,8 +94,9 @@ internal sealed interface MarketplaceContract {
 
     sealed interface Effect : BaseEffect {
         sealed interface Navigation : Effect {
-            data class GoToListingsByCategoryScreen(val categoryCode: String) : Navigation
             data class GoToListingDetailsScreen(val listingId: String) : Navigation
+            data object GoToFavoritesScreen : Navigation
+            data object GoToCartScreen : Navigation
         }
 
         data class ShowDateRangePicker(
@@ -109,5 +110,7 @@ internal sealed interface MarketplaceContract {
 
         data object HideBottomSheet : Effect
         data object ShowBottomSheet : Effect
+
+        data object RequestSearchBarFieldFocus : Effect
     }
 }

@@ -3,14 +3,13 @@ package com.alexgreece45.marvelx.ui.screens.marketplace.mappers
 import com.alexgreece45.marvelx.configuration.ConfigPriceLogic
 import com.alexgreece45.marvelx.core.common.extensions.formatPrice
 import com.alexgreece45.marvelx.core.common.extensions.toCustomFormat
-import com.alexgreece45.marvelx.core.common.extensions.toImmutableListOrEmpty
 import com.alexgreece45.marvelx.core.common.extensions.toLocalDate
 import com.alexgreece45.marvelx.core.common.logger.AppLogger
 import com.alexgreece45.marvelx.domain.model_api.marketplace.FilteredListingDomain
 import com.alexgreece45.marvelx.ui.model_generic.BigDecimalUi
 import com.alexgreece45.marvelx.ui.model_generic.LocalDateUi
 import com.alexgreece45.marvelx.ui.screens.marketplace.model.FilteredListingUi
-import kotlinx.collections.immutable.ImmutableList
+import com.alexgreece45.marvelx.ui.screens.marketplace.model.ToggleStateUi
 
 class FilteredListingUiMapper(
     private val appLogger: AppLogger,
@@ -19,8 +18,8 @@ class FilteredListingUiMapper(
 
     private val loggerTag = "FilteredListingUiMapper"
 
-    fun toUiList(filteredListings: List<FilteredListingDomain>): ImmutableList<FilteredListingUi>? =
-        filteredListings.map { toUi(it) ?: return null }.toImmutableListOrEmpty()
+    fun toUiList(filteredListings: List<FilteredListingDomain>): List<FilteredListingUi>? =
+        filteredListings.map { toUi(it) ?: return null }
 
     private fun toUi(filteredListing: FilteredListingDomain): FilteredListingUi? =
         with(filteredListing) {
@@ -45,8 +44,8 @@ class FilteredListingUiMapper(
                         )
                     },
                     isFinalSale = isFinalSale,
-                    favorite = favorite,
-                    cart = cart
+                    favorite = ToggleStateUi(isChecked = favorite),
+                    cart = ToggleStateUi(isChecked = cart)
                 )
 
             } catch (e: Exception) {

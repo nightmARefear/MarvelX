@@ -1,4 +1,4 @@
-package com.alexgreece45.marvelx.common_ui.components.statusBox
+package com.alexgreece45.marvelx.common_ui.components.statusContainer
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background

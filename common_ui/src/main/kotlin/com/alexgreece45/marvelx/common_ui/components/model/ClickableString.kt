@@ -1,9 +1,10 @@
-package com.alexgreece45.marvelx.ui.components.model
+package com.alexgreece45.marvelx.common_ui.components.model
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.TextUnit
-import com.alexgreece45.marvelx.ui.components.WrapClickableText
+import com.alexgreece45.marvelx.common_ui.components.WrapClickableText
 
 /**
  * Defines a single clickable text to be found in a [String]. This data class is used exclusively in
@@ -11,7 +12,7 @@ import com.alexgreece45.marvelx.ui.components.WrapClickableText
  *
  * @param text          The [String] to be displayed & found.
  * @param data          The link to be opened when this [String] is clicked. Set to `empty` by default.
- * @param color         The [Color] of this [String]. Set to `null` by default.
+ * @param color         The [androidx.compose.ui.graphics.Color] of this [String]. Set to `null` by default.
  * @param fontSize      The size of glyphs (in logical pixels) to use when painting this [String].
  * @param fontWeight    The typeface thickness to use when painting this [String] (e.g., bold).
  * @param onClick       The action(s) to be invoked when this [String] is clicked.
@@ -22,5 +23,6 @@ data class ClickableString(
     val color: Color? = null,
     val fontSize: TextUnit? = null,
     val fontWeight: FontWeight? = null,
+    val textDecoration: TextDecoration? = null,
     val onClick: (data: String) -> Unit
 )

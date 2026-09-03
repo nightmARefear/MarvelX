@@ -120,6 +120,8 @@ import androidx.navigation.NavController
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.common_ui.messageBanner.MessageBanner
+import com.alexgreece45.marvelx.common_ui.messageBanner.model.MessageBannerEvent
 import com.alexgreece45.marvelx.common_ui.snackbar.MarvelXSnackbar
 import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarEffect
 import com.alexgreece45.marvelx.core.common.util.flows.single_observer_flow.SingleObserverFlow
@@ -510,6 +512,7 @@ fun ContentScreen(
     bottomBarData: BottomBarData? = null,
     bottomNavigationBarData: BottomNavigationBarData? = null,
     snackbarEffects: SingleObserverFlow<SnackbarEffect> = SingleObserverFlow(emptyFlow()),
+    messageBannerEvents: SingleObserverFlow<MessageBannerEvent> = SingleObserverFlow(emptyFlow()),
     fabData: FabData? = null,
     stickyBottom: @Composable (BoxScope.() -> Unit)? = null,
     paddingValues: PaddingValues = PaddingValues(DEFAULT_SCREEN_PADDING),
@@ -587,7 +590,11 @@ fun ContentScreen(
                 }/* else {
                     content(finalScaffoldingPaddings)
                 }*/
-                content(finalScaffoldingPaddings)
+
+                MessageBanner(
+                    messageBannerEvents = messageBannerEvents,
+                    content = { content(finalScaffoldingPaddings) }
+                )
             }
 
             // Sticky bottom.

@@ -1,4 +1,4 @@
-package com.alexgreece45.marvelx.ui.components
+package com.alexgreece45.marvelx.common_ui.components
 
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material.LocalContentColor
@@ -10,9 +10,10 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.TextUnit
-import com.alexgreece45.marvelx.ui.components.model.ClickableString
+import com.alexgreece45.marvelx.common_ui.components.model.ClickableString
 import com.alexgreece45.marvelx.ui_theme.theme.values.customColors
 
 /**
@@ -47,6 +48,7 @@ fun WrapClickableText(
         val fontSize: TextUnit? = null,
         val fontWeight: FontWeight? = null,
         val color: Color? = null,
+        val textDecoration: TextDecoration? = null,
         val onClick: ((data: AnnotatedString.Range<String>) -> Unit)? = null
     )
 
@@ -66,7 +68,7 @@ fun WrapClickableText(
         sortedClickableTexts.forEachIndexed { index, clickableText ->
             val endIndex = text.indexOf(clickableText.text)
             if (endIndex == -1) {
-                throw RuntimeException("Fatal error: $clickableText does not exist in $text")
+                throw RuntimeException("Fatal error: $clickableText does not exist in $text") // TODO: Crashes the application if the text was not found!
             }
             stringData.add(
                 // Non-clickable string.
@@ -81,6 +83,7 @@ fun WrapClickableText(
                     tag = "${clickableText.text}_TAG",
                     data = clickableText.data,
                     color = clickableText.color,
+                    textDecoration = clickableText.textDecoration,
                     onClick = {
                         clickableText.onClick(it.item)
                     }
@@ -110,7 +113,8 @@ fun WrapClickableText(
                     style = textStyle.toSpanStyle().copy(
                         color = linkStringData.color ?: MaterialTheme.customColors.genericRed,
                         fontSize = linkStringData.fontSize ?: textStyle.fontSize,
-                        fontWeight = linkStringData.fontWeight ?: textStyle.fontWeight
+                        fontWeight = linkStringData.fontWeight ?: textStyle.fontWeight,
+                        textDecoration = linkStringData.textDecoration
                     )
                 ) {
                     append(linkStringData.text)

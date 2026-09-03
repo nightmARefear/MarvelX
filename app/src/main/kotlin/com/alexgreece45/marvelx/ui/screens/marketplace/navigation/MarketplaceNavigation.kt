@@ -31,6 +31,8 @@ fun NavController.navigateToMarketplaceScreen(
 
 internal fun NavGraphBuilder.marketplaceScreen(
     navigateToListingDetailsScreen: (String) -> Unit,
+    navigateToFavoritesScreen: () -> Unit,
+    navigateToCartScreen: () -> Unit,
     bottomNavigationBarData: @Composable () -> BottomNavigationBarData
 ) {
     composable<MarketplaceRoute> {
@@ -41,17 +43,17 @@ internal fun NavGraphBuilder.marketplaceScreen(
             effect = viewModel.uiEffect,
             onNavigation = { navigationEffect ->
                 when (navigationEffect) {
-                    is MarketplaceContract.Effect.Navigation.GoToListingsByCategoryScreen -> {
-
-                    }
-
                     is MarketplaceContract.Effect.Navigation.GoToListingDetailsScreen -> {
                         navigateToListingDetailsScreen(navigationEffect.listingId)
                     }
+
+                    MarketplaceContract.Effect.Navigation.GoToFavoritesScreen -> navigateToFavoritesScreen()
+                    MarketplaceContract.Effect.Navigation.GoToCartScreen -> navigateToCartScreen()
                 }
             },
             bottomNavigationBarData = bottomNavigationBarData,
-            snackbarEffects = viewModel.snackbarEffects
+            snackbarEffects = viewModel.snackbarEffects,
+            messageBannerEvents = viewModel.messageBannerEvents
         )
     }
 }

@@ -13,8 +13,8 @@ data class FilteredListingUi(
     val coverImageUrl: String,
     val postedAt: LocalDateUi,
     val isFinalSale: Boolean,
-    val favorite: Boolean,
-    val cart: Boolean,
+    val favorite: ToggleStateUi,
+    val cart: ToggleStateUi,
 
     val comparison: Boolean = false
 )

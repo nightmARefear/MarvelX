@@ -1,5 +1,6 @@
 package com.alexgreece45.marvelx.ui.screens.marketplace
 
+import android.annotation.SuppressLint
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.SizeTransform
@@ -40,6 +41,7 @@ import androidx.compose.material.Badge
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Card
 import androidx.compose.material.ChipDefaults
+import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.ContentAlpha
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.FilterChip
@@ -63,6 +65,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
@@ -85,6 +89,7 @@ import androidx.core.util.Pair
 import androidx.navigation.compose.rememberNavController
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.common_ui.inputFieldValidator.model.InputFieldValidationResult
+import com.alexgreece45.marvelx.common_ui.messageBanner.model.MessageBannerEvent
 import com.alexgreece45.marvelx.common_ui.previewAnnotation.ThemePreview
 import com.alexgreece45.marvelx.common_ui.snackbar.MarvelXSnackbar
 import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarEffect
@@ -102,6 +107,7 @@ import com.alexgreece45.marvelx.ui.components.LoadingScreen
 import com.alexgreece45.marvelx.ui.components.ModalBottomSheetContent
 import com.alexgreece45.marvelx.ui.components.OutlinedTextFieldValidation
 import com.alexgreece45.marvelx.ui.components.PullRefreshable
+import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
 import com.alexgreece45.marvelx.ui.components.WrapButton
 import com.alexgreece45.marvelx.ui.components.WrapCheckbox
 import com.alexgreece45.marvelx.ui.components.WrapHorizontalPager
@@ -124,11 +130,13 @@ import com.alexgreece45.marvelx.ui.screens.marketplace.model.ListingPreviewUi
 import com.alexgreece45.marvelx.ui.screens.marketplace.model.MarketplaceBottomSheetType
 import com.alexgreece45.marvelx.ui.screens.marketplace.model.MarketplaceContract
 import com.alexgreece45.marvelx.ui.screens.marketplace.model.MarketplaceContract.Event.Filter.DatePosted.OnRangeSelected
+import com.alexgreece45.marvelx.ui.screens.marketplace.model.MarketplaceContract.Event.SortByBottomSheet.OnSortSelected
 import com.alexgreece45.marvelx.ui.screens.marketplace.model.MarketplaceListingsLayout
 import com.alexgreece45.marvelx.ui.screens.marketplace.model.MarketplaceMode
 import com.alexgreece45.marvelx.ui.screens.marketplace.model.MarketplaceSearchCriteriaUi
 import com.alexgreece45.marvelx.ui.screens.marketplace.model.MarketplaceUi
 import com.alexgreece45.marvelx.ui.screens.marketplace.model.SelectableOption
+import com.alexgreece45.marvelx.ui.screens.marketplace.model.ToggleStateUi
 import com.alexgreece45.marvelx.ui.visual_transformations.VisualTransformationCurrencySuffix
 import com.alexgreece45.marvelx.ui_theme.theme.MarvelXTheme
 import com.alexgreece45.marvelx.ui_theme.theme.import_aliases.UiThemeDrawable
@@ -165,12 +173,14 @@ internal fun MarketplaceScreen(
     onNavigation: (MarketplaceContract.Effect.Navigation) -> Unit,
     bottomNavigationBarData: @Composable () -> BottomNavigationBarData,
     snackbarEffects: SingleObserverFlow<SnackbarEffect>,
+    messageBannerEvents: SingleObserverFlow<MessageBannerEvent>,
 ) {
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
     val sheetState = rememberWrapModalBottomSheetState(
 //        confirmValueChange = { it != ModalBottomSheetValue.Hidden } // TODO: If let uncommented and the bottom sheet closes, the scrim still remains.
     )
+    val focusRequester = remember { FocusRequester() }
 
     val coroutineScope = rememberCoroutineScope()
 
@@ -245,6 +255,10 @@ internal fun MarketplaceScreen(
                     sheetState.showIfHidden()
                 }
             }
+
+            MarketplaceContract.Effect.RequestSearchBarFieldFocus -> {
+                focusRequester.requestFocus()
+            }
         }
     }
 
@@ -261,7 +275,7 @@ internal fun MarketplaceScreen(
                         onCloseButtonClick = { onEvent(MarketplaceContract.Event.SortByBottomSheet.OnCloseButtonClicked) },
                         onSortSelect = {
                             onEvent(
-                                MarketplaceContract.Event.SortByBottomSheet.OnSortSelected(
+                                OnSortSelected(
                                     it
                                 )
                             )
@@ -280,6 +294,7 @@ internal fun MarketplaceScreen(
                     }
                 }
 
+                MarketplaceBottomSheetType.COMPARISON -> {}
                 null -> {}
             }
         },
@@ -288,9 +303,13 @@ internal fun MarketplaceScreen(
     ) {
         ContentScreen(
             isLoading = state.isLoading,
+            navigableAction = if (state.mode == MarketplaceMode.DISCOVER) ScreenNavigableAction.None else ScreenNavigableAction.Backable(
+                onBack = { onEvent(MarketplaceContract.Event.OnBackClicked) }
+            ),
             showToolbar = true,
-            toolbarTitle = stringResource(R.string.screen_marketplace_toolbar_title),
-            bottomNavigationBarData = bottomNavigationBarData()
+            toolbarTitle = stringResource(if (state.mode == MarketplaceMode.DISCOVER) R.string.screen_marketplace_discover_toolbar_title else R.string.screen_marketplace_search_toolbar_title),
+            bottomNavigationBarData = bottomNavigationBarData(),
+            messageBannerEvents = messageBannerEvents
         ) { paddingValues ->
             Column(modifier = Modifier.fillMaxSize()) {
                 when {
@@ -323,7 +342,7 @@ internal fun MarketplaceScreen(
                                 verticalArrangement = Arrangement.spacedBy(SPACING_MEDIUM.dp),
                                 horizontalArrangement = Arrangement.spacedBy(SPACING_MEDIUM.dp)
                             ) {
-                                item(key = "searchBar", span = { GridItemSpan(maxLineSpan) }) {
+                                item(key = "searchHeader", span = { GridItemSpan(maxLineSpan) }) {
                                     with(state) {
                                         SearchHeader(
                                             mode = mode,
@@ -331,6 +350,10 @@ internal fun MarketplaceScreen(
                                             searchQuery = searchQuery,
                                             uniqueFiltersApplied = activeSearchCriteria.validFiltersCount,
                                             activeSort = activeSort,
+                                            searchBarModifier = Modifier
+                                                .fillMaxWidth()
+                                                .focusRequester(focusRequester = focusRequester),
+                                            onSearchBarClick = { onEvent(MarketplaceContract.Event.SearchBar.OnClicked) },
                                             onSearchQueryChange = {
                                                 onEvent(
                                                     MarketplaceContract.Event.SearchBar.OnSearchTermChanged(
@@ -492,6 +515,8 @@ private fun SearchHeader(
     searchQuery: String,
     uniqueFiltersApplied: Int,
     activeSort: ListingSort,
+    @SuppressLint("ModifierParameter") searchBarModifier: Modifier,
+    onSearchBarClick: () -> Unit,
     onSearchQueryChange: (String) -> Unit,
     onDeleteIconClick: () -> Unit,
     onSortChipClick: () -> Unit,
@@ -502,13 +527,28 @@ private fun SearchHeader(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp)
     ) {
-        GenericSearchBar(
-            searchTerm = searchQuery,
-            hint = stringResource(R.string.screen_marketplace_search_bar_hint),
-            modifier = Modifier.fillMaxWidth(),
-            onValueChange = onSearchQueryChange,
-            onDeleteIconClicked = onDeleteIconClick
-        )
+        // Search bar.
+        Box(modifier = Modifier.fillMaxWidth()) {
+            GenericSearchBar(
+                searchTerm = searchQuery,
+                hint = stringResource(R.string.screen_marketplace_search_bar_hint),
+                modifier = searchBarModifier,
+                onValueChange = onSearchQueryChange,
+                onDeleteIconClicked = onDeleteIconClick
+            )
+
+            if (mode == MarketplaceMode.DISCOVER) {
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .clip(MaterialTheme.shapes.medium)
+                        .clickableNoRipple(
+                            role = Role.Button,
+                            onClick = onSearchBarClick
+                        )
+                )
+            }
+        }
 
         // Sort, Filter chips & listings layout button
         AnimatedVisibility(
@@ -827,9 +867,10 @@ private fun FilteredListingItem(
                     verticalArrangement = Arrangement.spacedBy(SPACING_TINY.dp)
                 ) {
                     FilteredListingItemImageActionButton(
+                        isLoading = filteredListing.favorite.isLoading,
                         onClick = onFavoriteClick,
                         icon = {
-                            if (filteredListing.favorite) {
+                            if (filteredListing.favorite.isChecked) {
                                 Icon(
                                     painter = painterResource(R.drawable.ic_favorite_filled),
                                     contentDescription = null,
@@ -846,6 +887,7 @@ private fun FilteredListingItem(
                     )
 
                     FilteredListingItemImageActionButton(
+                        isLoading = false,
                         onClick = onComparisonClick,
                         icon = {
                             Icon(
@@ -860,7 +902,7 @@ private fun FilteredListingItem(
 
                 // Add to cart icon.
                 AnimatedContent(
-                    targetState = filteredListing.cart,
+                    targetState = filteredListing.cart.isChecked,
                     modifier = Modifier.align(Alignment.BottomEnd),
                     contentAlignment = Alignment.BottomEnd,
                     transitionSpec = {
@@ -888,7 +930,11 @@ private fun FilteredListingItem(
                                 )
                             )
                         ) {
-                            Text(text = stringResource(R.string.screen_marketplace_filtered_listing_remove_from_cart_button))
+                            if (filteredListing.cart.isLoading) {
+                                FilteredListingItemImageActionLoadingIndicator()
+                            } else {
+                                Text(text = stringResource(R.string.screen_marketplace_filtered_listing_remove_from_cart_button))
+                            }
                         }
                     } else {
                         Box(
@@ -901,12 +947,16 @@ private fun FilteredListingItem(
                                 .padding(horizontal = SPACING_SMALL.dp),
                             contentAlignment = Alignment.Center
                         ) {
-                            Icon(
-                                painter = painterResource(R.drawable.ic_cart),
-                                contentDescription = null,
-                                modifier = Modifier.size(18.dp),
-                                tint = Color(0xFF386641)
-                            )
+                            if (filteredListing.cart.isLoading) {
+                                FilteredListingItemImageActionLoadingIndicator()
+                            } else {
+                                Icon(
+                                    painter = painterResource(R.drawable.ic_cart),
+                                    contentDescription = null,
+                                    modifier = Modifier.size(18.dp),
+                                    tint = Color(0xFF386641)
+                                )
+                            }
                         }
                     }
                 }
@@ -952,11 +1002,16 @@ private fun FilteredListingItem(
 @Composable
 private fun FilteredListingItemImageActionButton(
     modifier: Modifier = Modifier,
+    isLoading: Boolean,
     iconBackgroundColor: Color = MaterialTheme.customColors.creamWhite,
     onClick: () -> Unit,
     icon: @Composable () -> Unit
 ) {
-    IconButton(onClick = onClick, modifier = modifier) {
+    IconButton(
+        onClick = onClick,
+        modifier = modifier,
+        enabled = !isLoading
+    ) {
         Box(
             modifier = Modifier
                 .background(
@@ -964,9 +1019,23 @@ private fun FilteredListingItemImageActionButton(
                     shape = CircleShape
                 )
                 .padding(SPACING_TINY.dp),
-            content = { icon() }
+            content = {
+                if (isLoading) {
+                    FilteredListingItemImageActionLoadingIndicator()
+                } else {
+                    icon()
+                }
+            }
         )
     }
+}
+
+@Composable
+private fun FilteredListingItemImageActionLoadingIndicator() {
+    CircularProgressIndicator(
+        modifier = Modifier.size(ConstantsUi.MIN_ICON_SIZE),
+        color = MaterialTheme.customColors.genericRed
+    )
 }
 
 @Composable
@@ -989,7 +1058,7 @@ private fun NoListingsContent(searchQuery: String) {
         )
 
         Text(
-            text = stringResource(
+            text = if (searchQuery.isBlank()) stringResource(R.string.screen_marketplace_error_search_no_results_empty) else stringResource(
                 R.string.screen_marketplace_error_search_no_results,
                 searchQuery
             ),
@@ -1244,43 +1313,35 @@ private fun FilterMenuBottomSheetContent(
                                         null
                                     } else {
                                         {
-                                            Row(
-                                                modifier = Modifier.fillMaxWidth(),
-                                                horizontalArrangement = Arrangement.spacedBy(
-                                                    SPACING_SMALL.dp
-                                                ),
-                                                verticalAlignment = Alignment.CenterVertically
-                                            ) {
-                                                Box(modifier = Modifier.fillMaxWidth()) {
-                                                    OutlinedTextFieldValidation(
-                                                        value = searchCriteria.datedPostedCustomRange?.label.orEmpty(),
-                                                        modifier = Modifier.fillMaxWidth(),
-                                                        onValueChange = {},
-                                                        readOnly = true,
-                                                        label = stringResource(R.string.screen_marketplace_filter_menu_section_date_posted_custom_range_label),
-                                                        trailingIcon = {
-                                                            Icon(
-                                                                imageVector = Icons.Filled.CalendarMonth,
-                                                                contentDescription = null,
-                                                                tint = MaterialTheme.customColors.white // Since the field is not focusable.
-                                                            )
-                                                        }
-                                                    )
+                                            Box(modifier = Modifier.fillMaxWidth()) {
+                                                OutlinedTextFieldValidation(
+                                                    value = searchCriteria.datedPostedCustomRange?.label.orEmpty(),
+                                                    modifier = Modifier.fillMaxWidth(),
+                                                    onValueChange = {},
+                                                    readOnly = true,
+                                                    label = stringResource(R.string.screen_marketplace_filter_menu_section_date_posted_custom_range_label),
+                                                    trailingIcon = {
+                                                        Icon(
+                                                            imageVector = Icons.Filled.CalendarMonth,
+                                                            contentDescription = null,
+                                                            tint = MaterialTheme.customColors.white // Since the field is not focusable.
+                                                        )
+                                                    }
+                                                )
 
-                                                    Box(
-                                                        modifier = Modifier
-                                                            .matchParentSize()
-                                                            .clip(MaterialTheme.shapes.medium)
-                                                            .clickableNoRipple(
-                                                                role = Role.Button,
-                                                                onClick = {
-                                                                    onFilterEvent(
-                                                                        MarketplaceContract.Event.Filter.DatePosted.OnDatePostedCustomRangeClicked
-                                                                    )
-                                                                }
-                                                            )
-                                                    )
-                                                }
+                                                Box(
+                                                    modifier = Modifier
+                                                        .matchParentSize()
+                                                        .clip(MaterialTheme.shapes.medium)
+                                                        .clickableNoRipple(
+                                                            role = Role.Button,
+                                                            onClick = {
+                                                                onFilterEvent(
+                                                                    MarketplaceContract.Event.Filter.DatePosted.OnDatePostedCustomRangeClicked
+                                                                )
+                                                            }
+                                                        )
+                                                )
                                             }
                                         }
                                     }
@@ -1611,8 +1672,8 @@ private fun MarketplaceScreenSearchPreview() {
                                     )
                                 },
                             isFinalSale = Random.nextBoolean(),
-                            favorite = true,
-                            cart = false,
+                            favorite = ToggleStateUi(isChecked = true),
+                            cart = ToggleStateUi(isChecked = false),
                             comparison = true
                         ),
                         FilteredListingUi(
@@ -1632,8 +1693,8 @@ private fun MarketplaceScreenSearchPreview() {
                                     )
                                 },
                             isFinalSale = Random.nextBoolean(),
-                            favorite = true,
-                            cart = true
+                            favorite = ToggleStateUi(isChecked = true),
+                            cart = ToggleStateUi(isChecked = true),
                         ),
                     )
                 ),
@@ -1647,7 +1708,8 @@ private fun MarketplaceScreenSearchPreview() {
             effect = SingleObserverFlow(emptyFlow()),
             onNavigation = {},
             bottomNavigationBarData = { getBottomNavigationBarData(rememberNavController()) },
-            snackbarEffects = SingleObserverFlow(emptyFlow())
+            snackbarEffects = SingleObserverFlow(emptyFlow()),
+            messageBannerEvents = SingleObserverFlow(emptyFlow()),
         )
     }
 }

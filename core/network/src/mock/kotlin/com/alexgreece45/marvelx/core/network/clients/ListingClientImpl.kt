@@ -21,7 +21,6 @@ import com.alexgreece45.marvelx.core.network.model.generic.ApiResult
 import com.alexgreece45.marvelx.core.network.model.marketplace.ListingSort
 import com.alexgreece45.marvelx.core.network.services.ListingService
 import com.alexgreece45.marvelx.core.network.util.executeApiServiceCall
-import com.alexgreece45.marvelx.core.network.util.executeApiServiceCallNoTransformation
 import com.alexgreece45.marvelx.core.network.utils.parsedPostedAt
 import com.alexgreece45.marvelx.core.network.utils.parsedPrice
 import com.google.gson.JsonObject
@@ -609,8 +608,8 @@ internal class ListingClientImpl(
                 ),
                 categories = listOf(
                     ResponseMarketplaceCategorySection(
-                        title = "apparel",
-                        categoryCode = "1",
+                        title = "Apparel",
+                        categoryCode = "apparel",
                         listings = listOf(
                             ResponseListingPreview(
                                 listingId = "1",
@@ -623,8 +622,8 @@ internal class ListingClientImpl(
                         )
                     ),
                     ResponseMarketplaceCategorySection(
-                        title = "drinkware",
-                        categoryCode = "2",
+                        title = "Drinkware",
+                        categoryCode = "drinkware",
                         listings = listOf(
                             ResponseListingPreview(
                                 listingId = "1",
@@ -923,12 +922,15 @@ internal class ListingClientImpl(
         return ApiResult.Success("")
     }
 
-    override suspend fun addToFavorites(listingId: String): ApiResult<String> =
-        ApiResult.Success("")
+    override suspend fun addToFavorites(listingId: String): ApiResult<String> {
+        delay(1.5.seconds)
+        return ApiResult.Success("")
+    }
 
-
-    override suspend fun removeFromFavorites(listingId: String): ApiResult<String> =
-        ApiResult.Success("")
+    override suspend fun removeFromFavorites(listingId: String): ApiResult<String> {
+        delay(1.5.seconds)
+        return ApiResult.Success("")
+    }
 
 
     override suspend fun getFavoriteListings(): ApiResult<List<ResponseListingPreview>> {
@@ -968,14 +970,12 @@ internal class ListingClientImpl(
     }
 
     override suspend fun addCartItem(listingId: String): ApiResult<String> {
-        return executeApiServiceCallNoTransformation {
-            listingService.addCartItem(listingId)
-        }
+        delay(1.5.seconds)
+        return ApiResult.Success("")
     }
 
     override suspend fun deleteCartItem(listingId: String): ApiResult<String> {
-        return executeApiServiceCallNoTransformation {
-            listingService.deleteCartItem(listingId)
-        }
+        delay(1.5.seconds)
+        return ApiResult.Success("")
     }
 }
