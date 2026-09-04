@@ -27,8 +27,6 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import com.alexgreece45.marvelx.common_ui.components.WrapClickableText
-import com.alexgreece45.marvelx.common_ui.components.model.ClickableString
 import com.alexgreece45.marvelx.common_ui.extensions.hideSnackbar
 import com.alexgreece45.marvelx.common_ui.extensions.showSnackbarAndHandleResult
 import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarActionData
@@ -141,15 +139,6 @@ private fun ActionSnackbar(
     actionData: SnackbarActionData,
     hideSnackbar: () -> Unit
 ) {
-    if (actionData.isHyperlink) {
-        HyperlinkSnackbar(
-            message = message,
-            actionData = actionData,
-            hideSnackbar = hideSnackbar
-        )
-        return
-    }
-
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(6.dp)
@@ -187,30 +176,6 @@ private fun MessageSnackbar(message: String, modifier: Modifier) {
         overflow = TextOverflow.Ellipsis,
         maxLines = 2,
         style = MaterialTheme.typography.h6
-    )
-}
-
-@Composable
-private fun HyperlinkSnackbar(
-    message: String,
-    actionData: SnackbarActionData,
-    hideSnackbar: () -> Unit
-) {
-    WrapClickableText(
-        text = message,
-        textStyle = MaterialTheme.typography.h6,
-        clickableStrings = listOf(
-            ClickableString(
-                text = actionData.label,
-                onClick = {
-                    when (val actionType = actionData.actionType) {
-                        SnackbarActionType.Hide -> hideSnackbar()
-                        is SnackbarActionType.Custom -> actionType.onAction.invoke()
-                    }
-                }
-            )
-        ),
-        modifier = Modifier.fillMaxWidth()
     )
 }
 

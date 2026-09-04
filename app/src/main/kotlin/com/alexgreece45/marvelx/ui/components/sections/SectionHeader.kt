@@ -22,7 +22,7 @@ import androidx.compose.ui.unit.dp
 import com.alexgreece45.marvelx.util.SPACING_MEDIUM
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.VSpacer
-import com.alexgreece45.marvelx.util.extensions.clickableNoRipple
+import com.alexgreece45.marvelx.common_ui.extensions.clickableNoRipple
 import com.alexgreece45.marvelx.util.extensions.throttledClickable
 
 /**

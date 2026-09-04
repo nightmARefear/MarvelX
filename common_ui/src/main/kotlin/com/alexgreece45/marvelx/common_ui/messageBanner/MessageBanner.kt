@@ -5,7 +5,6 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -29,6 +28,8 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.alexgreece45.marvelx.common_ui.extensions.clickableNoRipple
+import com.alexgreece45.marvelx.common_ui.messageBanner.model.MessageBannerAction
 import com.alexgreece45.marvelx.common_ui.messageBanner.model.MessageBannerActionType
 import com.alexgreece45.marvelx.common_ui.messageBanner.model.MessageBannerData
 import com.alexgreece45.marvelx.common_ui.messageBanner.model.MessageBannerDuration
@@ -65,7 +66,7 @@ fun MessageBanner(
     // Auto-dismiss timeout logic
     currentMessageBannerData?.let { bannerData ->
         LaunchedEffect(bannerData) {
-            when (val messageBannerDuration = bannerData.messageBannerDuration) {
+            when (val messageBannerDuration = bannerData.duration) {
                 MessageBannerDuration.Short -> delay(4000.milliseconds)
                 MessageBannerDuration.Long -> delay(10000.milliseconds)
                 MessageBannerDuration.Indefinite -> awaitCancellation()
@@ -109,28 +110,37 @@ private fun MessageBannerContent(
 ) {
     val throttleDuration = 1500L
     val lastClickedMillis = remember { AtomicLong(0L) }
+    val onAction = {
+        messageBannerData.action?.actionType?.let { actionType ->
+            when (actionType) {
+                MessageBannerActionType.Hide -> hideMessageBanner()
+                is MessageBannerActionType.Custom -> {
+                    actionType.action.invoke()
+                    hideMessageBanner()
+                }
+            }
+        }
+    }
+
+    val onClick = {
+        val currentTimeMillis = System.currentTimeMillis()
+        if (currentTimeMillis - lastClickedMillis.load() > throttleDuration) {
+            lastClickedMillis.store(currentTimeMillis)
+            onAction()
+        }
+    }
 
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(
-                enabled = messageBannerData.actionData != null,
-                role = Role.Button,
-                onClick = {
-                    val actionType = messageBannerData.actionData?.actionType ?: return@clickable
-
-                    val currentTimeMillis = System.currentTimeMillis()
-                    if (currentTimeMillis - lastClickedMillis.load() > throttleDuration) {
-                        lastClickedMillis.store(currentTimeMillis)
-
-                        when (actionType) {
-                            MessageBannerActionType.Hide -> hideMessageBanner()
-                            is MessageBannerActionType.Custom -> {
-                                actionType.action.invoke()
-                                hideMessageBanner()
-                            }
-                        }
-                    }
+            .then(
+                if (messageBannerData.action is MessageBannerAction.Global) {
+                    Modifier.clickableNoRipple(
+                        role = Role.Button,
+                        onClick = onClick
+                    )
+                } else {
+                    Modifier
                 }
             ),
         color = MaterialTheme.colors.surface,
@@ -139,7 +149,7 @@ private fun MessageBannerContent(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 8.dp),
+                .padding(12.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -149,49 +159,28 @@ private fun MessageBannerContent(
                 maxLines = 2
             )
 
-            messageBannerData.actionData?.let { actionData ->
+            messageBannerData.action?.label?.let { label ->
                 Spacer(modifier = Modifier.weight(1f))
 
-                MessageBannerTextButton(
-                    label = actionData.label,
-                    throttleDuration = throttleDuration,
-                    lastClickedMillis = lastClickedMillis,
-                    onClick = {
-                        when (val actionType = actionData.actionType) {
-                            MessageBannerActionType.Hide -> hideMessageBanner()
-                            is MessageBannerActionType.Custom -> {
-                                actionType.action.invoke()
-                                hideMessageBanner()
-                            }
-                        }
+                if (messageBannerData.action is MessageBannerAction.Button) {
+                    TextButton(onClick = onClick) {
+                        MessageBannerActionText(label = label)
                     }
-                )
+                } else {
+                    Box(modifier = Modifier.padding(vertical = 8.dp, horizontal = 4.dp)) {
+                        MessageBannerActionText(label = label)
+                    }
+                }
             }
         }
     }
 }
 
-@OptIn(ExperimentalAtomicApi::class)
 @Composable
-private fun MessageBannerTextButton(
-    label: String,
-    throttleDuration: Long,
-    lastClickedMillis: AtomicLong,
-    onClick: () -> Unit
-) {
-    TextButton(
-        onClick = {
-            val currentTimeMillis = System.currentTimeMillis()
-            if (currentTimeMillis - lastClickedMillis.load() > throttleDuration) {
-                lastClickedMillis.store(currentTimeMillis)
-                onClick()
-            }
-        }
-    ) {
-        Text(
-            text = label,
-            textDecoration = TextDecoration.Underline,
-            maxLines = 1
-        )
-    }
+private fun MessageBannerActionText(label: String) {
+    Text(
+        text = label,
+        textDecoration = TextDecoration.Underline, // TODO: Shown for a little bit and then disappears.
+        maxLines = 1
+    )
 }

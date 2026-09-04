@@ -440,6 +440,12 @@ data class IconData(
     val enabled: Boolean = true
 )
 
+data class ClickableIconData(
+    @DrawableRes val iconResource: Int,
+    val contentDescription: String,
+    val onClick: () -> Unit
+)
+
 sealed class ScreenNavigableAction {
     /**
      * Indicates that the toolbar has no icon button at all.

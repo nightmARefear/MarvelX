@@ -9,6 +9,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -31,6 +32,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -56,6 +58,7 @@ import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -88,6 +91,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.util.Pair
 import androidx.navigation.compose.rememberNavController
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.common_ui.extensions.clickableNoRipple
 import com.alexgreece45.marvelx.common_ui.inputFieldValidator.model.InputFieldValidationResult
 import com.alexgreece45.marvelx.common_ui.messageBanner.model.MessageBannerEvent
 import com.alexgreece45.marvelx.common_ui.previewAnnotation.ThemePreview
@@ -100,6 +104,7 @@ import com.alexgreece45.marvelx.core.common.util.flows.single_observer_flow.Sing
 import com.alexgreece45.marvelx.core.data.model.marketplace.ListingSort
 import com.alexgreece45.marvelx.data.model.marketplace.listing.EnumGeneric
 import com.alexgreece45.marvelx.ui.components.BottomNavigationBarData
+import com.alexgreece45.marvelx.ui.components.ClickableIconData
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.GenericErrorScreen
 import com.alexgreece45.marvelx.ui.components.GenericSearchBar
@@ -146,12 +151,11 @@ import com.alexgreece45.marvelx.util.SPACING_LARGE
 import com.alexgreece45.marvelx.util.SPACING_MEDIUM
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.SPACING_TINY
-import com.alexgreece45.marvelx.util.VSpacer
 import com.alexgreece45.marvelx.util.constants.ConstantsUi
-import com.alexgreece45.marvelx.util.extensions.clickableNoRipple
 import com.alexgreece45.marvelx.util.extensions.getFragmentActivity
 import com.alexgreece45.marvelx.util.extensions.hideIfVisible
 import com.alexgreece45.marvelx.util.extensions.showIfHidden
+import com.alexgreece45.marvelx.util.extensions.showToast
 import com.alexgreece45.marvelx.util.extensions.withEuroSymbol
 import com.google.android.material.datepicker.CalendarConstraints.Builder
 import com.google.android.material.datepicker.CompositeDateValidator
@@ -163,6 +167,8 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.launch
 import kotlin.random.Random
+
+private val FILTERED_LISTING_GRID_VIEW_WIDTH = 140.dp
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
@@ -259,6 +265,9 @@ internal fun MarketplaceScreen(
             MarketplaceContract.Effect.RequestSearchBarFieldFocus -> {
                 focusRequester.requestFocus()
             }
+
+            is MarketplaceContract.Effect.Share.Comparison -> context.showToast("Sharing comparison list not supported!")
+            is MarketplaceContract.Effect.Share.Filters -> context.showToast("Sharing filters not supported!")
         }
     }
 
@@ -294,7 +303,16 @@ internal fun MarketplaceScreen(
                     }
                 }
 
-                MarketplaceBottomSheetType.COMPARISON -> {}
+                MarketplaceBottomSheetType.COMPARISON -> {
+                    ComparisonBottomSheetContent(
+                        listings = state.comparisonListings,
+                        carouselPageCount = state.carouselPageCount,
+                        currentCarouselIndex = state.currentCarouselPageIndex,
+                        currentCarouselItemIndices = state.currentCarouselItemIndices,
+                        onComparisonEvent = onEvent
+                    )
+                }
+
                 null -> {}
             }
         },
@@ -333,23 +351,38 @@ internal fun MarketplaceScreen(
                             onRefresh = { onEvent(MarketplaceContract.Event.OnRefresh) },
                             isRefreshing = state.isRefreshing
                         ) {
-                            LazyVerticalGrid(
-                                columns = GridCells.Fixed(2),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .pointerInput(Unit) { detectTapGestures(onTap = { focusManager.clearFocus() }) },
-                                contentPadding = paddingValues,
-                                verticalArrangement = Arrangement.spacedBy(SPACING_MEDIUM.dp),
-                                horizontalArrangement = Arrangement.spacedBy(SPACING_MEDIUM.dp)
-                            ) {
-                                item(key = "searchHeader", span = { GridItemSpan(maxLineSpan) }) {
-                                    with(state) {
-                                        SearchHeader(
-                                            mode = mode,
-                                            listingsLayout = listingsLayout,
-                                            searchQuery = searchQuery,
-                                            uniqueFiltersApplied = activeSearchCriteria.validFiltersCount,
-                                            activeSort = activeSort,
+                            val gridState = rememberLazyGridState()
+
+                            val isChipsRowSticky by remember {
+                                derivedStateOf {
+                                    val searchBarInfo = gridState.layoutInfo.visibleItemsInfo
+                                        .firstOrNull { it.key == "searchBar" }
+
+                                    searchBarInfo == null ||
+                                            (searchBarInfo.offset.y + searchBarInfo.size.height) <= 0
+                                }
+                            }
+
+                            Box(modifier = Modifier.fillMaxWidth()) {
+                                LazyVerticalGrid(
+                                    state = gridState,
+                                    columns = GridCells.Fixed(2),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .pointerInput(Unit) { detectTapGestures(onTap = { focusManager.clearFocus() }) },
+                                    contentPadding = paddingValues,
+                                    verticalArrangement = Arrangement.spacedBy(SPACING_MEDIUM.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(SPACING_MEDIUM.dp)
+                                ) {
+                                    item(
+                                        key = "searchBarSection",
+                                        span = { GridItemSpan(maxLineSpan) }) {
+                                        SearchBarSection(
+                                            mode = state.mode,
+                                            listingsLayout = state.listingsLayout,
+                                            searchQuery = state.searchQuery,
+                                            uniqueFiltersApplied = state.activeSearchCriteria.validFiltersCount,
+                                            activeSort = state.activeSort,
                                             searchBarModifier = Modifier
                                                 .fillMaxWidth()
                                                 .focusRequester(focusRequester = focusRequester),
@@ -372,125 +405,123 @@ internal fun MarketplaceScreen(
                                         )
                                     }
 
-                                    VSpacer.Small()
-                                }
-
-                                if (state.isRefreshing) {
-                                    item(
-                                        key = "refreshingContent",
-                                        span = { GridItemSpan(maxLineSpan) }
-                                    ) {
-                                        Box(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .padding(top = 48.dp),
-                                            contentAlignment = Alignment.Center
+                                    if (state.isRefreshing) {
+                                        item(
+                                            key = "refreshingContent",
+                                            span = { GridItemSpan(maxLineSpan) }
                                         ) {
-                                            LoadingScreen()
-                                        }
-                                    }
-                                } else {
-                                    when (state.mode) {
-                                        MarketplaceMode.DISCOVER -> {
-                                            item(
-                                                key = "discoverContent",
-                                                span = { GridItemSpan(maxLineSpan) }
+                                            Box(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .padding(top = 48.dp),
+                                                contentAlignment = Alignment.Center
                                             ) {
-                                                DiscoverContent(
-                                                    marketplaceUi = state.marketplaceUi,
-                                                    onEvent = onEvent
-                                                )
+                                                LoadingScreen()
                                             }
                                         }
-
-                                        MarketplaceMode.SEARCH -> {
-                                            when (val searchUiState = state.searchUiState) {
-                                                UiState.Loading -> {
-                                                    item(
-                                                        key = "searchLoading",
-                                                        span = { GridItemSpan(maxLineSpan) }
-                                                    ) {
-                                                        Box(
-                                                            modifier = Modifier
-                                                                .fillMaxWidth()
-                                                                .padding(top = 48.dp),
-                                                            contentAlignment = Alignment.Center
-                                                        ) {
-                                                            LoadingScreen()
-                                                        }
-                                                    }
+                                    } else {
+                                        when (state.mode) {
+                                            MarketplaceMode.DISCOVER -> {
+                                                item(
+                                                    key = "discoverContent",
+                                                    span = { GridItemSpan(maxLineSpan) }
+                                                ) {
+                                                    DiscoverContent(
+                                                        marketplaceUi = state.marketplaceUi,
+                                                        onEvent = onEvent
+                                                    )
                                                 }
+                                            }
 
-                                                is UiState.Error -> {
-                                                    item(
-                                                        key = "searchError",
-                                                        span = { GridItemSpan(maxLineSpan) }
-                                                    ) {
-                                                        GenericErrorScreen(
-                                                            errorMessage = stringResource(R.string.screen_marketplace_generic_error_message),
-                                                            modifier = Modifier.fillMaxSize(),
-                                                            onErrorButtonClick = {
-                                                                onEvent(
-                                                                    MarketplaceContract.Event.OnErrorButtonClicked
-                                                                )
-                                                            }
-                                                        )
-                                                    }
-                                                }
-
-                                                is UiState.Success -> {
-                                                    if (searchUiState.data.isEmpty()) {
+                                            MarketplaceMode.SEARCH -> {
+                                                when (val searchUiState = state.searchUiState) {
+                                                    UiState.Loading -> {
                                                         item(
-                                                            key = "searchListingsEmpty",
+                                                            key = "searchLoading",
                                                             span = { GridItemSpan(maxLineSpan) }
                                                         ) {
-                                                            NoListingsContent(searchQuery = state.searchQuery)
-                                                        }
-                                                    } else {
-                                                        items(
-                                                            items = searchUiState.data,
-                                                            key = { it.listingId },
-                                                            span = {
-                                                                GridItemSpan(
-                                                                    currentLineSpan = when (state.listingsLayout) {
-                                                                        MarketplaceListingsLayout.GRID -> 1
-                                                                        MarketplaceListingsLayout.LIST -> maxLineSpan
-                                                                    }
-                                                                )
+                                                            Box(
+                                                                modifier = Modifier
+                                                                    .fillMaxWidth()
+                                                                    .padding(top = 48.dp),
+                                                                contentAlignment = Alignment.Center
+                                                            ) {
+                                                                LoadingScreen()
                                                             }
-                                                        ) { listing ->
-                                                            FilteredListingItem(
-                                                                filteredListing = listing,
-                                                                listingsLayout = state.listingsLayout,
-                                                                onListingClick = {
+                                                        }
+                                                    }
+
+                                                    is UiState.Error -> {
+                                                        item(
+                                                            key = "searchError",
+                                                            span = { GridItemSpan(maxLineSpan) }
+                                                        ) {
+                                                            GenericErrorScreen(
+                                                                errorMessage = stringResource(R.string.screen_marketplace_generic_error_message),
+                                                                modifier = Modifier.fillMaxSize(),
+                                                                onErrorButtonClick = {
                                                                     onEvent(
-                                                                        MarketplaceContract.Event.Listing.OnClicked(
-                                                                            listingId = listing.listingId
-                                                                        )
-                                                                    )
-                                                                },
-                                                                onFavoriteClick = {
-                                                                    onEvent(
-                                                                        MarketplaceContract.Event.Listing.OnFavoriteClicked(
-                                                                            listingId = listing.listingId
-                                                                        )
-                                                                    )
-                                                                },
-                                                                onComparisonClick = {
-                                                                    onEvent(
-                                                                        MarketplaceContract.Event.Listing.OnComparisonClicked(
-                                                                            listingId = listing.listingId
-                                                                        )
-                                                                    )
-                                                                },
-                                                                onCartClick = {
-                                                                    onEvent(
-                                                                        MarketplaceContract.Event.Listing.OnCartClicked(
-                                                                            listingId = listing.listingId
-                                                                        )
+                                                                        MarketplaceContract.Event.OnErrorButtonClicked
                                                                     )
                                                                 }
                                                             )
+                                                        }
+                                                    }
+
+                                                    is UiState.Success -> {
+                                                        if (searchUiState.data.isEmpty()) {
+                                                            item(
+                                                                key = "searchListingsEmpty",
+                                                                span = { GridItemSpan(maxLineSpan) }
+                                                            ) {
+                                                                NoListingsContent(searchQuery = state.searchQuery)
+                                                            }
+                                                        } else {
+                                                            items(
+                                                                items = searchUiState.data,
+                                                                key = { it.listingId },
+                                                                span = {
+                                                                    GridItemSpan(
+                                                                        currentLineSpan = when (state.listingsLayout) {
+                                                                            MarketplaceListingsLayout.GRID -> 1
+                                                                            MarketplaceListingsLayout.LIST -> maxLineSpan
+                                                                        }
+                                                                    )
+                                                                }
+                                                            ) { listing ->
+                                                                FilteredListingItem(
+                                                                    filteredListing = listing,
+                                                                    listingsLayout = state.listingsLayout,
+                                                                    onListingClick = {
+                                                                        onEvent(
+                                                                            MarketplaceContract.Event.Listing.OnClicked(
+                                                                                listingId = listing.listingId
+                                                                            )
+                                                                        )
+                                                                    },
+                                                                    onFavoriteClick = {
+                                                                        onEvent(
+                                                                            MarketplaceContract.Event.Listing.OnFavoriteClicked(
+                                                                                listingId = listing.listingId
+                                                                            )
+                                                                        )
+                                                                    },
+                                                                    onComparisonClick = {
+                                                                        onEvent(
+                                                                            MarketplaceContract.Event.Listing.OnComparisonClicked(
+                                                                                listingId = listing.listingId
+                                                                            )
+                                                                        )
+                                                                    },
+                                                                    onCartClick = {
+                                                                        onEvent(
+                                                                            MarketplaceContract.Event.Listing.OnCartClicked(
+                                                                                listingId = listing.listingId
+                                                                            )
+                                                                        )
+                                                                    }
+                                                                )
+                                                            }
                                                         }
                                                     }
                                                 }
@@ -507,9 +538,8 @@ internal fun MarketplaceScreen(
     }
 }
 
-@OptIn(ExperimentalMaterialApi::class)
 @Composable
-private fun SearchHeader(
+private fun SearchBarSection(
     mode: MarketplaceMode,
     listingsLayout: MarketplaceListingsLayout,
     searchQuery: String,
@@ -527,7 +557,6 @@ private fun SearchHeader(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp)
     ) {
-        // Search bar.
         Box(modifier = Modifier.fillMaxWidth()) {
             GenericSearchBar(
                 searchTerm = searchQuery,
@@ -550,92 +579,124 @@ private fun SearchHeader(
             }
         }
 
-        // Sort, Filter chips & listings layout button
         AnimatedVisibility(
             visible = mode == MarketplaceMode.SEARCH,
             modifier = Modifier.fillMaxWidth()
         ) {
+            SortFilterChipsRow(
+                listingsLayout = listingsLayout,
+                uniqueFiltersApplied = uniqueFiltersApplied,
+                activeSort = activeSort,
+                onSortChipClick = onSortChipClick,
+                onFiltersChipClick = onFiltersChipClick,
+                onLayoutChangeButtonClick = onLayoutChangeButtonClick
+            )
+        }
+    }
+}
+
+// Sort, Filter chips & listings layout button
+@OptIn(ExperimentalMaterialApi::class)
+@Composable
+private fun SortFilterChipsRow(
+    modifier: Modifier = Modifier,
+    listingsLayout: MarketplaceListingsLayout,
+    uniqueFiltersApplied: Int,
+    activeSort: ListingSort,
+    onSortChipClick: () -> Unit,
+    onFiltersChipClick: () -> Unit,
+    onLayoutChangeButtonClick: () -> Unit,
+) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Sort chip.
+        WrapChip(
+            onClick = onSortChipClick,
+            contentPaddingValues = PaddingValues(SPACING_SMALL.dp),
+            leadingIcon = {
+                Icon(
+                    painter = painterResource(UiThemeDrawable.ic_sort),
+                    contentDescription = null,
+                    tint = MaterialTheme.customColors.white
+                )
+            }
+        ) {
+            Text(
+                text = stringResource(
+                    when (activeSort) {
+                        ListingSort.PRICE_ASCENDING -> R.string.screen_marketplace_sort_price_ascending_label
+                        ListingSort.PRICE_DESCENDING -> R.string.screen_marketplace_sort_price_descending_label
+                        ListingSort.DATE_POSTED_ASCENDING -> R.string.screen_marketplace_sort_date_posted_ascending_label
+                        ListingSort.DATE_POSTED_DESCENDING -> R.string.screen_marketplace_sort_date_posted_descending_label
+                    }
+                )
+            )
+        }
+
+        // Filters chip.
+        WrapChip(
+            onClick = onFiltersChipClick,
+            border = if (uniqueFiltersApplied > 0) BorderStroke(
+                width = 1.dp,
+                MaterialTheme.customColors.errorStatusContainerColors.outlineColor
+            ) else null,
+            colors = if (uniqueFiltersApplied > 0) ChipDefaults.chipColors(
+                backgroundColor = MaterialTheme.customColors.errorStatusContainerColors.backgroundColor,
+                contentColor = MaterialTheme.customColors.errorStatusContainerColors.contentColor,
+                leadingIconContentColor = MaterialTheme.customColors.errorStatusContainerColors.contentColor
+            ) else ChipDefaults.chipColors(leadingIconContentColor = MaterialTheme.customColors.white),
+            contentPaddingValues = PaddingValues(SPACING_SMALL.dp),
+            leadingIcon = {
+                Icon(
+                    painter = painterResource(UiThemeDrawable.ic_filter),
+                    contentDescription = null
+                )
+            }
+        ) {
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp),
+//                modifier = Modifier.padding(SPACING_SMALL.dp),
+                horizontalArrangement = Arrangement.spacedBy(
+                    SPACING_TINY.dp
+                ),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Sort chip.
-                WrapChip(
-                    onClick = onSortChipClick,
-                    leadingIcon = {
-                        Icon(
-                            painter = painterResource(UiThemeDrawable.ic_sort),
-                            contentDescription = null,
-                            tint = MaterialTheme.customColors.white
-                        )
-                    }
-                ) {
-                    Text(
-                        text = stringResource(
-                            when (activeSort) {
-                                ListingSort.PRICE_ASCENDING -> R.string.screen_marketplace_sort_price_ascending_label
-                                ListingSort.PRICE_DESCENDING -> R.string.screen_marketplace_sort_price_descending_label
-                                ListingSort.DATE_POSTED_ASCENDING -> R.string.screen_marketplace_sort_date_posted_ascending_label
-                                ListingSort.DATE_POSTED_DESCENDING -> R.string.screen_marketplace_sort_date_posted_descending_label
-                            }
-                        )
-                    )
-                }
+                Text(text = stringResource(R.string.screen_marketplace_filters_label))
 
-                // Filters chip.
-                WrapChip(
-                    onClick = onFiltersChipClick,
-                    leadingIcon = {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_filter),
-                            contentDescription = null,
-                            tint = MaterialTheme.customColors.white
-                        )
-                    }
-                ) {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(
-                            SPACING_TINY.dp
-                        ),
-                        verticalAlignment = Alignment.CenterVertically
+                if (uniqueFiltersApplied > 0) {
+                    Badge(
+                        backgroundColor = MaterialTheme.customColors.genericRed,
+                        contentColor = MaterialTheme.customColors.white
                     ) {
-                        Text(text = stringResource(R.string.screen_marketplace_filters_label))
-
-                        if (uniqueFiltersApplied > 0) {
-                            Badge(
-                                backgroundColor = MaterialTheme.customColors.genericRed,
-                                contentColor = MaterialTheme.customColors.white
-                            ) {
-                                Text(
-                                    text = if (uniqueFiltersApplied > 9) "9+" else "$uniqueFiltersApplied",
-                                    fontSize = 14.sp
-                                )
-                            }
-                        }
+                        Text(
+                            text = if (uniqueFiltersApplied > 9) "9+" else "$uniqueFiltersApplied",
+                            fontSize = 14.sp
+                        )
                     }
-                }
-
-                Spacer(modifier = Modifier.weight(1f))
-
-                IconButton(onClick = onLayoutChangeButtonClick) {
-                    Icon(
-                        painter = painterResource(
-                            when (listingsLayout) {
-                                MarketplaceListingsLayout.GRID -> UiThemeDrawable.ic_list_view
-                                MarketplaceListingsLayout.LIST -> UiThemeDrawable.ic_grid
-                            }
-                        ),
-                        contentDescription = stringResource(
-                            when (listingsLayout) {
-                                MarketplaceListingsLayout.GRID -> R.string.screen_marketplace_content_description_change_to_list_view_button
-                                MarketplaceListingsLayout.LIST -> R.string.screen_marketplace_content_description_change_to_grid_view_button
-                            }
-                        ),
-                        modifier = Modifier.size(ConstantsUi.MIN_ICON_SIZE)
-                    )
                 }
             }
+        }
+
+        Spacer(modifier = Modifier.weight(1f))
+
+        IconButton(onClick = onLayoutChangeButtonClick) {
+            Icon(
+                painter = painterResource(
+                    when (listingsLayout) {
+                        MarketplaceListingsLayout.GRID -> UiThemeDrawable.ic_list_view
+                        MarketplaceListingsLayout.LIST -> UiThemeDrawable.ic_grid
+                    }
+                ),
+                contentDescription = stringResource(
+                    when (listingsLayout) {
+                        MarketplaceListingsLayout.GRID -> R.string.screen_marketplace_content_description_change_to_list_view_button
+                        MarketplaceListingsLayout.LIST -> R.string.screen_marketplace_content_description_change_to_grid_view_button
+                    }
+                ),
+                modifier = Modifier.size(ConstantsUi.MIN_ICON_SIZE)
+            )
         }
     }
 }
@@ -847,7 +908,7 @@ private fun FilteredListingItem(
                         if (listingsLayout == MarketplaceListingsLayout.GRID) {
                             Modifier.fillMaxWidth()
                         } else {
-                            Modifier.width(140.dp)
+                            Modifier.width(FILTERED_LISTING_GRID_VIEW_WIDTH)
                         }
                     )
                     .height(180.dp),
@@ -859,6 +920,7 @@ private fun FilteredListingItem(
                     modifier = Modifier
                         .padding(SPACING_MEDIUM.dp)
                         .clip(shape = MaterialTheme.shapes.medium)
+                        .fillMaxSize()
                 )
 
                 // Favorite & Compare icons.
@@ -889,12 +951,21 @@ private fun FilteredListingItem(
                     FilteredListingItemImageActionButton(
                         isLoading = false,
                         onClick = onComparisonClick,
+                        iconBackgroundColor = if (filteredListing.comparison) {
+                            MaterialTheme.customColors.black
+                        } else {
+                            MaterialTheme.customColors.creamWhite
+                        },
                         icon = {
                             Icon(
                                 painter = painterResource(UiThemeDrawable.ic_compare),
                                 contentDescription = null,
                                 modifier = Modifier.rotate(30f),
-                                tint = MaterialTheme.customColors.black
+                                tint = if (filteredListing.comparison) {
+                                    MaterialTheme.customColors.white
+                                } else {
+                                    MaterialTheme.customColors.black
+                                }
                             )
                         }
                     )
@@ -931,7 +1002,7 @@ private fun FilteredListingItem(
                             )
                         ) {
                             if (filteredListing.cart.isLoading) {
-                                FilteredListingItemImageActionLoadingIndicator()
+                                FilteredListingItemImageActionLoadingIndicator(indicatorColor = MaterialTheme.customColors.white)
                             } else {
                                 Text(text = stringResource(R.string.screen_marketplace_filtered_listing_remove_from_cart_button))
                             }
@@ -942,13 +1013,13 @@ private fun FilteredListingItem(
                                 .align(Alignment.BottomEnd)
                                 .clip(RoundedCornerShape(topStart = SPACING_MEDIUM.dp))
                                 .background(color = Color(0xD821F33D))
-                                .clickableNoRipple(onClick = onCartClick)
+                                .clickableNoRipple(onClick = onCartClick, role = Role.Button)
                                 .height(32.dp)
                                 .padding(horizontal = SPACING_SMALL.dp),
                             contentAlignment = Alignment.Center
                         ) {
                             if (filteredListing.cart.isLoading) {
-                                FilteredListingItemImageActionLoadingIndicator()
+                                FilteredListingItemImageActionLoadingIndicator(indicatorColor = MaterialTheme.customColors.white)
                             } else {
                                 Icon(
                                     painter = painterResource(R.drawable.ic_cart),
@@ -966,7 +1037,8 @@ private fun FilteredListingItem(
                 Column(verticalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp)) {
                     Text(
                         text = filteredListing.title,
-                        overflow = TextOverflow.Ellipsis
+                        overflow = TextOverflow.Ellipsis,
+                        maxLines = 2
                     )
 
                     Text(
@@ -986,7 +1058,8 @@ private fun FilteredListingItem(
             ) {
                 Text(
                     text = filteredListing.title,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
+                    maxLines = 2
                 )
 
                 Text(
@@ -1031,10 +1104,10 @@ private fun FilteredListingItemImageActionButton(
 }
 
 @Composable
-private fun FilteredListingItemImageActionLoadingIndicator() {
+private fun FilteredListingItemImageActionLoadingIndicator(indicatorColor: Color = MaterialTheme.customColors.genericRed) {
     CircularProgressIndicator(
         modifier = Modifier.size(ConstantsUi.MIN_ICON_SIZE),
-        color = MaterialTheme.customColors.genericRed
+        color = indicatorColor
     )
 }
 
@@ -1421,16 +1494,176 @@ private fun FilterMenuBottomSheetContent(
 }
 
 @Composable
+private fun ComparisonBottomSheetContent(
+    listings: List<FilteredListingUi>,
+    carouselPageCount: Int,
+    currentCarouselIndex: Int,
+    currentCarouselItemIndices: kotlin.Pair<Int?, Int?>,
+    onComparisonEvent: (MarketplaceContract.Event.ComparisonBottomSheet) -> Unit
+) {
+    ModalBottomSheetContent(showDragHandle = false) {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.spacedBy(SPACING_MEDIUM.dp)
+        ) {
+            BottomSheetStickyHeader(
+                title = stringResource(
+                    R.string.screen_marketplace_comparison_bottom_sheet_title,
+                    listings.size
+                ),
+                closeIconContentDescription = stringResource(R.string.screen_marketplace_content_description_close_comparison_bottom_sheet_icon),
+                onCloseButtonClick = { onComparisonEvent(MarketplaceContract.Event.ComparisonBottomSheet.OnCloseButtonClicked) },
+                otherIconData = ClickableIconData(
+                    iconResource = R.drawable.ic_share,
+                    contentDescription = stringResource(R.string.screen_marketplace_content_description_share_comparison_listings),
+                    onClick = { onComparisonEvent(MarketplaceContract.Event.ComparisonBottomSheet.OnShareButtonClicked) }
+                )
+            )
+
+            WrapHorizontalPager(
+                initialPage = 0,
+                pageCount = carouselPageCount,
+                selectedIndex = currentCarouselIndex,
+                contentPaddingValues = PaddingValues(),
+                onPageChanged = { onComparisonEvent(MarketplaceContract.Event.ComparisonBottomSheet.OnScrolled) }
+            ) { _ ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    val (first, second) = currentCarouselItemIndices
+
+                    first?.let { index ->
+                        val listing = listings.getOrNull(index = index) ?: return@let
+                        ComparisonBottomSheetListingItem(
+                            listing = listing,
+                            isFullWidth = second != null,
+                            onClick = {
+                                onComparisonEvent(
+                                    MarketplaceContract.Event.ComparisonBottomSheet.OnListingClicked(
+                                        listing.listingId
+                                    )
+                                )
+                            },
+                            onDeleteIconClick = {
+                                onComparisonEvent(
+                                    MarketplaceContract.Event.ComparisonBottomSheet.OnListingDeleteButtonClicked(
+                                        listing.listingId
+                                    )
+                                )
+                            }
+                        )
+                    }
+
+                    second?.let { index ->
+                        val listing = listings.getOrNull(index = index) ?: return@let
+                        ComparisonBottomSheetListingItem(
+                            listing = listing,
+                            isFullWidth = true,
+                            onClick = {
+                                onComparisonEvent(
+                                    MarketplaceContract.Event.ComparisonBottomSheet.OnListingClicked(
+                                        listing.listingId
+                                    )
+                                )
+                            },
+                            onDeleteIconClick = {
+                                onComparisonEvent(
+                                    MarketplaceContract.Event.ComparisonBottomSheet.OnListingDeleteButtonClicked(
+                                        listing.listingId
+                                    )
+                                )
+                            }
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ComparisonBottomSheetListingItem(
+    listing: FilteredListingUi,
+    isFullWidth: Boolean,
+    onClick: () -> Unit,
+    onDeleteIconClick: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .then(
+                if (isFullWidth) {
+                    Modifier.fillMaxWidth()
+                } else Modifier.width(FILTERED_LISTING_GRID_VIEW_WIDTH)
+            )
+            .clickableNoRipple(onClick = onClick),
+        verticalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp)
+    ) {
+        // Image.
+        Box(
+            modifier = Modifier
+                .clip(shape = MaterialTheme.shapes.medium)
+                .background(color = MaterialTheme.customColors.white)
+                .fillMaxWidth()
+                .height(180.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            ListingImage(
+                imageUrl = listing.coverImageUrl,
+                title = listing.title,
+                modifier = Modifier
+                    .padding(SPACING_MEDIUM.dp)
+                    .clip(shape = MaterialTheme.shapes.medium)
+                    .fillMaxSize()
+            )
+
+            FilteredListingItemImageActionButton(
+                modifier = Modifier.align(Alignment.TopEnd),
+                isLoading = false,
+                onClick = onDeleteIconClick,
+                icon = {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_close),
+                        contentDescription = stringResource(R.string.screen_marketplace_content_description_remove_listing_from_comparison)
+                    )
+                }
+            )
+        }
+
+        Text(
+            text = listing.title,
+            overflow = TextOverflow.Ellipsis,
+            maxLines = 2
+        )
+
+        Text(
+            text = listing.price.label,
+            fontWeight = FontWeight.Bold,
+            style = MaterialTheme.typography.body2
+        )
+    }
+}
+
+@Composable
 private fun BottomSheetStickyHeader(
     title: String,
     closeIconContentDescription: String,
-    onCloseButtonClick: () -> Unit
+    onCloseButtonClick: () -> Unit,
+    otherIconData: ClickableIconData? = null
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Spacer(modifier = Modifier.width(48.dp)) // Matches the width of the icon button.
+        BottomSheetStickyHeaderIcon(
+            clickableIconData = ClickableIconData(
+                iconResource = R.drawable.ic_close,
+                contentDescription = closeIconContentDescription,
+                onClick = onCloseButtonClick
+            ),
+            contentAlignment = if (otherIconData == null) Alignment.CenterEnd else Alignment.CenterStart
+        )
 
         Text(
             text = title,
@@ -1439,21 +1672,36 @@ private fun BottomSheetStickyHeader(
             style = MaterialTheme.typography.h5
         )
 
-        Box(contentAlignment = Alignment.CenterEnd) {
-            IconButton(
-                onClick = onCloseButtonClick
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_close),
-                    contentDescription = closeIconContentDescription,
-                    modifier = Modifier
-                        .background(
-                            color = MaterialTheme.colors.background.copy(alpha = ContentAlpha.medium),
-                            shape = CircleShape
-                        )
-                        .padding(SPACING_SMALL.dp)
-                )
-            }
+        if (otherIconData == null) {
+            Spacer(modifier = Modifier.width(48.dp)) // Matches the width of the icon button.
+        } else {
+            BottomSheetStickyHeaderIcon(
+                clickableIconData = otherIconData,
+                contentAlignment = Alignment.CenterEnd
+            )
+        }
+    }
+}
+
+@Composable
+private fun BottomSheetStickyHeaderIcon(
+    clickableIconData: ClickableIconData,
+    contentAlignment: Alignment
+) {
+    Box(contentAlignment = contentAlignment) {
+        IconButton(
+            onClick = clickableIconData.onClick
+        ) {
+            Icon(
+                painter = painterResource(clickableIconData.iconResource),
+                contentDescription = clickableIconData.contentDescription,
+                modifier = Modifier
+                    .background(
+                        color = MaterialTheme.colors.background.copy(alpha = ContentAlpha.medium),
+                        shape = CircleShape
+                    )
+                    .padding(SPACING_SMALL.dp)
+            )
         }
     }
 }

@@ -6,17 +6,16 @@ import com.alexgreece45.marvelx.common_ui.inputFieldValidator.InputFieldValidato
 import com.alexgreece45.marvelx.common_ui.inputFieldValidator.model.InputFieldRule
 import com.alexgreece45.marvelx.common_ui.inputFieldValidator.model.InputFieldValidationResult
 import com.alexgreece45.marvelx.common_ui.messageBanner.delegate.MessageBannerDelegate
-import com.alexgreece45.marvelx.common_ui.messageBanner.model.MessageBannerActionData
+import com.alexgreece45.marvelx.common_ui.messageBanner.model.MessageBannerAction
 import com.alexgreece45.marvelx.common_ui.messageBanner.model.MessageBannerActionType
 import com.alexgreece45.marvelx.common_ui.snackbar.delegate.SnackbarDelegate
-import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarActionData
-import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarActionType
 import com.alexgreece45.marvelx.configuration.ConfigPriceLogic
 import com.alexgreece45.marvelx.controllers.TimerController
 import com.alexgreece45.marvelx.core.common.extensions.formatPrice
 import com.alexgreece45.marvelx.core.common.extensions.toCustomFormat
 import com.alexgreece45.marvelx.core.common.extensions.toEpochDays
 import com.alexgreece45.marvelx.core.common.extensions.toEpochMillis
+import com.alexgreece45.marvelx.core.common.extensions.toImmutableListOrEmpty
 import com.alexgreece45.marvelx.core.common.util.DateUtil
 import com.alexgreece45.marvelx.core.data.model.marketplace.ListingSort
 import com.alexgreece45.marvelx.data.model.marketplace.listing.EnumGeneric
@@ -25,6 +24,7 @@ import com.alexgreece45.marvelx.data.repository.marketplace.listing.details.List
 import com.alexgreece45.marvelx.domain.helper.InteractorPartialState
 import com.alexgreece45.marvelx.domain.helper.onAnyError
 import com.alexgreece45.marvelx.domain.helper.onSuccess
+import com.alexgreece45.marvelx.domain.interactors.cart.CartInteractor
 import com.alexgreece45.marvelx.domain.interactors.marketplace.MarketplaceInteractor
 import com.alexgreece45.marvelx.domain.interactors.marketplace.listing.ListingInteractor
 import com.alexgreece45.marvelx.mvi.BaseViewModel
@@ -33,6 +33,7 @@ import com.alexgreece45.marvelx.ui.model_generic.LocalDateUi
 import com.alexgreece45.marvelx.ui.model_generic.UiState
 import com.alexgreece45.marvelx.ui.screens.marketplace.mappers.FilteredListingUiMapper
 import com.alexgreece45.marvelx.ui.screens.marketplace.mappers.MarketplaceUiMapper
+import com.alexgreece45.marvelx.ui.screens.marketplace.model.FilteredListingUi
 import com.alexgreece45.marvelx.ui.screens.marketplace.model.ListingDatePostedCustomRangeUi
 import com.alexgreece45.marvelx.ui.screens.marketplace.model.ListingDateRangeOptionUi
 import com.alexgreece45.marvelx.ui.screens.marketplace.model.MarketplaceBottomSheetType
@@ -41,6 +42,7 @@ import com.alexgreece45.marvelx.ui.screens.marketplace.model.MarketplaceListings
 import com.alexgreece45.marvelx.ui.screens.marketplace.model.MarketplaceMode
 import com.alexgreece45.marvelx.ui.screens.marketplace.model.MarketplaceSearchCriteriaUi
 import com.alexgreece45.marvelx.ui.screens.marketplace.model.SelectableOption
+import com.alexgreece45.marvelx.ui.screens.marketplace.model.ToggleStateUi
 import com.alexgreece45.marvelx.ui.screens.marketplace.model.toDomain
 import com.alexgreece45.marvelx.util.ResourceProvider
 import kotlinx.coroutines.FlowPreview
@@ -69,6 +71,7 @@ internal class MarketplaceViewModel(
     private val listingInteractor: ListingInteractor,
     private val filteredListingUiMapper: FilteredListingUiMapper,
     messageBannerDelegate: MessageBannerDelegate,
+    private val cartInteractor: CartInteractor,
 ) : BaseViewModel<MarketplaceContract.Event, MarketplaceContract.State, MarketplaceContract.Effect>(),
     SnackbarDelegate by snackbarDelegate,
     MessageBannerDelegate by messageBannerDelegate {
@@ -126,6 +129,18 @@ internal class MarketplaceViewModel(
             MarketplaceContract.Event.FilterMenu.OnCloseButtonClicked -> onFilterMenuCloseButtonClicked()
             MarketplaceContract.Event.FilterMenu.OnNegativeButtonClicked -> onFilterMenuNegativeButtonClicked()
             MarketplaceContract.Event.FilterMenu.OnPositiveButtonClicked -> onFilterMenuPositiveButtonClicked()
+
+            MarketplaceContract.Event.ComparisonBottomSheet.OnCloseButtonClicked -> onComparisonBottomSheetCloseButtonClicked()
+            MarketplaceContract.Event.ComparisonBottomSheet.OnShareButtonClicked -> onComparisonBottomSheetShareButtonClicked()
+            is MarketplaceContract.Event.ComparisonBottomSheet.OnListingClicked -> onComparisonBottomSheetListingClicked(
+                event.listingId
+            )
+
+            is MarketplaceContract.Event.ComparisonBottomSheet.OnListingDeleteButtonClicked -> onComparisonBottomSheetListingDeleteButtonClicked(
+                event.listingId
+            )
+
+            MarketplaceContract.Event.ComparisonBottomSheet.OnScrolled -> onComparisonBottomSheetScrolled()
 
             is MarketplaceContract.Event.Filter.OnCategorySelected -> onFilterCategorySelected(event.code)
             is MarketplaceContract.Event.Filter.OnConditionSelected -> onFilterConditionSelected(
@@ -263,7 +278,7 @@ internal class MarketplaceViewModel(
                                 data = searchUiState.data.map { filteredListing ->
                                     if (filteredListing.listingId == listingId) {
                                         filteredListing.copy(
-                                            favorite = filteredListing.favorite.copy(
+                                            favorite = ToggleStateUi(
                                                 isChecked = false,
                                                 isLoading = false
                                             )
@@ -275,20 +290,18 @@ internal class MarketplaceViewModel(
                             )
                         )
                     }
+
                     showMessageBanner(
                         message = resourceProvider.getString(R.string.screen_marketplace_filtered_listing_removed_from_favorites_success),
-                        actionData =
-                            MessageBannerActionData(
-                                label = "Show",
-                                actionType = MessageBannerActionType.Hide
+                        action =
+                            MessageBannerAction.Global(
+                                label = resourceProvider.getString(R.string.screen_marketplace_filtered_listing_image_action_button_success_message_banner_label),
+                                actionType = MessageBannerActionType.Custom(
+                                    action = {
+                                        setEffect { MarketplaceContract.Effect.Navigation.GoToFavoritesScreen }
+                                    }
+                                )
                             )
-                    )
-                    showInfoSnackbar(
-                        message = resourceProvider.getString(R.string.screen_marketplace_filtered_listing_removed_from_favorites_success),
-                        snackbarActionData = SnackbarActionData(
-                            label = resourceProvider.getString(R.string.generic_ok_button),
-                            actionType = SnackbarActionType.Hide
-                        )
                     )
                 } else {
                     setState {
@@ -306,11 +319,12 @@ internal class MarketplaceViewModel(
                             )
                         )
                     }
-                    showErroneousSnackbar(
-                        errorMessage = resourceProvider.getString(R.string.screen_marketplace_error_filtered_listing_remove_from_favorites),
-                        snackbarActionData = SnackbarActionData(
+
+                    showMessageBanner(
+                        message = resourceProvider.getString(R.string.screen_marketplace_error_filtered_listing_remove_from_favorites),
+                        action = MessageBannerAction.Button(
                             label = resourceProvider.getString(R.string.generic_ok_button),
-                            actionType = SnackbarActionType.Hide
+                            actionType = MessageBannerActionType.Hide
                         )
                     )
                 }
@@ -335,14 +349,13 @@ internal class MarketplaceViewModel(
                             )
                         )
                     }
-                    // TODO: Replace with message banner.
-                    showSuccessSnackbar(
+
+                    showMessageBanner(
                         message = resourceProvider.getString(R.string.screen_marketplace_filtered_listing_added_to_favorites_success),
-                        snackbarActionData = SnackbarActionData(
-                            label = resourceProvider.getString(R.string.screen_marketplace_filtered_listing_added_to_favorites_success_clickable_text),
-                            isHyperlink = true,
-                            actionType = SnackbarActionType.Custom(
-                                onAction = {
+                        action = MessageBannerAction.Global(
+                            label = resourceProvider.getString(R.string.screen_marketplace_filtered_listing_image_action_button_success_message_banner_label),
+                            actionType = MessageBannerActionType.Custom(
+                                action = {
                                     setEffect { MarketplaceContract.Effect.Navigation.GoToFavoritesScreen }
                                 }
                             )
@@ -364,11 +377,12 @@ internal class MarketplaceViewModel(
                             )
                         )
                     }
-                    showErroneousSnackbar(
-                        errorMessage = resourceProvider.getString(R.string.screen_marketplace_error_filtered_listing_add_to_favorites),
-                        snackbarActionData = SnackbarActionData(
+
+                    showMessageBanner(
+                        message = resourceProvider.getString(R.string.screen_marketplace_error_filtered_listing_add_to_favorites),
+                        action = MessageBannerAction.Button(
                             label = resourceProvider.getString(R.string.generic_ok_button),
-                            actionType = SnackbarActionType.Hide
+                            actionType = MessageBannerActionType.Hide
                         )
                     )
                 }
@@ -378,6 +392,7 @@ internal class MarketplaceViewModel(
 
     private fun onListingComparisonClicked(listingId: String) {
         var wasListingAddedToComparison = false
+        var listing: FilteredListingUi? = null
         setState {
             copy(
                 searchUiState = if (searchUiState !is UiState.Success) searchUiState else searchUiState.copy(
@@ -386,6 +401,56 @@ internal class MarketplaceViewModel(
                             wasListingAddedToComparison = !filteredListing.comparison
 
                             filteredListing.copy(comparison = wasListingAddedToComparison)
+                                .also { listing = it }
+                        } else {
+                            filteredListing
+                        }
+
+                    }
+                )
+            )
+        }
+
+        if (wasListingAddedToComparison && listing != null) {
+            setState {
+                copy(
+                    comparisonListings = buildList {
+                        addAll(comparisonListings)
+                        add(listing)
+                    }
+                )
+            }
+        } else {
+            setState {
+                copy(
+                    comparisonListings = comparisonListings.filterNot { it.listingId == listingId }
+                )
+            }
+        }
+
+        showMessageBanner(
+            message = resourceProvider.getString(if (wasListingAddedToComparison) R.string.screen_marketplace_filtered_listing_added_to_comparison_success else R.string.screen_marketplace_filtered_listing_removed_from_comparison_success),
+            action = MessageBannerAction.Global(
+                label = resourceProvider.getString(R.string.screen_marketplace_filtered_listing_image_action_button_success_message_banner_label),
+                actionType = MessageBannerActionType.Custom(
+                    action = {
+                        showBottomSheet(MarketplaceBottomSheetType.COMPARISON)
+                    }
+                )
+            )
+        )
+    }
+
+    private fun onListingAddToCartClicked(listingId: String) {
+        var isListingInCart = false
+        setState {
+            copy(
+                searchUiState = if (searchUiState !is UiState.Success) searchUiState else searchUiState.copy(
+                    data = searchUiState.data.map { filteredListing ->
+                        if (filteredListing.listingId == listingId) {
+                            isListingInCart = filteredListing.cart.isChecked
+
+                            filteredListing.copy(cart = filteredListing.cart.copy(isLoading = true))
                         } else {
                             filteredListing
                         }
@@ -393,39 +458,127 @@ internal class MarketplaceViewModel(
                 )
             )
         }
+        viewModelScope.launch {
+            if (isListingInCart) {
+                val wasRemovedFromCart =
+                    cartInteractor.addCartItem(listingId = listingId)
+                if (wasRemovedFromCart) {
+                    setState {
+                        copy(
+                            searchUiState = if (searchUiState !is UiState.Success) searchUiState else searchUiState.copy(
+                                data = searchUiState.data.map { filteredListing ->
+                                    if (filteredListing.listingId == listingId) {
+                                        filteredListing.copy(
+                                            cart = ToggleStateUi(
+                                                isChecked = false,
+                                                isLoading = false
+                                            )
+                                        )
+                                    } else {
+                                        filteredListing
+                                    }
+                                }
+                            )
+                        )
+                    }
 
-        if (wasListingAddedToComparison) {
-            showInfoSnackbar(
-                message = resourceProvider.getString(R.string.screen_marketplace_filtered_listing_added_to_comparison_success),
-                snackbarActionData =
-                    SnackbarActionData(
-                        label = resourceProvider.getString(R.string.screen_marketplace_filtered_listing_added_to_comparison_success_clickable_text),
-                        isHyperlink = true,
-                        actionType = SnackbarActionType.Custom(
-                            onAction = {
-                                showBottomSheet(MarketplaceBottomSheetType.COMPARISON)
-                            }
+                    showMessageBanner(
+                        message = resourceProvider.getString(R.string.screen_marketplace_filtered_listing_removed_from_cart_success),
+                        action =
+                            MessageBannerAction.Global(
+                                label = resourceProvider.getString(R.string.screen_marketplace_filtered_listing_image_action_button_success_message_banner_label),
+                                actionType = MessageBannerActionType.Custom(
+                                    action = {
+                                        setEffect { MarketplaceContract.Effect.Navigation.GoToCartScreen }
+                                    }
+                                )
+                            )
+                    )
+                } else {
+                    setState {
+                        copy(
+                            searchUiState = if (searchUiState !is UiState.Success) searchUiState else searchUiState.copy(
+                                data = searchUiState.data.map { filteredListing ->
+                                    if (filteredListing.listingId == listingId) {
+                                        filteredListing.copy(
+                                            cart = filteredListing.cart.copy(isLoading = false)
+                                        )
+                                    } else {
+                                        filteredListing
+                                    }
+                                }
+                            )
+                        )
+                    }
+
+                    showMessageBanner(
+                        message = resourceProvider.getString(R.string.screen_marketplace_error_filtered_listing_remove_from_cart),
+                        action = MessageBannerAction.Button(
+                            label = resourceProvider.getString(R.string.generic_ok_button),
+                            actionType = MessageBannerActionType.Hide
                         )
                     )
-            )
-        }
-    }
+                }
+            } else {
+                val wasAddedToCart = cartInteractor.addCartItem(listingId = listingId)
+                if (wasAddedToCart) {
+                    setState {
+                        copy(
+                            searchUiState = if (searchUiState !is UiState.Success) searchUiState else searchUiState.copy(
+                                data = searchUiState.data.map { filteredListing ->
+                                    if (filteredListing.listingId == listingId) {
+                                        filteredListing.copy(
+                                            cart = ToggleStateUi(
+                                                isChecked = true,
+                                                isLoading = false
+                                            )
+                                        )
+                                    } else {
+                                        filteredListing
+                                    }
+                                }
+                            )
+                        )
+                    }
 
-    private fun onListingAddToCartClicked(listingId: String) {
-        // TODO: Add API call.
-//        setState {
-//            copy(
-//                searchUiState = if (searchUiState !is UiState.Success) searchUiState else searchUiState.copy(
-//                    data = searchUiState.data.map { filteredListing ->
-//                        if (filteredListing.listingId == listingId) {
-//                            filteredListing.copy(cart = !filteredListing.cart)
-//                        } else {
-//                            filteredListing
-//                        }
-//                    }
-//                )
-//            )
-//        }
+                    showMessageBanner(
+                        message = resourceProvider.getString(R.string.screen_marketplace_filtered_listing_added_to_cart_success),
+                        action = MessageBannerAction.Global(
+                            label = resourceProvider.getString(R.string.screen_marketplace_filtered_listing_image_action_button_success_message_banner_label),
+                            actionType = MessageBannerActionType.Custom(
+                                action = {
+                                    setEffect { MarketplaceContract.Effect.Navigation.GoToCartScreen }
+                                }
+                            )
+                        )
+                    )
+                } else {
+                    setState {
+                        copy(
+                            searchUiState = if (searchUiState !is UiState.Success) searchUiState else searchUiState.copy(
+                                data = searchUiState.data.map { filteredListing ->
+                                    if (filteredListing.listingId == listingId) {
+                                        filteredListing.copy(
+                                            cart = filteredListing.cart.copy(isLoading = false)
+                                        )
+                                    } else {
+                                        filteredListing
+                                    }
+                                }
+                            )
+                        )
+                    }
+
+                    showMessageBanner(
+                        message = resourceProvider.getString(R.string.screen_marketplace_error_filtered_listing_add_to_cart),
+                        action = MessageBannerAction.Button(
+                            label = resourceProvider.getString(R.string.generic_ok_button),
+                            actionType = MessageBannerActionType.Hide
+                        )
+                    )
+                }
+            }
+        }
     }
 
     private fun onSearchBarClicked() {
@@ -441,6 +594,10 @@ internal class MarketplaceViewModel(
     private fun onSearchBarSearchQueryChanged(newSearchQuery: String) {
         setState {
             copy(
+                mode = MarketplaceMode.SEARCH, // Re-assigned in the rare case that the phone has as an input method a keyboard and the user types something, taps on "enter" triggering the
+                // search to occur which captures the focus of the "close button", and further tapping the "enter" again, for some reason, the back button is triggered resulting into the
+                // mode turning into "discover". While in the "discover" mode, the search bar has focus allowing the user to enter queries. Search-as-you-type functionality doesn't work,
+                // thus, a solution must be found. The solution is to re-assign the mode when the user types in the search bar.
                 searchQuery = newSearchQuery
             )
         }
@@ -669,6 +826,51 @@ internal class MarketplaceViewModel(
                     )
                 }
             }
+        }
+    }
+
+    private fun onComparisonBottomSheetCloseButtonClicked() {
+        hideBottomSheet()
+    }
+
+    private fun onComparisonBottomSheetShareButtonClicked() {
+        val listingIds = currentState.comparisonListings.map { it.listingId }
+        if (listingIds.isEmpty()) {
+            showMessageBanner(message = resourceProvider.getString(R.string.screen_marketplace_error_sharing_comparison_listings))
+        } else {
+            setEffect {
+                MarketplaceContract.Effect.Share.Comparison(listingIds = listingIds)
+            }
+        }
+    }
+
+    private fun onComparisonBottomSheetListingClicked(listingId: String) {
+        hideBottomSheet()
+        setEffect { MarketplaceContract.Effect.Navigation.GoToListingDetailsScreen(listingId = listingId) }
+    }
+
+    private fun onComparisonBottomSheetListingDeleteButtonClicked(listingId: String) {
+        val comparisonListings =
+            currentState.comparisonListings.filterNot { it.listingId == listingId }
+                .toImmutableListOrEmpty()
+        setState {
+            copy(
+                comparisonListings = comparisonListings
+            )
+        }
+        if (comparisonListings.isEmpty()) {
+            hideBottomSheet()
+        }
+    }
+
+    private fun onComparisonBottomSheetScrolled() {
+        val newCarouselPageIndex = currentState.currentCarouselPageIndex + 1
+        if (newCarouselPageIndex >= currentState.carouselPageCount - 1) return
+
+        setState {
+            copy(
+                currentCarouselPageIndex = newCarouselPageIndex
+            )
         }
     }
 

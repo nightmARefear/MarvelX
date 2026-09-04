@@ -5,8 +5,8 @@ import java.util.UUID
 data class MessageBannerData(
     val uuid: UUID,
     val message: String,
-    val messageBannerDuration: MessageBannerDuration = MessageBannerDuration.Short,
-    val actionData: MessageBannerActionData? = null,
+    val duration: MessageBannerDuration = MessageBannerDuration.Short,
+    val action: MessageBannerAction? = null,
     val onDismiss: (UUID) -> Unit
 )
 

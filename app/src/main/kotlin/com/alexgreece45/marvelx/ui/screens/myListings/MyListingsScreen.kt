@@ -53,7 +53,7 @@ import com.alexgreece45.marvelx.ui.screens.myListings.model.MyListingsContract
 import com.alexgreece45.marvelx.ui_theme.theme.values.customColors
 import com.alexgreece45.marvelx.util.SPACING_MEDIUM
 import com.alexgreece45.marvelx.util.constants.ConstantsUi
-import com.alexgreece45.marvelx.util.extensions.clickableNoRipple
+import com.alexgreece45.marvelx.common_ui.extensions.clickableNoRipple
 import com.alexgreece45.marvelx.util.extensions.hideIfVisible
 import com.alexgreece45.marvelx.util.extensions.shareContentUrl
 import com.alexgreece45.marvelx.util.extensions.showIfHidden

@@ -7,15 +7,15 @@
     <string name="screen_marketplace_filtered_listing_remove_from_cart_button">Remove from cart</string>
 
     <string name="screen_marketplace_filtered_listing_added_to_favorites_success">Added to favorites</string>
-    <string name="screen_marketplace_filtered_listing_added_to_favorites_success_clickable_text">favorites</string>
     <string name="screen_marketplace_filtered_listing_removed_from_favorites_success">Removed from favorites</string>
 
     <string name="screen_marketplace_filtered_listing_added_to_cart_success">Added to cart</string>
-    <string name="screen_marketplace_filtered_listing_added_to_cart_success_clickable_text">cart</string>
     <string name="screen_marketplace_filtered_listing_removed_from_cart_success">Removed from cart</string>
 
-    <string name="screen_marketplace_filtered_listing_added_to_comparison_success">Added to comparison</string>
-    <string name="screen_marketplace_filtered_listing_added_to_comparison_success_clickable_text">comparison</string>
+    <string name="screen_marketplace_filtered_listing_added_to_comparison_success">Added to comparison list</string>
+    <string name="screen_marketplace_filtered_listing_removed_from_comparison_success">Removed from comparison list</string>
+
+    <string name="screen_marketplace_filtered_listing_image_action_button_success_message_banner_label">Show</string>
 
     <string name="screen_marketplace_sort_price_ascending_label">Price Ascending</string>
     <string name="screen_marketplace_sort_price_descending_label">Price Descending</string>
@@ -61,6 +61,8 @@
     <string name="screen_marketplace_sort_bottom_sheet_item_date_posted_ascending_label">Oldest First</string>
     <string name="screen_marketplace_sort_bottom_sheet_item_date_posted_descending_label">Newest First</string>
 
+    <string name="screen_marketplace_comparison_bottom_sheet_title">Listings comparison (%1$s)</string>
+
     <string name="screen_marketplace_generic_error_message">An error occurred whilst loading the listings.</string>
 
     <string name="screen_marketplace_error_search_no_results">No results for \"%1$s\"</string>
@@ -80,9 +82,14 @@
 
     <string name="screen_marketplace_error_date_range_select">Select date range</string>
 
+    <string name="screen_marketplace_error_sharing_comparison_listings">No listings</string>
+
     <string name="screen_marketplace_content_description_listing">listing image: %1$s</string>
     <string name="screen_marketplace_content_description_close_sort_by_bottom_sheet_icon">close sort by bottom sheet icon</string>
     <string name="screen_marketplace_content_description_close_filter_menu_bottom_sheet_icon">close filter menu bottom sheet icon</string>
+    <string name="screen_marketplace_content_description_close_comparison_bottom_sheet_icon">close comparison bottom sheet icon</string>
     <string name="screen_marketplace_content_description_change_to_grid_view_button">change to grid view button</string>
     <string name="screen_marketplace_content_description_change_to_list_view_button">change to list view button</string>
+    <string name="screen_marketplace_content_description_remove_listing_from_comparison">remove listing from comparison button</string>
+    <string name="screen_marketplace_content_description_share_comparison_listings">share comparison listings icon</string>
 </resources>

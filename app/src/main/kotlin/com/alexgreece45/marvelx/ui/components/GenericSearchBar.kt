@@ -19,6 +19,7 @@ import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.ui_theme.theme.values.customColors
@@ -42,6 +43,8 @@ fun GenericSearchBar(
             Text(
                 text = hint,
                 fontStyle = FontStyle.Italic,
+                overflow = TextOverflow.Ellipsis,
+                maxLines = 1,
                 style = MaterialTheme.typography.h6
             )
         },

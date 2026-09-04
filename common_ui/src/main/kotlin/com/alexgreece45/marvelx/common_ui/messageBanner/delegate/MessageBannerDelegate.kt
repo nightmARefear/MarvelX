@@ -1,6 +1,6 @@
 package com.alexgreece45.marvelx.common_ui.messageBanner.delegate
 
-import com.alexgreece45.marvelx.common_ui.messageBanner.model.MessageBannerActionData
+import com.alexgreece45.marvelx.common_ui.messageBanner.model.MessageBannerAction
 import com.alexgreece45.marvelx.common_ui.messageBanner.model.MessageBannerData
 import com.alexgreece45.marvelx.common_ui.messageBanner.model.MessageBannerDuration
 import com.alexgreece45.marvelx.common_ui.messageBanner.model.MessageBannerEvent
@@ -16,7 +16,7 @@ interface MessageBannerDelegate {
     fun showMessageBanner(
         message: String,
         messageBannerDuration: MessageBannerDuration = MessageBannerDuration.Short,
-        actionData: MessageBannerActionData? = null
+        action: MessageBannerAction? = null
     )
 
     fun dismissMessageBanner(uuid: UUID)
@@ -33,14 +33,14 @@ internal class MessageBannerDelegateImpl : MessageBannerDelegate {
     override fun showMessageBanner(
         message: String,
         messageBannerDuration: MessageBannerDuration,
-        actionData: MessageBannerActionData?
+        action: MessageBannerAction?
     ) {
         val newUuid = UUID.randomUUID()
         val messageBannerData = MessageBannerData(
             uuid = newUuid,
             message = message,
-            messageBannerDuration = messageBannerDuration,
-            actionData = actionData,
+            duration = messageBannerDuration,
+            action = action,
             onDismiss = { dismissMessageBanner(newUuid) }
         )
         _messageBannerEvents.trySend(MessageBannerEvent.Show(messageBannerData))

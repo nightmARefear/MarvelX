@@ -54,7 +54,7 @@ import com.alexgreece45.marvelx.util.SPACING_TINY
 import com.alexgreece45.marvelx.util.VSpacer
 import com.alexgreece45.marvelx.util.constants.ConstantsUi
 import com.alexgreece45.marvelx.util.extensions.circularImageWithBorder
-import com.alexgreece45.marvelx.util.extensions.clickableNoRipple
+import com.alexgreece45.marvelx.common_ui.extensions.clickableNoRipple
 import com.alexgreece45.marvelx.util.extensions.toAnnotatedString
 
 @Composable
