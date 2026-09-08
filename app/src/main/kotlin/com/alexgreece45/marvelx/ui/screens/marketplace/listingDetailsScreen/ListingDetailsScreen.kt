@@ -2,7 +2,9 @@ package com.alexgreece45.marvelx.ui.screens.marketplace.listingDetailsScreen
 
 import android.content.res.Configuration
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
@@ -12,15 +14,19 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.CircularProgressIndicator
+import androidx.compose.material.Icon
+import androidx.compose.material.LocalTextStyle
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -29,15 +35,22 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.common_ui.components.WrapClickableText
+import com.alexgreece45.marvelx.common_ui.components.model.ClickableString
+import com.alexgreece45.marvelx.common_ui.components.statusContainer.StatusContainer
+import com.alexgreece45.marvelx.common_ui.extensions.clickableNoRipple
 import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarEvent
 import com.alexgreece45.marvelx.common_ui.util.ObserveUiEffect
 import com.alexgreece45.marvelx.common_ui.util.safeLetComposable
+import com.alexgreece45.marvelx.core.common.extensions.formatPrice
 import com.alexgreece45.marvelx.core.common.extensions.minusMinutes
 import com.alexgreece45.marvelx.core.common.extensions.toListingFormat
 import com.alexgreece45.marvelx.core.common.util.flows.single_observer_flow.SingleObserverFlow
 import com.alexgreece45.marvelx.data.model.marketplace.listing.EnumGeneric
 import com.alexgreece45.marvelx.domain.model_api.marketplace.listing.ListingDetailsDomain
 import com.alexgreece45.marvelx.domain.model_api.marketplace.listing.ListingDimensions
+import com.alexgreece45.marvelx.domain.model_api.marketplace.listing.ListingOrderIdsDomain
+import com.alexgreece45.marvelx.domain.model_api.order.OrderIdDomain
 import com.alexgreece45.marvelx.domain.model_api.user.privacySettings.PrivacySettingsDomain
 import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.BasicProfileDetailsDomain
 import com.alexgreece45.marvelx.domain.model_api.user.profileDetails.ProfileDetailsDomain
@@ -63,7 +76,10 @@ import com.alexgreece45.marvelx.ui.screens.marketplace.listingDetailsScreen.mode
 import com.alexgreece45.marvelx.ui.screens.marketplace.listingDetailsScreen.model.ListingDetailsMode
 import com.alexgreece45.marvelx.ui.screens.marketplace.model.ListingStatusUi
 import com.alexgreece45.marvelx.ui.screens.marketplace.model.ListingUi
+import com.alexgreece45.marvelx.ui.screens.orders.model.item.OrderItemStatusUi
+import com.alexgreece45.marvelx.ui.screens.orders.model.item.OrderItemUi
 import com.alexgreece45.marvelx.ui_theme.theme.MarvelXTheme
+import com.alexgreece45.marvelx.ui_theme.theme.import_aliases.UiThemeDrawable
 import com.alexgreece45.marvelx.ui_theme.theme.values.customColors
 import com.alexgreece45.marvelx.util.DateUtil
 import com.alexgreece45.marvelx.util.SPACING_SMALL
@@ -71,8 +87,6 @@ import com.alexgreece45.marvelx.util.SPACING_TINY
 import com.alexgreece45.marvelx.util.VSpacer
 import com.alexgreece45.marvelx.util.constants.ConstantsUi
 import com.alexgreece45.marvelx.util.extensions.circularImageWithBorder
-import com.alexgreece45.marvelx.common_ui.extensions.clickableNoRipple
-import com.alexgreece45.marvelx.core.common.extensions.formatPrice
 import com.alexgreece45.marvelx.util.extensions.shareContentUrl
 import com.alexgreece45.marvelx.util.extensions.showToast
 import kotlinx.coroutines.flow.emptyFlow
@@ -171,9 +185,11 @@ internal fun ListingDetailsScreen(
                 ListingView(
                     listing = listing,
                     sellerProfileDetails = sellerProfileDetails,
+                    orderItem = state.listingOrderItem,
                     onCarouselScrolled = {
                         onEvent(ListingDetailsContract.Event.OnCarouselScrolled(it))
                     },
+                    onOrderItemStatusContainerClickableTextClick = { onEvent(ListingDetailsContract.Event.OnOrderItemStatusContainerClickableTextClicked) },
                     onSellerInfoSectionClicked = {
                         onEvent(ListingDetailsContract.Event.OnSellerInfoClicked)
                     }
@@ -187,7 +203,9 @@ internal fun ListingDetailsScreen(
 private fun ListingView(
     listing: ListingUi,
     sellerProfileDetails: ProfileDetailsDomain,
+    orderItem: OrderItemUi?,
     onCarouselScrolled: (Int) -> Unit,
+    onOrderItemStatusContainerClickableTextClick: () -> Unit,
     onSellerInfoSectionClicked: () -> Unit
 ) {
     Column(
@@ -222,6 +240,63 @@ private fun ListingView(
             color = MaterialTheme.customColors.genericRed,
             style = MaterialTheme.typography.h5
         )
+
+        VSpacer.Medium()
+
+        safeLetComposable(
+            p1 = listing.orderIds,
+            p2 = orderItem
+        ) { orderIds, _ ->
+            StatusContainer(
+                title = stringResource(if (listing.canEdit) R.string.screen_listing_details_seller_status_container_title else R.string.screen_listing_details_buyer_status_container_title),
+                titleColor = MaterialTheme.customColors.successStatusContainerColors.contentColor,
+                backgroundColor = MaterialTheme.customColors.successStatusContainerColors.backgroundColor,
+                modifier = Modifier.fillMaxWidth(),
+                outlineColor = MaterialTheme.customColors.successStatusContainerColors.outlineColor,
+                icon = {
+                    Box(
+                        modifier = Modifier
+                            .background(
+                                color = MaterialTheme.customColors.successStatusContainerColors.outlineColor,
+                                shape = CircleShape
+                            )
+                            .clip(CircleShape)
+                            .padding(SPACING_TINY.dp)
+                            .size(28.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            painter = painterResource(UiThemeDrawable.ic_tag),
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp),
+                            tint = MaterialTheme.customColors.successStatusContainerColors.contentColor
+                        )
+                    }
+                },
+                extraContent = {
+                    val statusLabel = stringResource(listing.status.labelResId)
+                    WrapClickableText(
+                        text = if (listing.canEdit) stringResource(
+                            R.string.screen_listing_details_seller_status_container_body,
+                            orderIds.orderId.formatted,
+                            statusLabel
+                        ) else stringResource(
+                            R.string.screen_listing_details_buyer_status_container_body,
+                            orderIds.orderId.formatted,
+                            statusLabel
+                        ),
+                        textStyle = LocalTextStyle.current,
+                        clickableStrings = listOf(
+                            ClickableString(
+                                text = stringResource(if (listing.canEdit) R.string.screen_listing_details_seller_status_container_body_clickable else R.string.screen_listing_details_buyer_status_container_body_clickable),
+                                color = MaterialTheme.customColors.linkTextColor,
+                                onClick = { onOrderItemStatusContainerClickableTextClick() }
+                            )
+                        )
+                    )
+                }
+            )
+        }
 
         VSpacer.Medium()
 
@@ -714,8 +789,15 @@ private fun StickyBottomButton(
 @Composable
 private fun ListingDetailsScreenPreview() {
     val listingId = "1"
-    val price = "150.20".toBigDecimal()
+    val title = "Rare 2005 Spider-Man Limited Edition Mug"
+    val priceBigDecimal = "150.20".toBigDecimal()
+    val price = BigDecimalUi(
+        value = priceBigDecimal,
+        label = priceBigDecimal.formatPrice(2)
+    )
     val postedAt = DateUtil.getUTCInstant().minusMinutes(10)
+    val orderId = OrderIdDomain("10")
+    val orderItemId = OrderIdDomain("B1")
 
     MarvelXTheme {
         ListingDetailsScreen(
@@ -741,12 +823,9 @@ private fun ListingDetailsScreenPreview() {
                         label = "Very Good"
                     ),
                     status = ListingStatusUi.Active,
-                    title = "Rare 2005 Spider-Man Limited Edition Mug",
+                    title = title,
                     description = "Exclusive 2005 edition Spider-Man mug. It is of high quality.",
-                    price = BigDecimalUi(
-                        value = price,
-                        label = price.formatPrice(2)
-                    ),
+                    price = price,
                     coverImageUrl = "https://backend.alexandrosvoliotis.com/api/private/marvelx/user/1/profile-image",
                     imageUrls = listOf("https://backend.alexandrosvoliotis.com/api/private/marvelx/user/2/profile-image"),
                     details = ListingDetailsDomain.ArtDetailsDomain(
@@ -787,7 +866,10 @@ private fun ListingDetailsScreenPreview() {
                     favorite = false,
                     cart = true,
                     canEdit = false,
-                    orderIds = null
+                    orderIds = ListingOrderIdsDomain(
+                        orderId = orderId,
+                        orderItemId = orderItemId
+                    )
                 ),
                 sellerProfileDetails = ProfileDetailsDomain(
                     basicProfileDetails = BasicProfileDetailsDomain(
@@ -812,6 +894,14 @@ private fun ListingDetailsScreenPreview() {
                         listingsCount = 1,
                         favoritesCount = 2
                     )
+                ),
+                listingOrderItem = OrderItemUi(
+                    orderItemId = orderItemId,
+                    sellerUserId = "2",
+                    title = title,
+                    coverImageUrl = "https://backend.alexandrosvoliotis.com/api/private/marvelx/user/1/profile-image",
+                    status = OrderItemStatusUi.OutForDelivery,
+                    price = price,
                 )
             ),
             effect = SingleObserverFlow(emptyFlow()),
