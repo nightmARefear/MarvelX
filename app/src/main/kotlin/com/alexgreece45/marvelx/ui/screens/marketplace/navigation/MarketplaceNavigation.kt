@@ -52,7 +52,7 @@ internal fun NavGraphBuilder.marketplaceScreen(
                 }
             },
             bottomNavigationBarData = bottomNavigationBarData,
-            snackbarEffects = viewModel.snackbarEffects,
+            snackbarEvents = viewModel.snackbarEffects,
             messageBannerEvents = viewModel.messageBannerEvents
         )
     }

@@ -3,7 +3,7 @@ package com.alexgreece45.marvelx.common_ui.snackbar.delegate
 import androidx.compose.material.SnackbarDuration
 import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarActionData
 import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarActionType
-import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarEffect
+import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarEvent
 import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarNavigationPayload
 import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarStateData
 import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarType
@@ -14,34 +14,39 @@ import org.koin.core.annotation.Factory
 import java.util.UUID
 
 interface SnackbarDelegate {
-    val snackbarEffects: SingleObserverFlow<SnackbarEffect>
+    val snackbarEffects: SingleObserverFlow<SnackbarEvent>
 
     fun showSuccessSnackbar(
         message: String,
+        maxMessageLines: Int = 2,
         duration: SnackbarDuration = SnackbarDuration.Short,
         snackbarActionData: SnackbarActionData? = null
     )
 
     fun showErroneousSnackbar(
         errorMessage: String,
+        maxErrorMessageLines: Int = 2,
         duration: SnackbarDuration = SnackbarDuration.Short,
         snackbarActionData: SnackbarActionData? = null
     )
 
     fun showInfoSnackbar(
         message: String,
+        maxMessageLines: Int = 2,
         duration: SnackbarDuration = SnackbarDuration.Short,
         snackbarActionData: SnackbarActionData? = null
     )
 
     fun showWarningSnackbar(
         message: String,
+        maxMessageLines: Int = 2,
         duration: SnackbarDuration = SnackbarDuration.Short,
         snackbarActionData: SnackbarActionData? = null
     )
 
     fun showCustomSnackbar(
         message: String,
+        maxMessageLines: Int = 2,
         type: SnackbarType,
         duration: SnackbarDuration = SnackbarDuration.Short,
         snackbarActionData: SnackbarActionData? = null
@@ -53,17 +58,19 @@ interface SnackbarDelegate {
 @Factory(binds = [SnackbarDelegate::class])
 internal class SnackbarDelegateImpl : SnackbarDelegate {
 
-    private val _snackbarEffects: Channel<SnackbarEffect> =
+    private val _snackbarEffects: Channel<SnackbarEvent> =
         Channel(capacity = 1) // TODO: Review case where more than one snackbar is queued (hint: it's not).
-    override val snackbarEffects: SingleObserverFlow<SnackbarEffect> =
+    override val snackbarEffects: SingleObserverFlow<SnackbarEvent> =
         _snackbarEffects.receiveAsSingleObserverFlow()
 
     override fun showSuccessSnackbar(
         message: String,
+        maxMessageLines: Int,
         duration: SnackbarDuration,
         snackbarActionData: SnackbarActionData?
     ) = showSnackbar(
         message = message,
+        maxMessageLines = maxMessageLines,
         type = SnackbarType.SUCCESS,
         duration = duration,
         actionData = snackbarActionData
@@ -71,10 +78,12 @@ internal class SnackbarDelegateImpl : SnackbarDelegate {
 
     override fun showErroneousSnackbar(
         errorMessage: String,
+        maxErrorMessageLines: Int,
         duration: SnackbarDuration,
         snackbarActionData: SnackbarActionData?
     ) = showSnackbar(
         message = errorMessage,
+        maxMessageLines = maxErrorMessageLines,
         type = SnackbarType.ERROR,
         duration = duration,
         actionData = snackbarActionData
@@ -82,10 +91,12 @@ internal class SnackbarDelegateImpl : SnackbarDelegate {
 
     override fun showInfoSnackbar(
         message: String,
+        maxMessageLines: Int,
         duration: SnackbarDuration,
         snackbarActionData: SnackbarActionData?
     ) = showSnackbar(
         message = message,
+        maxMessageLines = maxMessageLines,
         type = SnackbarType.INFO,
         duration = duration,
         actionData = snackbarActionData
@@ -93,10 +104,12 @@ internal class SnackbarDelegateImpl : SnackbarDelegate {
 
     override fun showWarningSnackbar(
         message: String,
+        maxMessageLines: Int,
         duration: SnackbarDuration,
         snackbarActionData: SnackbarActionData?
     ) = showSnackbar(
         message = message,
+        maxMessageLines = maxMessageLines,
         type = SnackbarType.WARNING,
         duration = duration,
         actionData = snackbarActionData
@@ -104,11 +117,13 @@ internal class SnackbarDelegateImpl : SnackbarDelegate {
 
     override fun showCustomSnackbar(
         message: String,
+        maxMessageLines: Int,
         type: SnackbarType,
         duration: SnackbarDuration,
         snackbarActionData: SnackbarActionData?
     ) = showSnackbar(
         message = message,
+        maxMessageLines = maxMessageLines,
         type = type,
         duration = duration,
         actionData = snackbarActionData
@@ -131,6 +146,7 @@ internal class SnackbarDelegateImpl : SnackbarDelegate {
 
     private fun showSnackbar(
         message: String,
+        maxMessageLines: Int,
         type: SnackbarType,
         duration: SnackbarDuration,
         actionData: SnackbarActionData?
@@ -139,15 +155,16 @@ internal class SnackbarDelegateImpl : SnackbarDelegate {
         val snackbarStateData = SnackbarStateData(
             uuid = newUuid,
             message = message,
+            maxMessageLines = maxMessageLines,
             type = type,
             duration = duration,
             actionData = actionData,
             onDismiss = { dismissSnackbar(newUuid) }
         )
-        _snackbarEffects.trySend(SnackbarEffect.Show(snackbarStateData))
+        _snackbarEffects.trySend(SnackbarEvent.Show(snackbarStateData))
     }
 
     private fun dismissSnackbar(uuid: UUID) {
-        _snackbarEffects.trySend(SnackbarEffect.OnDismissed(uuid))
+        _snackbarEffects.trySend(SnackbarEvent.OnDismissed(uuid))
     }
 }

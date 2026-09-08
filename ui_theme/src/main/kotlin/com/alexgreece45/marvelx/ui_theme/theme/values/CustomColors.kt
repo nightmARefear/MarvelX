@@ -43,7 +43,7 @@ data class CustomColors(
     val warningStatusContainerColors: StatusContainerColors,
     val errorStatusContainerColors: StatusContainerColors,
     val successStatusContainerColors: StatusContainerColors,
-    val creamWhite: Color,
+    val earthGray: Color,
 )
 
 /**
@@ -179,7 +179,7 @@ internal fun customLightColors() = CustomColors(
         outlineColor = Color(0x4D21F33D),
         contentColor = Color(0xFF21F33D)
     ),
-    creamWhite = Color(0xFFFFFDD0),
+    earthGray = Color(0xFF81806A),
 )
 
 /**
@@ -259,7 +259,7 @@ internal fun customDarkColors() = CustomColors(
         outlineColor = Color(0x4D21F33D),
         contentColor = Color(0xFF21F33D)
     ),
-    creamWhite = Color(0xFFFFFDD0),
+    earthGray = Color(0xFF81806A),
 )
 
 val LocalCustomColors = staticCompositionLocalOf { customLightColors() }

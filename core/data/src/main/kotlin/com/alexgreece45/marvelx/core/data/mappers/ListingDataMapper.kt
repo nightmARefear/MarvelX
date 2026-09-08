@@ -82,6 +82,7 @@ internal class ListingDataMapper(
                 coverImageUrl = coverImageUrl,
                 imageUrls = imageUrls,
                 details = listingDetails,
+                finalSale = finalSale,
                 postedAt = postedAt,
                 updatedAt = updatedAt,
                 favorite = favorite,

@@ -29,7 +29,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarEffect
+import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarEvent
 import com.alexgreece45.marvelx.common_ui.util.ObserveUiEffect
 import com.alexgreece45.marvelx.common_ui.util.safeLetComposable
 import com.alexgreece45.marvelx.core.common.extensions.minusMinutes
@@ -82,7 +82,7 @@ internal fun ListingDetailsScreen(
     onEvent: (ListingDetailsContract.Event) -> Unit,
     state: ListingDetailsContract.State,
     effect: SingleObserverFlow<ListingDetailsContract.Effect>,
-    snackbarEffects: SingleObserverFlow<SnackbarEffect>,
+    snackbarEffects: SingleObserverFlow<SnackbarEvent>,
     onNavigation: (ListingDetailsContract.Effect.Navigation) -> Unit,
     listingId: String?,
     createListingWizardMode: CreateListingWizardMode?,
@@ -133,7 +133,7 @@ internal fun ListingDetailsScreen(
                 )
             }
         },
-        snackbarEffects = snackbarEffects,
+        snackbarEvents = snackbarEffects,
         stickyBottom = {
             safeLetComposable(state.listing, state.mode) { listing, mode ->
                 if (mode == ListingDetailsMode.EXISTING) {

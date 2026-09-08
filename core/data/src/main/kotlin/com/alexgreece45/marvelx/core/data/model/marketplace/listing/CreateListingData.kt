@@ -11,5 +11,6 @@ data class CreateListingData(
     val categoryCode: String,
     val subcategoryCode: String,
     val conditionCode: String,
-    val price: BigDecimal
+    val price: BigDecimal,
+    val finalSale: Boolean
 )

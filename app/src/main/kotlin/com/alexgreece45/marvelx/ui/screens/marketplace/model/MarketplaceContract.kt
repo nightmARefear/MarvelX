@@ -1,11 +1,11 @@
 package com.alexgreece45.marvelx.ui.screens.marketplace.model
 
 import com.alexgreece45.marvelx.core.data.model.marketplace.ListingSort
+import com.alexgreece45.marvelx.data.model.marketplace.listing.EnumGeneric
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
 import com.alexgreece45.marvelx.ui.model_generic.UiState
-import kotlinx.collections.immutable.persistentListOf
 
 internal sealed interface MarketplaceContract {
 
@@ -19,7 +19,7 @@ internal sealed interface MarketplaceContract {
         sealed class Listing(open val listingId: String) : Event {
             data class OnClicked(override val listingId: String) : Listing(listingId)
             data class OnFavoriteClicked(override val listingId: String) : Listing(listingId)
-            data class OnComparisonClicked(override val listingId: String) : Listing(listingId)
+            data class OnComparisonClicked(override val listingId: String, val category: EnumGeneric) : Listing(listingId)
             data class OnCartClicked(override val listingId: String) : Listing(listingId)
         }
 
@@ -29,9 +29,13 @@ internal sealed interface MarketplaceContract {
             data object OnDeleteIconClicked : SearchBar
         }
 
+        data object OnComparisonStatusContainerButtonClicked : Event
+
         data object OnSortChipClicked : Event
         data object OnFiltersChipClicked : Event
         data object OnLayoutChangeButtonClicked : Event
+
+        data class OnActiveCategoryDeleteIconClicked(val deletedCategory: EnumGeneric) : Event
 
         sealed interface SortByBottomSheet : Event {
             data object OnCloseButtonClicked : SortByBottomSheet
@@ -49,7 +53,7 @@ internal sealed interface MarketplaceContract {
             data object OnShareButtonClicked : ComparisonBottomSheet
             data class OnListingClicked(val listingId: String) : ComparisonBottomSheet
             data class OnListingDeleteButtonClicked(val listingId: String) : ComparisonBottomSheet
-            data object OnScrolled : ComparisonBottomSheet
+            data class OnScrolled(val page: Int) : ComparisonBottomSheet
         }
 
         sealed interface Filter : Event {
@@ -99,27 +103,10 @@ internal sealed interface MarketplaceContract {
         val activeSort: ListingSort = ListingSort.DATE_POSTED_DESCENDING,
         // -- END OF `Searching` --
 
-        val comparisonListings: List<FilteredListingUi> = persistentListOf(),
-        val currentCarouselPageIndex: Int = 0,
+        val comparison: MarketplaceComparisonUi = MarketplaceComparisonUi(),
 
         val bottomSheetType: MarketplaceBottomSheetType? = null,
-    ) : BaseState {
-
-        val carouselPageCount: Int
-            get() = comparisonListings.size.let { count ->
-                if (count > 1) count - 1 else 1
-            }
-
-        val currentCarouselItemIndices: Pair<Int?, Int?>
-            get() = when (val comparisonListingsCount = comparisonListings.size) {
-                0 -> Pair(null, null)
-                1 -> Pair(0, null)
-                else -> Pair(
-                    first = comparisonListingsCount - 2,
-                    second = comparisonListingsCount - 1
-                )
-            }
-    }
+    ) : BaseState
 
     sealed interface Effect : BaseEffect {
         sealed interface Navigation : Effect {
@@ -146,5 +133,7 @@ internal sealed interface MarketplaceContract {
         data object ShowBottomSheet : Effect
 
         data object RequestSearchBarFieldFocus : Effect
+
+        data class ShowToastMessage(val message: String) : Effect
     }
 }

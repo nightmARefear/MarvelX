@@ -76,7 +76,7 @@ import com.alexgreece45.marvelx.common_ui.components.statusContainer.InfoContain
 import com.alexgreece45.marvelx.common_ui.components.statusContainer.StatusContainer
 import com.alexgreece45.marvelx.common_ui.extensions.clickableNoRipple
 import com.alexgreece45.marvelx.common_ui.previewAnnotation.ThemePreview
-import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarEffect
+import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarEvent
 import com.alexgreece45.marvelx.common_ui.util.ObserveUiEffect
 import com.alexgreece45.marvelx.common_ui.util.safeLetComposable
 import com.alexgreece45.marvelx.core.common.extensions.defaultFormat
@@ -151,7 +151,7 @@ internal fun RequestItemReturnScreen(
     state: RequestItemReturnContract.State,
     effect: SingleObserverFlow<RequestItemReturnContract.Effect>,
     onNavigationEffect: (RequestItemReturnContract.Effect.Navigation) -> Unit,
-    snackbarEffects: SingleObserverFlow<SnackbarEffect>
+    snackbarEffects: SingleObserverFlow<SnackbarEvent>
 ) {
     val context = LocalContext.current
 
@@ -244,7 +244,7 @@ internal fun RequestItemReturnScreen(
             onBack = { onEvent(RequestItemReturnContract.Event.OnBack) },
             showToolbar = true,
             toolbarTitle = state.toolbarTitle,
-            snackbarEffects = snackbarEffects,
+            snackbarEvents = snackbarEffects,
             stickyBottom = {
                 if (state.isStickyBottomButtonVisible) {
                     Column(

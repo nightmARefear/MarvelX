@@ -50,7 +50,7 @@ import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.common_ui.previewAnnotation.ThemePreview
-import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarEffect
+import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarEvent
 import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarNavigationPayload
 import com.alexgreece45.marvelx.common_ui.util.ObserveUiEffect
 import com.alexgreece45.marvelx.common_ui.util.ObserveUiState
@@ -100,7 +100,7 @@ internal fun ProfileDetailsScreen(
     onEventSent: (ProfileDetailsContract.Event) -> Unit,
     state: ProfileDetailsContract.State,
     effect: SingleObserverFlow<ProfileDetailsContract.Effect>,
-    snackbarEffects: SingleObserverFlow<SnackbarEffect>,
+    snackbarEffects: SingleObserverFlow<SnackbarEvent>,
     userId: String,
     shouldShowAcceptFriendRequestDialog: Boolean,
     onNavigation: (ProfileDetailsContract.Effect.Navigation) -> Unit,
@@ -236,7 +236,7 @@ internal fun ProfileDetailsScreen(
                     )
                 )
             },
-            snackbarEffects = snackbarEffects,
+            snackbarEvents = snackbarEffects,
         ) { paddingValues ->
             Column(
                 modifier = Modifier

@@ -6,6 +6,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
@@ -35,6 +36,7 @@ import androidx.compose.ui.unit.dp
  * @param innerPadding The padding applied uniformly inside the status box container. Defaults to [StatusContainerDefaults.innerPadding].
  * @param horizontalArrangement The horizontal arrangement applied to the row containing the [icon] and [title]. Defaults to [StatusContainerDefaults.horizontalArrangement].
  * @param verticalAlignment The vertical alignment applied to the row containing the [icon] and [title]. Defaults to [StatusContainerDefaults.verticalAlignment].
+ * @param extraTitleContent An optional composable slot for displaying additional layout elements at the end of the main title row.
  * @param extraContent An optional composable slot for displaying additional layout elements below the main title row.
  */
 @Composable
@@ -49,6 +51,7 @@ fun StatusContainer(
     innerPadding: Dp = StatusContainerDefaults.innerPadding,
     horizontalArrangement: Arrangement.Horizontal = StatusContainerDefaults.horizontalArrangement,
     verticalAlignment: Alignment.Vertical = StatusContainerDefaults.verticalAlignment,
+    extraTitleContent: (@Composable () -> Unit)? = null,
     extraContent: (@Composable () -> Unit)? = null
 ) {
     Column(
@@ -73,16 +76,24 @@ fun StatusContainer(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Row(
-            horizontalArrangement = horizontalArrangement,
-            verticalAlignment = verticalAlignment
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            icon?.invoke()
+            Row(
+                horizontalArrangement = horizontalArrangement,
+                verticalAlignment = verticalAlignment
+            ) {
+                icon?.invoke()
 
-            Text(
-                text = title,
-                color = titleColor,
-                style = MaterialTheme.typography.h6
-            )
+                Text(
+                    text = title,
+                    color = titleColor,
+                    style = MaterialTheme.typography.h6
+                )
+            }
+
+            extraTitleContent?.invoke()
         }
 
         extraContent?.invoke()

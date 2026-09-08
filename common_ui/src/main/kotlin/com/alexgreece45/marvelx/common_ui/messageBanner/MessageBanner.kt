@@ -25,6 +25,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.fromHtml
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -154,7 +156,7 @@ private fun MessageBannerContent(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = messageBannerData.message,
+                text = AnnotatedString.fromHtml(htmlString = messageBannerData.message), // We use an annotated string here in case styled text is provided.
                 overflow = TextOverflow.Ellipsis,
                 maxLines = 2
             )

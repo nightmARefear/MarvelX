@@ -158,7 +158,7 @@ internal class MainActivity : AppCompatActivity() {
                     NavGraph(navController = navController)
 
                     // TODO: To be removed.
-                    /*Box(
+                    Box(
                         modifier = Modifier
                             .fillMaxSize()
                             .safeDrawingPadding(),
@@ -184,7 +184,7 @@ internal class MainActivity : AppCompatActivity() {
                                 tint = MaterialTheme.customColors.white
                             )
                         }
-                    }*/
+                    }
 
                     ChuckerPermissions()
 

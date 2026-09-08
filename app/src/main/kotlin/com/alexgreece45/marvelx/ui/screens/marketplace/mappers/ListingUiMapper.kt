@@ -1,6 +1,7 @@
 package com.alexgreece45.marvelx.ui.screens.marketplace.mappers
 
 import com.alexgreece45.marvelx.configuration.ConfigPriceLogic
+import com.alexgreece45.marvelx.core.common.extensions.formatPrice
 import com.alexgreece45.marvelx.core.common.extensions.toListingFormat
 import com.alexgreece45.marvelx.core.common.logger.AppLogger
 import com.alexgreece45.marvelx.data.model.marketplace.listing.EnumGeneric
@@ -15,7 +16,6 @@ import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.model
 import com.alexgreece45.marvelx.ui.screens.marketplace.model.ListingUi
 import com.alexgreece45.marvelx.ui.screens.marketplace.model.toUi
 import com.alexgreece45.marvelx.util.DateUtil
-import com.alexgreece45.marvelx.core.common.extensions.formatPrice
 
 // TODO: Revisit in future.
 class ListingUiMapper(
@@ -110,6 +110,7 @@ class ListingUiMapper(
                         coverImageUrl = attachedImages.first().uri.toString(),
                         imageUrls = attachedImages.drop(1).map { it.uri.toString() },
                         details = listingDetailsUiMapper.toDomain(listingDetails!!)!!,
+                        finalSale = finalSale,
                         postedAt = DateUtil.getUTCInstant(),
                         updatedAt = null,
                         favorite = false,

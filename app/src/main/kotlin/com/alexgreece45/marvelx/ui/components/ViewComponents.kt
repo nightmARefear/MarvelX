@@ -123,7 +123,7 @@ import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.common_ui.messageBanner.MessageBanner
 import com.alexgreece45.marvelx.common_ui.messageBanner.model.MessageBannerEvent
 import com.alexgreece45.marvelx.common_ui.snackbar.MarvelXSnackbar
-import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarEffect
+import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarEvent
 import com.alexgreece45.marvelx.core.common.util.flows.single_observer_flow.SingleObserverFlow
 import com.alexgreece45.marvelx.ui.components.model.ErrorButtonType
 import com.alexgreece45.marvelx.ui_theme.theme.values.customColors
@@ -500,7 +500,7 @@ data class ExtendedFabData(
  * `null`.
  * @param toolbarActionsContent The composable function to display as the toolbar actions.
  * [toolbarActions] must be `null`.
- * @param snackbarEffects Snackbar-related flow.
+ * @param snackbarEvents Snackbar-related flow.
  * @param paddingValues The padding values to apply on top of the scaffold's ones. Provide a non-null
  * value to override the default padding values that are provided within this composable.
  * @param isInnerScreen Whether this screen is an inner-screen. If `true`, then system bar and
@@ -517,7 +517,7 @@ fun ContentScreen(
     toolbarActionsContent: (@Composable RowScope.() -> Unit)? = null,
     bottomBarData: BottomBarData? = null,
     bottomNavigationBarData: BottomNavigationBarData? = null,
-    snackbarEffects: SingleObserverFlow<SnackbarEffect> = SingleObserverFlow(emptyFlow()),
+    snackbarEvents: SingleObserverFlow<SnackbarEvent> = SingleObserverFlow(emptyFlow()),
     messageBannerEvents: SingleObserverFlow<MessageBannerEvent> = SingleObserverFlow(emptyFlow()),
     fabData: FabData? = null,
     stickyBottom: @Composable (BoxScope.() -> Unit)? = null,
@@ -560,7 +560,7 @@ fun ContentScreen(
         },
         snackbarHost = {
             MarvelXSnackbar(
-                snackbarEffects = snackbarEffects,
+                snackbarEffects = snackbarEvents,
                 modifier = if (bottomNavigationBarData == null) Modifier.navigationBarsPadding() else Modifier
             )
         },

@@ -23,7 +23,7 @@ internal fun MarketplaceSearchCriteria.toDomain(): MarketplaceSearchCriteriaDoma
         maxPrice = maxPrice?.toBigDecimal(),
         datePosted = datePosted,
         datedPostedCustomRange = datedPostedCustomRange?.toDomain(),
-        isFinalSale = isFinalSale
+        isFinalSale = finalSale
     )
 
 internal fun MarketplaceSearchCriteriaDomain.toData(formatPrice: (BigDecimal?) -> String?): MarketplaceSearchCriteria =
@@ -39,5 +39,5 @@ internal fun MarketplaceSearchCriteriaDomain.toData(formatPrice: (BigDecimal?) -
                 to = datedPostedCustomRange.to.toString()
             )
         },
-        isFinalSale = isFinalSale
+        finalSale = isFinalSale
     )

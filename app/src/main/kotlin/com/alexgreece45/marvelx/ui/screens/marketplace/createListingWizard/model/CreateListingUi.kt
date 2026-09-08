@@ -17,7 +17,8 @@ data class CreateListingUi(
     val subcategory: ListingSubcategory? = null,
     val listingDetails: ListingDetailsUi? = null,
     val condition: EnumGeneric = EnumGeneric("", ""),
-    val price: BigDecimal = BigDecimal.ZERO
+    val price: BigDecimal = BigDecimal.ZERO,
+    val finalSale: Boolean = false
 )
 
 internal fun CreateListingUi.toDomain(
@@ -32,5 +33,6 @@ internal fun CreateListingUi.toDomain(
         subcategoryId = subcategory?.id ?: -1,
         listingDetailsDomain = listingDetailsDomain,
         conditionCode = condition.code,
-        price = price
+        price = price,
+        finalSale = finalSale
     )

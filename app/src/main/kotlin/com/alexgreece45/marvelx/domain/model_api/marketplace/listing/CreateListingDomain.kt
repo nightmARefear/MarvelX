@@ -13,7 +13,8 @@ data class CreateListingDomain(
     val subcategoryId: Int,
     val listingDetailsDomain: ListingDetailsDomain,
     val conditionCode: String,
-    val price: BigDecimal
+    val price: BigDecimal,
+    val finalSale: Boolean
 )
 
 internal fun CreateListingDomain.toData(): CreateListingData =
@@ -25,5 +26,6 @@ internal fun CreateListingDomain.toData(): CreateListingData =
         categoryCode = categoryId.toString(),
         subcategoryCode = subcategoryId.toString(),
         conditionCode = conditionCode,
-        price = price
+        price = price,
+        finalSale = finalSale
     )

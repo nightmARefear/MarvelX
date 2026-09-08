@@ -31,7 +31,7 @@ import com.alexgreece45.marvelx.common_ui.extensions.hideSnackbar
 import com.alexgreece45.marvelx.common_ui.extensions.showSnackbarAndHandleResult
 import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarActionData
 import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarActionType
-import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarEffect
+import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarEvent
 import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarStateData
 import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarType
 import com.alexgreece45.marvelx.common_ui.util.ObserveUiEffect
@@ -42,7 +42,7 @@ import kotlin.math.roundToInt
 
 @Composable
 fun MarvelXSnackbar(
-    snackbarEffects: SingleObserverFlow<SnackbarEffect>,
+    snackbarEffects: SingleObserverFlow<SnackbarEvent>,
     modifier: Modifier
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
@@ -52,7 +52,7 @@ fun MarvelXSnackbar(
 
     ObserveUiEffect(flow = snackbarEffects, tag = "MarvelXSnackbar") { snackbarEffect ->
         when (snackbarEffect) {
-            is SnackbarEffect.Show -> {
+            is SnackbarEvent.Show -> {
                 currentSnackbarData = snackbarEffect.snackbarStateData
 
                 coroutineScope.launch {
@@ -60,7 +60,7 @@ fun MarvelXSnackbar(
                 }
             }
 
-            is SnackbarEffect.OnDismissed -> {
+            is SnackbarEvent.OnDismissed -> {
                 if (snackbarEffect.uuid == currentSnackbarData?.uuid) {
                     currentSnackbarData = null
                 }
@@ -115,12 +115,14 @@ private fun MarvelXSnackbarContent(snackbarStateData: SnackbarStateData, hideSna
             if (snackbarStateData.actionData != null) {
                 ActionSnackbar(
                     message = snackbarStateData.message,
+                    maxMessageLines = snackbarStateData.maxMessageLines,
                     actionData = snackbarStateData.actionData,
                     hideSnackbar = hideSnackbar
                 )
             } else {
                 MessageSnackbar(
                     message = snackbarStateData.message,
+                    maxMessageLines = snackbarStateData.maxMessageLines,
                     modifier = Modifier.padding(vertical = 16.dp)
                 )
             }
@@ -136,6 +138,7 @@ private fun MarvelXSnackbarContent(snackbarStateData: SnackbarStateData, hideSna
 @Composable
 private fun ActionSnackbar(
     message: String,
+    maxMessageLines: Int,
     actionData: SnackbarActionData,
     hideSnackbar: () -> Unit
 ) {
@@ -145,6 +148,7 @@ private fun ActionSnackbar(
     ) {
         MessageSnackbar(
             message = message,
+            maxMessageLines = maxMessageLines,
             modifier = Modifier.weight(1f)
         )
 
@@ -169,12 +173,12 @@ private fun ActionSnackbar(
  * @see ActionSnackbar
  */
 @Composable
-private fun MessageSnackbar(message: String, modifier: Modifier) {
+private fun MessageSnackbar(message: String, maxMessageLines: Int, modifier: Modifier) {
     return Text(
         text = message,
         modifier = modifier,
         overflow = TextOverflow.Ellipsis,
-        maxLines = 2,
+        maxLines = maxMessageLines,
         style = MaterialTheme.typography.h6
     )
 }

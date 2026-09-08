@@ -4,6 +4,10 @@
 
     <string name="screen_marketplace_search_bar_hint">Rare 2005 Spider-Man Limited Edition Mug</string>
 
+    <string name="screen_marketplace_listings_for_comparison_title">Comparing %1$s (%2$s)</string>
+    <string name="screen_marketplace_listings_for_comparison_button">Show</string>
+    <string name="screen_marketplace_listings_for_comparison_last_removed">The last listing for comparison was removed</string>
+
     <string name="screen_marketplace_filtered_listing_remove_from_cart_button">Remove from cart</string>
 
     <string name="screen_marketplace_filtered_listing_added_to_favorites_success">Added to favorites</string>
@@ -14,6 +18,9 @@
 
     <string name="screen_marketplace_filtered_listing_added_to_comparison_success">Added to comparison list</string>
     <string name="screen_marketplace_filtered_listing_removed_from_comparison_success">Removed from comparison list</string>
+    <string name="screen_marketplace_filtered_listing_added_to_comparison_ineligible_title">You can only compare %1$s listings. Clear the comparison to start with %2$s.</string>
+    <string name="screen_marketplace_filtered_listing_added_to_comparison_ineligible_button">Start New</string>
+    <string name="screen_marketplace_filtered_listing_added_to_comparison_ineligible_action_executed_message">Comparing %1$s now</string>
 
     <string name="screen_marketplace_filtered_listing_image_action_button_success_message_banner_label">Show</string>
 
@@ -21,6 +28,8 @@
     <string name="screen_marketplace_sort_price_descending_label">Price Descending</string>
     <string name="screen_marketplace_sort_date_posted_ascending_label">Oldest First</string>
     <string name="screen_marketplace_sort_date_posted_descending_label">Newest First</string>
+
+    <string name="screen_marketplace_message_category_filter_removed">Removed &lt;b&gt;%1$s&lt;/b&gt; category filter</string>
 
     <string name="screen_marketplace_filters_label">Filters</string>
 
@@ -61,7 +70,7 @@
     <string name="screen_marketplace_sort_bottom_sheet_item_date_posted_ascending_label">Oldest First</string>
     <string name="screen_marketplace_sort_bottom_sheet_item_date_posted_descending_label">Newest First</string>
 
-    <string name="screen_marketplace_comparison_bottom_sheet_title">Listings comparison (%1$s)</string>
+    <string name="screen_marketplace_comparison_bottom_sheet_title">%1$s comparison (%2$s)</string>
 
     <string name="screen_marketplace_generic_error_message">An error occurred whilst loading the listings.</string>
 
@@ -85,11 +94,12 @@
     <string name="screen_marketplace_error_sharing_comparison_listings">No listings</string>
 
     <string name="screen_marketplace_content_description_listing">listing image: %1$s</string>
-    <string name="screen_marketplace_content_description_close_sort_by_bottom_sheet_icon">close sort by bottom sheet icon</string>
-    <string name="screen_marketplace_content_description_close_filter_menu_bottom_sheet_icon">close filter menu bottom sheet icon</string>
-    <string name="screen_marketplace_content_description_close_comparison_bottom_sheet_icon">close comparison bottom sheet icon</string>
-    <string name="screen_marketplace_content_description_change_to_grid_view_button">change to grid view button</string>
-    <string name="screen_marketplace_content_description_change_to_list_view_button">change to list view button</string>
-    <string name="screen_marketplace_content_description_remove_listing_from_comparison">remove listing from comparison button</string>
-    <string name="screen_marketplace_content_description_share_comparison_listings">share comparison listings icon</string>
+    <string name="screen_marketplace_content_description_close_sort_by_bottom_sheet_icon">close sort by bottom sheet</string>
+    <string name="screen_marketplace_content_description_close_filter_menu_bottom_sheet_icon">close filter menu bottom sheet</string>
+    <string name="screen_marketplace_content_description_close_comparison_bottom_sheet_icon">close comparison bottom sheet</string>
+    <string name="screen_marketplace_content_description_change_to_grid_view_button">change to grid view</string>
+    <string name="screen_marketplace_content_description_change_to_list_view_button">change to list view</string>
+    <string name="screen_marketplace_content_description_remove_listing_from_comparison">remove listing from comparison</string>
+    <string name="screen_marketplace_content_description_share_comparison_listings">share comparison listings</string>
+    <string name="screen_marketplace_content_description_remove_category">Remove %1$s category</string>
 </resources>

@@ -7,5 +7,5 @@ data class MarketplaceSearchCriteria(
     val maxPrice: String?,
     val datePosted: ListingDateRangeOption,
     val datedPostedCustomRange: ListingDatePostedCustomRange? = null,
-    val isFinalSale: Boolean
+    val finalSale: Boolean
 )

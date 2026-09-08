@@ -42,6 +42,7 @@ fun LoadingChip(
         onClick = {
             if (!isLoading) onClick()
         },
+        colors = colors,
         leadingIcon = {
             if (isLoading) {
                 CircularProgressIndicator(
@@ -57,10 +58,10 @@ fun LoadingChip(
                 )
             }
         },
-        colors = colors
-    ) {
-        Text(text = label)
-    }
+        content = {
+            Text(text = label)
+        }
+    )
 }
 
 @OptIn(ExperimentalMaterialApi::class)

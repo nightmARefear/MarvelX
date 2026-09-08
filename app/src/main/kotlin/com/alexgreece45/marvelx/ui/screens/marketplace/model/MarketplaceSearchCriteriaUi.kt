@@ -1,14 +1,12 @@
 package com.alexgreece45.marvelx.ui.screens.marketplace.model
 
-import com.alexgreece45.marvelx.common_ui.inputFieldValidator.model.InputFieldValidationResult
 import com.alexgreece45.marvelx.data.model.marketplace.listing.EnumGeneric
 import com.alexgreece45.marvelx.domain.model_api.marketplace.MarketplaceSearchCriteriaDomain
 import com.alexgreece45.marvelx.ui.model_generic.InputFieldUi
-import kotlinx.collections.immutable.persistentListOf
 
 internal data class MarketplaceSearchCriteriaUi(
-    val categories: List<SelectableOption<EnumGeneric>> = persistentListOf(),
-    val conditions: List<SelectableOption<EnumGeneric>> = persistentListOf(),
+    val categories: List<SelectableOption<EnumGeneric>> = emptyList(),
+    val conditions: List<SelectableOption<EnumGeneric>> = emptyList(),
     val priceRangeMin: InputFieldUi.Price = InputFieldUi.Price(isMandatory = false),
     val priceRangeMax: InputFieldUi.Price = InputFieldUi.Price(isMandatory = false),
 
@@ -27,8 +25,8 @@ internal data class MarketplaceSearchCriteriaUi(
             if (categories.any { it.isSelected }) count++
             if (conditions.any { it.isSelected }) count++
 
-            if (priceRangeMin.validationResult is InputFieldValidationResult.Success && !priceRangeMax.validationResult.isError
-                || priceRangeMax.validationResult is InputFieldValidationResult.Success && !priceRangeMin.validationResult.isError
+            if (priceRangeMin.value.isNotBlank() && !priceRangeMax.validationResult.isError
+                || priceRangeMax.value.isNotBlank() && !priceRangeMin.validationResult.isError
             ) count++
 
             if (datePosted != ListingDateRangeOptionUi.All) count++

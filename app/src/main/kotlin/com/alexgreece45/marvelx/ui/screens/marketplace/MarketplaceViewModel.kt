@@ -9,13 +9,14 @@ import com.alexgreece45.marvelx.common_ui.messageBanner.delegate.MessageBannerDe
 import com.alexgreece45.marvelx.common_ui.messageBanner.model.MessageBannerAction
 import com.alexgreece45.marvelx.common_ui.messageBanner.model.MessageBannerActionType
 import com.alexgreece45.marvelx.common_ui.snackbar.delegate.SnackbarDelegate
+import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarActionData
+import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarActionType
 import com.alexgreece45.marvelx.configuration.ConfigPriceLogic
 import com.alexgreece45.marvelx.controllers.TimerController
 import com.alexgreece45.marvelx.core.common.extensions.formatPrice
 import com.alexgreece45.marvelx.core.common.extensions.toCustomFormat
 import com.alexgreece45.marvelx.core.common.extensions.toEpochDays
 import com.alexgreece45.marvelx.core.common.extensions.toEpochMillis
-import com.alexgreece45.marvelx.core.common.extensions.toImmutableListOrEmpty
 import com.alexgreece45.marvelx.core.common.util.DateUtil
 import com.alexgreece45.marvelx.core.data.model.marketplace.ListingSort
 import com.alexgreece45.marvelx.data.model.marketplace.listing.EnumGeneric
@@ -37,6 +38,7 @@ import com.alexgreece45.marvelx.ui.screens.marketplace.model.FilteredListingUi
 import com.alexgreece45.marvelx.ui.screens.marketplace.model.ListingDatePostedCustomRangeUi
 import com.alexgreece45.marvelx.ui.screens.marketplace.model.ListingDateRangeOptionUi
 import com.alexgreece45.marvelx.ui.screens.marketplace.model.MarketplaceBottomSheetType
+import com.alexgreece45.marvelx.ui.screens.marketplace.model.MarketplaceComparisonUi
 import com.alexgreece45.marvelx.ui.screens.marketplace.model.MarketplaceContract
 import com.alexgreece45.marvelx.ui.screens.marketplace.model.MarketplaceListingsLayout
 import com.alexgreece45.marvelx.ui.screens.marketplace.model.MarketplaceMode
@@ -67,13 +69,13 @@ internal class MarketplaceViewModel(
     private val listingCategoryRepository: ListingCategoryRepository,
     private val listingDetailsRepository: ListingDetailsRepository,
     private val configPriceLogic: ConfigPriceLogic,
-    snackbarDelegate: SnackbarDelegate,
+    bottomSheetSnackbarDelegate: SnackbarDelegate,
     private val listingInteractor: ListingInteractor,
     private val filteredListingUiMapper: FilteredListingUiMapper,
     messageBannerDelegate: MessageBannerDelegate,
     private val cartInteractor: CartInteractor,
 ) : BaseViewModel<MarketplaceContract.Event, MarketplaceContract.State, MarketplaceContract.Effect>(),
-    SnackbarDelegate by snackbarDelegate,
+    SnackbarDelegate by bottomSheetSnackbarDelegate,
     MessageBannerDelegate by messageBannerDelegate {
 
     private var promoCarouselAutoScrollJob: Job? = null
@@ -101,7 +103,8 @@ internal class MarketplaceViewModel(
                     )
 
                     is MarketplaceContract.Event.Listing.OnComparisonClicked -> onListingComparisonClicked(
-                        listingId = event.listingId
+                        listingId = event.listingId,
+                        category = event.category
                     )
 
                     is MarketplaceContract.Event.Listing.OnCartClicked -> onListingAddToCartClicked(
@@ -117,9 +120,15 @@ internal class MarketplaceViewModel(
 
             MarketplaceContract.Event.SearchBar.OnDeleteIconClicked -> onSearchBarDeleteIconClicked()
 
+            MarketplaceContract.Event.OnComparisonStatusContainerButtonClicked -> onComparisonStatusContainerButtonClicked()
+
             MarketplaceContract.Event.OnSortChipClicked -> onSortChipClicked()
             MarketplaceContract.Event.OnFiltersChipClicked -> onFiltersChipClicked()
             MarketplaceContract.Event.OnLayoutChangeButtonClicked -> onLayoutChangeButtonClicked()
+
+            is MarketplaceContract.Event.OnActiveCategoryDeleteIconClicked -> onActiveCategoryDeleteIconClicked(
+                event.deletedCategory
+            )
 
             MarketplaceContract.Event.SortByBottomSheet.OnCloseButtonClicked -> onSortByCloseButtonClicked()
             is MarketplaceContract.Event.SortByBottomSheet.OnSortSelected -> onSortBySortSelected(
@@ -140,9 +149,11 @@ internal class MarketplaceViewModel(
                 event.listingId
             )
 
-            MarketplaceContract.Event.ComparisonBottomSheet.OnScrolled -> onComparisonBottomSheetScrolled()
+            is MarketplaceContract.Event.ComparisonBottomSheet.OnScrolled -> onComparisonBottomSheetScrolled(
+                page = event.page
+            )
 
-            is MarketplaceContract.Event.Filter.OnCategorySelected -> onFilterCategorySelected(event.code)
+            is MarketplaceContract.Event.Filter.OnCategorySelected -> onFilterCategorySelected(code = event.code)
             is MarketplaceContract.Event.Filter.OnConditionSelected -> onFilterConditionSelected(
                 event.code
             )
@@ -184,9 +195,10 @@ internal class MarketplaceViewModel(
                 copy(
                     mode = MarketplaceMode.DISCOVER,
                     listingsLayout = MarketplaceListingsLayout.GRID,
-                    searchUiState = UiState.Loading, // Revert to default state.
+                    searchUiState = UiState.Loading,
                     searchQuery = "",
                     activeSearchCriteria = getResetSearchCriteria(),
+                    comparison = MarketplaceComparisonUi(),
                     activeSort = ListingSort.DATE_POSTED_DESCENDING
                 )
             }
@@ -390,7 +402,58 @@ internal class MarketplaceViewModel(
         }
     }
 
-    private fun onListingComparisonClicked(listingId: String) {
+    private fun onListingComparisonClicked(listingId: String, category: EnumGeneric) {
+        val currentComparisonCategory = currentState.comparison.comparisonCategory
+        if (currentComparisonCategory != null && currentComparisonCategory.code != category.code) {
+            showInfoSnackbar(
+                message = resourceProvider.getString(
+                    R.string.screen_marketplace_filtered_listing_added_to_comparison_ineligible_title,
+                    currentComparisonCategory.label,
+                    category.label
+                ),
+                snackbarActionData = SnackbarActionData(
+                    label = resourceProvider.getString(R.string.screen_marketplace_filtered_listing_added_to_comparison_ineligible_button),
+                    actionType = SnackbarActionType.Custom(
+                        onAction = {
+                            var comparisonListing: FilteredListingUi? = null
+                            setState {
+                                copy(
+                                    searchUiState = if (searchUiState !is UiState.Success) searchUiState else searchUiState.copy(
+                                        data = searchUiState.data.map { filteredListing ->
+                                            if (filteredListing.listingId != listingId) {
+                                                filteredListing.copy(comparison = false)
+                                            } else {
+                                                comparisonListing =
+                                                    filteredListing.copy(comparison = true)
+                                                comparisonListing
+                                            }
+                                        }
+                                    ),
+                                    comparison = try {
+                                        MarketplaceComparisonUi(
+                                            listings = listOf(comparisonListing!!), // For some reason wrapping the variable inside a `when` and working on the non-null branch still provides a null version, so this solution is used. The null value is impossible anyways.
+                                            comparisonCategory = category,
+                                            currentCarouselPageIndex = 0
+                                        )
+                                    } catch (_: Exception) {
+                                        MarketplaceComparisonUi()
+                                    }
+                                )
+                            }
+                            showInfoSnackbar(
+                                message = resourceProvider.getString(
+                                    R.string.screen_marketplace_filtered_listing_added_to_comparison_ineligible_action_executed_message,
+                                    category.label
+                                ),
+                                maxMessageLines = 5
+                            )
+                        }
+                    )
+                )
+            )
+            return
+        }
+
         var wasListingAddedToComparison = false
         var listing: FilteredListingUi? = null
         setState {
@@ -405,7 +468,6 @@ internal class MarketplaceViewModel(
                         } else {
                             filteredListing
                         }
-
                     }
                 )
             )
@@ -414,16 +476,24 @@ internal class MarketplaceViewModel(
         if (wasListingAddedToComparison && listing != null) {
             setState {
                 copy(
-                    comparisonListings = buildList {
-                        addAll(comparisonListings)
-                        add(listing)
-                    }
+                    comparison = comparison.copy(
+                        listings = buildList {
+                            addAll(comparison.listings)
+                            add(listing)
+                        },
+                        comparisonCategory = category
+                    )
                 )
             }
         } else {
+            val comparisonListings =
+                currentState.comparison.listings.filterNot { it.listingId == listingId }
             setState {
                 copy(
-                    comparisonListings = comparisonListings.filterNot { it.listingId == listingId }
+                    comparison = comparison.copy(
+                        listings = comparisonListings,
+                        comparisonCategory = if (comparisonListings.isEmpty()) null else comparison.comparisonCategory
+                    )
                 )
             }
         }
@@ -584,6 +654,9 @@ internal class MarketplaceViewModel(
     private fun onSearchBarClicked() {
         setState {
             copy(
+                marketplaceUi = marketplaceUi?.copy(
+                    promo = marketplaceUi.promo?.copy(selectedListingIndex = 0)
+                ),
                 mode = MarketplaceMode.SEARCH
             )
         }
@@ -611,6 +684,10 @@ internal class MarketplaceViewModel(
         }
     }
 
+    private fun onComparisonStatusContainerButtonClicked() {
+        showBottomSheet(sheetType = MarketplaceBottomSheetType.COMPARISON)
+    }
+
     private fun onSortChipClicked() {
         showBottomSheet(MarketplaceBottomSheetType.SORT)
     }
@@ -628,6 +705,28 @@ internal class MarketplaceViewModel(
                 }
             )
         }
+    }
+
+    private fun onActiveCategoryDeleteIconClicked(deletedCategory: EnumGeneric) {
+        setState {
+            copy(
+                activeSearchCriteria = activeSearchCriteria.copy(
+                    categories = activeSearchCriteria.categories.map { category ->
+                        if (category.option.code == deletedCategory.code) {
+                            category.copy(isSelected = false)
+                        } else {
+                            category
+                        }
+                    }
+                )
+            )
+        }
+        showMessageBanner(
+            message = resourceProvider.getString(
+                R.string.screen_marketplace_message_category_filter_removed,
+                deletedCategory.label
+            )
+        )
     }
 
     private fun onFilterCategorySelected(code: String) {
@@ -772,7 +871,8 @@ internal class MarketplaceViewModel(
     private fun onBottomSheetDismissed() {
         setState {
             copy(
-                bottomSheetType = null
+                bottomSheetType = null,
+                comparison = comparison.copy(currentCarouselPageIndex = 0),// The carousel page index is reset so when the carousel is reopened, the user sees the first listings.
             )
         }
     }
@@ -805,9 +905,9 @@ internal class MarketplaceViewModel(
                 draftSearchCriteria = getResetSearchCriteria()
             )
         }
-        showInfoSnackbar(
-            message = resourceProvider.getString(R.string.screen_marketplace_filter_menu_negative_button_action_message)
-        )
+        setEffect {
+            MarketplaceContract.Effect.ShowToastMessage(resourceProvider.getString(R.string.screen_marketplace_filter_menu_negative_button_action_message))
+        }
     }
 
     private fun onFilterMenuPositiveButtonClicked() {
@@ -834,7 +934,7 @@ internal class MarketplaceViewModel(
     }
 
     private fun onComparisonBottomSheetShareButtonClicked() {
-        val listingIds = currentState.comparisonListings.map { it.listingId }
+        val listingIds = currentState.comparison.listings.map { it.listingId }
         if (listingIds.isEmpty()) {
             showMessageBanner(message = resourceProvider.getString(R.string.screen_marketplace_error_sharing_comparison_listings))
         } else {
@@ -851,25 +951,34 @@ internal class MarketplaceViewModel(
 
     private fun onComparisonBottomSheetListingDeleteButtonClicked(listingId: String) {
         val comparisonListings =
-            currentState.comparisonListings.filterNot { it.listingId == listingId }
-                .toImmutableListOrEmpty()
+            currentState.comparison.listings.filterNot { it.listingId == listingId }
         setState {
             copy(
-                comparisonListings = comparisonListings
+                searchUiState = if (searchUiState !is UiState.Success) searchUiState else searchUiState.copy(
+                    data = searchUiState.data.map { filteredListing ->
+                        if (filteredListing.listingId == listingId) {
+                            filteredListing.copy(comparison = false)
+                        } else {
+                            filteredListing
+                        }
+                    }
+                ),
+                comparison = comparison.copy(
+                    listings = comparisonListings,
+                    comparisonCategory = if (comparisonListings.isEmpty()) null else comparison.comparisonCategory
+                )
             )
         }
         if (comparisonListings.isEmpty()) {
             hideBottomSheet()
+            showMessageBanner(message = resourceProvider.getString(R.string.screen_marketplace_listings_for_comparison_last_removed))
         }
     }
 
-    private fun onComparisonBottomSheetScrolled() {
-        val newCarouselPageIndex = currentState.currentCarouselPageIndex + 1
-        if (newCarouselPageIndex >= currentState.carouselPageCount - 1) return
-
+    private fun onComparisonBottomSheetScrolled(page: Int) {
         setState {
             copy(
-                currentCarouselPageIndex = newCarouselPageIndex
+                comparison = comparison.copy(currentCarouselPageIndex = page)
             )
         }
     }
@@ -969,6 +1078,7 @@ internal class MarketplaceViewModel(
     }
 
     private fun initPromoCarouselAutoScroll() {
+        promoCarouselAutoScrollJob?.cancel() // Cancels previous job in order to avoid multiple jobs being present in the same time.
         promoCarouselAutoScrollJob = viewModelScope.launch {
             val delayMillis = 8000L
             timerController.startIndefiniteCountdown(
@@ -1010,7 +1120,7 @@ internal class MarketplaceViewModel(
                     )
                 }
                 .distinctUntilChanged()
-                .debounce(300.milliseconds)
+                .debounce(timeout = 300.milliseconds)
                 .collectLatest { _ -> getFilteredListings(isFromRefresh = false) }
         }
     }
@@ -1018,7 +1128,8 @@ internal class MarketplaceViewModel(
     private fun getFilteredListings(isFromRefresh: Boolean) {
         setState {
             copy(
-                searchUiState = UiState.Loading
+                searchUiState = UiState.Loading,
+                comparison = MarketplaceComparisonUi(),
             ).setIsRefreshing(isRefreshing = true, isFromRefresh = isFromRefresh)
         }
         viewModelScope.launch {
@@ -1031,7 +1142,7 @@ internal class MarketplaceViewModel(
                     )
                         .onSuccess { data ->
                             val filteredListingsUi = filteredListingUiMapper.toUiList(
-                                filteredListings = data
+                                listings = data
                             )
                             if (filteredListingsUi == null) {
                                 setState {
