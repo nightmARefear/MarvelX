@@ -111,8 +111,8 @@ internal class ListingRepositoryImpl(
             apiCall = {
                 listingClient.getFilteredListings(
                     searchQuery = searchQuery,
-                    categoryIds = searchCriteria.categoryIds,
-                    conditionIds = searchCriteria.conditionIds,
+                    categoryCodes = searchCriteria.categoryCodes,
+                    conditionCodes = searchCriteria.conditionCodes,
                     minPrice = searchCriteria.minPrice,
                     maxPrice = searchCriteria.maxPrice,
                     datePostedKey = searchCriteria.datePosted.key,

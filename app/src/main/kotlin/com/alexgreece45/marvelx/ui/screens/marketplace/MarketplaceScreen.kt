@@ -335,7 +335,7 @@ internal fun MarketplaceScreen(
                     state.isLoading -> {}
 
                     state.hasError -> {
-                        BoxWithConstraints(modifier = Modifier.fillMaxWidth()) { // TODO: Investigate why it's not fullscreen.
+                        BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
                             GenericErrorScreen(
                                 errorMessage = stringResource(R.string.screen_marketplace_generic_error_message),
                                 modifier = Modifier

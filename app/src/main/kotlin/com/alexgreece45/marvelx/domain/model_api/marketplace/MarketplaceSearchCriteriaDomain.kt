@@ -17,8 +17,8 @@ data class MarketplaceSearchCriteriaDomain(
 
 internal fun MarketplaceSearchCriteria.toDomain(): MarketplaceSearchCriteriaDomain =
     MarketplaceSearchCriteriaDomain(
-        categoryCodes = categoryIds,
-        conditionCodes = conditionIds,
+        categoryCodes = categoryCodes,
+        conditionCodes = conditionCodes,
         minPrice = minPrice?.toBigDecimal(),
         maxPrice = maxPrice?.toBigDecimal(),
         datePosted = datePosted,
@@ -28,8 +28,8 @@ internal fun MarketplaceSearchCriteria.toDomain(): MarketplaceSearchCriteriaDoma
 
 internal fun MarketplaceSearchCriteriaDomain.toData(formatPrice: (BigDecimal?) -> String?): MarketplaceSearchCriteria =
     MarketplaceSearchCriteria(
-        categoryIds = categoryCodes,
-        conditionIds = conditionCodes,
+        categoryCodes = categoryCodes,
+        conditionCodes = conditionCodes,
         minPrice = formatPrice(minPrice),
         maxPrice = formatPrice(maxPrice),
         datePosted = datePosted,

@@ -1013,7 +1013,7 @@ internal class MarketplaceViewModel(
                     setState {
                         copy(
                             isLoading = false,
-                            hasError = false
+                            hasError = true
                         ).setIsRefreshing(isRefreshing = false, isFromRefresh = isFromRefresh)
                     }
                 }
@@ -1041,7 +1041,6 @@ internal class MarketplaceViewModel(
                     setState {
                         copy(
                             isLoading = false,
-                            hasError = false,
                             marketplaceUi = marketplaceUi,
                             activeSearchCriteria = activeSearchCriteria.copy(
                                 categories = listingCategoryRepository.listingCategories.map { category ->
