@@ -11,7 +11,6 @@ import com.alexgreece45.marvelx.domain.helper.InteractorPartialState
 import com.alexgreece45.marvelx.domain.helper.handleRepositoryResultNoFlow
 import com.alexgreece45.marvelx.domain.mappers.marketplace.listing.ListingDomainMapper
 import com.alexgreece45.marvelx.domain.mappers.marketplace.listing.toRequest
-import com.alexgreece45.marvelx.domain.model_api.marketplace.FilteredListingDomain
 import com.alexgreece45.marvelx.domain.model_api.marketplace.MarketplaceSearchCriteriaDomain
 import com.alexgreece45.marvelx.domain.model_api.marketplace.listing.CreateListingDomain
 import com.alexgreece45.marvelx.domain.model_api.marketplace.listing.ListingDomain
@@ -20,7 +19,6 @@ import com.alexgreece45.marvelx.domain.model_api.marketplace.listing.UpdateListi
 import com.alexgreece45.marvelx.domain.model_api.marketplace.listing.toData
 import com.alexgreece45.marvelx.domain.model_api.marketplace.listing.toDomain
 import com.alexgreece45.marvelx.domain.model_api.marketplace.toData
-import com.alexgreece45.marvelx.domain.model_api.marketplace.toDomain
 import com.alexgreece45.marvelx.domain.model_api.myListing.MyListingDomain
 import com.alexgreece45.marvelx.domain.model_api.myListing.toDomain
 import org.koin.core.annotation.Factory
@@ -42,7 +40,7 @@ interface ListingInteractor {
         searchQuery: String,
         searchCriteria: MarketplaceSearchCriteriaDomain,
         sort: ListingSort
-    ): InteractorPartialState<List<FilteredListingDomain>>
+    ): InteractorPartialState<List<ListingDomain>>
 
     suspend fun createListing(createListingDomain: CreateListingDomain): MultipartResult<String>
     suspend fun updateListing(
@@ -102,7 +100,7 @@ internal class ListingInteractorImpl(
         searchQuery: String,
         searchCriteria: MarketplaceSearchCriteriaDomain,
         sort: ListingSort
-    ): InteractorPartialState<List<FilteredListingDomain>> {
+    ): InteractorPartialState<List<ListingDomain>> {
         return handleRepositoryResultNoFlow(
             repositoryResult = listingRepository.getFilteredListings(
                 searchQuery = searchQuery,
@@ -116,16 +114,7 @@ internal class ListingInteractorImpl(
                 ),
                 sort = sort
             ),
-            transformation = {
-                val categories = listingCategoryRepository.listingCategoryCodes
-                val conditions = listingDetailsRepository.listingConditions
-                this.map { listing ->
-                    listing.toDomain(
-                        mapCategory = { categories.first { it.code == listing.categoryCode } },
-                        mapCondition = { conditions.first { it.code == listing.conditionCode } }
-                    )
-                }
-            }
+            transformation = { this.map { listingDomainMapper.toDomain(it) } }
         )
     }
 

@@ -43,7 +43,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.rememberNavController
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarEffect
+import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarEvent
 import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarNavigationPayload
 import com.alexgreece45.marvelx.common_ui.util.ObserveUiEffect
 import com.alexgreece45.marvelx.common_ui.util.ObserveUiState
@@ -100,7 +100,7 @@ fun ProfileScreen(
     onEventSent: (ProfileContract.Event) -> Unit,
     state: ProfileContract.State,
     effect: SingleObserverFlow<ProfileContract.Effect>,
-    snackbarEffects: SingleObserverFlow<SnackbarEffect>,
+    snackbarEffects: SingleObserverFlow<SnackbarEvent>,
     snackbarNavigationPayloadFlow: StateFlow<SnackbarNavigationPayload?>,
     onSnackbarNavigationPayloadConsumed: () -> Unit,
     bottomNavigationBarData: @Composable () -> BottomNavigationBarData,
@@ -246,7 +246,7 @@ fun ProfileScreen(
                 )
             ),
             bottomNavigationBarData = bottomNavigationBarData(),
-            snackbarEffects = snackbarEffects,
+            snackbarEvents = snackbarEffects,
             paddingValues = PaddingValues()
         ) { paddingValues ->
             Column(

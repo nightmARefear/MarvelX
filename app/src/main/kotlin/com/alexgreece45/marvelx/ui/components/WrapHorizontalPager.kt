@@ -25,10 +25,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
+import com.alexgreece45.marvelx.common_ui.extensions.clickableNoRipple
 import com.alexgreece45.marvelx.ui_theme.theme.values.customColors
 import com.alexgreece45.marvelx.util.SPACING_MEDIUM
 import com.alexgreece45.marvelx.util.SPACING_SMALL
-import com.alexgreece45.marvelx.util.extensions.clickableNoRipple
 import kotlinx.coroutines.launch
 
 @Composable
@@ -36,6 +36,7 @@ fun WrapHorizontalPager(
     initialPage: Int = 0,
     pageCount: Int,
     selectedIndex: Int,
+    showPaginationIndicator: Boolean = true,
     contentPaddingValues: PaddingValues = PaddingValues(),
     onPageChanged: (Int) -> Unit,
     pageContent: @Composable (Int) -> Unit
@@ -88,34 +89,36 @@ fun WrapHorizontalPager(
             pageContent(page)
         }
 
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .align(Alignment.CenterHorizontally),
-            horizontalArrangement = Arrangement.spacedBy(
-                SPACING_SMALL.dp,
-                Alignment.CenterHorizontally
-            ),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            repeat(pagerState.pageCount) { pageIndex ->
-                val dotColor =
-                    if (pagerState.currentPage == pageIndex) {
-                        MaterialTheme.customColors.genericRed
-                    } else {
-                        MaterialTheme.customColors.genericRed.copy(alpha = 0.5f)
-                    }
-                val dotWidth =
-                    if (pagerState.currentPage == pageIndex) SPACING_MEDIUM.dp else SPACING_SMALL.dp
+        if (showPaginationIndicator) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.CenterHorizontally),
+                horizontalArrangement = Arrangement.spacedBy(
+                    SPACING_SMALL.dp,
+                    Alignment.CenterHorizontally
+                ),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                repeat(pagerState.pageCount) { pageIndex ->
+                    val dotColor =
+                        if (pagerState.currentPage == pageIndex) {
+                            MaterialTheme.customColors.genericRed
+                        } else {
+                            MaterialTheme.customColors.genericRed.copy(alpha = 0.5f)
+                        }
+                    val dotWidth =
+                        if (pagerState.currentPage == pageIndex) SPACING_MEDIUM.dp else SPACING_SMALL.dp
 
-                Box(
-                    modifier = Modifier
-                        .clip(CircleShape)
-                        .background(dotColor)
-                        .height(SPACING_SMALL.dp)
-                        .width(dotWidth)
-                        .clickableNoRipple(onClick = { onPageChanged(pageIndex) })
-                )
+                    Box(
+                        modifier = Modifier
+                            .clip(CircleShape)
+                            .background(dotColor)
+                            .height(SPACING_SMALL.dp)
+                            .width(dotWidth)
+                            .clickableNoRipple(onClick = { onPageChanged(pageIndex) })
+                    )
+                }
             }
         }
     }

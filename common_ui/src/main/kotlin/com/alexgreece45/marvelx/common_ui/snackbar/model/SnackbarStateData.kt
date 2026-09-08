@@ -10,6 +10,7 @@ import java.util.UUID
  * @param uuid A unique identifier for the Snackbar message, ensuring that it's shown even if the
  * message content is the same as a previous one.
  * @param message The message to be displayed in the Snackbar.
+ * @param maxMessageLines The maximum allowed lines for the [message]. Defaults to `2`.
  * @param type The type of this snackbar.
  * @param duration The duration of the Snackbar (default is [SnackbarDuration.Short]).
  * @param actionData The action data for this snackbar.
@@ -20,6 +21,7 @@ import java.util.UUID
 data class SnackbarStateData(
     val uuid: UUID,
     val message: String,
+    val maxMessageLines: Int = 2,
     val type: SnackbarType,
     val duration: SnackbarDuration = SnackbarDuration.Short,
     val actionData: SnackbarActionData? = null,

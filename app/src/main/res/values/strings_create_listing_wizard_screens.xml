@@ -47,8 +47,8 @@
     <string name="screen_create_listing_basic_details_error_attaching_images_over_max_size">The maximum allowed image size is %1$s MB.</string>
     <string name="screen_create_listing_basic_details_error_attaching_images_existing_image">One of the selected images is already attached.</string>
 
-    <string name="screen_create_listing_basic_details_content_description_upload_listing_image">Upload listing image icon</string>
-    <string name="screen_create_listing_basic_details_content_description_delete_listing_image">Delete listing image icon</string>
+    <string name="screen_create_listing_basic_details_content_description_upload_listing_image">Upload listing image</string>
+    <string name="screen_create_listing_basic_details_content_description_delete_listing_image">Delete listing image</string>
 
     // Create Listing Wizard --> AdvancedDetails
     <string name="screen_create_listing_advanced_details_label_condition">Condition</string>

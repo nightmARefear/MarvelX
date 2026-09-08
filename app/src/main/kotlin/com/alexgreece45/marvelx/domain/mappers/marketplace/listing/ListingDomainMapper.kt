@@ -43,6 +43,7 @@ class ListingDomainMapper(
                 coverImageUrl = coverImageUrl,
                 imageUrls = imageUrls,
                 details = listingDetailsDomainMapper.toDomain(details),
+                finalSale = finalSale,
                 postedAt = Instant.parse(postedAt),
                 updatedAt = updatedAt?.let { Instant.parse(it) },
                 favorite = favorite,

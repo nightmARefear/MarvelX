@@ -13,7 +13,9 @@ import com.alexgreece45.marvelx.ui.helper.openDeepLinkAction
 import com.alexgreece45.marvelx.ui.navigation.getBottomNavigationBarData
 import com.alexgreece45.marvelx.ui.screens.allCharacters.navigation.allCharactersScreen
 import com.alexgreece45.marvelx.ui.screens.allFavoriteCharacters.navigation.allFavoriteCharactersScreen
+import com.alexgreece45.marvelx.ui.screens.allFavoriteCharacters.navigation.navigateToAllFavoriteCharactersScreen
 import com.alexgreece45.marvelx.ui.screens.cart.navigation.cartScreen
+import com.alexgreece45.marvelx.ui.screens.cart.navigation.navigateToCartScreen
 import com.alexgreece45.marvelx.ui.screens.character.navigation.navigateToCharacterScreen
 import com.alexgreece45.marvelx.ui.screens.dashboard.model.DashboardContract
 import com.alexgreece45.marvelx.ui.screens.marketplace.listingDetailsScreen.navigation.navigateToListingDetailsScreen
@@ -50,7 +52,9 @@ fun DashboardScreen(
     ) {
         marketplaceScreen(
             navigateToListingDetailsScreen = rootNavController::navigateToListingDetailsScreen,
-            bottomNavigationBarData = { getBottomNavigationBarData(dashboardNavController) }
+            navigateToFavoritesScreen = dashboardNavController::navigateToAllFavoriteCharactersScreen,
+            navigateToCartScreen = dashboardNavController::navigateToCartScreen,
+            bottomNavigationBarData = { getBottomNavigationBarData(dashboardNavController) },
         )
 
         allCharactersScreen(

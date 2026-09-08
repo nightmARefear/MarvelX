@@ -2,7 +2,6 @@ package com.alexgreece45.marvelx.core.network.clients
 
 import com.alexgreece45.marvelx.core.network.model.api.cart.ResponseCartInfo
 import com.alexgreece45.marvelx.core.network.model.api.cart.ResponseCartSummary
-import com.alexgreece45.marvelx.core.network.model.api.marketplace.ResponseFilteredListing
 import com.alexgreece45.marvelx.core.network.model.api.marketplace.ResponseMarketplace
 import com.alexgreece45.marvelx.core.network.model.api.marketplace.listing.RequestUpdateListing
 import com.alexgreece45.marvelx.core.network.model.api.marketplace.listing.ResponseListing
@@ -48,16 +47,16 @@ interface ListingClient {
     suspend fun getListing(listingId: String): ApiResult<ResponseListing>
     suspend fun getFilteredListings(
         searchQuery: String,
-        categoryIds: List<String>,
-        conditionIds: List<String>,
+        categoryCodes: List<String>,
+        conditionCodes: List<String>,
         minPrice: String?,
         maxPrice: String?,
         datePostedKey: String,
         customDateFrom: String?,
         customDateTo: String?,
-        isFinalSale: Boolean,
+        finalSale: Boolean,
         sortKey: String
-    ): ApiResult<List<ResponseFilteredListing>>
+    ): ApiResult<List<ResponseListing>>
 
     suspend fun createListing(body: MultipartBody): ApiResult<ResponseListingId>
 

@@ -17,6 +17,7 @@ data class ResponseListing(
     @SerializedName("coverImageUrl") val coverImageUrl: String,
     @SerializedName("imageUrls") val imageUrls: List<String>,
     @SerializedName("details") val details: JsonElement,
+    @SerializedName("details") val finalSale: Boolean,
     @SerializedName("postedAt") val postedAt: String,
     @SerializedName("updatedAt") val updatedAt: String?,
     @SerializedName("favorite") val favorite: Boolean,

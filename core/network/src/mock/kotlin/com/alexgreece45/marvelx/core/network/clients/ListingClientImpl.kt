@@ -1,11 +1,11 @@
 package com.alexgreece45.marvelx.core.network.clients
 
 import com.alexgreece45.marvelx.core.common.extensions.toInstant
+import com.alexgreece45.marvelx.core.common.extensions.toLocalDate
 import com.alexgreece45.marvelx.core.common.util.DateUtil
 import com.alexgreece45.marvelx.core.network.model.ListingStatus
 import com.alexgreece45.marvelx.core.network.model.api.cart.ResponseCartInfo
 import com.alexgreece45.marvelx.core.network.model.api.cart.ResponseCartSummary
-import com.alexgreece45.marvelx.core.network.model.api.marketplace.ResponseFilteredListing
 import com.alexgreece45.marvelx.core.network.model.api.marketplace.ResponseMarketplace
 import com.alexgreece45.marvelx.core.network.model.api.marketplace.ResponseMarketplaceCategorySection
 import com.alexgreece45.marvelx.core.network.model.api.marketplace.ResponseMarketplacePromoSection
@@ -21,13 +21,11 @@ import com.alexgreece45.marvelx.core.network.model.generic.ApiResult
 import com.alexgreece45.marvelx.core.network.model.marketplace.ListingSort
 import com.alexgreece45.marvelx.core.network.services.ListingService
 import com.alexgreece45.marvelx.core.network.util.executeApiServiceCall
-import com.alexgreece45.marvelx.core.network.util.executeApiServiceCallNoTransformation
-import com.alexgreece45.marvelx.core.network.utils.parsedPostedAt
-import com.alexgreece45.marvelx.core.network.utils.parsedPrice
 import com.google.gson.JsonObject
 import kotlinx.coroutines.delay
 import okhttp3.MultipartBody
 import org.koin.core.annotation.Single
+import java.time.Instant
 import java.time.LocalDate
 import kotlin.random.Random
 import kotlin.random.nextInt
@@ -609,8 +607,8 @@ internal class ListingClientImpl(
                 ),
                 categories = listOf(
                     ResponseMarketplaceCategorySection(
-                        title = "apparel",
-                        categoryCode = "1",
+                        title = "Apparel",
+                        categoryCode = "apparel",
                         listings = listOf(
                             ResponseListingPreview(
                                 listingId = "1",
@@ -623,8 +621,8 @@ internal class ListingClientImpl(
                         )
                     ),
                     ResponseMarketplaceCategorySection(
-                        title = "drinkware",
-                        categoryCode = "2",
+                        title = "Drinkware",
+                        categoryCode = "drinkware",
                         listings = listOf(
                             ResponseListingPreview(
                                 listingId = "1",
@@ -754,6 +752,7 @@ internal class ListingClientImpl(
                     addProperty("capacityMl", "300")
                     addProperty("dishwasherSafe", true)
                 },
+                finalSale = Random.nextBoolean(),
                 postedAt = DateUtil.getUTCInstant().toString(),
                 updatedAt = null,
                 favorite = Random.nextBoolean(),
@@ -771,72 +770,131 @@ internal class ListingClientImpl(
         datePostedKey: String,
         customDateFrom: String?,
         customDateTo: String?,
-        isFinalSale: Boolean,
+        finalSale: Boolean,
         sortKey: String
-    ): ApiResult<List<ResponseFilteredListing>> {
+    ): ApiResult<List<ResponseListing>> {
         val mockDatabaseListings = listOf(
             // --- The Similar Items (For price range & text search testing) ---
-            ResponseFilteredListing(
+            ResponseListing(
                 listingId = "1",
+                sellerUserId = "2",
                 categoryCode = "comics",
+                subcategoryCode = "collected",
                 conditionCode = "good",
+                statusCode = "active",
                 title = "Amazing Spider-Man Vintage Comic #12",
+                description = "",
                 price = "15.50",
-                coverImageUrl = "https://backend.alexandrosvoliotis.com/api/private/marvelx/user/1/profile-image",
+                coverImageUrl = getImageUrl("1"),
+                imageUrls = listOf(getImageUrl("1")),
+                details = JsonObject().apply {
+                    addProperty("gradeCode", "FN")
+                    addProperty("publisher", "Marvel")
+                    addProperty("year", "1980")
+                },
+                finalSale = false,
                 postedAt = LocalDate.of(2026, 8, 30).toInstant().toString(),
-                isFinalSale = false,
+                updatedAt = null,
                 favorite = false,
-                cart = true
+                cart = true,
+                orderIds = null
             ),
-            ResponseFilteredListing(
+            ResponseListing(
                 listingId = "2",
+                sellerUserId = "3",
                 categoryCode = "comics",
+                subcategoryCode = "issue",
                 conditionCode = "very_good",
+                statusCode = "active",
                 title = "Amazing Spider-Man Classic Comic #15",
+                description = "",
                 price = "15.99",
-                coverImageUrl = "https://backend.alexandrosvoliotis.com/api/private/marvelx/user/2/profile-image",
+                coverImageUrl = getImageUrl("2"),
+                imageUrls = listOf(getImageUrl("2")),
+                details = JsonObject().apply {
+                    addProperty("gradeCode", "VF")
+                    addProperty("publisher", "Marvel")
+                    addProperty("year", "2001")
+                },
+                finalSale = false,
                 postedAt = LocalDate.of(2026, 8, 28).toInstant().toString(),
-                isFinalSale = false,
+                updatedAt = null,
                 favorite = true,
-                cart = false
+                cart = false,
+                orderIds = null
             ),
 
             // --- The Random Items ---
-            ResponseFilteredListing(
+            ResponseListing(
                 listingId = "3",
+                sellerUserId = "2",
                 categoryCode = "drinkware",
+                subcategoryCode = "mug",
                 conditionCode = "mint",
+                statusCode = "active",
                 title = "Rare 2001 Spider-Man Limited Edition Mug",
+                description = "",
                 price = "45.00",
-                coverImageUrl = "https://backend.alexandrosvoliotis.com/api/private/marvelx/user/2/profile-image",
+                coverImageUrl = getImageUrl("2"),
+                imageUrls = listOf(getImageUrl("2")),
+                finalSale = false,
+                details = JsonObject().apply {
+                    addProperty("materialCode", "ceramic")
+                    addProperty("capacityMl", "400")
+                    addProperty("dishwasherSafe", true)
+                },
                 postedAt = LocalDate.of(2026, 8, 25).toInstant().toString(),
-                isFinalSale = false,
+                updatedAt = null,
                 favorite = true,
-                cart = false
+                cart = false,
+                orderIds = null
             ),
-            ResponseFilteredListing(
+            ResponseListing(
                 listingId = "4",
+                sellerUserId = "4",
                 categoryCode = "art",
+                subcategoryCode = "canvas",
                 conditionCode = "mint",
+                statusCode = "active",
                 title = "Original Iron Man Mark V Blueprint Canvas - 24x36",
+                description = "",
                 price = "120.00",
-                coverImageUrl = "https://backend.alexandrosvoliotis.com/api/private/marvelx/user/1/profile-image",
+                coverImageUrl = getImageUrl("1"),
+                imageUrls = listOf(getImageUrl("1")),
+                details = JsonObject().apply {
+                    addProperty("width", "24")
+                    addProperty("height", "36")
+                    addProperty("framed", true)
+                },
+                finalSale = true,
                 postedAt = LocalDate.of(2026, 6, 12).toInstant().toString(),
-                isFinalSale = true,
+                updatedAt = null,
                 favorite = false,
-                cart = Random.nextBoolean()
+                cart = Random.nextBoolean(),
+                orderIds = null
             ),
-            ResponseFilteredListing(
+            ResponseListing(
                 listingId = "5",
+                sellerUserId = "6",
                 categoryCode = "apparel",
+                subcategoryCode = "jacket",
                 conditionCode = "fair",
+                statusCode = "active",
                 title = "Wolverine Logan Distressed Leather Jacket - Men's L",
+                description = "",
                 price = "85.00",
-                coverImageUrl = "https://backend.alexandrosvoliotis.com/api/private/marvelx/user/4/profile-image",
+                coverImageUrl = getImageUrl("4"),
+                imageUrls = listOf(getImageUrl("4")),
+                details = JsonObject().apply {
+                    addProperty("sizeCode", "L")
+                    addProperty("color", "brown") // TODO: Revisit.
+                },
+                finalSale = false,
                 postedAt = LocalDate.of(2026, 8, 1).toInstant().toString(),
-                isFinalSale = false,
+                updatedAt = null,
                 favorite = false,
-                cart = Random.nextBoolean()
+                cart = Random.nextBoolean(),
+                orderIds = null
             )
         )
 
@@ -854,18 +912,22 @@ internal class ListingClientImpl(
             val minPriceBigDecimal = minPrice?.toBigDecimalOrNull()
             val maxPriceBigDecimal = maxPrice?.toBigDecimalOrNull()
 
+            val itemPrice = item.price.toBigDecimal()
+
             val matchesPrices = when {
-                minPriceBigDecimal != null && maxPriceBigDecimal != null -> item.parsedPrice() in minPriceBigDecimal..maxPriceBigDecimal
-                minPriceBigDecimal != null -> item.parsedPrice() >= minPriceBigDecimal
-                maxPriceBigDecimal != null -> item.parsedPrice() <= maxPriceBigDecimal
+                minPriceBigDecimal != null && maxPriceBigDecimal != null -> itemPrice in minPriceBigDecimal..maxPriceBigDecimal
+                minPriceBigDecimal != null -> itemPrice >= minPriceBigDecimal
+                maxPriceBigDecimal != null -> itemPrice <= maxPriceBigDecimal
                 else -> true
             }
 
             // 4. Date Posted
+            val itemPostedAt = Instant.parse(item.postedAt).toLocalDate()
+
             val today = DateUtil.getCurrentLocalDate()
             val matchesDate = when (datePostedKey.uppercase()) {
-                "TODAY" -> item.parsedPostedAt().isEqual(today)
-                "LAST_7_DAYS" -> !item.parsedPostedAt().isBefore(today.minusDays(7))
+                "TODAY" -> itemPostedAt.isEqual(today)
+                "LAST_7_DAYS" -> !itemPostedAt.isBefore(today.minusDays(7))
                 "CUSTOM" -> {
                     val from = customDateFrom?.let {
                         runCatching { LocalDate.parse(it) }.getOrNull()
@@ -874,8 +936,8 @@ internal class ListingClientImpl(
                         runCatching { LocalDate.parse(it) }.getOrNull()
                     }
 
-                    val afterFrom = from == null || !item.parsedPostedAt().isBefore(from)
-                    val beforeTo = to == null || !item.parsedPostedAt().isAfter(to)
+                    val afterFrom = from == null || !itemPostedAt.isBefore(from)
+                    val beforeTo = to == null || !itemPostedAt.isAfter(to)
 
                     afterFrom && beforeTo
                 }
@@ -886,7 +948,7 @@ internal class ListingClientImpl(
             // 5. Final Sale Toggle
             // Assumes that if the user doesn't check the toggle, they want to see all items.
             // If checked, they ONLY want to see final sale items.
-            val matchesFinalSale = if (isFinalSale) item.isFinalSale else true
+            val matchesFinalSale = if (finalSale) item.finalSale else true
 
             matchesSearch
                     && matchesCategory
@@ -901,8 +963,16 @@ internal class ListingClientImpl(
             when (sortOption) {
                 ListingSort.PRICE_ASCENDING -> filteredList.sortedBy { it.price }
                 ListingSort.PRICE_DESCENDING -> filteredList.sortedByDescending { it.price }
-                ListingSort.DATE_POSTED_ASCENDING -> filteredList.sortedBy { it.parsedPostedAt() }
-                ListingSort.DATE_POSTED_DESCENDING -> filteredList.sortedByDescending { it.parsedPostedAt() }
+                ListingSort.DATE_POSTED_ASCENDING -> filteredList.sortedBy {
+                    Instant.parse(it.postedAt).toLocalDate()
+                }
+
+                ListingSort.DATE_POSTED_DESCENDING -> filteredList.sortedByDescending {
+                    Instant.parse(
+                        it.postedAt
+                    ).toLocalDate()
+                }
+
                 null -> filteredList // Fallback to the original order if the key is missing or invalid
             }
         }
@@ -923,12 +993,15 @@ internal class ListingClientImpl(
         return ApiResult.Success("")
     }
 
-    override suspend fun addToFavorites(listingId: String): ApiResult<String> =
-        ApiResult.Success("")
+    override suspend fun addToFavorites(listingId: String): ApiResult<String> {
+        delay(1.5.seconds)
+        return ApiResult.Success("")
+    }
 
-
-    override suspend fun removeFromFavorites(listingId: String): ApiResult<String> =
-        ApiResult.Success("")
+    override suspend fun removeFromFavorites(listingId: String): ApiResult<String> {
+        delay(1.5.seconds)
+        return ApiResult.Success("")
+    }
 
 
     override suspend fun getFavoriteListings(): ApiResult<List<ResponseListingPreview>> {
@@ -968,14 +1041,17 @@ internal class ListingClientImpl(
     }
 
     override suspend fun addCartItem(listingId: String): ApiResult<String> {
-        return executeApiServiceCallNoTransformation {
-            listingService.addCartItem(listingId)
-        }
+        delay(1.5.seconds)
+        return ApiResult.Success("")
     }
 
     override suspend fun deleteCartItem(listingId: String): ApiResult<String> {
-        return executeApiServiceCallNoTransformation {
-            listingService.deleteCartItem(listingId)
-        }
+        delay(1.5.seconds)
+        return ApiResult.Success("")
     }
+
+    // Helper functions.
+
+    private fun getImageUrl(userId: String): String =
+        "https://backend.alexandrosvoliotis.com/api/private/marvelx/user/$userId/profile-image"
 }

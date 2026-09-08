@@ -76,8 +76,8 @@ internal interface ListingService {
     @GET("/api/private/marvelx/listings/search")
     suspend fun getFilteredListings(
         @Query("searchQuery") searchQuery: String,
-        @Query("categoryIds") categoryIds: List<String>,
-        @Query("conditionIds") conditionIds: List<String>,
+        @Query("categoryIds") categoryCodes: List<String>,
+        @Query("conditionCodes") conditionCodes: List<String>,
         @Query("minPrice") minPrice: String?,
         @Query("maxPrice") maxPrice: String?,
         @Query("datePostedKey") datePostedKey: String,
@@ -85,7 +85,7 @@ internal interface ListingService {
         @Query("customDateTo") customDateTo: String?,
         @Query("isFinalSale") isFinalSale: Boolean,
         @Query("sortKey") sortKey: String
-    ): Response<List<ResponseListingPreview>>
+    ): Response<List<ResponseListing>>
 
     @POST("/api/private/marvelx/listings")
     suspend fun createListing(

@@ -251,10 +251,11 @@ private fun OrderCard( // TODO: Fix issue where if the data is refreshed and the
                         onClick = onStatusChipClicked,
                         colors = ChipDefaults.chipColors(
                             backgroundColor = order.status.backgroundColor
-                        )
-                    ) {
-                        Text(text = stringResource(order.status.labelResId))
-                    }
+                        ),
+                        content = {
+                            Text(text = stringResource(order.status.labelResId))
+                        }
+                    )
                 }
 
                 OrderCardLabel(

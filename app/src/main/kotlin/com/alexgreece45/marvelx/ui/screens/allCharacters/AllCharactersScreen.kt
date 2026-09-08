@@ -174,7 +174,7 @@ fun AllCharactersScreen(
                     extended = lazyGridState.isScrollingUp(),
                     normalFabData = NormalFabData(
                         label = stringResource(R.string.all_characters_screen_fab_label),
-                        iconResource = R.drawable.ic_filter,
+                        iconResource = R.drawable.ic_filter_old,
                         backgroundColor = null,
                         contentColor = null,
                         onClick = { onEventSent(AllCharactersEvent.OnFabClick) }

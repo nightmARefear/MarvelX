@@ -43,7 +43,7 @@ data class CustomColors(
     val warningStatusContainerColors: StatusContainerColors,
     val errorStatusContainerColors: StatusContainerColors,
     val successStatusContainerColors: StatusContainerColors,
-    val creamWhite: Color,
+    val earthGray: Color,
 )
 
 /**
@@ -146,8 +146,8 @@ internal fun customLightColors() = CustomColors(
     greenCheckmark = Color(0xFF21F33D),
     transparent = Color(0x00000000),
     info = Color(0xFF2196F3),
-    cardBrandBackgroundColor = Color(0xFF1e40af),
-    linkTextColor = Color(0xFF1e40af),
+    cardBrandBackgroundColor = Color(0xFF1E40AF),
+    linkTextColor = Color(0xFF1E40AF),
     genericOrangeColor = Color(0xFFD56E00),
     snackbarBackgroundColors = SnackbarBackgroundColors(
         info = Color(0xFF2196F3),
@@ -179,7 +179,7 @@ internal fun customLightColors() = CustomColors(
         outlineColor = Color(0x4D21F33D),
         contentColor = Color(0xFF21F33D)
     ),
-    creamWhite = Color(0xFFFFFDD0),
+    earthGray = Color(0xFF81806A),
 )
 
 /**
@@ -226,8 +226,8 @@ internal fun customDarkColors() = CustomColors(
     greenCheckmark = Color(0xFF21F33D),
     transparent = Color(0x00000000),
     info = Color(0xFF2196F3),
-    cardBrandBackgroundColor = Color(0xFF1e40af),
-    linkTextColor = Color(0xFF1e40af),
+    cardBrandBackgroundColor = Color(0xFF1E40AF),
+    linkTextColor = Color(0xFF1E40AF),
     genericOrangeColor = Color(0xFFD56E00),
     snackbarBackgroundColors = SnackbarBackgroundColors(
         info = Color(0xFF2196F3),
@@ -259,7 +259,7 @@ internal fun customDarkColors() = CustomColors(
         outlineColor = Color(0x4D21F33D),
         contentColor = Color(0xFF21F33D)
     ),
-    creamWhite = Color(0xFFFFFDD0),
+    earthGray = Color(0xFF81806A),
 )
 
 val LocalCustomColors = staticCompositionLocalOf { customLightColors() }

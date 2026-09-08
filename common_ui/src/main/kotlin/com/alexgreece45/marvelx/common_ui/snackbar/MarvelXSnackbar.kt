@@ -29,8 +29,9 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.alexgreece45.marvelx.common_ui.extensions.hideSnackbar
 import com.alexgreece45.marvelx.common_ui.extensions.showSnackbarAndHandleResult
+import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarActionData
 import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarActionType
-import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarEffect
+import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarEvent
 import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarStateData
 import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarType
 import com.alexgreece45.marvelx.common_ui.util.ObserveUiEffect
@@ -41,7 +42,7 @@ import kotlin.math.roundToInt
 
 @Composable
 fun MarvelXSnackbar(
-    snackbarEffects: SingleObserverFlow<SnackbarEffect>,
+    snackbarEffects: SingleObserverFlow<SnackbarEvent>,
     modifier: Modifier
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
@@ -51,7 +52,7 @@ fun MarvelXSnackbar(
 
     ObserveUiEffect(flow = snackbarEffects, tag = "MarvelXSnackbar") { snackbarEffect ->
         when (snackbarEffect) {
-            is SnackbarEffect.Show -> {
+            is SnackbarEvent.Show -> {
                 currentSnackbarData = snackbarEffect.snackbarStateData
 
                 coroutineScope.launch {
@@ -59,7 +60,7 @@ fun MarvelXSnackbar(
                 }
             }
 
-            is SnackbarEffect.OnDismissed -> {
+            is SnackbarEvent.OnDismissed -> {
                 if (snackbarEffect.uuid == currentSnackbarData?.uuid) {
                     currentSnackbarData = null
                 }
@@ -112,13 +113,16 @@ private fun MarvelXSnackbarContent(snackbarStateData: SnackbarStateData, hideSna
             )
         ) {
             if (snackbarStateData.actionData != null) {
-                SnackbarSimpleAction(
-                    snackbarStateData = snackbarStateData,
+                ActionSnackbar(
+                    message = snackbarStateData.message,
+                    maxMessageLines = snackbarStateData.maxMessageLines,
+                    actionData = snackbarStateData.actionData,
                     hideSnackbar = hideSnackbar
                 )
             } else {
-                SnackbarSimple(
+                MessageSnackbar(
                     message = snackbarStateData.message,
+                    maxMessageLines = snackbarStateData.maxMessageLines,
                     modifier = Modifier.padding(vertical = 16.dp)
                 )
             }
@@ -129,32 +133,36 @@ private fun MarvelXSnackbarContent(snackbarStateData: SnackbarStateData, hideSna
 /**
  * Function that composes a snackbar with a message and an action button.
  *
- * @see SnackbarSimple()
+ * @see MessageSnackbar()
  */
 @Composable
-private fun SnackbarSimpleAction(snackbarStateData: SnackbarStateData, hideSnackbar: () -> Unit) {
+private fun ActionSnackbar(
+    message: String,
+    maxMessageLines: Int,
+    actionData: SnackbarActionData,
+    hideSnackbar: () -> Unit
+) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(6.dp)
     ) {
-        SnackbarSimple(
-            message = snackbarStateData.message,
+        MessageSnackbar(
+            message = message,
+            maxMessageLines = maxMessageLines,
             modifier = Modifier.weight(1f)
         )
 
-        snackbarStateData.actionData?.let { actionData ->
-            TextButton(
-                onClick = {
-                    when (val actionType = actionData.actionType) {
-                        SnackbarActionType.Hide -> hideSnackbar()
-                        is SnackbarActionType.Custom -> actionType.onAction.invoke()
-                    }
-                },
-            ) {
-                Text(
-                    text = actionData.label
-                )
-            }
+        TextButton(
+            onClick = {
+                when (val actionType = actionData.actionType) {
+                    SnackbarActionType.Hide -> hideSnackbar()
+                    is SnackbarActionType.Custom -> actionType.onAction.invoke()
+                }
+            },
+        ) {
+            Text(
+                text = actionData.label
+            )
         }
     }
 }
@@ -162,15 +170,15 @@ private fun SnackbarSimpleAction(snackbarStateData: SnackbarStateData, hideSnack
 /**
  * Function that composes a snackbar with a message.
  *
- * @see SnackbarSimpleAction
+ * @see ActionSnackbar
  */
 @Composable
-private fun SnackbarSimple(message: String, modifier: Modifier) {
+private fun MessageSnackbar(message: String, maxMessageLines: Int, modifier: Modifier) {
     return Text(
         text = message,
         modifier = modifier,
         overflow = TextOverflow.Ellipsis,
-        maxLines = 2,
+        maxLines = maxMessageLines,
         style = MaterialTheme.typography.h6
     )
 }

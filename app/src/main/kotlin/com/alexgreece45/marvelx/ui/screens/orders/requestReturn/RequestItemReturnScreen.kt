@@ -70,13 +70,17 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.common_ui.components.statusBox.InfoContainer
-import com.alexgreece45.marvelx.common_ui.components.statusBox.StatusContainer
+import com.alexgreece45.marvelx.common_ui.components.WrapClickableText
+import com.alexgreece45.marvelx.common_ui.components.model.ClickableString
+import com.alexgreece45.marvelx.common_ui.components.statusContainer.InfoContainer
+import com.alexgreece45.marvelx.common_ui.components.statusContainer.StatusContainer
+import com.alexgreece45.marvelx.common_ui.extensions.clickableNoRipple
 import com.alexgreece45.marvelx.common_ui.previewAnnotation.ThemePreview
-import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarEffect
+import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarEvent
 import com.alexgreece45.marvelx.common_ui.util.ObserveUiEffect
 import com.alexgreece45.marvelx.common_ui.util.safeLetComposable
 import com.alexgreece45.marvelx.core.common.extensions.defaultFormat
+import com.alexgreece45.marvelx.core.common.extensions.formatPrice
 import com.alexgreece45.marvelx.core.common.util.DateUtil
 import com.alexgreece45.marvelx.core.common.util.flows.single_observer_flow.SingleObserverFlow
 import com.alexgreece45.marvelx.core.data.model.order.item.ReturnPolicy
@@ -92,19 +96,17 @@ import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
 import com.alexgreece45.marvelx.ui.components.ThrottledIconButton
 import com.alexgreece45.marvelx.ui.components.WrapAsyncImage
 import com.alexgreece45.marvelx.ui.components.WrapButton
-import com.alexgreece45.marvelx.ui.components.WrapClickableText
 import com.alexgreece45.marvelx.ui.components.WrapHorizontalDivider
 import com.alexgreece45.marvelx.ui.components.WrapImage
 import com.alexgreece45.marvelx.ui.components.WrapModalBottomSheetLayout
+import com.alexgreece45.marvelx.ui.components.inputFields.TextInputField
 import com.alexgreece45.marvelx.ui.components.listing.ListingCard
 import com.alexgreece45.marvelx.ui.components.listing.ListingPriceLabel
-import com.alexgreece45.marvelx.ui.components.model.ClickableString
 import com.alexgreece45.marvelx.ui.components.model.ErrorButtonType
 import com.alexgreece45.marvelx.ui.components.rememberWrapModalBottomSheetState
 import com.alexgreece45.marvelx.ui.components.sections.SectionHeader
 import com.alexgreece45.marvelx.ui.components.sections.SectionHeaderRow
 import com.alexgreece45.marvelx.ui.components.sections.SectionHeaderTitle
-import com.alexgreece45.marvelx.ui.components.inputFields.TextInputField
 import com.alexgreece45.marvelx.ui.model_generic.BigDecimalUi
 import com.alexgreece45.marvelx.ui.model_generic.InputFieldUi
 import com.alexgreece45.marvelx.ui.model_generic.LocalDateUi
@@ -129,8 +131,6 @@ import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.SPACING_TINY
 import com.alexgreece45.marvelx.util.VSpacer
 import com.alexgreece45.marvelx.util.constants.ConstantsUi
-import com.alexgreece45.marvelx.util.extensions.clickableNoRipple
-import com.alexgreece45.marvelx.core.common.extensions.formatPrice
 import com.alexgreece45.marvelx.util.extensions.hideIfVisible
 import com.alexgreece45.marvelx.util.extensions.showIfHidden
 import com.alexgreece45.marvelx.util.extensions.throttledClickable
@@ -151,7 +151,7 @@ internal fun RequestItemReturnScreen(
     state: RequestItemReturnContract.State,
     effect: SingleObserverFlow<RequestItemReturnContract.Effect>,
     onNavigationEffect: (RequestItemReturnContract.Effect.Navigation) -> Unit,
-    snackbarEffects: SingleObserverFlow<SnackbarEffect>
+    snackbarEffects: SingleObserverFlow<SnackbarEvent>
 ) {
     val context = LocalContext.current
 
@@ -244,7 +244,7 @@ internal fun RequestItemReturnScreen(
             onBack = { onEvent(RequestItemReturnContract.Event.OnBack) },
             showToolbar = true,
             toolbarTitle = state.toolbarTitle,
-            snackbarEffects = snackbarEffects,
+            snackbarEvents = snackbarEffects,
             stickyBottom = {
                 if (state.isStickyBottomButtonVisible) {
                     Column(

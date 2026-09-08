@@ -135,29 +135,6 @@ fun Modifier.throttledClickable(
         )
 }
 
-@OptIn(ExperimentalAtomicApi::class)
-fun Modifier.clickableNoRipple(
-    enabled: Boolean = true,
-    rippleShape: Shape? = null,
-    role: Role? = null,
-    onClick: () -> Unit
-): Modifier = composed {
-    // Clip content to the provided shape.
-    val clipModifier = if (rippleShape != null) {
-        Modifier.clip(rippleShape)
-    } else {
-        Modifier
-    }
-
-    clickable(
-        interactionSource = remember { MutableInteractionSource() },
-        indication = null,
-        enabled = enabled,
-        role = role,
-        onClick = onClick
-    ).then(clipModifier)
-}
-
 /**
  * Provides protection against UI overlay attacks from other applications.
  */

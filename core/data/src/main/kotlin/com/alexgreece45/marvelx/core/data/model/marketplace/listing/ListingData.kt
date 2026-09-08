@@ -20,6 +20,7 @@ data class ListingData(
     val coverImageUrl: String,
     val imageUrls: List<String>,
     val details: ResponseListingDetails,
+    val finalSale: Boolean,
     val postedAt: String,
     val updatedAt: String?,
     val favorite: Boolean,

@@ -32,7 +32,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarEffect
+import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarEvent
 import com.alexgreece45.marvelx.common_ui.util.ObserveUiEffect
 import com.alexgreece45.marvelx.core.common.util.flows.single_observer_flow.SingleObserverFlow
 import com.alexgreece45.marvelx.ui.components.AlertDialogButton
@@ -54,7 +54,7 @@ import com.alexgreece45.marvelx.util.SPACING_TINY
 import com.alexgreece45.marvelx.util.VSpacer
 import com.alexgreece45.marvelx.util.constants.ConstantsUi
 import com.alexgreece45.marvelx.util.extensions.circularImageWithBorder
-import com.alexgreece45.marvelx.util.extensions.clickableNoRipple
+import com.alexgreece45.marvelx.common_ui.extensions.clickableNoRipple
 import com.alexgreece45.marvelx.util.extensions.toAnnotatedString
 
 @Composable
@@ -62,7 +62,7 @@ fun FriendsScreen(
     onEventSent: (FriendsContract.Event) -> Unit,
     state: FriendsContract.State,
     effect: SingleObserverFlow<FriendsContract.Effect>,
-    snackbarEffects: SingleObserverFlow<SnackbarEffect>,
+    snackbarEffects: SingleObserverFlow<SnackbarEvent>,
     onNavigationEffect: (FriendsContract.Effect.Navigation) -> Unit,
 ) {
     LaunchedEffect(Unit) {
@@ -85,7 +85,7 @@ fun FriendsScreen(
         onBack = { onEventSent(FriendsContract.Event.OnSystemBack) },
         showToolbar = true,
         toolbarTitle = stringResource(id = R.string.screen_friends_toolbar_title),
-        snackbarEffects = snackbarEffects
+        snackbarEvents = snackbarEffects
     ) { paddingValues ->
         Column(
             modifier = Modifier

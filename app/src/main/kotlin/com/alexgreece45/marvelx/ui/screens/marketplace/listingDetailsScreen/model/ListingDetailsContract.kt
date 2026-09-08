@@ -7,6 +7,7 @@ import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
 import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.model.CreateListingWizardMode
 import com.alexgreece45.marvelx.ui.screens.marketplace.model.ListingUi
+import com.alexgreece45.marvelx.ui.screens.orders.model.item.OrderItemUi
 import com.alexgreece45.marvelx.util.extensions.model.ShareContentUrlData
 
 sealed interface ListingDetailsContract {
@@ -28,6 +29,7 @@ sealed interface ListingDetailsContract {
         data class OnCarouselScrolled(val index: Int) : Event
 
         data object OnSellerInfoClicked : Event
+        data object OnOrderItemStatusContainerClickableTextClicked : Event
 
         data object OnStickyBottomButtonClicked : Event
 
@@ -44,6 +46,7 @@ sealed interface ListingDetailsContract {
         val listingId: String? = null,
         val listing: ListingUi? = null,
         val sellerProfileDetails: ProfileDetailsDomain? = null,
+        val listingOrderItem: OrderItemUi? = null,
 
         val hasError: Boolean = false,
 

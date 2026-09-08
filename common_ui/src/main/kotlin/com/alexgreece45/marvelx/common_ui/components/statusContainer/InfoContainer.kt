@@ -1,4 +1,4 @@
-package com.alexgreece45.marvelx.common_ui.components.statusBox
+package com.alexgreece45.marvelx.common_ui.components.statusContainer
 
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
@@ -11,24 +11,35 @@ import com.alexgreece45.marvelx.ui_theme.R
 import com.alexgreece45.marvelx.ui_theme.theme.values.StatusContainerColors
 import com.alexgreece45.marvelx.ui_theme.theme.values.customColors
 
-private val errorColors: StatusContainerColors
+private val infoColors: StatusContainerColors
     @Composable
     @ReadOnlyComposable
-    get() = MaterialTheme.customColors.errorStatusContainerColors
+    get() = MaterialTheme.customColors.infoStatusContainerColors
 
 @Composable
-fun ErrorStatusContainer(
+fun InfoContainer(
     title: String,
     modifier: Modifier = Modifier,
-    titleColor: Color = errorColors.contentColor,
+    titleColor: Color = infoColors.contentColor,
+    showOutline: Boolean = true,
+    showIcon: Boolean = true,
     extraContent: (@Composable () -> Unit)? = null
 ) {
     StatusContainer(
         title = title,
         titleColor = titleColor,
-        backgroundColor = errorColors.backgroundColor,
+        backgroundColor = infoColors.backgroundColor,
         modifier = modifier,
-        icon = { Icon(painter = painterResource(R.drawable.ic_error), contentDescription = null) },
+        outlineColor = if (showOutline) infoColors.outlineColor else null,
+        icon = {
+            if (showIcon) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_info),
+                    contentDescription = null,
+                    tint = titleColor
+                )
+            }
+        },
         extraContent = extraContent
     )
 }

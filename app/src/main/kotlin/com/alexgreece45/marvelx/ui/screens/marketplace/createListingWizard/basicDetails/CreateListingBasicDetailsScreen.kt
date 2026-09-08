@@ -444,11 +444,11 @@ private fun ImageItem(
                 .align(Alignment.BottomStart)
                 .padding(start = SPACING_TINY.dp)
         ) {
-            WrapChip(onClick = {}) {
+            WrapChip(onClick = {}, content = {
                 Text(
                     text = stringResource(R.string.screen_create_listing_basic_details_cover_listing_image_label)
                 )
-            }
+            })
         }
     }
 }

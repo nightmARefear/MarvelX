@@ -17,8 +17,6 @@ import com.alexgreece45.marvelx.core.data.model.marketplace.listing.ListingPrevi
 import com.alexgreece45.marvelx.core.data.model.marketplace.listing.toData
 import com.alexgreece45.marvelx.core.data.model.myListing.MyListingData
 import com.alexgreece45.marvelx.core.data.model.myListing.toData
-import com.alexgreece45.marvelx.core.data.repositories.marketplace.listing.model.FilteredListing
-import com.alexgreece45.marvelx.core.data.repositories.marketplace.listing.model.toData
 import com.alexgreece45.marvelx.core.network.clients.ListingClient
 import com.alexgreece45.marvelx.core.network.model.api.marketplace.listing.RequestUpdateListing
 import com.alexgreece45.marvelx.core.network.model.api.marketplace.listing.ResponseListingId
@@ -42,7 +40,7 @@ interface ListingRepository {
         searchQuery: String,
         searchCriteria: MarketplaceSearchCriteria,
         sort: ListingSort
-    ): RepositoryResult<List<FilteredListing>>
+    ): RepositoryResult<List<ListingData>>
 
     suspend fun createListing(createListingData: CreateListingData): MultipartResult<String>
 
@@ -108,23 +106,23 @@ internal class ListingRepositoryImpl(
         searchQuery: String,
         searchCriteria: MarketplaceSearchCriteria,
         sort: ListingSort
-    ): RepositoryResult<List<FilteredListing>> {
+    ): RepositoryResult<List<ListingData>> {
         return handleApiResultNoFlow(
             apiCall = {
                 listingClient.getFilteredListings(
                     searchQuery = searchQuery,
-                    categoryIds = searchCriteria.categoryIds,
-                    conditionIds = searchCriteria.conditionIds,
+                    categoryCodes = searchCriteria.categoryCodes,
+                    conditionCodes = searchCriteria.conditionCodes,
                     minPrice = searchCriteria.minPrice,
                     maxPrice = searchCriteria.maxPrice,
                     datePostedKey = searchCriteria.datePosted.key,
                     customDateFrom = searchCriteria.datedPostedCustomRange?.from,
                     customDateTo = searchCriteria.datedPostedCustomRange?.to,
-                    isFinalSale = searchCriteria.isFinalSale,
+                    finalSale = searchCriteria.finalSale,
                     sortKey = sort.key
                 )
             },
-            transformation = { this.map { it.toData() } },
+            transformation = { this.map { listingDataMapper.toData(it) } },
             ioDispatcher = ioDispatcher
         )
     }

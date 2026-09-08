@@ -26,7 +26,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarEffect
+import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarEvent
 import com.alexgreece45.marvelx.common_ui.util.ObserveUiEffect
 import com.alexgreece45.marvelx.core.common.util.flows.single_observer_flow.SingleObserverFlow
 import com.alexgreece45.marvelx.ui.components.AlertDialogButton
@@ -53,7 +53,7 @@ import com.alexgreece45.marvelx.ui.screens.myListings.model.MyListingsContract
 import com.alexgreece45.marvelx.ui_theme.theme.values.customColors
 import com.alexgreece45.marvelx.util.SPACING_MEDIUM
 import com.alexgreece45.marvelx.util.constants.ConstantsUi
-import com.alexgreece45.marvelx.util.extensions.clickableNoRipple
+import com.alexgreece45.marvelx.common_ui.extensions.clickableNoRipple
 import com.alexgreece45.marvelx.util.extensions.hideIfVisible
 import com.alexgreece45.marvelx.util.extensions.shareContentUrl
 import com.alexgreece45.marvelx.util.extensions.showIfHidden
@@ -66,7 +66,7 @@ fun MyListingsScreen(
     state: MyListingsContract.State,
     effect: SingleObserverFlow<MyListingsContract.Effect>,
     onNavigationEffect: (MyListingsContract.Effect.Navigation) -> Unit,
-    snackbarEffects: SingleObserverFlow<SnackbarEffect>,
+    snackbarEffects: SingleObserverFlow<SnackbarEvent>,
 ) {
     val context = LocalContext.current
     val lazyListState = rememberLazyListState()
@@ -132,7 +132,7 @@ fun MyListingsScreen(
                     onClick = { onEvent(MyListingsContract.Event.OnFabButtonClicked) }
                 )
             ),
-            snackbarEffects = snackbarEffects
+            snackbarEvents = snackbarEffects
         ) { paddingValues ->
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
@@ -296,12 +296,13 @@ private fun MyListingCard(
                         ListingStatusUi.Reserved -> MaterialTheme.customColors.chipBackgroundColors.listingReserved
                         ListingStatusUi.Sold -> MaterialTheme.customColors.chipBackgroundColors.listingSold
                     }
-                )
-            ) {
-                Text(
-                    text = stringResource(statusUi.labelResId)
-                )
-            }
+                ),
+                content = {
+                    Text(
+                        text = stringResource(statusUi.labelResId)
+                    )
+                }
+            )
         },
         trailingIcon = {
             if (isProcessing) {

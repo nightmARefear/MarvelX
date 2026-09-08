@@ -11,7 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarEffect
+import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarEvent
 import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarType
 import com.alexgreece45.marvelx.common_ui.util.ObserveUiEffect
 import com.alexgreece45.marvelx.core.common.util.flows.single_observer_flow.SingleObserverFlow
@@ -43,7 +43,7 @@ internal fun CreateListingWizardScreen(
     onEvent: (CreateListingWizardContract.Event) -> Unit,
     state: CreateListingWizardContract.State,
     effect: SingleObserverFlow<CreateListingWizardContract.Effect>,
-    snackbarEffects: SingleObserverFlow<SnackbarEffect>,
+    snackbarEffects: SingleObserverFlow<SnackbarEvent>,
     onNavigationEffect: (CreateListingWizardContract.Effect.Navigation) -> Unit,
     createListingWizardViewModel: CreateListingWizardViewModel = koinViewModel(),
     createListingBasicDetailsViewModel: CreateListingBasicDetailsViewModel = koinViewModel(),
@@ -83,7 +83,7 @@ internal fun CreateListingWizardScreen(
         },
         showToolbar = true,
         toolbarTitle = state.toolbarTitle,
-        snackbarEffects = snackbarEffects,
+        snackbarEvents = snackbarEffects,
         stickyBottom = {
             WrapButton(
                 onClick = { onEvent(CreateListingWizardContract.Event.OnStickyBottomButtonClicked) },

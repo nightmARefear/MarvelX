@@ -17,6 +17,7 @@ data class ListingDomain(
     val coverImageUrl: String,
     val imageUrls: List<String>,
     val details: ListingDetailsDomain,
+    val finalSale: Boolean,
     val postedAt: Instant,
     val updatedAt: Instant?,
     val favorite: Boolean,

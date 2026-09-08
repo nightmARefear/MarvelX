@@ -29,8 +29,13 @@
     <string name="screen_listing_details_listing_details_label_framed">Framed</string>
     <string name="screen_listing_details_listing_details_label_not_framed">Not Framed</string>
     
-    <string name="screen_listing_details_buyer_info_box_title">You bought this item</string>
-    <string name="screen_listing_details_buyer_info_box_description">You boug</string>
+    <string name="screen_listing_details_buyer_status_container_title">You bought this item</string>
+    <string name="screen_listing_details_buyer_status_container_body">Order item %1$s is currently %2$s. Click here to track it.</string>
+    <string name="screen_listing_details_buyer_status_container_body_clickable">here</string>
+
+    <string name="screen_listing_details_seller_status_container_title">This listing has been sold</string>
+    <string name="screen_listing_details_seller_status_container_body">Order item %1$s is currently %2$s. Editing is disabled. Manage fulfilment in Order Item Management.</string>
+    <string name="screen_listing_details_seller_status_container_body_clickable">Order Item Management</string>
 
     <string name="screen_listing_details_success_adding_to_cart">Successfully added to cart</string>
     <string name="screen_listing_details_success_removing_from_cart">Successfully removed from cart</string>

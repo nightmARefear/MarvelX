@@ -1,16 +1,17 @@
 package com.alexgreece45.marvelx.ui.screens.marketplace.model
 
 import com.alexgreece45.marvelx.core.data.model.marketplace.ListingSort
+import com.alexgreece45.marvelx.data.model.marketplace.listing.EnumGeneric
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
 import com.alexgreece45.marvelx.ui.model_generic.UiState
-import kotlinx.collections.immutable.ImmutableList
 
 internal sealed interface MarketplaceContract {
 
     sealed interface Event : BaseEvent {
         data object Init : Event
+        data object OnBackClicked : Event
         data object OnRefresh : Event
         data class OnPromoCarouselScrolled(val newIndex: Int) : Event
         data class OnCategoryClicked(val categoryCode: String) : Event
@@ -18,7 +19,7 @@ internal sealed interface MarketplaceContract {
         sealed class Listing(open val listingId: String) : Event {
             data class OnClicked(override val listingId: String) : Listing(listingId)
             data class OnFavoriteClicked(override val listingId: String) : Listing(listingId)
-            data class OnComparisonClicked(override val listingId: String) : Listing(listingId)
+            data class OnComparisonClicked(override val listingId: String, val category: EnumGeneric) : Listing(listingId)
             data class OnCartClicked(override val listingId: String) : Listing(listingId)
         }
 
@@ -28,9 +29,13 @@ internal sealed interface MarketplaceContract {
             data object OnDeleteIconClicked : SearchBar
         }
 
+        data object OnComparisonStatusContainerButtonClicked : Event
+
         data object OnSortChipClicked : Event
         data object OnFiltersChipClicked : Event
         data object OnLayoutChangeButtonClicked : Event
+
+        data class OnActiveCategoryDeleteIconClicked(val deletedCategory: EnumGeneric) : Event
 
         sealed interface SortByBottomSheet : Event {
             data object OnCloseButtonClicked : SortByBottomSheet
@@ -41,6 +46,14 @@ internal sealed interface MarketplaceContract {
             data object OnCloseButtonClicked : FilterMenu
             data object OnNegativeButtonClicked : FilterMenu
             data object OnPositiveButtonClicked : FilterMenu
+        }
+
+        sealed interface ComparisonBottomSheet : Event {
+            data object OnCloseButtonClicked : ComparisonBottomSheet
+            data object OnShareButtonClicked : ComparisonBottomSheet
+            data class OnListingClicked(val listingId: String) : ComparisonBottomSheet
+            data class OnListingDeleteButtonClicked(val listingId: String) : ComparisonBottomSheet
+            data class OnScrolled(val page: Int) : ComparisonBottomSheet
         }
 
         sealed interface Filter : Event {
@@ -79,8 +92,8 @@ internal sealed interface MarketplaceContract {
         val mode: MarketplaceMode = MarketplaceMode.DISCOVER,
         val listingsLayout: MarketplaceListingsLayout = MarketplaceListingsLayout.GRID,
 
-        // Searching.
-        val searchUiState: UiState<ImmutableList<FilteredListingUi>, Unit> = UiState.Loading,
+        // -- START OF `Searching` --
+        val searchUiState: UiState<List<FilteredListingUi>, Unit> = UiState.Loading,
 
         val searchQuery: String = "",
 
@@ -88,14 +101,23 @@ internal sealed interface MarketplaceContract {
         val draftSearchCriteria: MarketplaceSearchCriteriaUi? = null,
 
         val activeSort: ListingSort = ListingSort.DATE_POSTED_DESCENDING,
+        // -- END OF `Searching` --
+
+        val comparison: MarketplaceComparisonUi = MarketplaceComparisonUi(),
 
         val bottomSheetType: MarketplaceBottomSheetType? = null,
     ) : BaseState
 
     sealed interface Effect : BaseEffect {
         sealed interface Navigation : Effect {
-            data class GoToListingsByCategoryScreen(val categoryCode: String) : Navigation
             data class GoToListingDetailsScreen(val listingId: String) : Navigation
+            data object GoToFavoritesScreen : Navigation
+            data object GoToCartScreen : Navigation
+        }
+
+        sealed interface Share : Effect {
+            data class Filters(val listingIds: List<String>) : Share // TODO: Re-define.
+            data class Comparison(val listingIds: List<String>) : Share
         }
 
         data class ShowDateRangePicker(
@@ -109,5 +131,9 @@ internal sealed interface MarketplaceContract {
 
         data object HideBottomSheet : Effect
         data object ShowBottomSheet : Effect
+
+        data object RequestSearchBarFieldFocus : Effect
+
+        data class ShowToastMessage(val message: String) : Effect
     }
 }

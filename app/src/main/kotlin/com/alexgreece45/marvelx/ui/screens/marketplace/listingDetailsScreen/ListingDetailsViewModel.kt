@@ -3,21 +3,27 @@ package com.alexgreece45.marvelx.ui.screens.marketplace.listingDetailsScreen
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.common_ui.snackbar.delegate.SnackbarDelegate
+import com.alexgreece45.marvelx.configuration.ConfigPriceLogic
 import com.alexgreece45.marvelx.configuration.models.DeepLinkWebUrl
 import com.alexgreece45.marvelx.controllers.createListingWizard.CreateListingWizardController
 import com.alexgreece45.marvelx.core.common.logger.AppLogger
 import com.alexgreece45.marvelx.core.data.repositories.UserSessionRepository
 import com.alexgreece45.marvelx.domain.helper.InteractorPartialState
+import com.alexgreece45.marvelx.domain.helper.onAnyError
+import com.alexgreece45.marvelx.domain.helper.onSuccess
 import com.alexgreece45.marvelx.domain.interactors.GetProfileDetailsPartialState
 import com.alexgreece45.marvelx.domain.interactors.UserInteractor
 import com.alexgreece45.marvelx.domain.interactors.cart.CartInteractor
 import com.alexgreece45.marvelx.domain.interactors.marketplace.listing.ListingInteractor
+import com.alexgreece45.marvelx.domain.interactors.order.OrderInteractor
+import com.alexgreece45.marvelx.domain.model_api.order.toData
 import com.alexgreece45.marvelx.model.model.user.UserId
 import com.alexgreece45.marvelx.mvi.BaseViewModel
 import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.model.CreateListingWizardMode
 import com.alexgreece45.marvelx.ui.screens.marketplace.listingDetailsScreen.model.ListingDetailsContract
 import com.alexgreece45.marvelx.ui.screens.marketplace.listingDetailsScreen.model.ListingDetailsMode
 import com.alexgreece45.marvelx.ui.screens.marketplace.mappers.ListingUiMapper
+import com.alexgreece45.marvelx.ui.screens.orders.model.item.toUi
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.extensions.model.ShareContentUrlData
 import kotlinx.coroutines.flow.first
@@ -35,6 +41,8 @@ internal class ListingDetailsViewModel(
     private val cartInteractor: CartInteractor,
     private val appLogger: AppLogger,
     snackbarDelegate: SnackbarDelegate,
+    private val orderInteractor: OrderInteractor,
+    private val configPriceLogic: ConfigPriceLogic,
 ) : BaseViewModel<ListingDetailsContract.Event, ListingDetailsContract.State, ListingDetailsContract.Effect>(),
     SnackbarDelegate by snackbarDelegate {
 
@@ -53,6 +61,7 @@ internal class ListingDetailsViewModel(
             ListingDetailsContract.Event.ToolbarActionButton.OnEditClicked -> onEditButtonClicked()
             is ListingDetailsContract.Event.OnCarouselScrolled -> onCarouselScrolled(event.index)
             ListingDetailsContract.Event.OnSellerInfoClicked -> onSellerInfoClicked()
+            ListingDetailsContract.Event.OnOrderItemStatusContainerClickableTextClicked -> onOrderItemStatusContainerClickableTextClicked()
             ListingDetailsContract.Event.OnStickyBottomButtonClicked -> onStickyBottomButtonClicked()
             ListingDetailsContract.Event.OnErrorRetryButtonClicked -> onErrorRetryButtonClicked()
         }
@@ -211,6 +220,28 @@ internal class ListingDetailsViewModel(
         currentState.listing?.sellerUserId?.let { userId ->
             setEffect {
                 ListingDetailsContract.Effect.Navigation.NavigateToProfileDetailsScreen(userId)
+            }
+        }
+    }
+
+    private fun onOrderItemStatusContainerClickableTextClicked() {
+        if (currentState.listingOrderItem == null) return
+        val canEdit = currentState.listing?.canEdit ?: return
+        val orderIds = currentState.listing?.orderIds ?: return
+
+        if (canEdit) {
+            setEffect {
+                ListingDetailsContract.Effect.Navigation.NavigateToOrderItemManagementScreen(
+                    orderId = orderIds.orderId.value,
+                    orderItemId = orderIds.orderItemId.value
+                )
+            }
+        } else {
+            setEffect {
+                ListingDetailsContract.Effect.Navigation.NavigateToOrderItemTrackingHistoryScreen(
+                    orderId = orderIds.orderId.value,
+                    orderItemId = orderIds.orderItemId.value
+                )
             }
         }
     }
@@ -376,12 +407,35 @@ internal class ListingDetailsViewModel(
                                 }
 
                                 is GetProfileDetailsPartialState.Success -> {
-                                    setState {
-                                        copy(
-                                            isLoading = false,
-                                            listing = listing,
-                                            sellerProfileDetails = profileDetailsPartialState.profileDetailsDomain
+                                    val orderIds = listing.orderIds
+                                    if (orderIds == null) {
+                                        setState {
+                                            copy(
+                                                isLoading = false,
+                                                listing = listing,
+                                                sellerProfileDetails = profileDetailsPartialState.profileDetailsDomain
+                                            )
+                                        }
+                                    } else {
+                                        orderInteractor.getOrderItemDetails(
+                                            orderId = orderIds.orderId.toData(),
+                                            orderItemId = orderIds.orderItemId.toData()
                                         )
+                                            .onSuccess { orderItem ->
+                                                val orderItemUi =
+                                                    orderItem.toUi(priceScale = configPriceLogic.priceScale)
+                                                setState {
+                                                    copy(
+                                                        isLoading = false,
+                                                        listing = listing,
+                                                        sellerProfileDetails = profileDetailsPartialState.profileDetailsDomain,
+                                                        listingOrderItem = orderItemUi
+                                                    )
+                                                }
+                                            }
+                                            .onAnyError {
+                                                showGenericErrorMessage()
+                                            }
                                     }
                                 }
                             }

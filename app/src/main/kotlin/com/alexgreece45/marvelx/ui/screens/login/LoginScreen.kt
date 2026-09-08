@@ -61,18 +61,18 @@ import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.OutlinedTextFieldValidation
 import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
 import com.alexgreece45.marvelx.ui.components.WrapButton
-import com.alexgreece45.marvelx.ui.components.WrapClickableText
+import com.alexgreece45.marvelx.common_ui.components.WrapClickableText
 import com.alexgreece45.marvelx.ui.components.WrapOutlinedButton
 import com.alexgreece45.marvelx.ui.components.error.ContentErrorScreen
 import com.alexgreece45.marvelx.ui.components.line.HorizontalLine
-import com.alexgreece45.marvelx.ui.components.model.ClickableString
+import com.alexgreece45.marvelx.common_ui.components.model.ClickableString
 import com.alexgreece45.marvelx.ui.screens.login.model.LoginWithGoogleResult
 import com.alexgreece45.marvelx.ui.screens.login.model.LoginWithIntentWithGoogleResult
 import com.alexgreece45.marvelx.util.HSpacer
 import com.alexgreece45.marvelx.util.SPACING_MEDIUM
 import com.alexgreece45.marvelx.util.VSpacer
 import com.alexgreece45.marvelx.util.constants.ConstantsUi
-import com.alexgreece45.marvelx.util.extensions.clickableNoRipple
+import com.alexgreece45.marvelx.common_ui.extensions.clickableNoRipple
 import com.google.android.gms.auth.api.identity.Identity
 import kotlinx.coroutines.launch
 
