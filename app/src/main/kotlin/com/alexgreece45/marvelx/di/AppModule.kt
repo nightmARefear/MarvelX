@@ -22,6 +22,7 @@ import com.alexgreece45.marvelx.domain.di.DomainModule
 import com.alexgreece45.marvelx.domain.mappers.cart.CartSummaryDomainMapper
 import com.alexgreece45.marvelx.domain.mappers.marketplace.listing.ListingDomainMapper
 import com.alexgreece45.marvelx.domain.mappers.marketplace.listing.details.ListingDetailsDomainMapper
+import com.alexgreece45.marvelx.domain.mappers.marketplace.listing.details.ListingDetailsResponseMapper
 import com.alexgreece45.marvelx.domain.worker.RefreshTokenWorker
 import com.alexgreece45.marvelx.notifications.di.NotificationsModule
 import com.alexgreece45.marvelx.ui.helper.FieldValidationRules
@@ -44,6 +45,7 @@ import org.koin.core.annotation.KoinApplication
 import org.koin.core.context.GlobalContext.startKoin
 import org.koin.core.logger.Level
 import org.koin.core.module.Module
+import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
 import org.koin.ksp.generated.module
@@ -113,6 +115,7 @@ private val mapperModule = module {
     singleOf(::CartItemUiMapper)
     singleOf(::CartSummaryDomainMapper)
     singleOf(::FilteredListingUiMapper)
+    factoryOf(::ListingDetailsResponseMapper)
 }
 
 private val formValidatorModule = module {

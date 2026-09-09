@@ -1,6 +1,7 @@
 package com.alexgreece45.marvelx.domain.model_api.marketplace.listing
 
 import com.alexgreece45.marvelx.core.data.model.marketplace.listing.CreateListingData
+import com.alexgreece45.marvelx.core.network.model.api.marketplace.listing.details.ResponseListingDetails
 import com.alexgreece45.marvelx.model.model.generic.AttachedFileContentData
 import java.math.BigDecimal
 
@@ -17,7 +18,9 @@ data class CreateListingDomain(
     val finalSale: Boolean
 )
 
-internal fun CreateListingDomain.toData(): CreateListingData =
+internal fun CreateListingDomain.toData(
+    mapListingDetails: (ListingDetailsDomain) -> ResponseListingDetails
+): CreateListingData =
     CreateListingData(
         coverImage = coverImage,
         additionalImages = additionalImages,
@@ -25,6 +28,7 @@ internal fun CreateListingDomain.toData(): CreateListingData =
         description = description,
         categoryCode = categoryId.toString(),
         subcategoryCode = subcategoryId.toString(),
+        details = mapListingDetails(listingDetailsDomain),
         conditionCode = conditionCode,
         price = price,
         finalSale = finalSale

@@ -57,12 +57,12 @@ internal interface ListingService {
         @Path("categoryCode") categoryCode: String
     ): Response<List<ResponseListing>>
 
-    @GET("/api/private/marvelx/users/me/listings")
+    @GET("/api/private/marvelx/user/me/listings")
     suspend fun getCurrentUserListings(
         @Query("page") page: Int
     ): Response<List<ResponseMyListing>>
 
-    @GET("/api/private/marvelx/users/{userId}/listings")
+    @GET("/api/private/marvelx/user/{userId}/listings")
     suspend fun getUserListings(
         @Path("userId") userId: String,
         @Query("page") page: Int

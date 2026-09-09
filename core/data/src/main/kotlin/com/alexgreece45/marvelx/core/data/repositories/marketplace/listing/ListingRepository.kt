@@ -20,6 +20,7 @@ import com.alexgreece45.marvelx.core.data.model.myListing.toData
 import com.alexgreece45.marvelx.core.network.clients.ListingClient
 import com.alexgreece45.marvelx.core.network.model.api.marketplace.listing.RequestUpdateListing
 import com.alexgreece45.marvelx.core.network.model.api.marketplace.listing.ResponseListingId
+import com.google.gson.Gson
 import org.koin.core.annotation.Single
 import kotlin.coroutines.CoroutineContext
 
@@ -62,7 +63,8 @@ internal class ListingRepositoryImpl(
     private val listingClient: ListingClient,
     @IoDispatcher private val ioDispatcher: CoroutineContext,
     private val listingDataMapper: ListingDataMapper,
-    private val multipartBuilder: MultipartBuilder
+    private val multipartBuilder: MultipartBuilder,
+    private val gson: Gson,
 ) : ListingRepository {
 
     override suspend fun getAllListingsByCategory(
@@ -154,6 +156,7 @@ internal class ListingRepositoryImpl(
                 add(MultipartItem.Text("description", createListingData.description))
                 add(MultipartItem.Text("category_id", createListingData.categoryCode))
                 add(MultipartItem.Text("subcategory_id", createListingData.subcategoryCode))
+                add(MultipartItem.Text("details", gson.toJson(createListingData.details)))
                 add(MultipartItem.Text("condition_code", createListingData.conditionCode))
                 add(MultipartItem.Text("price", createListingData.price.toPlainString()))
             }
