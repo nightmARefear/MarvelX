@@ -94,9 +94,9 @@ internal class ListingClientImpl(
     }
 
     override suspend fun getFilteredListings(
-        searchQuery: String,
-        categoryCodes: List<String>,
-        conditionCodes: List<String>,
+        searchQuery: String?,
+        categoryCodes: List<String>?,
+        conditionCodes: List<String>?,
         minPrice: String?,
         maxPrice: String?,
         datePostedKey: String,
@@ -115,7 +115,7 @@ internal class ListingClientImpl(
                 datePostedKey = datePostedKey,
                 customDateFrom = customDateFrom,
                 customDateTo = customDateTo,
-                isFinalSale = finalSale,
+                finalSale = finalSale,
                 sortKey = sortKey
             )
         }

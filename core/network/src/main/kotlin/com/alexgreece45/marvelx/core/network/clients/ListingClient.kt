@@ -46,9 +46,9 @@ interface ListingClient {
 
     suspend fun getListing(listingId: String): ApiResult<ResponseListing>
     suspend fun getFilteredListings(
-        searchQuery: String,
-        categoryCodes: List<String>,
-        conditionCodes: List<String>,
+        searchQuery: String?,
+        categoryCodes: List<String>?,
+        conditionCodes: List<String>?,
         minPrice: String?,
         maxPrice: String?,
         datePostedKey: String,

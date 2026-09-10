@@ -36,7 +36,7 @@ interface ListingInteractor {
     suspend fun getListing(listingId: String): InteractorPartialState<ListingDomain>
 
     suspend fun getFilteredListings(
-        searchQuery: String,
+        searchQuery: String?,
         searchCriteria: MarketplaceSearchCriteriaDomain,
         sort: ListingSort
     ): InteractorPartialState<List<ListingDomain>>
@@ -95,7 +95,7 @@ internal class ListingInteractorImpl(
     }
 
     override suspend fun getFilteredListings(
-        searchQuery: String,
+        searchQuery: String?,
         searchCriteria: MarketplaceSearchCriteriaDomain,
         sort: ListingSort
     ): InteractorPartialState<List<ListingDomain>> {

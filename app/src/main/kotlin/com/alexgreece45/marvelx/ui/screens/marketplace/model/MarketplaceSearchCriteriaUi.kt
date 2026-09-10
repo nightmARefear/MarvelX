@@ -13,7 +13,7 @@ internal data class MarketplaceSearchCriteriaUi(
     val datePosted: ListingDateRangeOptionUi = ListingDateRangeOptionUi.All,
     val datedPostedCustomRange: ListingDatePostedCustomRangeUi? = null,
 
-    val isFinalSale: Boolean = false
+    val finalSale: Boolean = false
 ) {
     /**
      * The total number of valid filters currently applied.
@@ -30,7 +30,7 @@ internal data class MarketplaceSearchCriteriaUi(
             ) count++
 
             if (datePosted != ListingDateRangeOptionUi.All) count++
-            if (isFinalSale) count++
+            if (finalSale) count++
 
             return count
         }
@@ -48,7 +48,7 @@ internal data class MarketplaceSearchCriteriaUi(
             if (priceRangeMin.value.isNotBlank() || priceRangeMax.value.isNotBlank()) count++
 
             if (datePosted != ListingDateRangeOptionUi.All) count++
-            if (isFinalSale) count++
+            if (finalSale) count++
 
             return count
         }
@@ -73,6 +73,6 @@ internal fun MarketplaceSearchCriteriaUi.toDomain(): Result<MarketplaceSearchCri
             maxPrice = priceRangeMax.parsedValue,
             datePosted = datePosted.toData(),
             datedPostedCustomRange = datedPostedCustomRange?.toDomain(),
-            isFinalSale = isFinalSale
+            finalSale = finalSale
         )
     }

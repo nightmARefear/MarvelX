@@ -1499,11 +1499,11 @@ private fun FilterMenuBottomSheetContent(
                     // Final sale.
                     FilterSection(
                         title = stringResource(R.string.screen_marketplace_filter_menu_section_final_title),
-                        collapsedLabel = stringResource(if (searchCriteria.isFinalSale) R.string.screen_marketplace_filter_menu_section_final_collapsed_yes_label else R.string.screen_marketplace_filter_menu_section_final_collapsed_no_label)
+                        collapsedLabel = stringResource(if (searchCriteria.finalSale) R.string.screen_marketplace_filter_menu_section_final_collapsed_yes_label else R.string.screen_marketplace_filter_menu_section_final_collapsed_no_label)
                     ) {
                         WrapCheckbox(
                             label = stringResource(R.string.screen_marketplace_filter_menu_section_final_checkbox_label),
-                            checked = searchCriteria.isFinalSale,
+                            checked = searchCriteria.finalSale,
                             onCheckedChange = { onFilterEvent(MarketplaceContract.Event.Filter.OnFinalSaleChecked) }
                         )
                     }

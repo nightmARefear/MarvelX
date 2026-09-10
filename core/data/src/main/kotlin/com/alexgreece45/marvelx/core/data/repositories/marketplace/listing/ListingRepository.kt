@@ -38,7 +38,7 @@ interface ListingRepository {
     suspend fun getListing(listingId: String): RepositoryResult<ListingData>
 
     suspend fun getFilteredListings(
-        searchQuery: String,
+        searchQuery: String?,
         searchCriteria: MarketplaceSearchCriteria,
         sort: ListingSort
     ): RepositoryResult<List<ListingData>>
@@ -105,7 +105,7 @@ internal class ListingRepositoryImpl(
     }
 
     override suspend fun getFilteredListings(
-        searchQuery: String,
+        searchQuery: String?,
         searchCriteria: MarketplaceSearchCriteria,
         sort: ListingSort
     ): RepositoryResult<List<ListingData>> {

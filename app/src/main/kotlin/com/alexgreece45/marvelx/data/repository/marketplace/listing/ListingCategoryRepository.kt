@@ -126,14 +126,22 @@ class ListingCategoryRepositoryImpl(
     }
 
     private suspend fun saveListingCategoriesToDatabase(listingCategories: List<ListingCategory>) {
-        listingCategoryDao.replaceAll(
-            categories = listingCategories.map { it.toDatabase() },
-            subcategories = listingCategories.flatMap { categoryData ->
-                categoryData.subcategories.map { subcategoryData ->
-                    subcategoryData.toDatabase()
+        runCatching {
+            listingCategoryDao.replaceAll(
+                categories = listingCategories.map { it.toDatabase() },
+                subcategories = listingCategories.flatMap { categoryData ->
+                    categoryData.subcategories.map { subcategoryData ->
+                        subcategoryData.toDatabase()
+                    }
                 }
+            )
+        }
+            .onSuccess {
+                appLogger.d(loggerTag) { "Listing categories saved to database." }
             }
-        )
+            .onFailure {
+                appLogger.d(loggerTag) { "Error saving listing categories to database." }
+            }
     }
 
     private suspend fun getListingCategoriesAndSaveToDatabase(): List<ListingCategory>? {

@@ -862,7 +862,7 @@ internal class MarketplaceViewModel(
         setState {
             copy(
                 draftSearchCriteria = draftSearchCriteria?.copy(
-                    isFinalSale = !draftSearchCriteria.isFinalSale
+                    finalSale = !draftSearchCriteria.finalSale
                 )
             )
         }
@@ -1135,7 +1135,7 @@ internal class MarketplaceViewModel(
             currentState.activeSearchCriteria.toDomain()
                 .onSuccess { searchCriteria ->
                     listingInteractor.getFilteredListings(
-                        searchQuery = currentState.searchQuery,
+                        searchQuery = currentState.searchQuery.takeIf { it.isNotBlank() },
                         searchCriteria = searchCriteria,
                         sort = currentState.activeSort
                     )
@@ -1263,7 +1263,7 @@ internal class MarketplaceViewModel(
                 ),
                 datePosted = ListingDateRangeOptionUi.All,
                 datedPostedCustomRange = null,
-                isFinalSale = false
+                finalSale = false
             )
         }
     }
