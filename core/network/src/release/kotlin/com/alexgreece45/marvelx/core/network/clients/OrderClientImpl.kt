@@ -1,5 +1,6 @@
 package com.alexgreece45.marvelx.core.network.clients
 
+import com.alexgreece45.marvelx.core.network.model.api.order.RequestPlaceOrder
 import com.alexgreece45.marvelx.core.network.model.api.order.ResponseOrder
 import com.alexgreece45.marvelx.core.network.model.api.order.ResponseOrderId
 import com.alexgreece45.marvelx.core.network.model.api.order.ResponseOrderPreview
@@ -34,9 +35,9 @@ internal class OrderClientImpl(
         }
     }
 
-    override suspend fun placeOrder(): ApiResult<ResponseOrderId> {
+    override suspend fun placeOrder(requestPlaceOrder: RequestPlaceOrder): ApiResult<ResponseOrderId> {
         return executeApiServiceCall {
-            orderService.placeOrder()
+            orderService.placeOrder(requestPlaceOrder)
         }
     }
 }

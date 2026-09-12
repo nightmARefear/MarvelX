@@ -46,9 +46,9 @@ internal class OrderClientImpl(
         }
     }
 
-    override suspend fun placeOrder(): ApiResult<ResponseOrderId> {
+    override suspend fun placeOrder(requestPlaceOrder: RequestPlaceOrder): ApiResult<ResponseOrderId> {
         return executeApiServiceCall {
-            orderService.placeOrder(RequestPlaceOrder(emptyList()))
+            orderService.placeOrder(requestPlaceOrder)
         }
     }
 

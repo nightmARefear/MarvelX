@@ -124,58 +124,51 @@ internal class ListingDetailsViewModel(
 
     private fun onFavoriteButtonClicked() {
         if (currentState.isFavoriteButtonLoading) return
+        val listing = currentState.listing?.copy() ?: return
 
-        when (val listing = currentState.listing) {
-            null -> {
-                return
-            }
-
-            else -> {
-                setState {
-                    copy(
-                        isFavoriteButtonLoading = true
+        setState {
+            copy(
+                isFavoriteButtonLoading = true
+            )
+        }
+        viewModelScope.launch {
+            if (listing.favorite) {
+                val wasRemoved = listingInteractor.removeFromFavorites(listing.listingId)
+                if (wasRemoved) {
+                    setState {
+                        copy(
+                            isFavoriteButtonLoading = false,
+                            listing = listing.copy(favorite = false)
+                        )
+                    }
+                } else {
+                    setState {
+                        copy(
+                            isFavoriteButtonLoading = false
+                        )
+                    }
+                    showErroneousSnackbar(
+                        errorMessage = resourceProvider.getString(R.string.screen_listing_details_error_removing_from_favorites)
                     )
                 }
-                viewModelScope.launch {
-                    if (listing.favorite) {
-                        val wasRemoved = listingInteractor.removeFromFavorites(listing.listingId)
-                        if (wasRemoved) {
-                            setState {
-                                copy(
-                                    isFavoriteButtonLoading = false,
-                                    listing = listing.copy(favorite = false)
-                                )
-                            }
-                        } else {
-                            setState {
-                                copy(
-                                    isFavoriteButtonLoading = false
-                                )
-                            }
-                            showErroneousSnackbar(
-                                errorMessage = resourceProvider.getString(R.string.screen_listing_details_error_removing_from_favorites)
-                            )
-                        }
-                    } else {
-                        val wasAdded = listingInteractor.addToFavorites(listing.listingId)
-                        if (wasAdded) {
-                            setState {
-                                copy(
-                                    isFavoriteButtonLoading = false,
-                                    listing = listing.copy(favorite = true)
-                                )
-                            }
-                        } else {
-                            setState {
-                                copy(
-                                    isFavoriteButtonLoading = false
-                                )
-                            }
-                            showErroneousSnackbar(
-                                errorMessage = resourceProvider.getString(R.string.screen_listing_details_error_adding_to_favorites)
-                            )
-                        }
+            } else {
+                val wasAdded = listingInteractor.addToFavorites(listing.listingId)
+                if (wasAdded) {
+                    setState {
+                        copy(
+                            isFavoriteButtonLoading = false,
+                            listing = listing.copy(favorite = true)
+                        )
                     }
+                } else {
+                    setState {
+                        copy(
+                            isFavoriteButtonLoading = false
+                        )
+                    }
+                    showErroneousSnackbar(
+                        errorMessage = resourceProvider.getString(R.string.screen_listing_details_error_adding_to_favorites)
+                    )
                 }
             }
         }

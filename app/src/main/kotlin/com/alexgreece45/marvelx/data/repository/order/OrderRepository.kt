@@ -7,11 +7,14 @@ import com.alexgreece45.marvelx.core.data.model.order.OrderId
 import com.alexgreece45.marvelx.core.data.model.order.item.OrderItemData
 import com.alexgreece45.marvelx.core.data.model.order.item.toData
 import com.alexgreece45.marvelx.core.network.clients.OrderClient
+import com.alexgreece45.marvelx.core.network.model.api.order.RequestPlaceOrder
 import com.alexgreece45.marvelx.data.model.order.OrderData
 import com.alexgreece45.marvelx.data.model.order.OrderPreviewData
+import com.alexgreece45.marvelx.data.model.order.PlaceOrderCheckoutDetails
 import com.alexgreece45.marvelx.data.model.order.item.OrderItemTrackingHistoryData
 import com.alexgreece45.marvelx.data.model.order.item.toData
 import com.alexgreece45.marvelx.data.model.order.toData
+import com.alexgreece45.marvelx.data.model.order.toRequest
 import org.koin.core.annotation.Single
 import kotlin.coroutines.CoroutineContext
 
@@ -28,7 +31,10 @@ interface OrderRepository {
         orderItemId: OrderId
     ): RepositoryResult<OrderItemTrackingHistoryData>
 
-    suspend fun placeOrder(): RepositoryResult<OrderId>
+    suspend fun placeOrder(
+        listingIds: List<String>,
+        placeOrderCheckoutDetails: PlaceOrderCheckoutDetails
+    ): RepositoryResult<OrderId>
 }
 
 @Single
@@ -75,9 +81,16 @@ internal class OrderRepositoryImpl(
         )
     }
 
-    override suspend fun placeOrder(): RepositoryResult<OrderId> {
+    override suspend fun placeOrder(
+        listingIds: List<String>,
+        placeOrderCheckoutDetails: PlaceOrderCheckoutDetails
+    ): RepositoryResult<OrderId> {
+        val request = RequestPlaceOrder(
+            listingIds = listingIds,
+            checkoutInfo = placeOrderCheckoutDetails.toRequest()
+        )
         return handleApiResultNoFlow(
-            apiCall = orderClient::placeOrder,
+            apiCall = { orderClient.placeOrder(request) },
             transformation = { OrderId(this.orderId) },
             ioDispatcher = ioDispatcher
         )

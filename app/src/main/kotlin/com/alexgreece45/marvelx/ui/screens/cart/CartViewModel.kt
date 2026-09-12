@@ -2,17 +2,16 @@ package com.alexgreece45.marvelx.ui.screens.cart
 
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.controllers.orderCheckout.OrderCheckoutController
 import com.alexgreece45.marvelx.core.data.helper.RepositoryResult
 import com.alexgreece45.marvelx.data.repository.order.OrderRepository
 import com.alexgreece45.marvelx.domain.helper.InteractorPartialState
 import com.alexgreece45.marvelx.domain.interactors.cart.CartInteractor
 import com.alexgreece45.marvelx.domain.interactors.marketplace.listing.ListingInteractor
-import com.alexgreece45.marvelx.domain.model_api.order.OrderCheckoutInfoDomain
 import com.alexgreece45.marvelx.mvi.BaseViewModel
 import com.alexgreece45.marvelx.ui.screens.cart.mappers.CartItemUiMapper
 import com.alexgreece45.marvelx.ui.screens.cart.model.CartContract
 import com.alexgreece45.marvelx.ui.screens.cart.model.CartInfoUi
-import com.alexgreece45.marvelx.ui.screens.orders.model.toUi
 import com.alexgreece45.marvelx.util.ResourceProvider
 import kotlinx.coroutines.launch
 import org.koin.android.annotation.KoinViewModel
@@ -24,13 +23,14 @@ class CartViewModel(
     private val listingInteractor: ListingInteractor,
     private val resourceProvider: ResourceProvider,
     private val orderRepository: OrderRepository,
+    private val orderCheckoutController: OrderCheckoutController,
 ) : BaseViewModel<CartContract.Event, CartContract.State, CartContract.Effect>() {
 
     override fun setInitialState(): CartContract.State = CartContract.State()
 
     override fun handleEvents(event: CartContract.Event) {
         when (event) {
-            is CartContract.Event.Init -> init(event.orderCheckoutInfo)
+            CartContract.Event.Init -> init()
             CartContract.Event.OnEmptyCartViewButtonClicked -> onEmptyCartViewButtonClicked()
             is CartContract.Event.CartItemEvents.OnClicked -> onCartItemClicked(event.listingId)
             is CartContract.Event.CartItemEvents.OnFavoriteButtonClicked -> onCartItemFavoriteButtonClicked(
@@ -59,10 +59,10 @@ class CartViewModel(
     /**
      * The init function.
      */
-    private fun init(orderCheckoutInfoUi: OrderCheckoutInfoDomain?) {
+    private fun init() {
         setState {
             setInitialState().copy(
-                orderCheckoutInfo = orderCheckoutInfoUi?.toUi()
+                orderCheckoutInfo = orderCheckoutController.orderCheckoutInfo
             )
         }
         getCartInfo()
@@ -197,7 +197,7 @@ class CartViewModel(
     private fun onCartSummaryButtonClicked() {
         if (currentState.isCheckout) {
             // TODO: Add stripe implementation.
-            
+
             placeOrder()
         } else {
             setEffect {
@@ -294,6 +294,8 @@ class CartViewModel(
     }
 
     private fun placeOrder() {
+        val listingIds = currentState.cartInfo?.items?.map { it.listingId } ?: return
+        val placeOrderCheckoutDetails = orderCheckoutController.placeOrderCheckoutDetails ?: return
         setState {
             copy(
                 isLoading = true
@@ -301,7 +303,10 @@ class CartViewModel(
         }
 
         viewModelScope.launch {
-            when (val result = orderRepository.placeOrder()) {
+            when (val result = orderRepository.placeOrder(
+                listingIds = listingIds,
+                placeOrderCheckoutDetails = placeOrderCheckoutDetails
+            )) {
                 is RepositoryResult.Failed,
                 RepositoryResult.NetworkError -> {
                     setState {

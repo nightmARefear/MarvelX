@@ -1,5 +1,6 @@
 package com.alexgreece45.marvelx.core.network.clients
 
+import com.alexgreece45.marvelx.core.network.model.api.order.RequestPlaceOrder
 import com.alexgreece45.marvelx.core.network.model.api.order.ResponseOrder
 import com.alexgreece45.marvelx.core.network.model.api.order.ResponseOrderId
 import com.alexgreece45.marvelx.core.network.model.api.order.ResponseOrderPreview
@@ -23,7 +24,7 @@ interface OrderClient {
         orderItemId: String
     ): ApiResult<ResponseOrderItemTrackingHistory>
 
-    suspend fun placeOrder(): ApiResult<ResponseOrderId>
+    suspend fun placeOrder(requestPlaceOrder: RequestPlaceOrder): ApiResult<ResponseOrderId>
 
     suspend fun getOrderItemReturn(
         orderId: String,

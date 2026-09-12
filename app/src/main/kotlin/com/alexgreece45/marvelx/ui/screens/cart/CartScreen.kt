@@ -23,7 +23,6 @@ import androidx.compose.ui.unit.dp
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.common_ui.util.ObserveUiEffect
 import com.alexgreece45.marvelx.core.common.util.flows.single_observer_flow.SingleObserverFlow
-import com.alexgreece45.marvelx.domain.model_api.order.OrderCheckoutInfoDomain
 import com.alexgreece45.marvelx.ui.components.BottomNavigationBarData
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.GenericLazyItemInfoScreen
@@ -48,8 +47,7 @@ fun CartScreen(
     state: CartContract.State,
     effect: SingleObserverFlow<CartContract.Effect>,
     onNavigationEffect: (CartContract.Effect.Navigation) -> Unit,
-    bottomNavigationBarData: (@Composable () -> BottomNavigationBarData)?,
-    orderCheckoutInfo: OrderCheckoutInfoDomain?,
+    bottomNavigationBarData: (@Composable () -> BottomNavigationBarData)?
 ) {
     val context = LocalContext.current
 
@@ -61,15 +59,15 @@ fun CartScreen(
     }
 
     LaunchedEffect(Unit) {
-        onEvent(CartContract.Event.Init(orderCheckoutInfo))
+        onEvent(CartContract.Event.Init)
     }
 
     ContentScreen(
         isLoading = state.isLoading,
-        showToolbar = orderCheckoutInfo == null,
+        showToolbar = state.orderCheckoutInfo == null,
         toolbarTitle = stringResource(R.string.screen_cart_toolbar_title),
         bottomNavigationBarData = bottomNavigationBarData?.invoke(),
-        isInnerScreen = orderCheckoutInfo != null
+        isInnerScreen = state.orderCheckoutInfo != null
     ) { paddingValues ->
         LazyColumn(
             modifier = Modifier.fillMaxSize(),

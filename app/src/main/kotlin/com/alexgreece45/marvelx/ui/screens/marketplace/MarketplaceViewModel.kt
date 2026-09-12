@@ -531,7 +531,7 @@ internal class MarketplaceViewModel(
         viewModelScope.launch {
             if (isListingInCart) {
                 val wasRemovedFromCart =
-                    cartInteractor.addCartItem(listingId = listingId)
+                    cartInteractor.deleteCartItem(listingId = listingId)
                 if (wasRemovedFromCart) {
                     setState {
                         copy(
@@ -1135,7 +1135,7 @@ internal class MarketplaceViewModel(
             currentState.activeSearchCriteria.toDomain()
                 .onSuccess { searchCriteria ->
                     listingInteractor.getFilteredListings(
-                        searchQuery = currentState.searchQuery.takeIf { it.isNotBlank() },
+                        searchQuery = currentState.searchQuery,
                         searchCriteria = searchCriteria,
                         sort = currentState.activeSort
                     )

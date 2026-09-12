@@ -117,6 +117,16 @@ internal interface ListingService {
     suspend fun getFavoriteListings(
     ): Response<List<ResponseListingPreview>>
 
+    @POST("/api/private/marvelx/listings/{listingId}/cart")
+    suspend fun addCartItem(
+        @Path("listingId") listingId: String
+    ): Response<Void>
+
+    @DELETE("/api/private/marvelx/listings/{listingId}/cart")
+    suspend fun deleteCartItem(
+        @Path("listingId") listingId: String
+    ): Response<Void>
+
     // Cart calls.
 
     @GET("/api/private/marvelx/cart/info")
@@ -127,14 +137,4 @@ internal interface ListingService {
 
     @GET("/api/private/marvelx/cart/summary")
     suspend fun getCartSummary(): Response<ResponseCartSummary>
-
-    @POST("/api/private/marvelx/cart/{listingId}")
-    suspend fun addCartItem(
-        @Path("listingId") listingId: String
-    ): Response<Void>
-
-    @DELETE("/api/private/marvelx/cart/{listingId}")
-    suspend fun deleteCartItem(
-        @Path("listingId") listingId: String
-    ): Response<Void>
 }

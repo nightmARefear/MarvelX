@@ -36,7 +36,7 @@ interface ListingInteractor {
     suspend fun getListing(listingId: String): InteractorPartialState<ListingDomain>
 
     suspend fun getFilteredListings(
-        searchQuery: String?,
+        searchQuery: String,
         searchCriteria: MarketplaceSearchCriteriaDomain,
         sort: ListingSort
     ): InteractorPartialState<List<ListingDomain>>
@@ -95,18 +95,19 @@ internal class ListingInteractorImpl(
     }
 
     override suspend fun getFilteredListings(
-        searchQuery: String?,
+        searchQuery: String,
         searchCriteria: MarketplaceSearchCriteriaDomain,
         sort: ListingSort
     ): InteractorPartialState<List<ListingDomain>> {
         return handleRepositoryResultNoFlow(
             repositoryResult = listingRepository.getFilteredListings(
-                searchQuery = searchQuery,
+                searchQuery = searchQuery.takeIf { it.isNotBlank() },
                 searchCriteria = searchCriteria.toData(
                     formatPrice = {
                         it?.formatPrice(
                             scale = configPriceLogic.priceScale,
-                            roundingMode = configPriceLogic.roundingMode
+                            roundingMode = configPriceLogic.roundingMode,
+                            withEuroSymbol = false
                         )
                     }
                 ),
