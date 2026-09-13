@@ -218,7 +218,7 @@ internal class ListingDetailsViewModel(
     }
 
     private fun onOrderItemStatusContainerClickableTextClicked() {
-        if (currentState.listingOrderItem == null) return
+        val orderItem = currentState.listingOrderItem?.copy() ?: return
         val canEdit = currentState.listing?.canEdit ?: return
         val orderIds = currentState.listing?.orderIds ?: return
 
@@ -233,13 +233,18 @@ internal class ListingDetailsViewModel(
             setEffect {
                 ListingDetailsContract.Effect.Navigation.NavigateToOrderItemTrackingHistoryScreen(
                     orderId = orderIds.orderId.value,
-                    orderItemId = orderIds.orderItemId.value
+                    orderItemId = orderIds.orderItemId.value,
+                    orderItemTitle = orderItem.title,
+                    orderItemCoverImageUrl = orderItem.coverImageUrl,
+                    orderItemPriceLabel = orderItem.price.label,
+                    sellerUserId = orderItem.sellerUserId
                 )
             }
         }
     }
 
     private fun onStickyBottomButtonClicked() {
+        val orderItem = currentState.listingOrderItem?.copy() ?: return
         val (isInCart, listingId) = (currentState.listing?.cart to currentState.listing?.listingId)
         if (isInCart == null || listingId == null) return
 
@@ -256,7 +261,11 @@ internal class ListingDetailsViewModel(
                 setEffect {
                     ListingDetailsContract.Effect.Navigation.NavigateToOrderItemTrackingHistoryScreen(
                         orderId = orderIds.orderId.value,
-                        orderItemId = orderIds.orderItemId.value
+                        orderItemId = orderIds.orderItemId.value,
+                        orderItemTitle = orderItem.title,
+                        orderItemCoverImageUrl = orderItem.coverImageUrl,
+                        orderItemPriceLabel = orderItem.price.label,
+                        sellerUserId = orderItem.sellerUserId
                     )
                 }
             }

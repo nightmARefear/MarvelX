@@ -64,12 +64,16 @@ sealed interface ListingDetailsContract {
             data class NavigateToEditListingScreen(val listingId: String) : Navigation
             data class NavigateToOrderItemTrackingHistoryScreen(
                 val orderId: String,
-                val orderItemId: String
+                val orderItemId: String,
+                val orderItemTitle: String,
+                val orderItemCoverImageUrl: String,
+                val orderItemPriceLabel: String,
+                val sellerUserId: String
             ) : Navigation
 
             data class NavigateToOrderItemManagementScreen(
                 val orderId: String,
-                val orderItemId: String
+                val orderItemId: String,
             ) : Navigation
 
             data object GoToNextScreen : Navigation

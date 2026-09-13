@@ -15,6 +15,7 @@ import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.succe
 import com.alexgreece45.marvelx.ui.screens.marketplace.listingDetailsScreen.navigation.listingDetailsScreen
 import com.alexgreece45.marvelx.ui.screens.marketplace.listingDetailsScreen.navigation.navigateToListingDetailsScreen
 import com.alexgreece45.marvelx.ui.screens.orders.orderItemManagement.navigation.navigateToOrderItemManagementScreen
+import com.alexgreece45.marvelx.ui.screens.orders.orderItemTrackingHistory.navigation.navigateToOrderItemTrackingHistoryScreen
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -43,7 +44,8 @@ fun NavGraphBuilder.marketplaceGraph(
                 )
             },
             navigateToEditListingScreen = navController::navigateToCreateListingWizardScreen,
-            navigateToOrderItemManagementScreen = navController::navigateToOrderItemManagementScreen
+            navigateToOrderItemManagementScreen = navController::navigateToOrderItemManagementScreen,
+            navigateToOrderItemTrackingHistoryScreen = navController::navigateToOrderItemTrackingHistoryScreen
         )
 
         createListingWizardScreen(

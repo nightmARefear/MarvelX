@@ -124,7 +124,8 @@ internal class ListingDetailsRepositoryImpl(
 
                     is ApiResult.Success -> {
                         try {
-                            val listingEnums = apiResult.body.map { it.toData() }
+                            val listingEnums =
+                                apiResult.body.map { it.toData() }.sortedBy { it.sortOrder }
                             operation.cachedVariable.value = listingEnums
                         } catch (e: Exception) {
                             appLogger.d(loggerTag) { "An error occurred whilst initializing the cached listing ${operation.operationName}.\n" + e.localizedMessage }

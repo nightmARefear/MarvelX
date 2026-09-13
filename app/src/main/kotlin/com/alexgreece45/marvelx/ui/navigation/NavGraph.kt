@@ -347,7 +347,8 @@ internal fun NavGraph(navController: NavHostController) {
                 )
             },
             navigateToEditListingScreen = navController::navigateToCreateListingWizardScreen,
-            navigateToOrderItemManagementScreen = navController::navigateToOrderItemManagementScreen
+            navigateToOrderItemManagementScreen = navController::navigateToOrderItemManagementScreen,
+            navigateToOrderItemTrackingHistoryScreen = navController::navigateToOrderItemTrackingHistoryScreen
         )
 
         createListingWizardScreen(
@@ -570,7 +571,7 @@ internal fun NavGraph(navController: NavHostController) {
                 ) ?: false,
                 onNavigation = { navigationEffect ->
                     when (navigationEffect) {
-                        ProfileDetailsContract.Effect.Navigation.PopBackStack -> navController.navigateToDashboardScreen()
+                        ProfileDetailsContract.Effect.Navigation.PopBackStack -> navController.navigateUp()
 
                         is ProfileDetailsContract.Effect.Navigation.NavigateToProfileImageScreen -> {
                             navController.navigate(
