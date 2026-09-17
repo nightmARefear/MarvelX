@@ -6,6 +6,7 @@ import com.alexgreece45.marvelx.core.network.model.api.order.ResponseOrderId
 import com.alexgreece45.marvelx.core.network.model.api.order.ResponseOrderPreview
 import com.alexgreece45.marvelx.core.network.model.api.order.item.ResponseOrderItem
 import com.alexgreece45.marvelx.core.network.model.api.order.item.ResponseOrderItemTrackingHistory
+import com.alexgreece45.marvelx.core.network.model.api.order.item.returnRequest.RequestOrderItemReturnResponse
 import com.alexgreece45.marvelx.core.network.model.api.order.item.returnRequest.ResponseOrderItemReturn
 import com.alexgreece45.marvelx.core.network.model.api.order.item.returnRequest.ResponseOrderItemReturnEligibility
 import com.alexgreece45.marvelx.core.network.model.api.order.item.returnRequest.ResponseOrderItemReturnId
@@ -13,6 +14,7 @@ import okhttp3.MultipartBody
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.Path
 
@@ -61,5 +63,11 @@ internal interface OrderService {
     @GET("/api/private/marvelx/return-requests/{orderItemReturnId}")
     suspend fun getOrderItemReturnById(
         @Path(value = "orderItemReturnId") orderItemReturnId: String
+    ): Response<ResponseOrderItemReturn>
+
+    @PATCH("/api/private/marvelx/return-requests/{orderItemReturnId}/respond")
+    suspend fun respondToOrderItemReturn(
+        @Path(value = "orderItemReturnId") orderItemReturnId: String,
+        @Body body: RequestOrderItemReturnResponse
     ): Response<ResponseOrderItemReturn>
 }

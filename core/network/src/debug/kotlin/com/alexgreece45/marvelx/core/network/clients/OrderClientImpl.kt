@@ -6,6 +6,7 @@ import com.alexgreece45.marvelx.core.network.model.api.order.ResponseOrderId
 import com.alexgreece45.marvelx.core.network.model.api.order.ResponseOrderPreview
 import com.alexgreece45.marvelx.core.network.model.api.order.item.ResponseOrderItem
 import com.alexgreece45.marvelx.core.network.model.api.order.item.ResponseOrderItemTrackingHistory
+import com.alexgreece45.marvelx.core.network.model.api.order.item.returnRequest.RequestOrderItemReturnResponse
 import com.alexgreece45.marvelx.core.network.model.api.order.item.returnRequest.ResponseOrderItemReturn
 import com.alexgreece45.marvelx.core.network.model.api.order.item.returnRequest.ResponseOrderItemReturnId
 import com.alexgreece45.marvelx.core.network.model.generic.ApiResult
@@ -81,6 +82,18 @@ internal class OrderClientImpl(
     override suspend fun getOrderItemReturnById(orderItemReturnId: String): ApiResult<ResponseOrderItemReturn> {
         return executeApiServiceCall {
             orderService.getOrderItemReturnById(orderItemReturnId = orderItemReturnId)
+        }
+    }
+
+    override suspend fun respondToOrderItemReturn(
+        orderItemReturnId: String,
+        request: RequestOrderItemReturnResponse
+    ): ApiResult<ResponseOrderItemReturn> {
+        return executeApiServiceCall {
+            orderService.respondToOrderItemReturn(
+                orderItemReturnId = orderItemReturnId,
+                body = request
+            )
         }
     }
 }

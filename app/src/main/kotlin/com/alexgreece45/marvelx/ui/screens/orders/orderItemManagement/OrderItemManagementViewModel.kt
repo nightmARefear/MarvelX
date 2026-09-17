@@ -4,8 +4,13 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.core.common.logger.AppLogger
 import com.alexgreece45.marvelx.configuration.ConfigPriceLogic
+import com.alexgreece45.marvelx.core.data.helper.onFailed
+import com.alexgreece45.marvelx.core.data.helper.onNetworkError
+import com.alexgreece45.marvelx.core.data.helper.onSuccess
 import com.alexgreece45.marvelx.core.data.model.order.OrderId
+import com.alexgreece45.marvelx.core.data.repositories.OrderItemReturnRepository
 import com.alexgreece45.marvelx.domain.helper.InteractorPartialState
 import com.alexgreece45.marvelx.domain.interactors.order.OrderInteractor
 import com.alexgreece45.marvelx.mvi.BaseViewModel
@@ -14,6 +19,8 @@ import com.alexgreece45.marvelx.ui.screens.orders.model.item.OrderItemStatusUi
 import com.alexgreece45.marvelx.ui.screens.orders.model.item.toUi
 import com.alexgreece45.marvelx.ui.screens.orders.orderItemManagement.model.OrderItemManagementContract
 import com.alexgreece45.marvelx.ui.screens.orders.orderItemManagement.navigation.OrderItemManagementRoute
+import com.alexgreece45.marvelx.ui.screens.orders.requestReturn.model.OrderItemReturnStateUi
+import com.alexgreece45.marvelx.ui.screens.orders.requestReturn.model.toUi
 import com.alexgreece45.marvelx.util.ResourceProvider
 import kotlinx.coroutines.launch
 import org.koin.android.annotation.KoinViewModel
@@ -21,11 +28,15 @@ import org.koin.android.annotation.KoinViewModel
 @KoinViewModel
 internal class OrderItemManagementViewModel(
     private val orderInteractor: OrderInteractor,
+    private val orderItemReturnRepository: OrderItemReturnRepository,
     private val configPriceLogic: ConfigPriceLogic,
     private val resourceProvider: ResourceProvider,
+    private val appLogger: AppLogger,
     savedStateHandle: SavedStateHandle
 ) :
     BaseViewModel<OrderItemManagementContract.Event, OrderItemManagementContract.State, OrderItemManagementContract.Effect>() {
+
+    private val loggerTag = "OrderItemManagementViewModel"
 
     init {
         val route = savedStateHandle.toRoute<OrderItemManagementRoute>()
@@ -51,6 +62,8 @@ internal class OrderItemManagementViewModel(
             )
 
             OrderItemManagementContract.Event.OnApplyStatusButtonClicked -> onApplyStatusButtonClicked()
+
+            OrderItemManagementContract.Event.OnReturnCardClicked -> onReturnCardClicked()
         }
     }
 
@@ -73,6 +86,10 @@ internal class OrderItemManagementViewModel(
 
         viewModelScope.launch {
             getOrderItemDetails()
+        }
+
+        viewModelScope.launch {
+            getExistingReturnStatus()
         }
     }
 
@@ -130,7 +147,42 @@ internal class OrderItemManagementViewModel(
         }
     }
 
+    private fun onReturnCardClicked() {
+        setEffect {
+            OrderItemManagementContract.Effect.Navigation.GoToRequestItemReturnScreen(
+                orderId = currentState.orderId.value,
+                orderItemId = currentState.orderItemId.value
+            )
+        }
+    }
+
     // Helper functions.
+
+    private suspend fun getExistingReturnStatus() {
+        orderItemReturnRepository.getOrderItemReturnState(
+            orderId = currentState.orderId,
+            orderItemId = currentState.orderItemId
+        )
+            .onSuccess { returnState ->
+                returnState.toUi(configPriceLogic.priceScale)
+                    .onSuccess { returnStateUi ->
+                        val existingReturnStatus =
+                            (returnStateUi as? OrderItemReturnStateUi.Existing)?.orderItemReturn?.returnStatus
+                        setState {
+                            copy(existingReturnStatus = existingReturnStatus)
+                        }
+                    }
+                    .onFailure { throwable ->
+                        appLogger.e(loggerTag) { "Failed to map order item return state to UI: ${throwable.message}" }
+                    }
+            }
+            .onFailed { errorMessage ->
+                appLogger.e(loggerTag) { "Failed to fetch order item return state for orderId=${currentState.orderId.value}, orderItemId=${currentState.orderItemId.value}: $errorMessage" }
+            }
+            .onNetworkError {
+                appLogger.e(loggerTag) { "Network error while fetching order item return state for orderId=${currentState.orderId.value}, orderItemId=${currentState.orderItemId.value}" }
+            }
+    }
 
     private suspend fun getOrderItemDetails() {
         setState {

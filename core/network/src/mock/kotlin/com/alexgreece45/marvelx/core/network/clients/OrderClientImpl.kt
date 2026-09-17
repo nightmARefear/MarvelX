@@ -12,6 +12,7 @@ import com.alexgreece45.marvelx.core.network.model.api.order.ResponseOrderId
 import com.alexgreece45.marvelx.core.network.model.api.order.ResponseOrderPreview
 import com.alexgreece45.marvelx.core.network.model.api.order.item.ResponseOrderItem
 import com.alexgreece45.marvelx.core.network.model.api.order.item.ResponseOrderItemTrackingHistory
+import com.alexgreece45.marvelx.core.network.model.api.order.item.returnRequest.RequestOrderItemReturnResponse
 import com.alexgreece45.marvelx.core.network.model.api.order.item.returnRequest.ResponseOrderItemReturn
 import com.alexgreece45.marvelx.core.network.model.api.order.item.returnRequest.ResponseOrderItemReturnEligibility
 import com.alexgreece45.marvelx.core.network.model.api.order.item.returnRequest.ResponseOrderItemReturnId
@@ -304,6 +305,39 @@ internal class OrderClientImpl : OrderClient {
 
     override suspend fun getOrderItemReturnById(orderItemReturnId: String): ApiResult<ResponseOrderItemReturn> {
         return ApiResult.Success(if (submittedOrderItemReturn?.orderItemReturnId == orderItemReturnId) submittedOrderItemReturn!! else OrderClientConstants.responseOrderItemReturns[orderItemReturnId]!!)
+    }
+
+    override suspend fun respondToOrderItemReturn(
+        orderItemReturnId: String,
+        request: RequestOrderItemReturnResponse
+    ): ApiResult<ResponseOrderItemReturn> {
+        val isSubmitted = submittedOrderItemReturn?.orderItemReturnId == orderItemReturnId
+        val current = if (isSubmitted) {
+            submittedOrderItemReturn!!
+        } else {
+            OrderClientConstants.responseOrderItemReturns[orderItemReturnId]!!
+        }
+
+        val (newReturnStatus, newRefundStatus) = when (request.action) {
+            "reject" -> OrderItemReturnStatus.REJECTED.key to OrderItemRefundStatus.REJECTED.key
+            "accept_replace" -> OrderItemReturnStatus.ITEM_REPLACED.key to OrderItemRefundStatus.REJECTED.key
+            "accept_refund" -> OrderItemReturnStatus.REFUNDED.key to OrderItemRefundStatus.ACCEPTED.key
+            else -> current.returnStatus to current.refundStatus
+        }
+
+        val updated = current.copy(
+            returnStatus = newReturnStatus,
+            refundStatus = newRefundStatus,
+            sellerMessage = request.sellerMessage ?: current.sellerMessage
+        )
+
+        if (isSubmitted) {
+            submittedOrderItemReturn = updated
+        } else {
+            OrderClientConstants.responseOrderItemReturns[orderItemReturnId] = updated
+        }
+
+        return ApiResult.Success(updated)
     }
 }
 

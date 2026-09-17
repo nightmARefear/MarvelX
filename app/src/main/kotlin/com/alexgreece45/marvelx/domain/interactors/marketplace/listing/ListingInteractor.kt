@@ -41,6 +41,17 @@ interface ListingInteractor {
         sort: ListingSort
     ): InteractorPartialState<List<ListingDomain>>
 
+    /**
+     * Offset/limit keyed variant of [getFilteredListings], backing the Paging 3 search feed.
+     */
+    suspend fun getFilteredListingsPaged(
+        searchQuery: String,
+        searchCriteria: MarketplaceSearchCriteriaDomain,
+        sort: ListingSort,
+        offset: Int,
+        limit: Int
+    ): InteractorPartialState<List<ListingDomain>>
+
     suspend fun createListing(createListingDomain: CreateListingDomain): MultipartResult<String>
     suspend fun updateListing(
         listingId: String,
@@ -112,6 +123,33 @@ internal class ListingInteractorImpl(
                     }
                 ),
                 sort = sort
+            ),
+            transformation = { this.map { listingDomainMapper.toDomain(it) } }
+        )
+    }
+
+    override suspend fun getFilteredListingsPaged(
+        searchQuery: String,
+        searchCriteria: MarketplaceSearchCriteriaDomain,
+        sort: ListingSort,
+        offset: Int,
+        limit: Int
+    ): InteractorPartialState<List<ListingDomain>> {
+        return handleRepositoryResultNoFlow(
+            repositoryResult = listingRepository.getFilteredListingsPaged(
+                searchQuery = searchQuery.takeIf { it.isNotBlank() },
+                searchCriteria = searchCriteria.toData(
+                    formatPrice = {
+                        it?.formatPrice(
+                            scale = configPriceLogic.priceScale,
+                            roundingMode = configPriceLogic.roundingMode,
+                            withEuroSymbol = false
+                        )
+                    }
+                ),
+                sort = sort,
+                offset = offset,
+                limit = limit
             ),
             transformation = { this.map { listingDomainMapper.toDomain(it) } }
         )

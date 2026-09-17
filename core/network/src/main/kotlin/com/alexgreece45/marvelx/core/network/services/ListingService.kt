@@ -87,6 +87,30 @@ internal interface ListingService {
         @Query("sortKey") sortKey: String
     ): Response<List<ResponseListing>>
 
+    /**
+     * Offset/limit keyed variant of [getFilteredListings], used by the Paging 3 search feed.
+     *
+     * Offset/limit (rather than a page index) is required because Paging 3 asks for a different
+     * number of rows depending on the load: `PagingConfig.initialLoadSize` on the first load and
+     * `pageSize` afterwards. A page-index API cannot express that, so rows get skipped or
+     * duplicated at the boundaries.
+     */
+    @GET("/api/private/marvelx/listings/search")
+    suspend fun getFilteredListingsPaged(
+        @Query("searchQuery") searchQuery: String?,
+        @Query("categoryCodes") categoryCodes: List<String>?,
+        @Query("conditionCodes") conditionCodes: List<String>?,
+        @Query("minPrice") minPrice: String?,
+        @Query("maxPrice") maxPrice: String?,
+        @Query("datePostedKey") datePostedKey: String,
+        @Query("customDateFrom") customDateFrom: String?,
+        @Query("customDateTo") customDateTo: String?,
+        @Query("finalSale") finalSale: Boolean,
+        @Query("sortKey") sortKey: String,
+        @Query("offset") offset: Int,
+        @Query("limit") limit: Int
+    ): Response<List<ResponseListing>>
+
     @POST("/api/private/marvelx/listings")
     suspend fun createListing(
         @Body body: MultipartBody

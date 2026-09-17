@@ -7,6 +7,7 @@ import androidx.navigation.compose.composable
 import com.alexgreece45.marvelx.ui.screens.orders.orderItemManagement.OrderItemManagementScreen
 import com.alexgreece45.marvelx.ui.screens.orders.orderItemManagement.OrderItemManagementViewModel
 import com.alexgreece45.marvelx.ui.screens.orders.orderItemManagement.model.OrderItemManagementContract
+import com.alexgreece45.marvelx.ui.screens.orders.requestReturn.navigation.navigateToRequestItemReturnScreen
 import kotlinx.serialization.Serializable
 import org.koin.androidx.compose.koinViewModel
 
@@ -39,6 +40,12 @@ internal fun NavGraphBuilder.orderItemManagementScreen(
             onNavigationEffect = { navigationEffect ->
                 when (navigationEffect) {
                     OrderItemManagementContract.Effect.Navigation.GoBack -> navController.navigateUp()
+                    is OrderItemManagementContract.Effect.Navigation.GoToRequestItemReturnScreen -> {
+                        navController.navigateToRequestItemReturnScreen(
+                            orderId = navigationEffect.orderId,
+                            orderItemId = navigationEffect.orderItemId
+                        )
+                    }
                 }
             }
         )

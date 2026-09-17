@@ -87,6 +87,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -145,6 +146,7 @@ import com.alexgreece45.marvelx.util.extensions.applyPadding
 import com.alexgreece45.marvelx.util.extensions.filterTouchesWhenObscured
 import com.alexgreece45.marvelx.util.extensions.screenPaddingsNone
 import com.alexgreece45.marvelx.util.extensions.throttledClickableIcon
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlin.concurrent.atomics.AtomicLong
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
@@ -1811,6 +1813,30 @@ fun LazyGridState.isScrollingUp(): Boolean {
             }
         }
     }.value
+}
+
+/**
+ * Emits `true` once the last visible item is within [prefetchDistance] items of the end of the
+ * list, and `false` again once the user scrolls back out of that window. Emissions are distinct,
+ * so a trigger fires once per approach to the end rather than on every scroll frame.
+ *
+ * Prefer this over `canScrollForward` for "load the next page" triggers:
+ * - `canScrollForward` only flips once the very last pixel is reached, so the user always waits on
+ *   a spinner. A [prefetchDistance] of a few items starts the request while they are still
+ *   scrolling, and the page is usually there before they arrive.
+ * - `canScrollForward` also flips back to `true` the moment the new page is appended, firing the
+ *   trigger a second time for a scroll the user never made.
+ *
+ * @param prefetchDistance How many items from the end to trigger at. `0` means "the last item is
+ * visible". Tune it against the endpoint's latency: the window has to be wide enough that the
+ * request completes before the user scrolls through it.
+ */
+fun LazyListState.isNearEnd(prefetchDistance: Int): Flow<Boolean> = snapshotFlow {
+    val lastVisibleItemIndex = layoutInfo.visibleItemsInfo.lastOrNull()?.index
+        ?: return@snapshotFlow false
+    val totalItemsCount = layoutInfo.totalItemsCount
+
+    totalItemsCount > 0 && lastVisibleItemIndex >= totalItemsCount - 1 - prefetchDistance
 }
 
 @Composable

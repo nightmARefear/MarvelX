@@ -7,6 +7,7 @@ import com.alexgreece45.marvelx.mvi.BaseState
 import com.alexgreece45.marvelx.ui.model_generic.UiState
 import com.alexgreece45.marvelx.ui.screens.orders.model.item.OrderItemStatusUi
 import com.alexgreece45.marvelx.ui.screens.orders.model.item.OrderItemUi
+import com.alexgreece45.marvelx.ui.screens.orders.requestReturn.model.OrderItemReturnStatusUi
 
 internal interface OrderItemManagementContract {
 
@@ -21,6 +22,8 @@ internal interface OrderItemManagementContract {
         }
 
         data object OnApplyStatusButtonClicked : Event
+
+        data object OnReturnCardClicked : Event
     }
 
     data class State(
@@ -31,11 +34,19 @@ internal interface OrderItemManagementContract {
 
         val isDropdownExpanded: Boolean = false,
         val selectedNewStatus: OrderItemStatusUi? = null,
+
+        // Set only when a return request already exists for this order item (any status). Null
+        // means either it's still loading or there is no return to display.
+        val existingReturnStatus: OrderItemReturnStatusUi? = null,
     ) : BaseState
 
     sealed interface Effect : BaseEffect {
         sealed interface Navigation : Effect {
             data object GoBack : Navigation
+            data class GoToRequestItemReturnScreen(
+                val orderId: String,
+                val orderItemId: String
+            ) : Navigation
         }
 
         data class ShowToast(val message: String) : Effect

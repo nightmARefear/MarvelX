@@ -216,6 +216,10 @@ dependencies {
     ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.room.paging)
 
+    // Paging 3.
+    implementation(libs.androidx.paging.runtime)
+    implementation(libs.androidx.paging.compose)
+
     implementation(libs.bundles.security)
 
     implementation(libs.airbnb.lottie.compose)

@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.Card
 import androidx.compose.material.ContentAlpha
 import androidx.compose.material.DropdownMenuItem
 import androidx.compose.material.MaterialTheme
@@ -25,6 +26,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.common_ui.extensions.clickableNoRipple
 import com.alexgreece45.marvelx.common_ui.util.ObserveUiEffect
 import com.alexgreece45.marvelx.core.common.util.flows.single_observer_flow.SingleObserverFlow
 import com.alexgreece45.marvelx.core.data.model.order.OrderId
@@ -43,7 +45,9 @@ import com.alexgreece45.marvelx.ui.model_generic.onSuccess
 import com.alexgreece45.marvelx.ui.screens.orders.model.item.OrderItemStatusUi
 import com.alexgreece45.marvelx.ui.screens.orders.model.item.OrderItemUi
 import com.alexgreece45.marvelx.ui.screens.orders.orderItemManagement.model.OrderItemManagementContract
+import com.alexgreece45.marvelx.ui.screens.orders.requestReturn.model.OrderItemReturnStatusUi
 import com.alexgreece45.marvelx.ui_theme.theme.MarvelXTheme
+import com.alexgreece45.marvelx.ui_theme.theme.values.customColors
 import com.alexgreece45.marvelx.util.SPACING_MEDIUM
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.extensions.showToast
@@ -145,6 +149,15 @@ internal fun OrderItemManagementScreen(
                                 onEvent(OrderItemManagementContract.Event.OnApplyStatusButtonClicked)
                             }
                         )
+
+                        state.existingReturnStatus?.let { existingReturnStatus ->
+                            ReturnStatusCard(
+                                returnStatus = existingReturnStatus,
+                                onClick = {
+                                    onEvent(OrderItemManagementContract.Event.OnReturnCardClicked)
+                                }
+                            )
+                        }
                     }
                 }
         }
@@ -249,6 +262,42 @@ private fun StatusManagementSection(
             enabled = selectedNewStatus != null && selectedNewStatus != currentStatus
         ) {
             Text(text = stringResource(R.string.screen_order_item_management_button_apply_status))
+        }
+    }
+}
+
+@Composable
+private fun ReturnStatusCard(
+    returnStatus: OrderItemReturnStatusUi,
+    onClick: () -> Unit
+) {
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickableNoRipple(onClick = onClick)
+                .padding(SPACING_MEDIUM.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column {
+                Text(
+                    text = stringResource(R.string.screen_order_item_management_return_card_title),
+                    style = MaterialTheme.typography.subtitle1
+                )
+
+                Text(
+                    text = stringResource(returnStatus.labelResId),
+                    style = MaterialTheme.typography.body2,
+                    color = MaterialTheme.colors.onSurface.copy(alpha = ContentAlpha.medium)
+                )
+            }
+
+            Text(
+                text = stringResource(R.string.screen_order_item_management_return_card_action),
+                color = MaterialTheme.customColors.linkTextColor,
+                style = MaterialTheme.typography.button
+            )
         }
     }
 }

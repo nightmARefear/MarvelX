@@ -980,6 +980,45 @@ internal class ListingClientImpl(
         return ApiResult.Success(filteredListings)
     }
 
+    override suspend fun getFilteredListingsPaged(
+        searchQuery: String?,
+        categoryCodes: List<String>?,
+        conditionCodes: List<String>?,
+        minPrice: String?,
+        maxPrice: String?,
+        datePostedKey: String,
+        customDateFrom: String?,
+        customDateTo: String?,
+        finalSale: Boolean,
+        sortKey: String,
+        offset: Int,
+        limit: Int
+    ): ApiResult<List<ResponseListing>> {
+        // Reuse the full mock filter/sort pipeline, then slice it the way a real offset/limit
+        // endpoint would. This lets the mock variant exercise real paging behaviour end to end,
+        // including the "last page returns fewer rows than asked for" end-of-pagination signal.
+        val allMatches = getFilteredListings(
+            searchQuery.orEmpty(),
+            categoryCodes.orEmpty(),
+            conditionCodes.orEmpty(),
+            minPrice,
+            maxPrice,
+            datePostedKey,
+            customDateFrom,
+            customDateTo,
+            finalSale,
+            sortKey
+        )
+
+        return when (allMatches) {
+            is ApiResult.Success -> ApiResult.Success(
+                allMatches.body.drop(offset).take(limit)
+            )
+
+            else -> allMatches
+        }
+    }
+
     override suspend fun createListing(body: MultipartBody): ApiResult<ResponseListingId> =
         ApiResult.Success(ResponseListingId("100"))
 

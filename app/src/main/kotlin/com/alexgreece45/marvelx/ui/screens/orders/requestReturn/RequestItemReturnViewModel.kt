@@ -24,6 +24,7 @@ import com.alexgreece45.marvelx.core.data.helper.multi_part_builder.model.Multip
 import com.alexgreece45.marvelx.core.data.helper.onError
 import com.alexgreece45.marvelx.core.data.helper.onSuccess
 import com.alexgreece45.marvelx.core.data.repositories.OrderItemReturnRepository
+import com.alexgreece45.marvelx.core.data.repositories.UserSessionRepository
 import com.alexgreece45.marvelx.data.repository.marketplace.MarketplaceRepository
 import com.alexgreece45.marvelx.domain.model_api.order.OrderIdDomain
 import com.alexgreece45.marvelx.domain.model_api.order.toData
@@ -34,6 +35,7 @@ import com.alexgreece45.marvelx.ui.screens.orders.model.item.itemReturn.OrderIte
 import com.alexgreece45.marvelx.ui.screens.orders.model.item.itemReturn.toData
 import com.alexgreece45.marvelx.ui.screens.orders.requestReturn.model.OrderItemReturnConditionUi
 import com.alexgreece45.marvelx.ui.screens.orders.requestReturn.model.OrderItemReturnMethodUi
+import com.alexgreece45.marvelx.ui.screens.orders.requestReturn.model.OrderItemReturnSellerActionUi
 import com.alexgreece45.marvelx.ui.screens.orders.requestReturn.model.OrderItemReturnStateUi
 import com.alexgreece45.marvelx.ui.screens.orders.requestReturn.model.RequestItemReturnContract
 import com.alexgreece45.marvelx.ui.screens.orders.requestReturn.model.RequestItemReturnDialogType
@@ -57,6 +59,7 @@ internal class RequestItemReturnViewModel(
     private val marketplaceRepository: MarketplaceRepository,
     snackbarDelegate: SnackbarDelegate,
     private val configPriceLogic: ConfigPriceLogic,
+    private val userSessionRepository: UserSessionRepository,
 ) : BaseViewModel<RequestItemReturnContract.Event, RequestItemReturnContract.State, RequestItemReturnContract.Effect>(),
     SnackbarDelegate by snackbarDelegate {
 
@@ -122,6 +125,14 @@ internal class RequestItemReturnViewModel(
             RequestItemReturnContract.Event.OnStickyBottomButtonClicked -> onStickyBottomButtonClicked()
             RequestItemReturnContract.Event.OnBottomSheetErrorButtonClicked -> onBottomSheetErrorButtonClicked()
             RequestItemReturnContract.Event.OnBottomSheetDismissed -> onBottomSheetDismissed()
+
+            is RequestItemReturnContract.Event.OnSellerResponseMessageChanged -> onSellerResponseMessageChanged(
+                event.text
+            )
+
+            is RequestItemReturnContract.Event.OnSellerResponseActionClicked -> onSellerResponseActionClicked(
+                event.action
+            )
         }
     }
 
@@ -233,13 +244,17 @@ internal class RequestItemReturnViewModel(
     }
 
     private fun onReturnReasonDropdownItemSelected(item: OrderItemReturnReasonUi) {
+        val isOther = item == OrderItemReturnReasonUi.OTHER
         setState {
             copy(
                 selectedReturnReason = item,
-                returnReasonOtherTextField = if (item != OrderItemReturnReasonUi.OTHER) returnReasonOtherTextField.copy(
+                returnReasonOtherTextField = if (!isOther) returnReasonOtherTextField.copy(
                     value = "",
                     validationResult = InputFieldValidationResult.Uninitialized
-                ) else returnReasonOtherTextField
+                ) else returnReasonOtherTextField,
+                // The description field is hidden entirely for "Other" (its text lives in
+                // returnReasonOtherTextField instead), so only require it otherwise.
+                descriptionField = descriptionField.copy(isMandatory = !isOther)
             )
         }
     }
@@ -485,6 +500,12 @@ internal class RequestItemReturnViewModel(
                 hasError = false
             )
         }
+        val description = if (returnReason == OrderItemReturnReasonUi.OTHER) {
+            currentState.returnReasonOtherTextField.value
+        } else {
+            currentState.descriptionField.value
+        }
+
         viewModelScope.launch {
             val result =
                 orderItemReturnRepository.submitOrderItemReturn(
@@ -493,7 +514,7 @@ internal class RequestItemReturnViewModel(
                     returnReason = returnReason.toData(),
                     requestRefund = currentState.isRequestRefundChecked,
                     attachedImages = currentState.attachedImages,
-                    description = currentState.descriptionField.value,
+                    description = description,
                     itemCondition = itemCondition.toData(),
                     returnMethod = returnMethod.toData()
                 )
@@ -537,6 +558,8 @@ internal class RequestItemReturnViewModel(
             )
         }
         viewModelScope.launch {
+            val currentUserId = userSessionRepository.getUserId()
+
             orderItemReturnRepository.getOrderItemReturnState(
                 orderId = currentState.orderId.toData(),
                 orderItemId = currentState.orderItemId.toData()
@@ -544,10 +567,15 @@ internal class RequestItemReturnViewModel(
                 .onSuccess { returnState ->
                     returnState.toUi(configPriceLogic.priceScale)
                         .onSuccess { returnStateUi ->
+                            val sellerUserId = when (returnStateUi) {
+                                is OrderItemReturnStateUi.Available -> returnStateUi.orderItem.sellerUserId
+                                is OrderItemReturnStateUi.Existing -> returnStateUi.orderItemReturn.orderItem.sellerUserId
+                            }
                             setState {
                                 copy(
                                     isLoading = false,
                                     returnState = returnStateUi,
+                                    isSeller = sellerUserId == currentUserId,
                                     wizardMode = if (returnStateUi is OrderItemReturnStateUi.Available) RequestItemReturnWizardMode.Create else RequestItemReturnWizardMode.Exists,
                                     wizardStep = RequestItemReturnWizardStep.INITIAL_STEP
                                 )
@@ -569,6 +597,64 @@ internal class RequestItemReturnViewModel(
                             hasError = true
                         )
                     }
+                }
+        }
+    }
+
+    private fun onSellerResponseMessageChanged(text: String) {
+        setState {
+            copy(
+                sellerResponseMessageField = sellerResponseMessageField.copy(value = text)
+            )
+        }
+    }
+
+    private fun onSellerResponseActionClicked(action: OrderItemReturnSellerActionUi) {
+        if (currentState.isSubmittingSellerResponse) return
+        val orderItemReturn =
+            (currentState.returnState as? OrderItemReturnStateUi.Existing)?.orderItemReturn ?: return
+
+        setState {
+            copy(
+                isSubmittingSellerResponse = true
+            )
+        }
+        viewModelScope.launch {
+            orderItemReturnRepository.respondToOrderItemReturn(
+                orderItemReturnId = orderItemReturn.orderItemReturnId,
+                action = action.toData(),
+                sellerMessage = currentState.sellerResponseMessageField.value.ifBlank { null }
+            )
+                .onSuccess { updatedOrderItemReturn ->
+                    updatedOrderItemReturn.toUi(configPriceLogic.priceScale)
+                        .onSuccess { updatedOrderItemReturnUi ->
+                            setState {
+                                copy(
+                                    isSubmittingSellerResponse = false,
+                                    returnState = OrderItemReturnStateUi.Existing(updatedOrderItemReturnUi)
+                                )
+                            }
+                        }
+                        .onFailure {
+                            setState {
+                                copy(
+                                    isSubmittingSellerResponse = false
+                                )
+                            }
+                            showErroneousSnackbar(
+                                errorMessage = resourceProvider.getString(R.string.screen_request_item_return_seller_response_snackbar_error_message)
+                            )
+                        }
+                }
+                .onError {
+                    setState {
+                        copy(
+                            isSubmittingSellerResponse = false
+                        )
+                    }
+                    showErroneousSnackbar(
+                        errorMessage = resourceProvider.getString(R.string.screen_request_item_return_seller_response_snackbar_error_message)
+                    )
                 }
         }
     }

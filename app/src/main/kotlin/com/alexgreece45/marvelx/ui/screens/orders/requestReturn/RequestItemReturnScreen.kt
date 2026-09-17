@@ -31,6 +31,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Card
 import androidx.compose.material.Checkbox
 import androidx.compose.material.ContentAlpha
@@ -115,13 +116,17 @@ import com.alexgreece45.marvelx.ui.screens.orders.components.OrderIdsLabel
 import com.alexgreece45.marvelx.ui.screens.orders.model.item.OrderItemStatusUi
 import com.alexgreece45.marvelx.ui.screens.orders.model.item.OrderItemUi
 import com.alexgreece45.marvelx.ui.screens.orders.model.item.itemReturn.OrderItemReturnReasonUi
+import com.alexgreece45.marvelx.ui.screens.orders.model.item.itemReturn.toUi
 import com.alexgreece45.marvelx.ui.screens.orders.requestReturn.model.OrderItemReturnConditionUi
 import com.alexgreece45.marvelx.ui.screens.orders.requestReturn.model.OrderItemReturnMethodUi
+import com.alexgreece45.marvelx.ui.screens.orders.requestReturn.model.OrderItemReturnSellerActionUi
 import com.alexgreece45.marvelx.ui.screens.orders.requestReturn.model.OrderItemReturnStateUi
+import com.alexgreece45.marvelx.ui.screens.orders.requestReturn.model.OrderItemReturnStatusUi
 import com.alexgreece45.marvelx.ui.screens.orders.requestReturn.model.OrderItemReturnUi
 import com.alexgreece45.marvelx.ui.screens.orders.requestReturn.model.RequestItemReturnContract
 import com.alexgreece45.marvelx.ui.screens.orders.requestReturn.model.RequestItemReturnWizardMode
 import com.alexgreece45.marvelx.ui.screens.orders.requestReturn.model.RequestItemReturnWizardStep
+import com.alexgreece45.marvelx.ui.screens.orders.requestReturn.model.toUi
 import com.alexgreece45.marvelx.ui_theme.theme.MarvelXTheme
 import com.alexgreece45.marvelx.ui_theme.theme.import_aliases.UiThemeDrawable
 import com.alexgreece45.marvelx.ui_theme.theme.values.customColors
@@ -358,7 +363,27 @@ internal fun RequestItemReturnScreen(
                                             }
 
                                             is OrderItemReturnStateUi.Existing -> {
-                                                ExistingReturn(returnState.orderItemReturn)
+                                                ExistingReturn(
+                                                    orderId = state.orderId,
+                                                    orderItemReturn = returnState.orderItemReturn,
+                                                    isSeller = state.isSeller,
+                                                    sellerResponseMessageField = state.sellerResponseMessageField,
+                                                    isSubmittingSellerResponse = state.isSubmittingSellerResponse,
+                                                    onSellerResponseMessageChange = {
+                                                        onEvent(
+                                                            RequestItemReturnContract.Event.OnSellerResponseMessageChanged(
+                                                                it
+                                                            )
+                                                        )
+                                                    },
+                                                    onSellerResponseActionClick = {
+                                                        onEvent(
+                                                            RequestItemReturnContract.Event.OnSellerResponseActionClicked(
+                                                                it
+                                                            )
+                                                        )
+                                                    }
+                                                )
                                             }
                                         }
                                     }
@@ -661,9 +686,12 @@ private fun WizardScreenReturnDetails(
             descriptionField = descriptionField,
             maxDescriptionLength = maxDescriptionLength,
             labelContent = {
-                SectionHeaderTitle(
-                    title = stringResource(R.string.screen_request_item_return_description_title)
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    SectionHeaderTitle(
+                        title = stringResource(R.string.screen_request_item_return_description_title)
+                    )
+                    MandatoryCharacter()
+                }
             },
             onDescriptionChange = onDescriptionChange
         )
@@ -1292,8 +1320,190 @@ private fun ReturnPolicyItem(returnPolicy: ReturnPolicy) {
 //region Existing Return Composables
 
 @Composable
-private fun ExistingReturn(orderItemReturn: OrderItemReturnUi) {
+private fun ExistingReturn(
+    orderId: OrderIdDomain,
+    orderItemReturn: OrderItemReturnUi,
+    isSeller: Boolean,
+    sellerResponseMessageField: InputFieldUi.Text,
+    isSubmittingSellerResponse: Boolean,
+    onSellerResponseMessageChange: (String) -> Unit,
+    onSellerResponseActionClick: (OrderItemReturnSellerActionUi) -> Unit
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(verticalItemPadding)
+    ) {
+        OrderIdsLabel(
+            orderId = orderId,
+            orderItemId = orderItemReturn.orderItem.orderItemId
+        )
 
+        OrderItemPreviewCard(
+            title = orderItemReturn.orderItem.title,
+            coverImageUrl = orderItemReturn.orderItem.coverImageUrl,
+            priceLabel = orderItemReturn.orderItem.price.label
+        )
+
+        ExistingReturnDetailsSection(orderItemReturn = orderItemReturn)
+
+        if (isSeller && orderItemReturn.returnStatus == OrderItemReturnStatusUi.PENDING) {
+            SellerResponseSection(
+                sellerResponseMessageField = sellerResponseMessageField,
+                isSubmitting = isSubmittingSellerResponse,
+                onMessageChange = onSellerResponseMessageChange,
+                onActionClick = onSellerResponseActionClick
+            )
+        }
+    }
+}
+
+@Composable
+private fun ExistingReturnDetailsSection(orderItemReturn: OrderItemReturnUi) {
+    Column(verticalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp)) {
+        SectionHeaderTitle(title = stringResource(R.string.screen_request_item_return_existing_return_details_title))
+
+        SectionHeaderRow(
+            startLabel = stringResource(R.string.screen_request_item_return_existing_return_status_label),
+            endLabel = stringResource(orderItemReturn.returnStatus.labelResId)
+        )
+
+        SectionHeaderRow(
+            startLabel = stringResource(R.string.screen_request_item_return_existing_return_reason_label),
+            endLabel = stringResource(orderItemReturn.reason.toUi().titleResId)
+        )
+
+        SectionHeaderRow(
+            startLabel = stringResource(R.string.screen_request_item_return_existing_return_condition_label),
+            endLabel = stringResource(orderItemReturn.condition.toUi().titleResId)
+        )
+
+        SectionHeaderRow(
+            startLabel = stringResource(R.string.screen_request_item_return_existing_return_method_label),
+            endLabel = stringResource(orderItemReturn.returnMethod.toUi().titleResId)
+        )
+
+        SectionHeaderRow(
+            startLabel = stringResource(R.string.screen_request_item_return_existing_return_submitted_label),
+            endLabel = orderItemReturn.submittedAt.label
+        )
+
+        orderItemReturn.refundAmount?.let { refundAmount ->
+            SectionHeaderRow(
+                startLabel = stringResource(R.string.screen_request_item_return_existing_return_refund_amount_label),
+                endLabel = refundAmount.label
+            )
+        }
+
+        orderItemReturn.description?.let { description ->
+            Column(verticalArrangement = Arrangement.spacedBy(SPACING_TINY.dp)) {
+                Text(
+                    text = stringResource(R.string.screen_request_item_return_existing_return_description_label),
+                    style = MaterialTheme.typography.subtitle1
+                )
+
+                Text(
+                    text = description,
+                    style = MaterialTheme.typography.body2
+                )
+            }
+        }
+
+        if (orderItemReturn.attachedImageUrls.isNotEmpty()) {
+            Column(verticalArrangement = Arrangement.spacedBy(SPACING_TINY.dp)) {
+                Text(
+                    text = stringResource(R.string.screen_request_item_return_existing_return_images_label),
+                    style = MaterialTheme.typography.subtitle1
+                )
+
+                LazyRow(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(ATTACHED_IMAGE_SIZE),
+                    horizontalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp)
+                ) {
+                    items(
+                        items = orderItemReturn.attachedImageUrls,
+                        key = { it }
+                    ) { imageUrl ->
+                        WrapAsyncImage(
+                            imageUrl = imageUrl,
+                            contentDescription = stringResource(R.string.screen_request_item_return_existing_return_images_label),
+                            modifier = Modifier.size(ATTACHED_IMAGE_SIZE),
+                            boxModifier = Modifier
+                                .clip(shape = MaterialTheme.shapes.medium)
+                                .background(color = MaterialTheme.customColors.white),
+                            contentScale = ContentScale.Crop
+                        )
+                    }
+                }
+            }
+        }
+
+        orderItemReturn.sellerMessage?.let { sellerMessage ->
+            Column(verticalArrangement = Arrangement.spacedBy(SPACING_TINY.dp)) {
+                Text(
+                    text = stringResource(R.string.screen_request_item_return_existing_return_seller_message_label),
+                    style = MaterialTheme.typography.subtitle1
+                )
+
+                Text(
+                    text = sellerMessage,
+                    style = MaterialTheme.typography.body2
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun SellerResponseSection(
+    sellerResponseMessageField: InputFieldUi.Text,
+    isSubmitting: Boolean,
+    onMessageChange: (String) -> Unit,
+    onActionClick: (OrderItemReturnSellerActionUi) -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(SPACING_MEDIUM.dp)) {
+        WrapHorizontalDivider()
+
+        SectionHeaderTitle(title = stringResource(R.string.screen_request_item_return_seller_response_section_title))
+
+        TextInputField(
+            inputField = sellerResponseMessageField,
+            label = stringResource(R.string.screen_request_item_return_seller_response_message_label),
+            placeholder = stringResource(R.string.screen_request_item_return_seller_response_message_placeholder),
+            enabled = !isSubmitting,
+            onValueChanged = onMessageChange,
+            minLines = 2,
+            maxLines = 4
+        )
+
+        Column(verticalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp)) {
+            WrapButton(
+                onClick = { onActionClick(OrderItemReturnSellerActionUi.ACCEPT_REFUND) },
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !isSubmitting
+            ) {
+                Text(text = stringResource(OrderItemReturnSellerActionUi.ACCEPT_REFUND.labelResId))
+            }
+
+            WrapButton(
+                onClick = { onActionClick(OrderItemReturnSellerActionUi.ACCEPT_REPLACE) },
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !isSubmitting
+            ) {
+                Text(text = stringResource(OrderItemReturnSellerActionUi.ACCEPT_REPLACE.labelResId))
+            }
+
+            WrapButton(
+                onClick = { onActionClick(OrderItemReturnSellerActionUi.REJECT) },
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !isSubmitting,
+                colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.customColors.genericRed)
+            ) {
+                Text(text = stringResource(OrderItemReturnSellerActionUi.REJECT.labelResId))
+            }
+        }
+    }
 }
 
 //endregion

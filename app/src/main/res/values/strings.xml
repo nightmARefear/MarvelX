@@ -677,6 +677,9 @@
 
     <string name="screen_order_item_management_error_label_fetching_data">An error occurred whilst loading the details for the order %1$s and item %2$s.</string>
 
+    <string name="screen_order_item_management_return_card_title">A return has been requested for this item</string>
+    <string name="screen_order_item_management_return_card_action">View</string>
+
     // Request Item Return Screen
     <string name="screen_request_item_return_toolbar_title">Request Return</string>
     <string name="screen_request_item_return_wizard_step_return_reason_toolbar_title">Return Reason</string>
@@ -699,7 +702,7 @@
     <string name="screen_request_item_return_return_details_requirements_label_2">All accessories and documentation included</string>
     <string name="screen_request_item_return_return_details_requirements_label_3">No signs of wear or damage</string>
 
-    <string name="screen_request_item_return_description_title">Additional Details (Optional)</string>
+    <string name="screen_request_item_return_description_title">Additional Details</string>
     <string name="screen_request_item_return_description_placeholder">Describe your return reason…</string>
     <string name="screen_request_item_return_description_remaining_characters_label">remaining characters: %1$s/%2$s</string>
 
@@ -770,6 +773,27 @@
     <string name="screen_request_item_return_upload_image_button_content_description">upload image button</string>
     <string name="screen_request_item_return_uploaded_image_content_description">Uploaded image %1$s</string>
     <string name="screen_request_item_return_remove_image_button_content_description">remove attached image button</string>
+
+    // Request Item Return Screen :: Existing Return
+    <string name="screen_request_item_return_existing_return_details_title">Return Details</string>
+    <string name="screen_request_item_return_existing_return_status_label">Status</string>
+    <string name="screen_request_item_return_existing_return_reason_label">Reason</string>
+    <string name="screen_request_item_return_existing_return_condition_label">Condition</string>
+    <string name="screen_request_item_return_existing_return_method_label">Return Method</string>
+    <string name="screen_request_item_return_existing_return_submitted_label">Submitted</string>
+    <string name="screen_request_item_return_existing_return_refund_amount_label">Refund Amount</string>
+    <string name="screen_request_item_return_existing_return_description_label">Description</string>
+    <string name="screen_request_item_return_existing_return_images_label">Attached Images</string>
+    <string name="screen_request_item_return_existing_return_seller_message_label">Seller\'s Message</string>
+
+    // Request Item Return Screen :: Seller Response
+    <string name="screen_request_item_return_seller_response_section_title">Respond to Return Request</string>
+    <string name="screen_request_item_return_seller_response_message_label">Message to buyer (optional)</string>
+    <string name="screen_request_item_return_seller_response_message_placeholder">Add a note for the buyer…</string>
+    <string name="screen_request_item_return_seller_action_reject">Reject Return</string>
+    <string name="screen_request_item_return_seller_action_accept_replace">Accept &amp; Replace Item</string>
+    <string name="screen_request_item_return_seller_action_accept_refund">Accept &amp; Issue Refund</string>
+    <string name="screen_request_item_return_seller_response_snackbar_error_message">An error occurred whilst submitting your response. Please try again.</string>
 
     // Request Item Return Success Screen
     <string name="screen_request_item_return_success_toolbar_title">Return Submitted</string>

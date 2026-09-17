@@ -93,6 +93,38 @@ internal class ListingClientImpl(
         }
     }
 
+    override suspend fun getFilteredListingsPaged(
+        searchQuery: String?,
+        categoryCodes: List<String>?,
+        conditionCodes: List<String>?,
+        minPrice: String?,
+        maxPrice: String?,
+        datePostedKey: String,
+        customDateFrom: String?,
+        customDateTo: String?,
+        finalSale: Boolean,
+        sortKey: String,
+        offset: Int,
+        limit: Int
+    ): ApiResult<List<ResponseListing>> {
+        return executeApiServiceCall {
+            listingService.getFilteredListingsPaged(
+                searchQuery = searchQuery,
+                categoryCodes = categoryCodes,
+                conditionCodes = conditionCodes,
+                minPrice = minPrice,
+                maxPrice = maxPrice,
+                datePostedKey = datePostedKey,
+                customDateFrom = customDateFrom,
+                customDateTo = customDateTo,
+                finalSale = finalSale,
+                sortKey = sortKey,
+                offset = offset,
+                limit = limit
+            )
+        }
+    }
+
     override suspend fun createListing(body: MultipartBody): ApiResult<ResponseListingId> {
         return executeApiServiceCall {
             listingService.createListing(body)

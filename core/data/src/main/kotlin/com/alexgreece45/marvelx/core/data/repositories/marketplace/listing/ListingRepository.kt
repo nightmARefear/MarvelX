@@ -43,6 +43,17 @@ interface ListingRepository {
         sort: ListingSort
     ): RepositoryResult<List<ListingData>>
 
+    /**
+     * Offset/limit keyed variant of [getFilteredListings], backing the Paging 3 search feed.
+     */
+    suspend fun getFilteredListingsPaged(
+        searchQuery: String?,
+        searchCriteria: MarketplaceSearchCriteria,
+        sort: ListingSort,
+        offset: Int,
+        limit: Int
+    ): RepositoryResult<List<ListingData>>
+
     suspend fun createListing(createListingData: CreateListingData): MultipartResult<String>
 
     suspend fun updateListing(
@@ -122,6 +133,35 @@ internal class ListingRepositoryImpl(
                     customDateTo = searchCriteria.datedPostedCustomRange?.to,
                     finalSale = searchCriteria.finalSale,
                     sortKey = sort.key
+                )
+            },
+            transformation = { this.map { listingDataMapper.toData(it) } },
+            ioDispatcher = ioDispatcher
+        )
+    }
+
+    override suspend fun getFilteredListingsPaged(
+        searchQuery: String?,
+        searchCriteria: MarketplaceSearchCriteria,
+        sort: ListingSort,
+        offset: Int,
+        limit: Int
+    ): RepositoryResult<List<ListingData>> {
+        return handleApiResultNoFlow(
+            apiCall = {
+                listingClient.getFilteredListingsPaged(
+                    searchQuery = searchQuery,
+                    categoryCodes = searchCriteria.categoryCodes,
+                    conditionCodes = searchCriteria.conditionCodes,
+                    minPrice = searchCriteria.minPrice,
+                    maxPrice = searchCriteria.maxPrice,
+                    datePostedKey = searchCriteria.datePosted.key,
+                    customDateFrom = searchCriteria.datedPostedCustomRange?.from,
+                    customDateTo = searchCriteria.datedPostedCustomRange?.to,
+                    finalSale = searchCriteria.finalSale,
+                    sortKey = sort.key,
+                    offset = offset,
+                    limit = limit
                 )
             },
             transformation = { this.map { listingDataMapper.toData(it) } },
