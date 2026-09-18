@@ -14,7 +14,7 @@ import com.alexgreece45.marvelx.ui.components.BottomNavigationBarData
 import com.alexgreece45.marvelx.ui.components.IconData
 import com.alexgreece45.marvelx.ui.helper.openDeepLinkAction
 import com.alexgreece45.marvelx.ui.screens.allCharacters.navigation.AllCharactersRoute
-import com.alexgreece45.marvelx.ui.screens.allFavoriteCharacters.navigation.AllFavoriteCharactersRoute
+import com.alexgreece45.marvelx.ui.screens.favoriteListings.navigation.FavoriteListingsRoute
 import com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.CheckoutWizardScreen
 import com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.CheckoutWizardViewModel
 import com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.model.CheckoutWizardContract
@@ -93,8 +93,7 @@ import com.alexgreece45.marvelx.ui.screens.signup.SignUpScreen
 import com.alexgreece45.marvelx.ui.screens.signup.SignupEffect
 import com.alexgreece45.marvelx.ui.screens.signup.SignupViewModel
 import com.alexgreece45.marvelx.ui.screens.splash.SplashScreen
-import com.alexgreece45.marvelx.ui.transitions.EnterTransition
-import com.alexgreece45.marvelx.ui.transitions.ExitTransition
+import com.alexgreece45.marvelx.ui.transitions.NavigationTransitions
 import com.alexgreece45.marvelx.ui_theme.theme.values.customColors
 import com.alexgreece45.marvelx.util.SPACING_MEDIUM
 import com.alexgreece45.marvelx.util.extensions.composable
@@ -111,7 +110,13 @@ import org.koin.androidx.compose.koinViewModel
 internal fun NavGraph(navController: NavHostController) {
     NavHost(
         navController = navController,
-        startDestination = Screen.getStartDestination()
+        startDestination = Screen.getStartDestination(),
+        // Applied to every destination that does not declare its own, so the whole graph animates
+        // consistently instead of each screen opting in separately.
+        enterTransition = NavigationTransitions.enter,
+        exitTransition = NavigationTransitions.exit,
+        popEnterTransition = NavigationTransitions.popEnter,
+        popExitTransition = NavigationTransitions.popExit
     ) {
         // Register screens.
         composable(Screen.SplashScreen) {
@@ -367,8 +372,6 @@ internal fun NavGraph(navController: NavHostController) {
 
         composable(
             screen = Screen.MyListingsScreen,
-            enterTransition = { EnterTransition.RightToLeft },
-            exitTransition = { ExitTransition.LeftToRight },
         ) {
             val viewModel = koinViewModel<MyListingsViewModel>()
             MyListingsScreen(
@@ -446,8 +449,6 @@ internal fun NavGraph(navController: NavHostController) {
 
         composable(
             screen = Screen.OrdersScreen,
-            enterTransition = { EnterTransition.RightToLeft },
-            exitTransition = { ExitTransition.LeftToRight },
         ) {
             val viewModel = koinViewModel<OrdersViewModel>()
             OrdersScreen(
@@ -504,12 +505,9 @@ internal fun NavGraph(navController: NavHostController) {
             }
         )
 
-//        allFavoriteCharactersScreen(navController)
 
         composable(
             screen = Screen.FriendsScreen,
-            enterTransition = { EnterTransition.RightToLeft },
-            exitTransition = { ExitTransition.LeftToRight },
         ) {
             val viewModel = koinViewModel<FriendsViewModel>()
             FriendsScreen(
@@ -540,8 +538,10 @@ internal fun NavGraph(navController: NavHostController) {
 
         composable(
             screen = Screen.ProfileImageScreen,
-            enterTransition = { EnterTransition.BottomToTop },
-            exitTransition = { ExitTransition.TopToBottom }
+            enterTransition = NavigationTransitions.modalEnter,
+            exitTransition = NavigationTransitions.modalExit,
+            popEnterTransition = NavigationTransitions.modalPopEnter,
+            popExitTransition = NavigationTransitions.modalPopExit
         ) { navBackStackEntry ->
             val viewModel = koinViewModel<ProfileImageViewModel>()
             ProfileImageScreen(
@@ -556,8 +556,6 @@ internal fun NavGraph(navController: NavHostController) {
 
         composable(
             screen = Screen.ProfileDetailsScreen,
-            enterTransition = { EnterTransition.RightToLeft },
-            exitTransition = { ExitTransition.LeftToRight },
         ) { navBackStackEntry ->
             val viewModel = koinViewModel<ProfileDetailsViewModel>()
             ProfileDetailsScreen(
@@ -639,8 +637,6 @@ internal fun NavGraph(navController: NavHostController) {
 
         composable(
             screen = Screen.EditProfileDetailsScreen,
-            enterTransition = { EnterTransition.RightToLeft },
-            exitTransition = { ExitTransition.LeftToRight },
         ) {
             val viewModel = koinViewModel<EditProfileDetailsViewModel>()
             EditProfileDetailsScreen(
@@ -665,8 +661,6 @@ internal fun NavGraph(navController: NavHostController) {
 
         composable(
             screen = Screen.SettingsScreen,
-            enterTransition = { EnterTransition.RightToLeft },
-            exitTransition = { ExitTransition.LeftToRight },
         ) {
             val viewModel = koinViewModel<SettingsViewModel>()
 
@@ -697,8 +691,6 @@ internal fun NavGraph(navController: NavHostController) {
 
         composable(
             screen = Screen.PrivacySettingsScreen,
-            enterTransition = { EnterTransition.RightToLeft },
-            exitTransition = { ExitTransition.LeftToRight },
         ) {
             val viewModel = koinViewModel<PrivacySettingsViewModel>()
             PrivacySettingsScreen(
@@ -711,8 +703,6 @@ internal fun NavGraph(navController: NavHostController) {
 
         composable(
             screen = Screen.FaqScreen,
-            enterTransition = { EnterTransition.RightToLeft },
-            exitTransition = { ExitTransition.LeftToRight },
         ) {
             val viewModel = koinViewModel<FaqViewModel>()
             FaqScreen(
@@ -797,7 +787,7 @@ private fun getBottomNavigationItems(): List<BottomBarItem> = listOf(
         )
     ),
     BottomBarItem(
-        route = AllFavoriteCharactersRoute,
+        route = FavoriteListingsRoute,
         label = R.string.bottom_navigation_label_favorites,
         iconData = IconData(
             iconResource = R.drawable.ic_favorite_filled,

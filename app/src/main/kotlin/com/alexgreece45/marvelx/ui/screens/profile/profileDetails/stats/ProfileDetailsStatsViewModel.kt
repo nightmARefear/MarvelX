@@ -5,6 +5,12 @@ import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.core.data.helper.RepositoryResult
 import com.alexgreece45.marvelx.core.network.model.api.user.friend.ResponseFriend
 import com.alexgreece45.marvelx.data.repository.user.FriendRepository
+import com.alexgreece45.marvelx.core.data.repositories.UserSessionRepository
+import com.alexgreece45.marvelx.domain.helper.InteractorPartialState
+import com.alexgreece45.marvelx.domain.helper.mapSuccess
+import com.alexgreece45.marvelx.domain.interactors.marketplace.listing.ListingInteractor
+import com.alexgreece45.marvelx.domain.model_api.marketplace.listing.ListingPreviewDomain
+import com.alexgreece45.marvelx.domain.model_api.myListing.MyListingDomain
 import com.alexgreece45.marvelx.model.model.user.UserId
 import com.alexgreece45.marvelx.mvi.BaseViewModel
 import com.alexgreece45.marvelx.ui.screens.profile.profileDetails.stats.model.ProfileDetailsStatsContract
@@ -18,7 +24,9 @@ import org.koin.android.annotation.KoinViewModel
 @KoinViewModel
 class ProfileDetailsStatsViewModel(
     private val resourceProvider: ResourceProvider,
-    private val friendRepository: FriendRepository
+    private val friendRepository: FriendRepository,
+    private val listingInteractor: ListingInteractor,
+    private val userSessionRepository: UserSessionRepository
 ) :
     BaseViewModel<ProfileDetailsStatsContract.Event, ProfileDetailsStatsContract.State, ProfileDetailsStatsContract.Effect>() {
 
@@ -147,21 +155,64 @@ class ProfileDetailsStatsViewModel(
     }
 
     private fun getListings() {
-        setState {
-            copy(
-                isLoading = false,
-                error = ProfileDetailsStatsErrorView(
-                    subtitle = resourceProvider.getString(R.string.generic_unknown_error),
-                    primaryButtonLabel = resourceProvider.getString(R.string.generic_go_back),
-                    primaryButtonOnClicked = {
-                        setEffect {
-                            ProfileDetailsStatsContract.Effect.Navigation.NavigateUp
-                        }
+        viewModelScope.launch {
+            // Viewing your own profile resolves through /user/me/listings; another user's listings
+            // come from the user-scoped endpoint.
+            val isCurrentUser = userSessionRepository.getUserId() == currentState.userId.value
+
+            val partialState = if (isCurrentUser) {
+                listingInteractor.getCurrentUserListings(page = FIRST_PAGE)
+                    .mapSuccess { listings -> listings.map(MyListingDomain::toProfileDetailsStatsItem) }
+            } else {
+                listingInteractor.getUserListings(
+                    userId = currentState.userId.value,
+                    page = FIRST_PAGE
+                ).mapSuccess { listings -> listings.map(ListingPreviewDomain::toProfileDetailsStatsItem) }
+            }
+
+            when (partialState) {
+                is InteractorPartialState.Success -> {
+                    setState {
+                        copy(
+                            isLoading = false,
+                            items = partialState.data
+                        )
                     }
-                )
-            )
+                }
+
+                InteractorPartialState.NoInternetConnection -> {
+                    setState {
+                        copy(
+                            isLoading = false,
+                            error = noInternetError()
+                        )
+                    }
+                }
+
+                is InteractorPartialState.Failed,
+                is InteractorPartialState.Error -> {
+                    setState {
+                        copy(
+                            isLoading = false,
+                            error = genericRetryableError()
+                        )
+                    }
+                }
+            }
         }
     }
+
+    private fun noInternetError() = ProfileDetailsStatsErrorView(
+        subtitle = resourceProvider.getString(R.string.no_internet_connection_error_message),
+        primaryButtonLabel = resourceProvider.getString(R.string.generic_retry_button),
+        primaryButtonOnClicked = ::loadData
+    )
+
+    private fun genericRetryableError() = ProfileDetailsStatsErrorView(
+        subtitle = resourceProvider.getString(R.string.generic_unknown_error),
+        primaryButtonLabel = resourceProvider.getString(R.string.generic_retry_button),
+        primaryButtonOnClicked = ::loadData
+    )
 
     private fun getFavorites() {
         setState {
@@ -178,5 +229,9 @@ class ProfileDetailsStatsViewModel(
                 )
             )
         }
+    }
+
+    private companion object {
+        const val FIRST_PAGE = 1
     }
 }

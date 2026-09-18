@@ -66,7 +66,7 @@ import com.alexgreece45.marvelx.ui.navigation.NavGraph
 import com.alexgreece45.marvelx.ui.navigation.Screen
 import com.alexgreece45.marvelx.ui.navigation.models.NavArg
 import com.alexgreece45.marvelx.ui.screens.allCharacters.navigation.AllCharactersRoute
-import com.alexgreece45.marvelx.ui.screens.allFavoriteCharacters.navigation.AllFavoriteCharactersRoute
+import com.alexgreece45.marvelx.ui.screens.favoriteListings.navigation.FavoriteListingsRoute
 import com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.steps.success.navigation.CheckoutSuccessRoute
 import com.alexgreece45.marvelx.ui.screens.cart.navigation.CartRoute
 import com.alexgreece45.marvelx.ui.screens.character.allCharacterComicsScreen.navigation.AllCharacterComicsRoute
@@ -540,7 +540,7 @@ internal class MainActivity : AppCompatActivity() {
         ComicRoute::class,
         AllCharactersRoute::class,
         AllCharacterComicsRoute::class,
-        AllFavoriteCharactersRoute::class,
+        FavoriteListingsRoute::class,
         ProfileRoute::class,
         RequestItemReturnRoute::class,
         RequestItemReturnSuccessRoute::class,

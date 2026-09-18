@@ -12,8 +12,8 @@ import com.alexgreece45.marvelx.core.common.util.flows.single_observer_flow.Sing
 import com.alexgreece45.marvelx.ui.helper.openDeepLinkAction
 import com.alexgreece45.marvelx.ui.navigation.getBottomNavigationBarData
 import com.alexgreece45.marvelx.ui.screens.allCharacters.navigation.allCharactersScreen
-import com.alexgreece45.marvelx.ui.screens.allFavoriteCharacters.navigation.allFavoriteCharactersScreen
-import com.alexgreece45.marvelx.ui.screens.allFavoriteCharacters.navigation.navigateToAllFavoriteCharactersScreen
+import com.alexgreece45.marvelx.ui.screens.favoriteListings.navigation.favoriteListingsScreen
+import com.alexgreece45.marvelx.ui.screens.favoriteListings.navigation.navigateToFavoriteListingsScreen
 import com.alexgreece45.marvelx.ui.screens.cart.navigation.cartScreen
 import com.alexgreece45.marvelx.ui.screens.cart.navigation.navigateToCartScreen
 import com.alexgreece45.marvelx.ui.screens.character.navigation.navigateToCharacterScreen
@@ -52,7 +52,7 @@ fun DashboardScreen(
     ) {
         marketplaceScreen(
             navigateToListingDetailsScreen = rootNavController::navigateToListingDetailsScreen,
-            navigateToFavoritesScreen = dashboardNavController::navigateToAllFavoriteCharactersScreen,
+            navigateToFavoritesScreen = dashboardNavController::navigateToFavoriteListingsScreen,
             navigateToCartScreen = dashboardNavController::navigateToCartScreen,
             bottomNavigationBarData = { getBottomNavigationBarData(dashboardNavController) },
         )
@@ -72,7 +72,10 @@ fun DashboardScreen(
             openDeepLinkAction = rootNavController::openDeepLinkAction
         )
 
-        allFavoriteCharactersScreen(dashboardNavController)
+        favoriteListingsScreen(
+            navController = dashboardNavController,
+            navigateToListingDetailsScreen = rootNavController::navigateToListingDetailsScreen
+        )
 
         cartScreen(
             navController = dashboardNavController,

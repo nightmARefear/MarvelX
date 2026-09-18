@@ -135,8 +135,14 @@
     // All Character Comics Screen
     <string name="all_character_comics_screen_toolbar_title">%1$s Comics</string>
 
-    // All Favorite Characters Screen
-    <string name="all_favorite_characters_screen_toolbar_title">Favorite Characters</string>
+    // Favorite Listings Screen
+    <string name="screen_favorite_listings_toolbar_title">Favorites</string>
+    <string name="screen_favorite_listings_empty_message">You have not added any listings to your favorites yet.</string>
+    <string name="screen_favorite_listings_error_loading">An error occurred whilst loading your favorite listings.</string>
+    <string name="screen_favorite_listings_error_favorite_toggle">An error occurred whilst updating your favorites. Please try again.</string>
+    <string name="screen_favorite_listings_error_cart_toggle">An error occurred whilst updating your cart. Please try again.</string>
+    <string name="screen_favorite_listings_content_description_favorite">toggle favorite</string>
+    <string name="screen_favorite_listings_content_description_add_to_cart">add listing to cart</string>
 
     // Friends Screen
     <string name="screen_friends_toolbar_title">Friends</string>
@@ -299,6 +305,7 @@
     <string name="screen_profile_details_stats_error_button">Go back</string>
 
     <string name="screen_profile_details_stats_content_description_profile_image">profile image of %1$s</string>
+    <string name="screen_profile_details_stats_content_description_listing_image">listing cover image</string>
 
     // Settings Screen
     <string name="screen_settings_toolbar_title">Settings</string>

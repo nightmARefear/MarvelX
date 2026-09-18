@@ -6,7 +6,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.navigation
 import com.alexgreece45.marvelx.ui.components.BottomNavigationBarData
 import com.alexgreece45.marvelx.ui.navigation.Screen
-import com.alexgreece45.marvelx.ui.screens.allFavoriteCharacters.navigation.navigateToAllFavoriteCharactersScreen
+import com.alexgreece45.marvelx.ui.screens.favoriteListings.navigation.navigateToFavoriteListingsScreen
 import com.alexgreece45.marvelx.ui.screens.cart.navigation.navigateToCartScreen
 import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.navigation.createListingWizardScreen
 import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.navigation.navigateToCreateListingWizardScreen
@@ -28,7 +28,7 @@ fun NavGraphBuilder.marketplaceGraph(
     navigation<MarketplaceGraphRoute>(startDestination = MarketplaceRoute) {
         marketplaceScreen(
             navigateToListingDetailsScreen = navController::navigateToListingDetailsScreen,
-            navigateToFavoritesScreen = navController::navigateToAllFavoriteCharactersScreen,
+            navigateToFavoritesScreen = navController::navigateToFavoriteListingsScreen,
             navigateToCartScreen = navController::navigateToCartScreen,
             bottomNavigationBarData = bottomNavigationBarData,
         )
