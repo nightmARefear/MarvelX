@@ -670,15 +670,20 @@
     <string name="screen_order_item_management_label_order_ids">Order #%1$s > Order Item #%2$s</string>
     <string name="screen_order_item_management_label_current_status">CURRENT STATUS</string>
 
-    <string name="screen_order_item_management_dropdown_label_new_status">New Status</string>
-    <string name="screen_order_item_management_button_apply_status">Apply Status</string>
+    <string name="screen_order_item_management_button_mark_as_shipped">Mark as Shipped</string>
+    <string name="screen_order_item_management_mark_as_shipped_description">Confirm once you have handed the item over to the courier. Every status after dispatch is reported by the courier.</string>
+    <string name="screen_order_item_management_status_courier_managed_title">No action needed</string>
+    <string name="screen_order_item_management_status_courier_managed_description">This item has already been dispatched. The courier reports every status from here on.</string>
 
     <string name="screen_order_item_management_toast_message_status_updated">Successfully updated the order item status</string>
 
     <string name="screen_order_item_management_error_label_fetching_data">An error occurred whilst loading the details for the order %1$s and item %2$s.</string>
 
+    <string name="screen_order_item_management_return_section_title">Return Request</string>
     <string name="screen_order_item_management_return_card_title">A return has been requested for this item</string>
+    <string name="screen_order_item_management_return_action_required_title">Action required</string>
     <string name="screen_order_item_management_return_card_action">View</string>
+    <string name="screen_order_item_management_return_card_action_review">Review request</string>
 
     // Request Item Return Screen
     <string name="screen_request_item_return_toolbar_title">Request Return</string>
@@ -794,6 +799,65 @@
     <string name="screen_request_item_return_seller_action_accept_replace">Accept &amp; Replace Item</string>
     <string name="screen_request_item_return_seller_action_accept_refund">Accept &amp; Issue Refund</string>
     <string name="screen_request_item_return_seller_response_snackbar_error_message">An error occurred whilst submitting your response. Please try again.</string>
+    <string name="screen_request_item_return_seller_response_snackbar_success_message">Your response has been sent to the buyer.</string>
+
+    <string name="screen_request_item_return_seller_action_reject_description">Decline the request. The buyer keeps the item and receives no refund.</string>
+    <string name="screen_request_item_return_seller_action_accept_replace_description">Approve the return and send the buyer a replacement instead of a refund.</string>
+    <string name="screen_request_item_return_seller_action_accept_refund_description">Approve the return and refund the buyer the amount paid for this item.</string>
+
+    <string name="screen_request_item_return_seller_action_reject_dialog_title">Reject this return?</string>
+    <string name="screen_request_item_return_seller_action_reject_dialog_message">The buyer will be told their return was declined. This decision cannot be changed afterwards.</string>
+    <string name="screen_request_item_return_seller_action_accept_replace_dialog_title">Send a replacement?</string>
+    <string name="screen_request_item_return_seller_action_accept_replace_dialog_message">The return will be approved and you commit to sending a replacement item. This decision cannot be changed afterwards.</string>
+    <string name="screen_request_item_return_seller_action_accept_refund_dialog_title">Issue a refund?</string>
+    <string name="screen_request_item_return_seller_action_accept_refund_dialog_message">The return will be approved and the buyer will be refunded. This decision cannot be changed afterwards.</string>
+    <string name="screen_request_item_return_seller_response_dialog_button_negative">Cancel</string>
+
+    <string name="screen_request_item_return_seller_response_warning_title">This decision is final</string>
+    <string name="screen_request_item_return_seller_response_warning_description">A return request can only be answered once. Review the buyer\'s reason and photos before choosing.</string>
+    <string name="screen_request_item_return_seller_response_submitting">Sending your response…</string>
+
+    <string name="screen_request_item_return_seller_response_card_title">Your Response</string>
+    <string name="screen_request_item_return_seller_message_empty">No message was left for the buyer.</string>
+
+    <string name="screen_request_item_return_existing_return_refund_requested_label">Refund requested</string>
+    <string name="screen_request_item_return_status_banner_refund_amount">Refund issued: %1$s</string>
+
+    <string name="screen_request_item_return_buyer_awaiting_response_title">Nothing to do right now</string>
+    <string name="screen_request_item_return_buyer_awaiting_response_description">The seller has been notified. You will be told as soon as they respond to your request.</string>
+
+    <string name="screen_request_item_return_timeline_title">Progress</string>
+    <string name="screen_request_item_return_timeline_step_submitted">Request submitted</string>
+    <string name="screen_request_item_return_timeline_step_review">Seller review</string>
+    <string name="screen_request_item_return_timeline_step_review_in_progress">Awaiting the seller\'s decision</string>
+    <string name="screen_request_item_return_timeline_step_review_completed">The seller has responded</string>
+    <string name="screen_request_item_return_timeline_step_outcome">Outcome</string>
+    <string name="screen_request_item_return_timeline_step_outcome_awaiting">Not decided yet</string>
+
+    // Return status headlines and descriptions.
+    <string name="return_status_headline_pending_seller">Action required</string>
+    <string name="return_status_headline_pending_buyer">Waiting for the seller</string>
+    <string name="return_status_headline_rejected_seller">You rejected this return</string>
+    <string name="return_status_headline_rejected_buyer">Return rejected</string>
+    <string name="return_status_headline_replaced_seller">You approved a replacement</string>
+    <string name="return_status_headline_replaced_buyer">Replacement approved</string>
+    <string name="return_status_headline_refunded_seller">You issued a refund</string>
+    <string name="return_status_headline_refunded_buyer">Refund approved</string>
+    <string name="return_status_headline_available">Return available</string>
+    <string name="return_status_headline_expired">Return window closed</string>
+    <string name="return_status_headline_final_sale">Final sale</string>
+
+    <string name="return_status_description_pending_seller">The buyer is waiting for your decision on this return request.</string>
+    <string name="return_status_description_pending_buyer">Your request has been sent. The seller has yet to respond.</string>
+    <string name="return_status_description_rejected_seller">You declined this request. The buyer keeps the item and was not refunded.</string>
+    <string name="return_status_description_rejected_buyer">The seller declined your request. You keep the item and no refund was issued.</string>
+    <string name="return_status_description_replaced_seller">You approved this return and committed to sending a replacement item.</string>
+    <string name="return_status_description_replaced_buyer">The seller approved your return and will send you a replacement item.</string>
+    <string name="return_status_description_refunded_seller">You approved this return and the buyer has been refunded.</string>
+    <string name="return_status_description_refunded_buyer">The seller approved your return and your refund has been issued.</string>
+    <string name="return_status_description_available">This item can still be returned.</string>
+    <string name="return_status_description_expired">The period during which this item could be returned has passed.</string>
+    <string name="return_status_description_final_sale">This item was sold as a final sale and cannot be returned.</string>
 
     // Request Item Return Success Screen
     <string name="screen_request_item_return_success_toolbar_title">Return Submitted</string>

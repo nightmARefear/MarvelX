@@ -124,6 +124,16 @@ internal sealed interface RequestItemReturnContract {
         val sellerResponseMessageField: InputFieldUi.Text = InputFieldUi.Text(isMandatory = false),
         val isSubmittingSellerResponse: Boolean = false,
     ) : BaseState {
+        /**
+         * Only a seller looking at a request that is still pending can act on it; every other
+         * status has already been answered and is read-only for both sides.
+         */
+        val isSellerResponsePanelVisible: Boolean
+            get() = isSeller
+                    && (returnState as? OrderItemReturnStateUi.Existing)
+                ?.orderItemReturn
+                ?.returnStatus == OrderItemReturnStatusUi.PENDING
+
         val progress: Float
             get() = (wizardStep.ordinal + 1) / RequestItemReturnWizardStep.TOTAL_STEPS.toFloat()
 

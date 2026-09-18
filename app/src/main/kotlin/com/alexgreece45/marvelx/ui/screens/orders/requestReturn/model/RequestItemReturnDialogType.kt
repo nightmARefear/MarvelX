@@ -22,4 +22,16 @@ sealed class RequestItemReturnDialogType(
         confirmButtonLabelResId = R.string.screen_request_item_return_exit_dialog_button_positive,
         dismissButtonLabelResId = R.string.screen_request_item_return_exit_dialog_button_negative
     )
+
+    /**
+     * Confirmation before a seller response is submitted. The decision is irreversible for the
+     * seller, so it is never applied straight from the action button.
+     */
+    internal data class SellerResponse(val action: OrderItemReturnSellerActionUi) :
+        RequestItemReturnDialogType(
+            titleResId = action.confirmDialogTitleResId,
+            messageResId = action.confirmDialogMessageResId,
+            confirmButtonLabelResId = action.labelResId,
+            dismissButtonLabelResId = R.string.screen_request_item_return_seller_response_dialog_button_negative
+        )
 }

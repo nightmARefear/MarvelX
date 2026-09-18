@@ -417,7 +417,7 @@ internal class RequestItemReturnViewModel(
     }
 
     private fun onDialogPositiveButtonClicked() {
-        when (currentState.dialogType) {
+        when (val dialogType = currentState.dialogType) {
             RequestItemReturnDialogType.Refund -> {
                 setState {
                     copy(
@@ -434,6 +434,16 @@ internal class RequestItemReturnViewModel(
                     )
                 }
                 setEffect { RequestItemReturnContract.Effect.Navigation.GoBack }
+            }
+
+            is RequestItemReturnDialogType.SellerResponse -> {
+                val action = dialogType.action
+                setState {
+                    copy(
+                        dialogType = null
+                    )
+                }
+                submitSellerResponse(action)
             }
 
             null -> {}
@@ -611,6 +621,14 @@ internal class RequestItemReturnViewModel(
 
     private fun onSellerResponseActionClicked(action: OrderItemReturnSellerActionUi) {
         if (currentState.isSubmittingSellerResponse) return
+
+        setState {
+            copy(dialogType = RequestItemReturnDialogType.SellerResponse(action))
+        }
+    }
+
+    private fun submitSellerResponse(action: OrderItemReturnSellerActionUi) {
+        if (currentState.isSubmittingSellerResponse) return
         val orderItemReturn =
             (currentState.returnState as? OrderItemReturnStateUi.Existing)?.orderItemReturn ?: return
 
@@ -631,9 +649,13 @@ internal class RequestItemReturnViewModel(
                             setState {
                                 copy(
                                     isSubmittingSellerResponse = false,
-                                    returnState = OrderItemReturnStateUi.Existing(updatedOrderItemReturnUi)
+                                    returnState = OrderItemReturnStateUi.Existing(updatedOrderItemReturnUi),
+                                    sellerResponseMessageField = sellerResponseMessageField.copy(value = "")
                                 )
                             }
+                            showSuccessSnackbar(
+                                message = resourceProvider.getString(R.string.screen_request_item_return_seller_response_snackbar_success_message)
+                            )
                         }
                         .onFailure {
                             setState {

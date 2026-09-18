@@ -55,13 +55,8 @@ internal class OrderItemManagementViewModel(
         when (event) {
             OrderItemManagementContract.Event.OnBack -> onBack()
             OrderItemManagementContract.Event.OnErrorButtonClicked -> onErrorButtonClicked()
-            OrderItemManagementContract.Event.DropdownEvents.OnClicked -> onDropdownClicked()
-            OrderItemManagementContract.Event.DropdownEvents.OnDismissed -> onDropdownDismissed()
-            is OrderItemManagementContract.Event.DropdownEvents.OnItemSelected -> onDropdownItemSelected(
-                event.status
-            )
 
-            OrderItemManagementContract.Event.OnApplyStatusButtonClicked -> onApplyStatusButtonClicked()
+            OrderItemManagementContract.Event.OnMarkAsShippedClicked -> onMarkAsShippedClicked()
 
             OrderItemManagementContract.Event.OnReturnCardClicked -> onReturnCardClicked()
         }
@@ -105,37 +100,14 @@ internal class OrderItemManagementViewModel(
         }
     }
 
-    private fun onDropdownClicked() {
-        setState {
-            copy(isDropdownExpanded = !isDropdownExpanded)
-        }
-    }
-
-    private fun onDropdownDismissed() {
-        setState {
-            copy(isDropdownExpanded = false)
-        }
-    }
-
-    private fun onDropdownItemSelected(status: OrderItemStatusUi) {
-        setState {
-            copy(
-                selectedNewStatus = status,
-                isDropdownExpanded = false
-            )
-        }
-    }
-
-    private fun onApplyStatusButtonClicked() {
-        val newStatus = currentState.selectedNewStatus ?: return
+    // TODO: Apply the new status through the backend once an order item status endpoint exists.
+    //  Until then the transition only lives in this screen's state and is lost on reload.
+    private fun onMarkAsShippedClicked() {
         val currentData = (currentState.uiState as? UiState.Success)?.data ?: return
-        if (newStatus == currentData.status) return
+        if (currentData.status != OrderItemStatusUi.Processing) return
 
         setState {
-            copy(
-                uiState = UiState.Success(currentData.copy(status = newStatus)),
-                selectedNewStatus = null
-            )
+            copy(uiState = UiState.Success(currentData.copy(status = OrderItemStatusUi.Shipped)))
         }
 
         setEffect {

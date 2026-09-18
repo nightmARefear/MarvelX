@@ -15,13 +15,7 @@ internal interface OrderItemManagementContract {
         data object OnBack : Event
         data object OnErrorButtonClicked : Event
 
-        sealed interface DropdownEvents : Event {
-            data object OnClicked : DropdownEvents
-            data object OnDismissed : DropdownEvents
-            data class OnItemSelected(val status: OrderItemStatusUi) : DropdownEvents
-        }
-
-        data object OnApplyStatusButtonClicked : Event
+        data object OnMarkAsShippedClicked : Event
 
         data object OnReturnCardClicked : Event
     }
@@ -32,13 +26,17 @@ internal interface OrderItemManagementContract {
         val orderId: OrderId = OrderId.EMPTY,
         val orderItemId: OrderId = OrderId.EMPTY,
 
-        val isDropdownExpanded: Boolean = false,
-        val selectedNewStatus: OrderItemStatusUi? = null,
-
         // Set only when a return request already exists for this order item (any status). Null
         // means either it's still loading or there is no return to display.
         val existingReturnStatus: OrderItemReturnStatusUi? = null,
-    ) : BaseState
+    ) : BaseState {
+        /**
+         * Dispatch is the only transition the seller owns; everything past it is reported by the
+         * courier, so the action disappears as soon as the item leaves the seller.
+         */
+        val isMarkAsShippedAvailable: Boolean
+            get() = (uiState as? UiState.Success)?.data?.status == OrderItemStatusUi.Processing
+    }
 
     sealed interface Effect : BaseEffect {
         sealed interface Navigation : Effect {
