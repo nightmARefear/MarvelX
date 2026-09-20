@@ -19,7 +19,6 @@ sealed class HomeEvent : BaseEvent {
 
 data class HomeState(
     val isLoading: Boolean = false,
-    val hasInternetConnection: Boolean = true,
     val alertDialogError: HomeAlertDialogErrorView? = null,
 ) : BaseState
 
@@ -28,12 +27,6 @@ sealed interface HomeEffect : BaseEffect {
         data object PopBackStack : Navigation()
         data object NavigateToLoginScreen : Navigation()
         data object NavigateToSignupScreen : Navigation()
-        data class NavigateToOtpScreen(
-            val userId: String,
-            val otpFlowType: String,
-            val verificationStep: String,
-            val shouldRememberUserSession: Boolean
-        ) : Navigation()
     }
 }
 
@@ -46,47 +39,31 @@ class HomeViewModel(
     override fun handleEvents(event: HomeEvent) {
         when (event) {
             is HomeEvent.Init -> {
-                event.logoutReason?.let { stringifiedLogoutReason ->
-                    val logoutReason =
-                        LogoutReason.entries.firstOrNull { it.name == stringifiedLogoutReason }
-                            ?: return
+                // Anything that is not a LogoutReason name (e.g. the "none" sentinel) means the
+                // screen was reached normally and there is nothing to announce.
+                val logoutReason = LogoutReason.entries.firstOrNull { it.name == event.logoutReason }
+                    ?: return
 
-                    val (titleResId, descriptionResId) = when (logoutReason) {
-                        LogoutReason.SESSION_EXPIRED,
-                        LogoutReason.WEBSOCKET_ERROR,
-                        LogoutReason.SECURITY_VALIDATION_ERROR -> {
-                            R.string.screen_home_alert_dialog_session_expired_title to R.string.screen_home_alert_dialog_session_expired_description
-                        }
-
-                        LogoutReason.USER_TRIGGERED -> {
-                            R.string.screen_home_alert_dialog_user_logout_title to R.string.screen_home_alert_dialog_user_logout_description
-                        }
+                val (titleResId, descriptionResId) = when (logoutReason) {
+                    LogoutReason.SESSION_EXPIRED,
+                    LogoutReason.SECURITY_VALIDATION_ERROR -> {
+                        R.string.screen_home_alert_dialog_session_expired_title to R.string.screen_home_alert_dialog_session_expired_description
                     }
 
-                    showAlertDialog(
-                        title = resourceProvider.getString(titleResId),
-                        description = resourceProvider.getString(descriptionResId)
-                    )
+                    LogoutReason.USER_TRIGGERED -> {
+                        R.string.screen_home_alert_dialog_user_logout_title to R.string.screen_home_alert_dialog_user_logout_description
+                    }
                 }
+
+                showAlertDialog(
+                    title = resourceProvider.getString(titleResId),
+                    description = resourceProvider.getString(descriptionResId)
+                )
             }
 
-            HomeEvent.OnBack -> {
-                setEffect {
-                    HomeEffect.Navigation.PopBackStack
-                }
-            }
-
-            HomeEvent.OnLoginButtonClicked -> {
-                setEffect {
-                    HomeEffect.Navigation.NavigateToLoginScreen
-                }
-            }
-
-            HomeEvent.OnSignupButtonClicked -> {
-                setEffect {
-                    HomeEffect.Navigation.NavigateToSignupScreen
-                }
-            }
+            HomeEvent.OnBack -> setEffect { HomeEffect.Navigation.PopBackStack }
+            HomeEvent.OnLoginButtonClicked -> setEffect { HomeEffect.Navigation.NavigateToLoginScreen }
+            HomeEvent.OnSignupButtonClicked -> setEffect { HomeEffect.Navigation.NavigateToSignupScreen }
         }
     }
 
@@ -98,11 +75,7 @@ class HomeViewModel(
                     description = description,
                     buttonLabel = resourceProvider.getString(R.string.generic_ok_button),
                     alertDialogOnClick = {
-                        setState {
-                            copy(
-                                alertDialogError = null
-                            )
-                        }
+                        setState { copy(alertDialogError = null) }
                     }
                 )
             )

@@ -9,11 +9,15 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarNavigationPayload
+import com.alexgreece45.marvelx.core.network.managers.model.LogoutReason
 import com.alexgreece45.marvelx.ui.components.BottomBarItem
 import com.alexgreece45.marvelx.ui.components.BottomNavigationBarData
 import com.alexgreece45.marvelx.ui.components.IconData
+import com.alexgreece45.marvelx.data.repository.chat.ChatRepository
 import com.alexgreece45.marvelx.ui.helper.openDeepLinkAction
-import com.alexgreece45.marvelx.ui.screens.allCharacters.navigation.AllCharactersRoute
+import com.alexgreece45.marvelx.ui.screens.chat.conversation.navigation.conversationScreen
+import com.alexgreece45.marvelx.ui.screens.chat.conversation.navigation.navigateToDirectConversationScreen
+import com.alexgreece45.marvelx.ui.screens.chat.inbox.navigation.InboxRoute
 import com.alexgreece45.marvelx.ui.screens.favoriteListings.navigation.FavoriteListingsRoute
 import com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.CheckoutWizardScreen
 import com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.CheckoutWizardViewModel
@@ -22,7 +26,10 @@ import com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.steps.shippingDet
 import com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.steps.success.navigation.checkoutSuccessScreen
 import com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.steps.success.navigation.navigateToCheckoutSuccessScreen
 import com.alexgreece45.marvelx.ui.screens.cart.navigation.CartRoute
+import com.alexgreece45.marvelx.ui.screens.changePassword.ChangePasswordContract
 import com.alexgreece45.marvelx.ui.screens.changePassword.ChangePasswordScreen
+import com.alexgreece45.marvelx.ui.screens.changePassword.ChangePasswordViewModel
+import com.alexgreece45.marvelx.ui.screens.changePassword.passwordChanged.PasswordChangedScreen
 import com.alexgreece45.marvelx.ui.screens.character.allCharacterComicsScreen.navigation.allCharacterComicsScreen
 import com.alexgreece45.marvelx.ui.screens.character.allCharacterComicsScreen.navigation.navigateToAllCharacterComicsScreen
 import com.alexgreece45.marvelx.ui.screens.character.navigation.characterScreen
@@ -31,7 +38,6 @@ import com.alexgreece45.marvelx.ui.screens.comic.navigation.navigateToComicScree
 import com.alexgreece45.marvelx.ui.screens.dashboard.navigation.dashboardGraph
 import com.alexgreece45.marvelx.ui.screens.dashboard.navigation.navigateToDashboardScreen
 import com.alexgreece45.marvelx.ui.screens.forgotPasswordScreen.ForgotPasswordScreen
-import com.alexgreece45.marvelx.ui.screens.forgotPasswordScreen.forgotPasswordValidateEmailScreen.ForgotPasswordValidateEmailScreen
 import com.alexgreece45.marvelx.ui.screens.friends.FriendsScreen
 import com.alexgreece45.marvelx.ui.screens.friends.FriendsViewModel
 import com.alexgreece45.marvelx.ui.screens.friends.model.FriendsContract
@@ -100,6 +106,7 @@ import com.alexgreece45.marvelx.util.extensions.composable
 import com.alexgreece45.marvelx.util.extensions.openAppSettings
 import com.alexgreece45.marvelx.util.extensions.popUpToTop
 import org.koin.androidx.compose.koinViewModel
+import org.koin.compose.koinInject
 
 /**
  * Generates the `NavHost` of this application by providing all the necessary routes / screens.
@@ -122,7 +129,7 @@ internal fun NavGraph(navController: NavHostController) {
         composable(Screen.SplashScreen) {
             SplashScreen(
                 popUpToHomeScreen = {
-                    navController.navigate(Screen.HomeScreen.route) {
+                    navController.navigate(Screen.HomeScreen.createNavRoute()) {
                         popUpToTop(navController)
                     }
                 },
@@ -163,19 +170,6 @@ internal fun NavGraph(navController: NavHostController) {
                         HomeEffect.Navigation.NavigateToSignupScreen -> {
                             navController.navigate(Screen.SignupScreen.route) {
                                 launchSingleTop = true
-                            }
-                        }
-
-                        is HomeEffect.Navigation.NavigateToOtpScreen -> {
-                            with(navigationEffect) {
-                                navController.navigate(
-                                    Screen.OtpScreen.createNavRoute(
-                                        userId = userId,
-                                        otpFlowType = otpFlowType,
-                                        verificationStep = verificationStep,
-                                        shouldRememberUserSession = shouldRememberUserSession
-                                    )
-                                )
                             }
                         }
                     }
@@ -233,26 +227,35 @@ internal fun NavGraph(navController: NavHostController) {
             )
         }
 
-        composable(Screen.ForgotPasswordValidateEmailScreen) { navBackStackEntry ->
-            ForgotPasswordValidateEmailScreen(
-                popBackStack = navController::navigateUp,
-                navigateToForgotPasswordEnterPhoneNumberScreen = { requestIdEmail ->
-                    navController.navigate(
-                        Screen.ForgotPasswordEnterPhoneNumberScreen.createNavRoute(
-                            requestIdEmail = requestIdEmail
-                        )
-                    )
-                },
-                requestIdEmail = navBackStackEntry.arguments?.getString(NavItem.RequestIdEmail.key)
+        composable(Screen.ChangePasswordScreen) { entry ->
+            val viewModel = koinViewModel<ChangePasswordViewModel>()
+            ChangePasswordScreen(
+                onEvent = viewModel::setEvent,
+                state = viewModel.uiState.collectAsStateWithLifecycle().value,
+                effect = viewModel.uiEffect,
+                snackbarEffects = viewModel.snackbarEffects,
+                requestIdEmail = entry.arguments?.getString(NavItem.RequestIdEmail.key),
+                onNavigationEffect = { navigationEffect ->
+                    when (navigationEffect) {
+                        ChangePasswordContract.Effect.Navigation.PopBackStack -> navController.navigateUp()
+
+                        ChangePasswordContract.Effect.Navigation.GoToPasswordChangedScreen -> {
+                            navController.navigate(Screen.PasswordChangedScreen.route) {
+                                popUpTo(Screen.HomeScreen.route)
+                            }
+                        }
+                    }
+                }
             )
         }
 
-        composable(Screen.ChangePasswordScreen) { entry ->
-            ChangePasswordScreen(
-                popBackStack = navController::navigateUp,
-                otpFlowType = entry.arguments?.getString(NavItem.OtpFlowType.key),
-                requestIdEmail = entry.arguments?.getString(NavItem.RequestIdEmail.key).orEmpty(),
-                requestIdPhoneNumber = entry.arguments?.getString(NavItem.RequestIdPhoneNumber.key)
+        composable(Screen.PasswordChangedScreen) {
+            PasswordChangedScreen(
+                onGoToLoginClick = {
+                    navController.navigate(Screen.LoginScreen.route) {
+                        popUpTo(Screen.HomeScreen.route)
+                    }
+                }
             )
         }
 
@@ -308,8 +311,7 @@ internal fun NavGraph(navController: NavHostController) {
                         is OtpEffect.Navigation.NavigateToChangePasswordScreen -> {
                             navController.navigate(
                                 Screen.ChangePasswordScreen.createNavRoute(
-                                    requestIdEmail = navigationEffect.requestIdEmail,
-                                    requestIdPhoneNumber = navigationEffect.requestIdPhoneNumber
+                                    requestIdEmail = navigationEffect.requestIdEmail
                                 )
                             )
                         }
@@ -477,6 +479,8 @@ internal fun NavGraph(navController: NavHostController) {
 
         orderItemManagementScreen(navController = navController)
 
+        conversationScreen(navController = navController)
+
         requestItemReturnScreen(navController = navController)
 
         requestItemReturnSuccessScreen(navController = navController)
@@ -592,6 +596,10 @@ internal fun NavGraph(navController: NavHostController) {
                                 )
                             )
                         }
+
+                        is ProfileDetailsContract.Effect.Navigation.NavigateToConversation -> {
+                            navController.navigateToDirectConversationScreen(navigationEffect.userId)
+                        }
                     }
                 },
                 snackbarNavigationPayloadFlow = navBackStackEntry.savedStateHandle
@@ -676,7 +684,9 @@ internal fun NavGraph(navController: NavHostController) {
                         )
 
                         SettingsContract.Effect.Navigation.NavigateToHomeScreen -> {
-                            navController.navigate(Screen.HomeScreen.route) {
+                            navController.navigate(
+                                Screen.HomeScreen.createNavRoute(LogoutReason.USER_TRIGGERED.name)
+                            ) {
                                 popUpToTop(navController)
                             }
                         }
@@ -746,45 +756,42 @@ internal fun NavGraph(navController: NavHostController) {
  * @param navController The associated [NavController] of the graph.
  */
 @Composable
-fun getBottomNavigationBarData(navController: NavController): BottomNavigationBarData =
-    BottomNavigationBarData(
+fun getBottomNavigationBarData(navController: NavController): BottomNavigationBarData {
+    val unreadMessages = koinInject<ChatRepository>().unreadCount.collectAsStateWithLifecycle().value
+
+    return BottomNavigationBarData(
         navController = navController,
         rootItem = rootBottomBarItem,
-        items = getBottomNavigationItems(),
+        items = getBottomNavigationItems(unreadMessages = unreadMessages),
         backgroundColor = MaterialTheme.colors.background,
         topHorizontalColor = MaterialTheme.colors.onBackground.copy(alpha = 0.8f),
         selectedItemTopHorizontalColor = MaterialTheme.customColors.genericRed.copy(alpha = 0.8f),
         elevation = SPACING_MEDIUM.dp
     )
+}
 
 private val rootBottomBarItem = BottomBarItem(
-    route = AllCharactersRoute,
-    label = R.string.bottom_navigation_label_characters,
+    route = MarketplaceRoute,
+    label = R.string.bottom_navigation_label_marketplace,
     iconData = IconData(
-        iconResource = R.drawable.ic_superhero,
-        contentDescription = R.string.bottom_navigation_label_characters
+        iconResource = R.drawable.ic_marketplace,
+        contentDescription = R.string.bottom_navigation_label_marketplace
     )
 )
 
 /**
  * Returns the bottom navigation items.
  */
-private fun getBottomNavigationItems(): List<BottomBarItem> = listOf(
+private fun getBottomNavigationItems(unreadMessages: Int): List<BottomBarItem> = listOf(
+    rootBottomBarItem,
     BottomBarItem(
-        route = MarketplaceRoute,
-        label = R.string.bottom_navigation_label_marketplace,
+        route = InboxRoute,
+        label = R.string.bottom_navigation_label_inbox,
         iconData = IconData(
-            iconResource = R.drawable.ic_marketplace,
-            contentDescription = R.string.bottom_navigation_label_marketplace
-        )
-    ),
-    BottomBarItem(
-        route = AllCharactersRoute,
-        label = R.string.bottom_navigation_label_characters,
-        iconData = IconData(
-            iconResource = R.drawable.ic_superhero,
-            contentDescription = R.string.bottom_navigation_label_characters
-        )
+            iconResource = R.drawable.ic_chat,
+            contentDescription = R.string.bottom_navigation_label_inbox
+        ),
+        badgeCount = unreadMessages
     ),
     BottomBarItem(
         route = FavoriteListingsRoute,

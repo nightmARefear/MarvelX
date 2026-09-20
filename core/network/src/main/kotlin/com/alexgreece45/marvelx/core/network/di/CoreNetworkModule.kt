@@ -18,8 +18,8 @@ import com.alexgreece45.marvelx.core.network.di.model.WebsocketOkHttpClient
 import com.alexgreece45.marvelx.core.network.di.model.WebsocketInterceptor
 import com.alexgreece45.marvelx.core.network.model.api.character.comic.ResponseComicPriceType
 import com.alexgreece45.marvelx.core.network.model.api.verification_step.ResponseVerificationStep
-import com.alexgreece45.marvelx.core.network.model.websocket.ResponseWebsocketRequestType
 import com.alexgreece45.marvelx.core.network.services.ApiService
+import com.alexgreece45.marvelx.core.network.services.ChatService
 import com.alexgreece45.marvelx.core.network.services.ListingService
 import com.alexgreece45.marvelx.core.network.services.OrderService
 import com.alexgreece45.marvelx.core.network.services.RefreshTokenService
@@ -27,7 +27,6 @@ import com.alexgreece45.marvelx.core.network.typeAdapters.InstantTypeAdapter
 import com.alexgreece45.marvelx.core.network.typeAdapters.OffsetDateTimeAdapter
 import com.alexgreece45.marvelx.core.network.typeAdapters.ResponseComicPriceTypeAdapter
 import com.alexgreece45.marvelx.core.network.typeAdapters.ResponseVerificationStepAdapter
-import com.alexgreece45.marvelx.core.network.typeAdapters.ResponseWebsocketRequestTypeAdapter
 import com.alexgreece45.marvelx.core.network.typeAdapters.UUIDAdapter
 import com.chuckerteam.chucker.api.ChuckerInterceptor
 import com.google.gson.Gson
@@ -76,10 +75,6 @@ internal fun provideGson(): Gson = GsonBuilder()
     .registerTypeAdapter(
         ResponseVerificationStep::class.java,
         ResponseVerificationStepAdapter()
-    )
-    .registerTypeAdapter(
-        ResponseWebsocketRequestType::class.java,
-        ResponseWebsocketRequestTypeAdapter()
     )
     .registerTypeAdapter(
         UUID::class.java,
@@ -268,3 +263,7 @@ internal fun provideListingService(@BackendRetrofit retrofit: Retrofit): Listing
 @Single
 internal fun provideOrderService(@BackendRetrofit retrofit: Retrofit): OrderService =
     retrofit.create(OrderService::class.java)
+
+@Single
+internal fun provideChatService(@BackendRetrofit retrofit: Retrofit): ChatService =
+    retrofit.create(ChatService::class.java)

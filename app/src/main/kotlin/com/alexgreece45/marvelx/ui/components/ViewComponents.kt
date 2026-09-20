@@ -40,6 +40,8 @@ import androidx.compose.material.AppBarDefaults
 import androidx.compose.material.BottomAppBar
 import androidx.compose.material.BottomNavigation
 import androidx.compose.material.BottomNavigationDefaults
+import androidx.compose.material.Badge
+import androidx.compose.material.BadgedBox
 import androidx.compose.material.BottomNavigationItem
 import androidx.compose.material.BottomSheetScaffold
 import androidx.compose.material.BottomSheetScaffoldDefaults
@@ -226,6 +228,8 @@ data class BottomBarItem(
     val route: Any,
     @StringRes val label: Int,
     val iconData: IconData,
+    /** Shown as a badge on the icon when greater than zero. */
+    val badgeCount: Int = 0,
 )
 
 data class BottomBarData(
@@ -387,13 +391,26 @@ private fun BottomNavigationBar(
                                     }
                             ),
                         icon = {
-                            Icon(
-                                painter = painterResource(item.iconData.iconResource),
-                                contentDescription = stringResource(item.iconData.contentDescription),
-                                modifier = Modifier.size(ConstantsUi.MIN_ICON_SIZE),
-                                tint = item.iconData.tint
-                                    ?: LocalContentColor.current.copy(alpha = LocalContentAlpha.current)
-                            )
+                            BadgedBox(
+                                badge = {
+                                    if (item.badgeCount > 0) {
+                                        Badge(backgroundColor = MaterialTheme.customColors.genericRed) {
+                                            Text(
+                                                text = item.badgeCount.coerceAtMost(99).toString(),
+                                                color = MaterialTheme.customColors.white
+                                            )
+                                        }
+                                    }
+                                }
+                            ) {
+                                Icon(
+                                    painter = painterResource(item.iconData.iconResource),
+                                    contentDescription = stringResource(item.iconData.contentDescription),
+                                    modifier = Modifier.size(ConstantsUi.MIN_ICON_SIZE),
+                                    tint = item.iconData.tint
+                                        ?: LocalContentColor.current.copy(alpha = LocalContentAlpha.current)
+                                )
+                            }
                         },
                         label = {
                             Text(

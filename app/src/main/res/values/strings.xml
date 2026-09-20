@@ -347,8 +347,17 @@
     <string name="screen_home_alert_dialog_user_logout_title">Logout</string>
     <string name="screen_home_alert_dialog_user_logout_description">You have been successfully logged out!</string>
 
-    <string name="screen_home_login_button">Login</string>
-    <string name="screen_home_signup_button">Signup</string>
+    <string name="screen_home_login_button">I already have an account</string>
+    <string name="screen_home_signup_button">Create an account</string>
+    <string name="screen_home_hero_title">MarvelX</string>
+    <string name="screen_home_hero_tagline">The marketplace for Marvel fans — buy, sell and trade collectibles with people who love them as much as you do.</string>
+    <string name="screen_home_features_title">Why MarvelX</string>
+    <string name="screen_home_feature_marketplace_title">A marketplace built for fans</string>
+    <string name="screen_home_feature_marketplace_description">Browse apparel, drinkware, collectibles, comics and cards listed by other collectors.</string>
+    <string name="screen_home_feature_secure_title">Secure checkout, easy returns</string>
+    <string name="screen_home_feature_secure_description">Pay safely, track every item to your door, and request a return in a couple of taps.</string>
+    <string name="screen_home_feature_chat_title">Talk to sellers directly</string>
+    <string name="screen_home_feature_chat_description">Message the seller about an order, or any collector about anything, without leaving the app.</string>
 
     // Login Screen
     <string name="login_screen_toolbar_title">Login</string>
@@ -1090,5 +1099,64 @@
     <string name="content_description_view_profile_image">View profile image</string>
     <string name="content_description_upload_profile_image">Upload profile image</string>
     <string name="content_description_delete_search_term">Delete search term</string>
+
+    // Chat — bottom navigation and entry points
+    <string name="bottom_navigation_label_inbox">Inbox</string>
+    <string name="generic_chip_label_message">Message</string>
+    <string name="content_description_message_user">Message user</string>
+    <string name="screen_order_item_management_button_message_buyer">Message buyer</string>
+    <string name="screen_order_item_management_message_buyer_description">Questions about the delivery or the item? Chat with the buyer directly.</string>
+
+    // Inbox Screen
+    <string name="screen_inbox_toolbar_title">Messages</string>
+    <string name="screen_inbox_empty_title">No conversations yet. Message a seller from an order, or a user from their profile.</string>
+    <string name="screen_inbox_error_loading">An error occurred whilst loading your conversations.</string>
+    <string name="screen_inbox_no_messages_yet">No messages yet</string>
+    <string name="screen_inbox_content_description_avatar">profile image of %1$s</string>
+
+    // Conversation Screen
+    <string name="screen_conversation_error_loading">An error occurred whilst opening this conversation.</string>
+    <string name="screen_conversation_error_forbidden">You can\'t message this user.</string>
+    <string name="screen_conversation_composer_placeholder">Write a message…</string>
+    <string name="screen_conversation_content_description_send">send message</string>
+    <string name="screen_conversation_content_description_participant_avatar">profile image of %1$s</string>
+    <string name="screen_conversation_message_status_sending">Sending…</string>
+    <string name="screen_conversation_message_status_failed">Not sent · Tap to retry</string>
+    <string name="screen_conversation_pinned_item_label">About this order item</string>
+    <string name="screen_conversation_empty_hint">Say hello to %1$s</string>
+
+    // Change Password Screen
+    <string name="screen_change_password_input_label_new_password">New password</string>
+    <string name="screen_change_password_input_label_confirm_password">Confirm new password</string>
+    <string name="screen_change_password_input_action_show">Show</string>
+    <string name="screen_change_password_input_action_hide">Hide</string>
+    <string name="screen_change_password_rules_title">Your password must contain</string>
+    <string name="screen_change_password_rule_length">At least %1$d characters</string>
+    <string name="screen_change_password_rule_uppercase">An uppercase letter</string>
+    <string name="screen_change_password_rule_lowercase">A lowercase letter</string>
+    <string name="screen_change_password_rule_digit">A number</string>
+    <string name="screen_change_password_error_mismatch">Passwords do not match.</string>
+    <string name="screen_change_password_error_uppercase">Password must contain an uppercase letter.</string>
+    <string name="screen_change_password_error_lowercase">Password must contain a lowercase letter.</string>
+    <string name="screen_change_password_error_digit">Password must contain a number.</string>
+    <string name="screen_change_password_strength_label">Strength: %1$s</string>
+    <string name="screen_change_password_strength_weak">Weak</string>
+    <string name="screen_change_password_strength_fair">Fair</string>
+    <string name="screen_change_password_strength_good">Good</string>
+    <string name="screen_change_password_strength_strong">Strong</string>
+    <string name="screen_change_password_snackbar_error">We couldn\'t reset your password. Please try again.</string>
+    <string name="screen_change_password_error_invalid_request">This password reset is no longer valid. Please start over.</string>
+
+    // Password Changed Screen
+    <string name="screen_password_changed_title">Password changed</string>
+    <string name="screen_password_changed_subtitle">Your password has been updated. Log in with your new password to continue.</string>
+    <string name="screen_password_changed_button_login">Go to login</string>
+
+    // Relative time
+    <string name="relative_time_just_now">now</string>
+    <string name="relative_time_minutes">%1$dm</string>
+    <string name="relative_time_hours">%1$dh</string>
+    <string name="relative_time_yesterday">Yesterday</string>
+    <string name="relative_time_today">Today</string>
 
 </resources>

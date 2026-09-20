@@ -67,6 +67,7 @@ import com.alexgreece45.marvelx.ui.components.WrapAsyncImage
 import com.alexgreece45.marvelx.ui.components.WrapHorizontalDivider
 import com.alexgreece45.marvelx.ui.components.WrapModalBottomSheetLayout
 import com.alexgreece45.marvelx.ui.components.chips.AddFriendChip
+import com.alexgreece45.marvelx.ui.components.chips.MessageChip
 import com.alexgreece45.marvelx.ui.components.chips.CancelRequestChip
 import com.alexgreece45.marvelx.ui.components.chips.FriendsChip
 import com.alexgreece45.marvelx.ui.components.chips.IncomingFriendRequestChip
@@ -397,6 +398,10 @@ internal fun ProfileDetailsScreen(
                             // Relationship status.
                             if (profileDetails.isDifferentUser) {
                                 WrapHorizontalDivider()
+
+                                MessageChip(
+                                    onClick = { onEventSent(ProfileDetailsContract.Event.ProfileBanner.OnMessageClicked) }
+                                )
 
                                 when (profileDetails.relationshipStatus) {
                                     null -> {}

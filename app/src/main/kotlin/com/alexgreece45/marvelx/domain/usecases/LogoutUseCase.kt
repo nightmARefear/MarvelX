@@ -29,7 +29,7 @@ class LogoutUseCase(
     suspend operator fun invoke(): RepositoryResult<String> {
         val refreshToken = userSessionRepository.getRefreshToken()
 
-        websocketController.close()
+        websocketController.disconnect()
         userRepository.setUserLoggedIn(false)
         removeUserCredentialsUseCase()
         autoLogoutRepository.removeAutoLogoutTimestamp()

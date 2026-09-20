@@ -60,6 +60,8 @@ internal interface OrderItemTrackingHistoryContract {
             ) : Navigation
 
             data class GoToContactSupportScreen(val orderItemDetails: OrderItemDetails) : Navigation
+
+            data class GoToConversation(val orderId: String, val orderItemId: String) : Navigation
         }
 
         data class SetClipboardText(val toastMessage: String, val text: String) : Effect

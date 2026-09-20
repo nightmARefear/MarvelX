@@ -8,6 +8,7 @@ import com.alexgreece45.marvelx.core.network.model.api.device.RequestUpdateDevic
 import com.alexgreece45.marvelx.core.network.model.api.faq.ResponseFaqs
 import com.alexgreece45.marvelx.core.network.model.api.forgotPassword.email.RequestForgotPasswordOtpBlockedEmail
 import com.alexgreece45.marvelx.core.network.model.api.forgotPassword.email.RequestForgotPasswordSendOtp
+import com.alexgreece45.marvelx.core.network.model.api.forgotPassword.RequestForgotPasswordResetPassword
 import com.alexgreece45.marvelx.core.network.model.api.forgotPassword.email.RequestForgotPasswordValidateOtp
 import com.alexgreece45.marvelx.core.network.model.api.forgotPassword.email.ResponseForgotPasswordOtpBlockedEmail
 import com.alexgreece45.marvelx.core.network.model.api.forgotPassword.email.ResponseForgotPasswordSendOtp
@@ -132,6 +133,9 @@ internal interface ApiService {
 
     @POST("/api/private/marvelx/user/forgot_password/validate_otp")
     suspend fun forgotPasswordValidateOtp(@Body body: RequestForgotPasswordValidateOtp): Response<ResponseForgotPasswordValidateOtp>
+
+    @POST("/api/private/marvelx/user/forgot_password/reset_password")
+    suspend fun forgotPasswordResetPassword(@Body body: RequestForgotPasswordResetPassword): Response<Void>
 
     /**
      * Retrieves the basic __public__ profile details of another user with the ID of [userId].

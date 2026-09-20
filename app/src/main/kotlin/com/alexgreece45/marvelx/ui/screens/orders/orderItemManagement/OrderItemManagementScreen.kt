@@ -133,6 +133,10 @@ internal fun OrderItemManagementScreen(
 
                         CurrentStatusSection(status = orderItemUi.status)
 
+                        MessageBuyerSection(
+                            onClick = { onEvent(OrderItemManagementContract.Event.OnMessageBuyerClicked) }
+                        )
+
                         ShippingActionSection(
                             isMarkAsShippedAvailable = state.isMarkAsShippedAvailable,
                             onMarkAsShippedClicked = {
@@ -204,6 +208,33 @@ private fun CurrentStatusSection(status: OrderItemStatusUi) {
         }
 
         WrapHorizontalDivider()
+    }
+}
+
+@Composable
+private fun MessageBuyerSection(onClick: () -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp)) {
+        Text(
+            text = stringResource(R.string.screen_order_item_management_message_buyer_description),
+            color = MaterialTheme.colors.onSurface.copy(alpha = ContentAlpha.medium),
+            style = MaterialTheme.typography.body2
+        )
+
+        WrapButton(
+            onClick = onClick,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.ic_chat),
+                contentDescription = null,
+                modifier = Modifier.size(ConstantsUi.MIN_ICON_SIZE)
+            )
+
+            Text(
+                text = stringResource(R.string.screen_order_item_management_button_message_buyer),
+                modifier = Modifier.padding(start = SPACING_SMALL.dp)
+            )
+        }
     }
 }
 

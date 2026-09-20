@@ -8,5 +8,9 @@ internal annotation class BackendOkHttpClient
 @Named
 internal annotation class RefreshAuthTokenOkHttpClient
 
+/**
+ * Public because the websocket connection is owned by the app module's `WebsocketController`,
+ * which has to request this exact client (pinning, ping interval, timeouts) from Koin.
+ */
 @Named
-internal annotation class WebsocketOkHttpClient
+annotation class WebsocketOkHttpClient

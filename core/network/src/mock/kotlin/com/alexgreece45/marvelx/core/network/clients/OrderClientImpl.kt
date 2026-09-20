@@ -5,6 +5,7 @@ import com.alexgreece45.marvelx.core.common.extensions.plusDays
 import com.alexgreece45.marvelx.core.common.extensions.toLocalDate
 import com.alexgreece45.marvelx.core.common.util.DateUtil
 import com.alexgreece45.marvelx.core.network.model.CardBrand
+import com.alexgreece45.marvelx.core.network.model.api.order.RequestPlaceOrder
 import com.alexgreece45.marvelx.core.network.model.api.order.ResponseOrder
 import com.alexgreece45.marvelx.core.network.model.api.order.ResponseOrderCheckoutInfo
 import com.alexgreece45.marvelx.core.network.model.api.order.ResponseOrderEstimatedDeliveryDateRange
@@ -230,7 +231,7 @@ internal class OrderClientImpl : OrderClient {
         )
     }
 
-    override suspend fun placeOrder(): ApiResult<ResponseOrderId> = ApiResult.Success(
+    override suspend fun placeOrder(requestPlaceOrder: RequestPlaceOrder): ApiResult<ResponseOrderId> = ApiResult.Success(
         ResponseOrderId("A10001")
     )
 

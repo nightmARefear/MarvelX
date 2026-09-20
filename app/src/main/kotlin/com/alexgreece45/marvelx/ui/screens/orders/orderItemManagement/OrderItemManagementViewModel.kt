@@ -59,6 +59,15 @@ internal class OrderItemManagementViewModel(
             OrderItemManagementContract.Event.OnMarkAsShippedClicked -> onMarkAsShippedClicked()
 
             OrderItemManagementContract.Event.OnReturnCardClicked -> onReturnCardClicked()
+
+            OrderItemManagementContract.Event.OnMessageBuyerClicked -> {
+                setEffect {
+                    OrderItemManagementContract.Effect.Navigation.GoToConversation(
+                        orderId = currentState.orderId.value,
+                        orderItemId = currentState.orderItemId.value
+                    )
+                }
+            }
         }
     }
 

@@ -47,24 +47,13 @@ fun ForgotPasswordScreen(
     LaunchedEffect(Unit) {
         viewModel.uiEffect.collect { effect ->
             when (effect) {
-                ForgotPasswordEffect.Navigation.PopBackStack -> {
-
-                }
-
-                ForgotPasswordEffect.Navigation.PopToLoginScreen -> {
-                    popUpToLoginScreen()
-                }
+                ForgotPasswordEffect.Navigation.PopToLoginScreen -> popUpToLoginScreen()
 
                 is ForgotPasswordEffect.Navigation.NavigateToLoginScreenWithError -> {
                     Toast.makeText(context, effect.errorMessage, Toast.LENGTH_SHORT).show()
                     popUpToLoginScreen()
                 }
 
-                is ForgotPasswordEffect.Navigation.NavigateToValidateEmailSubScreen -> {
-                    viewModel.setEvent(ForgotPasswordEvent.Navigation.NavigateToValidateEmailSubScreen)
-                }
-
-                ForgotPasswordEffect.OtpFieldRequestFocus -> {}
                 is ForgotPasswordEffect.Navigation.NavigateToOtpScreen -> {
                     navController.navigate(
                         Screen.OtpScreen.createNavRoute(
@@ -82,9 +71,7 @@ fun ForgotPasswordScreen(
     ContentScreen(
         isLoading = state.isLoading,
         navigableAction = ScreenNavigableAction.Backable {
-            viewModel.setEvent(
-                ForgotPasswordEvent.OnBackClick
-            )
+            viewModel.setEvent(ForgotPasswordEvent.OnBackClick)
         },
         showToolbar = true,
         stickyBottom = {
@@ -93,9 +80,7 @@ fun ForgotPasswordScreen(
                 modifier = Modifier.fillMaxWidth(),
                 enabled = state.isContinueButtonEnabled
             ) {
-                Text(
-                    text = stringResource(state.currentSubScreen.stickyButtonResId)
-                )
+                Text(text = stringResource(R.string.forgot_password_enter_email_screen_sticky_button))
             }
         }
     ) { paddingValues ->
@@ -105,36 +90,18 @@ fun ForgotPasswordScreen(
                 .padding(paddingValues)
         ) {
             ContentScreenHeader(
-                title = stringResource(state.currentSubScreen.titleResId),
-                subtitle = stringResource(state.currentSubScreen.subtitleResId)
+                title = stringResource(R.string.forgot_password_enter_email_screen_title),
+                subtitle = stringResource(R.string.forgot_password_enter_email_screen_subtitle)
             )
 
-            when (state.currentSubScreen) {
-                ForgotPasswordSubScreens.EnterEmail -> {
-                    ForgotPasswordScreenContent(
-                        onEventSent = { forgotPasswordEvent ->
-                            viewModel.setEvent(forgotPasswordEvent)
-                        },
-                        state = state
-                    )
-                }
-
-                ForgotPasswordSubScreens.ValidateEmail -> {
-//                    ForgotPasswordValidateEmailScreen()
-                }
-
-                ForgotPasswordSubScreens.EnterPhoneNumber -> {}
-                ForgotPasswordSubScreens.ValidatePhoneNumber -> {}
-                ForgotPasswordSubScreens.EnterNewPassword -> {}
-                ForgotPasswordSubScreens.PasswordChanged -> {}
-            }
+            ForgotPasswordScreenContent(
+                onEventSent = viewModel::setEvent,
+                state = state
+            )
         }
     }
 }
 
-/**
- * The initial content of [ForgotPasswordScreen].
- */
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 private fun ForgotPasswordScreenContent(
@@ -145,7 +112,6 @@ private fun ForgotPasswordScreenContent(
 
     VSpacer.Medium()
 
-    // Email.
     OutlinedTextFieldValidation(
         value = state.email,
         onValueChange = { newEmail ->

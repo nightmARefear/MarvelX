@@ -4,6 +4,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
+import com.alexgreece45.marvelx.ui.screens.chat.conversation.navigation.navigateToOrderItemConversationScreen
 import com.alexgreece45.marvelx.ui.screens.orders.orderItemManagement.OrderItemManagementScreen
 import com.alexgreece45.marvelx.ui.screens.orders.orderItemManagement.OrderItemManagementViewModel
 import com.alexgreece45.marvelx.ui.screens.orders.orderItemManagement.model.OrderItemManagementContract
@@ -42,6 +43,13 @@ internal fun NavGraphBuilder.orderItemManagementScreen(
                     OrderItemManagementContract.Effect.Navigation.GoBack -> navController.navigateUp()
                     is OrderItemManagementContract.Effect.Navigation.GoToRequestItemReturnScreen -> {
                         navController.navigateToRequestItemReturnScreen(
+                            orderId = navigationEffect.orderId,
+                            orderItemId = navigationEffect.orderItemId
+                        )
+                    }
+
+                    is OrderItemManagementContract.Effect.Navigation.GoToConversation -> {
+                        navController.navigateToOrderItemConversationScreen(
                             orderId = navigationEffect.orderId,
                             orderItemId = navigationEffect.orderItemId
                         )

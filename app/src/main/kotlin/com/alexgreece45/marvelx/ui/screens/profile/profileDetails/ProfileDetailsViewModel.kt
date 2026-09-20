@@ -78,6 +78,7 @@ sealed interface ProfileDetailsContract {
             data object OnEmailLongClick : ProfileBanner
 
             data object OnRelationshipStatusChipClicked : ProfileBanner
+            data object OnMessageClicked : ProfileBanner
         }
 
         /**
@@ -152,6 +153,8 @@ sealed interface ProfileDetailsContract {
                 val userId: String,
                 val tab: ProfileDetailsStatsTab
             ) : Navigation
+
+            data class NavigateToConversation(val userId: String) : Navigation
         }
     }
 }
@@ -319,6 +322,12 @@ class ProfileDetailsViewModel(
                             text = profileDetails.basicProfileDetails.email
                         )
                     }
+                }
+            }
+
+            ProfileDetailsContract.Event.ProfileBanner.OnMessageClicked -> {
+                setEffect {
+                    ProfileDetailsContract.Effect.Navigation.NavigateToConversation(currentState.userId.value)
                 }
             }
 

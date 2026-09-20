@@ -762,9 +762,9 @@ internal class ListingClientImpl(
     }
 
     override suspend fun getFilteredListings(
-        searchQuery: String,
-        categoryIds: List<String>,
-        conditionIds: List<String>,
+        searchQuery: String?,
+        categoryCodes: List<String>?,
+        conditionCodes: List<String>?,
         minPrice: String?,
         maxPrice: String?,
         datePostedKey: String,
@@ -901,12 +901,12 @@ internal class ListingClientImpl(
         val filteredListings = mockDatabaseListings.filter { item ->
 
             // 1. Search Query
-            val matchesSearch = searchQuery.isBlank() ||
+            val matchesSearch = searchQuery.isNullOrBlank() ||
                     item.title.contains(searchQuery, ignoreCase = true)
 
             // 2. Multi-Select Chips
-            val matchesCategory = categoryIds.isEmpty() || item.categoryCode in categoryIds
-            val matchesCondition = conditionIds.isEmpty() || item.conditionCode in conditionIds
+            val matchesCategory = categoryCodes.isNullOrEmpty() || item.categoryCode in categoryCodes
+            val matchesCondition = conditionCodes.isNullOrEmpty() || item.conditionCode in conditionCodes
 
             // 3. Price Range
             val minPriceBigDecimal = minPrice?.toBigDecimalOrNull()
@@ -998,9 +998,9 @@ internal class ListingClientImpl(
         // endpoint would. This lets the mock variant exercise real paging behaviour end to end,
         // including the "last page returns fewer rows than asked for" end-of-pagination signal.
         val allMatches = getFilteredListings(
-            searchQuery.orEmpty(),
-            categoryCodes.orEmpty(),
-            conditionCodes.orEmpty(),
+            searchQuery,
+            categoryCodes,
+            conditionCodes,
             minPrice,
             maxPrice,
             datePostedKey,

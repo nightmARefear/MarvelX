@@ -1,32 +1,49 @@
 package com.alexgreece45.marvelx.data.repository
 
+import com.alexgreece45.marvelx.core.common.dispatchers.model.IoDispatcher
+import com.alexgreece45.marvelx.core.data.helper.RepositoryResult
+import com.alexgreece45.marvelx.core.data.helper.handleApiResultNoTransformationNoFlow
 import com.alexgreece45.marvelx.core.network.clients.ApiClient
-import kotlinx.coroutines.flow.Flow
+import com.alexgreece45.marvelx.core.network.model.api.forgotPassword.RequestForgotPasswordResetPassword
+import org.koin.core.annotation.Single
+import kotlin.coroutines.CoroutineContext
 
 interface ChangePasswordRepository {
-    suspend fun updateUserPassword(
-        requestIdEmail: String,
-        requestIdPhoneNumber: String?,
-        newPassword: String,
-        newPasswordConfirmation: String
-    ): Flow<ChangePasswordRepositoryUpdateUserPasswordResponse>
+
+    /**
+     * Sets a new password for the forgot-password request identified by [requestId]. The request's
+     * OTP must already have been validated server-side.
+     *
+     * @param hashedPassword The password hashed client-side, exactly as signup/login send it.
+     */
+    suspend fun resetPassword(
+        requestId: String,
+        verificationStep: String,
+        hashedPassword: String
+    ): RepositoryResult<String>
 }
 
-class ChangePasswordRepositoryImpl(
-    private val apiClient: ApiClient
+@Single
+internal class ChangePasswordRepositoryImpl(
+    private val apiClient: ApiClient,
+    @IoDispatcher private val ioDispatcher: CoroutineContext
 ) : ChangePasswordRepository {
-    override suspend fun updateUserPassword(
-        requestIdEmail: String,
-        requestIdPhoneNumber: String?,
-        newPassword: String,
-        newPasswordConfirmation: String
-    ): Flow<ChangePasswordRepositoryUpdateUserPasswordResponse> {
-        TODO("Not yet implemented")
-    }
-}
 
-sealed interface ChangePasswordRepositoryUpdateUserPasswordResponse {
-    data object Success : ChangePasswordRepositoryUpdateUserPasswordResponse
-    data class Failed(val errorMessage: String) : ChangePasswordRepositoryUpdateUserPasswordResponse
-    data class Error(val errorMessage: String) : ChangePasswordRepositoryUpdateUserPasswordResponse
+    override suspend fun resetPassword(
+        requestId: String,
+        verificationStep: String,
+        hashedPassword: String
+    ): RepositoryResult<String> =
+        handleApiResultNoTransformationNoFlow(
+            apiCall = {
+                apiClient.forgotPasswordResetPassword(
+                    RequestForgotPasswordResetPassword(
+                        requestId = requestId,
+                        verificationStep = verificationStep,
+                        newPassword = hashedPassword
+                    )
+                )
+            },
+            ioDispatcher = ioDispatcher
+        )
 }

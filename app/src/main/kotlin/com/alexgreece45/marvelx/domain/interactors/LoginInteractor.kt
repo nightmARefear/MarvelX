@@ -143,7 +143,7 @@ class LoginInteractorImpl(
                     }
 
                     autoLogoutRepository.setAutoLogoutTimestamp(DateUtil.getUTCInstant())
-                    websocketController.init()
+                    websocketController.connect()
                     refreshTokenController.startWorker()
 
                     signatureStorage.setSignature(

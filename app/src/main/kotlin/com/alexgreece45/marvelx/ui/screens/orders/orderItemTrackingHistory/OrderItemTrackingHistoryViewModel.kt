@@ -193,7 +193,12 @@ internal class OrderItemTrackingHistoryViewModel(
     }
 
     private fun onExtraActionButtonContactSellerClicked() {
-        // TODO: Navigate to chat screen.
+        setEffect {
+            OrderItemTrackingHistoryContract.Effect.Navigation.GoToConversation(
+                orderId = currentState.orderItemDetails.orderId.value,
+                orderItemId = currentState.orderItemDetails.orderItemId.value
+            )
+        }
     }
 
     private fun onBottomSheetDismissed() {

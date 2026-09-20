@@ -16,6 +16,8 @@ import com.alexgreece45.marvelx.ui.screens.favoriteListings.navigation.favoriteL
 import com.alexgreece45.marvelx.ui.screens.favoriteListings.navigation.navigateToFavoriteListingsScreen
 import com.alexgreece45.marvelx.ui.screens.cart.navigation.cartScreen
 import com.alexgreece45.marvelx.ui.screens.cart.navigation.navigateToCartScreen
+import com.alexgreece45.marvelx.ui.screens.chat.conversation.navigation.navigateToConversationScreen
+import com.alexgreece45.marvelx.ui.screens.chat.inbox.navigation.inboxScreen
 import com.alexgreece45.marvelx.ui.screens.character.navigation.navigateToCharacterScreen
 import com.alexgreece45.marvelx.ui.screens.dashboard.model.DashboardContract
 import com.alexgreece45.marvelx.ui.screens.marketplace.listingDetailsScreen.navigation.navigateToListingDetailsScreen
@@ -75,6 +77,11 @@ fun DashboardScreen(
         favoriteListingsScreen(
             navController = dashboardNavController,
             navigateToListingDetailsScreen = rootNavController::navigateToListingDetailsScreen
+        )
+
+        inboxScreen(
+            navController = dashboardNavController,
+            navigateToConversationScreen = rootNavController::navigateToConversationScreen
         )
 
         cartScreen(

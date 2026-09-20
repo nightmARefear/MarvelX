@@ -12,6 +12,7 @@ import com.alexgreece45.marvelx.core.network.model.api.device.RequestUpdateDevic
 import com.alexgreece45.marvelx.core.network.model.api.faq.ResponseFaqs
 import com.alexgreece45.marvelx.core.network.model.api.forgotPassword.email.RequestForgotPasswordOtpBlockedEmail
 import com.alexgreece45.marvelx.core.network.model.api.forgotPassword.email.RequestForgotPasswordSendOtp
+import com.alexgreece45.marvelx.core.network.model.api.forgotPassword.RequestForgotPasswordResetPassword
 import com.alexgreece45.marvelx.core.network.model.api.forgotPassword.email.RequestForgotPasswordValidateOtp
 import com.alexgreece45.marvelx.core.network.model.api.forgotPassword.email.ResponseForgotPasswordOtpBlockedEmail
 import com.alexgreece45.marvelx.core.network.model.api.forgotPassword.email.ResponseForgotPasswordSendOtp
@@ -354,6 +355,9 @@ internal class ApiClientImpl(
             200,
             ResponseForgotPasswordValidateOtp(isPhoneNumberRequired = false)
         )
+
+    override suspend fun forgotPasswordResetPassword(body: RequestForgotPasswordResetPassword): ApiResult<String> =
+        ApiResult.Success("")
 
     override suspend fun getBasicProfileDetails(userId: String): ApiResult<ResponseBasicProfileDetails> =
         ApiResult.Success(body = basicProfileDetails)

@@ -18,6 +18,8 @@ internal interface OrderItemManagementContract {
         data object OnMarkAsShippedClicked : Event
 
         data object OnReturnCardClicked : Event
+
+        data object OnMessageBuyerClicked : Event
     }
 
     data class State(
@@ -42,6 +44,11 @@ internal interface OrderItemManagementContract {
         sealed interface Navigation : Effect {
             data object GoBack : Navigation
             data class GoToRequestItemReturnScreen(
+                val orderId: String,
+                val orderItemId: String
+            ) : Navigation
+
+            data class GoToConversation(
                 val orderId: String,
                 val orderItemId: String
             ) : Navigation
