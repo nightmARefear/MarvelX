@@ -63,11 +63,7 @@ internal fun NavGraphBuilder.orderItemTrackingHistoryScreen(
                         orderItemId = navigationEffect.orderItemId
                     )
 
-                    is OrderItemTrackingHistoryContract.Effect.Navigation.GoToContactSupportScreen -> {
-                        // TODO: To be implemented.
-                    }
-
-                    is OrderItemTrackingHistoryContract.Effect.Navigation.GoToConversation ->
+                    is OrderItemTrackingHistoryContract.Effect.Navigation.GoToConversationScreen ->
                         navController.navigateToOrderItemConversationScreen(
                             orderId = navigationEffect.orderId,
                             orderItemId = navigationEffect.orderItemId

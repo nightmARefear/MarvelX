@@ -30,10 +30,7 @@ internal interface OrderItemTrackingHistoryContract {
         data object OnReturnActionButtonClicked : Event
         data object OnRefundActionButtonClicked : Event
 
-        sealed interface ExtraActionButtonEvents : Event {
-            data object OnContactSupportClicked : ExtraActionButtonEvents
-            data object OnContactSellerClicked : ExtraActionButtonEvents
-        }
+        data object OnContactSellerButtonClicked : Event
 
         data object OnBottomSheetDismissed : Event
     }
@@ -59,9 +56,7 @@ internal interface OrderItemTrackingHistoryContract {
                 val orderItemId: String
             ) : Navigation
 
-            data class GoToContactSupportScreen(val orderItemDetails: OrderItemDetails) : Navigation
-
-            data class GoToConversation(val orderId: String, val orderItemId: String) : Navigation
+            data class GoToConversationScreen(val orderId: String, val orderItemId: String) : Navigation
         }
 
         data class SetClipboardText(val toastMessage: String, val text: String) : Effect

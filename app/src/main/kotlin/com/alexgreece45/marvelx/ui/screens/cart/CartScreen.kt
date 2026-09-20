@@ -228,7 +228,6 @@ private fun CheckoutCartItemCard(
         title = title,
         coverImageUrl = coverImageUrl,
         additionalTitleContent = { PriceText(price = price) },
-        titleContentAlignment = Alignment.CenterVertically,
         trailingIcon = null,
         enabled = false,
         onClicked = {}
@@ -251,7 +250,6 @@ private fun CartItemCard(
         title = title,
         coverImageUrl = coverImageUrl,
         additionalTitleContent = { PriceText(price = price) },
-        titleContentAlignment = Alignment.CenterVertically,
         trailingIcon = {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally

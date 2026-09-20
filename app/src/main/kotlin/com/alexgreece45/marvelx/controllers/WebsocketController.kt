@@ -283,7 +283,7 @@ class WebsocketControllerImpl(
         reconnectJob = applicationScope.launch {
             val needsRefresh = mutex.withLock { refreshTokenBeforeReconnect }
             if (needsRefresh) refreshAccessToken()
-            delay(delayMillis)
+            delay(delayMillis.milliseconds)
             openIfNeeded()
         }
     }

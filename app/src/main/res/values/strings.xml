@@ -665,7 +665,6 @@
     <string name="screen_order_item_tracking_history_refund_section_button_request_refund">Request Refund</string>
     <string name="screen_order_item_tracking_history_refund_section_button_view_refund_request">View Refund Request</string>
 
-    <string name="screen_order_item_tracking_history_extra_action_button_contact_support">Contact Support</string>
     <string name="screen_order_item_tracking_history_extra_action_button_contact_seller">Contact Seller</string>
 
     <string name="screen_order_item_tracking_history_toast_message_success_copying_to_clipboard">Successfully copied the tracking ID to the clipboard</string>
@@ -806,6 +805,7 @@
     <string name="screen_request_item_return_existing_return_description_label">Description</string>
     <string name="screen_request_item_return_existing_return_images_label">Attached Images</string>
     <string name="screen_request_item_return_existing_return_seller_message_label">Seller\'s Message</string>
+    <string name="screen_request_item_return_existing_return_your_message_label">Your message</string>
 
     // Request Item Return Screen :: Seller Response
     <string name="screen_request_item_return_seller_response_section_title">Respond to Return Request</string>

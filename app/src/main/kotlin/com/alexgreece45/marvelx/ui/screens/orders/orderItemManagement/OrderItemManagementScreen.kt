@@ -172,7 +172,6 @@ private fun OrderItemPreviewCard(
                 style = MaterialTheme.typography.subtitle1
             )
         },
-        titleContentAlignment = Alignment.CenterVertically,
         coverImageUrl = coverImageUrl,
         trailingIcon = null,
         enabled = false,

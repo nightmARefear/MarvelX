@@ -123,6 +123,7 @@ internal fun ConversationScreen(
         },
         stickyBottom = {
             if (conversation != null) {
+//                TextInputField()
                 Composer(
                     text = state.messageField.value,
                     isSendEnabled = state.isSendEnabled,

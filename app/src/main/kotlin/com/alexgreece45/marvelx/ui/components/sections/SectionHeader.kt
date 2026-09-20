@@ -12,17 +12,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.alexgreece45.marvelx.common_ui.extensions.clickableNoRipple
 import com.alexgreece45.marvelx.util.SPACING_MEDIUM
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.VSpacer
-import com.alexgreece45.marvelx.common_ui.extensions.clickableNoRipple
 import com.alexgreece45.marvelx.util.extensions.throttledClickable
 
 /**
@@ -47,7 +46,6 @@ import com.alexgreece45.marvelx.util.extensions.throttledClickable
 fun SectionHeader(
     title: String,
     titleMaxLines: Int = SectionHeaderDefaults.TITLE_MAX_LINES,
-    titleContentAlignment: Alignment.Vertical = Alignment.Top,
     additionalTitleContent: (@Composable () -> Unit)? = null,
     leadingIcon: (@Composable () -> Unit)? = null,
     trailingIcon: (@Composable () -> Unit)? = null,
@@ -101,8 +99,7 @@ fun SectionHeader(
             // Standard content.
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = titleContentAlignment
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 leadingIcon?.invoke()
 

@@ -706,7 +706,7 @@ private fun Toolbar(
                             text = toolbarTitle,
                             modifier = Modifier
                                 .weight(1f)
-                                .padding(end = if (toolbarActions?.isEmpty() == true) SPACING_TINY.dp else 0.dp),
+                                .padding(end = SPACING_TINY.dp),
                             overflow = TextOverflow.Ellipsis,
                             maxLines = 1,
                             style = MaterialTheme.typography.h5

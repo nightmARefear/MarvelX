@@ -106,6 +106,7 @@ internal fun ExistingReturnContent(
         if (orderItemReturn.returnStatus.isResolved) {
             SellerResponseCard(
                 status = orderItemReturn.returnStatus,
+                isSeller = isSeller,
                 sellerMessage = orderItemReturn.sellerMessage,
                 refundAmountLabel = orderItemReturn.refundAmount?.label
             )
@@ -406,6 +407,7 @@ private fun ReturnRequestDetailsSection(orderItemReturn: OrderItemReturnUi) {
 @Composable
 private fun SellerResponseCard(
     status: OrderItemReturnStatusUi,
+    isSeller: Boolean,
     sellerMessage: String?,
     refundAmountLabel: String?
 ) {
@@ -449,7 +451,7 @@ private fun SellerResponseCard(
                 WrapHorizontalDivider(modifier = Modifier.fillMaxWidth())
 
                 Text(
-                    text = stringResource(R.string.screen_request_item_return_existing_return_seller_message_label),
+                    text = stringResource(if (isSeller) R.string.screen_request_item_return_existing_return_your_message_label else R.string.screen_request_item_return_existing_return_seller_message_label),
                     color = MaterialTheme.colors.onSurface.copy(alpha = ContentAlpha.medium),
                     style = MaterialTheme.typography.body1
                 )
