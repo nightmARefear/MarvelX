@@ -2,7 +2,6 @@ package com.alexgreece45.marvelx.core.network.clients
 
 import android.content.Context
 import com.alexgreece45.marvelx.core.network.constants.TokenConstants
-import com.alexgreece45.marvelx.core.network.model.api.authorize.ResponseAuthorize
 import com.alexgreece45.marvelx.core.network.model.api.character.CharacterDataContainer
 import com.alexgreece45.marvelx.core.network.model.api.character.CharacterDataWrapper
 import com.alexgreece45.marvelx.core.network.model.api.character.comic.ComicDataContainer
@@ -12,6 +11,7 @@ import com.alexgreece45.marvelx.core.network.model.api.device.RequestUpdateDevic
 import com.alexgreece45.marvelx.core.network.model.api.faq.ResponseFaqs
 import com.alexgreece45.marvelx.core.network.model.api.forgotPassword.email.RequestForgotPasswordOtpBlockedEmail
 import com.alexgreece45.marvelx.core.network.model.api.forgotPassword.email.RequestForgotPasswordSendOtp
+import com.alexgreece45.marvelx.core.network.model.api.forgotPassword.RequestForgotPasswordResetPassword
 import com.alexgreece45.marvelx.core.network.model.api.forgotPassword.email.RequestForgotPasswordValidateOtp
 import com.alexgreece45.marvelx.core.network.model.api.forgotPassword.email.ResponseForgotPasswordOtpBlockedEmail
 import com.alexgreece45.marvelx.core.network.model.api.forgotPassword.email.ResponseForgotPasswordSendOtp
@@ -293,19 +293,6 @@ internal class ApiClientImpl(
             )
         )
 
-    override suspend fun authorize(
-        tempAuthCode: String,
-        clientId: String,
-        codeChallenge: String,
-        codeChallengeMethod: String
-    ): Response<ResponseAuthorize> =
-        Response.success(
-            200,
-            ResponseAuthorize(
-                authCode = "AUTH_CODE"
-            )
-        )
-
     override suspend fun grandNewAccessToken(
         clientId: String,
         codeVerifier: String,
@@ -354,6 +341,9 @@ internal class ApiClientImpl(
             200,
             ResponseForgotPasswordValidateOtp(isPhoneNumberRequired = false)
         )
+
+    override suspend fun forgotPasswordResetPassword(body: RequestForgotPasswordResetPassword): ApiResult<String> =
+        ApiResult.Success("")
 
     override suspend fun getBasicProfileDetails(userId: String): ApiResult<ResponseBasicProfileDetails> =
         ApiResult.Success(body = basicProfileDetails)

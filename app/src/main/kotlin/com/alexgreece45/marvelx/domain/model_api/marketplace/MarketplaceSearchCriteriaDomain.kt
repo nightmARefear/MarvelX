@@ -12,24 +12,24 @@ data class MarketplaceSearchCriteriaDomain(
     val maxPrice: BigDecimal?,
     val datePosted: ListingDateRangeOption,
     val datedPostedCustomRange: ListingDatePostedCustomRangeDomain? = null,
-    val isFinalSale: Boolean
+    val finalSale: Boolean
 )
 
 internal fun MarketplaceSearchCriteria.toDomain(): MarketplaceSearchCriteriaDomain =
     MarketplaceSearchCriteriaDomain(
-        categoryCodes = categoryCodes,
-        conditionCodes = conditionCodes,
+        categoryCodes = categoryCodes.orEmpty(),
+        conditionCodes = conditionCodes.orEmpty(),
         minPrice = minPrice?.toBigDecimal(),
         maxPrice = maxPrice?.toBigDecimal(),
         datePosted = datePosted,
         datedPostedCustomRange = datedPostedCustomRange?.toDomain(),
-        isFinalSale = finalSale
+        finalSale = finalSale
     )
 
 internal fun MarketplaceSearchCriteriaDomain.toData(formatPrice: (BigDecimal?) -> String?): MarketplaceSearchCriteria =
     MarketplaceSearchCriteria(
-        categoryCodes = categoryCodes,
-        conditionCodes = conditionCodes,
+        categoryCodes = categoryCodes.takeIf { it.isNotEmpty() },
+        conditionCodes = conditionCodes.takeIf { it.isNotEmpty() },
         minPrice = formatPrice(minPrice),
         maxPrice = formatPrice(maxPrice),
         datePosted = datePosted,
@@ -39,5 +39,5 @@ internal fun MarketplaceSearchCriteriaDomain.toData(formatPrice: (BigDecimal?) -
                 to = datedPostedCustomRange.to.toString()
             )
         },
-        finalSale = isFinalSale
+        finalSale = finalSale
     )

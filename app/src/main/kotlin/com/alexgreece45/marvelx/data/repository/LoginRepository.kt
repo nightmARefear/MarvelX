@@ -16,12 +16,6 @@ import org.koin.core.annotation.Single
 import kotlin.coroutines.CoroutineContext
 
 interface LoginRepository {
-    suspend fun authorize(
-        tempAuthCode: String,
-        clientId: String,
-        codeChallenge: String,
-        codeChallengeMethod: String
-    ): Flow<AuthorizeRepositoryPartialState>
 
     /**
      * Grands an access token based on the given [code] that has been retrieved by the server to
@@ -56,22 +50,6 @@ class LoginRepositoryImpl(
     private val apiClient: ApiClient,
     @IoDispatcher private val ioDispatcher: CoroutineContext,
 ) : LoginRepository {
-
-    override suspend fun authorize(
-        tempAuthCode: String,
-        clientId: String,
-        codeChallenge: String,
-        codeChallengeMethod: String
-    ): Flow<AuthorizeRepositoryPartialState> = flow {
-        apiClient.authorize(tempAuthCode, clientId, codeChallenge, codeChallengeMethod)
-            .let { response ->
-                if (response.isSuccessful) {
-                    emit(AuthorizeRepositoryPartialState.Success(response.body()))
-                } else {
-                    emit(AuthorizeRepositoryPartialState.Failed(resourceProvider.getGenericErrorMessage()))
-                }
-            }
-    }
 
     override suspend fun grandNewAccessToken(
         clientId: String,
@@ -136,13 +114,6 @@ class LoginRepositoryImpl(
                 }
             }
         }
-}
-
-sealed interface AuthorizeRepositoryPartialState {
-    data class Success(val response: com.alexgreece45.marvelx.core.network.model.api.authorize.ResponseAuthorize?) :
-        AuthorizeRepositoryPartialState
-
-    data class Failed(val errorMessage: String) : AuthorizeRepositoryPartialState
 }
 
 sealed interface PostLoginRepositoryResponse {

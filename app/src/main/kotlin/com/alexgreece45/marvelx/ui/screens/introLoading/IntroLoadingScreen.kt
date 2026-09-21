@@ -36,7 +36,7 @@ fun IntroLoadingScreen(
 //                    NavArg.HomeAlertDialogErrorType,
 //                    HomeAlertDialogErrorType.HasError(uiEffect.errorMessage)
 //                )
-                navController.navigate(Screen.HomeScreen.route) {
+                navController.navigate(Screen.HomeScreen.createNavRoute()) {
                     popUpToTop(navController)
                 }
             }

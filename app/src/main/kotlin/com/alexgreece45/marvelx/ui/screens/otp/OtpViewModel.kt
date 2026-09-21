@@ -3,11 +3,12 @@ package com.alexgreece45.marvelx.ui.screens.otp
 import androidx.core.text.isDigitsOnly
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.controllers.OAuthAuthorizationController
+import com.alexgreece45.marvelx.controllers.OAuthCallbackResult
 import com.alexgreece45.marvelx.controllers.TimerController
 import com.alexgreece45.marvelx.controllers.TimerStatus
 import com.alexgreece45.marvelx.core.data.repositories.UserSessionRepository
 import com.alexgreece45.marvelx.data.repository.AutoLogoutRepository
-import com.alexgreece45.marvelx.domain.interactors.AuthorizePartialState
 import com.alexgreece45.marvelx.domain.interactors.ForgotPasswordInteractor
 import com.alexgreece45.marvelx.domain.interactors.ForgotPasswordValidateOtpPartialState
 import com.alexgreece45.marvelx.domain.interactors.GetJwtForSensitiveUserDataPartialState
@@ -179,6 +180,12 @@ internal sealed class OtpEffect : BaseEffect {
     data object OnUserSensitiveDataReceived : OtpEffect()
 
     data object SaveAutoFilledData : OtpEffect()
+
+    /**
+     * Opens [url] (the OAuth 2.0 + PKCE authorization request) in a Custom Tab. The result of the
+     * flow arrives asynchronously via the app's deep link handling, not through this effect.
+     */
+    data class LaunchOAuthAuthorization(val url: String) : OtpEffect()
 }
 
 @KoinViewModel
@@ -191,6 +198,7 @@ internal class OtpViewModel(
     private val userSessionRepository: UserSessionRepository,
     private val timerController: TimerController,
     private val autoLogoutRepository: AutoLogoutRepository,
+    private val oAuthAuthorizationController: OAuthAuthorizationController,
 ) : BaseViewModel<OtpEvent, OtpState, OtpEffect>() {
 
     /**
@@ -236,6 +244,12 @@ internal class OtpViewModel(
      * ```
      */
     private var countdownJob: Job? = null
+
+    /**
+     * Tracks the coroutine suspended in [OAuthAuthorizationController.awaitCallback] so it gets
+     * cancelled (rather than leaking until its own timeout) if the screen is torn down first.
+     */
+    private var oAuthCallbackJob: Job? = null
 
     override fun setInitialState(): OtpState = OtpState(
         otpFlowType = OtpFlowType.Invalid("")
@@ -683,23 +697,29 @@ internal class OtpViewModel(
     }
 
     /**
-     * Retrieves the authorization code.
+     * Opens the OAuth 2.0 + PKCE authorization request in a Custom Tab and suspends until the
+     * browser redirects back into the app with an authorization code (caught as a deep link).
      */
     private fun getAuthorizationCode(tempAuthCode: String) {
-        viewModelScope.launch {
-            loginInteractor.authorize(tempAuthCode).collect {
-                when (it) {
-                    is AuthorizePartialState.Failed -> {
-                        showGenericErrorViewWithErrorMessage(
-                            errorMessage = it.errorMessage,
-                            otpFlowType = OtpFlowType.Register
-                        )
-                    }
+        val url = oAuthAuthorizationController.buildAuthorizationUrl(tempAuthCode)
+        setEffect {
+            OtpEffect.LaunchOAuthAuthorization(url)
+        }
 
-                    is AuthorizePartialState.Success -> {
-                        // Proceed to retrieve access token.
-                        grandNewAccessToken(authCode = it.authCode)
-                    }
+        oAuthCallbackJob?.cancel()
+        oAuthCallbackJob = viewModelScope.launch {
+            when (val result = oAuthAuthorizationController.awaitCallback()) {
+                is OAuthCallbackResult.Success -> {
+                    grandNewAccessToken(authCode = result.code, codeVerifier = result.codeVerifier)
+                }
+
+                is OAuthCallbackResult.ServerError,
+                OAuthCallbackResult.StateMismatch,
+                OAuthCallbackResult.Timeout -> {
+                    showGenericErrorViewWithErrorCode(
+                        errorCode = OtpScreenErrorCodes.GrandNewAccessToken.GenericError,
+                        otpFlowType = OtpFlowType.Register
+                    )
                 }
             }
         }
@@ -708,9 +728,9 @@ internal class OtpViewModel(
     /**
      * Retrieves the access token.
      */
-    private fun grandNewAccessToken(authCode: String) {
+    private fun grandNewAccessToken(authCode: String, codeVerifier: String) {
         viewModelScope.launch {
-            loginInteractor.grandNewAccessToken(authCode = authCode)
+            loginInteractor.grandNewAccessToken(authCode = authCode, codeVerifier = codeVerifier)
                 .collect { accessTokenPartialState ->
                     when (accessTokenPartialState) {
                         is GrandNewAccessTokenPartialState.Failed -> {

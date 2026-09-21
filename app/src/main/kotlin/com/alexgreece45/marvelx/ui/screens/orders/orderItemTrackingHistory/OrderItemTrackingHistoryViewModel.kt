@@ -60,8 +60,7 @@ internal class OrderItemTrackingHistoryViewModel(
             OrderItemTrackingHistoryContract.Event.OnCurrentStatusClicked -> onCurrentStatusClicked()
             OrderItemTrackingHistoryContract.Event.OnReturnActionButtonClicked -> onRequestReturnClicked()
             OrderItemTrackingHistoryContract.Event.OnRefundActionButtonClicked -> onRequestRefundClicked()
-            OrderItemTrackingHistoryContract.Event.ExtraActionButtonEvents.OnContactSupportClicked -> onExtraActionButtonContactSupportClicked()
-            OrderItemTrackingHistoryContract.Event.ExtraActionButtonEvents.OnContactSellerClicked -> onExtraActionButtonContactSellerClicked()
+            OrderItemTrackingHistoryContract.Event.OnContactSellerButtonClicked -> onContactSellerButtonClicked()
             OrderItemTrackingHistoryContract.Event.OnBottomSheetDismissed -> onBottomSheetDismissed()
         }
     }
@@ -176,24 +175,13 @@ internal class OrderItemTrackingHistoryViewModel(
         onRequestReturnClicked()
     }
 
-    private fun onExtraActionButtonContactSupportClicked() {
+    private fun onContactSellerButtonClicked() {
         setEffect {
-            OrderItemTrackingHistoryContract.Effect.Navigation.GoToContactSupportScreen(
-                with(currentState.orderItemDetails) {
-                    OrderItemDetails(
-                        orderId = orderId,
-                        orderItemId = orderItemId,
-                        orderItemTitle = orderItemTitle,
-                        orderItemCoverImageUrl = orderItemCoverImageUrl,
-                        orderItemPriceLabel = orderItemPriceLabel
-                    )
-                }
+            OrderItemTrackingHistoryContract.Effect.Navigation.GoToConversationScreen(
+                orderId = currentState.orderItemDetails.orderId.value,
+                orderItemId = currentState.orderItemDetails.orderItemId.value
             )
         }
-    }
-
-    private fun onExtraActionButtonContactSellerClicked() {
-        // TODO: Navigate to chat screen.
     }
 
     private fun onBottomSheetDismissed() {

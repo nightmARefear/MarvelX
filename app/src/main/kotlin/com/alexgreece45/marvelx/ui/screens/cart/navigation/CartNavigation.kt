@@ -36,7 +36,7 @@ internal fun NavGraphBuilder.cartScreen(
             onNavigationEffect = { navigationEffect ->
                 when (navigationEffect) {
                     CartContract.Effect.Navigation.GoBack -> navController.navigateUp()
-                    CartContract.Effect.Navigation.GoToMarketplaceScreen -> navController.navigateToDashboardScreen()
+                    CartContract.Effect.Navigation.GoToMarketplaceScreen -> navController.navigateToMarketplaceScreen()
 
                     is CartContract.Effect.Navigation.GoToListingDetailsScreen -> rootNavController.navigateToListingDetailsScreen(
                         navigationEffect.listingId
@@ -51,8 +51,7 @@ internal fun NavGraphBuilder.cartScreen(
                     is CartContract.Effect.Navigation.GoToCheckoutSuccessScreen -> {}
                 }
             },
-            bottomNavigationBarData = bottomNavigationBarData,
-            orderCheckoutInfo = null
+            bottomNavigationBarData = bottomNavigationBarData
         )
     }
 }

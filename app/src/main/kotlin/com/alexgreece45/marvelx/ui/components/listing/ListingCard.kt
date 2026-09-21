@@ -3,7 +3,6 @@ package com.alexgreece45.marvelx.ui.components.listing
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.alexgreece45.marvelx.ui.components.sections.SectionHeader
 import com.alexgreece45.marvelx.ui.screens.marketplace.components.ListingImage
@@ -19,7 +18,6 @@ fun ListingCard(
     titleMaxLines: Int = 3,
     coverImageUrl: String,
     additionalTitleContent: (@Composable () -> Unit)? = null,
-    titleContentAlignment: Alignment.Vertical = Alignment.Top,
     trailingIcon: (@Composable () -> Unit)?,
     additionalContent: (@Composable () -> Unit)? = null,
     enabled: Boolean = true,
@@ -28,7 +26,6 @@ fun ListingCard(
     SectionHeader(
         title = title,
         titleMaxLines = titleMaxLines,
-        titleContentAlignment = titleContentAlignment,
         additionalTitleContent = additionalTitleContent,
         leadingIcon = {
             ListingImage(

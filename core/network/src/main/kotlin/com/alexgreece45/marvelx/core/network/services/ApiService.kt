@@ -1,6 +1,5 @@
 package com.alexgreece45.marvelx.core.network.services
 
-import com.alexgreece45.marvelx.core.network.model.api.authorize.ResponseAuthorize
 import com.alexgreece45.marvelx.core.network.model.api.character.CharacterDataWrapper
 import com.alexgreece45.marvelx.core.network.model.api.character.comic.ComicDataWrapper
 import com.alexgreece45.marvelx.core.network.model.api.device.RequestRegisterDevice
@@ -8,6 +7,7 @@ import com.alexgreece45.marvelx.core.network.model.api.device.RequestUpdateDevic
 import com.alexgreece45.marvelx.core.network.model.api.faq.ResponseFaqs
 import com.alexgreece45.marvelx.core.network.model.api.forgotPassword.email.RequestForgotPasswordOtpBlockedEmail
 import com.alexgreece45.marvelx.core.network.model.api.forgotPassword.email.RequestForgotPasswordSendOtp
+import com.alexgreece45.marvelx.core.network.model.api.forgotPassword.RequestForgotPasswordResetPassword
 import com.alexgreece45.marvelx.core.network.model.api.forgotPassword.email.RequestForgotPasswordValidateOtp
 import com.alexgreece45.marvelx.core.network.model.api.forgotPassword.email.ResponseForgotPasswordOtpBlockedEmail
 import com.alexgreece45.marvelx.core.network.model.api.forgotPassword.email.ResponseForgotPasswordSendOtp
@@ -84,14 +84,6 @@ internal interface ApiService {
     @POST("/api/private/marvelx/user/post_login")
     suspend fun postLogin(@Body requestPostLogin: RequestPostLogin): Response<ResponsePostLogin>
 
-    @POST("/api/private/marvelx/user/authorize")
-    suspend fun authorize(
-        @Query("temp_auth_code") tempAuthCode: String,
-        @Query("client_id") clientId: String,
-        @Query("code_challenge") codeChallenge: String,
-        @Query("code_challenge_method") codeChallengeMethod: String,
-    ): Response<ResponseAuthorize>
-
     @POST("/api/private/marvelx/user/token")
     @FormUrlEncoded
     suspend fun grandNewAccessToken(
@@ -132,6 +124,9 @@ internal interface ApiService {
 
     @POST("/api/private/marvelx/user/forgot_password/validate_otp")
     suspend fun forgotPasswordValidateOtp(@Body body: RequestForgotPasswordValidateOtp): Response<ResponseForgotPasswordValidateOtp>
+
+    @POST("/api/private/marvelx/user/forgot_password/reset_password")
+    suspend fun forgotPasswordResetPassword(@Body body: RequestForgotPasswordResetPassword): Response<Void>
 
     /**
      * Retrieves the basic __public__ profile details of another user with the ID of [userId].

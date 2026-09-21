@@ -39,7 +39,6 @@ object SecurityUtil { // TODO: utilize coroutines.
         )
         logcat { "(getHashedPasswordFromString) end of hashing..." }
 
-        emit(hashResult.encodedOutputAsByteArray().toString(Charsets.UTF_8)
-            .also { logcat { "(getHashedPasswordFromString) finalPassword: $it" } })
+        emit(hashResult.encodedOutputAsByteArray().toString(Charsets.UTF_8))
     }.flowOn(defaultDispatcher)
 }

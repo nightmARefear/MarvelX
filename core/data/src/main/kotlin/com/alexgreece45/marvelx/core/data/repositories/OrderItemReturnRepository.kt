@@ -15,10 +15,12 @@ import com.alexgreece45.marvelx.core.data.model.order.item.OrderItemReturnCondit
 import com.alexgreece45.marvelx.core.data.model.order.item.OrderItemReturnId
 import com.alexgreece45.marvelx.core.data.model.order.item.OrderItemReturnMethod
 import com.alexgreece45.marvelx.core.data.model.order.item.OrderItemReturnReason
+import com.alexgreece45.marvelx.core.data.model.order.item.OrderItemReturnSellerAction
 import com.alexgreece45.marvelx.core.data.model.order.item.OrderItemReturnState
 import com.alexgreece45.marvelx.core.data.model.order.item.toData
 import com.alexgreece45.marvelx.core.data.model.order.item.toDataState
 import com.alexgreece45.marvelx.core.network.clients.OrderClient
+import com.alexgreece45.marvelx.core.network.model.api.order.item.returnRequest.RequestOrderItemReturnResponse
 import com.alexgreece45.marvelx.model.model.generic.AttachedFileContentData
 import org.koin.core.annotation.Single
 import kotlin.coroutines.CoroutineContext
@@ -43,6 +45,12 @@ interface OrderItemReturnRepository {
 
     suspend fun getOrderItemReturnById(
         orderItemReturnId: OrderItemReturnId
+    ): RepositoryResult<OrderItemReturn>
+
+    suspend fun respondToOrderItemReturn(
+        orderItemReturnId: OrderItemReturnId,
+        action: OrderItemReturnSellerAction,
+        sellerMessage: String?
     ): RepositoryResult<OrderItemReturn>
 }
 
@@ -156,6 +164,27 @@ internal class OrderItemReturnRepositoryImpl(
             },
             transformation = { this.toData() },
             ioDispatcher = ioDispatcher
+        )
+    }
+
+    override suspend fun respondToOrderItemReturn(
+        orderItemReturnId: OrderItemReturnId,
+        action: OrderItemReturnSellerAction,
+        sellerMessage: String?
+    ): RepositoryResult<OrderItemReturn> {
+        return handleApiResultNoFlow(
+            apiCall = {
+                orderClient.respondToOrderItemReturn(
+                    orderItemReturnId = orderItemReturnId.value,
+                    request = RequestOrderItemReturnResponse(
+                        action = action.key,
+                        sellerMessage = sellerMessage
+                    )
+                )
+            },
+            transformation = { this.toData() },
+            ioDispatcher = ioDispatcher,
+            logError = { errorMessage -> appLogger.e(loggerTag) { errorMessage } }
         )
     }
 }

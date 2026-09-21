@@ -28,6 +28,9 @@ interface ListingCategoryDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertSubcategories(subcategories: List<ListingSubcategoryEntity>)
 
+    @Query("DELETE FROM listing_subcategory")
+    suspend fun clearSubcategories()
+
     @Query("DELETE FROM listing_category")
     suspend fun clearCategories()
 
@@ -36,6 +39,7 @@ interface ListingCategoryDao {
         categories: List<ListingCategoryEntity>,
         subcategories: List<ListingSubcategoryEntity>
     ) {
+        clearSubcategories()
         clearCategories()
         insertCategories(categories)
         insertSubcategories(subcategories)

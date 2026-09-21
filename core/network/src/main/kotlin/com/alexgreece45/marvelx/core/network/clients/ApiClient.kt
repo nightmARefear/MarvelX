@@ -1,6 +1,5 @@
 package com.alexgreece45.marvelx.core.network.clients
 
-import com.alexgreece45.marvelx.core.network.model.api.authorize.ResponseAuthorize
 import com.alexgreece45.marvelx.core.network.model.api.character.CharacterDataWrapper
 import com.alexgreece45.marvelx.core.network.model.api.character.comic.ComicDataWrapper
 import com.alexgreece45.marvelx.core.network.model.api.device.RequestRegisterDevice
@@ -8,6 +7,7 @@ import com.alexgreece45.marvelx.core.network.model.api.device.RequestUpdateDevic
 import com.alexgreece45.marvelx.core.network.model.api.faq.ResponseFaqs
 import com.alexgreece45.marvelx.core.network.model.api.forgotPassword.email.RequestForgotPasswordOtpBlockedEmail
 import com.alexgreece45.marvelx.core.network.model.api.forgotPassword.email.RequestForgotPasswordSendOtp
+import com.alexgreece45.marvelx.core.network.model.api.forgotPassword.RequestForgotPasswordResetPassword
 import com.alexgreece45.marvelx.core.network.model.api.forgotPassword.email.RequestForgotPasswordValidateOtp
 import com.alexgreece45.marvelx.core.network.model.api.forgotPassword.email.ResponseForgotPasswordOtpBlockedEmail
 import com.alexgreece45.marvelx.core.network.model.api.forgotPassword.email.ResponseForgotPasswordSendOtp
@@ -54,13 +54,6 @@ interface ApiClient {
     suspend fun loginWithToken(): Response<ResponseLoginWithToken>
     suspend fun postLogin(accessToken: String): Response<ResponsePostLogin>
 
-    suspend fun authorize(
-        tempAuthCode: String,
-        clientId: String,
-        codeChallenge: String,
-        codeChallengeMethod: String
-    ): Response<ResponseAuthorize>
-
     suspend fun grandNewAccessToken(
         clientId: String,
         codeVerifier: String,
@@ -77,6 +70,7 @@ interface ApiClient {
     suspend fun forgotPasswordIsOtpBlockedEmail(body: RequestForgotPasswordOtpBlockedEmail): Response<ResponseForgotPasswordOtpBlockedEmail>
     suspend fun forgotPasswordIsOtpBlockedPhoneNumber(body: RequestForgotPasswordOtpBlockedPhoneNumber): Response<ResponseForgotPasswordOtpBlockedPhoneNumber>
     suspend fun forgotPasswordValidateOtp(body: RequestForgotPasswordValidateOtp): Response<ResponseForgotPasswordValidateOtp>
+    suspend fun forgotPasswordResetPassword(body: RequestForgotPasswordResetPassword): ApiResult<String>
     suspend fun getBasicProfileDetails(userId: String): ApiResult<ResponseBasicProfileDetails>
     suspend fun getCurrentUserProfileDetails(): Response<ResponseBasicProfileDetails>
     suspend fun updateCurrentUserProfileDetails(requestProfileDetailsUpdate: RequestProfileDetailsUpdate): ApiResult<String>

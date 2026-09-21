@@ -46,9 +46,9 @@ interface ListingClient {
 
     suspend fun getListing(listingId: String): ApiResult<ResponseListing>
     suspend fun getFilteredListings(
-        searchQuery: String,
-        categoryCodes: List<String>,
-        conditionCodes: List<String>,
+        searchQuery: String?,
+        categoryCodes: List<String>?,
+        conditionCodes: List<String>?,
         minPrice: String?,
         maxPrice: String?,
         datePostedKey: String,
@@ -56,6 +56,24 @@ interface ListingClient {
         customDateTo: String?,
         finalSale: Boolean,
         sortKey: String
+    ): ApiResult<List<ResponseListing>>
+
+    /**
+     * Offset/limit keyed variant of [getFilteredListings], used by the Paging 3 search feed.
+     */
+    suspend fun getFilteredListingsPaged(
+        searchQuery: String?,
+        categoryCodes: List<String>?,
+        conditionCodes: List<String>?,
+        minPrice: String?,
+        maxPrice: String?,
+        datePostedKey: String,
+        customDateFrom: String?,
+        customDateTo: String?,
+        finalSale: Boolean,
+        sortKey: String,
+        offset: Int,
+        limit: Int
     ): ApiResult<List<ResponseListing>>
 
     suspend fun createListing(body: MultipartBody): ApiResult<ResponseListingId>

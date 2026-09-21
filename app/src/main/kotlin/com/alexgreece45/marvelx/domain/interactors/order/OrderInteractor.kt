@@ -1,6 +1,7 @@
 package com.alexgreece45.marvelx.domain.interactors.order
 
 import com.alexgreece45.marvelx.core.data.model.order.OrderId
+import com.alexgreece45.marvelx.data.model.order.PlaceOrderCheckoutDetails
 import com.alexgreece45.marvelx.data.repository.order.OrderRepository
 import com.alexgreece45.marvelx.domain.helper.InteractorPartialState
 import com.alexgreece45.marvelx.domain.helper.handleRepositoryResultNoFlow
@@ -28,7 +29,10 @@ interface OrderInteractor {
         orderItemId: OrderIdDomain
     ): InteractorPartialState<OrderItemTrackingHistoryDomain>
 
-    suspend fun placeOrder(): InteractorPartialState<OrderIdDomain>
+    suspend fun placeOrder(
+        listingIds: List<String>,
+        placeOrderCheckoutDetails: PlaceOrderCheckoutDetails
+    ): InteractorPartialState<OrderIdDomain>
 }
 
 @Factory
@@ -73,9 +77,15 @@ internal class OrderInteractorImpl(
         )
     }
 
-    override suspend fun placeOrder(): InteractorPartialState<OrderIdDomain> {
+    override suspend fun placeOrder(
+        listingIds: List<String>,
+        placeOrderCheckoutDetails: PlaceOrderCheckoutDetails
+    ): InteractorPartialState<OrderIdDomain> {
         return handleRepositoryResultNoFlow(
-            repositoryResult = orderRepository.placeOrder(),
+            repositoryResult = orderRepository.placeOrder(
+                listingIds = listingIds,
+                placeOrderCheckoutDetails = placeOrderCheckoutDetails
+            ),
             transformation = { this.toDomain() }
         )
     }

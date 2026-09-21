@@ -12,10 +12,12 @@ import com.alexgreece45.marvelx.core.common.util.flows.single_observer_flow.Sing
 import com.alexgreece45.marvelx.ui.helper.openDeepLinkAction
 import com.alexgreece45.marvelx.ui.navigation.getBottomNavigationBarData
 import com.alexgreece45.marvelx.ui.screens.allCharacters.navigation.allCharactersScreen
-import com.alexgreece45.marvelx.ui.screens.allFavoriteCharacters.navigation.allFavoriteCharactersScreen
-import com.alexgreece45.marvelx.ui.screens.allFavoriteCharacters.navigation.navigateToAllFavoriteCharactersScreen
+import com.alexgreece45.marvelx.ui.screens.favoriteListings.navigation.favoriteListingsScreen
+import com.alexgreece45.marvelx.ui.screens.favoriteListings.navigation.navigateToFavoriteListingsScreen
 import com.alexgreece45.marvelx.ui.screens.cart.navigation.cartScreen
 import com.alexgreece45.marvelx.ui.screens.cart.navigation.navigateToCartScreen
+import com.alexgreece45.marvelx.ui.screens.chat.conversation.navigation.navigateToConversationScreen
+import com.alexgreece45.marvelx.ui.screens.chat.inbox.navigation.inboxScreen
 import com.alexgreece45.marvelx.ui.screens.character.navigation.navigateToCharacterScreen
 import com.alexgreece45.marvelx.ui.screens.dashboard.model.DashboardContract
 import com.alexgreece45.marvelx.ui.screens.marketplace.listingDetailsScreen.navigation.navigateToListingDetailsScreen
@@ -52,7 +54,7 @@ fun DashboardScreen(
     ) {
         marketplaceScreen(
             navigateToListingDetailsScreen = rootNavController::navigateToListingDetailsScreen,
-            navigateToFavoritesScreen = dashboardNavController::navigateToAllFavoriteCharactersScreen,
+            navigateToFavoritesScreen = dashboardNavController::navigateToFavoriteListingsScreen,
             navigateToCartScreen = dashboardNavController::navigateToCartScreen,
             bottomNavigationBarData = { getBottomNavigationBarData(dashboardNavController) },
         )
@@ -72,7 +74,15 @@ fun DashboardScreen(
             openDeepLinkAction = rootNavController::openDeepLinkAction
         )
 
-        allFavoriteCharactersScreen(dashboardNavController)
+        favoriteListingsScreen(
+            navController = dashboardNavController,
+            navigateToListingDetailsScreen = rootNavController::navigateToListingDetailsScreen
+        )
+
+        inboxScreen(
+            navController = dashboardNavController,
+            navigateToConversationScreen = rootNavController::navigateToConversationScreen
+        )
 
         cartScreen(
             navController = dashboardNavController,

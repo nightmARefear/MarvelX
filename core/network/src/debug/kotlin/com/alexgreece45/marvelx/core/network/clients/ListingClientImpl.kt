@@ -94,9 +94,9 @@ internal class ListingClientImpl(
     }
 
     override suspend fun getFilteredListings(
-        searchQuery: String,
-        categoryCodes: List<String>,
-        conditionCodes: List<String>,
+        searchQuery: String?,
+        categoryCodes: List<String>?,
+        conditionCodes: List<String>?,
         minPrice: String?,
         maxPrice: String?,
         datePostedKey: String,
@@ -115,8 +115,40 @@ internal class ListingClientImpl(
                 datePostedKey = datePostedKey,
                 customDateFrom = customDateFrom,
                 customDateTo = customDateTo,
-                isFinalSale = finalSale,
+                finalSale = finalSale,
                 sortKey = sortKey
+            )
+        }
+    }
+
+    override suspend fun getFilteredListingsPaged(
+        searchQuery: String?,
+        categoryCodes: List<String>?,
+        conditionCodes: List<String>?,
+        minPrice: String?,
+        maxPrice: String?,
+        datePostedKey: String,
+        customDateFrom: String?,
+        customDateTo: String?,
+        finalSale: Boolean,
+        sortKey: String,
+        offset: Int,
+        limit: Int
+    ): ApiResult<List<ResponseListing>> {
+        return executeApiServiceCall {
+            listingService.getFilteredListingsPaged(
+                searchQuery = searchQuery,
+                categoryCodes = categoryCodes,
+                conditionCodes = conditionCodes,
+                minPrice = minPrice,
+                maxPrice = maxPrice,
+                datePostedKey = datePostedKey,
+                customDateFrom = customDateFrom,
+                customDateTo = customDateTo,
+                finalSale = finalSale,
+                sortKey = sortKey,
+                offset = offset,
+                limit = limit
             )
         }
     }

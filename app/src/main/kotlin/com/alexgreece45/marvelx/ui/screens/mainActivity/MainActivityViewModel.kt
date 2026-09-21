@@ -6,52 +6,40 @@ import com.alexgreece45.marvelx.controllers.DeepLinkController
 import com.alexgreece45.marvelx.controllers.DeviceController
 import com.alexgreece45.marvelx.controllers.FcmController
 import com.alexgreece45.marvelx.controllers.HandleDeepLinkActionResult
+import com.alexgreece45.marvelx.controllers.OAuthAuthorizationController
 import com.alexgreece45.marvelx.controllers.WebsocketController
-import com.alexgreece45.marvelx.controllers.model.websocket.WebsocketOnMessageReceivedPartialState
-import com.alexgreece45.marvelx.controllers.model.websocket.WebsocketRequestType
-import com.alexgreece45.marvelx.controllers.model.websocket.WebsocketSendRequestPartialState
+import com.alexgreece45.marvelx.controllers.model.websocket.WebsocketInbound
 import com.alexgreece45.marvelx.core.common.config.SecurityConfigLogic
 import com.alexgreece45.marvelx.core.common.constants.ConstantsSecurity
-import com.alexgreece45.marvelx.core.common.dispatchers.model.DispatcherQualifiers
 import com.alexgreece45.marvelx.core.common.extensions.differenceInMinutes
 import com.alexgreece45.marvelx.core.common.logger.AppLogger
 import com.alexgreece45.marvelx.core.network.managers.SessionManager
 import com.alexgreece45.marvelx.core.network.managers.model.LogoutReason
-import com.alexgreece45.marvelx.core.network.model.websocket.ResponseWebSocketDeleteNotification
-import com.alexgreece45.marvelx.core.network.model.websocket.ResponseWebsocket
 import com.alexgreece45.marvelx.core.security.model.security.SecurityViolation
 import com.alexgreece45.marvelx.data.model.deepLink.DeepLinkAction
 import com.alexgreece45.marvelx.data.repository.AutoLogoutRepository
 import com.alexgreece45.marvelx.data.repository.UserRepository
 import com.alexgreece45.marvelx.data.repository.marketplace.listing.ListingCategoryRepository
 import com.alexgreece45.marvelx.data.repository.marketplace.listing.details.ListingDetailsRepository
-import com.alexgreece45.marvelx.domain.model_websocket.toWebsocketDomain
 import com.alexgreece45.marvelx.domain.usecases.LogoutUseCase
 import com.alexgreece45.marvelx.mvi.BaseViewModel
 import com.alexgreece45.marvelx.notifications.PushNotificationsController
 import com.alexgreece45.marvelx.ui.navigation.Screen
-import com.alexgreece45.marvelx.ui.screens.mainActivity.model.CoroutineWebSocketListener
 import com.alexgreece45.marvelx.ui.screens.mainActivity.model.MainActivityEffect
 import com.alexgreece45.marvelx.ui.screens.mainActivity.model.MainActivityEffect.Navigation.NavigateToSplashScreenWithSecurityViolation
 import com.alexgreece45.marvelx.ui.screens.mainActivity.model.MainActivityEffect.OpenOrCacheDeepLink
 import com.alexgreece45.marvelx.ui.screens.mainActivity.model.MainActivityEvent
 import com.alexgreece45.marvelx.ui.screens.mainActivity.model.MainActivityState
-import com.alexgreece45.marvelx.ui.screens.mainActivity.model.WebSocketEvent
 import com.alexgreece45.marvelx.util.DateUtil
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.constants.ConstantsWorker
 import com.google.gson.Gson
-import kotlinx.coroutines.channels.consumeEach
+import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
-import okhttp3.WebSocketListener
 import org.koin.android.annotation.KoinViewModel
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import org.koin.core.qualifier.named
-import java.time.Instant
-import java.time.format.DateTimeParseException
-import kotlin.coroutines.CoroutineContext
 
 @KoinViewModel(binds = [MainActivityViewModel::class])
 class MainActivityViewModel :
@@ -64,9 +52,9 @@ class MainActivityViewModel :
     private val resourceProvider: ResourceProvider by inject()
     private val websocketController: WebsocketController by inject()
     private val deepLinkController: DeepLinkController by inject()
+    private val oAuthAuthorizationController: OAuthAuthorizationController by inject()
     private val userRepository: UserRepository by inject()
 
-    private val ioDispatcher: CoroutineContext by inject(named(DispatcherQualifiers.IO.qualifier))
     private val fcmController: FcmController by inject()
     private val deviceController: DeviceController by inject()
     private val gson: Gson by inject()
@@ -91,6 +79,8 @@ class MainActivityViewModel :
             }
 
             MainActivityEvent.LifecycleEvent.OnPause -> {
+                websocketController.onAppForegroundChanged(isForeground = false)
+
                 if (userRepository.isUserLoggedIn && securityConfigLogic.isAutoLogoutEnabled) {
                     viewModelScope.launch {
                         autoLogoutRepository.setAutoLogoutTimestamp(DateUtil.getUTCInstant())
@@ -99,6 +89,8 @@ class MainActivityViewModel :
             }
 
             MainActivityEvent.LifecycleEvent.OnResume -> {
+                websocketController.onAppForegroundChanged(isForeground = true)
+
                 if (!userRepository.isUserLoggedIn) return // TODO: To be reviewed.
 
                 viewModelScope.launch {
@@ -178,6 +170,10 @@ class MainActivityViewModel :
                 }
             }
 
+            is MainActivityEvent.OnOAuthCallbackReceived -> {
+                oAuthAuthorizationController.onCallbackUri(event.uri)
+            }
+
             is MainActivityEvent.OnFcmTokenReceived -> {
                 fcmController.setFcmToken(event.fcmToken)
 
@@ -208,14 +204,21 @@ class MainActivityViewModel :
      * The operations to perform when the app gets initialized.
      */
     private fun onCreateOperations() {
-        setWebsocketListener()
-
         viewModelScope.launch {
             userRepository.getUserLoggedInFlow().collect { isUserLoggedIn ->
                 if (isUserLoggedIn) {
                     registerOrUpdateDevice()
+                    websocketController.connect()
+                } else {
+                    websocketController.disconnect()
                 }
             }
+        }
+
+        viewModelScope.launch {
+            websocketController.inbound
+                .filterIsInstance<WebsocketInbound.NotificationDeleted>()
+                .collect { pushNotificationsController.deleteNotification(it.notificationId) }
         }
 
         viewModelScope.launch {
@@ -246,13 +249,6 @@ class MainActivityViewModel :
         }
     }
 
-    /**
-     * The actions to perform when the viewModel is instantiated.
-     */
-    private fun setWebsocketListener() {
-        websocketController.setWebSocketListener(getWebSocketListener())
-    }
-
     private fun registerOrUpdateDevice() {
         viewModelScope.launch {
             val wasDeviceRegistered =
@@ -275,7 +271,7 @@ class MainActivityViewModel :
             .cancelUniqueWork(ConstantsWorker.RefreshToken.WORKER_NAME)
 
         // Close websocket.
-        websocketController.close()
+        websocketController.disconnect()
 
         // Remove auto-logout timestamp.
         viewModelScope.launch {
@@ -289,122 +285,27 @@ class MainActivityViewModel :
     private fun performAutoLogoutOperations() {
         if (securityConfigLogic.isAutoLogoutEnabled && isCurrentRouteIncludedInAutoLogout()) {
             viewModelScope.launch {
-                websocketController.sendRequest(WebsocketRequestType.GetTimestamp)
-                    .collect { partialState ->
-                        var logoutReason = LogoutReason.SESSION_EXPIRED
-                        val currentTimestamp =
-                            when (partialState) {
-                                is WebsocketSendRequestPartialState.Failed -> {
-                                    appLogger.d(loggerTag) { "(performAutoLogoutOperations#sendRequest#Failed) errorMessage: ${partialState.errorMessage}" }
-                                    logoutReason = LogoutReason.WEBSOCKET_ERROR
-                                    DateUtil.getUTCInstant()
-                                }
+                // Prefer the server's clock so a tampered device clock cannot extend the session;
+                // fall back to local time if the socket cannot answer in time.
+                val currentTimestamp =
+                    websocketController.requestServerTimestamp() ?: DateUtil.getUTCInstant()
 
-                                is WebsocketSendRequestPartialState.Success -> {
-                                    try {
-                                        appLogger.d(loggerTag) { "(performAutoLogoutOperations#sendRequest#Success) timestamp: ${partialState.websocketDomain.data}" }
-                                        Instant.parse(partialState.websocketDomain.data)
-                                    } catch (e: DateTimeParseException) {
-                                        appLogger.e(loggerTag) { "(performAutoLogoutOperations#sendRequest#Success) parsing error: $e" }
-                                        logoutReason = LogoutReason.WEBSOCKET_ERROR
-                                        DateUtil.getUTCInstant()
-                                    }
-                                }
-                            }
+                when (val storedTimestamp = autoLogoutRepository.getAutoLogoutTimestamp()) {
+                    null -> autoLogoutRepository.setAutoLogoutTimestamp(currentTimestamp)
 
-                        viewModelScope.launch {
-                            when (val storedTimestamp =
-                                autoLogoutRepository.getAutoLogoutTimestamp()) {
-                                null -> {
-                                    autoLogoutRepository.setAutoLogoutTimestamp(currentTimestamp)
-                                }
+                    else -> {
+                        val idleMinutes = currentTimestamp.differenceInMinutes(storedTimestamp)
+                        appLogger.d(loggerTag) { "(performAutoLogoutOperations) idle minutes: $idleMinutes" }
 
-                                else -> {
-                                    if (currentTimestamp.differenceInMinutes(storedTimestamp)
-                                            .also { appLogger.d(loggerTag) { "difference in time: $it" } } >= ConstantsSecurity.AutoLogout.TIMEOUT_PERIOD
-                                    ) {
-                                        sessionManager.triggerLogout(logoutReason)
-                                    } else {
-                                        autoLogoutRepository.setAutoLogoutTimestamp(currentTimestamp)
-                                    }
-                                }
-                            }
+                        if (idleMinutes >= ConstantsSecurity.AutoLogout.TIMEOUT_PERIOD) {
+                            sessionManager.triggerLogout(LogoutReason.SESSION_EXPIRED)
+                        } else {
+                            autoLogoutRepository.setAutoLogoutTimestamp(currentTimestamp)
                         }
-                    }
-            }
-        }
-    }
-
-    /**
-     * Returns the websocket listener responsible for handling connections, terminations, and more.
-     */
-    private fun getWebSocketListener(): WebSocketListener {
-        val listener = CoroutineWebSocketListener()
-
-        viewModelScope.launch(ioDispatcher) {
-            listener.eventChannel.consumeEach { webSocketEvent ->
-                when (webSocketEvent) {
-                    is WebSocketEvent.OnOpen -> {
-                        appLogger.d(loggerTag) { "The websocket connection has been opened." }
-                    }
-
-                    is WebSocketEvent.OnMessage -> {
-                        appLogger.d(loggerTag) { "Received message: ${webSocketEvent.text}" }
-
-                        try {
-                            // Delete notification handling.
-                            val notificationId = gson.fromJson(
-                                webSocketEvent.text,
-                                ResponseWebSocketDeleteNotification::class.java
-                            ).notificationId
-                            pushNotificationsController.deleteNotification(notificationId)
-                        } catch (_: Exception) {
-                            appLogger.e(loggerTag) { "(onMessage) The received websocket response is not of \"delete notification\" type." }
-
-                            try {
-                                val websocketDomain =
-                                    gson.fromJson(
-                                        webSocketEvent.text,
-                                        ResponseWebsocket::class.java
-                                    )
-                                        .toWebsocketDomain()
-                                websocketController.onMessageReceived(
-                                    WebsocketOnMessageReceivedPartialState.Success(websocketDomain)
-                                )
-                                appLogger.d(loggerTag) { "(onMessage) websocketDomain: $websocketDomain" }
-                            } catch (e: Exception) {
-                                appLogger.e(loggerTag) { "(onMessage) Error parsing websocket response: $e" }
-                                websocketController.onMessageReceived(
-                                    WebsocketOnMessageReceivedPartialState.Failed(e.message.orEmpty())
-                                )
-                            }
-                        }
-                    }
-
-                    is WebSocketEvent.OnClosing -> {
-                        appLogger.d(loggerTag) { "(onClosing): The websocket server has decided to close the websocket connection.\tcode: ${webSocketEvent.code}" }
-
-                        if (userRepository.isUserLoggedIn) {
-                            sessionManager.triggerLogout(LogoutReason.WEBSOCKET_ERROR)
-                        }
-                    }
-
-                    is WebSocketEvent.OnClosed -> {
-                        if (userRepository.isUserLoggedIn) {
-                            appLogger.d(loggerTag) { "(onClosed): isUserLoggedIn: true" }
-                            sessionManager.triggerLogout(LogoutReason.WEBSOCKET_ERROR)
-                        }
-                        appLogger.d(loggerTag) { "(onClosed): Both the websocket client and server have decided to end this websocket connection.\tcode: ${webSocketEvent.code}" }
-                    }
-
-                    is WebSocketEvent.OnFailure -> {
-                        appLogger.d(loggerTag) { "(onFailure): The websocket server has decided to close this websocket connection." }
-                        sessionManager.triggerLogout(LogoutReason.WEBSOCKET_ERROR)
                     }
                 }
             }
         }
-        return listener
     }
 
     /**

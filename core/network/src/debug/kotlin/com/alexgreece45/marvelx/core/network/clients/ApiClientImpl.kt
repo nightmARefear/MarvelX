@@ -1,6 +1,5 @@
 package com.alexgreece45.marvelx.core.network.clients
 
-import com.alexgreece45.marvelx.core.network.model.api.authorize.ResponseAuthorize
 import com.alexgreece45.marvelx.core.network.model.api.character.CharacterDataWrapper
 import com.alexgreece45.marvelx.core.network.model.api.character.comic.ComicDataWrapper
 import com.alexgreece45.marvelx.core.network.model.api.device.RequestRegisterDevice
@@ -8,6 +7,7 @@ import com.alexgreece45.marvelx.core.network.model.api.device.RequestUpdateDevic
 import com.alexgreece45.marvelx.core.network.model.api.faq.ResponseFaqs
 import com.alexgreece45.marvelx.core.network.model.api.forgotPassword.email.RequestForgotPasswordOtpBlockedEmail
 import com.alexgreece45.marvelx.core.network.model.api.forgotPassword.email.RequestForgotPasswordSendOtp
+import com.alexgreece45.marvelx.core.network.model.api.forgotPassword.RequestForgotPasswordResetPassword
 import com.alexgreece45.marvelx.core.network.model.api.forgotPassword.email.RequestForgotPasswordValidateOtp
 import com.alexgreece45.marvelx.core.network.model.api.forgotPassword.email.ResponseForgotPasswordOtpBlockedEmail
 import com.alexgreece45.marvelx.core.network.model.api.forgotPassword.email.ResponseForgotPasswordSendOtp
@@ -79,14 +79,6 @@ internal class ApiClientImpl(
     override suspend fun postLogin(accessToken: String): Response<ResponsePostLogin> =
         apiService.postLogin(RequestPostLogin(accessToken))
 
-    override suspend fun authorize(
-        tempAuthCode: String,
-        clientId: String,
-        codeChallenge: String,
-        codeChallengeMethod: String
-    ): Response<ResponseAuthorize> =
-        apiService.authorize(tempAuthCode, clientId, codeChallenge, codeChallengeMethod)
-
     override suspend fun grandNewAccessToken(
         clientId: String,
         codeVerifier: String,
@@ -120,6 +112,11 @@ internal class ApiClientImpl(
 
     override suspend fun forgotPasswordValidateOtp(body: RequestForgotPasswordValidateOtp): Response<ResponseForgotPasswordValidateOtp> =
         apiService.forgotPasswordValidateOtp(body)
+
+    override suspend fun forgotPasswordResetPassword(body: RequestForgotPasswordResetPassword): ApiResult<String> =
+        com.alexgreece45.marvelx.core.network.util.executeApiServiceCallNoTransformation {
+            apiService.forgotPasswordResetPassword(body)
+        }
 
     override suspend fun getBasicProfileDetails(userId: String): ApiResult<ResponseBasicProfileDetails> =
         executeApiServiceCall { (apiService.getBasicProfileDetails(userId)) }

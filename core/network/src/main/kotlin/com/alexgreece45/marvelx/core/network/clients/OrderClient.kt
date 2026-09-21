@@ -1,10 +1,12 @@
 package com.alexgreece45.marvelx.core.network.clients
 
+import com.alexgreece45.marvelx.core.network.model.api.order.RequestPlaceOrder
 import com.alexgreece45.marvelx.core.network.model.api.order.ResponseOrder
 import com.alexgreece45.marvelx.core.network.model.api.order.ResponseOrderId
 import com.alexgreece45.marvelx.core.network.model.api.order.ResponseOrderPreview
 import com.alexgreece45.marvelx.core.network.model.api.order.item.ResponseOrderItem
 import com.alexgreece45.marvelx.core.network.model.api.order.item.ResponseOrderItemTrackingHistory
+import com.alexgreece45.marvelx.core.network.model.api.order.item.returnRequest.RequestOrderItemReturnResponse
 import com.alexgreece45.marvelx.core.network.model.api.order.item.returnRequest.ResponseOrderItemReturn
 import com.alexgreece45.marvelx.core.network.model.api.order.item.returnRequest.ResponseOrderItemReturnId
 import com.alexgreece45.marvelx.core.network.model.generic.ApiResult
@@ -23,7 +25,7 @@ interface OrderClient {
         orderItemId: String
     ): ApiResult<ResponseOrderItemTrackingHistory>
 
-    suspend fun placeOrder(): ApiResult<ResponseOrderId>
+    suspend fun placeOrder(requestPlaceOrder: RequestPlaceOrder): ApiResult<ResponseOrderId>
 
     suspend fun getOrderItemReturn(
         orderId: String,
@@ -38,5 +40,10 @@ interface OrderClient {
 
     suspend fun getOrderItemReturnById(
         orderItemReturnId: String
+    ): ApiResult<ResponseOrderItemReturn>
+
+    suspend fun respondToOrderItemReturn(
+        orderItemReturnId: String,
+        request: RequestOrderItemReturnResponse
     ): ApiResult<ResponseOrderItemReturn>
 }

@@ -85,6 +85,7 @@ sealed class Screen(
                 // TODO: Examine.
 //                ProfileScreen.baseRoute -> ProfileScreen
                 ProfileDetailsScreen.baseRoute -> ProfileDetailsScreen
+                ChatConversationScreen.baseRoute -> ChatConversationScreen
                 // TODO: Examine.
 //                ListingDetailsScreen.baseRoute -> ListingDetailsScreen
                 else -> null
@@ -109,7 +110,14 @@ sealed class Screen(
         navArgs = listOf(NavItem.LogoutReason),
         isIncludedInAutoLogout = false
     ) {
-        fun createNavRoute(errorMessage: String): String = "$baseRoute/$errorMessage"
+        /**
+         * Always navigate through this rather than [route]: the raw pattern would hand the screen
+         * the literal text `{logoutReason}` as its argument.
+         */
+        fun createNavRoute(logoutReason: String? = null): String =
+            "$baseRoute/${logoutReason ?: NO_LOGOUT_REASON}"
+
+        private const val NO_LOGOUT_REASON = "none"
     }
 
     data object LoginScreen :
@@ -120,35 +128,16 @@ sealed class Screen(
     data object ForgotPasswordScreen :
         Screen(baseRoute = "forgotPasswordScreen", isIncludedInAutoLogout = false)
 
-    data object ForgotPasswordValidateEmailScreen :
-        Screen(
-            baseRoute = "forgotPasswordValidateEmailScreen",
-            navArgs = listOf(NavItem.RequestIdEmail)
-        ) {
-        fun createNavRoute(requestIdEmail: String): String =
-            "$baseRoute/$requestIdEmail"
-    }
-
-    data object ForgotPasswordEnterPhoneNumberScreen :
-        Screen(
-            baseRoute = "forgotPasswordEnterPhoneNumberScreen",
-            navArgs = listOf(NavItem.RequestIdEmail),
-            isIncludedInAutoLogout = false
-        ) {
-        fun createNavRoute(requestIdEmail: String): String =
-            "$baseRoute/$requestIdEmail"
-    }
-
     data object ChangePasswordScreen : Screen(
         baseRoute = "changePasswordScreen",
-        navArgs = listOf(NavItem.RequestIdEmail, NavItem.RequestIdPhoneNumber),
+        navArgs = listOf(NavItem.RequestIdEmail),
         isIncludedInAutoLogout = false
     ) {
-        fun createNavRoute(
-            requestIdEmail: String,
-            requestIdPhoneNumber: String?
-        ): String = "$baseRoute/$requestIdEmail/$requestIdPhoneNumber"
+        fun createNavRoute(requestIdEmail: String): String = "$baseRoute/$requestIdEmail"
     }
+
+    data object PasswordChangedScreen :
+        Screen(baseRoute = "passwordChangedScreen", isIncludedInAutoLogout = false)
 
     data object OtpScreen : Screen(
         baseRoute = "otpScreen",
@@ -202,6 +191,18 @@ sealed class Screen(
             orderItemPriceLabel: String
         ): String =
             "$baseRoute/$orderId/$orderItemId/$orderItemTitle/$orderItemCoverImageUrl/$orderItemPriceLabel"
+    }
+
+    /**
+     * String-route twin of the type-safe `ConversationRoute`, needed because push notifications
+     * and web links resolve through this class. Argument keys match the typed route's properties.
+     */
+    data object ChatConversationScreen : Screen(
+        baseRoute = "chatConversation",
+        navArgs = listOf(NavItem.ConversationId),
+        deepLinkArgs = listOf(NavDeepLinkItem.ConversationId)
+    ) {
+        fun createNavRoute(conversationId: String): String = "$baseRoute/$conversationId"
     }
 
     data object ProfileImageScreen : Screen(
@@ -313,7 +314,8 @@ enum class NavItem(val key: String, val type: NavType<*>) {
     OrderItemPriceLabel(key = NavItemKey.orderItemPriceLabel, type = NavType.StringType),
     SellerUserId(key = NavItemKey.sellerUserId, type = NavType.StringType),
     LogoutReason(key = NavItemKey.logoutReason, type = NavType.StringType),
-    CreateListingWizardMode(key = NavItemKey.createListingWizardMode, type = NavType.StringType)
+    CreateListingWizardMode(key = NavItemKey.createListingWizardMode, type = NavType.StringType),
+    ConversationId(key = NavItemKey.conversationId, type = NavType.StringType)
 }
 
 /**
@@ -325,6 +327,7 @@ enum class NavDeepLinkItem(val key: String) {
     QrCodeScanErrorMessage(key = NavItemKey.qrCodeScanErrorMessage),
     ShouldShowAcceptFriendRequestDialog(key = NavItemKey.shouldShowAcceptFriendRequestDialog),
     OrderId(key = NavItemKey.orderId),
+    ConversationId(key = NavItemKey.conversationId),
 }
 
 /**
@@ -357,4 +360,5 @@ private object NavItemKey {
     const val logoutReason = "logoutReason"
     const val createListingWizardMode = "createListingWizardMode"
     const val checkoutWizardMode = "checkoutWizardMode"
+    const val conversationId = "conversationId"
 }

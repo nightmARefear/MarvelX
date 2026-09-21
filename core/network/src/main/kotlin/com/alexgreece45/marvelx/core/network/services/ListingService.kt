@@ -57,12 +57,12 @@ internal interface ListingService {
         @Path("categoryCode") categoryCode: String
     ): Response<List<ResponseListing>>
 
-    @GET("/api/private/marvelx/users/me/listings")
+    @GET("/api/private/marvelx/user/me/listings")
     suspend fun getCurrentUserListings(
         @Query("page") page: Int
     ): Response<List<ResponseMyListing>>
 
-    @GET("/api/private/marvelx/users/{userId}/listings")
+    @GET("/api/private/marvelx/user/{userId}/listings")
     suspend fun getUserListings(
         @Path("userId") userId: String,
         @Query("page") page: Int
@@ -75,16 +75,40 @@ internal interface ListingService {
 
     @GET("/api/private/marvelx/listings/search")
     suspend fun getFilteredListings(
-        @Query("searchQuery") searchQuery: String,
-        @Query("categoryIds") categoryCodes: List<String>,
-        @Query("conditionCodes") conditionCodes: List<String>,
+        @Query("searchQuery") searchQuery: String?,
+        @Query("categoryCodes") categoryCodes: List<String>?,
+        @Query("conditionCodes") conditionCodes: List<String>?,
         @Query("minPrice") minPrice: String?,
         @Query("maxPrice") maxPrice: String?,
         @Query("datePostedKey") datePostedKey: String,
         @Query("customDateFrom") customDateFrom: String?,
         @Query("customDateTo") customDateTo: String?,
-        @Query("isFinalSale") isFinalSale: Boolean,
+        @Query("finalSale") finalSale: Boolean,
         @Query("sortKey") sortKey: String
+    ): Response<List<ResponseListing>>
+
+    /**
+     * Offset/limit keyed variant of [getFilteredListings], used by the Paging 3 search feed.
+     *
+     * Offset/limit (rather than a page index) is required because Paging 3 asks for a different
+     * number of rows depending on the load: `PagingConfig.initialLoadSize` on the first load and
+     * `pageSize` afterwards. A page-index API cannot express that, so rows get skipped or
+     * duplicated at the boundaries.
+     */
+    @GET("/api/private/marvelx/listings/search")
+    suspend fun getFilteredListingsPaged(
+        @Query("searchQuery") searchQuery: String?,
+        @Query("categoryCodes") categoryCodes: List<String>?,
+        @Query("conditionCodes") conditionCodes: List<String>?,
+        @Query("minPrice") minPrice: String?,
+        @Query("maxPrice") maxPrice: String?,
+        @Query("datePostedKey") datePostedKey: String,
+        @Query("customDateFrom") customDateFrom: String?,
+        @Query("customDateTo") customDateTo: String?,
+        @Query("finalSale") finalSale: Boolean,
+        @Query("sortKey") sortKey: String,
+        @Query("offset") offset: Int,
+        @Query("limit") limit: Int
     ): Response<List<ResponseListing>>
 
     @POST("/api/private/marvelx/listings")
@@ -117,6 +141,16 @@ internal interface ListingService {
     suspend fun getFavoriteListings(
     ): Response<List<ResponseListingPreview>>
 
+    @POST("/api/private/marvelx/listings/{listingId}/cart")
+    suspend fun addCartItem(
+        @Path("listingId") listingId: String
+    ): Response<Void>
+
+    @DELETE("/api/private/marvelx/listings/{listingId}/cart")
+    suspend fun deleteCartItem(
+        @Path("listingId") listingId: String
+    ): Response<Void>
+
     // Cart calls.
 
     @GET("/api/private/marvelx/cart/info")
@@ -127,14 +161,4 @@ internal interface ListingService {
 
     @GET("/api/private/marvelx/cart/summary")
     suspend fun getCartSummary(): Response<ResponseCartSummary>
-
-    @POST("/api/private/marvelx/cart/{listingId}")
-    suspend fun addCartItem(
-        @Path("listingId") listingId: String
-    ): Response<Void>
-
-    @DELETE("/api/private/marvelx/cart/{listingId}")
-    suspend fun deleteCartItem(
-        @Path("listingId") listingId: String
-    ): Response<Void>
 }

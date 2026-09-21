@@ -5,11 +5,10 @@ import com.alexgreece45.marvelx.core.common.extensions.formatPrice
 import com.alexgreece45.marvelx.core.data.helper.multi_part_builder.model.MultipartResult
 import com.alexgreece45.marvelx.core.data.model.marketplace.ListingSort
 import com.alexgreece45.marvelx.core.data.repositories.marketplace.listing.ListingRepository
-import com.alexgreece45.marvelx.data.repository.marketplace.listing.ListingCategoryRepository
-import com.alexgreece45.marvelx.data.repository.marketplace.listing.details.ListingDetailsRepository
 import com.alexgreece45.marvelx.domain.helper.InteractorPartialState
 import com.alexgreece45.marvelx.domain.helper.handleRepositoryResultNoFlow
 import com.alexgreece45.marvelx.domain.mappers.marketplace.listing.ListingDomainMapper
+import com.alexgreece45.marvelx.domain.mappers.marketplace.listing.details.ListingDetailsResponseMapper
 import com.alexgreece45.marvelx.domain.mappers.marketplace.listing.toRequest
 import com.alexgreece45.marvelx.domain.model_api.marketplace.MarketplaceSearchCriteriaDomain
 import com.alexgreece45.marvelx.domain.model_api.marketplace.listing.CreateListingDomain
@@ -42,6 +41,17 @@ interface ListingInteractor {
         sort: ListingSort
     ): InteractorPartialState<List<ListingDomain>>
 
+    /**
+     * Offset/limit keyed variant of [getFilteredListings], backing the Paging 3 search feed.
+     */
+    suspend fun getFilteredListingsPaged(
+        searchQuery: String,
+        searchCriteria: MarketplaceSearchCriteriaDomain,
+        sort: ListingSort,
+        offset: Int,
+        limit: Int
+    ): InteractorPartialState<List<ListingDomain>>
+
     suspend fun createListing(createListingDomain: CreateListingDomain): MultipartResult<String>
     suspend fun updateListing(
         listingId: String,
@@ -61,8 +71,7 @@ internal class ListingInteractorImpl(
     private val listingRepository: ListingRepository,
     private val listingDomainMapper: ListingDomainMapper,
     private val configPriceLogic: ConfigPriceLogic,
-    private val listingCategoryRepository: ListingCategoryRepository,
-    private val listingDetailsRepository: ListingDetailsRepository,
+    private val listingDetailsResponseMapper: ListingDetailsResponseMapper,
 ) : ListingInteractor {
 
     override suspend fun getAllListingsByCategory(categoryCode: String): InteractorPartialState<List<ListingDomain>> {
@@ -103,12 +112,13 @@ internal class ListingInteractorImpl(
     ): InteractorPartialState<List<ListingDomain>> {
         return handleRepositoryResultNoFlow(
             repositoryResult = listingRepository.getFilteredListings(
-                searchQuery = searchQuery,
+                searchQuery = searchQuery.takeIf { it.isNotBlank() },
                 searchCriteria = searchCriteria.toData(
                     formatPrice = {
                         it?.formatPrice(
                             scale = configPriceLogic.priceScale,
-                            roundingMode = configPriceLogic.roundingMode
+                            roundingMode = configPriceLogic.roundingMode,
+                            withEuroSymbol = false
                         )
                     }
                 ),
@@ -118,9 +128,38 @@ internal class ListingInteractorImpl(
         )
     }
 
+    override suspend fun getFilteredListingsPaged(
+        searchQuery: String,
+        searchCriteria: MarketplaceSearchCriteriaDomain,
+        sort: ListingSort,
+        offset: Int,
+        limit: Int
+    ): InteractorPartialState<List<ListingDomain>> {
+        return handleRepositoryResultNoFlow(
+            repositoryResult = listingRepository.getFilteredListingsPaged(
+                searchQuery = searchQuery.takeIf { it.isNotBlank() },
+                searchCriteria = searchCriteria.toData(
+                    formatPrice = {
+                        it?.formatPrice(
+                            scale = configPriceLogic.priceScale,
+                            roundingMode = configPriceLogic.roundingMode,
+                            withEuroSymbol = false
+                        )
+                    }
+                ),
+                sort = sort,
+                offset = offset,
+                limit = limit
+            ),
+            transformation = { this.map { listingDomainMapper.toDomain(it) } }
+        )
+    }
+
     override suspend fun createListing(createListingDomain: CreateListingDomain): MultipartResult<String> {
         return listingRepository.createListing(
-            createListingData = createListingDomain.toData()
+            createListingData = createListingDomain.toData(
+                mapListingDetails = listingDetailsResponseMapper::toResponse
+            )
         )
     }
 

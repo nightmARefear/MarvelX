@@ -31,11 +31,17 @@ sealed class NotificationChannelType(val type: String, val channelData: Notifica
         channelData = NotificationChannelData.Listing
     )
 
+    data object NewMessage : NotificationChannelType(
+        type = "NewMessage",
+        channelData = NotificationChannelData.Chat
+    )
+
     companion object {
         private fun getAllTypes(): List<NotificationChannelType> = listOf(
             IncomingFriendRequest,
             AcceptFriendRequest,
-            ListingPurchase
+            ListingPurchase,
+            NewMessage
         )
 
         fun getChannelByType(channelType: String): NotificationChannelType =

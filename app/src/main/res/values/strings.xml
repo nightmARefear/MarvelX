@@ -135,8 +135,14 @@
     // All Character Comics Screen
     <string name="all_character_comics_screen_toolbar_title">%1$s Comics</string>
 
-    // All Favorite Characters Screen
-    <string name="all_favorite_characters_screen_toolbar_title">Favorite Characters</string>
+    // Favorite Listings Screen
+    <string name="screen_favorite_listings_toolbar_title">Favorites</string>
+    <string name="screen_favorite_listings_empty_message">You have not added any listings to your favorites yet.</string>
+    <string name="screen_favorite_listings_error_loading">An error occurred whilst loading your favorite listings.</string>
+    <string name="screen_favorite_listings_error_favorite_toggle">An error occurred whilst updating your favorites. Please try again.</string>
+    <string name="screen_favorite_listings_error_cart_toggle">An error occurred whilst updating your cart. Please try again.</string>
+    <string name="screen_favorite_listings_content_description_favorite">toggle favorite</string>
+    <string name="screen_favorite_listings_content_description_add_to_cart">add listing to cart</string>
 
     // Friends Screen
     <string name="screen_friends_toolbar_title">Friends</string>
@@ -299,6 +305,7 @@
     <string name="screen_profile_details_stats_error_button">Go back</string>
 
     <string name="screen_profile_details_stats_content_description_profile_image">profile image of %1$s</string>
+    <string name="screen_profile_details_stats_content_description_listing_image">listing cover image</string>
 
     // Settings Screen
     <string name="screen_settings_toolbar_title">Settings</string>
@@ -340,8 +347,17 @@
     <string name="screen_home_alert_dialog_user_logout_title">Logout</string>
     <string name="screen_home_alert_dialog_user_logout_description">You have been successfully logged out!</string>
 
-    <string name="screen_home_login_button">Login</string>
-    <string name="screen_home_signup_button">Signup</string>
+    <string name="screen_home_login_button">I already have an account</string>
+    <string name="screen_home_signup_button">Create an account</string>
+    <string name="screen_home_hero_title">MarvelX</string>
+    <string name="screen_home_hero_tagline">The marketplace for Marvel fans — buy, sell and trade collectibles with people who love them as much as you do.</string>
+    <string name="screen_home_features_title">Why MarvelX</string>
+    <string name="screen_home_feature_marketplace_title">A marketplace built for fans</string>
+    <string name="screen_home_feature_marketplace_description">Browse apparel, drinkware, collectibles, comics and cards listed by other collectors.</string>
+    <string name="screen_home_feature_secure_title">Secure checkout, easy returns</string>
+    <string name="screen_home_feature_secure_description">Pay safely, track every item to your door, and request a return in a couple of taps.</string>
+    <string name="screen_home_feature_chat_title">Talk to sellers directly</string>
+    <string name="screen_home_feature_chat_description">Message the seller about an order, or any collector about anything, without leaving the app.</string>
 
     // Login Screen
     <string name="login_screen_toolbar_title">Login</string>
@@ -649,7 +665,6 @@
     <string name="screen_order_item_tracking_history_refund_section_button_request_refund">Request Refund</string>
     <string name="screen_order_item_tracking_history_refund_section_button_view_refund_request">View Refund Request</string>
 
-    <string name="screen_order_item_tracking_history_extra_action_button_contact_support">Contact Support</string>
     <string name="screen_order_item_tracking_history_extra_action_button_contact_seller">Contact Seller</string>
 
     <string name="screen_order_item_tracking_history_toast_message_success_copying_to_clipboard">Successfully copied the tracking ID to the clipboard</string>
@@ -670,12 +685,20 @@
     <string name="screen_order_item_management_label_order_ids">Order #%1$s > Order Item #%2$s</string>
     <string name="screen_order_item_management_label_current_status">CURRENT STATUS</string>
 
-    <string name="screen_order_item_management_dropdown_label_new_status">New Status</string>
-    <string name="screen_order_item_management_button_apply_status">Apply Status</string>
+    <string name="screen_order_item_management_button_mark_as_shipped">Mark as Shipped</string>
+    <string name="screen_order_item_management_mark_as_shipped_description">Confirm once you have handed the item over to the courier. Every status after dispatch is reported by the courier.</string>
+    <string name="screen_order_item_management_status_courier_managed_title">No action needed</string>
+    <string name="screen_order_item_management_status_courier_managed_description">This item has already been dispatched. The courier reports every status from here on.</string>
 
     <string name="screen_order_item_management_toast_message_status_updated">Successfully updated the order item status</string>
 
     <string name="screen_order_item_management_error_label_fetching_data">An error occurred whilst loading the details for the order %1$s and item %2$s.</string>
+
+    <string name="screen_order_item_management_return_section_title">Return Request</string>
+    <string name="screen_order_item_management_return_card_title">A return has been requested for this item</string>
+    <string name="screen_order_item_management_return_action_required_title">Action required</string>
+    <string name="screen_order_item_management_return_card_action">View</string>
+    <string name="screen_order_item_management_return_card_action_review">Review request</string>
 
     // Request Item Return Screen
     <string name="screen_request_item_return_toolbar_title">Request Return</string>
@@ -699,7 +722,7 @@
     <string name="screen_request_item_return_return_details_requirements_label_2">All accessories and documentation included</string>
     <string name="screen_request_item_return_return_details_requirements_label_3">No signs of wear or damage</string>
 
-    <string name="screen_request_item_return_description_title">Additional Details (Optional)</string>
+    <string name="screen_request_item_return_description_title">Additional Details</string>
     <string name="screen_request_item_return_description_placeholder">Describe your return reason…</string>
     <string name="screen_request_item_return_description_remaining_characters_label">remaining characters: %1$s/%2$s</string>
 
@@ -770,6 +793,87 @@
     <string name="screen_request_item_return_upload_image_button_content_description">upload image button</string>
     <string name="screen_request_item_return_uploaded_image_content_description">Uploaded image %1$s</string>
     <string name="screen_request_item_return_remove_image_button_content_description">remove attached image button</string>
+
+    // Request Item Return Screen :: Existing Return
+    <string name="screen_request_item_return_existing_return_details_title">Return Details</string>
+    <string name="screen_request_item_return_existing_return_status_label">Status</string>
+    <string name="screen_request_item_return_existing_return_reason_label">Reason</string>
+    <string name="screen_request_item_return_existing_return_condition_label">Condition</string>
+    <string name="screen_request_item_return_existing_return_method_label">Return Method</string>
+    <string name="screen_request_item_return_existing_return_submitted_label">Submitted</string>
+    <string name="screen_request_item_return_existing_return_refund_amount_label">Refund Amount</string>
+    <string name="screen_request_item_return_existing_return_description_label">Description</string>
+    <string name="screen_request_item_return_existing_return_images_label">Attached Images</string>
+    <string name="screen_request_item_return_existing_return_seller_message_label">Seller\'s Message</string>
+    <string name="screen_request_item_return_existing_return_your_message_label">Your message</string>
+
+    // Request Item Return Screen :: Seller Response
+    <string name="screen_request_item_return_seller_response_section_title">Respond to Return Request</string>
+    <string name="screen_request_item_return_seller_response_message_label">Message to buyer (optional)</string>
+    <string name="screen_request_item_return_seller_response_message_placeholder">Add a note for the buyer…</string>
+    <string name="screen_request_item_return_seller_action_reject">Reject Return</string>
+    <string name="screen_request_item_return_seller_action_accept_replace">Accept &amp; Replace Item</string>
+    <string name="screen_request_item_return_seller_action_accept_refund">Accept &amp; Issue Refund</string>
+    <string name="screen_request_item_return_seller_response_snackbar_error_message">An error occurred whilst submitting your response. Please try again.</string>
+    <string name="screen_request_item_return_seller_response_snackbar_success_message">Your response has been sent to the buyer.</string>
+
+    <string name="screen_request_item_return_seller_action_reject_description">Decline the request. The buyer keeps the item and receives no refund.</string>
+    <string name="screen_request_item_return_seller_action_accept_replace_description">Approve the return and send the buyer a replacement instead of a refund.</string>
+    <string name="screen_request_item_return_seller_action_accept_refund_description">Approve the return and refund the buyer the amount paid for this item.</string>
+
+    <string name="screen_request_item_return_seller_action_reject_dialog_title">Reject this return?</string>
+    <string name="screen_request_item_return_seller_action_reject_dialog_message">The buyer will be told their return was declined. This decision cannot be changed afterwards.</string>
+    <string name="screen_request_item_return_seller_action_accept_replace_dialog_title">Send a replacement?</string>
+    <string name="screen_request_item_return_seller_action_accept_replace_dialog_message">The return will be approved and you commit to sending a replacement item. This decision cannot be changed afterwards.</string>
+    <string name="screen_request_item_return_seller_action_accept_refund_dialog_title">Issue a refund?</string>
+    <string name="screen_request_item_return_seller_action_accept_refund_dialog_message">The return will be approved and the buyer will be refunded. This decision cannot be changed afterwards.</string>
+    <string name="screen_request_item_return_seller_response_dialog_button_negative">Cancel</string>
+
+    <string name="screen_request_item_return_seller_response_warning_title">This decision is final</string>
+    <string name="screen_request_item_return_seller_response_warning_description">A return request can only be answered once. Review the buyer\'s reason and photos before choosing.</string>
+    <string name="screen_request_item_return_seller_response_submitting">Sending your response…</string>
+
+    <string name="screen_request_item_return_seller_response_card_title">Your Response</string>
+    <string name="screen_request_item_return_seller_message_empty">No message was left for the buyer.</string>
+
+    <string name="screen_request_item_return_existing_return_refund_requested_label">Refund requested</string>
+    <string name="screen_request_item_return_status_banner_refund_amount">Refund issued: %1$s</string>
+
+    <string name="screen_request_item_return_buyer_awaiting_response_title">Nothing to do right now</string>
+    <string name="screen_request_item_return_buyer_awaiting_response_description">The seller has been notified. You will be told as soon as they respond to your request.</string>
+
+    <string name="screen_request_item_return_timeline_title">Progress</string>
+    <string name="screen_request_item_return_timeline_step_submitted">Request submitted</string>
+    <string name="screen_request_item_return_timeline_step_review">Seller review</string>
+    <string name="screen_request_item_return_timeline_step_review_in_progress">Awaiting the seller\'s decision</string>
+    <string name="screen_request_item_return_timeline_step_review_completed">The seller has responded</string>
+    <string name="screen_request_item_return_timeline_step_outcome">Outcome</string>
+    <string name="screen_request_item_return_timeline_step_outcome_awaiting">Not decided yet</string>
+
+    // Return status headlines and descriptions.
+    <string name="return_status_headline_pending_seller">Action required</string>
+    <string name="return_status_headline_pending_buyer">Waiting for the seller</string>
+    <string name="return_status_headline_rejected_seller">You rejected this return</string>
+    <string name="return_status_headline_rejected_buyer">Return rejected</string>
+    <string name="return_status_headline_replaced_seller">You approved a replacement</string>
+    <string name="return_status_headline_replaced_buyer">Replacement approved</string>
+    <string name="return_status_headline_refunded_seller">You issued a refund</string>
+    <string name="return_status_headline_refunded_buyer">Refund approved</string>
+    <string name="return_status_headline_available">Return available</string>
+    <string name="return_status_headline_expired">Return window closed</string>
+    <string name="return_status_headline_final_sale">Final sale</string>
+
+    <string name="return_status_description_pending_seller">The buyer is waiting for your decision on this return request.</string>
+    <string name="return_status_description_pending_buyer">Your request has been sent. The seller has yet to respond.</string>
+    <string name="return_status_description_rejected_seller">You declined this request. The buyer keeps the item and was not refunded.</string>
+    <string name="return_status_description_rejected_buyer">The seller declined your request. You keep the item and no refund was issued.</string>
+    <string name="return_status_description_replaced_seller">You approved this return and committed to sending a replacement item.</string>
+    <string name="return_status_description_replaced_buyer">The seller approved your return and will send you a replacement item.</string>
+    <string name="return_status_description_refunded_seller">You approved this return and the buyer has been refunded.</string>
+    <string name="return_status_description_refunded_buyer">The seller approved your return and your refund has been issued.</string>
+    <string name="return_status_description_available">This item can still be returned.</string>
+    <string name="return_status_description_expired">The period during which this item could be returned has passed.</string>
+    <string name="return_status_description_final_sale">This item was sold as a final sale and cannot be returned.</string>
 
     // Request Item Return Success Screen
     <string name="screen_request_item_return_success_toolbar_title">Return Submitted</string>
@@ -995,5 +1099,64 @@
     <string name="content_description_view_profile_image">View profile image</string>
     <string name="content_description_upload_profile_image">Upload profile image</string>
     <string name="content_description_delete_search_term">Delete search term</string>
+
+    // Chat — bottom navigation and entry points
+    <string name="bottom_navigation_label_inbox">Inbox</string>
+    <string name="generic_chip_label_message">Message</string>
+    <string name="content_description_message_user">Message user</string>
+    <string name="screen_order_item_management_button_message_buyer">Message buyer</string>
+    <string name="screen_order_item_management_message_buyer_description">Questions about the delivery or the item? Chat with the buyer directly.</string>
+
+    // Inbox Screen
+    <string name="screen_inbox_toolbar_title">Messages</string>
+    <string name="screen_inbox_empty_title">No conversations yet. Message a seller from an order, or a user from their profile.</string>
+    <string name="screen_inbox_error_loading">An error occurred whilst loading your conversations.</string>
+    <string name="screen_inbox_no_messages_yet">No messages yet</string>
+    <string name="screen_inbox_content_description_avatar">profile image of %1$s</string>
+
+    // Conversation Screen
+    <string name="screen_conversation_error_loading">An error occurred whilst opening this conversation.</string>
+    <string name="screen_conversation_error_forbidden">You can\'t message this user.</string>
+    <string name="screen_conversation_composer_placeholder">Write a message…</string>
+    <string name="screen_conversation_content_description_send">send message</string>
+    <string name="screen_conversation_content_description_participant_avatar">profile image of %1$s</string>
+    <string name="screen_conversation_message_status_sending">Sending…</string>
+    <string name="screen_conversation_message_status_failed">Not sent · Tap to retry</string>
+    <string name="screen_conversation_pinned_item_label">About this order item</string>
+    <string name="screen_conversation_empty_hint">Say hello to %1$s</string>
+
+    // Change Password Screen
+    <string name="screen_change_password_input_label_new_password">New password</string>
+    <string name="screen_change_password_input_label_confirm_password">Confirm new password</string>
+    <string name="screen_change_password_input_action_show">Show</string>
+    <string name="screen_change_password_input_action_hide">Hide</string>
+    <string name="screen_change_password_rules_title">Your password must contain</string>
+    <string name="screen_change_password_rule_length">At least %1$d characters</string>
+    <string name="screen_change_password_rule_uppercase">An uppercase letter</string>
+    <string name="screen_change_password_rule_lowercase">A lowercase letter</string>
+    <string name="screen_change_password_rule_digit">A number</string>
+    <string name="screen_change_password_error_mismatch">Passwords do not match.</string>
+    <string name="screen_change_password_error_uppercase">Password must contain an uppercase letter.</string>
+    <string name="screen_change_password_error_lowercase">Password must contain a lowercase letter.</string>
+    <string name="screen_change_password_error_digit">Password must contain a number.</string>
+    <string name="screen_change_password_strength_label">Strength: %1$s</string>
+    <string name="screen_change_password_strength_weak">Weak</string>
+    <string name="screen_change_password_strength_fair">Fair</string>
+    <string name="screen_change_password_strength_good">Good</string>
+    <string name="screen_change_password_strength_strong">Strong</string>
+    <string name="screen_change_password_snackbar_error">We couldn\'t reset your password. Please try again.</string>
+    <string name="screen_change_password_error_invalid_request">This password reset is no longer valid. Please start over.</string>
+
+    // Password Changed Screen
+    <string name="screen_password_changed_title">Password changed</string>
+    <string name="screen_password_changed_subtitle">Your password has been updated. Log in with your new password to continue.</string>
+    <string name="screen_password_changed_button_login">Go to login</string>
+
+    // Relative time
+    <string name="relative_time_just_now">now</string>
+    <string name="relative_time_minutes">%1$dm</string>
+    <string name="relative_time_hours">%1$dh</string>
+    <string name="relative_time_yesterday">Yesterday</string>
+    <string name="relative_time_today">Today</string>
 
 </resources>

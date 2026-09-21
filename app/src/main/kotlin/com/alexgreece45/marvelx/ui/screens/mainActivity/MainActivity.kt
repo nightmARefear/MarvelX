@@ -66,7 +66,9 @@ import com.alexgreece45.marvelx.ui.navigation.NavGraph
 import com.alexgreece45.marvelx.ui.navigation.Screen
 import com.alexgreece45.marvelx.ui.navigation.models.NavArg
 import com.alexgreece45.marvelx.ui.screens.allCharacters.navigation.AllCharactersRoute
-import com.alexgreece45.marvelx.ui.screens.allFavoriteCharacters.navigation.AllFavoriteCharactersRoute
+import com.alexgreece45.marvelx.ui.screens.favoriteListings.navigation.FavoriteListingsRoute
+import com.alexgreece45.marvelx.ui.screens.chat.conversation.navigation.ConversationRoute
+import com.alexgreece45.marvelx.ui.screens.chat.inbox.navigation.InboxRoute
 import com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.steps.success.navigation.CheckoutSuccessRoute
 import com.alexgreece45.marvelx.ui.screens.cart.navigation.CartRoute
 import com.alexgreece45.marvelx.ui.screens.character.allCharacterComicsScreen.navigation.AllCharacterComicsRoute
@@ -195,12 +197,9 @@ internal class MainActivity : AppCompatActivity() {
                     ObserveUiEffect(flow = viewModel.uiEffect, tag = "MainActivity") { effect ->
                         when (effect) {
                             is MainActivityEffect.Navigation.NavigateToHomeScreen -> {
-                                // TODO: Resolve.
-//                                NavArgHelper.setArgument(
-//                                    NavArg.HomeAlertDialogErrorType,
-//                                    HomeAlertDialogErrorType.SessionExpired
-//                                )
-                                navController.navigate(Screen.HomeScreen.route) {
+                                navController.navigate(
+                                    Screen.HomeScreen.createNavRoute(effect.logoutReason.name)
+                                ) {
                                     popUpToTop(navController)
                                 }
                             }
@@ -410,6 +409,7 @@ internal class MainActivity : AppCompatActivity() {
                             NotificationChannelType.AcceptFriendRequest -> NotificationCompat.PRIORITY_LOW
                             NotificationChannelType.IncomingFriendRequest -> NotificationCompat.PRIORITY_HIGH
                             NotificationChannelType.ListingPurchase -> NotificationCompat.PRIORITY_MAX
+                            NotificationChannelType.NewMessage -> NotificationCompat.PRIORITY_HIGH
                         }
                     )
                 }
@@ -518,7 +518,11 @@ internal class MainActivity : AppCompatActivity() {
 
             // External URL handling.
             it.data?.let { uri ->
-                viewModel.setEvent(MainActivityEvent.OnDeepLinkReceived(uri))
+                if (uri.pathSegments.getOrNull(0) == "deeplink" && uri.pathSegments.getOrNull(1) == "oauth") {
+                    viewModel.setEvent(MainActivityEvent.OnOAuthCallbackReceived(uri))
+                } else {
+                    viewModel.setEvent(MainActivityEvent.OnDeepLinkReceived(uri))
+                }
             }
         }
     }
@@ -540,7 +544,9 @@ internal class MainActivity : AppCompatActivity() {
         ComicRoute::class,
         AllCharactersRoute::class,
         AllCharacterComicsRoute::class,
-        AllFavoriteCharactersRoute::class,
+        FavoriteListingsRoute::class,
+        InboxRoute::class,
+        ConversationRoute::class,
         ProfileRoute::class,
         RequestItemReturnRoute::class,
         RequestItemReturnSuccessRoute::class,

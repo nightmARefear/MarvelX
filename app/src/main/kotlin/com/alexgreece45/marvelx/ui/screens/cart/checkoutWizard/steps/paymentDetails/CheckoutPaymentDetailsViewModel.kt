@@ -1,6 +1,7 @@
 package com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.steps.paymentDetails
 
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.controllers.orderCheckout.OrderCheckoutController
 import com.alexgreece45.marvelx.mvi.BaseViewModel
 import com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.steps.paymentDetails.model.CheckoutPaymentDetailsContract
 import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.model.WizardInputFieldUi
@@ -16,8 +17,8 @@ import org.koin.android.annotation.KoinViewModel
 class CheckoutPaymentDetailsViewModel(
     private val resourceProvider: ResourceProvider,
     private val formValidator: FormValidator,
-) :
-    BaseViewModel<CheckoutPaymentDetailsContract.Event, CheckoutPaymentDetailsContract.State, CheckoutPaymentDetailsContract.Effect>() {
+    private val orderCheckoutController: OrderCheckoutController,
+) : BaseViewModel<CheckoutPaymentDetailsContract.Event, CheckoutPaymentDetailsContract.State, CheckoutPaymentDetailsContract.Effect>() {
 
     override fun setInitialState(): CheckoutPaymentDetailsContract.State =
         CheckoutPaymentDetailsContract.State()
@@ -110,6 +111,7 @@ class CheckoutPaymentDetailsViewModel(
                 )
             )
         }
+        orderCheckoutController.setCardholderName(newCardholderName)
         validateAllFields()
     }
 
@@ -123,6 +125,7 @@ class CheckoutPaymentDetailsViewModel(
                 )
             )
         }
+        orderCheckoutController.setCardNumber(filteredNewCardNumber)
         validateAllFields()
     }
 
@@ -136,6 +139,7 @@ class CheckoutPaymentDetailsViewModel(
                 )
             )
         }
+        orderCheckoutController.setExpirationDate(filteredNewExpirationDate)
         validateAllFields()
     }
 
@@ -149,6 +153,7 @@ class CheckoutPaymentDetailsViewModel(
                 )
             )
         }
+        orderCheckoutController.setCvv(filteredNewCvv)
         validateAllFields()
     }
 

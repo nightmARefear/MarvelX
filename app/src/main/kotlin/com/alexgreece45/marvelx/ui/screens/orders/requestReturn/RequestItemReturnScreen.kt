@@ -112,13 +112,14 @@ import com.alexgreece45.marvelx.ui.model_generic.InputFieldUi
 import com.alexgreece45.marvelx.ui.model_generic.LocalDateUi
 import com.alexgreece45.marvelx.ui.model_generic.UiState
 import com.alexgreece45.marvelx.ui.screens.orders.components.OrderIdsLabel
+import com.alexgreece45.marvelx.ui.screens.orders.requestReturn.components.ExistingReturnContent
+import com.alexgreece45.marvelx.ui.screens.orders.requestReturn.components.SellerResponsePanel
 import com.alexgreece45.marvelx.ui.screens.orders.model.item.OrderItemStatusUi
 import com.alexgreece45.marvelx.ui.screens.orders.model.item.OrderItemUi
 import com.alexgreece45.marvelx.ui.screens.orders.model.item.itemReturn.OrderItemReturnReasonUi
 import com.alexgreece45.marvelx.ui.screens.orders.requestReturn.model.OrderItemReturnConditionUi
 import com.alexgreece45.marvelx.ui.screens.orders.requestReturn.model.OrderItemReturnMethodUi
 import com.alexgreece45.marvelx.ui.screens.orders.requestReturn.model.OrderItemReturnStateUi
-import com.alexgreece45.marvelx.ui.screens.orders.requestReturn.model.OrderItemReturnUi
 import com.alexgreece45.marvelx.ui.screens.orders.requestReturn.model.RequestItemReturnContract
 import com.alexgreece45.marvelx.ui.screens.orders.requestReturn.model.RequestItemReturnWizardMode
 import com.alexgreece45.marvelx.ui.screens.orders.requestReturn.model.RequestItemReturnWizardStep
@@ -358,7 +359,39 @@ internal fun RequestItemReturnScreen(
                                             }
 
                                             is OrderItemReturnStateUi.Existing -> {
-                                                ExistingReturn(returnState.orderItemReturn)
+                                                Column(
+                                                    modifier = Modifier.fillMaxWidth(),
+                                                    verticalArrangement = Arrangement.spacedBy(
+                                                        verticalItemPadding
+                                                    )
+                                                ) {
+                                                    ExistingReturnContent(
+                                                        orderId = state.orderId,
+                                                        orderItemReturn = returnState.orderItemReturn,
+                                                        isSeller = state.isSeller
+                                                    )
+
+                                                    if (state.isSellerResponsePanelVisible) {
+                                                        SellerResponsePanel(
+                                                            sellerResponseMessageField = state.sellerResponseMessageField,
+                                                            isSubmitting = state.isSubmittingSellerResponse,
+                                                            onMessageChange = {
+                                                                onEvent(
+                                                                    RequestItemReturnContract.Event.OnSellerResponseMessageChanged(
+                                                                        it
+                                                                    )
+                                                                )
+                                                            },
+                                                            onActionClick = {
+                                                                onEvent(
+                                                                    RequestItemReturnContract.Event.OnSellerResponseActionClicked(
+                                                                        it
+                                                                    )
+                                                                )
+                                                            }
+                                                        )
+                                                    }
+                                                }
                                             }
                                         }
                                     }
@@ -661,9 +694,12 @@ private fun WizardScreenReturnDetails(
             descriptionField = descriptionField,
             maxDescriptionLength = maxDescriptionLength,
             labelContent = {
-                SectionHeaderTitle(
-                    title = stringResource(R.string.screen_request_item_return_description_title)
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    SectionHeaderTitle(
+                        title = stringResource(R.string.screen_request_item_return_description_title)
+                    )
+                    MandatoryCharacter()
+                }
             },
             onDescriptionChange = onDescriptionChange
         )
@@ -1288,13 +1324,6 @@ private fun ReturnPolicyItem(returnPolicy: ReturnPolicy) {
     }
 }
 //endregion
-
-//region Existing Return Composables
-
-@Composable
-private fun ExistingReturn(orderItemReturn: OrderItemReturnUi) {
-
-}
 
 //endregion
 

@@ -62,7 +62,7 @@ class MyListingsViewModel(
             )
         }
 
-        fetchListings()
+        fetchListings(page = 1)
     }
 
     private fun onBackClicked() {
@@ -88,12 +88,9 @@ class MyListingsViewModel(
         ) return
 
         setState {
-            copy(
-                isFetchingNewItems = true,
-                currentPage = currentPage + 1
-            )
+            copy(isFetchingNewItems = true)
         }
-        fetchListings()
+        fetchListings(page = currentState.currentPage + 1)
     }
 
     private fun onCreateListingButtonClicked() {
@@ -202,23 +199,29 @@ class MyListingsViewModel(
                 error = false
             )
         }
-        fetchListings()
+        fetchListings(page = currentState.currentPage)
     }
 
     /**
      * Helper functions.
      */
-    private fun fetchListings() {
+    /**
+     * Fetches [page], leaving [MyListingsContract.State.currentPage] untouched until the page
+     * actually arrives. Advancing it up front would permanently skip a page whose request failed:
+     * the next end-of-list scroll would ask for the page after it, and those listings would never
+     * be shown.
+     */
+    private fun fetchListings(page: Int) {
         additionalListingsJob = viewModelScope.launch {
             when (
                 val result = listingInteractor.getCurrentUserListings(
-                    page = currentState.currentPage
+                    page = page
                 )
             ) {
                 is InteractorPartialState.Error,
                 is InteractorPartialState.Failed,
                 InteractorPartialState.NoInternetConnection -> {
-                    val isFetchingInitialListings = currentState.currentPage == 1
+                    val isFetchingInitialListings = page == 1
                     setState {
                         copy(
                             isLoading = false,
@@ -250,6 +253,7 @@ class MyListingsViewModel(
                         copy(
                             isLoading = false,
                             isFetchingNewItems = false,
+                            currentPage = page,
                             allListings = allListings.addAll(filteredAdditionalListings.toPersistentList()),
                             error = false
                         )

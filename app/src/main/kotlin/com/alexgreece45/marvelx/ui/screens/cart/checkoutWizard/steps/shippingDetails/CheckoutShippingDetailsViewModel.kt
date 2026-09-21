@@ -1,6 +1,7 @@
 package com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.steps.shippingDetails
 
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.controllers.orderCheckout.OrderCheckoutController
 import com.alexgreece45.marvelx.data.model.marketplace.listing.EnumGeneric
 import com.alexgreece45.marvelx.mvi.BaseViewModel
 import com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.steps.shippingDetails.model.CheckoutShippingDetailsContract
@@ -16,6 +17,7 @@ import org.koin.android.annotation.KoinViewModel
 class CheckoutShippingDetailsViewModel(
     private val resourceProvider: ResourceProvider,
     private val formValidator: FormValidator,
+    private val orderCheckoutController: OrderCheckoutController,
 ) :
     BaseViewModel<CheckoutShippingDetailsContract.Event, CheckoutShippingDetailsContract.State, CheckoutShippingDetailsContract.Effect>() {
 
@@ -141,6 +143,7 @@ class CheckoutShippingDetailsViewModel(
                 )
             )
         }
+        orderCheckoutController.setFirstName(newFirstName)
         validateAllFields()
     }
 
@@ -153,6 +156,7 @@ class CheckoutShippingDetailsViewModel(
                 )
             )
         }
+        orderCheckoutController.setLastName(newLastName)
         validateAllFields()
     }
 
@@ -165,6 +169,7 @@ class CheckoutShippingDetailsViewModel(
                 )
             )
         }
+        orderCheckoutController.setStreetAddress(newStreetAddress)
         validateAllFields()
     }
 
@@ -177,6 +182,7 @@ class CheckoutShippingDetailsViewModel(
                 )
             )
         }
+        orderCheckoutController.setCity(newCity)
         validateAllFields()
     }
 
@@ -189,6 +195,7 @@ class CheckoutShippingDetailsViewModel(
                 )
             )
         }
+        orderCheckoutController.setZipCode(newZipCode)
         validateAllFields()
     }
 
@@ -232,6 +239,7 @@ class CheckoutShippingDetailsViewModel(
                 )
             )
         }
+        orderCheckoutController.setFloorNumber(newFloorNumber.code)
         validateAllFields()
     }
 
@@ -275,6 +283,7 @@ class CheckoutShippingDetailsViewModel(
                 )
             )
         }
+        orderCheckoutController.setLocationType(newLocationType.code)
         validateAllFields()
     }
 

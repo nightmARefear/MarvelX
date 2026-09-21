@@ -17,8 +17,8 @@ internal class ConfigOauthLogicImpl : ConfigOauthLogic {
         get() = "S256"
 
     override val authorizationPath: String
-        get() = "path"
+        get() = "/api/private/marvelx/user/authorize"
 
     override val redirectUri: String
-        get() = "marvelx_backend//oauth"
+        get() = "${BuildConfig.DEEPLINK_SCHEME}://${BuildConfig.MARVELX_BACKEND_DOMAIN}/deeplink/oauth"
 }

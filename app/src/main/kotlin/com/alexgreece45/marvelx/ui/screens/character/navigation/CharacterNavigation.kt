@@ -10,8 +10,6 @@ import androidx.navigation.toRoute
 import com.alexgreece45.marvelx.ui.screens.character.CharacterEffect
 import com.alexgreece45.marvelx.ui.screens.character.CharacterScreen
 import com.alexgreece45.marvelx.ui.screens.character.CharacterViewModel
-import com.alexgreece45.marvelx.ui.transitions.EnterTransition
-import com.alexgreece45.marvelx.ui.transitions.ExitTransition
 import kotlinx.serialization.Serializable
 import org.koin.androidx.compose.koinViewModel
 
@@ -30,10 +28,7 @@ fun NavGraphBuilder.characterScreen(
     navigateToComicScreen: (comicId: Int) -> Unit,
     navigateToAllCharacterComicsScreen: (characterId: Int, toolbarTitlePrefix: String) -> Unit
 ) {
-    composable<CharacterRoute>(
-        enterTransition = { EnterTransition.RightToLeft },
-        exitTransition = { ExitTransition.LeftToRight },
-    ) { navBackStackEntry ->
+    composable<CharacterRoute> { navBackStackEntry ->
         val route = navBackStackEntry.toRoute<CharacterRoute>()
         val viewModel = koinViewModel<CharacterViewModel>()
 

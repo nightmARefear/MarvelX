@@ -18,7 +18,6 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -41,6 +40,7 @@ import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
 import com.alexgreece45.marvelx.ui.components.WrapModalBottomSheetLayout
 import com.alexgreece45.marvelx.ui.components.chips.WrapChip
 import com.alexgreece45.marvelx.ui.components.icons.ProcessingRequestIconLottie
+import com.alexgreece45.marvelx.ui.components.isNearEnd
 import com.alexgreece45.marvelx.ui.components.isScrollingUp
 import com.alexgreece45.marvelx.ui.components.listing.ListingCard
 import com.alexgreece45.marvelx.ui.components.modalBottomSheetContents.ModalBottomSheetContentItems
@@ -57,8 +57,14 @@ import com.alexgreece45.marvelx.common_ui.extensions.clickableNoRipple
 import com.alexgreece45.marvelx.util.extensions.hideIfVisible
 import com.alexgreece45.marvelx.util.extensions.shareContentUrl
 import com.alexgreece45.marvelx.util.extensions.showIfHidden
-import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
+
+/**
+ * How many items from the end of the list the next page is requested at. Roughly half a screen of
+ * listings, so the request is usually in flight before the user reaches the bottom.
+ */
+private const val LOAD_MORE_PREFETCH_DISTANCE = 3
 
 @Composable
 fun MyListingsScreen(
@@ -99,8 +105,8 @@ fun MyListingsScreen(
     }
 
     LaunchedEffect(lazyListState) {
-        snapshotFlow { lazyListState.canScrollForward }
-            .drop(1)
+        lazyListState.isNearEnd(prefetchDistance = LOAD_MORE_PREFETCH_DISTANCE)
+            .filter { isNearEnd -> isNearEnd }
             .collect {
                 onEvent(MyListingsContract.Event.OnEndOfListScrolled)
             }

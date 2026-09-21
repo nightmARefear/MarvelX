@@ -1,10 +1,16 @@
 package com.alexgreece45.marvelx.ui.screens.marketplace.model
 
+import androidx.compose.runtime.Immutable
 import com.alexgreece45.marvelx.data.model.marketplace.listing.EnumGeneric
 import com.alexgreece45.marvelx.domain.model_api.marketplace.listing.ListingDetailsDomain
 import com.alexgreece45.marvelx.ui.model_generic.BigDecimalUi
 import com.alexgreece45.marvelx.ui.model_generic.LocalDateUi
 
+/**
+ * [Immutable] is load-bearing on a paged image grid: without it Compose treats this model as
+ * unstable and recomposes every visible listing card on any parent recomposition.
+ */
+@Immutable
 data class FilteredListingUi(
     val listingId: String,
     val category: EnumGeneric,

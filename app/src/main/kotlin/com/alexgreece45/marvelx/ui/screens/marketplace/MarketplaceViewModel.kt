@@ -531,7 +531,7 @@ internal class MarketplaceViewModel(
         viewModelScope.launch {
             if (isListingInCart) {
                 val wasRemovedFromCart =
-                    cartInteractor.addCartItem(listingId = listingId)
+                    cartInteractor.deleteCartItem(listingId = listingId)
                 if (wasRemovedFromCart) {
                     setState {
                         copy(
@@ -862,7 +862,7 @@ internal class MarketplaceViewModel(
         setState {
             copy(
                 draftSearchCriteria = draftSearchCriteria?.copy(
-                    isFinalSale = !draftSearchCriteria.isFinalSale
+                    finalSale = !draftSearchCriteria.finalSale
                 )
             )
         }
@@ -1263,7 +1263,7 @@ internal class MarketplaceViewModel(
                 ),
                 datePosted = ListingDateRangeOptionUi.All,
                 datedPostedCustomRange = null,
-                isFinalSale = false
+                finalSale = false
             )
         }
     }

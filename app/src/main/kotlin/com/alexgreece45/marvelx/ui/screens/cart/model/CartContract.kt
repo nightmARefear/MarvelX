@@ -1,6 +1,5 @@
 package com.alexgreece45.marvelx.ui.screens.cart.model
 
-import com.alexgreece45.marvelx.domain.model_api.order.OrderCheckoutInfoDomain
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
@@ -10,7 +9,7 @@ sealed interface CartContract {
 
     sealed interface Event : BaseEvent {
 
-        data class Init(val orderCheckoutInfo: OrderCheckoutInfoDomain?) : Event
+        data object Init : Event
         data object OnEmptyCartViewButtonClicked : Event
         sealed interface CartItemEvents : Event {
             data class OnClicked(val listingId: String) : CartItemEvents

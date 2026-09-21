@@ -348,6 +348,10 @@ internal class CreateListingWizardViewModel(
             return
         }
 
+        val newTitle = createListingWizardController.updateListingUi?.title ?: listing.title
+        val newDescription =
+            createListingWizardController.updateListingUi?.description ?: listing.description
+
         setState {
             copy(
                 isLoading = true,
@@ -358,8 +362,8 @@ internal class CreateListingWizardViewModel(
             val wasModifiedListingUploaded = listingInteractor.updateListing(
                 listingId = listing.listingId,
                 updateListingDomain = UpdateListingDomain(
-                    title = listing.title,
-                    description = listing.description
+                    title = newTitle,
+                    description = newDescription
                 )
             )
 

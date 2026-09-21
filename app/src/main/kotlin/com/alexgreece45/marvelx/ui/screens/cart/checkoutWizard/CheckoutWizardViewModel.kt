@@ -1,6 +1,7 @@
 package com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard
 
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.controllers.orderCheckout.OrderCheckoutController
 import com.alexgreece45.marvelx.mvi.BaseViewModel
 import com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.model.CheckoutWizardContract
 import com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.model.CheckoutWizardExitAlertDialogAction
@@ -11,7 +12,8 @@ import org.koin.android.annotation.KoinViewModel
 
 @KoinViewModel
 internal class CheckoutWizardViewModel(
-    private val resourceProvider: ResourceProvider
+    private val resourceProvider: ResourceProvider,
+    private val orderCheckoutController: OrderCheckoutController,
 ) : BaseViewModel<CheckoutWizardContract.Event, CheckoutWizardContract.State, CheckoutWizardContract.Effect>() {
 
     override fun setInitialState(): CheckoutWizardContract.State = CheckoutWizardContract.State()
@@ -44,6 +46,11 @@ internal class CheckoutWizardViewModel(
 
             CheckoutWizardContract.Event.OnExitWizard -> onExitWizard()
         }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        orderCheckoutController.resetData()
     }
 
     /**
@@ -98,9 +105,7 @@ internal class CheckoutWizardViewModel(
 
         when (alertDialogAction) {
             CheckoutWizardExitAlertDialogAction.EXIT_WIZARD -> {
-                setEffect {
-                    CheckoutWizardContract.Effect.Navigation.ExitWizard
-                }
+                onExitWizard()
             }
 
             CheckoutWizardExitAlertDialogAction.NAVIGATE_TO_MARKETPLACE_SCREEN -> {
@@ -162,6 +167,7 @@ internal class CheckoutWizardViewModel(
     }
 
     private fun onExitWizard() {
+        orderCheckoutController.resetData()
         setEffect {
             CheckoutWizardContract.Effect.Navigation.ExitWizard
         }

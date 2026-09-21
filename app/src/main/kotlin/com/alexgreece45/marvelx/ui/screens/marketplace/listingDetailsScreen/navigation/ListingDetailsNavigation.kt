@@ -34,7 +34,15 @@ internal fun NavGraphBuilder.listingDetailsScreen(
     goBack: () -> Unit,
     navigateToProfileDetailsScreen: (String) -> Unit,
     navigateToEditListingScreen: (String) -> Unit,
-    navigateToOrderItemManagementScreen: (orderId: String, orderItemId: String) -> Unit
+    navigateToOrderItemManagementScreen: (orderId: String, orderItemId: String) -> Unit,
+    navigateToOrderItemTrackingHistoryScreen: (
+        orderId: String,
+        orderItemId: String,
+        orderItemTitle: String,
+        orderItemCoverImageUrl: String,
+        orderItemPriceLabel: String,
+        sellerUserId: String
+    ) -> Unit
 ) {
     composable<ListingDetailsRoute>(
         deepLinks = listOf(
@@ -67,9 +75,14 @@ internal fun NavGraphBuilder.listingDetailsScreen(
                     )
 
                     is ListingDetailsContract.Effect.Navigation.NavigateToOrderItemTrackingHistoryScreen -> {
-                        // TODO: `OrderItemTrackingHistoryScreen` currently requires additional
-                        //  pre-fetched preview data (title, cover image, price, seller user ID)
-                        //  that isn't available on this effect yet.
+                        navigateToOrderItemTrackingHistoryScreen(
+                            navigationEffect.orderId,
+                            navigationEffect.orderItemId,
+                            navigationEffect.orderItemTitle,
+                            navigationEffect.orderItemCoverImageUrl,
+                            navigationEffect.orderItemPriceLabel,
+                            navigationEffect.sellerUserId
+                        )
                     }
 
                     ListingDetailsContract.Effect.Navigation.GoToNextScreen -> {}

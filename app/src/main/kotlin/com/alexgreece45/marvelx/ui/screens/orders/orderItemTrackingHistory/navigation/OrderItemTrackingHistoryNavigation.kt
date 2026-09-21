@@ -5,6 +5,7 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import com.alexgreece45.marvelx.ui.navigation.Screen
+import com.alexgreece45.marvelx.ui.screens.chat.conversation.navigation.navigateToOrderItemConversationScreen
 import com.alexgreece45.marvelx.ui.screens.orders.orderItemTrackingHistory.OrderItemTrackingHistoryScreen
 import com.alexgreece45.marvelx.ui.screens.orders.orderItemTrackingHistory.OrderItemTrackingHistoryViewModel
 import com.alexgreece45.marvelx.ui.screens.orders.orderItemTrackingHistory.model.OrderItemTrackingHistoryContract
@@ -62,9 +63,11 @@ internal fun NavGraphBuilder.orderItemTrackingHistoryScreen(
                         orderItemId = navigationEffect.orderItemId
                     )
 
-                    is OrderItemTrackingHistoryContract.Effect.Navigation.GoToContactSupportScreen -> {
-                        // TODO: To be implemented.
-                    }
+                    is OrderItemTrackingHistoryContract.Effect.Navigation.GoToConversationScreen ->
+                        navController.navigateToOrderItemConversationScreen(
+                            orderId = navigationEffect.orderId,
+                            orderItemId = navigationEffect.orderItemId
+                        )
                 }
             }
         )

@@ -69,6 +69,10 @@ internal sealed interface RequestItemReturnContract {
 
         data object OnBottomSheetErrorButtonClicked : Event
         data object OnBottomSheetDismissed : Event
+
+        // Seller response to an existing return (Exists wizard mode, seller only).
+        data class OnSellerResponseMessageChanged(val text: String) : Event
+        data class OnSellerResponseActionClicked(val action: OrderItemReturnSellerActionUi) : Event
     }
 
     data class State(
@@ -114,7 +118,22 @@ internal sealed interface RequestItemReturnContract {
 
         val isBottomSheetVisible: Boolean = false,
         val dialogType: RequestItemReturnDialogType? = null,
+
+        // Seller response to an existing return.
+        val isSeller: Boolean = false,
+        val sellerResponseMessageField: InputFieldUi.Text = InputFieldUi.Text(isMandatory = false),
+        val isSubmittingSellerResponse: Boolean = false,
     ) : BaseState {
+        /**
+         * Only a seller looking at a request that is still pending can act on it; every other
+         * status has already been answered and is read-only for both sides.
+         */
+        val isSellerResponsePanelVisible: Boolean
+            get() = isSeller
+                    && (returnState as? OrderItemReturnStateUi.Existing)
+                ?.orderItemReturn
+                ?.returnStatus == OrderItemReturnStatusUi.PENDING
+
         val progress: Float
             get() = (wizardStep.ordinal + 1) / RequestItemReturnWizardStep.TOTAL_STEPS.toFloat()
 

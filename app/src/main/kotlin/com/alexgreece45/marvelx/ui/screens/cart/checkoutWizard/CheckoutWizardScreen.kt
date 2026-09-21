@@ -21,7 +21,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.common_ui.util.ObserveUiEffect
 import com.alexgreece45.marvelx.core.common.util.flows.single_observer_flow.SingleObserverFlow
-import com.alexgreece45.marvelx.domain.model_api.order.OrderCheckoutInfoDomain
 import com.alexgreece45.marvelx.ui.components.AlertDialogButton
 import com.alexgreece45.marvelx.ui.components.AlertDialogError
 import com.alexgreece45.marvelx.ui.components.ContentScreen
@@ -44,8 +43,6 @@ import com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.steps.shippingDet
 import com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.steps.shippingDetails.CheckoutShippingDetailsViewModel
 import com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.steps.shippingDetails.model.CheckoutShippingDetailsContract
 import com.alexgreece45.marvelx.ui.screens.cart.model.CartContract
-import com.alexgreece45.marvelx.ui.screens.orders.model.CardBrandUi
-import com.alexgreece45.marvelx.ui.screens.orders.model.toData
 import com.alexgreece45.marvelx.ui_theme.theme.values.customColors
 import com.alexgreece45.marvelx.util.DEFAULT_SCREEN_PADDING
 import com.alexgreece45.marvelx.util.extensions.showToast
@@ -200,7 +197,6 @@ internal fun CheckoutWizardScreen(
 
                     CheckoutWizardStep.OVERVIEW -> {
                         val cartViewModel = koinViewModel<CartViewModel>()
-                        val cardNumber = checkoutPaymentDetailsState.cardNumberField.value
 
                         CartScreen(
                             onEvent = cartViewModel::setEvent,
@@ -235,18 +231,7 @@ internal fun CheckoutWizardScreen(
                                     }
                                 }
                             },
-                            bottomNavigationBarData = null,
-                            orderCheckoutInfo = OrderCheckoutInfoDomain(
-                                firstName = checkoutShippingDetailsState.firstName.value,
-                                lastName = checkoutShippingDetailsState.lastName.value,
-                                streetAddress = checkoutShippingDetailsState.streetAddress.value,
-                                city = checkoutShippingDetailsState.city.value,
-                                zipCode = checkoutShippingDetailsState.zipCode.value,
-                                maskedCardNumber = cardNumber.takeLast(4),
-                                cardBrand = CardBrandUi.getCardBrandUi(cardNumber).toData(),
-                                paymentDate = null,
-                                transactionId = null
-                            )
+                            bottomNavigationBarData = null
                         )
                     }
                 }

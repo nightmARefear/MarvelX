@@ -52,6 +52,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.common_ui.extensions.clickableNoRipple
 import com.alexgreece45.marvelx.common_ui.util.ObserveUiEffect
 import com.alexgreece45.marvelx.core.common.extensions.minusDays
 import com.alexgreece45.marvelx.core.common.extensions.plusDays
@@ -110,7 +111,6 @@ import com.alexgreece45.marvelx.util.SPACING_TINY
 import com.alexgreece45.marvelx.util.VSpacer
 import com.alexgreece45.marvelx.util.constants.ConstantsUi
 import com.alexgreece45.marvelx.util.extensions.circularImageWithBorder
-import com.alexgreece45.marvelx.common_ui.extensions.clickableNoRipple
 import com.alexgreece45.marvelx.util.extensions.setText
 import com.alexgreece45.marvelx.util.extensions.showToast
 import com.alexgreece45.marvelx.util.extensions.withEuroSymbol
@@ -272,14 +272,26 @@ internal fun OrderItemTrackingHistoryScreen(
                                 TrackingHistorySteps(trackingSteps = orderItemTrackingHistoryUi.steps)
                             }
 
-                            ExtraActionButtonsRow(
-                                onContactSupportButtonClicked = {
-                                    onEvent(OrderItemTrackingHistoryContract.Event.ExtraActionButtonEvents.OnContactSupportClicked)
+                            WrapOutlinedButton(
+                                onClick = {
+                                    onEvent(OrderItemTrackingHistoryContract.Event.OnContactSellerButtonClicked)
                                 },
-                                onContactSellerButtonClicked = {
-                                    onEvent(OrderItemTrackingHistoryContract.Event.ExtraActionButtonEvents.OnContactSellerClicked)
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    WrapImage(
+                                        painter = painterResource(R.drawable.ic_phone),
+                                        contentDescription = null,
+                                        modifier = Modifier.size(ConstantsUi.MIN_ICON_SIZE),
+                                        colorFilter = ColorFilter.tint(MaterialTheme.customColors.genericRed)
+                                    )
+
+                                    Text(text = stringResource(R.string.screen_order_item_tracking_history_extra_action_button_contact_seller))
                                 }
-                            )
+                            }
                         }
                     }
             }
@@ -326,7 +338,6 @@ private fun OrderItemCard(
         ListingCard(
             title = title,
             additionalTitleContent = { ListingPriceLabel(price = priceLabel) },
-            titleContentAlignment = Alignment.CenterVertically,
             coverImageUrl = coverImageUrl,
             trailingIcon = null,
             additionalContent = {
@@ -907,7 +918,6 @@ private fun GenericCard(
 ) {
     SectionHeader(
         title = titleLabel,
-        titleContentAlignment = Alignment.CenterVertically,
         additionalTitleContent = {
             Text(
                 text = additionalTitleContentLabel,
@@ -947,58 +957,6 @@ private fun GenericCardButton(
         colors = ButtonDefaults.outlinedButtonColors(backgroundColor = backgroundColor)
     ) {
         Text(text = label)
-    }
-}
-
-// Contact Support & Contact Seller buttons.
-@Composable
-private fun ExtraActionButtonsRow(
-    onContactSupportButtonClicked: () -> Unit,
-    onContactSellerButtonClicked: () -> Unit
-) {
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp)
-    ) {
-        val isContactButtonEnabled = false // TODO: Disabled for now.
-        WrapOutlinedButton(
-            onClick = onContactSupportButtonClicked,
-            modifier = Modifier.fillMaxWidth(),
-            enabled = isContactButtonEnabled
-        ) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                WrapImage(
-                    painter = painterResource(R.drawable.ic_contact_support),
-                    contentDescription = null,
-                    modifier = Modifier.size(ConstantsUi.MIN_ICON_SIZE),
-                    enabled = isContactButtonEnabled
-                )
-
-                Text(text = stringResource(R.string.screen_order_item_tracking_history_extra_action_button_contact_support))
-            }
-        }
-
-        WrapOutlinedButton(
-            onClick = onContactSellerButtonClicked,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                WrapImage(
-                    painter = painterResource(R.drawable.ic_phone),
-                    contentDescription = null,
-                    modifier = Modifier.size(ConstantsUi.MIN_ICON_SIZE),
-                    colorFilter = ColorFilter.tint(MaterialTheme.customColors.genericRed)
-                )
-
-                Text(text = stringResource(R.string.screen_order_item_tracking_history_extra_action_button_contact_seller))
-            }
-        }
     }
 }
 

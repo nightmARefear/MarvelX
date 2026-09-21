@@ -34,6 +34,17 @@ sealed interface InteractorPartialState<out T> {
     data object NoInternetConnection : InteractorPartialState<Nothing>
 }
 
+/**
+ * Transforms the data of a [InteractorPartialState.Success], leaving every failure case untouched.
+ */
+inline fun <T, R> InteractorPartialState<T>.mapSuccess(transform: (T) -> R): InteractorPartialState<R> =
+    when (this) {
+        is InteractorPartialState.Success -> InteractorPartialState.Success(transform(data))
+        is InteractorPartialState.Failed -> InteractorPartialState.Failed(failureMessage)
+        is InteractorPartialState.Error -> InteractorPartialState.Error(errorMessage)
+        InteractorPartialState.NoInternetConnection -> InteractorPartialState.NoInternetConnection
+    }
+
 inline fun <T> InteractorPartialState<T>.onSuccess(action: (T) -> Unit): InteractorPartialState<T> {
     if (this is InteractorPartialState.Success) action(data)
     return this
