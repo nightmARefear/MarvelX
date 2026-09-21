@@ -1,6 +1,5 @@
 package com.alexgreece45.marvelx.core.network.clients
 
-import com.alexgreece45.marvelx.core.network.model.api.authorize.ResponseAuthorize
 import com.alexgreece45.marvelx.core.network.model.api.character.CharacterDataWrapper
 import com.alexgreece45.marvelx.core.network.model.api.character.comic.ComicDataWrapper
 import com.alexgreece45.marvelx.core.network.model.api.device.RequestRegisterDevice
@@ -79,14 +78,6 @@ internal class ApiClientImpl(
 
     override suspend fun postLogin(accessToken: String): Response<ResponsePostLogin> =
         apiService.postLogin(RequestPostLogin(accessToken))
-
-    override suspend fun authorize(
-        tempAuthCode: String,
-        clientId: String,
-        codeChallenge: String,
-        codeChallengeMethod: String
-    ): Response<ResponseAuthorize> =
-        apiService.authorize(tempAuthCode, clientId, codeChallenge, codeChallengeMethod)
 
     override suspend fun grandNewAccessToken(
         clientId: String,

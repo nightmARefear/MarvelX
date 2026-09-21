@@ -2,10 +2,11 @@ package com.alexgreece45.marvelx.ui.screens.signup
 
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.controllers.OAuthAuthorizationController
+import com.alexgreece45.marvelx.controllers.OAuthCallbackResult
 import com.alexgreece45.marvelx.core.common.dispatchers.model.DefaultDispatcher
 import com.alexgreece45.marvelx.core.network.model.api.user.signup.RequestUserSignup
 import com.alexgreece45.marvelx.data.repository.AutoLogoutRepository
-import com.alexgreece45.marvelx.domain.interactors.AuthorizePartialState
 import com.alexgreece45.marvelx.domain.interactors.GrandNewAccessTokenPartialState
 import com.alexgreece45.marvelx.domain.interactors.LoginInteractor
 import com.alexgreece45.marvelx.domain.interactors.PostLoginPartialState
@@ -119,6 +120,12 @@ sealed class SignupEffect : BaseEffect {
     data object CloseKeyboardAndRemoveFocus : SignupEffect()
 
     data object OnDoneClick : SignupEffect()
+
+    /**
+     * Opens [url] (the OAuth 2.0 + PKCE authorization request) in a Custom Tab. The result of the
+     * flow arrives asynchronously via the app's deep link handling, not through this effect.
+     */
+    data class LaunchOAuthAuthorization(val url: String) : SignupEffect()
 }
 
 @KoinViewModel
@@ -129,7 +136,8 @@ internal class SignupViewModel(
     private val loginInteractor: LoginInteractor,
     private val fieldValidationRules: FieldValidationRules,
     @DefaultDispatcher private val defaultDispatcher: CoroutineContext,
-    private val autoLogoutRepository: AutoLogoutRepository
+    private val autoLogoutRepository: AutoLogoutRepository,
+    private val oAuthAuthorizationController: OAuthAuthorizationController
 ) : BaseViewModel<SignupEvent, SignupState, SignupEffect>() {
 
     override fun setInitialState(): SignupState =
@@ -448,29 +456,33 @@ internal class SignupViewModel(
      * It retrieves the user tokens, signing data, and logins the user.
      */
     private fun postSuccessfulSignup(tempAuthCode: String) {
-        viewModelScope.launch {
-            // Retrieve authorization code.
-            loginInteractor.authorize(tempAuthCode).collect {
-                when (it) {
-                    is AuthorizePartialState.Failed -> {
-                        setEffect {
-                            SignupEffect.ShowAlertDialogError(
-                                errorMessage = it.errorMessage
-                            )
-                        }
-                    }
+        val url = oAuthAuthorizationController.buildAuthorizationUrl(tempAuthCode)
+        setEffect {
+            SignupEffect.LaunchOAuthAuthorization(url)
+        }
 
-                    is AuthorizePartialState.Success -> {
-                        getAccessToken(it.authCode)
+        viewModelScope.launch {
+            when (val result = oAuthAuthorizationController.awaitCallback()) {
+                is OAuthCallbackResult.Success -> {
+                    getAccessToken(authCode = result.code, codeVerifier = result.codeVerifier)
+                }
+
+                is OAuthCallbackResult.ServerError,
+                OAuthCallbackResult.StateMismatch,
+                OAuthCallbackResult.Timeout -> {
+                    setEffect {
+                        SignupEffect.ShowAlertDialogError(
+                            errorMessage = resourceProvider.getGenericErrorMessage()
+                        )
                     }
                 }
             }
         }
     }
 
-    private fun getAccessToken(authCode: String) {
+    private fun getAccessToken(authCode: String, codeVerifier: String) {
         viewModelScope.launch {
-            loginInteractor.grandNewAccessToken(authCode).collect {
+            loginInteractor.grandNewAccessToken(authCode = authCode, codeVerifier = codeVerifier).collect {
                 when (it) {
                     is GrandNewAccessTokenPartialState.Failed -> {
                         setEffect {

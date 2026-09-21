@@ -6,6 +6,7 @@ import com.alexgreece45.marvelx.controllers.DeepLinkController
 import com.alexgreece45.marvelx.controllers.DeviceController
 import com.alexgreece45.marvelx.controllers.FcmController
 import com.alexgreece45.marvelx.controllers.HandleDeepLinkActionResult
+import com.alexgreece45.marvelx.controllers.OAuthAuthorizationController
 import com.alexgreece45.marvelx.controllers.WebsocketController
 import com.alexgreece45.marvelx.controllers.model.websocket.WebsocketInbound
 import com.alexgreece45.marvelx.core.common.config.SecurityConfigLogic
@@ -51,6 +52,7 @@ class MainActivityViewModel :
     private val resourceProvider: ResourceProvider by inject()
     private val websocketController: WebsocketController by inject()
     private val deepLinkController: DeepLinkController by inject()
+    private val oAuthAuthorizationController: OAuthAuthorizationController by inject()
     private val userRepository: UserRepository by inject()
 
     private val fcmController: FcmController by inject()
@@ -166,6 +168,10 @@ class MainActivityViewModel :
                         }
                     }
                 }
+            }
+
+            is MainActivityEvent.OnOAuthCallbackReceived -> {
+                oAuthAuthorizationController.onCallbackUri(event.uri)
             }
 
             is MainActivityEvent.OnFcmTokenReceived -> {

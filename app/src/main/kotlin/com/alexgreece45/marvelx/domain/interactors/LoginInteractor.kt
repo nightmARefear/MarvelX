@@ -1,6 +1,5 @@
 package com.alexgreece45.marvelx.domain.interactors
 
-import android.util.Base64
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.controllers.RefreshTokenController
 import com.alexgreece45.marvelx.controllers.WebsocketController
@@ -12,7 +11,6 @@ import com.alexgreece45.marvelx.core.data.repositories.UserSessionRepository
 import com.alexgreece45.marvelx.core.network.model.api.sensitiveUserData.RequestSensitiveUserData
 import com.alexgreece45.marvelx.core.network.model.api.token.toModel
 import com.alexgreece45.marvelx.core.network.storage.SignatureStorage
-import com.alexgreece45.marvelx.data.repository.AuthorizeRepositoryPartialState
 import com.alexgreece45.marvelx.data.repository.AutoLogoutRepository
 import com.alexgreece45.marvelx.data.repository.GetSensitiveUserDataRepositoryResponse
 import com.alexgreece45.marvelx.data.repository.GrandNewAccessTokenRepositoryResponse
@@ -31,20 +29,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import okio.IOException
 import org.koin.core.annotation.Factory
-import java.security.MessageDigest
-import java.security.SecureRandom
 
 interface LoginInteractor {
-
-    /**
-     * Authorization call for the OAuth 2.0 Grant flow. It sends the code challenge and challenge
-     * method and receives a `code` that is used to correlate the code challenge to this device. The
-     * [tempAuthCode] is the temporary code received by the server to protect attacks against
-     * generating tokens for any user.
-     *
-     * The received `code` is later used to obtain the access token.
-     */
-    suspend fun authorize(tempAuthCode: String): Flow<AuthorizePartialState>
 
     /**
      * The post-login call. It retrieves all the necessary data for signing requests.
@@ -52,11 +38,14 @@ interface LoginInteractor {
     suspend fun postLogin(accessTokenAndType: String): Flow<PostLoginPartialState>
 
     /**
-     * Grants an access token for the OAuth 2.0 flow. It sends the code verifier and the `code` that
-     * was received earlier. If the response is successful, then that means that the access token
-     * was successfully retrieved.
+     * Grants an access token for the OAuth 2.0 flow. It sends the [codeVerifier] and the [authCode]
+     * that was received from the browser-based authorization redirect. If the response is
+     * successful, then that means that the access token was successfully retrieved.
      */
-    suspend fun grandNewAccessToken(authCode: String): Flow<GrandNewAccessTokenPartialState>
+    suspend fun grandNewAccessToken(
+        authCode: String,
+        codeVerifier: String
+    ): Flow<GrandNewAccessTokenPartialState>
 
     suspend fun refreshAccessToken(): Flow<RefreshAccessTokenPartialState>
 
@@ -80,52 +69,6 @@ class LoginInteractorImpl(
 ) : LoginInteractor {
 
     private val loggerTag = "LoginInteractor"
-
-    private val codeVerifier by lazy {
-        createCodeVerifier()
-    }
-
-    private val codeChallenge by lazy {
-        createCodeChallenge(codeVerifier)
-    }
-
-    override suspend fun authorize(tempAuthCode: String): Flow<AuthorizePartialState> = flow {
-        val genericErrorMessage = resourceProvider.getGenericErrorMessage()
-        loginRepository.authorize(
-            tempAuthCode = tempAuthCode,
-            clientId = configOauthLogic.clientId,
-            codeChallenge = codeChallenge,
-            codeChallengeMethod = configOauthLogic.codeChallengeMethod
-        ).collect {
-            when (it) {
-                is AuthorizeRepositoryPartialState.Success -> {
-                    when (val body = it.response) {
-                        null -> emit(AuthorizePartialState.Failed(genericErrorMessage))
-                        else -> {
-                            if (body.authCode.isBlank()) {
-                                emit(AuthorizePartialState.Failed(genericErrorMessage))
-                            } else {
-                                emit(AuthorizePartialState.Success(body.authCode))
-                            }
-                        }
-                    }
-                }
-
-                is AuthorizeRepositoryPartialState.Failed -> {
-                    emit(
-                        AuthorizePartialState.Failed(
-                            genericErrorMessage
-                        )
-                    )
-                }
-            }
-        }
-    }.safeAsync {
-        when (it) {
-            is IOException -> AuthorizePartialState.Failed(resourceProvider.getNoInternetConnectionMessage())
-            else -> AuthorizePartialState.Failed(resourceProvider.getGenericErrorMessage())
-        }
-    }
 
     override suspend fun postLogin(accessTokenAndType: String): Flow<PostLoginPartialState> = flow {
         val genericErrorMessage = resourceProvider.getGenericErrorMessage()
@@ -178,7 +121,10 @@ class LoginInteractorImpl(
         }
     }
 
-    override suspend fun grandNewAccessToken(authCode: String): Flow<GrandNewAccessTokenPartialState> =
+    override suspend fun grandNewAccessToken(
+        authCode: String,
+        codeVerifier: String
+    ): Flow<GrandNewAccessTokenPartialState> =
         flow {
             val genericErrorMessage = resourceProvider.getGenericErrorMessage()
             loginRepository.grandNewAccessToken(
@@ -341,29 +287,6 @@ class LoginInteractorImpl(
                 else -> GetSensitiveUserDataPartialState.Failed(errorMessage = resourceProvider.getGenericErrorMessage())
             }
         }
-
-    private fun createCodeVerifier(): String {
-        val code = ByteArray(64)
-        SecureRandom().apply {
-            nextBytes(code)
-        }
-        return Base64.encodeToString(code, Base64.URL_SAFE or Base64.NO_WRAP or Base64.NO_PADDING)
-    }
-
-    private fun createCodeChallenge(verifier: String): String {
-        val bytes = verifier.toByteArray(Charsets.UTF_8)
-        val messageDigest = MessageDigest.getInstance("SHA-256")
-        messageDigest.update(bytes, 0, bytes.size)
-        return Base64.encodeToString(
-            messageDigest.digest(),
-            Base64.URL_SAFE or Base64.NO_WRAP or Base64.NO_PADDING
-        )
-    }
-}
-
-sealed interface AuthorizePartialState {
-    data class Success(val authCode: String) : AuthorizePartialState
-    data class Failed(val errorMessage: String) : AuthorizePartialState
 }
 
 sealed interface PostLoginPartialState {

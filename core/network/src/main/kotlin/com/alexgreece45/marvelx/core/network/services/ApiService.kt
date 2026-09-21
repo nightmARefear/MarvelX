@@ -1,6 +1,5 @@
 package com.alexgreece45.marvelx.core.network.services
 
-import com.alexgreece45.marvelx.core.network.model.api.authorize.ResponseAuthorize
 import com.alexgreece45.marvelx.core.network.model.api.character.CharacterDataWrapper
 import com.alexgreece45.marvelx.core.network.model.api.character.comic.ComicDataWrapper
 import com.alexgreece45.marvelx.core.network.model.api.device.RequestRegisterDevice
@@ -84,14 +83,6 @@ internal interface ApiService {
 
     @POST("/api/private/marvelx/user/post_login")
     suspend fun postLogin(@Body requestPostLogin: RequestPostLogin): Response<ResponsePostLogin>
-
-    @POST("/api/private/marvelx/user/authorize")
-    suspend fun authorize(
-        @Query("temp_auth_code") tempAuthCode: String,
-        @Query("client_id") clientId: String,
-        @Query("code_challenge") codeChallenge: String,
-        @Query("code_challenge_method") codeChallengeMethod: String,
-    ): Response<ResponseAuthorize>
 
     @POST("/api/private/marvelx/user/token")
     @FormUrlEncoded

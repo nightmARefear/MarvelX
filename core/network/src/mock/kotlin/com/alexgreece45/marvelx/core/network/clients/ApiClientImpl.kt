@@ -2,7 +2,6 @@ package com.alexgreece45.marvelx.core.network.clients
 
 import android.content.Context
 import com.alexgreece45.marvelx.core.network.constants.TokenConstants
-import com.alexgreece45.marvelx.core.network.model.api.authorize.ResponseAuthorize
 import com.alexgreece45.marvelx.core.network.model.api.character.CharacterDataContainer
 import com.alexgreece45.marvelx.core.network.model.api.character.CharacterDataWrapper
 import com.alexgreece45.marvelx.core.network.model.api.character.comic.ComicDataContainer
@@ -291,19 +290,6 @@ internal class ApiClientImpl(
                     key = "readRawTextFile(R.raw.backend_certificate_https_server)",
                     algorithm = "HmacSHA256"
                 )
-            )
-        )
-
-    override suspend fun authorize(
-        tempAuthCode: String,
-        clientId: String,
-        codeChallenge: String,
-        codeChallengeMethod: String
-    ): Response<ResponseAuthorize> =
-        Response.success(
-            200,
-            ResponseAuthorize(
-                authCode = "AUTH_CODE"
             )
         )
 
