@@ -36,9 +36,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.unit.dp
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
@@ -122,7 +125,7 @@ internal class MainActivity : AppCompatActivity() {
     var flowStarted: Boolean = false
 
     @SuppressLint("RestrictedApi")
-    @OptIn(KoinExperimentalAPI::class)
+    @OptIn(KoinExperimentalAPI::class, ExperimentalComposeUiApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -156,7 +159,12 @@ internal class MainActivity : AppCompatActivity() {
             MarvelXTheme {
                 SystemBarsThemeUtil.applyDarkSystemBarsTheme(activity = this)
 
-                Surface(color = MaterialTheme.colors.background) {
+                // Exposes every Modifier.testTag(...) as a view resource id so UI automation
+                // (Maestro, uiautomator) can select by tag.
+                Surface(
+                    modifier = Modifier.semantics { testTagsAsResourceId = true },
+                    color = MaterialTheme.colors.background
+                ) {
                     NavGraph(navController = navController)
 
                     // TODO: To be removed.

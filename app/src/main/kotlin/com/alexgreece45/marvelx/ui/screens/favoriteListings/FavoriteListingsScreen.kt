@@ -31,6 +31,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
@@ -97,6 +98,7 @@ internal fun FavoriteListingsScreen(
                 GenericErrorScreen(
                     errorMessage = stringResource(R.string.screen_favorite_listings_error_loading),
                     modifier = Modifier.padding(paddingValues),
+                    buttonTestTag = FavoriteListingsTestTags.ERROR_RETRY_BUTTON,
                     onErrorButtonClick = { onEvent(FavoriteListingsContract.Event.OnRetryClicked) }
                 )
             }
@@ -168,6 +170,7 @@ private fun FavoriteListingGridItem(
     Column(
         modifier = Modifier
             .fillMaxWidth()
+            .testTag(FavoriteListingsTestTags.listingCard(listing.listingId))
             .clickable(onClick = onListingClick),
         verticalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp)
     ) {
@@ -191,7 +194,9 @@ private fun FavoriteListingGridItem(
             FavoriteActionButton(
                 isLoading = listing.favorite.isLoading,
                 isChecked = listing.favorite.isChecked,
-                modifier = Modifier.align(Alignment.TopEnd),
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .testTag(FavoriteListingsTestTags.listingFavoriteButton(listing.listingId)),
                 onClick = onFavoriteClick
             )
 
@@ -211,7 +216,8 @@ private fun FavoriteListingGridItem(
                         onClick = onCartClick,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(CART_BUTTON_HEIGHT),
+                            .height(CART_BUTTON_HEIGHT)
+                            .testTag(FavoriteListingsTestTags.listingCartButton(listing.listingId)),
                         shape = RoundedCornerShape(
                             topStart = SPACING_MEDIUM.dp,
                             topEnd = SPACING_MEDIUM.dp
@@ -229,6 +235,7 @@ private fun FavoriteListingGridItem(
                         modifier = Modifier
                             .clip(RoundedCornerShape(topStart = SPACING_MEDIUM.dp))
                             .background(color = CART_BUTTON_BACKGROUND)
+                            .testTag(FavoriteListingsTestTags.listingCartButton(listing.listingId))
                             .clickableNoRipple(onClick = onCartClick, role = Role.Button)
                             .height(CART_BUTTON_HEIGHT)
                             .padding(horizontal = SPACING_SMALL.dp),

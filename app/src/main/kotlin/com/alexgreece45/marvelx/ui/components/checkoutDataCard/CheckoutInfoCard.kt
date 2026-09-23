@@ -18,6 +18,7 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -57,7 +58,8 @@ fun CheckoutInfoCard(
             trailingIcon = {
                 if (isShippingDetailsEditable) {
                     ThrottledIconButton(
-                        onClick = onShippingDetailsEditButtonClicked
+                        onClick = onShippingDetailsEditButtonClicked,
+                        modifier = Modifier.testTag(CheckoutInfoCardTestTags.EDIT_SHIPPING_DETAILS_BUTTON)
                     ) {
                         Icon(
                             painter = painterResource(R.drawable.ic_edit),
@@ -132,7 +134,8 @@ fun CheckoutInfoCard(
             trailingIcon = {
                 if (isPaymentDetailsEditable) {
                     ThrottledIconButton(
-                        onClick = onPaymentDetailsEditButtonClicked
+                        onClick = onPaymentDetailsEditButtonClicked,
+                        modifier = Modifier.testTag(CheckoutInfoCardTestTags.EDIT_PAYMENT_DETAILS_BUTTON)
                     ) {
                         Icon(
                             painter = painterResource(R.drawable.ic_edit),

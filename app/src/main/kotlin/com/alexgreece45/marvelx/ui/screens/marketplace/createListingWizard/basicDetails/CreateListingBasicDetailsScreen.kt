@@ -41,6 +41,7 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -260,6 +261,9 @@ internal fun CreateListingBasicDetailsScreen(
                 WizardTextInputField(
                     label = stringResource(R.string.screen_create_listing_basic_details_label_title),
                     placeholder = stringResource(R.string.screen_create_listing_basic_details_placeholder_title),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag(CreateListingBasicDetailsTestTags.TITLE_TEXT_FIELD),
                     wizardInputField = state.title,
                     onValueChanged = {
                         onEvent(CreateListingBasicDetailsContract.Event.OnTitleChanged(it))
@@ -270,6 +274,9 @@ internal fun CreateListingBasicDetailsScreen(
                 WizardTextInputField(
                     label = stringResource(R.string.screen_create_listing_basic_details_label_description),
                     placeholder = stringResource(R.string.screen_create_listing_basic_details_placeholder_description),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag(CreateListingBasicDetailsTestTags.DESCRIPTION_TEXT_FIELD),
                     wizardInputField = state.description,
                     onValueChanged = {
                         onEvent(CreateListingBasicDetailsContract.Event.OnDescriptionChanged(it))
@@ -283,7 +290,9 @@ internal fun CreateListingBasicDetailsScreen(
             ExposedDropdownMenu(
                 label = stringResource(R.string.screen_create_listing_basic_details_label_category),
                 expanded = state.category.isExpanded,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag(CreateListingBasicDetailsTestTags.CATEGORY_DROPDOWN),
                 value = state.category.value?.label.orEmpty(),
                 enabled = state.wizardMode.canEdit,
                 onDismissRequest = { onEvent(CreateListingBasicDetailsContract.Event.CategoryDropDownEvents.OnDismissed) },
@@ -291,7 +300,9 @@ internal fun CreateListingBasicDetailsScreen(
             ) {
                 state.listingCategories.forEach { listingCategory ->
                     DropdownMenuItem(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag(CreateListingBasicDetailsTestTags.categoryOption(listingCategory.code)),
                         onClick = {
                             onEvent(
                                 CreateListingBasicDetailsContract.Event.CategoryDropDownEvents.OnItemSelected(
@@ -311,7 +322,9 @@ internal fun CreateListingBasicDetailsScreen(
             ExposedDropdownMenu(
                 label = stringResource(R.string.screen_create_listing_basic_details_label_subcategory),
                 expanded = state.subcategory.isExpanded,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag(CreateListingBasicDetailsTestTags.SUBCATEGORY_DROPDOWN),
                 value = state.subcategory.value?.label.orEmpty(),
                 enabled = state.wizardMode.canEdit,
                 onDismissRequest = { onEvent(CreateListingBasicDetailsContract.Event.SubcategoryDropDownEvents.OnDismissed) },
@@ -319,7 +332,9 @@ internal fun CreateListingBasicDetailsScreen(
             ) {
                 state.listingSubcategories.forEach { listingSubcategory ->
                     DropdownMenuItem(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag(CreateListingBasicDetailsTestTags.subcategoryOption(listingSubcategory.id)),
                         onClick = {
                             onEvent(
                                 CreateListingBasicDetailsContract.Event.SubcategoryDropDownEvents.OnItemSelected(
@@ -362,6 +377,7 @@ private fun LazyListScope.attachedImages(
                     (index + 1)
                 ),
                 isCover = index == 0,
+                deleteButtonTestTag = CreateListingBasicDetailsTestTags.deleteImageButton(index + 1),
                 onDeleteIconClicked = { onDeleteIconClicked(attachedImageUri) },
                 modifier = Modifier
                     .draggableHandle(
@@ -376,6 +392,7 @@ private fun LazyListScope.attachedImages(
         Box(
             modifier = Modifier
                 .size(size = LISTING_IMAGE_SIZE)
+                .testTag(CreateListingBasicDetailsTestTags.UPLOAD_PHOTOS_BUTTON)
                 .border(
                     width = 1.dp,
                     color = MaterialTheme.customColors.genericRed,
@@ -459,6 +476,7 @@ private fun AttachedImageItem(
     imageUrl: String,
     title: String,
     isCover: Boolean,
+    deleteButtonTestTag: String,
     onDeleteIconClicked: () -> Unit,
     modifier: Modifier
 ) {
@@ -477,6 +495,7 @@ private fun AttachedImageItem(
             modifier = Modifier
                 .align(Alignment.TopEnd)
                 .offset(x = alignmentOffset, y = -alignmentOffset)
+                .testTag(deleteButtonTestTag)
         ) {
             Icon(
                 painter = painterResource(R.drawable.ic_close),

@@ -22,6 +22,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
@@ -104,6 +105,7 @@ internal fun OrderDetailsScreen(
         ContentScreen(
             isLoading = state.uiState.isLoading,
             navigableAction = ScreenNavigableAction.Backable(
+                testTag = OrderDetailsTestTags.BACK_BUTTON,
                 onBack = {
                     onEvent(OrderDetailsContract.Event.OnBack)
                 }
@@ -130,6 +132,7 @@ internal fun OrderDetailsScreen(
                                     R.string.screen_order_details_error,
                                     state.orderId
                                 ),
+                                retryTestTag = OrderDetailsTestTags.ERROR_RETRY_BUTTON,
                                 onRetryClick = {
                                     onEvent(OrderDetailsContract.Event.OnErrorButtonClicked)
                                 }
@@ -163,6 +166,7 @@ internal fun OrderDetailsScreen(
                                 priceLabel = order.price.label,
                                 status = order.status,
                                 buttonEnabled = order.status !is OrderItemStatusUi.Processing,
+                                buttonTestTag = OrderDetailsTestTags.trackItemButton(order.orderItemId.value),
                                 onButtonClicked = {
                                     onEvent(
                                         OrderDetailsContract.Event.OrderItemEvents.OnTrackButtonClicked(
@@ -207,6 +211,7 @@ private fun OrderItemCard(
     priceLabel: String,
     status: OrderItemStatusUi,
     buttonEnabled: Boolean,
+    buttonTestTag: String,
     onButtonClicked: () -> Unit,
 ) {
     ListingCard(
@@ -237,7 +242,9 @@ private fun OrderItemCard(
 
             WrapOutlinedButton(
                 onClick = onButtonClicked,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag(buttonTestTag),
                 enabled = buttonEnabled
             ) {
                 Text(
@@ -342,6 +349,7 @@ private fun OrderStatusBanner(
                     )
                 }
             },
+            modifier = Modifier.testTag(OrderDetailsTestTags.ORDER_STATUS_BANNER),
             onClick = onClick
         )
     }

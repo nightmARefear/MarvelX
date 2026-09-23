@@ -59,6 +59,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -235,10 +236,12 @@ internal fun RequestItemReturnScreen(
                 || state.wizardStep != RequestItemReturnWizardStep.RETURN_REASON
             ) {
                 ScreenNavigableAction.Backable(
+                    testTag = RequestItemReturnTestTags.BACK_BUTTON,
                     onBack = { onEvent(RequestItemReturnContract.Event.OnBack) }
                 )
             } else {
                 ScreenNavigableAction.Closeable(
+                    testTag = RequestItemReturnTestTags.CLOSE_BUTTON,
                     onClose = { onEvent(RequestItemReturnContract.Event.OnClose) }
                 )
             },
@@ -254,7 +257,9 @@ internal fun RequestItemReturnScreen(
                     ) {
                         WrapButton(
                             onClick = { onEvent(RequestItemReturnContract.Event.OnStickyBottomButtonClicked) },
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .testTag(RequestItemReturnTestTags.STICKY_BOTTOM_BUTTON),
                             enabled = state.isStickyBottomButtonEnabled
                         ) {
                             Text(text = stringResource(if (state.wizardStep != RequestItemReturnWizardStep.OVERVIEW) R.string.screen_request_item_return_sticky_bottom_button_next else R.string.screen_request_item_return_sticky_bottom_button_submit))
@@ -333,6 +338,7 @@ internal fun RequestItemReturnScreen(
                                     ) {
                                         GenericErrorScreen(
                                             errorMessage = stringResource(R.string.screen_request_item_return_generic_error_message),
+                                            buttonTestTag = RequestItemReturnTestTags.ERROR_RETRY_BUTTON,
                                             onErrorButtonClick = {
                                                 onEvent(RequestItemReturnContract.Event.OnErrorButtonClicked)
                                             }
@@ -416,6 +422,7 @@ internal fun RequestItemReturnScreen(
                                             horizontal = SPACING_SMALL.dp,
                                             vertical = SPACING_MEDIUM.dp
                                         )
+                                        .testTag(RequestItemReturnTestTags.AGREE_TO_RETURN_POLICY_CHECKBOX)
                                         .clickableNoRipple(
                                             onClick = {
                                                 onEvent(
@@ -453,7 +460,9 @@ internal fun RequestItemReturnScreen(
                                                 }
                                             )
                                         ),
-                                        modifier = Modifier.fillMaxWidth()
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .testTag(RequestItemReturnTestTags.RETURN_POLICY_TEXT)
                                     )
                                 }
                             }
@@ -637,6 +646,7 @@ private fun WizardScreenReturnReason(
         items = returnReasons,
         itemLabel = { item -> stringResource(item.titleResId) },
         descriptionLabel = { item -> stringResource(item.descriptionResId) },
+        itemTestTag = { item -> RequestItemReturnTestTags.returnReasonItem(item.name) },
         selectedItem = selectedReturnReason,
         shouldShowExtraItemContent = { item -> item == OrderItemReturnReasonUi.OTHER },
         onItemSelect = onReturnReasonItemSelect,
@@ -644,6 +654,7 @@ private fun WizardScreenReturnReason(
             ReturnReasonDescriptionTextField(
                 inputField = returnReasonOtherTextField,
                 maxTextLength = returnReasonOtherTextMaxLength,
+                modifier = Modifier.testTag(RequestItemReturnTestTags.RETURN_REASON_OTHER_TEXT_FIELD),
                 labelContent = {
                     Text(
                         text = stringResource(R.string.screen_request_item_return_return_reason_other_textfield_label),
@@ -719,6 +730,7 @@ private fun WizardScreenReturnDetails(
         items = returnConditions,
         itemLabel = { item -> stringResource(item.titleResId) },
         descriptionLabel = { item -> stringResource(item.descriptionResId) },
+        itemTestTag = { item -> RequestItemReturnTestTags.returnConditionItem(item.name) },
         selectedItem = selectedReturnCondition,
         onItemSelect = onReturnConditionSelect
     )
@@ -807,6 +819,7 @@ private fun WizardScreenOverview(
         items = returnMethods,
         itemLabel = { item -> stringResource(item.titleResId) },
         descriptionLabel = { item -> stringResource(item.descriptionResId) },
+        itemTestTag = { item -> RequestItemReturnTestTags.returnMethodItem(item.name) },
         selectedItem = selectedReturnMethod,
         onItemSelect = onReturnMethodSelect,
     )
@@ -883,6 +896,7 @@ private fun <T> ReturnItemsSection(
     items: List<T>,
     itemLabel: @Composable ((item: T) -> String),
     descriptionLabel: @Composable ((item: T) -> String),
+    itemTestTag: (item: T) -> String,
     selectedItem: T?,
     shouldShowExtraItemContent: (item: T) -> Boolean = { false },
     onItemSelect: (T) -> Unit,
@@ -900,6 +914,7 @@ private fun <T> ReturnItemsSection(
                 label = itemLabel.invoke(item),
                 description = descriptionLabel.invoke(item),
                 isSelected = item == selectedItem,
+                testTag = itemTestTag(item),
                 onSelect = { onItemSelect(item) },
                 extraContent = if (shouldShowExtraItemContent(item)) extraItemContent else null
             )
@@ -915,12 +930,15 @@ private fun ReturnReasonItem(
     label: String,
     description: String,
     isSelected: Boolean,
+    testTag: String,
     onSelect: () -> Unit,
     extraContent: (@Composable () -> Unit)? = null
 ) {
     Card(
         onClick = onSelect,
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag(testTag)
     ) {
         Column(
             modifier = Modifier.fillMaxWidth(),
@@ -963,10 +981,12 @@ private fun ReturnReasonItem(
 @Composable
 private fun RequestRefundCheckbox(checked: Boolean, enabled: Boolean, onClick: () -> Unit) {
     Row(
-        modifier = Modifier.clickableNoRipple(
-            role = Role.Checkbox,
-            onClick = onClick
-        ),
+        modifier = Modifier
+            .testTag(RequestItemReturnTestTags.REQUEST_REFUND_CHECKBOX)
+            .clickableNoRipple(
+                role = Role.Checkbox,
+                onClick = onClick
+            ),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Checkbox(
@@ -1020,6 +1040,7 @@ private fun DescriptionSection(
         inputField = descriptionField,
         maxTextLength = maxDescriptionLength,
         labelContent = labelContent,
+        modifier = Modifier.testTag(RequestItemReturnTestTags.DESCRIPTION_TEXT_FIELD),
         onTextChange = onDescriptionChange
     )
 }
@@ -1093,6 +1114,7 @@ private fun UploadImagesSection(
                             R.string.screen_request_item_return_uploaded_image_content_description,
                             (index + 1)
                         ),
+                        deleteButtonTestTag = RequestItemReturnTestTags.deleteImageButton(index + 1),
                         onDeleteIconClick = { onDeleteImageButtonClick(attachedImage.uri) }
                     )
                 }
@@ -1101,6 +1123,7 @@ private fun UploadImagesSection(
                     Box(
                         modifier = Modifier
                             .size(size = ATTACHED_IMAGE_SIZE)
+                            .testTag(RequestItemReturnTestTags.UPLOAD_PHOTOS_BUTTON)
                             .border(
                                 width = 1.dp,
                                 color = MaterialTheme.customColors.genericRed,
@@ -1159,6 +1182,7 @@ private fun UploadImagesSection(
 private fun AttachedImageItem(
     imageUrl: String,
     title: String,
+    deleteButtonTestTag: String,
     onDeleteIconClick: () -> Unit
 ) {
     val alignmentOffset = ((48.dp - SPACING_MEDIUM.dp) / 2 - SPACING_SMALL.dp).coerceAtLeast(0.dp)
@@ -1179,6 +1203,7 @@ private fun AttachedImageItem(
             modifier = Modifier
                 .align(Alignment.TopEnd)
                 .offset(x = alignmentOffset, y = -alignmentOffset)
+                .testTag(deleteButtonTestTag)
         ) {
             Icon(
                 painter = painterResource(R.drawable.ic_close),
@@ -1263,6 +1288,7 @@ private fun <T> ReturnPolicyBottomSheetContent(
                 is UiState.Error -> GenericErrorScreen(
                     errorMessage = stringResource(R.string.screen_request_item_return_bottom_sheet_error_loading),
                     modifier = Modifier.height(IntrinsicSize.Min),
+                    buttonTestTag = RequestItemReturnTestTags.POLICY_BOTTOM_SHEET_ERROR_RETRY_BUTTON,
                     onErrorButtonClick = onErrorButtonClick
                 )
 

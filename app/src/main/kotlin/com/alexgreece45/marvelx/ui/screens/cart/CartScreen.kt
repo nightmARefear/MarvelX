@@ -17,6 +17,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -78,6 +79,7 @@ fun CartScreen(
                 item("errorView") {
                     LazyItemContentErrorScreen(
                         errorMessage = stringResource(R.string.screen_cart_error_loading_cart),
+                        retryTestTag = CartTestTags.ERROR_RETRY_BUTTON,
                         onRetryClick = { onEvent(CartContract.Event.OnErrorButtonClicked) }
                     )
                 }
@@ -89,6 +91,7 @@ fun CartScreen(
                     GenericLazyItemInfoScreen(
                         title = stringResource(R.string.screen_cart_empty_cart_title),
                         buttonLabel = stringResource(R.string.screen_cart_empty_cart_button),
+                        buttonTestTag = CartTestTags.EMPTY_CART_BUTTON,
                         onButtonClicked = {
                             onEvent(CartContract.Event.OnEmptyCartViewButtonClicked)
                         }
@@ -120,6 +123,7 @@ fun CartScreen(
                     key = { it.listingId }
                 ) { cartItem ->
                     CartItemCard(
+                        listingId = cartItem.listingId,
                         title = cartItem.title,
                         price = cartItem.priceLabel,
                         coverImageUrl = cartItem.coverImageUrl,
@@ -171,6 +175,7 @@ fun CartScreen(
                     LazyItemErrorScreen(
                         errorMessage = stringResource(R.string.screen_cart_error_loading_cart_summary),
                         modifier = Modifier.fillMaxWidth(),
+                        retryTestTag = CartTestTags.SUMMARY_ERROR_RETRY_BUTTON,
                         onRetryClick = {
                             onEvent(CartContract.Event.OnCartSummaryErrorButtonClicked)
                         },
@@ -190,7 +195,9 @@ fun CartScreen(
 
                         WrapButton(
                             onClick = { onEvent(CartContract.Event.OnCartSummaryButtonClicked) },
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .testTag(CartTestTags.SUMMARY_BUTTON),
                             enabled = !state.isCheckingOut,
                             colors = ButtonDefaults.buttonColors(
                                 backgroundColor = MaterialTheme.customColors.buttonBackgroundNegative,
@@ -236,6 +243,7 @@ private fun CheckoutCartItemCard(
 
 @Composable
 private fun CartItemCard(
+    listingId: String,
     title: String,
     price: String,
     coverImageUrl: String,
@@ -258,7 +266,8 @@ private fun CartItemCard(
                     ProcessingRequestIconLottie()
                 } else {
                     ThrottledIconButton(
-                        onClick = onFavoriteButtonClicked
+                        onClick = onFavoriteButtonClicked,
+                        modifier = Modifier.testTag(CartTestTags.itemFavoriteButton(listingId))
                     ) {
                         Icon(
                             painter = painterResource(if (favorite) R.drawable.ic_favorite_filled else R.drawable.ic_favorite_empty),
@@ -272,7 +281,8 @@ private fun CartItemCard(
                     ProcessingRequestIconLottie()
                 } else {
                     ThrottledIconButton(
-                        onClick = onDeleteButtonClicked
+                        onClick = onDeleteButtonClicked,
+                        modifier = Modifier.testTag(CartTestTags.itemDeleteButton(listingId))
                     ) {
                         Icon(
                             painter = painterResource(R.drawable.ic_delete),
@@ -283,6 +293,7 @@ private fun CartItemCard(
                 }
             }
         },
+        modifier = Modifier.testTag(CartTestTags.itemCard(listingId)),
         onClicked = onClicked
     )
 }

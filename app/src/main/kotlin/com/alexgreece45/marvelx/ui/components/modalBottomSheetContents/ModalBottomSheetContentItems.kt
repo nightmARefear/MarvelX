@@ -17,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -47,6 +48,7 @@ fun <T : BaseEvent> ModalBottomSheetContentItems(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .then(bottomSheetContentItem.testTag?.let { Modifier.testTag(it) } ?: Modifier)
                         .throttledClickable(
                             LocalView.current,
                             onClick = {

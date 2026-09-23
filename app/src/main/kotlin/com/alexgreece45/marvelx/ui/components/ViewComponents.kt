@@ -105,6 +105,9 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
@@ -230,6 +233,7 @@ data class BottomBarItem(
     val iconData: IconData,
     /** Shown as a badge on the icon when greater than zero. */
     val badgeCount: Int = 0,
+    val testTag: String? = null,
 )
 
 data class BottomBarData(
@@ -281,7 +285,10 @@ private fun BottomBar(
             LocalTextStyle provides MaterialTheme.typography.caption
         ) {
             items.forEach { bottomBarAction ->
-                IconButton(onClick = { navController.navigate(bottomBarAction.route) }) {
+                IconButton(
+                    onClick = { navController.navigate(bottomBarAction.route) },
+                    modifier = bottomBarAction.testTag?.let { Modifier.testTag(it) } ?: Modifier
+                ) {
                     Column {
                         Icon(
                             painter = painterResource(bottomBarAction.iconData.iconResource),
@@ -348,6 +355,7 @@ private fun BottomNavigationBar(
                 CompositionLocalProvider(LocalContentAlpha provides ContentAlpha.high) {
                     BottomNavigationItem(
                         modifier = Modifier
+                            .then(item.testTag?.let { Modifier.testTag(it) } ?: Modifier)
                             .then(
                                 Modifier
                                     .drawWithContent {
@@ -462,6 +470,7 @@ data class IconData(
 data class ClickableIconData(
     @DrawableRes val iconResource: Int,
     val contentDescription: String,
+    val testTag: String? = null,
     val onClick: () -> Unit
 )
 
@@ -476,20 +485,21 @@ sealed class ScreenNavigableAction {
      * controlled by [onBack]; this action is most commonly used for navigating to the previous
      * screen.
      */
-    data class Backable(val onBack: () -> Unit) : ScreenNavigableAction()
+    data class Backable(val testTag: String? = null, val onBack: () -> Unit) : ScreenNavigableAction()
 
     /**
      * Indicates that the toolbar has a `cancel` icon button, and its on-click functionality is
      * controlled by [onClose]; this action is most commonly used for exiting from an
      * erroneous screen.
      */
-    data class Closeable(val onClose: () -> Unit) : ScreenNavigableAction()
+    data class Closeable(val testTag: String? = null, val onClose: () -> Unit) : ScreenNavigableAction()
 }
 
 data class ToolbarAction(
     val label: String,
     val order: Int,
     val iconData: IconData,
+    val testTag: String? = null,
     val onClick: () -> Unit
 )
 
@@ -501,6 +511,7 @@ data class NormalFabData(
     @DrawableRes val iconResource: Int? = null,
     val backgroundColor: Color? = null,
     val contentColor: Color? = null,
+    val testTag: String? = null,
     val onClick: () -> Unit
 ) : FabData
 
@@ -668,12 +679,18 @@ private fun Toolbar(
                 // Navigable action button; either `Close` or `Back`.
                 if (navigableAction !is ScreenNavigableAction.None) {
                     ThrottledIconButton(
+                        modifier = when (navigableAction) {
+                            is ScreenNavigableAction.Closeable -> navigableAction.testTag
+                            is ScreenNavigableAction.Backable -> navigableAction.testTag
+                            ScreenNavigableAction.None -> null
+                        }?.let { Modifier.testTag(it) } ?: Modifier,
                         onClick = {
                             keyboard?.hide()
                             focusManager.clearFocus(force = true)
                             when (navigableAction) {
                                 is ScreenNavigableAction.Closeable -> navigableAction.onClose()
                                 is ScreenNavigableAction.Backable -> navigableAction.onBack()
+                                ScreenNavigableAction.None -> Unit
                             }
                         }
                     ) {
@@ -718,6 +735,7 @@ private fun Toolbar(
 
                 toolbarActions?.sortedBy { it.order }?.forEach { toolbarAction ->
                     ThrottledIconButton(
+                        modifier = toolbarAction.testTag?.let { Modifier.testTag(it) } ?: Modifier,
                         onClick = toolbarAction.onClick,
                         enabled = toolbarAction.iconData.enabled,
                         delay = 750L
@@ -804,6 +822,7 @@ private fun NormalFloatingActionButton(
     val backgroundColor = normalFabData.backgroundColor ?: MaterialTheme.colors.secondary
 
     FloatingActionButton(
+        modifier = normalFabData.testTag?.let { Modifier.testTag(it) } ?: Modifier,
         backgroundColor = backgroundColor,
         contentColor = normalFabData.contentColor
             ?: contentColorFor(backgroundColor = backgroundColor),
@@ -833,10 +852,12 @@ private fun CollapsibleExtendedFloatingActionButton(
 
     FloatingActionButton(
         onClick = fabData.onClick,
-        modifier = Modifier.sizeIn(
-            minWidth = extendedFabSize,
-            minHeight = extendedFabSize
-        ),
+        modifier = Modifier
+            .sizeIn(
+                minWidth = extendedFabSize,
+                minHeight = extendedFabSize
+            )
+            .then(fabData.testTag?.let { Modifier.testTag(it) } ?: Modifier),
         backgroundColor = backgroundColor,
         contentColor = fabData.contentColor ?: contentColorFor(backgroundColor = backgroundColor)
     ) {
@@ -877,11 +898,13 @@ fun SearchBar(
     hint: String,
     backgroundColor: Color = MaterialTheme.colors.surface,
     textColor: Color = contentColorFor(backgroundColor),
+    modifier: Modifier = Modifier,
+    closeButtonTestTag: String? = null,
     onValueChange: (String) -> Unit,
     onCloseClick: () -> Unit
 ) {
     TextField(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         value = searchTerm,
         placeholder = {
             Text(
@@ -894,7 +917,8 @@ fun SearchBar(
             if (searchTerm.isNotBlank()) {
                 val circleBackgroundColor = MaterialTheme.colors.background
                 IconButton(
-                    onClick = onCloseClick
+                    onClick = onCloseClick,
+                    modifier = closeButtonTestTag?.let { Modifier.testTag(it) } ?: Modifier
                 ) {
                     Icon(
                         modifier = Modifier
@@ -1458,6 +1482,7 @@ data class AlertDialogButton(
  * [DialogProperties].
  * @param onDismissRequest  The action(s) to be invoked when the user clicks outside of this dialog.
  */
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun AlertDialogError(
     title: String,
@@ -1471,6 +1496,9 @@ fun AlertDialogError(
     onDismissRequest: (() -> Unit)? = null
 ) {
     AlertDialog(
+        // A dialog is hosted in its own window, so the root-level `testTagsAsResourceId` doesn't
+        // reach it.
+        modifier = Modifier.semantics { testTagsAsResourceId = true },
         title = {
             Text(
                 text = title,
@@ -1490,6 +1518,7 @@ fun AlertDialogError(
             dismissButton?.let { button ->
                 WrapTextButton(
                     onClick = button.onClick,
+                    modifier = Modifier.testTag(AlertDialogTestTags.DISMISS_BUTTON),
                     colors = button.buttonBackgroundColor?.let {
                         ButtonDefaults.textButtonColors(
                             backgroundColor = button.buttonBackgroundColor
@@ -1508,6 +1537,7 @@ fun AlertDialogError(
                     ErrorButtonType.Contained -> {
                         WrapButton(
                             onClick = button.onClick,
+                            modifier = Modifier.testTag(AlertDialogTestTags.CONFIRM_BUTTON),
                             colors = button.buttonBackgroundColor?.let {
                                 ButtonDefaults.buttonColors(
                                     backgroundColor = button.buttonBackgroundColor
@@ -1522,6 +1552,7 @@ fun AlertDialogError(
                     ErrorButtonType.Outlined -> {
                         WrapOutlinedButton(
                             onClick = button.onClick,
+                            modifier = Modifier.testTag(AlertDialogTestTags.CONFIRM_BUTTON),
                             colors = button.buttonBackgroundColor?.let {
                                 ButtonDefaults.outlinedButtonColors(
                                     backgroundColor = button.buttonBackgroundColor
@@ -1536,6 +1567,7 @@ fun AlertDialogError(
                     ErrorButtonType.Text -> {
                         WrapTextButton(
                             onClick = button.onClick,
+                            modifier = Modifier.testTag(AlertDialogTestTags.CONFIRM_BUTTON),
                             colors = button.buttonBackgroundColor?.let {
                                 ButtonDefaults.textButtonColors(
                                     backgroundColor = button.buttonBackgroundColor
@@ -1588,6 +1620,7 @@ fun SortingItems(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(start = startPadding)
+                .testTag(SortingTestTags.item(sortingType))
                 // Disables the on tap ripple effect for both single and long clicks.
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
@@ -1656,7 +1689,10 @@ fun SortingModalBottomSheetContent(
                 style = MaterialTheme.typography.h4
             )
 
-            IconButton(onClick = onCloseClick) {
+            IconButton(
+                onClick = onCloseClick,
+                modifier = Modifier.testTag(SortingTestTags.CLOSE_BUTTON)
+            ) {
                 Icon(
                     modifier = Modifier
                         .size(ConstantsUi.MIN_ICON_SIZE)
@@ -1689,6 +1725,7 @@ fun GenericInfoScreen(
     titleColor: Color = Color.Unspecified,
     buttonLabel: String,
     modifier: Modifier,
+    buttonTestTag: String? = null,
     onButtonClick: () -> Unit
 ) {
     Column(
@@ -1704,7 +1741,10 @@ fun GenericInfoScreen(
             )
         )
 
-        WrapButton(onClick = onButtonClick) {
+        WrapButton(
+            onClick = onButtonClick,
+            modifier = buttonTestTag?.let { Modifier.testTag(it) } ?: Modifier
+        ) {
             Text(
                 text = buttonLabel,
                 style = MaterialTheme.typography.h5
@@ -1718,6 +1758,7 @@ fun LazyItemScope.GenericLazyItemInfoScreen(
     title: String,
     titleColor: Color = Color.Unspecified,
     buttonLabel: String,
+    buttonTestTag: String? = null,
     onButtonClicked: () -> Unit
 ) {
     GenericInfoScreen(
@@ -1725,6 +1766,7 @@ fun LazyItemScope.GenericLazyItemInfoScreen(
         titleColor = titleColor,
         buttonLabel = buttonLabel,
         modifier = Modifier.fillParentMaxSize(),
+        buttonTestTag = buttonTestTag,
         onButtonClick = onButtonClicked
     )
 }
@@ -1737,6 +1779,7 @@ fun GenericErrorScreen(
     errorMessage: String,
     modifier: Modifier = Modifier,
     buttonLabel: String? = null,
+    buttonTestTag: String? = null,
     onErrorButtonClick: () -> Unit
 ) {
     GenericInfoScreen(
@@ -1744,6 +1787,7 @@ fun GenericErrorScreen(
         titleColor = MaterialTheme.colors.error,
         buttonLabel = buttonLabel ?: stringResource(R.string.generic_retry_button),
         modifier = modifier,
+        buttonTestTag = buttonTestTag,
         onButtonClick = onErrorButtonClick
     )
 }
@@ -1752,11 +1796,13 @@ fun GenericErrorScreen(
 fun LazyItemScope.LazyItemErrorScreen(
     errorMessage: String,
     modifier: Modifier,
+    retryTestTag: String? = null,
     onRetryClick: () -> Unit
 ) {
     GenericErrorScreen(
         errorMessage = errorMessage,
         modifier = modifier,
+        buttonTestTag = retryTestTag,
         onErrorButtonClick = onRetryClick
     )
 }
@@ -1764,11 +1810,13 @@ fun LazyItemScope.LazyItemErrorScreen(
 @Composable
 fun LazyItemScope.LazyItemContentErrorScreen(
     errorMessage: String,
+    retryTestTag: String? = null,
     onRetryClick: () -> Unit
 ) {
     GenericErrorScreen(
         errorMessage = errorMessage,
         modifier = Modifier.fillParentMaxSize(),
+        buttonTestTag = retryTestTag,
         onErrorButtonClick = onRetryClick
     )
 }

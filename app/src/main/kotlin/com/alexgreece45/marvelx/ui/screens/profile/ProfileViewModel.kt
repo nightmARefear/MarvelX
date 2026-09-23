@@ -318,6 +318,7 @@ class ProfileViewModel(
                             contentDescription = R.string.content_description_scan_qr_code
                         ),
                         isNavigable = false,
+                        testTag = ProfileTestTags.SCAN_QR_CODE_SECTION,
                         onClick = {
                             setEffect {
                                 ProfileContract.Effect.Navigation.NavigateToQrCodeScreen("profileScreen") // TODO: FIX!
@@ -331,6 +332,7 @@ class ProfileViewModel(
                             contentDescription = R.string.content_description_friends
                         ),
                         isNavigable = true,
+                        testTag = ProfileTestTags.FRIENDS_SECTION,
                         onClick = {
                             setEffect {
                                 ProfileContract.Effect.Navigation.NavigateToFriendsScreen
@@ -344,6 +346,7 @@ class ProfileViewModel(
                             contentDescription = R.string.screen_profile_content_description_orders_icon
                         ),
                         isNavigable = true,
+                        testTag = ProfileTestTags.ORDERS_SECTION,
                         onClick = {
                             setEffect {
                                 ProfileContract.Effect.Navigation.NavigateToOrdersScreen
@@ -357,6 +360,7 @@ class ProfileViewModel(
                             contentDescription = R.string.content_description_friends
                         ),
                         isNavigable = true,
+                        testTag = ProfileTestTags.MY_LISTINGS_SECTION,
                         onClick = {
                             setEffect {
                                 ProfileContract.Effect.Navigation.NavigateToMyListingsScreen
@@ -384,6 +388,7 @@ class ProfileViewModel(
                             ),
                             showBackgroundColor = true,
                         ),
+                        testTag = ProfileTestTags.VIEW_PROFILE_IMAGE_BOTTOM_SHEET_ITEM,
                         onClickEvent = ProfileContract.Event.ProfileImage.BottomSheet.OnViewImageClicked
                     ),
                     BottomSheetContentItem(
@@ -395,6 +400,7 @@ class ProfileViewModel(
                             ),
                             showBackgroundColor = true,
                         ),
+                        testTag = ProfileTestTags.UPLOAD_PROFILE_IMAGE_BOTTOM_SHEET_ITEM,
                         onClickEvent = ProfileContract.Event.ProfileImage.BottomSheet.OnUploadImageClicked
                     ),
                 )

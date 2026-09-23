@@ -16,6 +16,7 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -24,6 +25,7 @@ import com.alexgreece45.marvelx.ui.components.WrapButton
 import com.alexgreece45.marvelx.ui.components.inputFields.TextInputField
 import com.alexgreece45.marvelx.ui.components.sections.SectionHeaderTitle
 import com.alexgreece45.marvelx.ui.model_generic.InputFieldUi
+import com.alexgreece45.marvelx.ui.screens.orders.requestReturn.RequestItemReturnTestTags
 import com.alexgreece45.marvelx.ui.screens.orders.requestReturn.model.OrderItemReturnSellerActionUi
 import com.alexgreece45.marvelx.ui_theme.theme.values.customColors
 import com.alexgreece45.marvelx.util.SPACING_MEDIUM
@@ -56,6 +58,9 @@ internal fun SellerResponsePanel(
             inputField = sellerResponseMessageField,
             label = stringResource(R.string.screen_request_item_return_seller_response_message_label),
             placeholder = stringResource(R.string.screen_request_item_return_seller_response_message_placeholder),
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag(RequestItemReturnTestTags.SELLER_RESPONSE_MESSAGE_TEXT_FIELD),
             enabled = !isSubmitting,
             onValueChanged = onMessageChange,
             minLines = 2,
@@ -136,7 +141,9 @@ private fun SellerActionCard(
 
             WrapButton(
                 onClick = onClick,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag(RequestItemReturnTestTags.sellerResponseActionButton(action.name)),
                 enabled = isEnabled,
                 colors = ButtonDefaults.buttonColors(
                     backgroundColor = accentColor,

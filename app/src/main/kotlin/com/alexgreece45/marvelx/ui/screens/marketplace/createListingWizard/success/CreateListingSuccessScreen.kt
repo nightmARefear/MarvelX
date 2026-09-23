@@ -11,6 +11,7 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -41,6 +42,7 @@ internal fun CreateListingSuccessScreen(
     ContentScreen(
         isLoading = state.isLoading,
         navigableAction = ScreenNavigableAction.Closeable(
+            testTag = CreateListingSuccessTestTags.CLOSE_BUTTON,
             onClose = {
                 onEvent(
                     CreateListingSuccessContract.Event.OnBackClicked
@@ -73,7 +75,10 @@ internal fun CreateListingSuccessScreen(
                 )
             }
 
-            WrapButton(onClick = { onEvent(CreateListingSuccessContract.Event.OnViewListingClicked) }) {
+            WrapButton(
+                onClick = { onEvent(CreateListingSuccessContract.Event.OnViewListingClicked) },
+                modifier = Modifier.testTag(CreateListingSuccessTestTags.VIEW_LISTING_BUTTON)
+            ) {
                 Text(text = stringResource(R.string.screen_create_listing_button_view_listing))
             }
         }

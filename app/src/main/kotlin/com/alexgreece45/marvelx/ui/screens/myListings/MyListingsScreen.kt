@@ -21,6 +21,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -123,6 +124,7 @@ fun MyListingsScreen(
         ContentScreen(
             isLoading = state.isLoading,
             navigableAction = ScreenNavigableAction.Backable(
+                testTag = MyListingsTestTags.BACK_BUTTON,
                 onBack = { onEvent(MyListingsContract.Event.OnBackClicked) }
             ),
             onBack = {
@@ -135,6 +137,7 @@ fun MyListingsScreen(
                 normalFabData = NormalFabData(
                     label = stringResource(R.string.screen_my_listings_fab_label),
                     iconResource = R.drawable.ic_edit,
+                    testTag = MyListingsTestTags.CREATE_LISTING_FAB,
                     onClick = { onEvent(MyListingsContract.Event.OnFabButtonClicked) }
                 )
             ),
@@ -150,6 +153,7 @@ fun MyListingsScreen(
                     item(key = "errorView") {
                         LazyItemContentErrorScreen(
                             errorMessage = stringResource(R.string.screen_my_listings_error_fetching_listings),
+                            retryTestTag = MyListingsTestTags.ERROR_RETRY_BUTTON,
                             onRetryClick = {
                                 onEvent(MyListingsContract.Event.OnErrorButtonClicked)
                             }
@@ -163,6 +167,7 @@ fun MyListingsScreen(
                         GenericLazyItemInfoScreen(
                             title = stringResource(R.string.screen_my_listings_no_listings_found_title),
                             buttonLabel = stringResource(R.string.screen_my_listings_no_listings_found_button),
+                            buttonTestTag = MyListingsTestTags.CREATE_LISTING_BUTTON,
                             onButtonClicked = { onEvent(MyListingsContract.Event.OnCreateListingButtonClicked) }
                         )
                     }
@@ -203,6 +208,7 @@ fun MyListingsScreen(
                     key = { it.listingId }
                 ) { listing ->
                     MyListingCard(
+                        listingId = listing.listingId,
                         title = listing.title,
                         coverImageUrl = listing.coverImageUrl,
                         statusUi = listing.status,
@@ -244,6 +250,7 @@ private fun ModalBottomSheetContent(onBottomSheetEvent: (MyListingsContract.Even
         bottomSheetContentItems = listOf(
             BottomSheetContentItem(
                 title = stringResource(R.string.screen_my_listings_bottom_sheet_item_edit),
+                testTag = MyListingsTestTags.EDIT_LISTING_BOTTOM_SHEET_ITEM,
                 onClickEvent = MyListingsContract.Event.BottomSheet.OnEditListingClicked,
                 leadingIconData = BottomSheetContentItemIconData(
                     iconData = IconData(
@@ -254,6 +261,7 @@ private fun ModalBottomSheetContent(onBottomSheetEvent: (MyListingsContract.Even
             ),
             BottomSheetContentItem(
                 title = stringResource(R.string.screen_my_listings_bottom_sheet_item_share),
+                testTag = MyListingsTestTags.SHARE_LISTING_BOTTOM_SHEET_ITEM,
                 onClickEvent = MyListingsContract.Event.BottomSheet.OnShareListingClicked,
                 leadingIconData = BottomSheetContentItemIconData(
                     iconData = IconData(
@@ -265,6 +273,7 @@ private fun ModalBottomSheetContent(onBottomSheetEvent: (MyListingsContract.Even
             BottomSheetContentItem(
                 title = stringResource(R.string.screen_my_listings_bottom_sheet_item_delete),
                 titleColor = MaterialTheme.customColors.genericRed,
+                testTag = MyListingsTestTags.DELETE_LISTING_BOTTOM_SHEET_ITEM,
                 onClickEvent = MyListingsContract.Event.BottomSheet.OnDeleteListingClicked,
                 leadingIconData = BottomSheetContentItemIconData(
                     iconData = IconData(
@@ -282,6 +291,7 @@ private fun ModalBottomSheetContent(onBottomSheetEvent: (MyListingsContract.Even
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 private fun MyListingCard(
+    listingId: String,
     title: String,
     coverImageUrl: String,
     statusUi: ListingStatusUi,
@@ -317,10 +327,13 @@ private fun MyListingCard(
                 Icon(
                     painter = painterResource(R.drawable.ic_more),
                     contentDescription = stringResource(R.string.screen_my_listings_content_description_more_actions_listing),
-                    modifier = Modifier.clickableNoRipple(onClick = onMoreActionsButtonClicked)
+                    modifier = Modifier
+                        .testTag(MyListingsTestTags.listingMoreActionsButton(listingId))
+                        .clickableNoRipple(onClick = onMoreActionsButtonClicked)
                 )
             }
         },
+        modifier = Modifier.testTag(MyListingsTestTags.listingCard(listingId)),
         onClicked = onClicked
     )
 }

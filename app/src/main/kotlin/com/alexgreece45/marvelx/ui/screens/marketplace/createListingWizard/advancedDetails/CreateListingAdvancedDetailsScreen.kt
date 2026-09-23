@@ -14,6 +14,7 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
@@ -347,7 +348,9 @@ internal fun CreateListingAdvancedDetailsScreen(
             ExposedDropdownMenu(
                 label = stringResource(R.string.screen_create_listing_advanced_details_label_condition),
                 expanded = state.condition.isExpanded,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag(CreateListingAdvancedDetailsTestTags.CONDITION_DROPDOWN),
                 value = state.condition.value?.label,
                 enabled = state.wizardMode.canEdit,
                 onDismissRequest = {
@@ -360,7 +363,9 @@ internal fun CreateListingAdvancedDetailsScreen(
             ) {
                 state.conditions.forEach { condition ->
                     DropdownMenuItem(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag(CreateListingAdvancedDetailsTestTags.conditionOption(condition.code)),
                         onClick = {
                             onEvent(
                                 CreateListingAdvancedDetailsContract.Event.ConditionDropDownEvents.OnItemSelected(
@@ -401,7 +406,9 @@ private fun ApparelDetailsView(
     ExposedDropdownMenu(
         label = stringResource(R.string.screen_create_listing_advanced_details_label_apparel_size),
         expanded = apparelDetails.size.isExpanded,
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag(CreateListingAdvancedDetailsTestTags.APPAREL_SIZE_DROPDOWN),
         value = apparelDetails.size.value?.label,
         enabled = canEdit,
         onDismissRequest = onDismissRequest,
@@ -409,7 +416,9 @@ private fun ApparelDetailsView(
     ) {
         apparelDetails.sizes.forEach { size ->
             DropdownMenuItem(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag(CreateListingAdvancedDetailsTestTags.apparelSizeOption(size.code)),
                 onClick = {
                     onDropDownMenuItemSelected(size)
                 }
@@ -424,6 +433,9 @@ private fun ApparelDetailsView(
     WizardTextInputField(
         label = stringResource(R.string.screen_create_listing_advanced_details_label_color),
         placeholder = stringResource(R.string.screen_create_listing_advanced_details_placeholder_color),
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag(CreateListingAdvancedDetailsTestTags.APPAREL_COLOR_TEXT_FIELD),
         wizardInputField = apparelDetails.color,
         onValueChanged = onColorChanged
     )
@@ -442,7 +454,9 @@ private fun DrinkwareDetailsView(
     ExposedDropdownMenu(
         label = stringResource(R.string.screen_create_listing_advanced_details_label_material),
         expanded = drinkwareDetails.material.isExpanded,
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag(CreateListingAdvancedDetailsTestTags.DRINKWARE_MATERIAL_DROPDOWN),
         value = drinkwareDetails.material.value?.label,
         enabled = canEdit,
         onDismissRequest = onDismissRequest,
@@ -450,7 +464,9 @@ private fun DrinkwareDetailsView(
     ) {
         drinkwareDetails.materials.forEach { material ->
             DropdownMenuItem(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag(CreateListingAdvancedDetailsTestTags.drinkwareMaterialOption(material.code)),
                 onClick = {
                     onDropDownMenuItemSelected(material)
                 }
@@ -466,6 +482,9 @@ private fun DrinkwareDetailsView(
         label = stringResource(R.string.screen_create_listing_advanced_details_label_capacity),
         placeholder = stringResource(R.string.screen_create_listing_advanced_details_placeholder_capacity),
         enabled = canEdit,
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag(CreateListingAdvancedDetailsTestTags.DRINKWARE_CAPACITY_TEXT_FIELD),
         wizardInputField = drinkwareDetails.capacityMl,
         onValueChanged = onCapacityMlChanged,
         keyboardOptions = KeyboardOptions(
@@ -478,8 +497,9 @@ private fun DrinkwareDetailsView(
         label = stringResource(R.string.screen_create_listing_advanced_details_label_dishwasher_safe),
         checked = drinkwareDetails.dishwasherSafe,
         onCheckedChange = onDishwasherSafeCheckboxChanged,
-        enabled = canEdit
-    )
+        enabled = canEdit,
+        modifier = Modifier.testTag(CreateListingAdvancedDetailsTestTags.DRINKWARE_DISHWASHER_SAFE_CHECKBOX)
+)
 }
 
 @Composable
@@ -496,7 +516,9 @@ private fun CollectibleDetailsView(
     ExposedDropdownMenu(
         label = stringResource(R.string.screen_create_listing_advanced_details_label_scale),
         expanded = collectibleDetails.scale.isExpanded,
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag(CreateListingAdvancedDetailsTestTags.COLLECTIBLE_SCALE_DROPDOWN),
         value = collectibleDetails.scale.value?.label,
         enabled = canEdit,
         onDismissRequest = onScaleDropDownDismissed,
@@ -504,7 +526,9 @@ private fun CollectibleDetailsView(
     ) {
         collectibleDetails.scales.forEach { scale ->
             DropdownMenuItem(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag(CreateListingAdvancedDetailsTestTags.collectibleScaleOption(scale.code)),
                 onClick = {
                     onScaleDropDownItemSelected(scale)
                 }
@@ -519,7 +543,9 @@ private fun CollectibleDetailsView(
     ExposedDropdownMenu(
         label = stringResource(R.string.screen_create_listing_advanced_details_label_box_condition),
         expanded = collectibleDetails.boxCondition.isExpanded,
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag(CreateListingAdvancedDetailsTestTags.COLLECTIBLE_BOX_CONDITION_DROPDOWN),
         value = collectibleDetails.boxCondition.value?.label,
         enabled = canEdit,
         onDismissRequest = onBoxConditionDropDownDismissed,
@@ -527,7 +553,9 @@ private fun CollectibleDetailsView(
     ) {
         collectibleDetails.boxConditions.forEach { boxCondition ->
             DropdownMenuItem(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag(CreateListingAdvancedDetailsTestTags.collectibleBoxConditionOption(boxCondition.code)),
                 onClick = {
                     onBoxConditionDropDownItemSelected(boxCondition)
                 }
@@ -552,6 +580,9 @@ private fun ArtDetailsView(
         label = stringResource(R.string.screen_create_listing_advanced_details_label_width),
         placeholder = stringResource(R.string.screen_create_listing_advanced_details_placeholder_width),
         enabled = canEdit,
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag(CreateListingAdvancedDetailsTestTags.ART_WIDTH_TEXT_FIELD),
         wizardInputField = artDetails.dimensions.width,
         onValueChanged = onWidthChanged,
         keyboardOptions = KeyboardOptions(
@@ -564,6 +595,9 @@ private fun ArtDetailsView(
         label = stringResource(R.string.screen_create_listing_advanced_details_label_height),
         placeholder = stringResource(R.string.screen_create_listing_advanced_details_placeholder_height),
         enabled = canEdit,
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag(CreateListingAdvancedDetailsTestTags.ART_HEIGHT_TEXT_FIELD),
         wizardInputField = artDetails.dimensions.height,
         onValueChanged = onHeightChanged,
         keyboardOptions = KeyboardOptions(
@@ -575,7 +609,8 @@ private fun ArtDetailsView(
     WrapCheckbox(
         label = stringResource(R.string.screen_create_listing_advanced_details_label_framed),
         checked = artDetails.framed,
-        onCheckedChange = { onFramedCheckedChanged() }
+        onCheckedChange = { onFramedCheckedChanged() },
+        modifier = Modifier.testTag(CreateListingAdvancedDetailsTestTags.ART_FRAMED_CHECKBOX)
     )
 }
 
@@ -591,7 +626,9 @@ private fun AccessoryDetailsView(
     ExposedDropdownMenu(
         label = stringResource(R.string.screen_create_listing_advanced_details_label_material),
         expanded = accessoryDetails.material.isExpanded,
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag(CreateListingAdvancedDetailsTestTags.ACCESSORY_MATERIAL_DROPDOWN),
         value = accessoryDetails.material.value?.label,
         enabled = canEdit,
         onDismissRequest = onMaterialDropDownDismissed,
@@ -599,7 +636,9 @@ private fun AccessoryDetailsView(
     ) {
         accessoryDetails.materials.forEach { material ->
             DropdownMenuItem(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag(CreateListingAdvancedDetailsTestTags.accessoryMaterialOption(material.code)),
                 onClick = {
                     onMaterialDropDownItemSelected(material)
                 }
@@ -615,6 +654,9 @@ private fun AccessoryDetailsView(
         label = stringResource(R.string.screen_create_listing_advanced_details_label_color),
         placeholder = stringResource(R.string.screen_create_listing_advanced_details_placeholder_color),
         enabled = canEdit,
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag(CreateListingAdvancedDetailsTestTags.ACCESSORY_COLOR_TEXT_FIELD),
         wizardInputField = accessoryDetails.color,
         onValueChanged = onColorChanged,
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
@@ -632,6 +674,9 @@ private fun HomeDetailsView(
         label = stringResource(R.string.screen_create_listing_advanced_details_label_width),
         placeholder = stringResource(R.string.screen_create_listing_advanced_details_placeholder_width),
         enabled = canEdit,
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag(CreateListingAdvancedDetailsTestTags.HOME_WIDTH_TEXT_FIELD),
         wizardInputField = homeDetails.dimensions.width,
         onValueChanged = onWidthChanged,
         keyboardOptions = KeyboardOptions(
@@ -644,6 +689,9 @@ private fun HomeDetailsView(
         label = stringResource(R.string.screen_create_listing_advanced_details_label_height),
         placeholder = stringResource(R.string.screen_create_listing_advanced_details_placeholder_height),
         enabled = canEdit,
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag(CreateListingAdvancedDetailsTestTags.HOME_HEIGHT_TEXT_FIELD),
         wizardInputField = homeDetails.dimensions.height,
         onValueChanged = onHeightChanged,
         keyboardOptions = KeyboardOptions(
@@ -666,7 +714,9 @@ private fun ComicDetailsView(
     ExposedDropdownMenu(
         label = stringResource(R.string.screen_create_listing_advanced_details_label_grade),
         expanded = comicDetails.grade.isExpanded,
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag(CreateListingAdvancedDetailsTestTags.COMIC_GRADE_DROPDOWN),
         value = comicDetails.grade.value?.label,
         enabled = canEdit,
         onDismissRequest = onGradeDropDownDismissed,
@@ -674,7 +724,9 @@ private fun ComicDetailsView(
     ) {
         comicDetails.grades.forEach { grade ->
             DropdownMenuItem(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag(CreateListingAdvancedDetailsTestTags.comicGradeOption(grade.code)),
                 onClick = {
                     onGradeDropDownItemSelected(grade)
                 }
@@ -690,6 +742,9 @@ private fun ComicDetailsView(
         label = stringResource(R.string.screen_create_listing_advanced_details_label_publisher),
         placeholder = stringResource(R.string.screen_create_listing_advanced_details_placeholder_publisher),
         enabled = canEdit,
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag(CreateListingAdvancedDetailsTestTags.COMIC_PUBLISHER_TEXT_FIELD),
         wizardInputField = comicDetails.publisher,
         onValueChanged = onPublisherChanged,
         keyboardOptions = KeyboardOptions(
@@ -701,6 +756,9 @@ private fun ComicDetailsView(
         label = stringResource(R.string.screen_create_listing_advanced_details_label_year),
         placeholder = stringResource(R.string.screen_create_listing_advanced_details_placeholder_year),
         enabled = canEdit,
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag(CreateListingAdvancedDetailsTestTags.COMIC_YEAR_TEXT_FIELD),
         wizardInputField = comicDetails.year,
         onValueChanged = onYearChanged,
         keyboardOptions = KeyboardOptions(
@@ -726,7 +784,9 @@ private fun CardDetailsView(
     ExposedDropdownMenu(
         label = stringResource(R.string.screen_create_listing_advanced_details_label_grade),
         expanded = cardDetails.grade.isExpanded,
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag(CreateListingAdvancedDetailsTestTags.CARD_GRADE_DROPDOWN),
         value = cardDetails.grade.value?.label,
         enabled = canEdit,
         onDismissRequest = onGradeDropDownDismissed,
@@ -734,7 +794,9 @@ private fun CardDetailsView(
     ) {
         cardDetails.grades.forEach { grade ->
             DropdownMenuItem(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag(CreateListingAdvancedDetailsTestTags.cardGradeOption(grade.code)),
                 onClick = {
                     onGradeDropDownItemSelected(grade)
                 }
@@ -749,7 +811,9 @@ private fun CardDetailsView(
     ExposedDropdownMenu(
         label = stringResource(R.string.screen_create_listing_advanced_details_label_rarity),
         expanded = cardDetails.rarity.isExpanded,
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag(CreateListingAdvancedDetailsTestTags.CARD_RARITY_DROPDOWN),
         value = cardDetails.rarity.value?.label,
         enabled = canEdit,
         onDismissRequest = onRarityDropDownDismissed,
@@ -757,7 +821,9 @@ private fun CardDetailsView(
     ) {
         cardDetails.rarities.forEach { rarity ->
             DropdownMenuItem(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag(CreateListingAdvancedDetailsTestTags.cardRarityOption(rarity.code)),
                 onClick = {
                     onRarityDropDownItemSelected(rarity)
                 }
@@ -772,7 +838,9 @@ private fun CardDetailsView(
     ExposedDropdownMenu(
         label = stringResource(R.string.screen_create_listing_advanced_details_label_variant),
         expanded = cardDetails.variant.isExpanded,
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag(CreateListingAdvancedDetailsTestTags.CARD_VARIANT_DROPDOWN),
         value = cardDetails.variant.value?.label,
         enabled = canEdit,
         onDismissRequest = onVariantDropDownDismissed,
@@ -780,7 +848,9 @@ private fun CardDetailsView(
     ) {
         cardDetails.variants.forEach { variant ->
             DropdownMenuItem(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag(CreateListingAdvancedDetailsTestTags.cardVariantOption(variant.code)),
                 onClick = {
                     onVariantDropDownItemSelected(variant)
                 }
@@ -802,7 +872,9 @@ private fun PriceView(
     OutlinedTextFieldValidation(
         value = priceField.value,
         onValueChange = onValueChanged,
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag(CreateListingAdvancedDetailsTestTags.PRICE_TEXT_FIELD),
         enabled = canEdit,
         label = stringResource(R.string.screen_create_listing_advanced_details_label_price),
         placeholder = stringResource(R.string.screen_create_listing_advanced_details_placeholder_price),

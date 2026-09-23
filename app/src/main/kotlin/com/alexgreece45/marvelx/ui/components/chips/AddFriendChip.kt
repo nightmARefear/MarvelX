@@ -5,6 +5,7 @@ import androidx.compose.material.ChipDefaults
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.alexgreece45.marvelx.R
@@ -20,9 +21,10 @@ import com.alexgreece45.marvelx.ui_theme.theme.values.customColors
  */
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun AddFriendChip(onClick: () -> Unit, isLoading: Boolean) {
+fun AddFriendChip(onClick: () -> Unit, isLoading: Boolean, modifier: Modifier = Modifier) {
     LoadingChip(
         onClick = onClick,
+        modifier = modifier,
         label = stringResource(R.string.generic_chip_label_add_friend),
         isLoading = isLoading,
         colors = ChipDefaults.chipColors(

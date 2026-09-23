@@ -44,6 +44,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -179,7 +180,8 @@ internal fun OrderItemTrackingHistoryScreen(
             navigableAction = ScreenNavigableAction.Backable(
                 onBack = {
                     onEvent(OrderItemTrackingHistoryContract.Event.OnBack)
-                }
+                },
+                testTag = OrderItemTrackingHistoryTestTags.BACK_BUTTON
             ),
             onBack = {
                 onEvent(OrderItemTrackingHistoryContract.Event.OnBack)
@@ -205,6 +207,7 @@ internal fun OrderItemTrackingHistoryScreen(
                                 state.orderItemDetails.orderItemId.formatted
                             ),
                             buttonLabel = stringResource(if (isErrorTypeNoData) R.string.generic_go_back else R.string.generic_retry_button),
+                            buttonTestTag = OrderItemTrackingHistoryTestTags.ERROR_RETRY_BUTTON,
                             onErrorButtonClick = {
                                 onEvent(OrderItemTrackingHistoryContract.Event.OnErrorButtonClicked)
                             }
@@ -276,7 +279,9 @@ internal fun OrderItemTrackingHistoryScreen(
                                 onClick = {
                                     onEvent(OrderItemTrackingHistoryContract.Event.OnContactSellerButtonClicked)
                                 },
-                                modifier = Modifier.fillMaxWidth()
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .testTag(OrderItemTrackingHistoryTestTags.CONTACT_SELLER_BUTTON)
                             ) {
                                 Row(
                                     horizontalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp),
@@ -346,6 +351,7 @@ private fun OrderItemCard(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .testTag(OrderItemTrackingHistoryTestTags.CURRENT_STATUS_CARD)
                         .clickableNoRipple(
                             enabled = status is OrderItemStatusUi.Delivered,
                             onClick = onCurrentStatusClicked
@@ -430,6 +436,7 @@ private fun SellerDetailsCard(
             GenericErrorScreen(
                 errorMessage = stringResource(R.string.screen_order_item_tracking_history_error_label_fetching_seller_info),
                 modifier = Modifier.fillMaxWidth(),
+                buttonTestTag = OrderItemTrackingHistoryTestTags.SELLER_DETAILS_ERROR_RETRY_BUTTON,
                 onErrorButtonClick = onErrorButtonClicked
             )
         }
@@ -437,6 +444,7 @@ private fun SellerDetailsCard(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .testTag(OrderItemTrackingHistoryTestTags.SELLER_DETAILS_CARD)
                     .clickableNoRipple(onClick = onClicked),
                 horizontalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp),
                 verticalAlignment = Alignment.CenterVertically
@@ -531,7 +539,10 @@ private fun CourierCard(
                             style = MaterialTheme.typography.subtitle1
                         )
 
-                        ThrottledIconButton(onClick = onCopyButtonClicked) {
+                        ThrottledIconButton(
+                            onClick = onCopyButtonClicked,
+                            modifier = Modifier.testTag(OrderItemTrackingHistoryTestTags.COPY_TRACKING_ID_BUTTON)
+                        ) {
                             Icon(
                                 painter = painterResource(R.drawable.ic_copy),
                                 contentDescription = stringResource(R.string.screen_order_item_tracking_history_content_description_copy_tracking_id)
@@ -546,7 +557,9 @@ private fun CourierCard(
 
             WrapOutlinedButton(
                 onClick = onViewOnCourierWebsiteButtonClicked,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag(OrderItemTrackingHistoryTestTags.VIEW_ON_COURIER_WEBSITE_BUTTON)
             ) {
                 Text(
                     text = stringResource(R.string.screen_order_item_tracking_history_courier_card_button)
@@ -694,6 +707,7 @@ private fun ReturnCard(
                 additionalContent = {
                     GenericCardButton(
                         label = stringResource(R.string.screen_order_item_tracking_history_return_section_button_request_return),
+                        testTag = OrderItemTrackingHistoryTestTags.RETURN_ACTION_BUTTON,
                         onClick = onRequestReturnClicked
                     )
                 }
@@ -753,6 +767,7 @@ private fun ReturnCard(
                 additionalContent = {
                     GenericCardButton(
                         label = stringResource(R.string.screen_order_item_tracking_history_return_section_button_view_return_request),
+                        testTag = OrderItemTrackingHistoryTestTags.RETURN_ACTION_BUTTON,
                         onClick = onRequestReturnClicked
                     )
                 }
@@ -769,6 +784,7 @@ private fun ReturnCard(
                     GenericCardButton(
                         label = stringResource(R.string.screen_order_item_tracking_history_return_card_rejected_action_button),
                         backgroundColor = MaterialTheme.customColors.buttonBackgroundNegative,
+                        testTag = OrderItemTrackingHistoryTestTags.RETURN_ACTION_BUTTON,
                         onClick = onRequestReturnClicked
                     )
                 }
@@ -785,6 +801,7 @@ private fun ReturnCard(
                     GenericCardButton(
                         label = stringResource(R.string.screen_order_item_tracking_history_return_card_accepted_action_button),
                         backgroundColor = MaterialTheme.customColors.buttonBackgroundPositive,
+                        testTag = OrderItemTrackingHistoryTestTags.RETURN_ACTION_BUTTON,
                         onClick = onRequestReturnClicked
                     )
                 }
@@ -811,6 +828,7 @@ private fun RefundCard(
                 additionalContent = {
                     GenericCardButton(
                         label = stringResource(R.string.screen_order_item_tracking_history_refund_section_button_request_refund),
+                        testTag = OrderItemTrackingHistoryTestTags.REFUND_ACTION_BUTTON,
                         onClick = onButtonClicked
                     )
                 }
@@ -867,6 +885,7 @@ private fun RefundCard(
                 additionalContent = {
                     GenericCardButton(
                         label = stringResource(R.string.screen_order_item_tracking_history_refund_section_button_view_refund_request),
+                        testTag = OrderItemTrackingHistoryTestTags.REFUND_ACTION_BUTTON,
                         onClick = onButtonClicked
                     )
                 }
@@ -883,6 +902,7 @@ private fun RefundCard(
                     GenericCardButton(
                         label = stringResource(R.string.screen_order_item_tracking_history_refund_card_rejected_action_button),
                         backgroundColor = MaterialTheme.customColors.buttonBackgroundNegative,
+                        testTag = OrderItemTrackingHistoryTestTags.REFUND_ACTION_BUTTON,
                         onClick = onButtonClicked
                     )
                 }
@@ -899,6 +919,7 @@ private fun RefundCard(
                     GenericCardButton(
                         label = stringResource(R.string.screen_order_item_tracking_history_refund_card_accepted_action_button),
                         backgroundColor = MaterialTheme.customColors.buttonBackgroundPositive,
+                        testTag = OrderItemTrackingHistoryTestTags.REFUND_ACTION_BUTTON,
                         onClick = onButtonClicked
                     )
                 }
@@ -948,12 +969,15 @@ private fun GenericCard(
 @Composable
 private fun GenericCardButton(
     label: String,
+    testTag: String,
     backgroundColor: Color = ButtonDefaults.outlinedButtonColors().backgroundColor(true).value,
     onClick: () -> Unit
 ) {
     WrapOutlinedButton(
         onClick = onClick,
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag(testTag),
         colors = ButtonDefaults.outlinedButtonColors(backgroundColor = backgroundColor)
     ) {
         Text(text = label)

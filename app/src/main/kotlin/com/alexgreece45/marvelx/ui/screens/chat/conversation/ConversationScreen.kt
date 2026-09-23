@@ -29,6 +29,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -107,6 +108,7 @@ internal fun ConversationScreen(
     ContentScreen(
         isLoading = state.uiState.isLoading,
         navigableAction = ScreenNavigableAction.Backable(
+            testTag = ConversationTestTags.BACK_BUTTON,
             onBack = { onEvent(ConversationContract.Event.OnBack) }
         ),
         onBack = { onEvent(ConversationContract.Event.OnBack) },
@@ -197,6 +199,7 @@ private fun RowScope.ParticipantAvatar(
                 borderWidth = ConstantsUi.IMAGE_BORDER_WIDTH,
                 borderColor = MaterialTheme.customColors.genericRed
             )
+            .testTag(ConversationTestTags.PARTICIPANT_AVATAR)
             .clickableNoRipple(onClick = onClick)
     )
 }
@@ -214,6 +217,7 @@ private fun PinnedOrderItem(
         modifier = Modifier
             .fillMaxWidth()
             .padding(bottom = SPACING_SMALL.dp)
+            .testTag(ConversationTestTags.PINNED_ORDER_ITEM_CARD)
             .clickableNoRipple(onClick = onClick),
         shape = MaterialTheme.shapes.medium
     ) {
@@ -295,6 +299,7 @@ private fun ColumnScope.MessageList(
                 is ConversationListItemUi.DaySeparator -> DaySeparator(date = item.date)
                 is ConversationListItemUi.Message -> MessageBubble(
                     message = item.message,
+                    retryTestTag = ConversationTestTags.retryMessageButton(item.message.listKey),
                     onRetryClick = { item.message.clientMessageId?.let(onRetryMessageClick) }
                 )
             }
@@ -331,6 +336,7 @@ private fun DaySeparator(date: java.time.LocalDate) {
 @Composable
 private fun MessageBubble(
     message: ChatMessageUi,
+    retryTestTag: String,
     onRetryClick: () -> Unit
 ) {
     val isMine = message.isFromMe
@@ -387,7 +393,9 @@ private fun MessageBubble(
 
                 ChatMessageStatusUi.FAILED -> Text(
                     text = stringResource(R.string.screen_conversation_message_status_failed),
-                    modifier = Modifier.clickableNoRipple(onClick = onRetryClick),
+                    modifier = Modifier
+                        .testTag(retryTestTag)
+                        .clickableNoRipple(onClick = onRetryClick),
                     color = MaterialTheme.customColors.genericRed,
                     style = MaterialTheme.typography.caption
                 )
@@ -433,7 +441,9 @@ private fun Composer(
             ),
             label = "",
             placeholder = stringResource(R.string.screen_conversation_composer_placeholder),
-            modifier = Modifier.weight(1f),
+            modifier = Modifier
+                .weight(1f)
+                .testTag(ConversationTestTags.MESSAGE_TEXT_FIELD),
             onValueChanged = onTextChange,
             keyboardOptions = KeyboardOptions(
                 capitalization = KeyboardCapitalization.Sentences,
@@ -445,6 +455,7 @@ private fun Composer(
 
         ThrottledIconButton(
             onClick = onSendClick,
+            modifier = Modifier.testTag(ConversationTestTags.SEND_BUTTON),
             enabled = isSendEnabled
         ) {
             Icon(
@@ -472,18 +483,21 @@ private fun ConversationError(
             title = stringResource(R.string.screen_conversation_error_forbidden),
             buttonLabel = stringResource(R.string.generic_go_back),
             modifier = modifier,
+            buttonTestTag = ConversationTestTags.FORBIDDEN_GO_BACK_BUTTON,
             onButtonClick = onBackClick
         )
 
         ConversationErrorType.NoInternet -> GenericErrorScreen(
             errorMessage = stringResource(R.string.no_internet_connection_error_message),
             modifier = modifier,
+            buttonTestTag = ConversationTestTags.ERROR_RETRY_BUTTON,
             onErrorButtonClick = onRetryClick
         )
 
         ConversationErrorType.Generic -> GenericErrorScreen(
             errorMessage = stringResource(R.string.screen_conversation_error_loading),
             modifier = modifier,
+            buttonTestTag = ConversationTestTags.ERROR_RETRY_BUTTON,
             onErrorButtonClick = onRetryClick
         )
     }

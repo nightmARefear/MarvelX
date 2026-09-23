@@ -14,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -65,6 +66,7 @@ fun PrivacySettingsScreen(
         isLoading = state.isLoading,
         onBack = { onEventSent(PrivacySettingsEvent.OnBackClicked) },
         navigableAction = ScreenNavigableAction.Backable(
+            testTag = PrivacySettingsTestTags.BACK_BUTTON,
             onBack = {
                 onEventSent(
                     PrivacySettingsEvent.OnBackClicked
@@ -92,6 +94,7 @@ fun PrivacySettingsScreen(
                             PrivacySettingItem(
                                 label = stringResource(R.string.privacy_settings_screen_label_friends_list),
                                 isChecked = privacySettings.isFriendsListVisible,
+                                testTag = PrivacySettingsTestTags.FRIENDS_LIST_SWITCH,
                                 onCheckedToggle = {
                                     onEventSent(
                                         PrivacySettingsEvent.OnFriendsListToggleClicked(
@@ -104,6 +107,7 @@ fun PrivacySettingsScreen(
                             PrivacySettingItem(
                                 label = stringResource(R.string.privacy_settings_screen_label_listings_list),
                                 isChecked = privacySettings.isListingsListVisible,
+                                testTag = PrivacySettingsTestTags.LISTINGS_LIST_SWITCH,
                                 onCheckedToggle = {
                                     onEventSent(
                                         PrivacySettingsEvent.OnListingsListToggleClicked(
@@ -116,6 +120,7 @@ fun PrivacySettingsScreen(
                             PrivacySettingItem(
                                 label = stringResource(R.string.privacy_settings_screen_label_favorites_list),
                                 isChecked = privacySettings.isFavoritesListVisible,
+                                testTag = PrivacySettingsTestTags.FAVORITES_LIST_SWITCH,
                                 onCheckedToggle = {
                                     onEventSent(
                                         PrivacySettingsEvent.OnFavoritesListToggleClicked(
@@ -128,6 +133,7 @@ fun PrivacySettingsScreen(
                             PrivacySettingItem(
                                 label = stringResource(R.string.generic_label_gender),
                                 isChecked = privacySettings.isGenderVisible,
+                                testTag = PrivacySettingsTestTags.GENDER_SWITCH,
                                 onCheckedToggle = {
                                     onEventSent(
                                         PrivacySettingsEvent.OnGenderToggleClicked(
@@ -140,6 +146,7 @@ fun PrivacySettingsScreen(
                             PrivacySettingItem(
                                 label = stringResource(R.string.generic_label_email),
                                 isChecked = privacySettings.isEmailVisible,
+                                testTag = PrivacySettingsTestTags.EMAIL_SWITCH,
                                 onCheckedToggle = {
                                     onEventSent(
                                         PrivacySettingsEvent.OnEmailToggleClicked(
@@ -166,6 +173,7 @@ fun PrivacySettingsScreen(
 private fun PrivacySettingItem(
     label: String,
     isChecked: Boolean,
+    testTag: String,
     onCheckedToggle: (Boolean) -> Unit
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
@@ -181,7 +189,8 @@ private fun PrivacySettingItem(
 
             WrapSwitch(
                 checked = isChecked,
-                onCheckedToggle = onCheckedToggle
+                onCheckedToggle = onCheckedToggle,
+                modifier = Modifier.testTag(testTag)
             )
         }
 

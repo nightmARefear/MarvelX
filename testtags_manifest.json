@@ -1,0 +1,2358 @@
+{
+  "description": "Test tags added via Modifier.testTag(...). Static tags are exact ids; dynamic tags are templates keyed by an id / code / name. Tags are exposed as resource ids through testTagsAsResourceId on the root Surface in MainActivity and on AlertDialogError.",
+  "convention": "<screen>_<action>_<type>; shared components use a fixed role-based prefix (alert_dialog_, content_error_, sorting_, bottom_navigation_, checkout_info_card_).",
+  "objectCount": 47,
+  "screens": [
+    {
+      "screen": "AlertDialog",
+      "object": "AlertDialogTestTags",
+      "package": "com.alexgreece45.marvelx.ui.components",
+      "file": "app/src/main/kotlin/com/alexgreece45/marvelx/ui/components/AlertDialogTestTags.kt",
+      "tagCount": 2,
+      "tags": [
+        {
+          "name": "CONFIRM_BUTTON",
+          "kind": "static",
+          "tag": "alert_dialog_confirm_button",
+          "handles": "AlertDialogButton passed as `confirmButton`"
+        },
+        {
+          "name": "DISMISS_BUTTON",
+          "kind": "static",
+          "tag": "alert_dialog_dismiss_button",
+          "handles": "AlertDialogButton passed as `dismissButton`"
+        }
+      ]
+    },
+    {
+      "screen": "BottomNavigation",
+      "object": "BottomNavigationTestTags",
+      "package": "com.alexgreece45.marvelx.ui.components",
+      "file": "app/src/main/kotlin/com/alexgreece45/marvelx/ui/components/BottomNavigationTestTags.kt",
+      "tagCount": 5,
+      "tags": [
+        {
+          "name": "MARKETPLACE_ITEM",
+          "kind": "static",
+          "tag": "bottom_navigation_marketplace_item",
+          "handles": "Navigates to the Marketplace tab"
+        },
+        {
+          "name": "INBOX_ITEM",
+          "kind": "static",
+          "tag": "bottom_navigation_inbox_item",
+          "handles": "Navigates to the Inbox tab"
+        },
+        {
+          "name": "FAVORITES_ITEM",
+          "kind": "static",
+          "tag": "bottom_navigation_favorites_item",
+          "handles": "Navigates to the Favorites tab"
+        },
+        {
+          "name": "CART_ITEM",
+          "kind": "static",
+          "tag": "bottom_navigation_cart_item",
+          "handles": "Navigates to the Cart tab"
+        },
+        {
+          "name": "PROFILE_ITEM",
+          "kind": "static",
+          "tag": "bottom_navigation_profile_item",
+          "handles": "Navigates to the Profile tab"
+        }
+      ]
+    },
+    {
+      "screen": "CheckoutInfoCard",
+      "object": "CheckoutInfoCardTestTags",
+      "package": "com.alexgreece45.marvelx.ui.components.checkoutDataCard",
+      "file": "app/src/main/kotlin/com/alexgreece45/marvelx/ui/components/checkoutDataCard/CheckoutInfoCardTestTags.kt",
+      "tagCount": 2,
+      "tags": [
+        {
+          "name": "EDIT_SHIPPING_DETAILS_BUTTON",
+          "kind": "static",
+          "tag": "checkout_info_card_edit_shipping_details_button",
+          "handles": "`onShippingDetailsEditButtonClicked`"
+        },
+        {
+          "name": "EDIT_PAYMENT_DETAILS_BUTTON",
+          "kind": "static",
+          "tag": "checkout_info_card_edit_payment_details_button",
+          "handles": "`onPaymentDetailsEditButtonClicked`"
+        }
+      ]
+    },
+    {
+      "screen": "ContentError",
+      "object": "ContentErrorTestTags",
+      "package": "com.alexgreece45.marvelx.ui.components.error",
+      "file": "app/src/main/kotlin/com/alexgreece45/marvelx/ui/components/error/ContentErrorTestTags.kt",
+      "tagCount": 3,
+      "tags": [
+        {
+          "name": "CLOSE_BUTTON",
+          "kind": "static",
+          "tag": "content_error_close_button",
+          "handles": "`onClose` toolbar button"
+        },
+        {
+          "name": "PRIMARY_BUTTON",
+          "kind": "static",
+          "tag": "content_error_primary_button",
+          "handles": "ErrorButtonLayout.onPrimaryButtonClicked"
+        },
+        {
+          "name": "SECONDARY_BUTTON",
+          "kind": "static",
+          "tag": "content_error_secondary_button",
+          "handles": "ErrorButtonLayout.Double.onSecondaryButtonClicked"
+        }
+      ]
+    },
+    {
+      "screen": "Sorting",
+      "object": "SortingTestTags",
+      "package": "com.alexgreece45.marvelx.ui.components",
+      "file": "app/src/main/kotlin/com/alexgreece45/marvelx/ui/components/SortingTestTags.kt",
+      "tagCount": 4,
+      "tags": [
+        {
+          "name": "CLOSE_BUTTON",
+          "kind": "static",
+          "tag": "sorting_close_button",
+          "handles": "`onCloseClick`"
+        },
+        {
+          "name": "item",
+          "kind": "static",
+          "tag": "sorting_random_item",
+          "handles": "`onItemClick`; one tag per SortingType"
+        },
+        {
+          "name": "item",
+          "kind": "static",
+          "tag": "sorting_text_ascending_item",
+          "handles": "`onItemClick`; one tag per SortingType"
+        },
+        {
+          "name": "item",
+          "kind": "static",
+          "tag": "sorting_text_descending_item",
+          "handles": "`onItemClick`; one tag per SortingType"
+        }
+      ]
+    },
+    {
+      "screen": "AllCharacters",
+      "object": "AllCharactersTestTags",
+      "package": "com.alexgreece45.marvelx.ui.screens.allCharacters",
+      "file": "app/src/main/kotlin/com/alexgreece45/marvelx/ui/screens/allCharacters/AllCharactersTestTags.kt",
+      "tagCount": 6,
+      "tags": [
+        {
+          "name": "SORT_FAB",
+          "kind": "static",
+          "tag": "all_characters_sort_fab",
+          "handles": "AllCharactersEvent.OnFabClick (opens the shared sorting bottom sheet, whose items and `Close` button use the shared `sorting_*` tags)"
+        },
+        {
+          "name": "ERROR_RETRY_BUTTON",
+          "kind": "static",
+          "tag": "all_characters_error_retry_button",
+          "handles": "Error `onRetryClick`"
+        },
+        {
+          "name": "SEARCH_TEXT_FIELD",
+          "kind": "static",
+          "tag": "all_characters_search_text_field",
+          "handles": "AllCharactersEvent.SearchBar.OnKeyboardType"
+        },
+        {
+          "name": "SEARCH_CLEAR_BUTTON",
+          "kind": "static",
+          "tag": "all_characters_search_clear_button",
+          "handles": "AllCharactersEvent.SearchBar.OnCloseClick"
+        },
+        {
+          "name": "characterCard",
+          "kind": "dynamic",
+          "template": "all_characters_character_{characterId}_card",
+          "args": "characterId: Any",
+          "handles": "AllCharactersEvent.OnCharacterClick; one tag per character, keyed by the character id (e.g. `all_characters_character_1009610_card`)."
+        },
+        {
+          "name": "characterFavoriteButton",
+          "kind": "dynamic",
+          "template": "all_characters_character_{characterId}_favorite_button",
+          "args": "characterId: Any",
+          "handles": "AllCharactersEvent.OnHeartClick; one tag per character."
+        }
+      ]
+    },
+    {
+      "screen": "Cart",
+      "object": "CartTestTags",
+      "package": "com.alexgreece45.marvelx.ui.screens.cart",
+      "file": "app/src/main/kotlin/com/alexgreece45/marvelx/ui/screens/cart/CartTestTags.kt",
+      "tagCount": 7,
+      "tags": [
+        {
+          "name": "ERROR_RETRY_BUTTON",
+          "kind": "static",
+          "tag": "cart_error_retry_button",
+          "handles": "CartContract.Event.OnErrorButtonClicked"
+        },
+        {
+          "name": "EMPTY_CART_BUTTON",
+          "kind": "static",
+          "tag": "cart_empty_cart_button",
+          "handles": "CartContract.Event.OnEmptyCartViewButtonClicked"
+        },
+        {
+          "name": "SUMMARY_ERROR_RETRY_BUTTON",
+          "kind": "static",
+          "tag": "cart_summary_error_retry_button",
+          "handles": "CartContract.Event.OnCartSummaryErrorButtonClicked"
+        },
+        {
+          "name": "SUMMARY_BUTTON",
+          "kind": "static",
+          "tag": "cart_summary_button",
+          "handles": "CartContract.Event.OnCartSummaryButtonClicked (`Proceed` / `Pay`)"
+        },
+        {
+          "name": "itemCard",
+          "kind": "dynamic",
+          "template": "cart_item_{listingId}_card",
+          "args": "listingId: String",
+          "handles": "CartContract.Event.CartItemEvents.OnClicked; one tag per cart item, keyed by the listing id (e.g. `cart_item_42_card`)."
+        },
+        {
+          "name": "itemFavoriteButton",
+          "kind": "dynamic",
+          "template": "cart_item_{listingId}_favorite_button",
+          "args": "listingId: String",
+          "handles": "CartContract.Event.CartItemEvents.OnFavoriteButtonClicked; one tag per cart item."
+        },
+        {
+          "name": "itemDeleteButton",
+          "kind": "dynamic",
+          "template": "cart_item_{listingId}_delete_button",
+          "args": "listingId: String",
+          "handles": "CartContract.Event.CartItemEvents.OnDeleteButtonClicked; one tag per cart item."
+        }
+      ]
+    },
+    {
+      "screen": "CheckoutWizard",
+      "object": "CheckoutWizardTestTags",
+      "package": "com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard",
+      "file": "app/src/main/kotlin/com/alexgreece45/marvelx/ui/screens/cart/checkoutWizard/CheckoutWizardTestTags.kt",
+      "tagCount": 3,
+      "tags": [
+        {
+          "name": "CLOSE_BUTTON",
+          "kind": "static",
+          "tag": "checkout_wizard_close_button",
+          "handles": "CheckoutWizardContract.Event.OnCloseButtonClicked (shipping details step)"
+        },
+        {
+          "name": "BACK_BUTTON",
+          "kind": "static",
+          "tag": "checkout_wizard_back_button",
+          "handles": "CheckoutWizardContract.Event.OnBackButtonClicked (payment details and overview steps)"
+        },
+        {
+          "name": "NEXT_BUTTON",
+          "kind": "static",
+          "tag": "checkout_wizard_next_button",
+          "handles": "CheckoutWizardContract.Event.OnStickyBottomButtonClicked"
+        }
+      ]
+    },
+    {
+      "screen": "CheckoutPaymentDetails",
+      "object": "CheckoutPaymentDetailsTestTags",
+      "package": "com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.steps.paymentDetails",
+      "file": "app/src/main/kotlin/com/alexgreece45/marvelx/ui/screens/cart/checkoutWizard/steps/paymentDetails/CheckoutPaymentDetailsTestTags.kt",
+      "tagCount": 4,
+      "tags": [
+        {
+          "name": "CARDHOLDER_NAME_TEXT_FIELD",
+          "kind": "static",
+          "tag": "checkout_payment_details_cardholder_name_text_field",
+          "handles": "CheckoutPaymentDetailsContract.Event.OnCardholderNameChanged"
+        },
+        {
+          "name": "CARD_NUMBER_TEXT_FIELD",
+          "kind": "static",
+          "tag": "checkout_payment_details_card_number_text_field",
+          "handles": "CheckoutPaymentDetailsContract.Event.OnCardNumberChanged"
+        },
+        {
+          "name": "EXPIRATION_DATE_TEXT_FIELD",
+          "kind": "static",
+          "tag": "checkout_payment_details_expiration_date_text_field",
+          "handles": "CheckoutPaymentDetailsContract.Event.OnExpirationDateChanged"
+        },
+        {
+          "name": "CVV_TEXT_FIELD",
+          "kind": "static",
+          "tag": "checkout_payment_details_cvv_text_field",
+          "handles": "CheckoutPaymentDetailsContract.Event.OnCvvChanged"
+        }
+      ]
+    },
+    {
+      "screen": "CheckoutShippingDetails",
+      "object": "CheckoutShippingDetailsTestTags",
+      "package": "com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.steps.shippingDetails",
+      "file": "app/src/main/kotlin/com/alexgreece45/marvelx/ui/screens/cart/checkoutWizard/steps/shippingDetails/CheckoutShippingDetailsTestTags.kt",
+      "tagCount": 9,
+      "tags": [
+        {
+          "name": "FIRST_NAME_TEXT_FIELD",
+          "kind": "static",
+          "tag": "checkout_shipping_details_first_name_text_field",
+          "handles": "CheckoutShippingDetailsContract.Event.OnFirstNameChanged"
+        },
+        {
+          "name": "LAST_NAME_TEXT_FIELD",
+          "kind": "static",
+          "tag": "checkout_shipping_details_last_name_text_field",
+          "handles": "CheckoutShippingDetailsContract.Event.OnLastNameChanged"
+        },
+        {
+          "name": "STREET_ADDRESS_TEXT_FIELD",
+          "kind": "static",
+          "tag": "checkout_shipping_details_street_address_text_field",
+          "handles": "CheckoutShippingDetailsContract.Event.OnStreetAddressChanged"
+        },
+        {
+          "name": "CITY_TEXT_FIELD",
+          "kind": "static",
+          "tag": "checkout_shipping_details_city_text_field",
+          "handles": "CheckoutShippingDetailsContract.Event.OnCityChanged"
+        },
+        {
+          "name": "ZIP_CODE_TEXT_FIELD",
+          "kind": "static",
+          "tag": "checkout_shipping_details_zip_code_text_field",
+          "handles": "CheckoutShippingDetailsContract.Event.OnZipCodeChanged"
+        },
+        {
+          "name": "FLOOR_NUMBER_DROPDOWN",
+          "kind": "static",
+          "tag": "checkout_shipping_details_floor_number_dropdown",
+          "handles": "CheckoutShippingDetailsContract.Event.FloorNumber.OnClicked / OnDismissed"
+        },
+        {
+          "name": "LOCATION_TYPE_DROPDOWN",
+          "kind": "static",
+          "tag": "checkout_shipping_details_location_type_dropdown",
+          "handles": "CheckoutShippingDetailsContract.Event.LocationType.OnClicked / OnDismissed"
+        },
+        {
+          "name": "floorNumberOption",
+          "kind": "dynamic",
+          "template": "checkout_shipping_details_floor_number_{code}_option",
+          "args": "code: String",
+          "handles": "CheckoutShippingDetailsContract.Event.FloorNumber.OnItemSelected; one tag per option, keyed by `EnumGeneric.code`."
+        },
+        {
+          "name": "locationTypeOption",
+          "kind": "dynamic",
+          "template": "checkout_shipping_details_location_type_{code}_option",
+          "args": "code: String",
+          "handles": "CheckoutShippingDetailsContract.Event.LocationType.OnItemSelected; one tag per option, keyed by `EnumGeneric.code`."
+        }
+      ]
+    },
+    {
+      "screen": "CheckoutSuccess",
+      "object": "CheckoutSuccessTestTags",
+      "package": "com.alexgreece45.marvelx.ui.screens.cart.checkoutWizard.steps.success",
+      "file": "app/src/main/kotlin/com/alexgreece45/marvelx/ui/screens/cart/checkoutWizard/steps/success/CheckoutSuccessTestTags.kt",
+      "tagCount": 3,
+      "tags": [
+        {
+          "name": "CLOSE_BUTTON",
+          "kind": "static",
+          "tag": "checkout_success_close_button",
+          "handles": "CheckoutSuccessContract.Event.OnBack (toolbar `Close` button)"
+        },
+        {
+          "name": "VIEW_ORDER_DETAILS_BUTTON",
+          "kind": "static",
+          "tag": "checkout_success_view_order_details_button",
+          "handles": "CheckoutSuccessContract.Event.OnViewOrderDetailsButtonClicked"
+        },
+        {
+          "name": "CONTINUE_SHOPPING_BUTTON",
+          "kind": "static",
+          "tag": "checkout_success_continue_shopping_button",
+          "handles": "CheckoutSuccessContract.Event.OnContinueShoppingButtonClicked"
+        }
+      ]
+    },
+    {
+      "screen": "ChangePassword",
+      "object": "ChangePasswordTestTags",
+      "package": "com.alexgreece45.marvelx.ui.screens.changePassword",
+      "file": "app/src/main/kotlin/com/alexgreece45/marvelx/ui/screens/changePassword/ChangePasswordTestTags.kt",
+      "tagCount": 6,
+      "tags": [
+        {
+          "name": "BACK_BUTTON",
+          "kind": "static",
+          "tag": "change_password_back_button",
+          "handles": "ChangePasswordContract.Event.OnBackClicked"
+        },
+        {
+          "name": "PASSWORD_TEXT_FIELD",
+          "kind": "static",
+          "tag": "change_password_password_text_field",
+          "handles": "ChangePasswordContract.Event.OnPasswordChanged"
+        },
+        {
+          "name": "PASSWORD_VISIBILITY_BUTTON",
+          "kind": "static",
+          "tag": "change_password_password_visibility_button",
+          "handles": "ChangePasswordContract.Event.OnTogglePasswordVisibility"
+        },
+        {
+          "name": "CONFIRM_PASSWORD_TEXT_FIELD",
+          "kind": "static",
+          "tag": "change_password_confirm_password_text_field",
+          "handles": "ChangePasswordContract.Event.OnConfirmPasswordChanged"
+        },
+        {
+          "name": "CONFIRM_PASSWORD_VISIBILITY_BUTTON",
+          "kind": "static",
+          "tag": "change_password_confirm_password_visibility_button",
+          "handles": "ChangePasswordContract.Event.OnToggleConfirmPasswordVisibility"
+        },
+        {
+          "name": "SUBMIT_BUTTON",
+          "kind": "static",
+          "tag": "change_password_submit_button",
+          "handles": "ChangePasswordContract.Event.OnSubmitClicked"
+        }
+      ]
+    },
+    {
+      "screen": "PasswordChanged",
+      "object": "PasswordChangedTestTags",
+      "package": "com.alexgreece45.marvelx.ui.screens.changePassword.passwordChanged",
+      "file": "app/src/main/kotlin/com/alexgreece45/marvelx/ui/screens/changePassword/passwordChanged/PasswordChangedTestTags.kt",
+      "tagCount": 1,
+      "tags": [
+        {
+          "name": "GO_TO_LOGIN_BUTTON",
+          "kind": "static",
+          "tag": "password_changed_go_to_login_button",
+          "handles": "onGoToLoginClick callback (no ViewModel; the NavGraph navigates to the Login screen)"
+        }
+      ]
+    },
+    {
+      "screen": "AllCharacterComics",
+      "object": "AllCharacterComicsTestTags",
+      "package": "com.alexgreece45.marvelx.ui.screens.character.allCharacterComicsScreen",
+      "file": "app/src/main/kotlin/com/alexgreece45/marvelx/ui/screens/character/allCharacterComicsScreen/AllCharacterComicsTestTags.kt",
+      "tagCount": 5,
+      "tags": [
+        {
+          "name": "BACK_BUTTON",
+          "kind": "static",
+          "tag": "all_character_comics_back_button",
+          "handles": "AllCharacterComicsEvent.OnBackClick"
+        },
+        {
+          "name": "ERROR_RETRY_BUTTON",
+          "kind": "static",
+          "tag": "all_character_comics_error_retry_button",
+          "handles": "Error `onRetryClick`"
+        },
+        {
+          "name": "NO_INTERNET_RETRY_BUTTON",
+          "kind": "static",
+          "tag": "all_character_comics_no_internet_retry_button",
+          "handles": "AllCharacterComicsEvent.Init (retry after losing the internet connection)"
+        },
+        {
+          "name": "SORT_DROPDOWN",
+          "kind": "static",
+          "tag": "all_character_comics_sort_dropdown",
+          "handles": "AllCharacterComicsEvent.OnDropDownArrowClick (opens the shared sorting bottom sheet, whose items and `Close` button use the shared `sorting_*` tags)"
+        },
+        {
+          "name": "comicItem",
+          "kind": "dynamic",
+          "template": "all_character_comics_comic_{comicId}_item",
+          "args": "comicId: Any",
+          "handles": "AllCharacterComicsEvent.OnComicClick; one tag per comic, keyed by the comic id (e.g. `all_character_comics_comic_1234_item`)."
+        }
+      ]
+    },
+    {
+      "screen": "Character",
+      "object": "CharacterTestTags",
+      "package": "com.alexgreece45.marvelx.ui.screens.character",
+      "file": "app/src/main/kotlin/com/alexgreece45/marvelx/ui/screens/character/CharacterTestTags.kt",
+      "tagCount": 5,
+      "tags": [
+        {
+          "name": "BACK_BUTTON",
+          "kind": "static",
+          "tag": "character_back_button",
+          "handles": "CharacterEvent.OnBackClick"
+        },
+        {
+          "name": "FAVORITE_BUTTON",
+          "kind": "static",
+          "tag": "character_favorite_button",
+          "handles": "CharacterEvent.OnFavoriteClick (toolbar action)"
+        },
+        {
+          "name": "ERROR_RETRY_BUTTON",
+          "kind": "static",
+          "tag": "character_error_retry_button",
+          "handles": "Error `onRetryClick`"
+        },
+        {
+          "name": "ALL_COMICS_BUTTON",
+          "kind": "static",
+          "tag": "character_all_comics_button",
+          "handles": "CharacterEvent.OnArrowRightClick (`See all comics`)"
+        },
+        {
+          "name": "comicItem",
+          "kind": "dynamic",
+          "template": "character_comic_{comicId}_item",
+          "args": "comicId: Any",
+          "handles": "CharacterEvent.OnComicClick; one tag per comic, keyed by the comic id (e.g. `character_comic_1234_item`)."
+        }
+      ]
+    },
+    {
+      "screen": "Conversation",
+      "object": "ConversationTestTags",
+      "package": "com.alexgreece45.marvelx.ui.screens.chat.conversation",
+      "file": "app/src/main/kotlin/com/alexgreece45/marvelx/ui/screens/chat/conversation/ConversationTestTags.kt",
+      "tagCount": 8,
+      "tags": [
+        {
+          "name": "BACK_BUTTON",
+          "kind": "static",
+          "tag": "conversation_back_button",
+          "handles": "ConversationContract.Event.OnBack"
+        },
+        {
+          "name": "PARTICIPANT_AVATAR",
+          "kind": "static",
+          "tag": "conversation_participant_avatar",
+          "handles": "ConversationContract.Event.OnParticipantClicked (toolbar avatar)"
+        },
+        {
+          "name": "PINNED_ORDER_ITEM_CARD",
+          "kind": "static",
+          "tag": "conversation_pinned_order_item_card",
+          "handles": "ConversationContract.Event.OnPinnedOrderItemClicked"
+        },
+        {
+          "name": "MESSAGE_TEXT_FIELD",
+          "kind": "static",
+          "tag": "conversation_message_text_field",
+          "handles": "ConversationContract.Event.OnMessageTextChanged"
+        },
+        {
+          "name": "SEND_BUTTON",
+          "kind": "static",
+          "tag": "conversation_send_button",
+          "handles": "ConversationContract.Event.OnSendClicked"
+        },
+        {
+          "name": "ERROR_RETRY_BUTTON",
+          "kind": "static",
+          "tag": "conversation_error_retry_button",
+          "handles": "ConversationContract.Event.OnErrorButtonClicked (no internet / generic error)"
+        },
+        {
+          "name": "FORBIDDEN_GO_BACK_BUTTON",
+          "kind": "static",
+          "tag": "conversation_forbidden_go_back_button",
+          "handles": "ConversationContract.Event.OnBack (forbidden error `Go back` button)"
+        },
+        {
+          "name": "retryMessageButton",
+          "kind": "dynamic",
+          "template": "conversation_message_{messageKey}_retry_button",
+          "args": "messageKey: String",
+          "handles": "ConversationContract.Event.OnRetryMessageClicked; one tag per failed message, keyed by the message list key (e.g. `conversation_message_c-123_retry_button`)."
+        }
+      ]
+    },
+    {
+      "screen": "Inbox",
+      "object": "InboxTestTags",
+      "package": "com.alexgreece45.marvelx.ui.screens.chat.inbox",
+      "file": "app/src/main/kotlin/com/alexgreece45/marvelx/ui/screens/chat/inbox/InboxTestTags.kt",
+      "tagCount": 3,
+      "tags": [
+        {
+          "name": "ERROR_RETRY_BUTTON",
+          "kind": "static",
+          "tag": "inbox_error_retry_button",
+          "handles": "InboxContract.Event.OnErrorButtonClicked"
+        },
+        {
+          "name": "EMPTY_INBOX_REFRESH_BUTTON",
+          "kind": "static",
+          "tag": "inbox_empty_inbox_refresh_button",
+          "handles": "InboxContract.Event.OnRefresh (empty inbox `Retry` button)"
+        },
+        {
+          "name": "conversationRow",
+          "kind": "dynamic",
+          "template": "inbox_conversation_{conversationId}_row",
+          "args": "conversationId: Any",
+          "handles": "InboxContract.Event.OnConversationClicked; one tag per conversation, keyed by the conversation id (e.g. `inbox_conversation_42_row`)."
+        }
+      ]
+    },
+    {
+      "screen": "Comic",
+      "object": "ComicTestTags",
+      "package": "com.alexgreece45.marvelx.ui.screens.comic",
+      "file": "app/src/main/kotlin/com/alexgreece45/marvelx/ui/screens/comic/ComicTestTags.kt",
+      "tagCount": 1,
+      "tags": [
+        {
+          "name": "BACK_BUTTON",
+          "kind": "static",
+          "tag": "comic_back_button",
+          "handles": "ComicContract.Event.OnBackClicked"
+        }
+      ]
+    },
+    {
+      "screen": "FavoriteListings",
+      "object": "FavoriteListingsTestTags",
+      "package": "com.alexgreece45.marvelx.ui.screens.favoriteListings",
+      "file": "app/src/main/kotlin/com/alexgreece45/marvelx/ui/screens/favoriteListings/FavoriteListingsTestTags.kt",
+      "tagCount": 4,
+      "tags": [
+        {
+          "name": "ERROR_RETRY_BUTTON",
+          "kind": "static",
+          "tag": "favorite_listings_error_retry_button",
+          "handles": "FavoriteListingsContract.Event.OnRetryClicked"
+        },
+        {
+          "name": "listingCard",
+          "kind": "dynamic",
+          "template": "favorite_listings_listing_{listingId}_card",
+          "args": "listingId: String",
+          "handles": "FavoriteListingsContract.Event.OnListingClicked; one tag per listing, keyed by the listing id (e.g. `favorite_listings_listing_42_card`)."
+        },
+        {
+          "name": "listingFavoriteButton",
+          "kind": "dynamic",
+          "template": "favorite_listings_listing_{listingId}_favorite_button",
+          "args": "listingId: String",
+          "handles": "FavoriteListingsContract.Event.OnFavoriteClicked; one tag per listing."
+        },
+        {
+          "name": "listingCartButton",
+          "kind": "dynamic",
+          "template": "favorite_listings_listing_{listingId}_cart_button",
+          "args": "listingId: String",
+          "handles": "FavoriteListingsContract.Event.OnCartClicked; one tag per listing. Present in both the `Add to cart` and `Remove from cart` states."
+        }
+      ]
+    },
+    {
+      "screen": "ForgotPassword",
+      "object": "ForgotPasswordTestTags",
+      "package": "com.alexgreece45.marvelx.ui.screens.forgotPasswordScreen",
+      "file": "app/src/main/kotlin/com/alexgreece45/marvelx/ui/screens/forgotPasswordScreen/ForgotPasswordTestTags.kt",
+      "tagCount": 3,
+      "tags": [
+        {
+          "name": "BACK_BUTTON",
+          "kind": "static",
+          "tag": "forgot_password_back_button",
+          "handles": "ForgotPasswordEvent.OnBackClick"
+        },
+        {
+          "name": "EMAIL_TEXT_FIELD",
+          "kind": "static",
+          "tag": "forgot_password_email_text_field",
+          "handles": "ForgotPasswordEvent.OnEmailValueChange / OnEmailDoneClick"
+        },
+        {
+          "name": "CONTINUE_BUTTON",
+          "kind": "static",
+          "tag": "forgot_password_continue_button",
+          "handles": "ForgotPasswordEvent.OnContinueButtonClicked"
+        }
+      ]
+    },
+    {
+      "screen": "Friends",
+      "object": "FriendsTestTags",
+      "package": "com.alexgreece45.marvelx.ui.screens.friends",
+      "file": "app/src/main/kotlin/com/alexgreece45/marvelx/ui/screens/friends/FriendsTestTags.kt",
+      "tagCount": 11,
+      "tags": [
+        {
+          "name": "BACK_BUTTON",
+          "kind": "static",
+          "tag": "friends_back_button",
+          "handles": "FriendsContract.Event.OnBackClicked"
+        },
+        {
+          "name": "ALL_TAB",
+          "kind": "static",
+          "tag": "friends_all_tab",
+          "handles": "FriendsContract.Event.OnTabClicked(0)"
+        },
+        {
+          "name": "REQUESTS_TAB",
+          "kind": "static",
+          "tag": "friends_requests_tab",
+          "handles": "FriendsContract.Event.OnTabClicked(1)"
+        },
+        {
+          "name": "BLOCKED_TAB",
+          "kind": "static",
+          "tag": "friends_blocked_tab",
+          "handles": "FriendsContract.Event.OnTabClicked(2)"
+        },
+        {
+          "name": "ERROR_RETRY_BUTTON",
+          "kind": "static",
+          "tag": "friends_error_retry_button",
+          "handles": "Error `primaryButtonOnClicked`"
+        },
+        {
+          "name": "friendTile",
+          "kind": "dynamic",
+          "template": "friends_friend_{userId}_tile",
+          "args": "userId: Any",
+          "handles": "FriendsContract.Event.AllTabEvent.OnUserClicked; one tag per friend, keyed by the user id (e.g. `friends_friend_42_tile`)."
+        },
+        {
+          "name": "removeFriendButton",
+          "kind": "dynamic",
+          "template": "friends_friend_{userId}_remove_button",
+          "args": "userId: Any",
+          "handles": "FriendsContract.Event.AllTabEvent.OnRemoveClicked; one tag per friend."
+        },
+        {
+          "name": "requestTile",
+          "kind": "dynamic",
+          "template": "friends_request_{userId}_tile",
+          "args": "userId: Any",
+          "handles": "FriendsContract.Event.RequestsTabEvent.OnUserClicked; one tag per request."
+        },
+        {
+          "name": "acceptRequestButton",
+          "kind": "dynamic",
+          "template": "friends_request_{userId}_accept_button",
+          "args": "userId: Any",
+          "handles": "FriendsContract.Event.RequestsTabEvent.OnRequestAccepted; one tag per request."
+        },
+        {
+          "name": "declineRequestButton",
+          "kind": "dynamic",
+          "template": "friends_request_{userId}_decline_button",
+          "args": "userId: Any",
+          "handles": "FriendsContract.Event.RequestsTabEvent.OnRequestDeclined; one tag per request."
+        },
+        {
+          "name": "unblockButton",
+          "kind": "dynamic",
+          "template": "friends_blocked_{userId}_unblock_button",
+          "args": "userId: Any",
+          "handles": "FriendsContract.Event.BlockedTabEvent.OnUnblockClicked; one tag per blocked user."
+        }
+      ]
+    },
+    {
+      "screen": "Home",
+      "object": "HomeTestTags",
+      "package": "com.alexgreece45.marvelx.ui.screens.home",
+      "file": "app/src/main/kotlin/com/alexgreece45/marvelx/ui/screens/home/HomeTestTags.kt",
+      "tagCount": 2,
+      "tags": [
+        {
+          "name": "SIGNUP_BUTTON",
+          "kind": "static",
+          "tag": "home_signup_button",
+          "handles": "HomeEvent.OnSignupButtonClicked"
+        },
+        {
+          "name": "LOGIN_BUTTON",
+          "kind": "static",
+          "tag": "home_login_button",
+          "handles": "HomeEvent.OnLoginButtonClicked"
+        }
+      ]
+    },
+    {
+      "screen": "Login",
+      "object": "LoginTestTags",
+      "package": "com.alexgreece45.marvelx.ui.screens.login",
+      "file": "app/src/main/kotlin/com/alexgreece45/marvelx/ui/screens/login/LoginTestTags.kt",
+      "tagCount": 9,
+      "tags": [
+        {
+          "name": "BACK_BUTTON",
+          "kind": "static",
+          "tag": "login_back_button",
+          "handles": "LoginEvent.OnBack"
+        },
+        {
+          "name": "EMAIL_TEXT_FIELD",
+          "kind": "static",
+          "tag": "login_email_text_field",
+          "handles": "LoginEvent.FieldValueChange.Email"
+        },
+        {
+          "name": "PASSWORD_TEXT_FIELD",
+          "kind": "static",
+          "tag": "login_password_text_field",
+          "handles": "LoginEvent.FieldValueChange.Password"
+        },
+        {
+          "name": "PASSWORD_VISIBILITY_BUTTON",
+          "kind": "static",
+          "tag": "login_password_visibility_button",
+          "handles": "LoginEvent.OnPasswordVisibilityIconClick"
+        },
+        {
+          "name": "REMEMBER_ME_CHECKBOX",
+          "kind": "static",
+          "tag": "login_remember_me_checkbox",
+          "handles": "LoginEvent.OnRememberMeCheckboxClick"
+        },
+        {
+          "name": "FORGOT_PASSWORD_BUTTON",
+          "kind": "static",
+          "tag": "login_forgot_password_button",
+          "handles": "LoginEvent.OnForgotPasswordButtonClick"
+        },
+        {
+          "name": "SUBMIT_BUTTON",
+          "kind": "static",
+          "tag": "login_submit_button",
+          "handles": "LoginEvent.OnLoginButtonClick"
+        },
+        {
+          "name": "GOOGLE_SIGN_IN_BUTTON",
+          "kind": "static",
+          "tag": "login_google_sign_in_button",
+          "handles": "LoginEvent.OnLoginWithGoogleResult (fired after the Google sign-in flow returns)"
+        },
+        {
+          "name": "SIGNUP_TEXT",
+          "kind": "static",
+          "tag": "login_signup_text",
+          "handles": "LoginEvent.OnSignupTextClicked"
+        }
+      ]
+    },
+    {
+      "screen": "CreateListingAdvancedDetails",
+      "object": "CreateListingAdvancedDetailsTestTags",
+      "package": "com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.advancedDetails",
+      "file": "app/src/main/kotlin/com/alexgreece45/marvelx/ui/screens/marketplace/createListingWizard/advancedDetails/CreateListingAdvancedDetailsTestTags.kt",
+      "tagCount": 32,
+      "tags": [
+        {
+          "name": "CONDITION_DROPDOWN",
+          "kind": "static",
+          "tag": "create_listing_advanced_details_condition_dropdown",
+          "handles": "ConditionDropDownEvents.OnClicked / OnDismissed"
+        },
+        {
+          "name": "PRICE_TEXT_FIELD",
+          "kind": "static",
+          "tag": "create_listing_advanced_details_price_text_field",
+          "handles": "Event.OnPriceChanged"
+        },
+        {
+          "name": "APPAREL_SIZE_DROPDOWN",
+          "kind": "static",
+          "tag": "create_listing_advanced_details_apparel_size_dropdown",
+          "handles": "ListingDetailsEvents.Apparel.OnSizeDropDownClicked / OnSizeDropDownOnDismissed"
+        },
+        {
+          "name": "APPAREL_COLOR_TEXT_FIELD",
+          "kind": "static",
+          "tag": "create_listing_advanced_details_apparel_color_text_field",
+          "handles": "ListingDetailsEvents.Apparel.OnColorChanged"
+        },
+        {
+          "name": "DRINKWARE_MATERIAL_DROPDOWN",
+          "kind": "static",
+          "tag": "create_listing_advanced_details_drinkware_material_dropdown",
+          "handles": "ListingDetailsEvents.Drinkware.OnMaterialDropDownClicked / OnMaterialDropDownOnDismissed"
+        },
+        {
+          "name": "DRINKWARE_CAPACITY_TEXT_FIELD",
+          "kind": "static",
+          "tag": "create_listing_advanced_details_drinkware_capacity_text_field",
+          "handles": "ListingDetailsEvents.Drinkware.OnCapacityMlChanged"
+        },
+        {
+          "name": "DRINKWARE_DISHWASHER_SAFE_CHECKBOX",
+          "kind": "static",
+          "tag": "create_listing_advanced_details_drinkware_dishwasher_safe_checkbox",
+          "handles": "ListingDetailsEvents.Drinkware.OnDishwasherSafeCheckboxChanged"
+        },
+        {
+          "name": "COLLECTIBLE_SCALE_DROPDOWN",
+          "kind": "static",
+          "tag": "create_listing_advanced_details_collectible_scale_dropdown",
+          "handles": "ListingDetailsEvents.Collectible.OnScaleDropDownClicked / OnScaleDropDownOnDismissed"
+        },
+        {
+          "name": "COLLECTIBLE_BOX_CONDITION_DROPDOWN",
+          "kind": "static",
+          "tag": "create_listing_advanced_details_collectible_box_condition_dropdown",
+          "handles": "ListingDetailsEvents.Collectible.OnBoxConditionDropDownClicked / OnBoxConditionDropDownOnDismissed"
+        },
+        {
+          "name": "ART_WIDTH_TEXT_FIELD",
+          "kind": "static",
+          "tag": "create_listing_advanced_details_art_width_text_field",
+          "handles": "ListingDetailsEvents.Art.OnDimensionsWidthChanged"
+        },
+        {
+          "name": "ART_HEIGHT_TEXT_FIELD",
+          "kind": "static",
+          "tag": "create_listing_advanced_details_art_height_text_field",
+          "handles": "ListingDetailsEvents.Art.OnDimensionsHeightChanged"
+        },
+        {
+          "name": "ART_FRAMED_CHECKBOX",
+          "kind": "static",
+          "tag": "create_listing_advanced_details_art_framed_checkbox",
+          "handles": "ListingDetailsEvents.Art.OnFramedCheckboxChanged"
+        },
+        {
+          "name": "ACCESSORY_MATERIAL_DROPDOWN",
+          "kind": "static",
+          "tag": "create_listing_advanced_details_accessory_material_dropdown",
+          "handles": "ListingDetailsEvents.Accessory.OnMaterialDropDownClicked / OnMaterialDropDownOnDismissed"
+        },
+        {
+          "name": "ACCESSORY_COLOR_TEXT_FIELD",
+          "kind": "static",
+          "tag": "create_listing_advanced_details_accessory_color_text_field",
+          "handles": "ListingDetailsEvents.Accessory.OnColorChanged"
+        },
+        {
+          "name": "HOME_WIDTH_TEXT_FIELD",
+          "kind": "static",
+          "tag": "create_listing_advanced_details_home_width_text_field",
+          "handles": "ListingDetailsEvents.Home.OnDimensionsWidthChanged"
+        },
+        {
+          "name": "HOME_HEIGHT_TEXT_FIELD",
+          "kind": "static",
+          "tag": "create_listing_advanced_details_home_height_text_field",
+          "handles": "ListingDetailsEvents.Home.OnDimensionsHeightChanged"
+        },
+        {
+          "name": "COMIC_GRADE_DROPDOWN",
+          "kind": "static",
+          "tag": "create_listing_advanced_details_comic_grade_dropdown",
+          "handles": "ListingDetailsEvents.Comic.OnGradeDropDownClicked / OnGradeDropDownOnDismissed"
+        },
+        {
+          "name": "COMIC_PUBLISHER_TEXT_FIELD",
+          "kind": "static",
+          "tag": "create_listing_advanced_details_comic_publisher_text_field",
+          "handles": "ListingDetailsEvents.Comic.OnPublisherChanged"
+        },
+        {
+          "name": "COMIC_YEAR_TEXT_FIELD",
+          "kind": "static",
+          "tag": "create_listing_advanced_details_comic_year_text_field",
+          "handles": "ListingDetailsEvents.Comic.OnYearChanged"
+        },
+        {
+          "name": "CARD_GRADE_DROPDOWN",
+          "kind": "static",
+          "tag": "create_listing_advanced_details_card_grade_dropdown",
+          "handles": "ListingDetailsEvents.CardDetails.OnGradeDropDownClicked / OnGradeDropDownOnDismissed"
+        },
+        {
+          "name": "CARD_RARITY_DROPDOWN",
+          "kind": "static",
+          "tag": "create_listing_advanced_details_card_rarity_dropdown",
+          "handles": "ListingDetailsEvents.CardDetails.OnRarityDropDownClicked / OnRarityDropDownOnDismissed"
+        },
+        {
+          "name": "CARD_VARIANT_DROPDOWN",
+          "kind": "static",
+          "tag": "create_listing_advanced_details_card_variant_dropdown",
+          "handles": "ListingDetailsEvents.CardDetails.OnVariantDropDownClicked / OnVariantDropDownOnDismissed"
+        },
+        {
+          "name": "conditionOption",
+          "kind": "dynamic",
+          "template": "create_listing_advanced_details_condition_{code}_option",
+          "args": "code: String",
+          "handles": "ConditionDropDownEvents.OnItemSelected"
+        },
+        {
+          "name": "apparelSizeOption",
+          "kind": "dynamic",
+          "template": "create_listing_advanced_details_apparel_size_{code}_option",
+          "args": "code: String",
+          "handles": "ListingDetailsEvents.Apparel.OnSizeDropDownItemSelected"
+        },
+        {
+          "name": "drinkwareMaterialOption",
+          "kind": "dynamic",
+          "template": "create_listing_advanced_details_drinkware_material_{code}_option",
+          "args": "code: String",
+          "handles": "ListingDetailsEvents.Drinkware.OnMaterialDropDownItemSelected"
+        },
+        {
+          "name": "collectibleScaleOption",
+          "kind": "dynamic",
+          "template": "create_listing_advanced_details_collectible_scale_{code}_option",
+          "args": "code: String",
+          "handles": "ListingDetailsEvents.Collectible.OnScaleDropDownItemSelected"
+        },
+        {
+          "name": "collectibleBoxConditionOption",
+          "kind": "dynamic",
+          "template": "create_listing_advanced_details_collectible_box_condition_{code}_option",
+          "args": "code: String",
+          "handles": "ListingDetailsEvents.Collectible.OnBoxConditionDropDownItemSelected"
+        },
+        {
+          "name": "accessoryMaterialOption",
+          "kind": "dynamic",
+          "template": "create_listing_advanced_details_accessory_material_{code}_option",
+          "args": "code: String",
+          "handles": "ListingDetailsEvents.Accessory.OnMaterialDropDownItemSelected"
+        },
+        {
+          "name": "comicGradeOption",
+          "kind": "dynamic",
+          "template": "create_listing_advanced_details_comic_grade_{code}_option",
+          "args": "code: String",
+          "handles": "ListingDetailsEvents.Comic.OnGradeDropDownItemSelected"
+        },
+        {
+          "name": "cardGradeOption",
+          "kind": "dynamic",
+          "template": "create_listing_advanced_details_card_grade_{code}_option",
+          "args": "code: String",
+          "handles": "ListingDetailsEvents.CardDetails.OnGradeDropDownItemSelected"
+        },
+        {
+          "name": "cardRarityOption",
+          "kind": "dynamic",
+          "template": "create_listing_advanced_details_card_rarity_{code}_option",
+          "args": "code: String",
+          "handles": "ListingDetailsEvents.CardDetails.OnRarityDropDownItemSelected"
+        },
+        {
+          "name": "cardVariantOption",
+          "kind": "dynamic",
+          "template": "create_listing_advanced_details_card_variant_{code}_option",
+          "args": "code: String",
+          "handles": "ListingDetailsEvents.CardDetails.OnVariantDropDownItemSelected"
+        }
+      ]
+    },
+    {
+      "screen": "CreateListingBasicDetails",
+      "object": "CreateListingBasicDetailsTestTags",
+      "package": "com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.basicDetails",
+      "file": "app/src/main/kotlin/com/alexgreece45/marvelx/ui/screens/marketplace/createListingWizard/basicDetails/CreateListingBasicDetailsTestTags.kt",
+      "tagCount": 8,
+      "tags": [
+        {
+          "name": "UPLOAD_PHOTOS_BUTTON",
+          "kind": "static",
+          "tag": "create_listing_basic_details_upload_photos_button",
+          "handles": "CreateListingBasicDetailsContract.Event.OnUploadPhotosButtonClicked"
+        },
+        {
+          "name": "TITLE_TEXT_FIELD",
+          "kind": "static",
+          "tag": "create_listing_basic_details_title_text_field",
+          "handles": "CreateListingBasicDetailsContract.Event.OnTitleChanged"
+        },
+        {
+          "name": "DESCRIPTION_TEXT_FIELD",
+          "kind": "static",
+          "tag": "create_listing_basic_details_description_text_field",
+          "handles": "CreateListingBasicDetailsContract.Event.OnDescriptionChanged"
+        },
+        {
+          "name": "CATEGORY_DROPDOWN",
+          "kind": "static",
+          "tag": "create_listing_basic_details_category_dropdown",
+          "handles": "CreateListingBasicDetailsContract.Event.CategoryDropDownEvents.OnClicked / OnDismissed"
+        },
+        {
+          "name": "SUBCATEGORY_DROPDOWN",
+          "kind": "static",
+          "tag": "create_listing_basic_details_subcategory_dropdown",
+          "handles": "CreateListingBasicDetailsContract.Event.SubcategoryDropDownEvents.OnClicked / OnDismissed"
+        },
+        {
+          "name": "categoryOption",
+          "kind": "dynamic",
+          "template": "create_listing_basic_details_category_{code}_option",
+          "args": "code: String",
+          "handles": "CreateListingBasicDetailsContract.Event.CategoryDropDownEvents.OnItemSelected; one tag per option, keyed by `ListingCategory.code`."
+        },
+        {
+          "name": "subcategoryOption",
+          "kind": "dynamic",
+          "template": "create_listing_basic_details_subcategory_{id}_option",
+          "args": "id: Int",
+          "handles": "CreateListingBasicDetailsContract.Event.SubcategoryDropDownEvents.OnItemSelected; one tag per option, keyed by `ListingSubcategory.id`."
+        },
+        {
+          "name": "deleteImageButton",
+          "kind": "dynamic",
+          "template": "create_listing_basic_details_delete_image_{position}_button",
+          "args": "position: Int",
+          "handles": "CreateListingBasicDetailsContract.Event.AttachedImageEvents.OnDeleteIconButtonClicked; one tag per attached image, keyed by its 1-based position."
+        }
+      ]
+    },
+    {
+      "screen": "CreateListingWizard",
+      "object": "CreateListingWizardTestTags",
+      "package": "com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard",
+      "file": "app/src/main/kotlin/com/alexgreece45/marvelx/ui/screens/marketplace/createListingWizard/CreateListingWizardTestTags.kt",
+      "tagCount": 2,
+      "tags": [
+        {
+          "name": "BACK_BUTTON",
+          "kind": "static",
+          "tag": "create_listing_wizard_back_button",
+          "handles": "CreateListingWizardContract.Event.OnBackButtonClicked"
+        },
+        {
+          "name": "STICKY_BOTTOM_BUTTON",
+          "kind": "static",
+          "tag": "create_listing_wizard_sticky_bottom_button",
+          "handles": "CreateListingWizardContract.Event.OnStickyBottomButtonClicked (`Next` / `Upload`)"
+        }
+      ]
+    },
+    {
+      "screen": "CreateListingSuccess",
+      "object": "CreateListingSuccessTestTags",
+      "package": "com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.success",
+      "file": "app/src/main/kotlin/com/alexgreece45/marvelx/ui/screens/marketplace/createListingWizard/success/CreateListingSuccessTestTags.kt",
+      "tagCount": 2,
+      "tags": [
+        {
+          "name": "CLOSE_BUTTON",
+          "kind": "static",
+          "tag": "create_listing_success_close_button",
+          "handles": "CreateListingSuccessContract.Event.OnBackClicked (toolbar `Close` button)"
+        },
+        {
+          "name": "VIEW_LISTING_BUTTON",
+          "kind": "static",
+          "tag": "create_listing_success_view_listing_button",
+          "handles": "CreateListingSuccessContract.Event.OnViewListingClicked"
+        }
+      ]
+    },
+    {
+      "screen": "ListingDetails",
+      "object": "ListingDetailsTestTags",
+      "package": "com.alexgreece45.marvelx.ui.screens.marketplace.listingDetailsScreen",
+      "file": "app/src/main/kotlin/com/alexgreece45/marvelx/ui/screens/marketplace/listingDetailsScreen/ListingDetailsTestTags.kt",
+      "tagCount": 8,
+      "tags": [
+        {
+          "name": "BACK_BUTTON",
+          "kind": "static",
+          "tag": "listing_details_back_button",
+          "handles": "ListingDetailsContract.Event.OnBack"
+        },
+        {
+          "name": "EDIT_BUTTON",
+          "kind": "static",
+          "tag": "listing_details_edit_button",
+          "handles": "ListingDetailsContract.Event.ToolbarActionButton.OnEditClicked (seller only)"
+        },
+        {
+          "name": "FAVORITE_BUTTON",
+          "kind": "static",
+          "tag": "listing_details_favorite_button",
+          "handles": "ListingDetailsContract.Event.ToolbarActionButton.OnFavoriteClicked (buyer only; the same tag is used for the `Favorite` and `Unfavorite` states)"
+        },
+        {
+          "name": "SHARE_BUTTON",
+          "kind": "static",
+          "tag": "listing_details_share_button",
+          "handles": "ListingDetailsContract.Event.ToolbarActionButton.OnShareClicked"
+        },
+        {
+          "name": "STICKY_BOTTOM_BUTTON",
+          "kind": "static",
+          "tag": "listing_details_sticky_bottom_button",
+          "handles": "ListingDetailsContract.Event.OnStickyBottomButtonClicked (`Add to cart` / `Remove from cart` / `Manage order item` / `View order item details`)"
+        },
+        {
+          "name": "ERROR_RETRY_BUTTON",
+          "kind": "static",
+          "tag": "listing_details_error_retry_button",
+          "handles": "ListingDetailsContract.Event.OnErrorRetryButtonClicked"
+        },
+        {
+          "name": "ORDER_ITEM_STATUS_LINK",
+          "kind": "static",
+          "tag": "listing_details_order_item_status_link",
+          "handles": "ListingDetailsContract.Event.OnOrderItemStatusContainerClickableTextClicked"
+        },
+        {
+          "name": "SELLER_INFO_SECTION",
+          "kind": "static",
+          "tag": "listing_details_seller_info_section",
+          "handles": "ListingDetailsContract.Event.OnSellerInfoClicked"
+        }
+      ]
+    },
+    {
+      "screen": "Marketplace",
+      "object": "MarketplaceTestTags",
+      "package": "com.alexgreece45.marvelx.ui.screens.marketplace",
+      "file": "app/src/main/kotlin/com/alexgreece45/marvelx/ui/screens/marketplace/MarketplaceTestTags.kt",
+      "tagCount": 34,
+      "tags": [
+        {
+          "name": "BACK_BUTTON",
+          "kind": "static",
+          "tag": "marketplace_back_button",
+          "handles": "MarketplaceContract.Event.OnBackClicked (search mode only)"
+        },
+        {
+          "name": "ERROR_RETRY_BUTTON",
+          "kind": "static",
+          "tag": "marketplace_error_retry_button",
+          "handles": "MarketplaceContract.Event.OnErrorButtonClicked"
+        },
+        {
+          "name": "SEARCH_TEXT_FIELD",
+          "kind": "static",
+          "tag": "marketplace_search_text_field",
+          "handles": "MarketplaceContract.Event.SearchBar.OnSearchTermChanged"
+        },
+        {
+          "name": "SEARCH_CLEAR_BUTTON",
+          "kind": "static",
+          "tag": "marketplace_search_clear_button",
+          "handles": "MarketplaceContract.Event.SearchBar.OnDeleteIconClicked"
+        },
+        {
+          "name": "SEARCH_BAR_BUTTON",
+          "kind": "static",
+          "tag": "marketplace_search_bar_button",
+          "handles": "MarketplaceContract.Event.SearchBar.OnClicked (discover mode; opens the search mode)"
+        },
+        {
+          "name": "COMPARISON_STATUS_BUTTON",
+          "kind": "static",
+          "tag": "marketplace_comparison_status_button",
+          "handles": "MarketplaceContract.Event.OnComparisonStatusContainerButtonClicked"
+        },
+        {
+          "name": "SORT_CHIP",
+          "kind": "static",
+          "tag": "marketplace_sort_chip",
+          "handles": "MarketplaceContract.Event.OnSortChipClicked"
+        },
+        {
+          "name": "FILTERS_CHIP",
+          "kind": "static",
+          "tag": "marketplace_filters_chip",
+          "handles": "MarketplaceContract.Event.OnFiltersChipClicked"
+        },
+        {
+          "name": "LAYOUT_CHANGE_BUTTON",
+          "kind": "static",
+          "tag": "marketplace_layout_change_button",
+          "handles": "MarketplaceContract.Event.OnLayoutChangeButtonClicked"
+        },
+        {
+          "name": "SORT_SHEET_CLOSE_BUTTON",
+          "kind": "static",
+          "tag": "marketplace_sort_sheet_close_button",
+          "handles": "Sort bottom sheet: MarketplaceContract.Event.SortByBottomSheet.OnCloseButtonClicked"
+        },
+        {
+          "name": "FILTER_SHEET_CLOSE_BUTTON",
+          "kind": "static",
+          "tag": "marketplace_filter_sheet_close_button",
+          "handles": "Filter menu bottom sheet: MarketplaceContract.Event.FilterMenu.OnCloseButtonClicked"
+        },
+        {
+          "name": "FILTER_SHEET_CLEAR_BUTTON",
+          "kind": "static",
+          "tag": "marketplace_filter_sheet_clear_button",
+          "handles": "MarketplaceContract.Event.FilterMenu.OnNegativeButtonClicked (clear filters)"
+        },
+        {
+          "name": "FILTER_SHEET_APPLY_BUTTON",
+          "kind": "static",
+          "tag": "marketplace_filter_sheet_apply_button",
+          "handles": "MarketplaceContract.Event.FilterMenu.OnPositiveButtonClicked (apply filters)"
+        },
+        {
+          "name": "FILTER_PRICE_MIN_TEXT_FIELD",
+          "kind": "static",
+          "tag": "marketplace_filter_price_min_text_field",
+          "handles": "MarketplaceContract.Event.Filter.OnPriceRangeMinChanged"
+        },
+        {
+          "name": "FILTER_PRICE_MAX_TEXT_FIELD",
+          "kind": "static",
+          "tag": "marketplace_filter_price_max_text_field",
+          "handles": "MarketplaceContract.Event.Filter.OnPriceRangeMaxChanged"
+        },
+        {
+          "name": "FILTER_CUSTOM_DATE_RANGE_BUTTON",
+          "kind": "static",
+          "tag": "marketplace_filter_custom_date_range_button",
+          "handles": "MarketplaceContract.Event.Filter.DatePosted.OnDatePostedCustomRangeClicked"
+        },
+        {
+          "name": "FILTER_FINAL_SALE_CHECKBOX",
+          "kind": "static",
+          "tag": "marketplace_filter_final_sale_checkbox",
+          "handles": "MarketplaceContract.Event.Filter.OnFinalSaleChecked"
+        },
+        {
+          "name": "COMPARISON_SHEET_CLOSE_BUTTON",
+          "kind": "static",
+          "tag": "marketplace_comparison_sheet_close_button",
+          "handles": "Comparison bottom sheet: MarketplaceContract.Event.ComparisonBottomSheet.OnCloseButtonClicked"
+        },
+        {
+          "name": "COMPARISON_SHEET_SHARE_BUTTON",
+          "kind": "static",
+          "tag": "marketplace_comparison_sheet_share_button",
+          "handles": "MarketplaceContract.Event.ComparisonBottomSheet.OnShareButtonClicked"
+        },
+        {
+          "name": "activeCategoryRemoveButton",
+          "kind": "dynamic",
+          "template": "marketplace_active_category_{categoryCode}_remove_button",
+          "args": "categoryCode: String",
+          "handles": "MarketplaceContract.Event.OnActiveCategoryDeleteIconClicked; one tag per active category, keyed by the category code (e.g. `marketplace_active_category_comics_remove_button`)."
+        },
+        {
+          "name": "categorySection",
+          "kind": "dynamic",
+          "template": "marketplace_category_{categoryCode}_section",
+          "args": "categoryCode: String",
+          "handles": "MarketplaceContract.Event.OnCategoryClicked (discover mode); one tag per category section."
+        },
+        {
+          "name": "promoListing",
+          "kind": "dynamic",
+          "template": "marketplace_promo_listing_{listingId}_item",
+          "args": "listingId: String",
+          "handles": "MarketplaceContract.Event.Listing.OnClicked (discover mode promo carousel); keyed by listing id."
+        },
+        {
+          "name": "previewListing",
+          "kind": "dynamic",
+          "template": "marketplace_preview_listing_{listingId}_item",
+          "args": "listingId: String",
+          "handles": "MarketplaceContract.Event.Listing.OnClicked (discover mode category rows); keyed by listing id."
+        },
+        {
+          "name": "listingCard",
+          "kind": "dynamic",
+          "template": "marketplace_listing_{listingId}_card",
+          "args": "listingId: String",
+          "handles": "MarketplaceContract.Event.Listing.OnClicked (search mode); keyed by listing id."
+        },
+        {
+          "name": "listingFavoriteButton",
+          "kind": "dynamic",
+          "template": "marketplace_listing_{listingId}_favorite_button",
+          "args": "listingId: String",
+          "handles": "MarketplaceContract.Event.Listing.OnFavoriteClicked; keyed by listing id."
+        },
+        {
+          "name": "listingComparisonButton",
+          "kind": "dynamic",
+          "template": "marketplace_listing_{listingId}_comparison_button",
+          "args": "listingId: String",
+          "handles": "MarketplaceContract.Event.Listing.OnComparisonClicked; keyed by listing id."
+        },
+        {
+          "name": "listingCartButton",
+          "kind": "dynamic",
+          "template": "marketplace_listing_{listingId}_cart_button",
+          "args": "listingId: String",
+          "handles": "MarketplaceContract.Event.Listing.OnCartClicked; keyed by listing id. Present in both the `Add to cart` and `Remove from cart` states."
+        },
+        {
+          "name": "sortOption",
+          "kind": "dynamic",
+          "template": "marketplace_sort_{sortName}_item",
+          "args": "sortName: String",
+          "handles": "MarketplaceContract.Event.OnSortSelected; one tag per `ListingSort` (e.g. `..._price_ascending_item`)."
+        },
+        {
+          "name": "filterCategoryChip",
+          "kind": "dynamic",
+          "template": "marketplace_filter_category_{categoryCode}_chip",
+          "args": "categoryCode: String",
+          "handles": "MarketplaceContract.Event.Filter.OnCategorySelected; keyed by the category code."
+        },
+        {
+          "name": "filterConditionChip",
+          "kind": "dynamic",
+          "template": "marketplace_filter_condition_{conditionCode}_chip",
+          "args": "conditionCode: String",
+          "handles": "MarketplaceContract.Event.Filter.OnConditionSelected; keyed by the condition code."
+        },
+        {
+          "name": "filterDatePostedOption",
+          "kind": "dynamic",
+          "template": "marketplace_filter_date_posted_{optionName}_item",
+          "args": "optionName: String",
+          "handles": "MarketplaceContract.Event.Filter.DatePosted.OnDateRangeOptionSelected; one tag per `ListingDateRangeOptionUi`, keyed by its class name (e.g. `..._last24hours_item`)."
+        },
+        {
+          "name": "filterSectionHeader",
+          "kind": "dynamic",
+          "template": "marketplace_filter_{section}_section_header",
+          "args": "section: String",
+          "handles": "Collapse / expand toggle of a filter section, keyed by the section (`category`, `condition`, `price_range`, `date_posted`, `final_sale`)."
+        },
+        {
+          "name": "comparisonListingItem",
+          "kind": "dynamic",
+          "template": "marketplace_comparison_listing_{listingId}_item",
+          "args": "listingId: String",
+          "handles": "MarketplaceContract.Event.ComparisonBottomSheet.OnListingClicked; keyed by listing id."
+        },
+        {
+          "name": "comparisonListingRemoveButton",
+          "kind": "dynamic",
+          "template": "marketplace_comparison_listing_{listingId}_remove_button",
+          "args": "listingId: String",
+          "handles": "MarketplaceContract.Event.ComparisonBottomSheet.OnListingDeleteButtonClicked; keyed by listing id."
+        }
+      ]
+    },
+    {
+      "screen": "MyListings",
+      "object": "MyListingsTestTags",
+      "package": "com.alexgreece45.marvelx.ui.screens.myListings",
+      "file": "app/src/main/kotlin/com/alexgreece45/marvelx/ui/screens/myListings/MyListingsTestTags.kt",
+      "tagCount": 9,
+      "tags": [
+        {
+          "name": "BACK_BUTTON",
+          "kind": "static",
+          "tag": "my_listings_back_button",
+          "handles": "MyListingsContract.Event.OnBackClicked"
+        },
+        {
+          "name": "CREATE_LISTING_FAB",
+          "kind": "static",
+          "tag": "my_listings_create_listing_fab",
+          "handles": "MyListingsContract.Event.OnFabButtonClicked"
+        },
+        {
+          "name": "ERROR_RETRY_BUTTON",
+          "kind": "static",
+          "tag": "my_listings_error_retry_button",
+          "handles": "MyListingsContract.Event.OnErrorButtonClicked"
+        },
+        {
+          "name": "CREATE_LISTING_BUTTON",
+          "kind": "static",
+          "tag": "my_listings_create_listing_button",
+          "handles": "MyListingsContract.Event.OnCreateListingButtonClicked"
+        },
+        {
+          "name": "EDIT_LISTING_BOTTOM_SHEET_ITEM",
+          "kind": "static",
+          "tag": "my_listings_edit_listing_bottom_sheet_item",
+          "handles": "MyListingsContract.Event.BottomSheet.OnEditListingClicked"
+        },
+        {
+          "name": "SHARE_LISTING_BOTTOM_SHEET_ITEM",
+          "kind": "static",
+          "tag": "my_listings_share_listing_bottom_sheet_item",
+          "handles": "MyListingsContract.Event.BottomSheet.OnShareListingClicked"
+        },
+        {
+          "name": "DELETE_LISTING_BOTTOM_SHEET_ITEM",
+          "kind": "static",
+          "tag": "my_listings_delete_listing_bottom_sheet_item",
+          "handles": "MyListingsContract.Event.BottomSheet.OnDeleteListingClicked"
+        },
+        {
+          "name": "listingCard",
+          "kind": "dynamic",
+          "template": "my_listings_listing_{listingId}_card",
+          "args": "listingId: String",
+          "handles": "MyListingsContract.Event.ListingEvents.OnClicked; one tag per listing, keyed by the listing id (e.g. `my_listings_listing_42_card`)."
+        },
+        {
+          "name": "listingMoreActionsButton",
+          "kind": "dynamic",
+          "template": "my_listings_listing_{listingId}_more_actions_button",
+          "args": "listingId: String",
+          "handles": "MyListingsContract.Event.ListingEvents.OnMoreActionsButtonClicked; one tag per listing."
+        }
+      ]
+    },
+    {
+      "screen": "OrderDetails",
+      "object": "OrderDetailsTestTags",
+      "package": "com.alexgreece45.marvelx.ui.screens.orders.orderDetails",
+      "file": "app/src/main/kotlin/com/alexgreece45/marvelx/ui/screens/orders/orderDetails/OrderDetailsTestTags.kt",
+      "tagCount": 4,
+      "tags": [
+        {
+          "name": "BACK_BUTTON",
+          "kind": "static",
+          "tag": "order_details_back_button",
+          "handles": "OrderDetailsContract.Event.OnBack"
+        },
+        {
+          "name": "ERROR_RETRY_BUTTON",
+          "kind": "static",
+          "tag": "order_details_error_retry_button",
+          "handles": "OrderDetailsContract.Event.OnErrorButtonClicked"
+        },
+        {
+          "name": "ORDER_STATUS_BANNER",
+          "kind": "static",
+          "tag": "order_details_order_status_banner",
+          "handles": "OrderDetailsContract.Event.OnOrderStatusBannerClicked"
+        },
+        {
+          "name": "trackItemButton",
+          "kind": "dynamic",
+          "template": "order_details_item_{orderItemId}_track_button",
+          "args": "orderItemId: String",
+          "handles": "OrderDetailsContract.Event.OrderItemEvents.OnTrackButtonClicked; one tag per order item, keyed by the order item id (e.g. `order_details_item_B28_track_button`)."
+        }
+      ]
+    },
+    {
+      "screen": "OrderItemManagement",
+      "object": "OrderItemManagementTestTags",
+      "package": "com.alexgreece45.marvelx.ui.screens.orders.orderItemManagement",
+      "file": "app/src/main/kotlin/com/alexgreece45/marvelx/ui/screens/orders/orderItemManagement/OrderItemManagementTestTags.kt",
+      "tagCount": 5,
+      "tags": [
+        {
+          "name": "BACK_BUTTON",
+          "kind": "static",
+          "tag": "order_item_management_back_button",
+          "handles": "OrderItemManagementContract.Event.OnBack"
+        },
+        {
+          "name": "ERROR_RETRY_BUTTON",
+          "kind": "static",
+          "tag": "order_item_management_error_retry_button",
+          "handles": "OrderItemManagementContract.Event.OnErrorButtonClicked"
+        },
+        {
+          "name": "MESSAGE_BUYER_BUTTON",
+          "kind": "static",
+          "tag": "order_item_management_message_buyer_button",
+          "handles": "OrderItemManagementContract.Event.OnMessageBuyerClicked"
+        },
+        {
+          "name": "MARK_AS_SHIPPED_BUTTON",
+          "kind": "static",
+          "tag": "order_item_management_mark_as_shipped_button",
+          "handles": "OrderItemManagementContract.Event.OnMarkAsShippedClicked"
+        },
+        {
+          "name": "RETURN_CARD",
+          "kind": "static",
+          "tag": "order_item_management_return_card",
+          "handles": "OrderItemManagementContract.Event.OnReturnCardClicked"
+        }
+      ]
+    },
+    {
+      "screen": "OrderItemTrackingHistory",
+      "object": "OrderItemTrackingHistoryTestTags",
+      "package": "com.alexgreece45.marvelx.ui.screens.orders.orderItemTrackingHistory",
+      "file": "app/src/main/kotlin/com/alexgreece45/marvelx/ui/screens/orders/orderItemTrackingHistory/OrderItemTrackingHistoryTestTags.kt",
+      "tagCount": 10,
+      "tags": [
+        {
+          "name": "BACK_BUTTON",
+          "kind": "static",
+          "tag": "order_item_tracking_history_back_button",
+          "handles": "Event.OnBack"
+        },
+        {
+          "name": "ERROR_RETRY_BUTTON",
+          "kind": "static",
+          "tag": "order_item_tracking_history_error_retry_button",
+          "handles": "Event.OnErrorButtonClicked"
+        },
+        {
+          "name": "CURRENT_STATUS_CARD",
+          "kind": "static",
+          "tag": "order_item_tracking_history_current_status_card",
+          "handles": "Event.OnCurrentStatusClicked"
+        },
+        {
+          "name": "SELLER_DETAILS_CARD",
+          "kind": "static",
+          "tag": "order_item_tracking_history_seller_details_card",
+          "handles": "Event.SellerDetailsCardEvents.OnClicked"
+        },
+        {
+          "name": "SELLER_DETAILS_ERROR_RETRY_BUTTON",
+          "kind": "static",
+          "tag": "order_item_tracking_history_seller_details_error_retry_button",
+          "handles": "Event.SellerDetailsCardEvents.OnErrorButtonClicked"
+        },
+        {
+          "name": "COPY_TRACKING_ID_BUTTON",
+          "kind": "static",
+          "tag": "order_item_tracking_history_copy_tracking_id_button",
+          "handles": "Event.CourierCardEvents.OnCopyButtonClicked"
+        },
+        {
+          "name": "VIEW_ON_COURIER_WEBSITE_BUTTON",
+          "kind": "static",
+          "tag": "order_item_tracking_history_view_on_courier_website_button",
+          "handles": "Event.CourierCardEvents.OnViewOnCourierWebsiteButtonClicked"
+        },
+        {
+          "name": "RETURN_ACTION_BUTTON",
+          "kind": "static",
+          "tag": "order_item_tracking_history_return_action_button",
+          "handles": "Event.OnReturnActionButtonClicked"
+        },
+        {
+          "name": "REFUND_ACTION_BUTTON",
+          "kind": "static",
+          "tag": "order_item_tracking_history_refund_action_button",
+          "handles": "Event.OnRefundActionButtonClicked"
+        },
+        {
+          "name": "CONTACT_SELLER_BUTTON",
+          "kind": "static",
+          "tag": "order_item_tracking_history_contact_seller_button",
+          "handles": "Event.OnContactSellerButtonClicked"
+        }
+      ]
+    },
+    {
+      "screen": "Orders",
+      "object": "OrdersTestTags",
+      "package": "com.alexgreece45.marvelx.ui.screens.orders",
+      "file": "app/src/main/kotlin/com/alexgreece45/marvelx/ui/screens/orders/OrdersTestTags.kt",
+      "tagCount": 6,
+      "tags": [
+        {
+          "name": "BACK_BUTTON",
+          "kind": "static",
+          "tag": "orders_back_button",
+          "handles": "OrdersContract.Event.OnBackClicked"
+        },
+        {
+          "name": "ERROR_RETRY_BUTTON",
+          "kind": "static",
+          "tag": "orders_error_retry_button",
+          "handles": "OrdersContract.Event.OnErrorButtonClicked"
+        },
+        {
+          "name": "EMPTY_ORDERS_BUTTON",
+          "kind": "static",
+          "tag": "orders_empty_orders_button",
+          "handles": "OrdersContract.Event.OnEmptyOrdersButtonClicked"
+        },
+        {
+          "name": "VIEW_ORDER_DETAILS_BUTTON",
+          "kind": "static",
+          "tag": "orders_view_order_details_button",
+          "handles": "OrdersContract.Event.OrderStatusInfoBottomSheetEvents.OnViewOrderDetailsClicked"
+        },
+        {
+          "name": "orderCard",
+          "kind": "dynamic",
+          "template": "orders_order_{orderId}_card",
+          "args": "orderId: String",
+          "handles": "OrdersContract.Event.OrderEvents.OnClicked; one tag per order, keyed by the order id (e.g. `orders_order_A1001567_card`)."
+        },
+        {
+          "name": "orderStatusChip",
+          "kind": "dynamic",
+          "template": "orders_order_{orderId}_status_chip",
+          "args": "orderId: String",
+          "handles": "OrdersContract.Event.OrderEvents.OnStatusChipClicked; one tag per order, keyed by the order id."
+        }
+      ]
+    },
+    {
+      "screen": "RequestItemReturn",
+      "object": "RequestItemReturnTestTags",
+      "package": "com.alexgreece45.marvelx.ui.screens.orders.requestReturn",
+      "file": "app/src/main/kotlin/com/alexgreece45/marvelx/ui/screens/orders/requestReturn/RequestItemReturnTestTags.kt",
+      "tagCount": 17,
+      "tags": [
+        {
+          "name": "BACK_BUTTON",
+          "kind": "static",
+          "tag": "request_item_return_back_button",
+          "handles": "RequestItemReturnContract.Event.OnBack"
+        },
+        {
+          "name": "CLOSE_BUTTON",
+          "kind": "static",
+          "tag": "request_item_return_close_button",
+          "handles": "RequestItemReturnContract.Event.OnClose"
+        },
+        {
+          "name": "STICKY_BOTTOM_BUTTON",
+          "kind": "static",
+          "tag": "request_item_return_sticky_bottom_button",
+          "handles": "RequestItemReturnContract.Event.OnStickyBottomButtonClicked (`Next` / `Submit`)"
+        },
+        {
+          "name": "ERROR_RETRY_BUTTON",
+          "kind": "static",
+          "tag": "request_item_return_error_retry_button",
+          "handles": "RequestItemReturnContract.Event.OnErrorButtonClicked"
+        },
+        {
+          "name": "POLICY_BOTTOM_SHEET_ERROR_RETRY_BUTTON",
+          "kind": "static",
+          "tag": "request_item_return_policy_bottom_sheet_error_retry_button",
+          "handles": "RequestItemReturnContract.Event.OnBottomSheetErrorButtonClicked"
+        },
+        {
+          "name": "AGREE_TO_RETURN_POLICY_CHECKBOX",
+          "kind": "static",
+          "tag": "request_item_return_agree_to_return_policy_checkbox",
+          "handles": "RequestItemReturnContract.Event.OnAgreeToReturnPolicyCheckboxClicked"
+        },
+        {
+          "name": "RETURN_POLICY_TEXT",
+          "kind": "static",
+          "tag": "request_item_return_return_policy_text",
+          "handles": "RequestItemReturnContract.Event.OnReturnPolicyTextClicked"
+        },
+        {
+          "name": "REQUEST_REFUND_CHECKBOX",
+          "kind": "static",
+          "tag": "request_item_return_request_refund_checkbox",
+          "handles": "RequestItemReturnContract.Event.OnRequestRefundCheckboxClicked"
+        },
+        {
+          "name": "RETURN_REASON_OTHER_TEXT_FIELD",
+          "kind": "static",
+          "tag": "request_item_return_return_reason_other_text_field",
+          "handles": "RequestItemReturnContract.Event.OnReturnReasonOtherTextChanged"
+        },
+        {
+          "name": "DESCRIPTION_TEXT_FIELD",
+          "kind": "static",
+          "tag": "request_item_return_description_text_field",
+          "handles": "RequestItemReturnContract.Event.OnDescriptionChanged"
+        },
+        {
+          "name": "UPLOAD_PHOTOS_BUTTON",
+          "kind": "static",
+          "tag": "request_item_return_upload_photos_button",
+          "handles": "RequestItemReturnContract.Event.OnUploadPhotosButtonClicked"
+        },
+        {
+          "name": "SELLER_RESPONSE_MESSAGE_TEXT_FIELD",
+          "kind": "static",
+          "tag": "request_item_return_seller_response_message_text_field",
+          "handles": "RequestItemReturnContract.Event.OnSellerResponseMessageChanged"
+        },
+        {
+          "name": "returnReasonItem",
+          "kind": "dynamic",
+          "template": "request_item_return_return_reason_{reasonName}_item",
+          "args": "reasonName: String",
+          "handles": "RequestItemReturnContract.Event.OnReturnReasonItemSelected; one tag per `OrderItemReturnReasonUi` (e.g. `request_item_return_return_reason_defective_item`)."
+        },
+        {
+          "name": "returnConditionItem",
+          "kind": "dynamic",
+          "template": "request_item_return_return_condition_{conditionName}_item",
+          "args": "conditionName: String",
+          "handles": "RequestItemReturnContract.Event.OnReturnConditionItemSelected; one tag per `OrderItemReturnConditionUi`."
+        },
+        {
+          "name": "returnMethodItem",
+          "kind": "dynamic",
+          "template": "request_item_return_return_method_{methodName}_item",
+          "args": "methodName: String",
+          "handles": "RequestItemReturnContract.Event.OnReturnMethodItemSelected; one tag per `OrderItemReturnMethodUi`."
+        },
+        {
+          "name": "deleteImageButton",
+          "kind": "dynamic",
+          "template": "request_item_return_delete_image_{position}_button",
+          "args": "position: Int",
+          "handles": "RequestItemReturnContract.Event.OnImageDeleteButtonClicked; one tag per attached image, keyed by its 1-based position."
+        },
+        {
+          "name": "sellerResponseActionButton",
+          "kind": "dynamic",
+          "template": "request_item_return_seller_response_{actionName}_button",
+          "args": "actionName: String",
+          "handles": "RequestItemReturnContract.Event.OnSellerResponseActionClicked; one tag per `OrderItemReturnSellerActionUi`."
+        }
+      ]
+    },
+    {
+      "screen": "RequestItemReturnSuccess",
+      "object": "RequestItemReturnSuccessTestTags",
+      "package": "com.alexgreece45.marvelx.ui.screens.orders.requestReturn.success",
+      "file": "app/src/main/kotlin/com/alexgreece45/marvelx/ui/screens/orders/requestReturn/success/RequestItemReturnSuccessTestTags.kt",
+      "tagCount": 3,
+      "tags": [
+        {
+          "name": "CLOSE_BUTTON",
+          "kind": "static",
+          "tag": "request_item_return_success_close_button",
+          "handles": "RequestItemReturnSuccessContract.Event.OnBack (toolbar `Close` button)"
+        },
+        {
+          "name": "ERROR_RETRY_BUTTON",
+          "kind": "static",
+          "tag": "request_item_return_success_error_retry_button",
+          "handles": "RequestItemReturnSuccessContract.Event.OnErrorButtonClicked"
+        },
+        {
+          "name": "VIEW_STATUS_BUTTON",
+          "kind": "static",
+          "tag": "request_item_return_success_view_status_button",
+          "handles": "RequestItemReturnSuccessContract.Event.OnStickyBottomButtonClicked"
+        }
+      ]
+    },
+    {
+      "screen": "Otp",
+      "object": "OtpTestTags",
+      "package": "com.alexgreece45.marvelx.ui.screens.otp",
+      "file": "app/src/main/kotlin/com/alexgreece45/marvelx/ui/screens/otp/OtpTestTags.kt",
+      "tagCount": 4,
+      "tags": [
+        {
+          "name": "BACK_BUTTON",
+          "kind": "static",
+          "tag": "otp_back_button",
+          "handles": "OtpEvent.OnBackClick"
+        },
+        {
+          "name": "OTP_TEXT_FIELD",
+          "kind": "static",
+          "tag": "otp_otp_text_field",
+          "handles": "OtpEvent.OnOtpFieldValueChange / OnDoneClick"
+        },
+        {
+          "name": "RESEND_OTP_BUTTON",
+          "kind": "static",
+          "tag": "otp_resend_otp_button",
+          "handles": "OtpEvent.OnResendOtpButtonClick"
+        },
+        {
+          "name": "VERIFY_BUTTON",
+          "kind": "static",
+          "tag": "otp_verify_button",
+          "handles": "OtpEvent.OnVerifyButtonClicked"
+        }
+      ]
+    },
+    {
+      "screen": "EditProfileDetails",
+      "object": "EditProfileDetailsTestTags",
+      "package": "com.alexgreece45.marvelx.ui.screens.profile.editProfileDetails",
+      "file": "app/src/main/kotlin/com/alexgreece45/marvelx/ui/screens/profile/editProfileDetails/EditProfileDetailsTestTags.kt",
+      "tagCount": 10,
+      "tags": [
+        {
+          "name": "BACK_BUTTON",
+          "kind": "static",
+          "tag": "edit_profile_details_back_button",
+          "handles": "EditProfileDetailsContract.Event.OnBackClicked"
+        },
+        {
+          "name": "SAVE_CHANGES_BUTTON",
+          "kind": "static",
+          "tag": "edit_profile_details_save_changes_button",
+          "handles": "EditProfileDetailsContract.Event.OnSaveChangesButtonClicked"
+        },
+        {
+          "name": "FIRST_NAME_TEXT_FIELD",
+          "kind": "static",
+          "tag": "edit_profile_details_first_name_text_field",
+          "handles": "First name field value change (`EditProfileDetailsItemUi.onValueChanged`)"
+        },
+        {
+          "name": "FIRST_NAME_RESET_BUTTON",
+          "kind": "static",
+          "tag": "edit_profile_details_first_name_reset_button",
+          "handles": "First name field reset (`EditProfileDetailsItemUi.onResetIconClicked`)"
+        },
+        {
+          "name": "LAST_NAME_TEXT_FIELD",
+          "kind": "static",
+          "tag": "edit_profile_details_last_name_text_field",
+          "handles": "Last name field value change"
+        },
+        {
+          "name": "LAST_NAME_RESET_BUTTON",
+          "kind": "static",
+          "tag": "edit_profile_details_last_name_reset_button",
+          "handles": "Last name field reset"
+        },
+        {
+          "name": "EMAIL_TEXT_FIELD",
+          "kind": "static",
+          "tag": "edit_profile_details_email_text_field",
+          "handles": "Email field value change"
+        },
+        {
+          "name": "EMAIL_RESET_BUTTON",
+          "kind": "static",
+          "tag": "edit_profile_details_email_reset_button",
+          "handles": "Email field reset"
+        },
+        {
+          "name": "GENDER_DROPDOWN",
+          "kind": "static",
+          "tag": "edit_profile_details_gender_dropdown",
+          "handles": "EditProfileDetailsContract.Event.GenderField.OnClick / OnDismiss"
+        },
+        {
+          "name": "genderOption",
+          "kind": "dynamic",
+          "template": "edit_profile_details_gender_{genderKey}_option",
+          "args": "genderKey: String",
+          "handles": "EditProfileDetailsContract.Event.GenderField.OnGenderSelected; one tag per option, keyed by `Gender.key` (e.g. `edit_profile_details_gender_female_option`)."
+        }
+      ]
+    },
+    {
+      "screen": "ProfileImage",
+      "object": "ProfileImageTestTags",
+      "package": "com.alexgreece45.marvelx.ui.screens.profile.image",
+      "file": "app/src/main/kotlin/com/alexgreece45/marvelx/ui/screens/profile/image/ProfileImageTestTags.kt",
+      "tagCount": 1,
+      "tags": [
+        {
+          "name": "CLOSE_BUTTON",
+          "kind": "static",
+          "tag": "profile_image_close_button",
+          "handles": "ProfileImageContract.Event.OnBack (toolbar `Close` button)"
+        }
+      ]
+    },
+    {
+      "screen": "ProfileDetails",
+      "object": "ProfileDetailsTestTags",
+      "package": "com.alexgreece45.marvelx.ui.screens.profile.profileDetails",
+      "file": "app/src/main/kotlin/com/alexgreece45/marvelx/ui/screens/profile/profileDetails/ProfileDetailsTestTags.kt",
+      "tagCount": 14,
+      "tags": [
+        {
+          "name": "BACK_BUTTON",
+          "kind": "static",
+          "tag": "profile_details_back_button",
+          "handles": "ProfileDetailsContract.Event.OnBackClicked"
+        },
+        {
+          "name": "MORE_ACTIONS_BUTTON",
+          "kind": "static",
+          "tag": "profile_details_more_actions_button",
+          "handles": "ProfileDetailsContract.Event.MoreActions.OnClicked (toolbar action)"
+        },
+        {
+          "name": "EDIT_PROFILE_BUTTON",
+          "kind": "static",
+          "tag": "profile_details_edit_profile_button",
+          "handles": "ProfileDetailsContract.Event.OnEditProfileDetailsIconClicked (toolbar action, own profile only)"
+        },
+        {
+          "name": "PROFILE_IMAGE",
+          "kind": "static",
+          "tag": "profile_details_profile_image",
+          "handles": "ProfileDetailsContract.Event.ProfileBanner.OnProfileImageClicked"
+        },
+        {
+          "name": "FRIENDS_TILE",
+          "kind": "static",
+          "tag": "profile_details_friends_tile",
+          "handles": "ProfileDetailsContract.Event.ProfileBanner.OnFriendsListClicked"
+        },
+        {
+          "name": "LISTINGS_TILE",
+          "kind": "static",
+          "tag": "profile_details_listings_tile",
+          "handles": "ProfileDetailsContract.Event.ProfileBanner.OnListingsListClicked"
+        },
+        {
+          "name": "FAVORITES_TILE",
+          "kind": "static",
+          "tag": "profile_details_favorites_tile",
+          "handles": "ProfileDetailsContract.Event.ProfileBanner.OnFavoritesListClicked"
+        },
+        {
+          "name": "GENDER_FIELD",
+          "kind": "static",
+          "tag": "profile_details_gender_field",
+          "handles": "ProfileDetailsContract.Event.ProfileBanner.OnGenderLongClick (long click; visible gender only)"
+        },
+        {
+          "name": "EMAIL_FIELD",
+          "kind": "static",
+          "tag": "profile_details_email_field",
+          "handles": "ProfileDetailsContract.Event.ProfileBanner.OnEmailLongClick (long click; visible email only)"
+        },
+        {
+          "name": "MESSAGE_CHIP",
+          "kind": "static",
+          "tag": "profile_details_message_chip",
+          "handles": "ProfileDetailsContract.Event.ProfileBanner.OnMessageClicked (other users only)"
+        },
+        {
+          "name": "RELATIONSHIP_STATUS_CHIP",
+          "kind": "static",
+          "tag": "profile_details_relationship_status_chip",
+          "handles": "ProfileDetailsContract.Event.ProfileBanner.OnRelationshipStatusChipClicked; the same tag is used for the `Add friend`, `Cancel request`, `Incoming request` and `Friends` states"
+        },
+        {
+          "name": "BLOCK_BOTTOM_SHEET_ITEM",
+          "kind": "static",
+          "tag": "profile_details_block_bottom_sheet_item",
+          "handles": "ProfileDetailsContract.Event.MoreActions.OnBlockClicked"
+        },
+        {
+          "name": "SHARE_PROFILE_BOTTOM_SHEET_ITEM",
+          "kind": "static",
+          "tag": "profile_details_share_profile_bottom_sheet_item",
+          "handles": "ProfileDetailsContract.Event.MoreActions.OnShareProfileClicked"
+        },
+        {
+          "name": "SHOW_QR_CODE_BOTTOM_SHEET_ITEM",
+          "kind": "static",
+          "tag": "profile_details_show_qr_code_bottom_sheet_item",
+          "handles": "ProfileDetailsContract.Event.MoreActions.OnShowQrCodeClicked"
+        }
+      ]
+    },
+    {
+      "screen": "ProfileDetailsStats",
+      "object": "ProfileDetailsStatsTestTags",
+      "package": "com.alexgreece45.marvelx.ui.screens.profile.profileDetails.stats",
+      "file": "app/src/main/kotlin/com/alexgreece45/marvelx/ui/screens/profile/profileDetails/stats/ProfileDetailsStatsTestTags.kt",
+      "tagCount": 2,
+      "tags": [
+        {
+          "name": "BACK_BUTTON",
+          "kind": "static",
+          "tag": "profile_details_stats_back_button",
+          "handles": "ProfileDetailsStatsContract.Event.OnBackClicked"
+        },
+        {
+          "name": "itemTile",
+          "kind": "dynamic",
+          "template": "profile_details_stats_item_{itemId}_tile",
+          "args": "itemId: Any",
+          "handles": "ProfileDetailsStatsContract.Event.OnItemClicked; one tag per friend / listing / favorite tile, keyed by the item id (e.g. `profile_details_stats_item_42_tile`)."
+        }
+      ]
+    },
+    {
+      "screen": "Profile",
+      "object": "ProfileTestTags",
+      "package": "com.alexgreece45.marvelx.ui.screens.profile",
+      "file": "app/src/main/kotlin/com/alexgreece45/marvelx/ui/screens/profile/ProfileTestTags.kt",
+      "tagCount": 11,
+      "tags": [
+        {
+          "name": "SETTINGS_BUTTON",
+          "kind": "static",
+          "tag": "profile_settings_button",
+          "handles": "ProfileContract.Event.OnSettingsIconButtonClicked (toolbar action)"
+        },
+        {
+          "name": "PROFILE_IMAGE",
+          "kind": "static",
+          "tag": "profile_profile_image",
+          "handles": "ProfileContract.Event.ProfileImage.OnClicked (opens the profile image bottom sheet)"
+        },
+        {
+          "name": "SEE_YOUR_PROFILE_BUTTON",
+          "kind": "static",
+          "tag": "profile_see_your_profile_button",
+          "handles": "ProfileContract.Event.OnSeeYourProfileClicked"
+        },
+        {
+          "name": "SCAN_QR_CODE_SECTION",
+          "kind": "static",
+          "tag": "profile_scan_qr_code_section",
+          "handles": "Section: Scan QR code; navigates to the QR code screen"
+        },
+        {
+          "name": "FRIENDS_SECTION",
+          "kind": "static",
+          "tag": "profile_friends_section",
+          "handles": "Section: Friends; navigates to the Friends screen"
+        },
+        {
+          "name": "ORDERS_SECTION",
+          "kind": "static",
+          "tag": "profile_orders_section",
+          "handles": "Section: Orders; navigates to the Orders screen"
+        },
+        {
+          "name": "MY_LISTINGS_SECTION",
+          "kind": "static",
+          "tag": "profile_my_listings_section",
+          "handles": "Section: My listings; navigates to the My Listings screen"
+        },
+        {
+          "name": "VIEW_PROFILE_IMAGE_BOTTOM_SHEET_ITEM",
+          "kind": "static",
+          "tag": "profile_view_profile_image_bottom_sheet_item",
+          "handles": "ProfileContract.Event.ProfileImage.BottomSheet.OnViewImageClicked"
+        },
+        {
+          "name": "UPLOAD_PROFILE_IMAGE_BOTTOM_SHEET_ITEM",
+          "kind": "static",
+          "tag": "profile_upload_profile_image_bottom_sheet_item",
+          "handles": "ProfileContract.Event.ProfileImage.BottomSheet.OnUploadImageClicked"
+        },
+        {
+          "name": "CROPPED_IMAGE_CLOSE_BUTTON",
+          "kind": "static",
+          "tag": "profile_cropped_image_close_button",
+          "handles": "ProfileContract.Event.ProfileImage.CroppedImage.OnCloseClicked (toolbar `Close` button)"
+        },
+        {
+          "name": "CROPPED_IMAGE_SAVE_BUTTON",
+          "kind": "static",
+          "tag": "profile_cropped_image_save_button",
+          "handles": "ProfileContract.Event.ProfileImage.CroppedImage.OnSaveClicked"
+        }
+      ]
+    },
+    {
+      "screen": "QrCodeScan",
+      "object": "QrCodeScanTestTags",
+      "package": "com.alexgreece45.marvelx.ui.screens.qrCode",
+      "file": "app/src/main/kotlin/com/alexgreece45/marvelx/ui/screens/qrCode/QrCodeScanTestTags.kt",
+      "tagCount": 2,
+      "tags": [
+        {
+          "name": "CLOSE_BUTTON",
+          "kind": "static",
+          "tag": "qr_code_scan_close_button",
+          "handles": "QrCodeScanContract.Event.OnBack (toolbar `Close` button)"
+        },
+        {
+          "name": "OPEN_APP_SETTINGS_BUTTON",
+          "kind": "static",
+          "tag": "qr_code_scan_open_app_settings_button",
+          "handles": "QrCodeScanContract.Event.OnOpenAppSettingsButtonClicked"
+        }
+      ]
+    },
+    {
+      "screen": "Faq",
+      "object": "FaqTestTags",
+      "package": "com.alexgreece45.marvelx.ui.screens.settings.faq",
+      "file": "app/src/main/kotlin/com/alexgreece45/marvelx/ui/screens/settings/faq/FaqTestTags.kt",
+      "tagCount": 2,
+      "tags": [
+        {
+          "name": "BACK_BUTTON",
+          "kind": "static",
+          "tag": "faq_back_button",
+          "handles": "FaqContract.Event.OnBackClicked"
+        },
+        {
+          "name": "sectionHeader",
+          "kind": "dynamic",
+          "template": "faq_section_{sectionId}_header",
+          "args": "sectionId: String",
+          "handles": "FaqContract.Event.OnSectionClicked; one tag per section, keyed by `FaqUi.id` (e.g. `faq_section_42_header`)."
+        }
+      ]
+    },
+    {
+      "screen": "PrivacySettings",
+      "object": "PrivacySettingsTestTags",
+      "package": "com.alexgreece45.marvelx.ui.screens.settings.privacySettings",
+      "file": "app/src/main/kotlin/com/alexgreece45/marvelx/ui/screens/settings/privacySettings/PrivacySettingsTestTags.kt",
+      "tagCount": 6,
+      "tags": [
+        {
+          "name": "BACK_BUTTON",
+          "kind": "static",
+          "tag": "privacy_settings_back_button",
+          "handles": "PrivacySettingsEvent.OnBackClicked"
+        },
+        {
+          "name": "FRIENDS_LIST_SWITCH",
+          "kind": "static",
+          "tag": "privacy_settings_friends_list_switch",
+          "handles": "PrivacySettingsEvent.OnFriendsListToggleClicked"
+        },
+        {
+          "name": "LISTINGS_LIST_SWITCH",
+          "kind": "static",
+          "tag": "privacy_settings_listings_list_switch",
+          "handles": "PrivacySettingsEvent.OnListingsListToggleClicked"
+        },
+        {
+          "name": "FAVORITES_LIST_SWITCH",
+          "kind": "static",
+          "tag": "privacy_settings_favorites_list_switch",
+          "handles": "PrivacySettingsEvent.OnFavoritesListToggleClicked"
+        },
+        {
+          "name": "GENDER_SWITCH",
+          "kind": "static",
+          "tag": "privacy_settings_gender_switch",
+          "handles": "PrivacySettingsEvent.OnGenderToggleClicked"
+        },
+        {
+          "name": "EMAIL_SWITCH",
+          "kind": "static",
+          "tag": "privacy_settings_email_switch",
+          "handles": "PrivacySettingsEvent.OnEmailToggleClicked"
+        }
+      ]
+    },
+    {
+      "screen": "Settings",
+      "object": "SettingsTestTags",
+      "package": "com.alexgreece45.marvelx.ui.screens.settings",
+      "file": "app/src/main/kotlin/com/alexgreece45/marvelx/ui/screens/settings/SettingsTestTags.kt",
+      "tagCount": 4,
+      "tags": [
+        {
+          "name": "BACK_BUTTON",
+          "kind": "static",
+          "tag": "settings_back_button",
+          "handles": "SettingsContract.Event.OnBackClicked"
+        },
+        {
+          "name": "PRIVACY_SETTINGS_SECTION",
+          "kind": "static",
+          "tag": "settings_privacy_settings_section",
+          "handles": "Privacy settings section; navigates to the Privacy Settings screen"
+        },
+        {
+          "name": "FAQ_SECTION",
+          "kind": "static",
+          "tag": "settings_faq_section",
+          "handles": "FAQ section; navigates to the FAQ screen"
+        },
+        {
+          "name": "LOGOUT_SECTION",
+          "kind": "static",
+          "tag": "settings_logout_section",
+          "handles": "Logout section; triggers a user logout"
+        }
+      ]
+    },
+    {
+      "screen": "Signup",
+      "object": "SignupTestTags",
+      "package": "com.alexgreece45.marvelx.ui.screens.signup",
+      "file": "app/src/main/kotlin/com/alexgreece45/marvelx/ui/screens/signup/SignupTestTags.kt",
+      "tagCount": 9,
+      "tags": [
+        {
+          "name": "BACK_BUTTON",
+          "kind": "static",
+          "tag": "signup_back_button",
+          "handles": "SignupEvent.OnBack"
+        },
+        {
+          "name": "FIRST_NAME_TEXT_FIELD",
+          "kind": "static",
+          "tag": "signup_first_name_text_field",
+          "handles": "SignupEvent.FieldValueChange.FirstName"
+        },
+        {
+          "name": "LAST_NAME_TEXT_FIELD",
+          "kind": "static",
+          "tag": "signup_last_name_text_field",
+          "handles": "SignupEvent.FieldValueChange.LastName"
+        },
+        {
+          "name": "GENDER_DROPDOWN",
+          "kind": "static",
+          "tag": "signup_gender_dropdown",
+          "handles": "SignupEvent.GenderDropdownMenu.OnClick / OnDismiss"
+        },
+        {
+          "name": "EMAIL_TEXT_FIELD",
+          "kind": "static",
+          "tag": "signup_email_text_field",
+          "handles": "SignupEvent.FieldValueChange.Email"
+        },
+        {
+          "name": "PASSWORD_TEXT_FIELD",
+          "kind": "static",
+          "tag": "signup_password_text_field",
+          "handles": "SignupEvent.FieldValueChange.Password"
+        },
+        {
+          "name": "PASSWORD_VISIBILITY_BUTTON",
+          "kind": "static",
+          "tag": "signup_password_visibility_button",
+          "handles": "SignupEvent.OnPasswordVisibilityIconClick"
+        },
+        {
+          "name": "SUBMIT_BUTTON",
+          "kind": "static",
+          "tag": "signup_submit_button",
+          "handles": "SignupEvent.OnSignupButtonClick"
+        },
+        {
+          "name": "genderOption",
+          "kind": "dynamic",
+          "template": "signup_gender_{genderKey}_option",
+          "args": "genderKey: String",
+          "handles": "SignupEvent.FieldValueChange.GenderDropDown; one tag per option, keyed by `Gender.key` (e.g. `signup_gender_female_option`)."
+        }
+      ]
+    }
+  ]
+}

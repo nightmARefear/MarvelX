@@ -39,6 +39,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -177,6 +178,7 @@ fun AllCharactersScreen(
                         iconResource = R.drawable.ic_filter_old,
                         backgroundColor = null,
                         contentColor = null,
+                        testTag = AllCharactersTestTags.SORT_FAB,
                         onClick = { onEventSent(AllCharactersEvent.OnFabClick) }
                     )
                 )
@@ -190,6 +192,7 @@ fun AllCharactersScreen(
                     item {
                         LazyItemContentErrorScreen(
                             errorMessage = error.errorMessage,
+                            retryTestTag = AllCharactersTestTags.ERROR_RETRY_BUTTON,
                             onRetryClick = error.onRetryClick
                         )
                     }
@@ -213,6 +216,8 @@ fun AllCharactersScreen(
                         SearchBar(
                             searchTerm = state.searchBarTerm,
                             hint = stringResource(R.string.all_characters_screen_search_bar_hint),
+                            modifier = Modifier.testTag(AllCharactersTestTags.SEARCH_TEXT_FIELD),
+                            closeButtonTestTag = AllCharactersTestTags.SEARCH_CLEAR_BUTTON,
                             onValueChange = { newSearchTerm ->
                                 onEventSent(
                                     AllCharactersEvent.SearchBar.OnKeyboardType(
@@ -276,6 +281,7 @@ private fun CharacterItem(
     Card(
         modifier = Modifier
             .fillMaxWidth()
+            .testTag(AllCharactersTestTags.characterCard(character.id))
             .throttledClickable(onClick = onClick, view = LocalView.current)
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
@@ -297,7 +303,9 @@ private fun CharacterItem(
             // Favorite icon.
             IconButton(
                 onClick = onFavoriteClick,
-                modifier = Modifier.align(Alignment.TopEnd)
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .testTag(AllCharactersTestTags.characterFavoriteButton(character.id))
             ) {
                 when (character.isFavorite) {
                     true -> {

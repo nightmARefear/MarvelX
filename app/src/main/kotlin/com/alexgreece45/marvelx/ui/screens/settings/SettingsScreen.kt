@@ -48,6 +48,7 @@ fun SettingsScreen(
     ContentScreen(
         isLoading = state.isLoading,
         navigableAction = ScreenNavigableAction.Backable(
+            testTag = SettingsTestTags.BACK_BUTTON,
             onBack = {
                 onEvent(SettingsContract.Event.OnBackClicked)
             }

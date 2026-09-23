@@ -21,6 +21,7 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -62,6 +63,7 @@ internal fun RequestItemReturnSuccessScreen(
     ContentScreen(
         isLoading = state.uiState.isLoading,
         navigableAction = ScreenNavigableAction.Closeable(
+            testTag = RequestItemReturnSuccessTestTags.CLOSE_BUTTON,
             onClose = {
                 onEvent(
                     RequestItemReturnSuccessContract.Event.OnBack
@@ -78,7 +80,9 @@ internal fun RequestItemReturnSuccessScreen(
             if (state.uiState is UiState.Success) {
                 WrapButton(
                     onClick = { onEvent(RequestItemReturnSuccessContract.Event.OnStickyBottomButtonClicked) },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag(RequestItemReturnSuccessTestTags.VIEW_STATUS_BUTTON)
                 ) {
                     Text(text = stringResource(if (state.uiState.data.isRefundRequested) R.string.screen_request_item_return_success_sticky_bottom_button_view_refund_status else R.string.screen_request_item_return_success_sticky_bottom_button_view_return_status))
                 }
@@ -100,6 +104,7 @@ internal fun RequestItemReturnSuccessScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(maxHeight),
+                            buttonTestTag = RequestItemReturnSuccessTestTags.ERROR_RETRY_BUTTON,
                             onErrorButtonClick = {
                                 onEvent(RequestItemReturnSuccessContract.Event.OnErrorButtonClicked)
                             }

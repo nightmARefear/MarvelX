@@ -13,6 +13,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
@@ -71,6 +72,9 @@ internal fun CheckoutPaymentDetailsScreen(
                 WizardTextInputField(
                     label = stringResource(R.string.screen_checkout_payment_details_label_cardholder_name),
                     placeholder = stringResource(R.string.screen_checkout_payment_details_placeholder_cardholder_name),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag(CheckoutPaymentDetailsTestTags.CARDHOLDER_NAME_TEXT_FIELD),
                     wizardInputField = state.cardholderNameField,
                     onValueChanged = {
                         onEvent(
@@ -84,6 +88,9 @@ internal fun CheckoutPaymentDetailsScreen(
                 WizardTextInputField(
                     label = stringResource(R.string.screen_checkout_payment_details_label_card_number),
                     placeholder = stringResource(R.string.screen_checkout_payment_details_placeholder_card_number),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag(CheckoutPaymentDetailsTestTags.CARD_NUMBER_TEXT_FIELD),
                     wizardInputField = state.cardNumberField,
                     trailingIcon = {
                         with(state.cardBrand) {
@@ -114,7 +121,9 @@ internal fun CheckoutPaymentDetailsScreen(
                     WizardTextInputField(
                         label = stringResource(R.string.screen_checkout_payment_details_label_expiration_date),
                         placeholder = state.expirationDatePlaceholder,
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier
+                            .weight(1f)
+                            .testTag(CheckoutPaymentDetailsTestTags.EXPIRATION_DATE_TEXT_FIELD),
                         wizardInputField = state.expirationDateField,
                         onValueChanged = {
                             onEvent(
@@ -132,7 +141,9 @@ internal fun CheckoutPaymentDetailsScreen(
                     WizardTextInputField(
                         label = stringResource(R.string.screen_checkout_payment_details_label_cvv),
                         placeholder = stringResource(R.string.screen_checkout_payment_details_placeholder_CVV),
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier
+                            .weight(1f)
+                            .testTag(CheckoutPaymentDetailsTestTags.CVV_TEXT_FIELD),
                         wizardInputField = state.cvvField,
                         onValueChanged = {
                             onEvent(

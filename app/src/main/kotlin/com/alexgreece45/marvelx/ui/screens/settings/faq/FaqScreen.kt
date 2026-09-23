@@ -20,6 +20,7 @@ import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -73,7 +74,10 @@ fun FaqScreen(
     ContentScreen(
         isLoading = state.isLoading,
         onBack = { onEventSent(FaqContract.Event.OnBackClicked) },
-        navigableAction = ScreenNavigableAction.Backable(onBack = { onEventSent(FaqContract.Event.OnBackClicked) }),
+        navigableAction = ScreenNavigableAction.Backable(
+            testTag = FaqTestTags.BACK_BUTTON,
+            onBack = { onEventSent(FaqContract.Event.OnBackClicked) }
+        ),
         showToolbar = true,
         toolbarTitle = stringResource(R.string.faq_screen_toolbar_title)
     ) { paddingValues ->
@@ -130,6 +134,7 @@ private fun FaqSection(section: FaqUi, onToggleExpansion: () -> Unit) {
             FaqSectionHeader(
                 title = section.title,
                 isExpanded = section.isExpanded,
+                modifier = Modifier.testTag(FaqTestTags.sectionHeader(section.id)),
                 onClick = onToggleExpansion
             )
 
@@ -156,16 +161,19 @@ private fun FaqSection(section: FaqUi, onToggleExpansion: () -> Unit) {
  *
  * @param title         The title of the FAQ section.
  * @param isExpanded    Whether the section is currently expanded.
+ * @param modifier      The modifier to be applied to the header.
  * @param onClick       Callback to be invoked when the header is clicked.
  */
 @Composable
 fun FaqSectionHeader(
     title: String,
     isExpanded: Boolean,
+    modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
     SectionHeader(
         title = title,
+        modifier = modifier,
         trailingIcon = {
             Icon(
                 imageVector = Icons.Filled.KeyboardArrowDown,

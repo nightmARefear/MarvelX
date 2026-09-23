@@ -36,6 +36,7 @@ import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -193,6 +194,7 @@ internal fun ProfileDetailsScreen(
         ContentScreen(
             isLoading = state.isLoading,
             navigableAction = ScreenNavigableAction.Backable(
+                testTag = ProfileDetailsTestTags.BACK_BUTTON,
                 onBack = {
                     onEventSent(
                         ProfileDetailsContract.Event.OnBackClicked
@@ -212,6 +214,7 @@ internal fun ProfileDetailsScreen(
                             iconResource = R.drawable.ic_more,
                             contentDescription = R.string.content_description_ic_more_actions
                         ),
+                        testTag = ProfileDetailsTestTags.MORE_ACTIONS_BUTTON,
                         onClick = { onEventSent(ProfileDetailsContract.Event.MoreActions.OnClicked) }
                     )
                 )
@@ -224,6 +227,7 @@ internal fun ProfileDetailsScreen(
                             iconResource = R.drawable.ic_edit,
                             contentDescription = R.string.profile_details_screen_content_description_edit_profile_details
                         ),
+                        testTag = ProfileDetailsTestTags.EDIT_PROFILE_BUTTON,
                         onClick = { onEventSent(ProfileDetailsContract.Event.OnEditProfileDetailsIconClicked) }
                     ),
                     ToolbarAction(
@@ -233,6 +237,7 @@ internal fun ProfileDetailsScreen(
                             iconResource = R.drawable.ic_more,
                             contentDescription = R.string.content_description_ic_more_actions
                         ),
+                        testTag = ProfileDetailsTestTags.MORE_ACTIONS_BUTTON,
                         onClick = { onEventSent(ProfileDetailsContract.Event.MoreActions.OnClicked) }
                     )
                 )
@@ -269,6 +274,7 @@ internal fun ProfileDetailsScreen(
                                     contentDescription = stringResource(R.string.content_description_your_profile_image),
                                     modifier = Modifier
                                         .size(ConstantsUi.PROFILE_IMAGE_SMALL_SIZE)
+                                        .testTag(ProfileDetailsTestTags.PROFILE_IMAGE)
                                         .throttledClickable(
                                             view = LocalView.current,
                                             onClick = { onEventSent(ProfileDetailsContract.Event.ProfileBanner.OnProfileImageClicked) }
@@ -292,18 +298,21 @@ internal fun ProfileDetailsScreen(
                                             ProfileBannerTile(
                                                 label = stringResource(R.string.profile_details_screen_label_profile_banner_tile_friends),
                                                 count = profileDetails.userStats.friendsCountFormatted,
+                                                testTag = ProfileDetailsTestTags.FRIENDS_TILE,
                                                 onClick = { onEventSent(ProfileDetailsContract.Event.ProfileBanner.OnFriendsListClicked) }
                                             )
 
                                             ProfileBannerTile(
                                                 label = stringResource(R.string.profile_details_screen_label_profile_banner_tile_listings),
                                                 count = profileDetails.userStats.listingsCountFormatted,
+                                                testTag = ProfileDetailsTestTags.LISTINGS_TILE,
                                                 onClick = { onEventSent(ProfileDetailsContract.Event.ProfileBanner.OnListingsListClicked) }
                                             )
 
                                             ProfileBannerTile(
                                                 label = stringResource(R.string.profile_details_screen_label_profile_banner_tile_favorites),
                                                 count = profileDetails.userStats.favoritesCountFormatted,
+                                                testTag = ProfileDetailsTestTags.FAVORITES_TILE,
                                                 onClick = { onEventSent(ProfileDetailsContract.Event.ProfileBanner.OnFavoritesListClicked) }
                                             )
                                         }
@@ -367,6 +376,7 @@ internal fun ProfileDetailsScreen(
                                             VisibleField(
                                                 label = stringResource(profileDetails.basicProfileDetails.gender.label),
                                                 onLongClickLabel = stringResource(R.string.screen_profile_details_label_gender_copy),
+                                                testTag = ProfileDetailsTestTags.GENDER_FIELD,
                                                 onLongClick = { onEventSent(ProfileDetailsContract.Event.ProfileBanner.OnGenderLongClick) }
                                             )
                                         }
@@ -388,6 +398,7 @@ internal fun ProfileDetailsScreen(
                                             VisibleField(
                                                 label = profileDetails.basicProfileDetails.email,
                                                 onLongClickLabel = stringResource(R.string.screen_profile_details_label_email_copy),
+                                                testTag = ProfileDetailsTestTags.EMAIL_FIELD,
                                                 onLongClick = { onEventSent(ProfileDetailsContract.Event.ProfileBanner.OnEmailLongClick) }
                                             )
                                         }
@@ -400,7 +411,8 @@ internal fun ProfileDetailsScreen(
                                 WrapHorizontalDivider()
 
                                 MessageChip(
-                                    onClick = { onEventSent(ProfileDetailsContract.Event.ProfileBanner.OnMessageClicked) }
+                                    onClick = { onEventSent(ProfileDetailsContract.Event.ProfileBanner.OnMessageClicked) },
+                                    modifier = Modifier.testTag(ProfileDetailsTestTags.MESSAGE_CHIP)
                                 )
 
                                 when (profileDetails.relationshipStatus) {
@@ -409,28 +421,32 @@ internal fun ProfileDetailsScreen(
                                     RelationshipStatusDomain.None -> {
                                         AddFriendChip(
                                             onClick = { onEventSent(ProfileDetailsContract.Event.ProfileBanner.OnRelationshipStatusChipClicked) },
-                                            isLoading = state.isRelationshipStatusChipLoading
+                                            isLoading = state.isRelationshipStatusChipLoading,
+                                            modifier = Modifier.testTag(ProfileDetailsTestTags.RELATIONSHIP_STATUS_CHIP)
                                         )
                                     }
 
                                     RelationshipStatusDomain.PendingFriendRequestSender -> {
                                         CancelRequestChip(
                                             onClick = { onEventSent(ProfileDetailsContract.Event.ProfileBanner.OnRelationshipStatusChipClicked) },
-                                            isLoading = state.isRelationshipStatusChipLoading
+                                            isLoading = state.isRelationshipStatusChipLoading,
+                                            modifier = Modifier.testTag(ProfileDetailsTestTags.RELATIONSHIP_STATUS_CHIP)
                                         )
                                     }
 
                                     RelationshipStatusDomain.PendingFriendRequestReceiver -> {
                                         IncomingFriendRequestChip(
                                             onClick = { onEventSent(ProfileDetailsContract.Event.ProfileBanner.OnRelationshipStatusChipClicked) },
-                                            isLoading = state.isRelationshipStatusChipLoading
+                                            isLoading = state.isRelationshipStatusChipLoading,
+                                            modifier = Modifier.testTag(ProfileDetailsTestTags.RELATIONSHIP_STATUS_CHIP)
                                         )
                                     }
 
                                     RelationshipStatusDomain.Friends -> {
                                         FriendsChip(
                                             onClick = { onEventSent(ProfileDetailsContract.Event.ProfileBanner.OnRelationshipStatusChipClicked) },
-                                            isLoading = state.isRelationshipStatusChipLoading
+                                            isLoading = state.isRelationshipStatusChipLoading,
+                                            modifier = Modifier.testTag(ProfileDetailsTestTags.RELATIONSHIP_STATUS_CHIP)
                                         )
                                     }
                                 }
@@ -528,17 +544,24 @@ private fun HiddenField(label: String) {
  * the user. The text to show is set through [label].
  */
 @Composable
-private fun VisibleField(label: String, onLongClickLabel: String, onLongClick: () -> Unit) {
+private fun VisibleField(
+    label: String,
+    onLongClickLabel: String,
+    testTag: String,
+    onLongClick: () -> Unit
+) {
     Text(
         text = label,
-        modifier = Modifier.combinedClickable(
-            interactionSource = null,
-            indication = null,
-            role = Role.Button,
-            onLongClickLabel = onLongClickLabel,
-            onLongClick = onLongClick,
-            onClick = {}
-        ),
+        modifier = Modifier
+            .testTag(testTag)
+            .combinedClickable(
+                interactionSource = null,
+                indication = null,
+                role = Role.Button,
+                onLongClickLabel = onLongClickLabel,
+                onLongClick = onLongClick,
+                onClick = {}
+            ),
         style = MaterialTheme.typography.subtitle1
     )
 }
@@ -547,12 +570,14 @@ private fun VisibleField(label: String, onLongClickLabel: String, onLongClick: (
  * Displays a profile banner tile with the given [label] and [count].
  */
 @Composable
-private fun ProfileBannerTile(label: String, count: String, onClick: () -> Unit) {
+private fun ProfileBannerTile(label: String, count: String, testTag: String, onClick: () -> Unit) {
     Column(
-        modifier = Modifier.throttledClickable(
-            view = LocalView.current,
-            onClick = onClick
-        ),
+        modifier = Modifier
+            .testTag(testTag)
+            .throttledClickable(
+                view = LocalView.current,
+                onClick = onClick
+            ),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(

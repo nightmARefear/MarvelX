@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.autofill.ContentType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentType
 import androidx.compose.ui.semantics.semantics
@@ -70,14 +71,16 @@ fun ForgotPasswordScreen(
 
     ContentScreen(
         isLoading = state.isLoading,
-        navigableAction = ScreenNavigableAction.Backable {
+        navigableAction = ScreenNavigableAction.Backable(testTag = ForgotPasswordTestTags.BACK_BUTTON) {
             viewModel.setEvent(ForgotPasswordEvent.OnBackClick)
         },
         showToolbar = true,
         stickyBottom = {
             WrapButton(
                 onClick = { viewModel.setEvent(ForgotPasswordEvent.OnContinueButtonClicked) },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag(ForgotPasswordTestTags.CONTINUE_BUTTON),
                 enabled = state.isContinueButtonEnabled
             ) {
                 Text(text = stringResource(R.string.forgot_password_enter_email_screen_sticky_button))
@@ -119,7 +122,8 @@ private fun ForgotPasswordScreenContent(
         },
         modifier = Modifier
             .semantics { contentType = ContentType.EmailAddress }
-            .fillMaxWidth(),
+            .fillMaxWidth()
+            .testTag(ForgotPasswordTestTags.EMAIL_TEXT_FIELD),
         label = stringResource(R.string.forgot_password_screen_input_field_label_email),
         errorText = state.emailValidationResult.message,
         isError = state.emailValidationResult.isValid.not() && state.emailValidationResult.message.isNotBlank(),

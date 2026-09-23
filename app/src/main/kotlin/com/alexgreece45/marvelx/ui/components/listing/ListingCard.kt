@@ -21,10 +21,12 @@ fun ListingCard(
     trailingIcon: (@Composable () -> Unit)?,
     additionalContent: (@Composable () -> Unit)? = null,
     enabled: Boolean = true,
+    modifier: Modifier = Modifier,
     onClicked: () -> Unit
 ) {
     SectionHeader(
         title = title,
+        modifier = modifier,
         titleMaxLines = titleMaxLines,
         additionalTitleContent = additionalTitleContent,
         leadingIcon = {

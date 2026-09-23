@@ -568,14 +568,17 @@ class ProfileDetailsViewModel(
             BottomSheetContentItem(
                 title = resourceProvider.getString(R.string.profile_details_screen_label_more_actions_block),
                 titleColor = getErrorColor(),
+                testTag = ProfileDetailsTestTags.BLOCK_BOTTOM_SHEET_ITEM,
                 onClickEvent = ProfileDetailsContract.Event.MoreActions.OnBlockClicked
             ),
             BottomSheetContentItem(
                 title = resourceProvider.getString(R.string.profile_details_screen_label_more_actions_share_profile),
+                testTag = ProfileDetailsTestTags.SHARE_PROFILE_BOTTOM_SHEET_ITEM,
                 onClickEvent = ProfileDetailsContract.Event.MoreActions.OnShareProfileClicked
             ),
             BottomSheetContentItem(
                 title = resourceProvider.getString(R.string.profile_details_screen_label_more_actions_show_qr_code),
+                testTag = ProfileDetailsTestTags.SHOW_QR_CODE_BOTTOM_SHEET_ITEM,
                 onClickEvent = ProfileDetailsContract.Event.MoreActions.OnShowQrCodeClicked
             ),
         )

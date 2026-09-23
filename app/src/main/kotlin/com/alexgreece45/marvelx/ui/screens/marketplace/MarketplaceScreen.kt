@@ -76,6 +76,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -322,6 +323,7 @@ internal fun MarketplaceScreen(
         ContentScreen(
             isLoading = state.isLoading,
             navigableAction = if (state.mode == MarketplaceMode.DISCOVER) ScreenNavigableAction.None else ScreenNavigableAction.Backable(
+                testTag = MarketplaceTestTags.BACK_BUTTON,
                 onBack = { onEvent(MarketplaceContract.Event.OnBackClicked) }
             ),
             showToolbar = true,
@@ -342,6 +344,7 @@ internal fun MarketplaceScreen(
                                     .fillMaxWidth()
                                     .height(maxHeight),
                                 buttonLabel = stringResource(R.string.generic_retry_button),
+                                buttonTestTag = MarketplaceTestTags.ERROR_RETRY_BUTTON,
                                 onErrorButtonClick = { onEvent(MarketplaceContract.Event.OnErrorButtonClicked) }
                             )
                         }
@@ -463,6 +466,7 @@ internal fun MarketplaceScreen(
                                                         GenericErrorScreen(
                                                             errorMessage = stringResource(R.string.screen_marketplace_generic_error_message),
                                                             modifier = Modifier.fillMaxSize(),
+                                                            buttonTestTag = MarketplaceTestTags.ERROR_RETRY_BUTTON,
                                                             onErrorButtonClick = {
                                                                 onEvent(
                                                                     MarketplaceContract.Event.OnErrorButtonClicked
@@ -572,7 +576,8 @@ private fun SearchBarSection(
             GenericSearchBar(
                 searchTerm = searchQuery,
                 hint = stringResource(R.string.screen_marketplace_search_bar_hint),
-                modifier = searchBarModifier,
+                modifier = searchBarModifier.testTag(MarketplaceTestTags.SEARCH_TEXT_FIELD),
+                deleteButtonTestTag = MarketplaceTestTags.SEARCH_CLEAR_BUTTON,
                 onValueChange = onSearchQueryChange,
                 onDeleteIconClicked = onDeleteIconClick
             )
@@ -581,6 +586,7 @@ private fun SearchBarSection(
                 Box(
                     modifier = Modifier
                         .matchParentSize()
+                        .testTag(MarketplaceTestTags.SEARCH_BAR_BUTTON)
                         .clip(MaterialTheme.shapes.medium)
                         .clickableNoRipple(
                             role = Role.Button,
@@ -621,7 +627,10 @@ private fun SearchBarSection(
                     }
                 },
                 extraTitleContent = {
-                    WrapTextButton(onClick = onComparisonStatusContainerButtonClick) {
+                    WrapTextButton(
+                        onClick = onComparisonStatusContainerButtonClick,
+                        modifier = Modifier.testTag(MarketplaceTestTags.COMPARISON_STATUS_BUTTON)
+                    ) {
                         Text(
                             text = stringResource(R.string.screen_marketplace_listings_for_comparison_button),
                             textDecoration = TextDecoration.Underline,
@@ -661,6 +670,7 @@ private fun SearchBarSection(
                         ActiveFilterChip(
                             label = category.label,
                             onRemoveClick = { onActiveCategoryDeleteIconClick(category) },
+                            removeButtonTestTag = MarketplaceTestTags.activeCategoryRemoveButton(category.code),
                             iconContentDescription = stringResource(
                                 R.string.screen_marketplace_content_description_remove_category,
                                 category.label
@@ -693,6 +703,7 @@ private fun SortFilterChipsRow(
         // Sort chip.
         WrapChip(
             onClick = onSortChipClick,
+            modifier = Modifier.testTag(MarketplaceTestTags.SORT_CHIP),
             contentPaddingValues = PaddingValues(SPACING_SMALL.dp),
             leadingIcon = {
                 Icon(
@@ -718,6 +729,7 @@ private fun SortFilterChipsRow(
         // Filters chip.
         WrapChip(
             onClick = onFiltersChipClick,
+            modifier = Modifier.testTag(MarketplaceTestTags.FILTERS_CHIP),
             border = if (uniqueFiltersApplied > 0) BorderStroke(
                 width = 1.dp,
                 MaterialTheme.customColors.errorStatusContainerColors.outlineColor
@@ -761,7 +773,10 @@ private fun SortFilterChipsRow(
 
         Spacer(modifier = Modifier.weight(1f))
 
-        IconButton(onClick = onLayoutChangeButtonClick) {
+        IconButton(
+            onClick = onLayoutChangeButtonClick,
+            modifier = Modifier.testTag(MarketplaceTestTags.LAYOUT_CHANGE_BUTTON)
+        ) {
             Icon(
                 painter = painterResource(
                     when (listingsLayout) {
@@ -807,6 +822,7 @@ private fun DiscoverContent(
 
         marketplaceUi.categories.forEach { categorySectionUi ->
             ListingCategorySection(
+                categoryCode = categorySectionUi.categoryCode,
                 categoryTitle = categorySectionUi.title,
                 listings = categorySectionUi.listings,
                 onCategoryClicked = {
@@ -857,6 +873,7 @@ private fun PromoSection(
 
 @Composable
 private fun ListingCategorySection(
+    categoryCode: String,
     categoryTitle: String,
     listings: ImmutableList<ListingPreviewUi>,
     onCategoryClicked: (() -> Unit)? = null,
@@ -873,6 +890,7 @@ private fun ListingCategorySection(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 12.dp)
+                    .testTag(MarketplaceTestTags.categorySection(categoryCode))
                     .clickableNoRipple(
                         enabled = onCategoryClicked != null,
                         onClick = onCategoryClicked ?: {}
@@ -939,7 +957,15 @@ private fun ListingPreviewItem(
         }
 
     Column(
-        modifier = columnModifier.then(Modifier.clickableNoRipple(onClick = onListingClick)),
+        modifier = columnModifier
+            .testTag(
+                if (isPromo) {
+                    MarketplaceTestTags.promoListing(listingPreviewUi.listingId)
+                } else {
+                    MarketplaceTestTags.previewListing(listingPreviewUi.listingId)
+                }
+            )
+            .then(Modifier.clickableNoRipple(onClick = onListingClick)),
         verticalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp)
     ) {
         ListingImage(
@@ -971,6 +997,7 @@ private fun FilteredListingItem(
     Column(
         modifier = Modifier
             .fillMaxWidth()
+            .testTag(MarketplaceTestTags.listingCard(filteredListing.listingId))
             .clickable(onClick = onListingClick),
         verticalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp)
     ) {
@@ -1009,6 +1036,9 @@ private fun FilteredListingItem(
                     verticalArrangement = Arrangement.spacedBy(SPACING_TINY.dp)
                 ) {
                     FilteredListingItemImageActionButton(
+                        modifier = Modifier.testTag(
+                            MarketplaceTestTags.listingFavoriteButton(filteredListing.listingId)
+                        ),
                         isLoading = filteredListing.favorite.isLoading,
                         onClick = onFavoriteClick,
                         icon = {
@@ -1029,6 +1059,9 @@ private fun FilteredListingItem(
                     )
 
                     FilteredListingItemImageActionButton(
+                        modifier = Modifier.testTag(
+                            MarketplaceTestTags.listingComparisonButton(filteredListing.listingId)
+                        ),
                         isLoading = false,
                         onClick = onComparisonClick,
                         icon = {
@@ -1065,7 +1098,8 @@ private fun FilteredListingItem(
                             onClick = onCartClick,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(32.dp),
+                                .height(32.dp)
+                                .testTag(MarketplaceTestTags.listingCartButton(filteredListing.listingId)),
                             shape = RoundedCornerShape(
                                 topStart = SPACING_MEDIUM.dp,
                                 topEnd = SPACING_MEDIUM.dp
@@ -1088,6 +1122,7 @@ private fun FilteredListingItem(
                                 .align(Alignment.BottomEnd)
                                 .clip(RoundedCornerShape(topStart = SPACING_MEDIUM.dp))
                                 .background(color = Color(0xD821F33D))
+                                .testTag(MarketplaceTestTags.listingCartButton(filteredListing.listingId))
                                 .clickableNoRipple(onClick = onCartClick, role = Role.Button)
                                 .height(32.dp)
                                 .padding(horizontal = SPACING_SMALL.dp),
@@ -1234,6 +1269,7 @@ private fun SortBottomSheetContent(
             BottomSheetStickyHeader(
                 title = stringResource(R.string.screen_marketplace_sort_bottom_sheet_title),
                 closeIconContentDescription = stringResource(R.string.screen_marketplace_content_description_close_sort_by_bottom_sheet_icon),
+                closeTestTag = MarketplaceTestTags.SORT_SHEET_CLOSE_BUTTON,
                 onCloseButtonClick = onCloseButtonClick
             )
 
@@ -1242,6 +1278,7 @@ private fun SortBottomSheetContent(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .testTag(MarketplaceTestTags.sortOption(sort.name))
                         .clickable(onClick = { onSortSelect(sort) }),
                     horizontalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp),
                     verticalAlignment = Alignment.CenterVertically
@@ -1291,6 +1328,7 @@ private fun FilterMenuBottomSheetContent(
                 BottomSheetStickyHeader(
                     title = stringResource(R.string.screen_marketplace_filter_menu_title),
                     closeIconContentDescription = stringResource(R.string.screen_marketplace_content_description_close_filter_menu_bottom_sheet_icon),
+                    closeTestTag = MarketplaceTestTags.FILTER_SHEET_CLOSE_BUTTON,
                     onCloseButtonClick = { onFilterMenuEvent(MarketplaceContract.Event.FilterMenu.OnCloseButtonClicked) }
                 )
 
@@ -1305,6 +1343,7 @@ private fun FilterMenuBottomSheetContent(
                     // Category.
                     FilterSection(
                         title = stringResource(R.string.screen_marketplace_filter_menu_section_category_title),
+                        headerTestTag = MarketplaceTestTags.filterSectionHeader("category"),
                         collapsedLabel = searchCriteria.categories
                             .filter { it.isSelected }
                             .joinToString(separator = ", ") { it.option.label }
@@ -1317,6 +1356,9 @@ private fun FilterMenuBottomSheetContent(
                             searchCriteria.categories.forEach { category ->
                                 FilterChip(
                                     selected = category.isSelected,
+                                    modifier = Modifier.testTag(
+                                        MarketplaceTestTags.filterCategoryChip(category.option.code)
+                                    ),
                                     onClick = {
                                         onFilterEvent(
                                             MarketplaceContract.Event.Filter.OnCategorySelected(
@@ -1336,6 +1378,7 @@ private fun FilterMenuBottomSheetContent(
                     // Condition.
                     FilterSection(
                         title = stringResource(R.string.screen_marketplace_filter_menu_section_condition_title),
+                        headerTestTag = MarketplaceTestTags.filterSectionHeader("condition"),
                         collapsedLabel = searchCriteria.conditions
                             .filter { it.isSelected }
                             .joinToString(separator = ", ") { it.option.label }
@@ -1348,6 +1391,9 @@ private fun FilterMenuBottomSheetContent(
                             searchCriteria.conditions.forEach { condition ->
                                 FilterChip(
                                     selected = condition.isSelected,
+                                    modifier = Modifier.testTag(
+                                        MarketplaceTestTags.filterConditionChip(condition.option.code)
+                                    ),
                                     onClick = {
                                         onFilterEvent(
                                             MarketplaceContract.Event.Filter.OnConditionSelected(
@@ -1367,6 +1413,7 @@ private fun FilterMenuBottomSheetContent(
                     // Price range.
                     FilterSection(
                         title = stringResource(R.string.screen_marketplace_filter_menu_section_price_range_title),
+                        headerTestTag = MarketplaceTestTags.filterSectionHeader("price_range"),
                         collapsedLabel = when {
                             (searchCriteria.priceRangeMin.parsedValue != null && searchCriteria.priceRangeMin.isValid)
                                     && (searchCriteria.priceRangeMax.parsedValue != null && searchCriteria.priceRangeMax.isValid) -> stringResource(
@@ -1399,7 +1446,9 @@ private fun FilterMenuBottomSheetContent(
                                 label = stringResource(R.string.screen_marketplace_filter_menu_section_price_range_min_label),
                                 placeholder = stringResource(R.string.screen_marketplace_filter_menu_section_price_range_min_placeholder),
                                 isValid = searchCriteria.priceRangeMin.isValid,
-                                modifier = Modifier.weight(1f),
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .testTag(MarketplaceTestTags.FILTER_PRICE_MIN_TEXT_FIELD),
                                 onValueChanged = { newPrice ->
                                     onFilterEvent(
                                         MarketplaceContract.Event.Filter.OnPriceRangeMinChanged(
@@ -1414,7 +1463,9 @@ private fun FilterMenuBottomSheetContent(
                                 label = stringResource(R.string.screen_marketplace_filter_menu_section_price_range_max_label),
                                 placeholder = stringResource(R.string.screen_marketplace_filter_menu_section_price_range_max_placeholder),
                                 isValid = searchCriteria.priceRangeMax.isValid,
-                                modifier = Modifier.weight(1f),
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .testTag(MarketplaceTestTags.FILTER_PRICE_MAX_TEXT_FIELD),
                                 onValueChanged = { newPrice ->
                                     onFilterEvent(
                                         MarketplaceContract.Event.Filter.OnPriceRangeMaxChanged(
@@ -1429,6 +1480,7 @@ private fun FilterMenuBottomSheetContent(
                     // Date posted.
                     FilterSection(
                         title = stringResource(R.string.screen_marketplace_filter_menu_section_date_posted_title),
+                        headerTestTag = MarketplaceTestTags.filterSectionHeader("date_posted"),
                         collapsedLabel = when {
                             searchCriteria.datePosted !is ListingDateRangeOptionUi.Custom -> stringResource(
                                 searchCriteria.datePosted.labelResId
@@ -1448,6 +1500,7 @@ private fun FilterMenuBottomSheetContent(
                                 DatedPostedItem(
                                     label = stringResource(dateRangeOption.labelResId),
                                     isSelected = dateRangeOption == searchCriteria.datePosted,
+                                    testTag = MarketplaceTestTags.filterDatePostedOption(dateRangeOption::class.simpleName.orEmpty()),
                                     onSelect = {
                                         onFilterEvent(
                                             MarketplaceContract.Event.Filter.DatePosted.OnDateRangeOptionSelected(
@@ -1478,6 +1531,7 @@ private fun FilterMenuBottomSheetContent(
                                                 Box(
                                                     modifier = Modifier
                                                         .matchParentSize()
+                                                        .testTag(MarketplaceTestTags.FILTER_CUSTOM_DATE_RANGE_BUTTON)
                                                         .clip(MaterialTheme.shapes.medium)
                                                         .clickableNoRipple(
                                                             role = Role.Button,
@@ -1499,12 +1553,14 @@ private fun FilterMenuBottomSheetContent(
                     // Final sale.
                     FilterSection(
                         title = stringResource(R.string.screen_marketplace_filter_menu_section_final_title),
+                        headerTestTag = MarketplaceTestTags.filterSectionHeader("final_sale"),
                         collapsedLabel = stringResource(if (searchCriteria.finalSale) R.string.screen_marketplace_filter_menu_section_final_collapsed_yes_label else R.string.screen_marketplace_filter_menu_section_final_collapsed_no_label)
                     ) {
                         WrapCheckbox(
                             label = stringResource(R.string.screen_marketplace_filter_menu_section_final_checkbox_label),
                             checked = searchCriteria.finalSale,
-                            onCheckedChange = { onFilterEvent(MarketplaceContract.Event.Filter.OnFinalSaleChecked) }
+                            onCheckedChange = { onFilterEvent(MarketplaceContract.Event.Filter.OnFinalSaleChecked) },
+                            modifier = Modifier.testTag(MarketplaceTestTags.FILTER_FINAL_SALE_CHECKBOX)
                         )
                     }
                 }
@@ -1535,7 +1591,9 @@ private fun FilterMenuBottomSheetContent(
                         if (hasActiveFilters) {
                             WrapButton(
                                 onClick = { onFilterMenuEvent(MarketplaceContract.Event.FilterMenu.OnNegativeButtonClicked) },
-                                modifier = Modifier.weight(1f)
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .testTag(MarketplaceTestTags.FILTER_SHEET_CLEAR_BUTTON)
                             ) {
                                 Text(text = stringResource(R.string.screen_marketplace_filter_menu_negative_button_label))
                             }
@@ -1543,7 +1601,8 @@ private fun FilterMenuBottomSheetContent(
 
                         WrapButton(
                             onClick = { onFilterMenuEvent(MarketplaceContract.Event.FilterMenu.OnPositiveButtonClicked) },
-                            modifier = if (hasActiveFilters) Modifier.weight(1f) else Modifier.fillMaxWidth(),
+                            modifier = (if (hasActiveFilters) Modifier.weight(1f) else Modifier.fillMaxWidth())
+                                .testTag(MarketplaceTestTags.FILTER_SHEET_APPLY_BUTTON),
                             enabled = searchCriteria.areAllFiltersValid,
                             colors = ButtonDefaults.buttonColors(
                                 backgroundColor = MaterialTheme.customColors.buttonBackgroundNegative,
@@ -1576,10 +1635,12 @@ private fun ComparisonBottomSheetContent(
                     comparison.listings.size
                 ),
                 closeIconContentDescription = stringResource(R.string.screen_marketplace_content_description_close_comparison_bottom_sheet_icon),
+                closeTestTag = MarketplaceTestTags.COMPARISON_SHEET_CLOSE_BUTTON,
                 onCloseButtonClick = { onComparisonEvent(MarketplaceContract.Event.ComparisonBottomSheet.OnCloseButtonClicked) },
                 otherIconData = ClickableIconData(
                     iconResource = R.drawable.ic_share,
                     contentDescription = stringResource(R.string.screen_marketplace_content_description_share_comparison_listings),
+                    testTag = MarketplaceTestTags.COMPARISON_SHEET_SHARE_BUTTON,
                     onClick = { onComparisonEvent(MarketplaceContract.Event.ComparisonBottomSheet.OnShareButtonClicked) }
                 )
             )
@@ -1672,6 +1733,7 @@ private fun RowScope.ComparisonBottomSheetListingItem(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .testTag(MarketplaceTestTags.comparisonListingItem(listing.listingId))
                 .clickableNoRipple(onClick = onClick),
             verticalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp)
         ) {
@@ -1694,7 +1756,9 @@ private fun RowScope.ComparisonBottomSheetListingItem(
                 )
 
                 FilteredListingItemImageActionButton(
-                    modifier = Modifier.align(Alignment.TopEnd),
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .testTag(MarketplaceTestTags.comparisonListingRemoveButton(listing.listingId)),
                     isLoading = false,
                     onClick = onDeleteIconClick,
                     icon = {
@@ -1863,6 +1927,7 @@ private fun ComparisonListingDetailsItem(label: String, value: String) {
 private fun BottomSheetStickyHeader(
     title: String,
     closeIconContentDescription: String,
+    closeTestTag: String,
     onCloseButtonClick: () -> Unit,
     otherIconData: ClickableIconData? = null
 ) {
@@ -1874,6 +1939,7 @@ private fun BottomSheetStickyHeader(
             clickableIconData = ClickableIconData(
                 iconResource = R.drawable.ic_close,
                 contentDescription = closeIconContentDescription,
+                testTag = closeTestTag,
                 onClick = onCloseButtonClick
             ),
             contentAlignment = if (otherIconData == null) Alignment.CenterEnd else Alignment.CenterStart
@@ -1904,7 +1970,8 @@ private fun BottomSheetStickyHeaderIcon(
 ) {
     Box(contentAlignment = contentAlignment) {
         IconButton(
-            onClick = clickableIconData.onClick
+            onClick = clickableIconData.onClick,
+            modifier = clickableIconData.testTag?.let { Modifier.testTag(it) } ?: Modifier
         ) {
             Icon(
                 painter = painterResource(clickableIconData.iconResource),
@@ -1923,6 +1990,7 @@ private fun BottomSheetStickyHeaderIcon(
 @Composable
 private fun FilterSection(
     title: String,
+    headerTestTag: String,
     collapsedLabel: String? = null,
     collapsedErrorLabel: String? = null,
     hasError: Boolean = false,
@@ -1941,6 +2009,7 @@ private fun FilterSection(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                .testTag(headerTestTag)
                 .clickableNoRipple(onClick = { isExpanded = !isExpanded }),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
@@ -2008,12 +2077,15 @@ private fun FilterSection(
 private fun DatedPostedItem(
     label: String,
     isSelected: Boolean,
+    testTag: String,
     onSelect: () -> Unit,
     extraContent: (@Composable () -> Unit)? = null
 ) {
     Card(
         onClick = onSelect,
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag(testTag),
         backgroundColor = MaterialTheme.colors.onSurface
             .copy(alpha = 0.12f)
             .compositeOver(MaterialTheme.colors.surface) // Same background color as in `FilterChip`.
