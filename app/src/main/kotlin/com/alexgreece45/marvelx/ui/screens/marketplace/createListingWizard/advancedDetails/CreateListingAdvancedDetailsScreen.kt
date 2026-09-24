@@ -45,7 +45,7 @@ internal fun CreateListingAdvancedDetailsScreen(
     createListingAdvancedDetailsScreenData: CreateListingAdvancedDetailsScreenData
 ) {
 
-    ObserveUiEffect(flow = effect, tag = "Screen") { uiEffect ->
+    ObserveUiEffect(flow = effect, tag = "CreateListingAdvancedDetailsScreen") { uiEffect ->
         when (uiEffect) {
             CreateListingAdvancedDetailsContract.Effect.GoToPreviousStep -> goToPreviousStep()
             is CreateListingAdvancedDetailsContract.Effect.SetNextButtonEnabled -> setNextButtonEnabled(

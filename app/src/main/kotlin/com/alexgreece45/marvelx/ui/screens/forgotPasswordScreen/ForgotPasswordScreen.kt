@@ -9,7 +9,6 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -24,6 +23,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.common_ui.util.ObserveUiEffect
 import com.alexgreece45.marvelx.domain.model_api.otp.OtpFlowType
 import com.alexgreece45.marvelx.domain.model_api.user.VerificationStep
 import com.alexgreece45.marvelx.ui.components.ContentScreen
@@ -44,26 +44,24 @@ fun ForgotPasswordScreen(
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
-    LaunchedEffect(Unit) {
-        viewModel.uiEffect.collect { effect ->
-            when (effect) {
-                ForgotPasswordEffect.Navigation.PopToLoginScreen -> popUpToLoginScreen()
+    ObserveUiEffect(flow = viewModel.uiEffect, tag = "ForgotPasswordScreen") { effect ->
+        when (effect) {
+            ForgotPasswordEffect.Navigation.PopToLoginScreen -> popUpToLoginScreen()
 
-                is ForgotPasswordEffect.Navigation.NavigateToLoginScreenWithError -> {
-                    Toast.makeText(context, effect.errorMessage, Toast.LENGTH_SHORT).show()
-                    popUpToLoginScreen()
-                }
+            is ForgotPasswordEffect.Navigation.NavigateToLoginScreenWithError -> {
+                Toast.makeText(context, effect.errorMessage, Toast.LENGTH_SHORT).show()
+                popUpToLoginScreen()
+            }
 
-                is ForgotPasswordEffect.Navigation.NavigateToOtpScreen -> {
-                    navController.navigate(
-                        Screen.OtpScreen.createNavRoute(
-                            otpFlowType = OtpFlowType.ForgotPassword.Email.key,
-                            verificationStep = VerificationStep.OtpEmail.key,
-                            shouldRememberUserSession = false,
-                            requestIdEmail = effect.requestIdEmail
-                        )
+            is ForgotPasswordEffect.Navigation.NavigateToOtpScreen -> {
+                navController.navigate(
+                    Screen.OtpScreen.createNavRoute(
+                        otpFlowType = OtpFlowType.ForgotPassword.Email.key,
+                        verificationStep = VerificationStep.OtpEmail.key,
+                        shouldRememberUserSession = false,
+                        requestIdEmail = effect.requestIdEmail
                     )
-                }
+                )
             }
         }
     }

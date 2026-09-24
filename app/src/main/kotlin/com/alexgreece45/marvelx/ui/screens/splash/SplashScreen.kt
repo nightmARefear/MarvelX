@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -22,6 +21,7 @@ import coil.compose.rememberAsyncImagePainter
 import coil.decode.GifDecoder
 import coil.decode.ImageDecoderDecoder
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.common_ui.util.ObserveUiEffect
 import com.alexgreece45.marvelx.ui.components.AlertDialogButton
 import com.alexgreece45.marvelx.ui.components.AlertDialogError
 import com.alexgreece45.marvelx.ui.components.ContentScreen
@@ -42,20 +42,18 @@ fun SplashScreen(
         viewModel.setEvent(SplashContract.Event.Init)
     }
 
-    LaunchedEffect(Unit) {
-        viewModel.uiEffect.collect { effect ->
-            when (effect) {
-                SplashContract.Effect.Navigation.NavigateToHomeScreen -> {
-                    popUpToHomeScreen()
-                }
+    ObserveUiEffect(flow = viewModel.uiEffect, tag = "SplashScreen") { effect ->
+        when (effect) {
+            SplashContract.Effect.Navigation.NavigateToHomeScreen -> {
+                popUpToHomeScreen()
+            }
 
-                SplashContract.Effect.Navigation.CloseApplication -> {
-                    context.finish()
-                }
+            SplashContract.Effect.Navigation.CloseApplication -> {
+                context.finish()
+            }
 
-                SplashContract.Effect.Navigation.NavigateToIntroLoadingScreen -> {
-                    popUpToIntroLoadingScreen()
-                }
+            SplashContract.Effect.Navigation.NavigateToIntroLoadingScreen -> {
+                popUpToIntroLoadingScreen()
             }
         }
     }
