@@ -51,7 +51,11 @@ internal fun NavGraphBuilder.profileScreen(
             bottomNavigationBarData = { getBottomNavigationBarData(navController = navController) },
             onNavigation = { navigationEffect ->
                 when (navigationEffect) {
-                    ProfileContract.Effect.Navigation.NavigateUp -> rootNavController.navigateUp()
+                    // Profile is a tab of the dashboard's nested graph, so navigate up in it (i.e.,
+                    // back to the root tab). The root graph's back stack only holds the dashboard,
+                    // so `rootNavController.navigateUp()` would relaunch the activity to its start
+                    // destination (the splash screen).
+                    ProfileContract.Effect.Navigation.NavigateUp -> navController.navigateUp()
 
                     is ProfileContract.Effect.Navigation.NavigateToProfileImageScreen -> {
                         rootNavController.navigate(
