@@ -436,7 +436,7 @@ internal class OtpViewModel(
                 }
             }
 
-            VerificationStep.OtpPhoneNumber -> TODO()
+            // Phone number OTP is not supported yet, so it falls through to the error view.
             else -> {
                 showGenericErrorViewWithErrorCode(
                     errorCode = OtpScreenErrorCodes.InitViewChecks.InvalidVerificationStep,

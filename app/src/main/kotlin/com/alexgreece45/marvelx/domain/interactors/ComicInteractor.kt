@@ -45,7 +45,7 @@ internal class ComicInteractorImpl(
                 } ?: run {
                     emit(
                         GetComicPartialState.Error(
-                            errorMessage = response.errorBody().toString()
+                            errorMessage = response.errorBody()?.string().orEmpty()
                         )
                     )
                 }
@@ -54,7 +54,7 @@ internal class ComicInteractorImpl(
             false -> {
                 emit(
                     GetComicPartialState.Error(
-                        errorMessage = response.errorBody().toString()
+                        errorMessage = response.errorBody()?.string().orEmpty()
                     )
                 )
             }

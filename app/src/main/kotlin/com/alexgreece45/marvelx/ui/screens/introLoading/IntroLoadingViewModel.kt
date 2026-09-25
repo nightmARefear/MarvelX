@@ -211,11 +211,7 @@ internal class IntroLoadingViewModel(
                                 }
 
                                 // Currently we only support OTP from email.
-                                VerificationStep.OtpPhoneNumber -> {
-                                    TODO("\"VerificationStep.OtpPhoneNumber\" not implemented yet")
-                                }
-
-                                is VerificationStep.Invalid -> {
+                                VerificationStep.OtpPhoneNumber, is VerificationStep.Invalid -> {
                                     errorActions(resourceProvider.getGenericErrorMessage())
                                 }
                             }

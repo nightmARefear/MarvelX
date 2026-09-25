@@ -52,9 +52,11 @@ fun WrapClickableText(
         val onClick: ((data: AnnotatedString.Range<String>) -> Unit)? = null
     )
 
-    // Sorts the clickable strings in ascending order, so that they can work in any order that they're inserted as.
-    val sortedClickableTexts =
-        clickableStrings.sortedBy { clickableText -> text.indexOf(clickableText.text) }
+    // Clickable strings missing from the text (e.g. a mismatched translation) are skipped, and the
+    // rest are sorted in ascending order, so that they can work in any order that they're inserted as.
+    val sortedClickableTexts = clickableStrings
+        .filter { clickableText -> text.contains(clickableText.text) }
+        .sortedBy { clickableText -> text.indexOf(clickableText.text) }
 
     val stringData = mutableListOf<StringData>()
     if (sortedClickableTexts.isEmpty()) {
@@ -67,9 +69,6 @@ fun WrapClickableText(
         var startIndex = 0
         sortedClickableTexts.forEachIndexed { index, clickableText ->
             val endIndex = text.indexOf(clickableText.text)
-            if (endIndex == -1) {
-                throw RuntimeException("Fatal error: $clickableText does not exist in $text") // TODO: Crashes the application if the text was not found!
-            }
             stringData.add(
                 // Non-clickable string.
                 StringData(

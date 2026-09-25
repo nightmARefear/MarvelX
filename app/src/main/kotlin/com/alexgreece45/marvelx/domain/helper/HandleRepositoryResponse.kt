@@ -35,7 +35,7 @@ fun <R : Any, D : Any> handleRepositoryResult(
     }.catch { throwable ->
         val errorMessage = throwable.localizedMessage.orEmpty()
         logError?.invoke(errorMessage)
-        InteractorPartialState.Error<D>(errorMessage)
+        emit(InteractorPartialState.Error(errorMessage))
     }
 
 
@@ -93,7 +93,7 @@ fun handleRepositoryResultNoTransformation(
     }.catch { throwable ->
         val errorMessage = throwable.localizedMessage.orEmpty()
         logError?.invoke(errorMessage)
-        InteractorPartialState.Error<String>(errorMessage)
+        emit(InteractorPartialState.Error(errorMessage))
     }
 
 /**

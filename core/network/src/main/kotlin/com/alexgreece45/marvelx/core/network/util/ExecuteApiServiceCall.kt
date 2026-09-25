@@ -1,6 +1,7 @@
 package com.alexgreece45.marvelx.core.network.util
 
 import com.alexgreece45.marvelx.core.network.model.generic.ApiResult
+import kotlinx.coroutines.CancellationException
 import okio.IOException
 import retrofit2.Response
 
@@ -13,12 +14,14 @@ internal suspend fun <T : Any> executeApiServiceCall(apiCall: suspend () -> Resp
         val response = apiCall()
         if (response.isSuccessful) {
             when (val data = response.body()) {
-                null -> ApiResult.Failed(response.errorBody().toString())
+                null -> ApiResult.Failed(response.errorBody()?.string().orEmpty())
                 else -> ApiResult.Success(data)
             }
         } else {
-            ApiResult.Failed(response.errorBody().toString())
+            ApiResult.Failed(response.errorBody()?.string().orEmpty())
         }
+    } catch (e: CancellationException) {
+        throw e
     } catch (_: IOException) {
         ApiResult.NetworkError
     } catch (e: Exception) {
@@ -41,8 +44,10 @@ internal suspend fun executeApiServiceCallNoTransformation(apiCall: suspend () -
         if (response.isSuccessful) {
             ApiResult.Success("")
         } else {
-            ApiResult.Failed(response.errorBody().toString())
+            ApiResult.Failed(response.errorBody()?.string().orEmpty())
         }
+    } catch (e: CancellationException) {
+        throw e
     } catch (_: IOException) {
         ApiResult.NetworkError
     } catch (e: Exception) {

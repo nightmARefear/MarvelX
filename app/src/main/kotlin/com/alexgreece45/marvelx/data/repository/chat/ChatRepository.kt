@@ -79,6 +79,9 @@ interface ChatRepository {
      * read immediately instead of counting as unread.
      */
     fun setOpenConversation(conversationId: String?)
+
+    /** Drops every cached conversation, message and unread count, so they don't leak to the next user. */
+    suspend fun clear()
 }
 
 @Single
@@ -263,6 +266,15 @@ internal class ChatRepositoryImpl(
 
     override fun setOpenConversation(conversationId: String?) {
         openConversationId = conversationId
+    }
+
+    override suspend fun clear() {
+        mutex.withLock {
+            _conversations.value = emptyList()
+            _messagesByConversation.value = emptyMap()
+            _unreadCount.value = 0
+            openConversationId = null
+        }
     }
 
     // Internals.
