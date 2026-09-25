@@ -61,6 +61,10 @@ private sealed class OtpScreenErrorCodes(val code: String) {
         data object GenericError : GrandNewAccessToken("OTP_1007")
     }
 
+    sealed class OAuthAuthorization(code: String) : OtpScreenErrorCodes(code) {
+        data object Cancelled : OAuthAuthorization("OTP_1012")
+    }
+
     sealed class PostLogin(code: String) : OtpScreenErrorCodes(code) {
         data object GenericError : PostLogin("OTP_1008")
     }
@@ -718,6 +722,14 @@ internal class OtpViewModel(
                 OAuthCallbackResult.Timeout -> {
                     showGenericErrorViewWithErrorCode(
                         errorCode = OtpScreenErrorCodes.GrandNewAccessToken.GenericError,
+                        otpFlowType = OtpFlowType.Register
+                    )
+                }
+
+                // The user returned from the browser without completing the authorization.
+                OAuthCallbackResult.Cancelled -> {
+                    showGenericErrorViewWithErrorCode(
+                        errorCode = OtpScreenErrorCodes.OAuthAuthorization.Cancelled,
                         otpFlowType = OtpFlowType.Register
                     )
                 }

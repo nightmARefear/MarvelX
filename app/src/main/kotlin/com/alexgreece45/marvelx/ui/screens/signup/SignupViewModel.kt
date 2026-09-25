@@ -469,7 +469,8 @@ internal class SignupViewModel(
 
                 is OAuthCallbackResult.ServerError,
                 OAuthCallbackResult.StateMismatch,
-                OAuthCallbackResult.Timeout -> {
+                OAuthCallbackResult.Timeout,
+                OAuthCallbackResult.Cancelled -> {
                     setEffect {
                         SignupEffect.ShowAlertDialogError(
                             errorMessage = resourceProvider.getGenericErrorMessage()

@@ -145,8 +145,10 @@ class LoginInteractorImpl(
                     is GrandNewAccessTokenRepositoryResponse.Success -> {
                         when (val response = it.response) {
                             null -> {
-                                GrandNewAccessTokenPartialState.Failed(
-                                    errorMessage = genericErrorMessage
+                                emit(
+                                    GrandNewAccessTokenPartialState.Failed(
+                                        errorMessage = genericErrorMessage
+                                    )
                                 )
                             }
 

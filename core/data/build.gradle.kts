@@ -8,6 +8,7 @@ android {
 }
 
 dependencies {
+    implementation(libs.androidx.exifinterface)
     implementation(projects.core.network)
     implementation(projects.core.common)
     implementation(projects.core.datastore)
