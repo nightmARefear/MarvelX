@@ -176,21 +176,25 @@ class QrCodeScanViewModel(
             is QrCodeScanContract.Event.OnCameraBindFailed -> {
                 appLogger.e("QrCodeScanViewModel") { "(OnCameraBindFailed) failure message: ${event.failureMessage}" }
                 viewModelScope.launch {
+                    val cameraBindingFailedMessage =
+                        resourceProvider.getString(R.string.qr_code_screen_label_error_camera_binding_failed)
                     when (
                         val result = deepLinkController.createDeepLinkAction(
                             screenRoute = currentState.previousScreen?.route.orEmpty(),
                             deepLinkMap = mapOf(
                                 Pair(
                                     first = NavDeepLinkItem.QrCodeScanErrorMessage,
-                                    second = resourceProvider.getString(R.string.qr_code_screen_label_error_camera_binding_failed)
+                                    second = cameraBindingFailedMessage
                                 )
                             )
                         )
                     ) {
+                        // The previous screen can't receive the error through a deep link (e.g. the
+                        // type-safe profile route), so show it here before navigating up.
                         CreateDeepLinkActionResult.Failed -> {
                             setEffect {
                                 QrCodeScanContract.Effect.ShowToastAndNavigateUp(
-                                    message = resourceProvider.getGenericErrorMessage()
+                                    message = cameraBindingFailedMessage
                                 )
                             }
                         }

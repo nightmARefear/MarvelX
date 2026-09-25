@@ -2,7 +2,6 @@ package com.alexgreece45.marvelx.domain.interactors
 
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.controllers.RefreshTokenController
-import com.alexgreece45.marvelx.controllers.WebsocketController
 import com.alexgreece45.marvelx.core.common.config.ConfigOauthLogic
 import com.alexgreece45.marvelx.core.common.extensions.safeAsync
 import com.alexgreece45.marvelx.core.common.logger.AppLogger
@@ -21,6 +20,7 @@ import com.alexgreece45.marvelx.data.repository.TokenRefreshRepositoryResult
 import com.alexgreece45.marvelx.data.repository.UserRepository
 import com.alexgreece45.marvelx.domain.model_api.sensitiveUserData.SensitiveUserDataDomain
 import com.alexgreece45.marvelx.domain.model_api.sensitiveUserData.toSensitiveUserDataDomain
+import com.alexgreece45.marvelx.domain.usecases.InitListingEnumsUseCase
 import com.alexgreece45.marvelx.domain.usecases.RemoveUserCredentialsUseCase
 import com.alexgreece45.marvelx.model.model.AuthenticationTokens
 import com.alexgreece45.marvelx.model.model.Signature
@@ -33,9 +33,13 @@ import org.koin.core.annotation.Factory
 interface LoginInteractor {
 
     /**
-     * The post-login call. It retrieves all the necessary data for signing requests.
+     * The post-login call. It retrieves all the necessary data for signing requests, and on success
+     * completes the login: stores the [session] (if it's a [PostLoginSession.New] one), and performs
+     * all the operations of a logged-in user (token refresh worker, listing enum values
+     * initialization, etc.). The websocket connection is handled by `MainActivityViewModel`, once
+     * the user is marked as logged in.
      */
-    suspend fun postLogin(accessTokenAndType: String): Flow<PostLoginPartialState>
+    suspend fun postLogin(session: PostLoginSession): Flow<PostLoginPartialState>
 
     /**
      * Grants an access token for the OAuth 2.0 flow. It sends the [codeVerifier] and the [authCode]
@@ -64,14 +68,18 @@ class LoginInteractorImpl(
     private val appLogger: AppLogger,
     private val userRepository: UserRepository,
     private val autoLogoutRepository: AutoLogoutRepository,
-    private val websocketController: WebsocketController,
     private val refreshTokenController: RefreshTokenController,
+    private val initListingEnumsUseCase: InitListingEnumsUseCase,
 ) : LoginInteractor {
 
     private val loggerTag = "LoginInteractor"
 
-    override suspend fun postLogin(accessTokenAndType: String): Flow<PostLoginPartialState> = flow {
+    override suspend fun postLogin(session: PostLoginSession): Flow<PostLoginPartialState> = flow {
         val genericErrorMessage = resourceProvider.getGenericErrorMessage()
+        val accessTokenAndType = when (session) {
+            PostLoginSession.Stored -> userSessionRepository.getAccessTokenAndType()
+            is PostLoginSession.New -> session.authenticationTokens.accessTokenAndType
+        }
 
         loginRepository.postLogin(accessTokenAndType).collect {
             when (it) {
@@ -85,16 +93,28 @@ class LoginInteractorImpl(
                         return@collect
                     }
 
-                    autoLogoutRepository.setAutoLogoutTimestamp(DateUtil.getUTCInstant())
-                    websocketController.connect()
-                    refreshTokenController.startWorker()
-
+                    // Store the session and sign data FIRST, as all the operations below (and
+                    // the ones triggered by the user being logged in) perform authorized requests,
+                    // which read them from storage.
+                    if (session is PostLoginSession.New) {
+                        userSessionRepository.setUserSession(
+                            userId = session.userId,
+                            authenticationTokens = session.authenticationTokens
+                        )
+                    }
                     signatureStorage.setSignature(
                         Signature(
                             key = sign.key.orEmpty(),
                             algorithm = sign.algorithm.orEmpty()
                         )
                     )
+
+                    autoLogoutRepository.setAutoLogoutTimestamp(DateUtil.getUTCInstant())
+                    refreshTokenController.startWorker()
+                    initListingEnumsUseCase()
+
+                    // Last, as its observers perform authorized operations as well (e.g.,
+                    // `MainActivityViewModel` registers the device and connects the websocket).
                     userRepository.setUserLoggedIn(true)
                     emit(PostLoginPartialState.Success)
                 }
@@ -145,8 +165,10 @@ class LoginInteractorImpl(
                     is GrandNewAccessTokenRepositoryResponse.Success -> {
                         when (val response = it.response) {
                             null -> {
-                                GrandNewAccessTokenPartialState.Failed(
-                                    errorMessage = genericErrorMessage
+                                emit(
+                                    GrandNewAccessTokenPartialState.Failed(
+                                        errorMessage = genericErrorMessage
+                                    )
                                 )
                             }
 
@@ -287,6 +309,26 @@ class LoginInteractorImpl(
                 else -> GetSensitiveUserDataPartialState.Failed(errorMessage = resourceProvider.getGenericErrorMessage())
             }
         }
+}
+
+/**
+ * The user session that [LoginInteractor.postLogin] completes the login with.
+ */
+sealed interface PostLoginSession {
+
+    /**
+     * The session is already stored in the device (e.g., when logging in with the stored token).
+     */
+    data object Stored : PostLoginSession
+
+    /**
+     * A newly retrieved session (e.g., after OTP validation, or signup) that is stored in the
+     * device only if the post-login call succeeds.
+     */
+    data class New(
+        val userId: String,
+        val authenticationTokens: AuthenticationTokens
+    ) : PostLoginSession
 }
 
 sealed interface PostLoginPartialState {

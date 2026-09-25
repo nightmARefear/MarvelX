@@ -10,6 +10,7 @@ import com.alexgreece45.marvelx.data.repository.AutoLogoutRepository
 import com.alexgreece45.marvelx.domain.interactors.GrandNewAccessTokenPartialState
 import com.alexgreece45.marvelx.domain.interactors.LoginInteractor
 import com.alexgreece45.marvelx.domain.interactors.PostLoginPartialState
+import com.alexgreece45.marvelx.domain.interactors.PostLoginSession
 import com.alexgreece45.marvelx.domain.interactors.RegisterInteractor
 import com.alexgreece45.marvelx.domain.interactors.SignupPartialState
 import com.alexgreece45.marvelx.domain.model_api.otp.OtpFlowType
@@ -409,7 +410,10 @@ internal class SignupViewModel(
                                         }
 
                                         VerificationStep.None -> {
-                                            postSuccessfulSignup(signupResponseDomain.tempAuthCode)
+                                            postSuccessfulSignup(
+                                                userId = signupResponseDomain.userId,
+                                                tempAuthCode = signupResponseDomain.tempAuthCode
+                                            )
                                         }
 
                                         VerificationStep.OtpEmail -> {
@@ -455,7 +459,7 @@ internal class SignupViewModel(
      *
      * It retrieves the user tokens, signing data, and logins the user.
      */
-    private fun postSuccessfulSignup(tempAuthCode: String) {
+    private fun postSuccessfulSignup(userId: String, tempAuthCode: String) {
         val url = oAuthAuthorizationController.buildAuthorizationUrl(tempAuthCode)
         setEffect {
             SignupEffect.LaunchOAuthAuthorization(url)
@@ -464,12 +468,17 @@ internal class SignupViewModel(
         viewModelScope.launch {
             when (val result = oAuthAuthorizationController.awaitCallback()) {
                 is OAuthCallbackResult.Success -> {
-                    getAccessToken(authCode = result.code, codeVerifier = result.codeVerifier)
+                    getAccessToken(
+                        userId = userId,
+                        authCode = result.code,
+                        codeVerifier = result.codeVerifier
+                    )
                 }
 
                 is OAuthCallbackResult.ServerError,
                 OAuthCallbackResult.StateMismatch,
-                OAuthCallbackResult.Timeout -> {
+                OAuthCallbackResult.Timeout,
+                OAuthCallbackResult.Cancelled -> {
                     setEffect {
                         SignupEffect.ShowAlertDialogError(
                             errorMessage = resourceProvider.getGenericErrorMessage()
@@ -480,7 +489,7 @@ internal class SignupViewModel(
         }
     }
 
-    private fun getAccessToken(authCode: String, codeVerifier: String) {
+    private fun getAccessToken(userId: String, authCode: String, codeVerifier: String) {
         viewModelScope.launch {
             loginInteractor.grandNewAccessToken(authCode = authCode, codeVerifier = codeVerifier).collect {
                 when (it) {
@@ -493,8 +502,13 @@ internal class SignupViewModel(
                     }
 
                     is GrandNewAccessTokenPartialState.Success -> {
-                        // Retrieve sign data.
-                        loginInteractor.postLogin(it.authenticationTokens.accessTokenAndType)
+                        // Retrieve sign data, and store the user session.
+                        loginInteractor.postLogin(
+                            PostLoginSession.New(
+                                userId = userId,
+                                authenticationTokens = it.authenticationTokens
+                            )
+                        )
                             .collect { postLoginPartialState ->
                                 when (postLoginPartialState) {
                                     PostLoginPartialState.Success -> {

@@ -24,8 +24,8 @@ object FileUtil {
             return null
         }
 
-        val fileContents = FileUtil.decodeBitmapFromFileUri(context, uri)
-        if (fileContents == null) {
+        // Only the image header is read here; the full image is decoded (downsampled) on upload.
+        if (!FileUtil.isImageFile(context, uri)) {
             return null
         }
 

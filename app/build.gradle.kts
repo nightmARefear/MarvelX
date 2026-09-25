@@ -106,7 +106,7 @@ android {
             manifestPlaceholders.putAll(
                 mapOf(
                     "appNameSuffix" to "[MOCK]",
-                    "deeplinkScheme" to deeplinkProperties["deeplinkScheme"].toString(),
+                    "deeplinkScheme" to deeplinkProperties["mockDeeplinkScheme"].toString(),
                     "deeplinkHost" to deeplinkProperties["debugHost"].toString(),
                     "deeplinkPort" to deeplinkProperties["debugPort"].toString(),
                     "deeplinkPathAdvancedPattern" to deeplinkProperties["deeplinkPathAdvancedPattern.regexp"].toString(),

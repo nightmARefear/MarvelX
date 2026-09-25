@@ -631,9 +631,9 @@ internal fun NavGraph(navController: NavHostController) {
                             Screen.ProfileDetailsScreen.createNavRoute(userId = effect.userId)
                         )
 
-                        is ProfileDetailsStatsContract.Effect.Navigation.NavigateToListingScreen -> TODO(
-                            "Not implemented yet."
-                        )
+                        is ProfileDetailsStatsContract.Effect.Navigation.NavigateToListingScreen -> {
+                            navController.navigateToListingDetailsScreen(effect.listingId)
+                        }
 
                         is ProfileDetailsStatsContract.Effect.Navigation.NavigateToCharacterScreen -> navController.navigate(
                             Screen.CharacterScreen.createNavRoute(characterId = effect.characterId)

@@ -11,6 +11,7 @@ import com.alexgreece45.marvelx.data.repository.AutoLogoutRepository
 import com.alexgreece45.marvelx.domain.interactors.LoginInteractor
 import com.alexgreece45.marvelx.domain.interactors.LoginWithTokenPartialState
 import com.alexgreece45.marvelx.domain.interactors.PostLoginPartialState
+import com.alexgreece45.marvelx.domain.interactors.PostLoginSession
 import com.alexgreece45.marvelx.domain.interactors.RefreshAccessTokenPartialState
 import com.alexgreece45.marvelx.domain.interactors.RegisterInteractor
 import com.alexgreece45.marvelx.domain.model_api.otp.OtpFlowType
@@ -180,7 +181,9 @@ internal class IntroLoadingViewModel(
                                 // been generated in the `loginFlow` function.
                                 VerificationStep.None -> {
                                     // Retrieve sign data.
-                                    loginInteractor.postLogin(userSessionRepository.getAccessTokenAndType())
+                                    // The user session is already stored, as it was used for
+                                    // logging in with the token.
+                                    loginInteractor.postLogin(PostLoginSession.Stored)
                                         .collect { postLoginPartialState ->
                                             when (postLoginPartialState) {
                                                 PostLoginPartialState.Success -> {
@@ -211,11 +214,7 @@ internal class IntroLoadingViewModel(
                                 }
 
                                 // Currently we only support OTP from email.
-                                VerificationStep.OtpPhoneNumber -> {
-                                    TODO("\"VerificationStep.OtpPhoneNumber\" not implemented yet")
-                                }
-
-                                is VerificationStep.Invalid -> {
+                                VerificationStep.OtpPhoneNumber, is VerificationStep.Invalid -> {
                                     errorActions(resourceProvider.getGenericErrorMessage())
                                 }
                             }

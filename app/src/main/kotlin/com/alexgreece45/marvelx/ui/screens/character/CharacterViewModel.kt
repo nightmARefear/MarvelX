@@ -320,9 +320,11 @@ class CharacterViewModel(
                     }
                 }
             }
-        } ?: run {
-            // show snackbar with error
-            TODO("To be implemented in the future....")
+        } ?: setEffect {
+            // The character hasn't been loaded yet.
+            CharacterEffect.DisplayOnFavoriteClickMessage(
+                message = resourceProvider.getGenericErrorMessage()
+            )
         }
     }
 }

@@ -320,7 +320,7 @@ class ProfileViewModel(
                         isNavigable = false,
                         onClick = {
                             setEffect {
-                                ProfileContract.Effect.Navigation.NavigateToQrCodeScreen("profileScreen") // TODO: FIX!
+                                ProfileContract.Effect.Navigation.NavigateToQrCodeScreen("profileScreen") // Not a `Screen` route, so the QR screen reports errors itself.
                             }
                         }
                     ),

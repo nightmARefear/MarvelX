@@ -41,6 +41,21 @@ interface OAuthAuthorizationController {
      * Resolves whoever is suspended in [awaitCallback].
      */
     fun onCallbackUri(uri: Uri)
+
+    /**
+     * Called by `MainActivityViewModel` when the app leaves the foreground. While an attempt is in
+     * flight, this is the Custom Tab opening on top of the app.
+     */
+    fun onAppPaused()
+
+    /**
+     * Called by `MainActivityViewModel` when the app returns to the foreground, after the redirect
+     * (if any) has had the chance to be delivered through [onCallbackUri]. If the app left the
+     * foreground during the in-flight attempt and no callback arrived, the user abandoned the
+     * browser (closed the tab, dismissed an app chooser, etc.), so whoever is suspended in
+     * [awaitCallback] is resolved with [OAuthCallbackResult.Cancelled].
+     */
+    fun onAppResumed()
 }
 
 sealed interface OAuthCallbackResult {
@@ -48,6 +63,7 @@ sealed interface OAuthCallbackResult {
     data class ServerError(val errorCode: String) : OAuthCallbackResult
     data object StateMismatch : OAuthCallbackResult
     data object Timeout : OAuthCallbackResult
+    data object Cancelled : OAuthCallbackResult
 }
 
 /**
@@ -69,6 +85,13 @@ abstract class AbstractOAuthAuthorizationController(
     private var pendingCallback: CompletableDeferred<OAuthCallbackResult>? = null
 
     /**
+     * Whether the app left the foreground while the current attempt was in flight, i.e., the
+     * browser was actually shown. Guards [onAppResumed] from cancelling an attempt whose browser
+     * hasn't been opened yet.
+     */
+    private var leftAppDuringAttempt: Boolean = false
+
+    /**
      * Starts a new in-flight attempt: generates and stores a fresh `code_verifier`/`state`, and
      * returns them for [buildAuthorizationUrl] to use when constructing its URL.
      */
@@ -78,6 +101,7 @@ abstract class AbstractOAuthAuthorizationController(
         codeVerifier = verifier
         state = newState
         pendingCallback = CompletableDeferred()
+        leftAppDuringAttempt = false
         return verifier to newState
     }
 
@@ -124,10 +148,26 @@ abstract class AbstractOAuthAuthorizationController(
         clear()
     }
 
+    override fun onAppPaused() {
+        if (pendingCallback != null) {
+            leftAppDuringAttempt = true
+        }
+    }
+
+    override fun onAppResumed() {
+        val deferred = pendingCallback ?: return
+        if (!leftAppDuringAttempt) return
+
+        appLogger.e(loggerTag) { "(onAppResumed) Returned to the app without an OAuth callback; the attempt was abandoned." }
+        deferred.complete(OAuthCallbackResult.Cancelled)
+        clear()
+    }
+
     private fun clear() {
         codeVerifier = null
         state = null
         pendingCallback = null
+        leftAppDuringAttempt = false
     }
 
     protected fun createRandomUrlSafeToken(): String {

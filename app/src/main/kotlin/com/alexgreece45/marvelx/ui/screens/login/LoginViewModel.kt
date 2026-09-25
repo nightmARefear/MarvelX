@@ -336,7 +336,8 @@ class LoginViewModel(
                         // Act accordingly based on the verification step.
                         userPartialStatePostLogIn.loginResponseDomain.let { loginResponseDomain ->
                             when (loginResponseDomain.verificationStep) {
-                                is VerificationStep.Invalid, VerificationStep.None -> {
+                                // Phone number OTP is not supported yet.
+                                is VerificationStep.Invalid, VerificationStep.None, VerificationStep.OtpPhoneNumber -> {
                                     resetUiFieldStates()
                                     showErrorView(
                                         errorMessage = resourceProvider.getGenericErrorMessage(),
@@ -359,13 +360,6 @@ class LoginViewModel(
                                             shouldRememberUserSession = isRememberMeCheckboxChecked
                                         )
                                     }
-                                }
-
-                                is VerificationStep.OtpPhoneNumber -> { // Save userId in device.
-//                                    prefKeys.setUserId(userPartialStatePostLogIn.loginResponseDomain.userId) // todo: uncomment when this option is resolved
-
-                                    // TODO: display appropriate screen
-                                    TODO("\"VerificationStep.OtpPhoneNumber\" not implemented yet")
                                 }
                             }
                         }

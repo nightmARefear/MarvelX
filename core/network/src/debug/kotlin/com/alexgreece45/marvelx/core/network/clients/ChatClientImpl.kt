@@ -10,6 +10,7 @@ import com.alexgreece45.marvelx.core.network.model.generic.ApiResult
 import com.alexgreece45.marvelx.core.network.services.ChatService
 import com.alexgreece45.marvelx.core.network.util.executeApiServiceCall
 import com.alexgreece45.marvelx.core.network.util.executeApiServiceCallNoTransformation
+import kotlinx.coroutines.CancellationException
 import okio.IOException
 import org.koin.core.annotation.Single
 import retrofit2.Response
@@ -77,12 +78,14 @@ internal class ChatClientImpl(
             when {
                 response.isSuccessful -> response.body()
                     ?.let { ApiResult.Success(it) }
-                    ?: ApiResult.Failed(response.errorBody().toString())
+                    ?: ApiResult.Failed(response.errorBody()?.string().orEmpty())
 
                 response.code() == HTTP_FORBIDDEN -> ApiResult.Failed(ChatClient.FORBIDDEN_FAILURE)
 
-                else -> ApiResult.Failed(response.errorBody().toString())
+                else -> ApiResult.Failed(response.errorBody()?.string().orEmpty())
             }
+        } catch (e: CancellationException) {
+            throw e
         } catch (_: IOException) {
             ApiResult.NetworkError
         } catch (e: Exception) {

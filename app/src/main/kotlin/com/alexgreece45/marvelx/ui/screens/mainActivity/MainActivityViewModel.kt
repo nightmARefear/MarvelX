@@ -19,8 +19,6 @@ import com.alexgreece45.marvelx.core.security.model.security.SecurityViolation
 import com.alexgreece45.marvelx.data.model.deepLink.DeepLinkAction
 import com.alexgreece45.marvelx.data.repository.AutoLogoutRepository
 import com.alexgreece45.marvelx.data.repository.UserRepository
-import com.alexgreece45.marvelx.data.repository.marketplace.listing.ListingCategoryRepository
-import com.alexgreece45.marvelx.data.repository.marketplace.listing.details.ListingDetailsRepository
 import com.alexgreece45.marvelx.domain.usecases.LogoutUseCase
 import com.alexgreece45.marvelx.mvi.BaseViewModel
 import com.alexgreece45.marvelx.notifications.PushNotificationsController
@@ -34,12 +32,14 @@ import com.alexgreece45.marvelx.util.DateUtil
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.constants.ConstantsWorker
 import com.google.gson.Gson
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
 import org.koin.android.annotation.KoinViewModel
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import kotlin.time.Duration.Companion.seconds
 
 @KoinViewModel(binds = [MainActivityViewModel::class])
 class MainActivityViewModel :
@@ -63,10 +63,6 @@ class MainActivityViewModel :
     private val sessionManager: SessionManager by inject()
     private val autoLogoutRepository: AutoLogoutRepository by inject()
 
-    // Listing enum-related values.
-    private val listingCategoryRepository: ListingCategoryRepository by inject()
-    private val listingDetailsRepository: ListingDetailsRepository by inject()
-
     override fun setInitialState(): MainActivityState = MainActivityState()
 
     override fun handleEvents(event: MainActivityEvent) {
@@ -80,6 +76,7 @@ class MainActivityViewModel :
 
             MainActivityEvent.LifecycleEvent.OnPause -> {
                 websocketController.onAppForegroundChanged(isForeground = false)
+                oAuthAuthorizationController.onAppPaused()
 
                 if (userRepository.isUserLoggedIn && securityConfigLogic.isAutoLogoutEnabled) {
                     viewModelScope.launch {
@@ -90,6 +87,13 @@ class MainActivityViewModel :
 
             MainActivityEvent.LifecycleEvent.OnResume -> {
                 websocketController.onAppForegroundChanged(isForeground = true)
+
+                // The OAuth redirect (delivered via onNewIntent, right before onResume) gets a
+                // grace period to resolve the in-flight attempt, before it's deemed abandoned.
+                viewModelScope.launch {
+                    delay(OAUTH_ABANDON_GRACE_PERIOD)
+                    oAuthAuthorizationController.onAppResumed()
+                }
 
                 if (!userRepository.isUserLoggedIn) return // TODO: To be reviewed.
 
@@ -241,12 +245,6 @@ class MainActivityViewModel :
                     }
                 }
         }
-
-        viewModelScope.launch {
-            // Initialize listing enum related values.
-            listingCategoryRepository.init()
-            listingDetailsRepository.init()
-        }
     }
 
     private fun registerOrUpdateDevice() {
@@ -314,4 +312,8 @@ class MainActivityViewModel :
      */
     private fun isCurrentRouteIncludedInAutoLogout(): Boolean =
         Screen.fromRoute(currentState.currentRoute)?.isIncludedInAutoLogout ?: false
+
+    private companion object {
+        val OAUTH_ABANDON_GRACE_PERIOD = 1.seconds
+    }
 }

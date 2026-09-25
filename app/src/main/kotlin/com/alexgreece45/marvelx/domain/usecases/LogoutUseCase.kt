@@ -7,6 +7,7 @@ import com.alexgreece45.marvelx.core.data.repositories.UserSessionRepository
 import com.alexgreece45.marvelx.data.repository.AutoLogoutRepository
 import com.alexgreece45.marvelx.data.repository.LoginRepository
 import com.alexgreece45.marvelx.data.repository.UserRepository
+import com.alexgreece45.marvelx.data.repository.chat.ChatRepository
 import com.alexgreece45.marvelx.core.data.helper.RepositoryResult
 import org.koin.core.annotation.Factory
 
@@ -23,13 +24,15 @@ class LogoutUseCase(
     private val userRepository: UserRepository,
     private val autoLogoutRepository: AutoLogoutRepository,
     private val removeUserCredentialsUseCase: RemoveUserCredentialsUseCase,
-    private val userSessionRepository: UserSessionRepository
+    private val userSessionRepository: UserSessionRepository,
+    private val chatRepository: ChatRepository
 ) {
 
     suspend operator fun invoke(): RepositoryResult<String> {
         val refreshToken = userSessionRepository.getRefreshToken()
 
         websocketController.disconnect()
+        chatRepository.clear()
         userRepository.setUserLoggedIn(false)
         removeUserCredentialsUseCase()
         autoLogoutRepository.removeAutoLogoutTimestamp()

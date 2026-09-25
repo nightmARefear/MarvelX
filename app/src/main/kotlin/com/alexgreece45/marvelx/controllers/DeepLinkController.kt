@@ -98,10 +98,11 @@ class DeepLinkControllerImpl(
                     return HandleQrCodeWebUrlResult.InvalidUrl
                 }
 
-                val userId = try {
-                    Integer.parseInt(parameterValues.last()).toString()
-                } catch (_: NumberFormatException) {
-                    appLogger.e(loggerTag) { "(handleQrCodeWebUrl) The parsed userId \"${parameterValues.last()}\" is not of type Int!" }
+                // User ids are strings (e.g. numeric or UUIDs), so only reject blank ids or ids
+                // containing characters other than letters, digits, '-' and '_'.
+                val userId = parameterValues.last()
+                if (userId.isBlank() || !userId.all { character -> character.isLetterOrDigit() || character == '-' || character == '_' }) {
+                    appLogger.e(loggerTag) { "(handleQrCodeWebUrl) The parsed userId \"$userId\" is not valid!" }
                     return HandleQrCodeWebUrlResult.InvalidUrl
                 }
 

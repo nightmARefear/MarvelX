@@ -1,6 +1,7 @@
 package com.alexgreece45.marvelx.core.network.authenticators
 
 import com.alexgreece45.marvelx.core.common.config.ConfigLogic
+import com.alexgreece45.marvelx.core.common.constants.ConstantsSecurity
 import com.alexgreece45.marvelx.core.common.config.ConfigOauthLogic
 import com.alexgreece45.marvelx.core.common.dispatchers.model.IoDispatcher
 import com.alexgreece45.marvelx.core.common.extensions.differenceInMilliseconds
@@ -48,13 +49,12 @@ internal class ApiAuthenticatorImpl(
     private val loggerTag = "ApiAuthenticator"
 
     /**
-     * The request that caused the 401 error.
-     */
-    private lateinit var request: Request
-
-    /**
      * This function is triggered when a 401 response is received. It attempts to refresh the access
      * token 3 times before logging out the user.
+     *
+     * OkHttp may call this concurrently from several threads, so the whole process is serialized;
+     * otherwise every concurrent 401 would refresh with the same (possibly already rotated) refresh
+     * token.
      */
     override fun authenticate(route: Route?, response: Response): Request? {
         // If the path is not related to the MarvelX backend, then the authentication process is not
@@ -67,6 +67,27 @@ internal class ApiAuthenticatorImpl(
         // Should never occur, but just in case.
         if (path == configOauthLogic.tokenPath) {
             return null
+        }
+
+        return synchronized(this) { authenticateLocked(response = response, path = path) }
+    }
+
+    private fun authenticateLocked(response: Response, path: String): Request? {
+        // The request that caused the 401 error.
+        val request = response.request
+
+        // If the tokens were refreshed by another request while this one was in flight, retry it
+        // with the current access token instead of refreshing again.
+        val failedAuthorization = request.header(ConstantsSecurity.HeaderName.Authorization.name)
+        val currentAccessTokenAndType = tokenStorage.getAccessTokenAndType()
+        if (failedAuthorization != null &&
+            currentAccessTokenAndType.isNotBlank() &&
+            failedAuthorization != currentAccessTokenAndType
+        ) {
+            return marvelXBackendRequestTransformer.applyMarvelXBackendTransformations(
+                originalRequest = request,
+                path = path
+            )
         }
 
         var shouldLogout = false
@@ -119,9 +140,6 @@ internal class ApiAuthenticatorImpl(
             return null
         }
 
-        // Set request.
-        request = response.request
-
         val clientId = configOauthLogic.clientId
         val refreshToken = tokenStorage.getRefreshToken()
 
@@ -161,7 +179,7 @@ internal class ApiAuthenticatorImpl(
                             }
                         } else {
                             appLogger.e(loggerTag) {
-                                "(authenticate) error: ${response.errorBody().toString()}"
+                                "(authenticate) error: ${response.errorBody()?.string().orEmpty()}"
                             }
                         }
                     }
@@ -191,7 +209,7 @@ internal class ApiAuthenticatorImpl(
         // Re-construct initial request with the new token.
         return marvelXBackendRequestTransformer.applyMarvelXBackendTransformations(
             originalRequest = request,
-            path = request.url.toUri().path
+            path = path
         )
     }
 
