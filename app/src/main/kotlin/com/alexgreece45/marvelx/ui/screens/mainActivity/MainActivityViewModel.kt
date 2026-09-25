@@ -19,8 +19,6 @@ import com.alexgreece45.marvelx.core.security.model.security.SecurityViolation
 import com.alexgreece45.marvelx.data.model.deepLink.DeepLinkAction
 import com.alexgreece45.marvelx.data.repository.AutoLogoutRepository
 import com.alexgreece45.marvelx.data.repository.UserRepository
-import com.alexgreece45.marvelx.data.repository.marketplace.listing.ListingCategoryRepository
-import com.alexgreece45.marvelx.data.repository.marketplace.listing.details.ListingDetailsRepository
 import com.alexgreece45.marvelx.domain.usecases.LogoutUseCase
 import com.alexgreece45.marvelx.mvi.BaseViewModel
 import com.alexgreece45.marvelx.notifications.PushNotificationsController
@@ -64,10 +62,6 @@ class MainActivityViewModel :
     private val logoutUseCase: LogoutUseCase by inject()
     private val sessionManager: SessionManager by inject()
     private val autoLogoutRepository: AutoLogoutRepository by inject()
-
-    // Listing enum-related values.
-    private val listingCategoryRepository: ListingCategoryRepository by inject()
-    private val listingDetailsRepository: ListingDetailsRepository by inject()
 
     override fun setInitialState(): MainActivityState = MainActivityState()
 
@@ -250,12 +244,6 @@ class MainActivityViewModel :
                         )
                     }
                 }
-        }
-
-        viewModelScope.launch {
-            // Initialize listing enum related values.
-            listingCategoryRepository.init()
-            listingDetailsRepository.init()
         }
     }
 

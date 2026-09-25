@@ -7,7 +7,6 @@ import com.alexgreece45.marvelx.controllers.OAuthAuthorizationController
 import com.alexgreece45.marvelx.controllers.OAuthCallbackResult
 import com.alexgreece45.marvelx.controllers.TimerController
 import com.alexgreece45.marvelx.controllers.TimerStatus
-import com.alexgreece45.marvelx.core.data.repositories.UserSessionRepository
 import com.alexgreece45.marvelx.data.repository.AutoLogoutRepository
 import com.alexgreece45.marvelx.domain.interactors.ForgotPasswordInteractor
 import com.alexgreece45.marvelx.domain.interactors.ForgotPasswordValidateOtpPartialState
@@ -17,6 +16,7 @@ import com.alexgreece45.marvelx.domain.interactors.GrandNewAccessTokenPartialSta
 import com.alexgreece45.marvelx.domain.interactors.LoginInteractor
 import com.alexgreece45.marvelx.domain.interactors.OtpInteractor
 import com.alexgreece45.marvelx.domain.interactors.PostLoginPartialState
+import com.alexgreece45.marvelx.domain.interactors.PostLoginSession
 import com.alexgreece45.marvelx.domain.interactors.RegisterInteractor
 import com.alexgreece45.marvelx.domain.interactors.ResendOtpPartialState
 import com.alexgreece45.marvelx.domain.interactors.ValidateOtpPartialState
@@ -199,7 +199,6 @@ internal class OtpViewModel(
     private val registerInteractor: RegisterInteractor,
     private val forgotPasswordInteractor: ForgotPasswordInteractor,
     private val resourceProvider: ResourceProvider,
-    private val userSessionRepository: UserSessionRepository,
     private val timerController: TimerController,
     private val autoLogoutRepository: AutoLogoutRepository,
     private val oAuthAuthorizationController: OAuthAuthorizationController,
@@ -755,8 +754,13 @@ internal class OtpViewModel(
                         is GrandNewAccessTokenPartialState.Success -> {
                             // Token was successfully generated (in the server) and retrieved (in the client).
 
-                            // Retrieve signing data.
-                            loginInteractor.postLogin(accessTokenPartialState.authenticationTokens.accessTokenAndType)
+                            // Retrieve signing data, and store the user session.
+                            loginInteractor.postLogin(
+                                PostLoginSession.New(
+                                    userId = currentState.userId,
+                                    authenticationTokens = accessTokenPartialState.authenticationTokens
+                                )
+                            )
                                 .collect { postLoginPartialState ->
                                     when (postLoginPartialState) {
                                         PostLoginPartialState.Success -> {
@@ -764,12 +768,6 @@ internal class OtpViewModel(
                                             setEffect {
                                                 OtpEffect.SaveAutoFilledData
                                             }
-
-                                            // Save token info in device.
-                                            userSessionRepository.setUserSession(
-                                                userId = currentState.userId,
-                                                authenticationTokens = accessTokenPartialState.authenticationTokens
-                                            )
 
                                             // Save remember user session flag.
                                             autoLogoutRepository.setRememberUserSession(currentState.shouldRememberUserSession)
