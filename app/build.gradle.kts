@@ -9,6 +9,7 @@ plugins {
     alias(libs.plugins.google.firebase.crashlytics)
 //    alias(libs.plugins.kotzilla)
     id("marvelx.kotlin.serialization")
+    alias(libs.plugins.kover)
 }
 
 val keystoreProperties = Properties()
@@ -169,6 +170,33 @@ tasks.register("buildDebugApk") {
     dependsOn("assembleDebug")
 }*/
 
+//kover {
+//    reports {
+//        filters {
+//            excludes {
+//                classes(
+//                    "*svg*",
+//                    "*xml*",
+//                    "*special\$\$inlined\$inject\$default*",
+//                    "com.alexgreece45.marvelx.mvi.*"
+//                )
+//            }
+//            includes {
+//                classes(
+//                    //"*RepositoryImpl",
+//                    //"*InteractorImpl",
+//                    "*ViewModel"
+//                )
+//            }
+//        }
+//    }
+//}
+//
+//tasks.check {
+//    dependsOn("koverHtmlReport")
+//    dependsOn("koverVerify")
+//}
+
 dependencies {
     // Other modules.
     implementation(projects.commonUi)
@@ -266,4 +294,6 @@ dependencies {
     implementation(libs.androidx.datastore.preferences)
 
 //    implementation(libs.kotzilla.sdk.compose)
+
+    testImplementation(libs.bundles.testing)
 }

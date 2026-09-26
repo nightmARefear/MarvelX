@@ -75,6 +75,8 @@ kotlinx-serialization-converter = "1.0.0"
 
 kotzilla = "2.2.3"
 
+kover = "0.9.9"
+
 lambdapioneer-argon2kt = "1.6.0"
 
 rootbeer = "0.1.2"
@@ -226,6 +228,8 @@ ksp = { id = "com.google.devtools.ksp", version.ref = "plugin-ksp" }
 
 kotzilla = { id = "io.kotzilla.kotzilla-plugin", version.ref = "kotzilla" }
 
+kover = {id="org.jetbrains.kotlinx.kover", version.ref="kover"}
+
 
 [bundles]
 app-ui = [
@@ -302,4 +306,10 @@ networking = [
 security = [
     "androidx-security-crypto",
     "lambdapioneer-argon2kt"
+]
+
+testing = [
+    "mockito-core",
+    "mockito-kotlin",
+    "mockk"
 ]
