@@ -59,6 +59,12 @@ java-version = "17"
 
 junit = "4.13.2"
 
+mockito = "5.18.0"
+mockito-kotlin = "6.0.0"
+mockk = "1.14.5"
+
+turbine = "1.2.1"
+
 koin-annotations = "2.3.1"
 
 kotlin-collections-immutable = "0.4.0"
@@ -151,6 +157,12 @@ google-zxing = { module = "com.google.zxing:core", version.ref = "google-zxing" 
 
 junit = { module = "junit:junit", version.ref = "junit" }
 
+mockito-core = { module = "org.mockito:mockito-core", version.ref = "mockito" }
+mockito-kotlin = { module = "org.mockito.kotlin:mockito-kotlin", version.ref = "mockito-kotlin" }
+mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
+
+turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
+
 koin-bom = { module = "io.insert-koin:koin-bom", version.ref = "koin-bom" }
 koin-android = { module = "io.insert-koin:koin-android" }
 koin-androidx-compose = { module = "io.insert-koin:koin-androidx-compose" }
@@ -168,6 +180,7 @@ kotlin-serialization = { group = "org.jetbrains.kotlinx", name = "kotlinx-serial
 
 kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
 kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "kotlinx-coroutines" }
+kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "kotlinx-coroutines" }
 kotlinx-serialization-converter = { module = "com.jakewharton.retrofit:retrofit2-kotlinx-serialization-converter", version.ref = "kotlinx-serialization-converter" }
 
 kotzilla-sdk-compose = { group = "io.kotzilla", name = "kotzilla-sdk-compose", version.ref = "kotzilla" }
@@ -246,7 +259,12 @@ app-ui-camera = [
 ]
 
 test-implementation = [
-    "junit"
+    "junit",
+    "kotlinx-coroutines-test",
+    "mockito-core",
+    "mockito-kotlin",
+    "mockk",
+    "turbine"
 ]
 
 android-test-implementation = [
