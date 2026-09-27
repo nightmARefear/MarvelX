@@ -7,3 +7,6 @@ internal annotation class AutoLogoutPreferences
 
 @Named
 internal annotation class FcmTokenPreferences
+
+@Named
+internal annotation class NetworkInspectorPreferences

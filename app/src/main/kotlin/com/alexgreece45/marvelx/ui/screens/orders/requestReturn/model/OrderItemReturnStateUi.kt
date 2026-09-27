@@ -1,10 +1,12 @@
 package com.alexgreece45.marvelx.ui.screens.orders.requestReturn.model
 
 import com.alexgreece45.marvelx.core.common.extensions.defaultFormat
+import com.alexgreece45.marvelx.core.common.extensions.formatPrice
 import com.alexgreece45.marvelx.core.common.util.DateUtil
 import com.alexgreece45.marvelx.core.data.model.order.item.OrderItemReturnState
 import com.alexgreece45.marvelx.core.data.model.order.item.refund.OrderItemRefundStatus
 import com.alexgreece45.marvelx.domain.model_api.order.item.toDomain
+import com.alexgreece45.marvelx.ui.model_generic.BigDecimalUi
 import com.alexgreece45.marvelx.ui.model_generic.LocalDateUi
 import com.alexgreece45.marvelx.ui.screens.orders.model.item.OrderItemUi
 import com.alexgreece45.marvelx.ui.screens.orders.model.item.toUi
@@ -14,7 +16,10 @@ internal sealed interface OrderItemReturnStateUi {
     data class Available(
         val orderItem: OrderItemUi,
         val returnUntilDate: LocalDateUi,
-        val isRequestRefundAvailable: Boolean
+        val isRequestRefundAvailable: Boolean,
+        val returnShippingFee: BigDecimalUi,
+        /** The refund the buyer gets if it's accepted, as decided by the backend. */
+        val refundAmount: BigDecimalUi?
     ) : OrderItemReturnStateUi {
 
         val returnUntilRemainingDays: Long
@@ -36,7 +41,17 @@ internal fun OrderItemReturnState.toUi(priceScale: Int): Result<OrderItemReturnS
                     value = returnUntilDate,
                     label = returnUntilDate.defaultFormat()
                 ),
-                isRequestRefundAvailable = refundStatus == OrderItemRefundStatus.AVAILABLE
+                isRequestRefundAvailable = refundStatus == OrderItemRefundStatus.AVAILABLE,
+                returnShippingFee = BigDecimalUi(
+                    value = returnShippingFee,
+                    label = returnShippingFee.formatPrice(scale = priceScale)
+                ),
+                refundAmount = refundAmount?.let {
+                    BigDecimalUi(
+                        value = it,
+                        label = it.formatPrice(scale = priceScale)
+                    )
+                }
             )
 
             is OrderItemReturnState.Existing -> OrderItemReturnStateUi.Existing(

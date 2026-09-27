@@ -95,7 +95,18 @@ internal class SignatureEngineImpl(
             nonce,
             timestamp
         ).joinToString(payloadSeparator)
-        appLogger.d(loggerTag) { "payload: $payload" }
+        // The body is left out of the log: it may carry secrets (e.g., passwords, OTPs, or card
+        // data).
+        appLogger.d(loggerTag) {
+            "payload: " + listOf(
+                requestMethod,
+                pathAndParameters,
+                "<body: ${requestBody.length} chars>",
+                headers,
+                nonce,
+                timestamp
+            ).joinToString(payloadSeparator)
+        }
 
         return try {
             val signatureAlgorithm = signature.algorithm

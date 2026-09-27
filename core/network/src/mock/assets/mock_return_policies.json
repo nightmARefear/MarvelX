@@ -1,55 +1,58 @@
 {
   "returnPolicies": [
     {
-      "header": "Standard Return Window",
-      "description": "You have 15 days from the date of delivery to request a return. Once this window closes, the transaction is considered final and refunds can no longer be processed.",
-      "items": []
-    },
-    {
-      "header": "Eligible Reasons for Return",
-      "description": "You may request a return if the item meets one of the following conditions:",
+      "header": "Return Window",
+      "description": "You have 30 days from the day your item is delivered to open a return request. The countdown starts at delivery, not at purchase, so an item still in transit is never counted against your window.",
       "items": [
-        "Damaged or Defective: The item arrived broken or is not functioning.",
-        "Not as Described: The item significantly differs from the listing details or photos.",
-        "Wrong Item Received: You received a completely different product."
+        "The exact deadline for each item is shown on its return screen as \"Return until\".",
+        "If the delivery date is corrected, the deadline moves with it.",
+        "Once the window closes the purchase is final and a return can no longer be opened."
       ]
     },
     {
-      "header": "Shipping Fees & Responsibilities",
-      "description": "Return shipping costs depend on the reason for the return:",
+      "header": "Reasons You Can Return An Item",
+      "description": "A return request has to state one of the following reasons:",
       "items": [
-        "Seller Error (Damaged/Not as Described): The seller covers the return shipping costs.",
-        "Buyer Preference: The buyer must pay for the return shipping label.",
-        "Original Shipping: Initial shipping fees are non-refundable unless the return is due to a seller error."
+        "Damaged or defective — the item arrived broken, incomplete, or does not work.",
+        "Not as described — the item differs meaningfully from the listing's description or photos.",
+        "Wrong item received — what arrived is not the item you ordered.",
+        "Other — anything the three reasons above do not cover. Explain it in the description so the seller can respond."
       ]
     },
     {
-      "header": "Return Requirements",
-      "description": "To successfully receive your refund, the returned item must meet these criteria:",
+      "header": "What To Include In Your Request",
+      "description": "The more specific your request, the faster a seller can act on it. Every request asks for:",
       "items": [
-        "The item must be in the exact condition it was received.",
-        "All original packaging, accessories, and documentation must be included.",
-        "No signs of additional wear, use, or damage.",
-        "Hygiene seals (if applicable) must remain completely intact."
+        "A description of the problem, in your own words.",
+        "The condition of the item: unopened in its original packaging, opened, or lightly used.",
+        "Photos — up to 5. For damage or a wrong item, photos are the single thing most likely to get a request accepted quickly.",
+        "Whether you are asking for a refund or a replacement."
+      ]
+    },
+    {
+      "header": "Sending The Item Back",
+      "description": "You choose how the item travels back to the seller when you open the request:",
+      "items": [
+        "Prepaid return label — you print a label and drop the parcel off yourself.",
+        "Courier pickup — a courier collects the parcel from your address.",
+        "Return the item in the condition you described, with the original packaging, accessories and documentation you received.",
+        "The return shipping fee matches what delivery of that item cost you. It is deducted from your refund, and shown on the return screen before you confirm."
+      ]
+    },
+    {
+      "header": "What Happens After You Submit",
+      "description": "Your request goes straight to the seller and stays pending until they respond. There are three possible outcomes:",
+      "items": [
+        "Refund — the seller accepts and the refund amount is shown on your return screen.",
+        "Replacement — the seller sends a replacement item instead of refunding you.",
+        "Rejected — the seller declines the request and can leave a message explaining why.",
+        "You can reopen the return screen at any time to see the current status and the seller's message."
       ]
     },
     {
       "header": "Final Sale Items",
-      "description": "Items clearly marked as 'Final Sale' at the time of purchase are strictly non-returnable and non-refundable, unless the item arrives severely damaged or is definitively not the item ordered.",
-      "items": [
-        "The item must be in the exact condition it was received.",
-        "All original packaging, accessories, and documentation must be included.",
-        "No signs of additional wear, use, or damage.",
-        "Hygiene seals (if applicable) must remain completely intact.",
-        "The item must be in the exact condition it was received.",
-        "All original packaging, accessories, and documentation must be included.",
-        "No signs of additional wear, use, or damage.",
-        "Hygiene seals (if applicable) must remain completely intact.",
-        "The item must be in the exact condition it was received.",
-        "All original packaging, accessories, and documentation must be included.",
-        "No signs of additional wear, use, or damage.",
-        "Hygiene seals (if applicable) must remain completely intact."
-      ]
+      "description": "Listings marked Final Sale at the time of purchase cannot be returned or refunded, and no return option appears for them. Check for the Final Sale label before you buy — it is shown on the listing.",
+      "items": []
     }
   ]
 }

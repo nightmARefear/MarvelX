@@ -166,7 +166,7 @@ class MainActivityViewModel :
                 fcmController.setFcmToken(event.fcmToken)
 
                 if (userRepository.isUserLoggedIn) {
-                    registerOrUpdateDevice()
+                    registerDevice()
                 }
             }
 
@@ -195,7 +195,7 @@ class MainActivityViewModel :
         viewModelScope.launch {
             userRepository.getUserLoggedInFlow().collect { isUserLoggedIn ->
                 if (isUserLoggedIn) {
-                    registerOrUpdateDevice()
+                    registerDevice()
                     websocketController.connect()
                 } else {
                     websocketController.disconnect()
@@ -231,15 +231,15 @@ class MainActivityViewModel :
         }
     }
 
-    private fun registerOrUpdateDevice() {
+    private fun registerDevice() {
         viewModelScope.launch {
             val wasDeviceRegistered =
-                deviceController.registerOrUpdateDevice(fcmController.getFcmToken())
+                deviceController.registerDevice(fcmController.getFcmToken())
 
             if (wasDeviceRegistered) {
-                appLogger.d(loggerTag) { "(registerOrUpdateDevice) Device was successfully registered!" }
+                appLogger.d(loggerTag) { "(registerDevice) Device was successfully registered!" }
             } else {
-                appLogger.e(loggerTag) { "(registerOrUpdateDevice) An error occurred whilst registering the device." }
+                appLogger.e(loggerTag) { "(registerDevice) An error occurred whilst registering the device." }
             }
         }
     }
