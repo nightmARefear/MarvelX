@@ -1,6 +1,5 @@
 package com.alexgreece45.marvelx.core.network.di
 
-import android.content.Context
 import com.alexgreece45.marvelx.core.common.config.ConfigLogic
 import com.alexgreece45.marvelx.core.common.config.SecurityConfigLogic
 import com.alexgreece45.marvelx.core.common.config.WebsocketConfigLogic
@@ -16,6 +15,7 @@ import com.alexgreece45.marvelx.core.network.di.model.RefreshTokenInterceptor
 import com.alexgreece45.marvelx.core.network.di.model.RefreshTokenRetrofit
 import com.alexgreece45.marvelx.core.network.di.model.WebsocketOkHttpClient
 import com.alexgreece45.marvelx.core.network.di.model.WebsocketInterceptor
+import com.alexgreece45.marvelx.core.network.interceptors.NetworkInspectorInterceptor
 import com.alexgreece45.marvelx.core.network.model.api.character.comic.ResponseComicPriceType
 import com.alexgreece45.marvelx.core.network.model.api.verification_step.ResponseVerificationStep
 import com.alexgreece45.marvelx.core.network.services.ApiService
@@ -28,7 +28,6 @@ import com.alexgreece45.marvelx.core.network.typeAdapters.OffsetDateTimeAdapter
 import com.alexgreece45.marvelx.core.network.typeAdapters.ResponseComicPriceTypeAdapter
 import com.alexgreece45.marvelx.core.network.typeAdapters.ResponseVerificationStepAdapter
 import com.alexgreece45.marvelx.core.network.typeAdapters.UUIDAdapter
-import com.chuckerteam.chucker.api.ChuckerInterceptor
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import kotlinx.serialization.json.Json
@@ -95,7 +94,7 @@ internal fun provideJson(): Json = Json { ignoreUnknownKeys = true }
 @Single
 @BackendOkHttpClient
 internal fun provideOkHttpClient(
-    context: Context,
+    networkInspectorInterceptor: NetworkInspectorInterceptor,
     @ApiAuthenticator apiAuthenticator: Authenticator,
     @ApiInterceptor apiInterceptor: Interceptor,
     httpLoggingInterceptor: HttpLoggingInterceptor,
@@ -126,7 +125,7 @@ internal fun provideOkHttpClient(
         okHttpClient.addInterceptor(httpLoggingInterceptor)
     }
 
-    okHttpClient.addInterceptor(ChuckerInterceptor(context))
+    okHttpClient.addInterceptor(networkInspectorInterceptor)
 
     // Disables response caching for security reasons.
     okHttpClient.cache(null)
@@ -140,7 +139,7 @@ internal fun provideOkHttpClient(
 @Single
 @RefreshAuthTokenOkHttpClient
 internal fun provideOkHttpClientForRefreshTokenClient(
-    context: Context,
+    networkInspectorInterceptor: NetworkInspectorInterceptor,
     @RefreshTokenAuthenticator refreshTokenAuthenticator: Authenticator,
     @RefreshTokenInterceptor refreshTokenInterceptor: Interceptor,
     httpLoggingInterceptor: HttpLoggingInterceptor,
@@ -171,7 +170,7 @@ internal fun provideOkHttpClientForRefreshTokenClient(
         okHttpClient.addInterceptor(httpLoggingInterceptor)
     }
 
-    okHttpClient.addInterceptor(ChuckerInterceptor(context))
+    okHttpClient.addInterceptor(networkInspectorInterceptor)
 
     // Disables response caching for security reasons.
     okHttpClient.cache(null)
@@ -185,7 +184,7 @@ internal fun provideOkHttpClientForRefreshTokenClient(
 @Single
 @WebsocketOkHttpClient
 internal fun provideOkHttpClientForWebsocketClient(
-    context: Context,
+    networkInspectorInterceptor: NetworkInspectorInterceptor,
     httpLoggingInterceptor: HttpLoggingInterceptor,
     @WebsocketInterceptor websocketInterceptor: Interceptor,
     securityConfigLogic: SecurityConfigLogic,
@@ -215,7 +214,7 @@ internal fun provideOkHttpClientForWebsocketClient(
     }
     okHttpClient.addInterceptor(websocketInterceptor)
 
-    okHttpClient.addInterceptor(ChuckerInterceptor(context))
+    okHttpClient.addInterceptor(networkInspectorInterceptor)
 
     return okHttpClient.build()
 }

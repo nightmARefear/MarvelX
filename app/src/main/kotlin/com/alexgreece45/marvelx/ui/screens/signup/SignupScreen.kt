@@ -1,7 +1,5 @@
 package com.alexgreece45.marvelx.ui.screens.signup
 
-import android.net.Uri
-import androidx.browser.customtabs.CustomTabsIntent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -25,7 +23,6 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.autofill.ContentType
 import androidx.compose.ui.focus.FocusDirection
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
@@ -46,6 +43,7 @@ import com.alexgreece45.marvelx.ui.components.ExposedDropdownMenu
 import com.alexgreece45.marvelx.ui.components.OutlinedTextFieldValidation
 import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
 import com.alexgreece45.marvelx.ui.components.WrapButton
+import com.alexgreece45.marvelx.ui.helper.LocalOAuthBrowserLauncher
 import com.alexgreece45.marvelx.ui.model.Gender
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.SPACING_TINY
@@ -60,7 +58,7 @@ internal fun SignUpScreen(
 ) {
     val focusManager = LocalFocusManager.current
     val keyboard = LocalSoftwareKeyboardController.current
-    val context = LocalContext.current
+    val oAuthBrowserLauncher = LocalOAuthBrowserLauncher.current
 
     ObserveUiEffect(flow = effect, tag = "SignupScreen") { uiEffect ->
         when (uiEffect) {
@@ -84,7 +82,7 @@ internal fun SignUpScreen(
             }
 
             is SignupEffect.LaunchOAuthAuthorization -> {
-                CustomTabsIntent.Builder().build().launchUrl(context, Uri.parse(uiEffect.url))
+                oAuthBrowserLauncher?.launch(uiEffect.request)
             }
         }
     }

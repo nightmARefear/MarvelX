@@ -7,15 +7,15 @@ import com.alexgreece45.marvelx.core.common.dispatchers.model.IoDispatcher
 import com.alexgreece45.marvelx.core.common.extensions.differenceInMilliseconds
 import com.alexgreece45.marvelx.core.common.logger.AppLogger
 import com.alexgreece45.marvelx.core.common.util.DateUtil
-import com.alexgreece45.marvelx.core.network.clients.RefreshTokenClient
 import com.alexgreece45.marvelx.core.network.controller.MarvelXBackendRequestTransformer
 import com.alexgreece45.marvelx.core.network.di.model.ApiAuthenticator
 import com.alexgreece45.marvelx.core.network.managers.SessionManager
 import com.alexgreece45.marvelx.core.network.managers.model.LogoutReason
-import com.alexgreece45.marvelx.core.network.model.api.token.ResponseToken
-import com.alexgreece45.marvelx.core.network.model.api.token.toModel
 import com.alexgreece45.marvelx.core.network.storage.ConsecutiveFailedAuthenticationStorage
+import com.alexgreece45.marvelx.core.network.storage.TokenRefreshResult
+import com.alexgreece45.marvelx.core.network.storage.TokenRefresher
 import com.alexgreece45.marvelx.core.network.storage.TokenStorage
+import com.alexgreece45.marvelx.model.model.AuthenticationTokens
 import com.alexgreece45.marvelx.model.model.ConsecutiveFailedAuthentication
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.runBlocking
@@ -38,7 +38,7 @@ internal class ApiAuthenticatorImpl(
     private val appLogger: AppLogger,
     private val configLogic: ConfigLogic,
     private val configOauthLogic: ConfigOauthLogic,
-    private val refreshTokenClient: RefreshTokenClient,
+    private val tokenRefresher: TokenRefresher,
     private val tokenStorage: TokenStorage,
     private val consecutiveFailedAuthenticationStorage: ConsecutiveFailedAuthenticationStorage,
     private val marvelXBackendRequestTransformer: MarvelXBackendRequestTransformer,
@@ -140,15 +140,12 @@ internal class ApiAuthenticatorImpl(
             return null
         }
 
-        val clientId = configOauthLogic.clientId
-        val refreshToken = tokenStorage.getRefreshToken()
-
-        if (refreshToken.isNullOrBlank()) {
+        if (tokenStorage.getRefreshToken().isNullOrBlank()) {
             performLogoutOperations()
             return null
         }
 
-        var responseToken: ResponseToken? = null
+        var authenticationTokens: AuthenticationTokens? = null
         var timeoutExceeded = false
         runBlocking(ioDispatcher) {
             try {
@@ -159,27 +156,23 @@ internal class ApiAuthenticatorImpl(
                 withTimeout(maxTimeoutSeconds) {
                     repeat(configLogic.backendMaxAuthenticationTries) {
                         // If the token was retrieved from a previous call, exit the loop.
-                        if (responseToken != null) {
+                        if (authenticationTokens != null) {
                             return@repeat
                         }
 
-                        // Obtain new tokens.
-                        val response = refreshTokenClient.refreshAccessToken(clientId, refreshToken)
-                        if (response.isSuccessful) {
-                            when (val newResponseToken = response.body()) {
-                                null -> {
-                                    appLogger.e(loggerTag) { "(authenticate) error: Response body is null." }
-                                }
-
-                                else -> {
-                                    tokenStorage.setAuthenticationTokens(newResponseToken.toModel())
-                                    responseToken = newResponseToken
-                                    appLogger.d(loggerTag) { "(authenticate) Success retrieving access token." }
-                                }
+                        // Obtain (and persist) new tokens, sharing any refresh already in flight.
+                        when (val result = tokenRefresher.refresh()) {
+                            is TokenRefreshResult.Success -> {
+                                authenticationTokens = result.authenticationTokens
+                                appLogger.d(loggerTag) { "(authenticate) Success retrieving access token." }
                             }
-                        } else {
-                            appLogger.e(loggerTag) {
-                                "(authenticate) error: ${response.errorBody()?.string().orEmpty()}"
+
+                            is TokenRefreshResult.Failed -> {
+                                appLogger.e(loggerTag) { "(authenticate) error: ${result.reason}" }
+                            }
+
+                            is TokenRefreshResult.Error -> {
+                                appLogger.e(loggerTag) { "(authenticate) error: ${result.throwable.message.orEmpty()}" }
                             }
                         }
                     }
@@ -198,15 +191,12 @@ internal class ApiAuthenticatorImpl(
             return null
         }
 
-        if (responseToken == null) {
+        if (authenticationTokens == null) {
             performLogoutOperations()
             return null
         }
 
-        // Save token info in device.
-        tokenStorage.setAuthenticationTokens(responseToken.toModel())
-
-        // Re-construct initial request with the new token.
+        // Re-construct initial request with the new token (already persisted by the refresher).
         return marvelXBackendRequestTransformer.applyMarvelXBackendTransformations(
             originalRequest = request,
             path = path

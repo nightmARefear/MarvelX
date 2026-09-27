@@ -194,12 +194,10 @@ private val workerModule = module {
             get(),
             get(),
             get(),
-            get(),
         )
     }
     factory<WorkerFactory> {
         RefreshTokenWorkerFactory(
-            get(),
             get(),
             get(),
             get(),

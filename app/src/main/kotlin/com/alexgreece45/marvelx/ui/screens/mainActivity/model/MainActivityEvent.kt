@@ -53,10 +53,18 @@ sealed interface MainActivityEvent : BaseEvent {
     data class OnDeepLinkReceived(val uri: Uri) : MainActivityEvent
 
     /**
-     * Handles the browser (Custom Tabs) redirect back into the app once the OAuth 2.0 + PKCE
-     * authorization request completes, carrying `code`+`state` (or `error`+`state`) as query params.
+     * Handles the browser redirect back into the app once the OAuth 2.0 + PKCE authorization
+     * request completes, carrying `code`+`state` (or `error`+`state`) as query params. It arrives
+     * either as the Auth Tab result or as a deep link (Custom Tab fallback).
      */
     data class OnOAuthCallbackReceived(val uri: Uri) : MainActivityEvent
+
+    /**
+     * The browser opened for the OAuth authorization request with [state] was closed without
+     * delivering a redirect as its result. [state] is `null` if the request isn't known anymore
+     * (e.g., after process death).
+     */
+    data class OnOAuthBrowserClosed(val state: String?) : MainActivityEvent
 
     /**
      * When the FCM token has been received.

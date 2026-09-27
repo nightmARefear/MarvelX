@@ -4,7 +4,6 @@ import com.alexgreece45.marvelx.controllers.model.websocket.WebsocketConnectionS
 import com.alexgreece45.marvelx.controllers.model.websocket.WebsocketInbound
 import com.alexgreece45.marvelx.controllers.model.websocket.WebsocketTerminationCode
 import com.alexgreece45.marvelx.core.common.applicationScope.model.ApplicationScope
-import com.alexgreece45.marvelx.core.common.config.ConfigOauthLogic
 import com.alexgreece45.marvelx.core.common.config.WebsocketConfigLogic
 import com.alexgreece45.marvelx.core.common.constants.ConstantsSecurity
 import com.alexgreece45.marvelx.core.common.logger.AppLogger
@@ -19,9 +18,8 @@ import com.alexgreece45.marvelx.core.network.model.websocket.WebsocketFrameType
 import com.alexgreece45.marvelx.core.network.model.websocket.WebsocketNotificationDeletePayload
 import com.alexgreece45.marvelx.core.network.model.websocket.WebsocketTimestampRequestPayload
 import com.alexgreece45.marvelx.core.network.model.websocket.WebsocketTimestampResultPayload
+import com.alexgreece45.marvelx.core.network.storage.TokenRefreshResult
 import com.alexgreece45.marvelx.data.repository.RefreshTokenRepository
-import com.alexgreece45.marvelx.data.repository.TokenRefreshRepositoryResult
-import com.alexgreece45.marvelx.model.model.AuthenticationTokens
 import com.google.gson.Gson
 import com.google.gson.JsonElement
 import com.google.gson.JsonSyntaxException
@@ -105,7 +103,6 @@ class WebsocketControllerImpl(
     @WebsocketOkHttpClient private val okHttpClient: OkHttpClient,
     private val userSessionRepository: UserSessionRepository,
     private val refreshTokenRepository: RefreshTokenRepository,
-    private val configOauthLogic: ConfigOauthLogic,
     private val appLogger: AppLogger,
     private val gson: Gson,
     @ApplicationScope private val applicationScope: CoroutineScope,
@@ -315,25 +312,19 @@ class WebsocketControllerImpl(
         val refreshToken = userSessionRepository.getRefreshToken()
         if (refreshToken.isNullOrEmpty()) return
 
-        when (val result =
-            refreshTokenRepository.refreshAccessToken(configOauthLogic.clientId, refreshToken)) {
-            is TokenRefreshRepositoryResult.Success -> {
-                val body = result.responseToken ?: return
-                userSessionRepository.setAuthenticationTokens(
-                    AuthenticationTokens(
-                        accessToken = body.accessToken,
-                        accessExpiresIn = body.accessExpiresIn.toLong(),
-                        refreshToken = body.refreshToken,
-                        refreshExpiresIn = body.refreshExpiresIn.toLong(),
-                        tokenType = body.tokenType
-                    )
-                )
+        // The repository stores the new tokens, and shares any refresh already in flight.
+        when (val result = refreshTokenRepository.refreshAccessToken()) {
+            is TokenRefreshResult.Success -> {
                 mutex.withLock { refreshTokenBeforeReconnect = false }
                 appLogger.d(loggerTag) { "Access token refreshed for websocket reconnection." }
             }
 
-            is TokenRefreshRepositoryResult.Failed -> {
-                appLogger.e(loggerTag) { "Token refresh for websocket failed: ${result.failureMessage}" }
+            is TokenRefreshResult.Failed -> {
+                appLogger.e(loggerTag) { "Token refresh for websocket failed: ${result.reason}" }
+            }
+
+            is TokenRefreshResult.Error -> {
+                appLogger.e(loggerTag) { "Token refresh for websocket failed: ${result.throwable.message.orEmpty()}" }
             }
         }
     }

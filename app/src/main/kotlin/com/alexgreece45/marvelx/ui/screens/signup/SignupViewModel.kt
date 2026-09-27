@@ -3,18 +3,17 @@ package com.alexgreece45.marvelx.ui.screens.signup
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.controllers.OAuthAuthorizationController
+import com.alexgreece45.marvelx.controllers.OAuthAuthorizationRequest
 import com.alexgreece45.marvelx.controllers.OAuthCallbackResult
+import com.alexgreece45.marvelx.controllers.OAuthLoginContext
 import com.alexgreece45.marvelx.core.common.dispatchers.model.DefaultDispatcher
 import com.alexgreece45.marvelx.core.network.model.api.user.signup.RequestUserSignup
-import com.alexgreece45.marvelx.data.repository.AutoLogoutRepository
-import com.alexgreece45.marvelx.domain.interactors.GrandNewAccessTokenPartialState
-import com.alexgreece45.marvelx.domain.interactors.LoginInteractor
-import com.alexgreece45.marvelx.domain.interactors.PostLoginPartialState
-import com.alexgreece45.marvelx.domain.interactors.PostLoginSession
 import com.alexgreece45.marvelx.domain.interactors.RegisterInteractor
 import com.alexgreece45.marvelx.domain.interactors.SignupPartialState
 import com.alexgreece45.marvelx.domain.model_api.otp.OtpFlowType
 import com.alexgreece45.marvelx.domain.model_api.user.VerificationStep
+import com.alexgreece45.marvelx.domain.usecases.CompleteOAuthLoginResult
+import com.alexgreece45.marvelx.domain.usecases.CompleteOAuthLoginUseCase
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
@@ -26,6 +25,7 @@ import com.alexgreece45.marvelx.util.FormValidator
 import com.alexgreece45.marvelx.util.FormsValidationResult
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.SecurityUtil
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.launch
 import org.koin.android.annotation.KoinViewModel
@@ -123,10 +123,10 @@ sealed class SignupEffect : BaseEffect {
     data object OnDoneClick : SignupEffect()
 
     /**
-     * Opens [url] (the OAuth 2.0 + PKCE authorization request) in a Custom Tab. The result of the
-     * flow arrives asynchronously via the app's deep link handling, not through this effect.
+     * Opens [request] (the OAuth 2.0 + PKCE authorization request) in the browser. The result of
+     * the flow arrives asynchronously through `MainActivity`, not through this effect.
      */
-    data class LaunchOAuthAuthorization(val url: String) : SignupEffect()
+    data class LaunchOAuthAuthorization(val request: OAuthAuthorizationRequest) : SignupEffect()
 }
 
 @KoinViewModel
@@ -134,12 +134,17 @@ internal class SignupViewModel(
     private val resourceProvider: ResourceProvider,
     private val formValidator: FormValidator,
     private val registerInteractor: RegisterInteractor,
-    private val loginInteractor: LoginInteractor,
     private val fieldValidationRules: FieldValidationRules,
     @DefaultDispatcher private val defaultDispatcher: CoroutineContext,
-    private val autoLogoutRepository: AutoLogoutRepository,
-    private val oAuthAuthorizationController: OAuthAuthorizationController
+    private val oAuthAuthorizationController: OAuthAuthorizationController,
+    private val completeOAuthLoginUseCase: CompleteOAuthLoginUseCase
 ) : BaseViewModel<SignupEvent, SignupState, SignupEffect>() {
+
+    /**
+     * Tracks the coroutine suspended in [OAuthAuthorizationController.awaitCallback] so a new
+     * attempt replaces it, and it gets cancelled if the screen is torn down first.
+     */
+    private var oAuthCallbackJob: Job? = null
 
     override fun setInitialState(): SignupState =
         SignupState(
@@ -460,19 +465,22 @@ internal class SignupViewModel(
      * It retrieves the user tokens, signing data, and logins the user.
      */
     private fun postSuccessfulSignup(userId: String, tempAuthCode: String) {
-        val url = oAuthAuthorizationController.buildAuthorizationUrl(tempAuthCode)
-        setEffect {
-            SignupEffect.LaunchOAuthAuthorization(url)
-        }
+        // ONLY for signup, the user session is remembered by default.
+        val loginContext = OAuthLoginContext(userId = userId, shouldRememberUserSession = true)
 
-        viewModelScope.launch {
+        oAuthCallbackJob?.cancel()
+        oAuthCallbackJob = viewModelScope.launch {
+            val request = oAuthAuthorizationController.startAuthorization(
+                tempAuthCode = tempAuthCode,
+                loginContext = loginContext
+            )
+            setEffect {
+                SignupEffect.LaunchOAuthAuthorization(request)
+            }
+
             when (val result = oAuthAuthorizationController.awaitCallback()) {
                 is OAuthCallbackResult.Success -> {
-                    getAccessToken(
-                        userId = userId,
-                        authCode = result.code,
-                        codeVerifier = result.codeVerifier
-                    )
+                    completeLogin(authorization = result, loginContext = loginContext)
                 }
 
                 is OAuthCallbackResult.ServerError,
@@ -489,47 +497,34 @@ internal class SignupViewModel(
         }
     }
 
-    private fun getAccessToken(userId: String, authCode: String, codeVerifier: String) {
-        viewModelScope.launch {
-            loginInteractor.grandNewAccessToken(authCode = authCode, codeVerifier = codeVerifier).collect {
-                when (it) {
-                    is GrandNewAccessTokenPartialState.Failed -> {
-                        setEffect {
-                            SignupEffect.ShowAlertDialogError(
-                                errorMessage = resourceProvider.getGenericErrorMessage()
-                            )
-                        }
-                    }
+    /**
+     * Exchanges the authorization code for tokens and completes the login.
+     */
+    private suspend fun completeLogin(
+        authorization: OAuthCallbackResult.Success,
+        loginContext: OAuthLoginContext
+    ) {
+        val result = completeOAuthLoginUseCase(
+            code = authorization.code,
+            codeVerifier = authorization.codeVerifier,
+            redirectUri = authorization.redirectUri,
+            userId = loginContext.userId,
+            shouldRememberUserSession = loginContext.shouldRememberUserSession
+        )
 
-                    is GrandNewAccessTokenPartialState.Success -> {
-                        // Retrieve sign data, and store the user session.
-                        loginInteractor.postLogin(
-                            PostLoginSession.New(
-                                userId = userId,
-                                authenticationTokens = it.authenticationTokens
-                            )
-                        )
-                            .collect { postLoginPartialState ->
-                                when (postLoginPartialState) {
-                                    PostLoginPartialState.Success -> {
-                                        // ONLY for signup, set the remember user session to `true` by default.
-                                        autoLogoutRepository.setRememberUserSession(true)
+        when (result) {
+            CompleteOAuthLoginResult.Success -> {
+                setEffect {
+                    SignupEffect.Navigation.NavigateToDashboardScreen
+                }
+            }
 
-                                        setEffect {
-                                            SignupEffect.Navigation.NavigateToDashboardScreen
-                                        }
-                                    }
-
-                                    is PostLoginPartialState.Failed -> {
-                                        setEffect {
-                                            SignupEffect.ShowAlertDialogError(
-                                                errorMessage = resourceProvider.getGenericErrorMessage()
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-                    }
+            is CompleteOAuthLoginResult.TokenExchangeFailed,
+            is CompleteOAuthLoginResult.PostLoginFailed -> {
+                setEffect {
+                    SignupEffect.ShowAlertDialogError(
+                        errorMessage = resourceProvider.getGenericErrorMessage()
+                    )
                 }
             }
         }

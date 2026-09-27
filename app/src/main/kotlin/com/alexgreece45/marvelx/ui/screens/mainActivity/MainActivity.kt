@@ -33,6 +33,7 @@ import androidx.compose.material.Surface
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
@@ -59,6 +60,8 @@ import com.alexgreece45.marvelx.notifications.model.NotificationChannelData
 import com.alexgreece45.marvelx.notifications.model.NotificationChannelType
 import com.alexgreece45.marvelx.notifications.model.NotificationData
 import com.alexgreece45.marvelx.ui.components.effect.OneTimeLaunchedEffect
+import com.alexgreece45.marvelx.ui.helper.LocalOAuthBrowserLauncher
+import com.alexgreece45.marvelx.ui.helper.OAuthBrowserLauncher
 import com.alexgreece45.marvelx.ui.helper.openDeepLinkAction
 import com.alexgreece45.marvelx.ui.navigation.NavArgHelper
 import com.alexgreece45.marvelx.ui.navigation.NavBackStackLogger
@@ -114,6 +117,21 @@ internal class MainActivity : AppCompatActivity() {
 
     private val navBackStackLogger: NavBackStackLogger by inject()
 
+    /**
+     * Opens OAuth authorization requests (Auth Tab / Custom Tab). Created here, rather than in
+     * [onCreate], because its activity result launcher has to be registered before the activity
+     * is started.
+     */
+    private val oAuthBrowserLauncher = OAuthBrowserLauncher(
+        activity = this,
+        onRedirectReceived = { uri ->
+            viewModel.setEvent(MainActivityEvent.OnOAuthCallbackReceived(uri))
+        },
+        onBrowserClosed = { state ->
+            viewModel.setEvent(MainActivityEvent.OnOAuthBrowserClosed(state))
+        }
+    )
+
     var pendingDeepLinkAction: DeepLinkAction? = null
 
     /**
@@ -157,7 +175,9 @@ internal class MainActivity : AppCompatActivity() {
                 SystemBarsThemeUtil.applyDarkSystemBarsTheme(activity = this)
 
                 Surface(color = MaterialTheme.colors.background) {
-                    NavGraph(navController = navController)
+                    CompositionLocalProvider(LocalOAuthBrowserLauncher provides oAuthBrowserLauncher) {
+                        NavGraph(navController = navController)
+                    }
 
                     // TODO: To be removed.
                     /*Box(
@@ -211,6 +231,12 @@ internal class MainActivity : AppCompatActivity() {
                                         securityViolation = effect.securityViolation
                                     )
                                 )
+                                navController.navigate(Screen.SplashScreen.route) {
+                                    popUpToTop(navController)
+                                }
+                            }
+
+                            MainActivityEffect.Navigation.NavigateToSplashScreen -> {
                                 navController.navigate(Screen.SplashScreen.route) {
                                     popUpToTop(navController)
                                 }

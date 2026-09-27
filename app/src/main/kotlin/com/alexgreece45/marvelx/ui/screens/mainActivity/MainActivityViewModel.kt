@@ -76,7 +76,6 @@ class MainActivityViewModel :
 
             MainActivityEvent.LifecycleEvent.OnPause -> {
                 websocketController.onAppForegroundChanged(isForeground = false)
-                oAuthAuthorizationController.onAppPaused()
 
                 if (userRepository.isUserLoggedIn && securityConfigLogic.isAutoLogoutEnabled) {
                     viewModelScope.launch {
@@ -87,13 +86,6 @@ class MainActivityViewModel :
 
             MainActivityEvent.LifecycleEvent.OnResume -> {
                 websocketController.onAppForegroundChanged(isForeground = true)
-
-                // The OAuth redirect (delivered via onNewIntent, right before onResume) gets a
-                // grace period to resolve the in-flight attempt, before it's deemed abandoned.
-                viewModelScope.launch {
-                    delay(OAUTH_ABANDON_GRACE_PERIOD)
-                    oAuthAuthorizationController.onAppResumed()
-                }
 
                 if (!userRepository.isUserLoggedIn) return // TODO: To be reviewed.
 
@@ -156,6 +148,7 @@ class MainActivityViewModel :
                         currentRoute = event.route
                     )
                 }
+                restartStartupFlowForRestoredAuthorization()
             }
 
             is MainActivityEvent.OnDeepLinkReceived -> {
@@ -175,7 +168,20 @@ class MainActivityViewModel :
             }
 
             is MainActivityEvent.OnOAuthCallbackReceived -> {
-                oAuthAuthorizationController.onCallbackUri(event.uri)
+                viewModelScope.launch {
+                    oAuthAuthorizationController.onCallbackUri(event.uri)
+                    restartStartupFlowForRestoredAuthorization()
+                }
+            }
+
+            is MainActivityEvent.OnOAuthBrowserClosed -> {
+                // On the Custom Tab fallback path, the redirect arrives as a deep link and the tab
+                // closing is reported separately, in either order. Give the redirect a grace
+                // period to resolve the attempt before it's deemed abandoned.
+                viewModelScope.launch {
+                    delay(OAUTH_ABANDON_GRACE_PERIOD)
+                    oAuthAuthorizationController.onBrowserClosed(event.state)
+                }
             }
 
             is MainActivityEvent.OnFcmTokenReceived -> {
@@ -312,6 +318,24 @@ class MainActivityViewModel :
      */
     private fun isCurrentRouteIncludedInAutoLogout(): Boolean =
         Screen.fromRoute(currentState.currentRoute)?.isIncludedInAutoLogout ?: false
+
+    /**
+     * A redirect that belongs to an attempt of a killed process is completed by the startup flow
+     * (splash → intro loading). If the activity restored another screen instead (e.g., the OTP
+     * screen, from the saved back stack), restart that flow. Called both when the redirect is
+     * handled and when the destination changes, since either can happen first after a restart.
+     */
+    private fun restartStartupFlowForRestoredAuthorization() {
+        if (!oAuthAuthorizationController.hasRestoredAuthorization()) return
+
+        val currentRoute = currentState.currentRoute
+        if (currentRoute.isBlank()) return // The first destination isn't known yet.
+
+        when (Screen.fromRoute(currentRoute)) {
+            Screen.SplashScreen, Screen.IntroLoadingScreen -> {}
+            else -> setEffect { MainActivityEffect.Navigation.NavigateToSplashScreen }
+        }
+    }
 
     private companion object {
         val OAUTH_ABANDON_GRACE_PERIOD = 1.seconds

@@ -4,19 +4,17 @@ import androidx.core.text.isDigitsOnly
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.controllers.OAuthAuthorizationController
+import com.alexgreece45.marvelx.controllers.OAuthAuthorizationRequest
 import com.alexgreece45.marvelx.controllers.OAuthCallbackResult
+import com.alexgreece45.marvelx.controllers.OAuthLoginContext
 import com.alexgreece45.marvelx.controllers.TimerController
 import com.alexgreece45.marvelx.controllers.TimerStatus
-import com.alexgreece45.marvelx.data.repository.AutoLogoutRepository
 import com.alexgreece45.marvelx.domain.interactors.ForgotPasswordInteractor
 import com.alexgreece45.marvelx.domain.interactors.ForgotPasswordValidateOtpPartialState
 import com.alexgreece45.marvelx.domain.interactors.GetJwtForSensitiveUserDataPartialState
 import com.alexgreece45.marvelx.domain.interactors.GetSensitiveUserDataPartialState
-import com.alexgreece45.marvelx.domain.interactors.GrandNewAccessTokenPartialState
 import com.alexgreece45.marvelx.domain.interactors.LoginInteractor
 import com.alexgreece45.marvelx.domain.interactors.OtpInteractor
-import com.alexgreece45.marvelx.domain.interactors.PostLoginPartialState
-import com.alexgreece45.marvelx.domain.interactors.PostLoginSession
 import com.alexgreece45.marvelx.domain.interactors.RegisterInteractor
 import com.alexgreece45.marvelx.domain.interactors.ResendOtpPartialState
 import com.alexgreece45.marvelx.domain.interactors.ValidateOtpPartialState
@@ -25,6 +23,8 @@ import com.alexgreece45.marvelx.domain.model_api.otp.OtpFlowType
 import com.alexgreece45.marvelx.domain.model_api.resendOtp.ResendOtpErrorCause
 import com.alexgreece45.marvelx.domain.model_api.sensitiveUserData.SensitiveUserDataDomain
 import com.alexgreece45.marvelx.domain.model_api.user.VerificationStep
+import com.alexgreece45.marvelx.domain.usecases.CompleteOAuthLoginResult
+import com.alexgreece45.marvelx.domain.usecases.CompleteOAuthLoginUseCase
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
@@ -186,10 +186,10 @@ internal sealed class OtpEffect : BaseEffect {
     data object SaveAutoFilledData : OtpEffect()
 
     /**
-     * Opens [url] (the OAuth 2.0 + PKCE authorization request) in a Custom Tab. The result of the
-     * flow arrives asynchronously via the app's deep link handling, not through this effect.
+     * Opens [request] (the OAuth 2.0 + PKCE authorization request) in the browser. The result of
+     * the flow arrives asynchronously through `MainActivity`, not through this effect.
      */
-    data class LaunchOAuthAuthorization(val url: String) : OtpEffect()
+    data class LaunchOAuthAuthorization(val request: OAuthAuthorizationRequest) : OtpEffect()
 }
 
 @KoinViewModel
@@ -200,8 +200,8 @@ internal class OtpViewModel(
     private val forgotPasswordInteractor: ForgotPasswordInteractor,
     private val resourceProvider: ResourceProvider,
     private val timerController: TimerController,
-    private val autoLogoutRepository: AutoLogoutRepository,
     private val oAuthAuthorizationController: OAuthAuthorizationController,
+    private val completeOAuthLoginUseCase: CompleteOAuthLoginUseCase,
 ) : BaseViewModel<OtpEvent, OtpState, OtpEffect>() {
 
     /**
@@ -700,20 +700,26 @@ internal class OtpViewModel(
     }
 
     /**
-     * Opens the OAuth 2.0 + PKCE authorization request in a Custom Tab and suspends until the
-     * browser redirects back into the app with an authorization code (caught as a deep link).
+     * Opens the OAuth 2.0 + PKCE authorization request in the browser and suspends until the
+     * browser redirects back into the app with an authorization code.
      */
     private fun getAuthorizationCode(tempAuthCode: String) {
-        val url = oAuthAuthorizationController.buildAuthorizationUrl(tempAuthCode)
-        setEffect {
-            OtpEffect.LaunchOAuthAuthorization(url)
-        }
-
         oAuthCallbackJob?.cancel()
         oAuthCallbackJob = viewModelScope.launch {
+            val request = oAuthAuthorizationController.startAuthorization(
+                tempAuthCode = tempAuthCode,
+                loginContext = OAuthLoginContext(
+                    userId = currentState.userId,
+                    shouldRememberUserSession = currentState.shouldRememberUserSession
+                )
+            )
+            setEffect {
+                OtpEffect.LaunchOAuthAuthorization(request)
+            }
+
             when (val result = oAuthAuthorizationController.awaitCallback()) {
                 is OAuthCallbackResult.Success -> {
-                    grandNewAccessToken(authCode = result.code, codeVerifier = result.codeVerifier)
+                    completeLogin(result)
                 }
 
                 is OAuthCallbackResult.ServerError,
@@ -737,57 +743,42 @@ internal class OtpViewModel(
     }
 
     /**
-     * Retrieves the access token.
+     * Exchanges the authorization code for tokens and completes the login.
      */
-    private fun grandNewAccessToken(authCode: String, codeVerifier: String) {
-        viewModelScope.launch {
-            loginInteractor.grandNewAccessToken(authCode = authCode, codeVerifier = codeVerifier)
-                .collect { accessTokenPartialState ->
-                    when (accessTokenPartialState) {
-                        is GrandNewAccessTokenPartialState.Failed -> {
-                            showGenericErrorViewWithErrorCode(
-                                errorCode = OtpScreenErrorCodes.GrandNewAccessToken.GenericError,
-                                otpFlowType = OtpFlowType.Register
-                            )
-                        }
+    private suspend fun completeLogin(authorization: OAuthCallbackResult.Success) {
+        val result = completeOAuthLoginUseCase(
+            code = authorization.code,
+            codeVerifier = authorization.codeVerifier,
+            redirectUri = authorization.redirectUri,
+            userId = currentState.userId,
+            shouldRememberUserSession = currentState.shouldRememberUserSession
+        )
 
-                        is GrandNewAccessTokenPartialState.Success -> {
-                            // Token was successfully generated (in the server) and retrieved (in the client).
-
-                            // Retrieve signing data, and store the user session.
-                            loginInteractor.postLogin(
-                                PostLoginSession.New(
-                                    userId = currentState.userId,
-                                    authenticationTokens = accessTokenPartialState.authenticationTokens
-                                )
-                            )
-                                .collect { postLoginPartialState ->
-                                    when (postLoginPartialState) {
-                                        PostLoginPartialState.Success -> {
-                                            // Show autofill data save prompt (it saves the data from the login screen).
-                                            setEffect {
-                                                OtpEffect.SaveAutoFilledData
-                                            }
-
-                                            // Save remember user session flag.
-                                            autoLogoutRepository.setRememberUserSession(currentState.shouldRememberUserSession)
-
-                                            setEffect {
-                                                OtpEffect.Navigation.NavigateToDashboardScreen
-                                            }
-                                        }
-
-                                        is PostLoginPartialState.Failed -> {
-                                            showGenericErrorViewWithErrorCode(
-                                                errorCode = OtpScreenErrorCodes.PostLogin.GenericError,
-                                                otpFlowType = OtpFlowType.Register
-                                            )
-                                        }
-                                    }
-                                }
-                        }
-                    }
+        when (result) {
+            CompleteOAuthLoginResult.Success -> {
+                // Show autofill data save prompt (it saves the data from the login screen).
+                setEffect {
+                    OtpEffect.SaveAutoFilledData
                 }
+
+                setEffect {
+                    OtpEffect.Navigation.NavigateToDashboardScreen
+                }
+            }
+
+            is CompleteOAuthLoginResult.TokenExchangeFailed -> {
+                showGenericErrorViewWithErrorCode(
+                    errorCode = OtpScreenErrorCodes.GrandNewAccessToken.GenericError,
+                    otpFlowType = OtpFlowType.Register
+                )
+            }
+
+            is CompleteOAuthLoginResult.PostLoginFailed -> {
+                showGenericErrorViewWithErrorCode(
+                    errorCode = OtpScreenErrorCodes.PostLogin.GenericError,
+                    otpFlowType = OtpFlowType.Register
+                )
+            }
         }
     }
 

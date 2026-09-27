@@ -4,16 +4,14 @@ import android.content.Context
 import androidx.work.ListenableWorker
 import androidx.work.WorkerFactory
 import androidx.work.WorkerParameters
-import com.alexgreece45.marvelx.core.common.config.ConfigOauthLogic
 import com.alexgreece45.marvelx.core.common.logger.AppLogger
 import com.alexgreece45.marvelx.core.data.repositories.UserSessionRepository
-import com.alexgreece45.marvelx.core.network.clients.RefreshTokenClient
+import com.alexgreece45.marvelx.core.network.storage.TokenRefresher
 import com.alexgreece45.marvelx.domain.worker.RefreshTokenWorker
 
 class RefreshTokenWorkerFactory(
-    private val refreshTokenClient: RefreshTokenClient,
+    private val tokenRefresher: TokenRefresher,
     private val userSessionRepository: UserSessionRepository,
-    private val configOauthLogic: ConfigOauthLogic,
     private val logger: AppLogger
 ) : WorkerFactory() {
 
@@ -24,9 +22,8 @@ class RefreshTokenWorkerFactory(
     ): ListenableWorker = RefreshTokenWorker(
         context = appContext,
         workerParameters = workerParameters,
-        refreshTokenClient = refreshTokenClient,
+        tokenRefresher = tokenRefresher,
         userSessionRepository = userSessionRepository,
-        configOauthLogic = configOauthLogic,
         logger = logger
     )
 }

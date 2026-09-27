@@ -13,3 +13,6 @@ internal annotation class UserIdSerializer
 
 @Named
 internal annotation class AuthenticationTokensSerializer
+
+@Named
+internal annotation class PendingAuthorizationSerializer

@@ -19,4 +19,6 @@ dependencies {
     releaseImplementation(libs.chucker.no.op)
 
     implementation(libs.kotlin.serialization)
+
+    testImplementation(libs.bundles.test.implementation)
 }

@@ -8,8 +8,6 @@ import com.alexgreece45.marvelx.model.model.Signature
 import okhttp3.Headers
 import okhttp3.HttpUrl
 import org.koin.core.annotation.Single
-import java.security.MessageDigest
-import java.security.SecureRandom
 import javax.crypto.Mac
 
 /**
@@ -44,19 +42,6 @@ internal interface SignatureEngine {
         timestamp: Long,
         signature: Signature
     ): String
-
-
-    // TODO: Extract to different interface.
-    /**
-     * Creates and returns the code verifier used for the OAuth 2.0 Grant flow.
-     */
-    fun createCodeVerifier(): String
-
-    /**
-     * Creates and returns the code challenge with the given [verifier]. The hashing algorithm that
-     * is used is `SHA-256`.
-     */
-    fun createCodeChallenge(verifier: String): String
 }
 
 @Single
@@ -110,7 +95,18 @@ internal class SignatureEngineImpl(
             nonce,
             timestamp
         ).joinToString(payloadSeparator)
-        appLogger.d(loggerTag) { "payload: $payload" }
+        // The body is left out of the log: it may carry secrets (e.g., the `/token` exchange's PKCE
+        // `code_verifier` and authorization `code`).
+        appLogger.d(loggerTag) {
+            "payload: " + listOf(
+                requestMethod,
+                pathAndParameters,
+                "<body: ${requestBody.length} chars>",
+                headers,
+                nonce,
+                timestamp
+            ).joinToString(payloadSeparator)
+        }
 
         return try {
             val signatureAlgorithm = signature.algorithm
@@ -129,23 +125,5 @@ internal class SignatureEngineImpl(
             appLogger.e(loggerTag) { "(createSessionSignature) e: $e" }
             ""
         }
-    }
-
-    override fun createCodeVerifier(): String {
-        val code = ByteArray(64)
-        SecureRandom().apply {
-            nextBytes(code)
-        }
-        return Base64.encodeToString(code, Base64.URL_SAFE or Base64.NO_WRAP or Base64.NO_PADDING)
-    }
-
-    override fun createCodeChallenge(verifier: String): String {
-        val bytes = verifier.toByteArray(Charsets.UTF_8)
-        val messageDigest = MessageDigest.getInstance("SHA-256")
-        messageDigest.update(bytes, 0, bytes.size)
-        return Base64.encodeToString(
-            messageDigest.digest(),
-            Base64.URL_SAFE or Base64.NO_WRAP or Base64.NO_PADDING
-        )
     }
 }

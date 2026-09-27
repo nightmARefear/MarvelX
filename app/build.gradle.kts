@@ -69,6 +69,10 @@ android {
                 )
             )
 
+            // OAuth redirect via the verified `https` App Link instead of the custom scheme. Only
+            // enable once the backend's assetlinks.json lists the release signing certificate.
+            buildConfigField("boolean", "OAUTH_HTTPS_REDIRECT_ENABLED", "false")
+
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -92,6 +96,10 @@ android {
                 )
             )
 
+            // OAuth redirect via the verified `https` App Link instead of the custom scheme. The
+            // backend's assetlinks.json lists the debug certificate (verified live 2026-09-27).
+            buildConfigField("boolean", "OAUTH_HTTPS_REDIRECT_ENABLED", "true")
+
             versionNameSuffix = "-DEBUG"
 
             signingConfig = signingConfigs.getByName("debug")
@@ -112,6 +120,10 @@ android {
                     "deeplinkPathAdvancedPattern" to deeplinkProperties["deeplinkPathAdvancedPattern.regexp"].toString(),
                 )
             )
+
+            // The mock build fabricates the redirect itself and never reaches the backend, so it
+            // always uses its own custom scheme.
+            buildConfigField("boolean", "OAUTH_HTTPS_REDIRECT_ENABLED", "false")
 
             versionNameSuffix = "-MOCK"
 

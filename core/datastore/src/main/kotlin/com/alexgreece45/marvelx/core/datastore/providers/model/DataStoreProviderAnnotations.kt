@@ -13,3 +13,6 @@ internal annotation class SignatureDataStore
 
 @Named
 internal annotation class ConsecutiveFailedAuthenticationDataStore
+
+@Named
+internal annotation class PendingAuthorizationDataStore

@@ -19,6 +19,18 @@ internal class ConfigOauthLogicImpl : ConfigOauthLogic {
     override val authorizationPath: String
         get() = "/api/private/marvelx/user/authorize"
 
+    override val isHttpsRedirectEnabled: Boolean
+        get() = BuildConfig.OAUTH_HTTPS_REDIRECT_ENABLED
+
+    override val redirectScheme: String
+        get() = if (isHttpsRedirectEnabled) "https" else BuildConfig.DEEPLINK_SCHEME
+
+    override val redirectHost: String
+        get() = BuildConfig.MARVELX_BACKEND_DOMAIN
+
+    override val redirectPath: String
+        get() = "/deeplink/oauth"
+
     override val redirectUri: String
-        get() = "${BuildConfig.DEEPLINK_SCHEME}://${BuildConfig.MARVELX_BACKEND_DOMAIN}/deeplink/oauth"
+        get() = "$redirectScheme://$redirectHost$redirectPath"
 }

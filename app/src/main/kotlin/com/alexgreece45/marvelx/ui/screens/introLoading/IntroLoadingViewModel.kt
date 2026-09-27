@@ -3,6 +3,8 @@ package com.alexgreece45.marvelx.ui.screens.introLoading
 import androidx.annotation.StringRes
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.controllers.OAuthAuthorizationController
+import com.alexgreece45.marvelx.controllers.RestoredOAuthAuthorization
 import com.alexgreece45.marvelx.core.data.repositories.UserSessionRepository
 import com.alexgreece45.marvelx.core.network.managers.SessionManager
 import com.alexgreece45.marvelx.core.network.managers.model.LogoutReason
@@ -16,6 +18,8 @@ import com.alexgreece45.marvelx.domain.interactors.RefreshAccessTokenPartialStat
 import com.alexgreece45.marvelx.domain.interactors.RegisterInteractor
 import com.alexgreece45.marvelx.domain.model_api.otp.OtpFlowType
 import com.alexgreece45.marvelx.domain.model_api.user.VerificationStep
+import com.alexgreece45.marvelx.domain.usecases.CompleteOAuthLoginResult
+import com.alexgreece45.marvelx.domain.usecases.CompleteOAuthLoginUseCase
 import com.alexgreece45.marvelx.domain.usecases.RemoveUserCredentialsUseCase
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
@@ -34,6 +38,9 @@ sealed interface IntroLoadingContract {
      * @param label The string resource label describing this loading stage.
      */
     sealed class LoadingStage(@StringRes val label: Int) : IntroLoadingContract {
+        data object CompleteSignIn :
+            LoadingStage(label = R.string.intro_loading_screen_label_loading_stage_complete_sign_in)
+
         data object RefreshAccessToken :
             LoadingStage(label = R.string.intro_loading_screen_label_loading_stage_refresh_access_token)
 
@@ -77,6 +84,8 @@ internal class IntroLoadingViewModel(
     private val sessionManager: SessionManager,
     private val autoLogoutRepository: AutoLogoutRepository,
     private val removeUserCredentialsUseCase: RemoveUserCredentialsUseCase,
+    private val oAuthAuthorizationController: OAuthAuthorizationController,
+    private val completeOAuthLoginUseCase: CompleteOAuthLoginUseCase,
 ) :
     BaseViewModel<IntroLoadingContract.Event, IntroLoadingContract.State, IntroLoadingContract.Effect>() {
 
@@ -86,8 +95,55 @@ internal class IntroLoadingViewModel(
         when (event) {
             IntroLoadingContract.Event.Init -> {
                 resetFailedAuthenticationValues()
-                loginFlow()
+                viewModelScope.launch {
+                    // A login whose browser redirect arrived after the OS had killed the app
+                    // process is completed first; otherwise, the regular login flow runs.
+                    when (val restored = oAuthAuthorizationController.takeRestoredAuthorization()) {
+                        is RestoredOAuthAuthorization.Success -> completeRestoredSignIn(restored)
+                        RestoredOAuthAuthorization.Failed -> navigateToHomeWithSignInInterrupted()
+                        null -> loginFlow()
+                    }
+                }
             }
+        }
+    }
+
+    /**
+     * Completes the login of an authorization request that was started by a previous (killed)
+     * process, using the `code` its redirect delivered to this one.
+     */
+    private suspend fun completeRestoredSignIn(restored: RestoredOAuthAuthorization.Success) {
+        setState {
+            copy(
+                loadingStage = IntroLoadingContract.LoadingStage.CompleteSignIn
+            )
+        }
+
+        val result = completeOAuthLoginUseCase(
+            code = restored.code,
+            codeVerifier = restored.codeVerifier,
+            redirectUri = restored.redirectUri,
+            userId = restored.loginContext.userId,
+            shouldRememberUserSession = restored.loginContext.shouldRememberUserSession
+        )
+
+        when (result) {
+            CompleteOAuthLoginResult.Success -> {
+                setEffect {
+                    IntroLoadingContract.Effect.Navigation.NavigateToDashboardScreen
+                }
+            }
+
+            is CompleteOAuthLoginResult.TokenExchangeFailed,
+            is CompleteOAuthLoginResult.PostLoginFailed -> navigateToHomeWithSignInInterrupted()
+        }
+    }
+
+    private fun navigateToHomeWithSignInInterrupted() {
+        setEffect {
+            IntroLoadingContract.Effect.Navigation.NavigateToHomeScreenWithErrorMessage(
+                errorMessage = resourceProvider.getString(R.string.intro_loading_screen_error_sign_in_interrupted)
+            )
         }
     }
 

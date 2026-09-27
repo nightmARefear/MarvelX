@@ -10,13 +10,13 @@ import com.alexgreece45.marvelx.core.data.repositories.UserSessionRepository
 import com.alexgreece45.marvelx.core.network.model.api.sensitiveUserData.RequestSensitiveUserData
 import com.alexgreece45.marvelx.core.network.model.api.token.toModel
 import com.alexgreece45.marvelx.core.network.storage.SignatureStorage
+import com.alexgreece45.marvelx.core.network.storage.TokenRefreshResult
 import com.alexgreece45.marvelx.data.repository.AutoLogoutRepository
 import com.alexgreece45.marvelx.data.repository.GetSensitiveUserDataRepositoryResponse
 import com.alexgreece45.marvelx.data.repository.GrandNewAccessTokenRepositoryResponse
 import com.alexgreece45.marvelx.data.repository.LoginRepository
 import com.alexgreece45.marvelx.data.repository.PostLoginRepositoryResponse
 import com.alexgreece45.marvelx.data.repository.RefreshTokenRepository
-import com.alexgreece45.marvelx.data.repository.TokenRefreshRepositoryResult
 import com.alexgreece45.marvelx.data.repository.UserRepository
 import com.alexgreece45.marvelx.domain.model_api.sensitiveUserData.SensitiveUserDataDomain
 import com.alexgreece45.marvelx.domain.model_api.sensitiveUserData.toSensitiveUserDataDomain
@@ -43,12 +43,14 @@ interface LoginInteractor {
 
     /**
      * Grants an access token for the OAuth 2.0 flow. It sends the [codeVerifier] and the [authCode]
-     * that was received from the browser-based authorization redirect. If the response is
-     * successful, then that means that the access token was successfully retrieved.
+     * that was received from the browser-based authorization redirect, along with the exact
+     * [redirectUri] of the authorization request. If the response is successful, then that means
+     * that the access token was successfully retrieved.
      */
     suspend fun grandNewAccessToken(
         authCode: String,
-        codeVerifier: String
+        codeVerifier: String,
+        redirectUri: String
     ): Flow<GrandNewAccessTokenPartialState>
 
     suspend fun refreshAccessToken(): Flow<RefreshAccessTokenPartialState>
@@ -143,7 +145,8 @@ class LoginInteractorImpl(
 
     override suspend fun grandNewAccessToken(
         authCode: String,
-        codeVerifier: String
+        codeVerifier: String,
+        redirectUri: String
     ): Flow<GrandNewAccessTokenPartialState> =
         flow {
             val genericErrorMessage = resourceProvider.getGenericErrorMessage()
@@ -151,7 +154,7 @@ class LoginInteractorImpl(
                 clientId = configOauthLogic.clientId,
                 code = authCode,
                 codeVerifier = codeVerifier,
-                uri = configOauthLogic.redirectUri
+                uri = redirectUri
             ).collect {
                 when (it) {
                     is GrandNewAccessTokenRepositoryResponse.Failed -> {
@@ -196,7 +199,6 @@ class LoginInteractorImpl(
 
     override suspend fun refreshAccessToken(): Flow<RefreshAccessTokenPartialState> = flow {
         val genericErrorMessage = resourceProvider.getGenericErrorMessage()
-        val clientId = configOauthLogic.clientId
         val refreshToken = userSessionRepository.getRefreshToken()
 
         if (refreshToken.isNullOrBlank()) {
@@ -206,38 +208,24 @@ class LoginInteractorImpl(
             return@flow
         }
 
-        refreshTokenRepository.refreshAccessToken(clientId, refreshToken).let {
-            when (it) {
-                is TokenRefreshRepositoryResult.Failed -> {
-                    // Remove stored credentials.
-                    removeUserCredentialsUseCase()
-                    emit(
-                        RefreshAccessTokenPartialState.Failed(
-                            errorMessage = genericErrorMessage
-                        )
-                    )
-                }
-
-                is TokenRefreshRepositoryResult.Success -> {
-                    when (val response = it.responseToken) {
-                        null -> {
-                            // Remove stored credentials.
-                            removeUserCredentialsUseCase()
-                            emit(
-                                RefreshAccessTokenPartialState.Failed(
-                                    errorMessage = genericErrorMessage
-                                )
-                            )
-                        }
-
-                        else -> {
-                            // Save token info to device.
-                            userSessionRepository.setAuthenticationTokens(response.toModel())
-                            emit(RefreshAccessTokenPartialState.Success)
-                        }
-                    }
-                }
+        // The repository stores the new tokens, and shares any refresh already in flight.
+        when (val result = refreshTokenRepository.refreshAccessToken()) {
+            is TokenRefreshResult.Success -> {
+                emit(RefreshAccessTokenPartialState.Success)
             }
+
+            is TokenRefreshResult.Failed -> {
+                // Remove stored credentials.
+                removeUserCredentialsUseCase()
+                emit(
+                    RefreshAccessTokenPartialState.Failed(
+                        errorMessage = genericErrorMessage
+                    )
+                )
+            }
+
+            // Not a rejection by the backend (e.g., no internet), so keep the credentials.
+            is TokenRefreshResult.Error -> throw result.throwable
         }
     }.safeAsync {
         appLogger.e { "(refreshAccessToken) error: ${it.message.orEmpty()}" }

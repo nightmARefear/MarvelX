@@ -1,187 +1,409 @@
 package com.alexgreece45.marvelx.controllers
 
 import android.net.Uri
-import android.util.Base64
+import com.alexgreece45.marvelx.core.common.config.ConfigOauthLogic
 import com.alexgreece45.marvelx.core.common.logger.AppLogger
+import com.alexgreece45.marvelx.data.repository.PendingAuthorizationRepository
+import com.alexgreece45.marvelx.model.model.PendingAuthorization
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.withTimeoutOrNull
-import java.security.MessageDigest
-import java.security.SecureRandom
 import kotlin.time.Duration.Companion.minutes
 
 /**
- * Owns the browser-based (Custom Tabs) leg of the OAuth 2.0 + PKCE authorization request: building
- * the `/authorize` URL with a fresh `code_verifier`/`code_challenge`/`state`, and resolving the
- * eventual redirect back into the app (caught as a deep link by `MainActivity`) into a result the
- * caller can exchange for tokens.
+ * Owns the browser-based leg of the OAuth 2.0 + PKCE authorization request: generating a fresh
+ * `code_verifier`/`code_challenge`/`state` per attempt, persisting the attempt so it survives
+ * process death, and resolving the eventual redirect back into the app into a result the caller
+ * can exchange for tokens.
  *
- * The real (debug/release) and mock implementations only differ in how [buildAuthorizationUrl]
+ * The redirect can reach the app through two paths — the Auth Tab's activity result, or the
+ * `MainActivity` intent filter (Custom Tab fallback, or any browser without Auth Tab support) —
+ * so it is handled idempotently: the first valid delivery resolves the attempt, later ones are
+ * ignored.
+ *
+ * The real (debug/release) and mock implementations only differ in how [startAuthorization]
  * produces its URL — see the flavor-specific `OAuthAuthorizationControllerImpl` for each.
  *
- * All calls are expected on the main thread (ViewModel-triggered), matching how the rest of this
- * screen's state is handled — no cross-thread synchronization is needed here.
+ * All calls are expected on the main thread (ViewModel-triggered), so no cross-thread
+ * synchronization is needed here.
  */
 interface OAuthAuthorizationController {
 
     /**
-     * Builds the absolute browser URL for the authorization request tied to [tempAuthCode], and
-     * remembers the `code_verifier`/`state` for this attempt so [awaitCallback] can validate the
-     * redirect and hand back what's needed for the token exchange.
+     * Starts a new authorization attempt for [tempAuthCode]: generates and persists a fresh
+     * `code_verifier`/`state` together with [loginContext] (so the login can be resumed if the
+     * process dies while the browser is open), and returns what the browser has to open. Any
+     * previous attempt is resolved as [OAuthCallbackResult.Cancelled].
      */
-    fun buildAuthorizationUrl(tempAuthCode: String): String
+    suspend fun startAuthorization(
+        tempAuthCode: String,
+        loginContext: OAuthLoginContext
+    ): OAuthAuthorizationRequest
 
     /**
-     * Suspends until the browser redirect calls back into the app via [onCallbackUri], or a timeout
-     * elapses (the user abandoned the browser without completing the flow).
+     * Suspends until the current attempt is resolved (redirect received, browser closed), or a
+     * timeout elapses.
      */
     suspend fun awaitCallback(): OAuthCallbackResult
 
     /**
-     * Called by `MainActivityViewModel` when the app receives the `/deeplink/oauth` redirect.
-     * Resolves whoever is suspended in [awaitCallback].
+     * Called by `MainActivityViewModel` with the redirect URI, received either as the Auth Tab
+     * result or as a deep link.
      */
-    fun onCallbackUri(uri: Uri)
+    suspend fun onCallbackUri(uri: Uri)
 
     /**
-     * Called by `MainActivityViewModel` when the app leaves the foreground. While an attempt is in
-     * flight, this is the Custom Tab opening on top of the app.
+     * Called by `MainActivityViewModel` when the browser that was opened for the attempt with
+     * [state] was closed without delivering a redirect (after a grace period, since on the
+     * Custom Tab fallback path the redirect intent and the close can arrive in either order).
      */
-    fun onAppPaused()
+    suspend fun onBrowserClosed(state: String?)
 
     /**
-     * Called by `MainActivityViewModel` when the app returns to the foreground, after the redirect
-     * (if any) has had the chance to be delivered through [onCallbackUri]. If the app left the
-     * foreground during the in-flight attempt and no callback arrived, the user abandoned the
-     * browser (closed the tab, dismissed an app chooser, etc.), so whoever is suspended in
-     * [awaitCallback] is resolved with [OAuthCallbackResult.Cancelled].
+     * Returns, once, the outcome of an attempt that outlived the app process that started it —
+     * i.e., the redirect arrived after the OS had killed the process while the browser was open.
+     * Returns `null` if there is nothing to resume, in which case any attempt persisted by a
+     * previous process is discarded as abandoned.
      */
-    fun onAppResumed()
+    suspend fun takeRestoredAuthorization(): RestoredOAuthAuthorization?
+
+    /**
+     * Whether a redirect for an attempt of a killed process was received, and its outcome hasn't
+     * been taken through [takeRestoredAuthorization] yet.
+     */
+    fun hasRestoredAuthorization(): Boolean
+}
+
+/**
+ * Who the authorization request is for, persisted with it so the login can be completed from a
+ * fresh process.
+ */
+data class OAuthLoginContext(
+    val userId: String,
+    val shouldRememberUserSession: Boolean
+)
+
+/**
+ * What the browser has to open for an authorization attempt.
+ *
+ * @param url       The absolute URL to open.
+ * @param redirect  Where the authorization server redirects back to.
+ * @param state     The attempt's `state`, used to tie a browser close back to this attempt.
+ */
+data class OAuthAuthorizationRequest(
+    val url: String,
+    val redirect: OAuthRedirect,
+    val state: String
+)
+
+sealed interface OAuthRedirect {
+    data class CustomScheme(val scheme: String) : OAuthRedirect
+    data class Https(val host: String, val path: String) : OAuthRedirect
 }
 
 sealed interface OAuthCallbackResult {
-    data class Success(val code: String, val codeVerifier: String) : OAuthCallbackResult
+    data class Success(
+        val code: String,
+        val codeVerifier: String,
+        val redirectUri: String
+    ) : OAuthCallbackResult
+
     data class ServerError(val errorCode: String) : OAuthCallbackResult
     data object StateMismatch : OAuthCallbackResult
     data object Timeout : OAuthCallbackResult
     data object Cancelled : OAuthCallbackResult
 }
 
+sealed interface RestoredOAuthAuthorization {
+    data class Success(
+        val code: String,
+        val codeVerifier: String,
+        val redirectUri: String,
+        val loginContext: OAuthLoginContext
+    ) : RestoredOAuthAuthorization
+
+    /**
+     * A redirect arrived for a persisted attempt, but it can't be completed (expired, `state`
+     * mismatch, or an `error` response).
+     */
+    data object Failed : RestoredOAuthAuthorization
+}
+
 /**
- * Shared bookkeeping (state generation, callback validation, timeout) for every flavor's
- * [OAuthAuthorizationController]. Only [buildAuthorizationUrl] is left for subclasses to implement,
- * since it's the one part that legitimately differs between hitting the real backend and faking the
- * round trip for the `mock` build flavor.
+ * The query parameters of an authorization redirect.
+ */
+internal data class OAuthCallbackParams(
+    val state: String?,
+    val code: String?,
+    val error: String?,
+    val errorDescription: String?
+) {
+    companion object {
+        fun from(uri: Uri): OAuthCallbackParams = OAuthCallbackParams(
+            state = uri.getQueryParameter("state"),
+            code = uri.getQueryParameter("code"),
+            error = uri.getQueryParameter("error"),
+            errorDescription = uri.getQueryParameter("error_description")
+        )
+    }
+}
+
+/**
+ * Shared bookkeeping (PKCE/state generation, persistence, callback validation, timeout) for every
+ * flavor's [OAuthAuthorizationController]. Only [startAuthorization] is left for subclasses to
+ * implement, since it's the one part that legitimately differs between hitting the real backend
+ * and faking the round trip for the `mock` build flavor.
  */
 abstract class AbstractOAuthAuthorizationController(
     private val appLogger: AppLogger,
+    private val pendingAuthorizationRepository: PendingAuthorizationRepository,
+    private val configOauthLogic: ConfigOauthLogic,
 ) : OAuthAuthorizationController {
 
     private val loggerTag = "OAuthAuthorizationController"
 
-    protected var codeVerifier: String? = null
-        private set
-    protected var state: String? = null
-        private set
-    private var pendingCallback: CompletableDeferred<OAuthCallbackResult>? = null
+    private class InFlightAttempt(
+        val state: String,
+        val codeVerifier: String,
+        val redirectUri: String,
+        val result: CompletableDeferred<OAuthCallbackResult> = CompletableDeferred()
+    )
+
+    private var attempt: InFlightAttempt? = null
 
     /**
-     * Whether the app left the foreground while the current attempt was in flight, i.e., the
-     * browser was actually shown. Guards [onAppResumed] from cancelling an attempt whose browser
-     * hasn't been opened yet.
+     * Whether this process has started an attempt. A redirect that finds no in-flight attempt is
+     * only treated as a candidate for resuming a persisted attempt when this is `false`; otherwise
+     * it is a duplicate or stray delivery for an attempt this process already resolved.
      */
-    private var leftAppDuringAttempt: Boolean = false
+    private var hasStartedAttemptInProcess = false
 
     /**
-     * Starts a new in-flight attempt: generates and stores a fresh `code_verifier`/`state`, and
-     * returns them for [buildAuthorizationUrl] to use when constructing its URL.
+     * The outcome of resuming a persisted attempt, set when a redirect arrives in a process that
+     * didn't start the attempt. Consumed once by [takeRestoredAuthorization].
      */
-    protected fun startNewAttempt(): Pair<String, String> {
-        val verifier = createRandomUrlSafeToken()
-        val newState = createRandomUrlSafeToken()
-        codeVerifier = verifier
-        state = newState
-        pendingCallback = CompletableDeferred()
-        leftAppDuringAttempt = false
-        return verifier to newState
+    private var restoredAuthorization: CompletableDeferred<RestoredOAuthAuthorization?>? = null
+    private var restoredAuthorizationOutcome: RestoredOAuthAuthorization? = null
+    private var isRestoredAuthorizationTaken = false
+
+    /**
+     * The [OAuthRedirect] matching [ConfigOauthLogic.redirectUri].
+     */
+    protected val redirect: OAuthRedirect
+        get() = if (configOauthLogic.isHttpsRedirectEnabled) {
+            OAuthRedirect.Https(
+                host = configOauthLogic.redirectHost,
+                path = configOauthLogic.redirectPath
+            )
+        } else {
+            OAuthRedirect.CustomScheme(scheme = configOauthLogic.redirectScheme)
+        }
+
+    /**
+     * Starts a new in-flight attempt: resolves the previous one (if any) as cancelled, generates a
+     * fresh `code_verifier`/`state`, and persists them with [loginContext] before returning them.
+     */
+    protected suspend fun startNewAttempt(loginContext: OAuthLoginContext): PkceAttempt {
+        attempt?.result?.complete(OAuthCallbackResult.Cancelled)
+
+        val newAttempt = InFlightAttempt(
+            state = Pkce.createRandomUrlSafeToken(),
+            codeVerifier = Pkce.createRandomUrlSafeToken(),
+            redirectUri = configOauthLogic.redirectUri
+        )
+        attempt = newAttempt
+        hasStartedAttemptInProcess = true
+
+        pendingAuthorizationRepository.setPendingAuthorization(
+            PendingAuthorization(
+                state = newAttempt.state,
+                codeVerifier = newAttempt.codeVerifier,
+                redirectUri = newAttempt.redirectUri,
+                userId = loginContext.userId,
+                shouldRememberUserSession = loginContext.shouldRememberUserSession,
+                createdAtEpochSeconds = currentEpochSeconds()
+            )
+        )
+
+        return PkceAttempt(
+            state = newAttempt.state,
+            codeChallenge = Pkce.createCodeChallenge(newAttempt.codeVerifier),
+            redirectUri = newAttempt.redirectUri
+        )
     }
 
     override suspend fun awaitCallback(): OAuthCallbackResult {
-        val deferred = pendingCallback ?: return OAuthCallbackResult.Timeout
-        return withTimeoutOrNull(CALLBACK_TIMEOUT_MINUTES.minutes) { deferred.await() }
-            ?: OAuthCallbackResult.Timeout
+        val current = attempt ?: return OAuthCallbackResult.Timeout
+        val result = withTimeoutOrNull(CALLBACK_TIMEOUT_MINUTES.minutes) { current.result.await() }
+        if (result != null) return result
+
+        appLogger.e(loggerTag) { "(awaitCallback) Timed out waiting for the OAuth callback." }
+        finish(current, OAuthCallbackResult.Timeout)
+        return OAuthCallbackResult.Timeout
     }
 
-    override fun onCallbackUri(uri: Uri) {
-        val expectedState = state
-        val verifier = codeVerifier
-        val deferred = pendingCallback
+    override suspend fun onCallbackUri(uri: Uri) {
+        onCallback(OAuthCallbackParams.from(uri))
+    }
 
-        if (expectedState == null || verifier == null || deferred == null) {
-            appLogger.e(loggerTag) { "(onCallbackUri) Received an OAuth callback with no attempt in flight." }
+    internal suspend fun onCallback(params: OAuthCallbackParams) {
+        val current = attempt
+        if (current == null) {
+            onCallbackWithoutAttempt(params)
             return
         }
 
-        if (uri.getQueryParameter("state") != expectedState) {
-            appLogger.e(loggerTag) { "(onCallbackUri) State mismatch on OAuth callback." }
-            deferred.complete(OAuthCallbackResult.StateMismatch)
-            clear()
+        if (params.state != current.state) {
+            appLogger.e(loggerTag) { "(onCallback) State mismatch on OAuth callback." }
+            finish(current, OAuthCallbackResult.StateMismatch)
             return
         }
 
-        val error = uri.getQueryParameter("error")
-        if (error != null) {
-            appLogger.e(loggerTag) { "(onCallbackUri) OAuth callback returned an error: $error" }
-            deferred.complete(OAuthCallbackResult.ServerError(error))
-            clear()
+        if (params.error != null) {
+            appLogger.e(loggerTag) { "(onCallback) OAuth callback returned an error: ${params.describeError()}" }
+            finish(current, OAuthCallbackResult.ServerError(params.error))
             return
         }
 
-        val code = uri.getQueryParameter("code")
-        if (code.isNullOrBlank()) {
-            appLogger.e(loggerTag) { "(onCallbackUri) OAuth callback missing both 'code' and 'error'." }
-            deferred.complete(OAuthCallbackResult.ServerError("missing_code"))
-            clear()
+        if (params.code.isNullOrBlank()) {
+            appLogger.e(loggerTag) { "(onCallback) OAuth callback missing both 'code' and 'error'." }
+            finish(current, OAuthCallbackResult.ServerError(MISSING_CODE_ERROR))
             return
         }
 
-        deferred.complete(OAuthCallbackResult.Success(code = code, codeVerifier = verifier))
-        clear()
+        finish(
+            current,
+            OAuthCallbackResult.Success(
+                code = params.code,
+                codeVerifier = current.codeVerifier,
+                redirectUri = current.redirectUri
+            )
+        )
     }
 
-    override fun onAppPaused() {
-        if (pendingCallback != null) {
-            leftAppDuringAttempt = true
+    override suspend fun onBrowserClosed(state: String?) {
+        val current = attempt ?: return
+        if (state == null || state != current.state) return
+
+        appLogger.e(loggerTag) { "(onBrowserClosed) The browser was closed without an OAuth callback; the attempt was abandoned." }
+        finish(current, OAuthCallbackResult.Cancelled)
+    }
+
+    override suspend fun takeRestoredAuthorization(): RestoredOAuthAuthorization? {
+        val restored = restoredAuthorization
+        if (restored == null) {
+            // No redirect arrived in this process, so an attempt persisted by a previous process
+            // was abandoned (e.g., the browser was closed after the process had been killed).
+            if (!hasStartedAttemptInProcess) {
+                pendingAuthorizationRepository.removePendingAuthorization()
+            }
+            return null
         }
+
+        if (isRestoredAuthorizationTaken) return null
+        isRestoredAuthorizationTaken = true
+        return restored.await()
     }
 
-    override fun onAppResumed() {
-        val deferred = pendingCallback ?: return
-        if (!leftAppDuringAttempt) return
+    override fun hasRestoredAuthorization(): Boolean =
+        restoredAuthorizationOutcome != null && !isRestoredAuthorizationTaken
 
-        appLogger.e(loggerTag) { "(onAppResumed) Returned to the app without an OAuth callback; the attempt was abandoned." }
-        deferred.complete(OAuthCallbackResult.Cancelled)
-        clear()
+    /**
+     * Handles a redirect that found no in-flight attempt: either a duplicate/stray delivery, or
+     * the redirect of an attempt started by a process that has since been killed.
+     */
+    private suspend fun onCallbackWithoutAttempt(params: OAuthCallbackParams) {
+        if (hasStartedAttemptInProcess || restoredAuthorization != null) {
+            appLogger.e(loggerTag) { "(onCallback) Received an OAuth callback with no attempt in flight." }
+            return
+        }
+
+        val restored = CompletableDeferred<RestoredOAuthAuthorization?>()
+        restoredAuthorization = restored
+
+        val pending = pendingAuthorizationRepository.getPendingAuthorization()
+        if (pending == null) {
+            appLogger.e(loggerTag) { "(onCallback) Received an OAuth callback with no attempt in flight or persisted." }
+            restored.complete(null)
+            return
+        }
+        pendingAuthorizationRepository.removePendingAuthorization()
+
+        val outcome = when {
+            currentEpochSeconds() - pending.createdAtEpochSeconds > PENDING_AUTHORIZATION_MAX_AGE_SECONDS -> {
+                appLogger.e(loggerTag) { "(onCallback) The persisted OAuth attempt has expired." }
+                RestoredOAuthAuthorization.Failed
+            }
+
+            params.state != pending.state -> {
+                appLogger.e(loggerTag) { "(onCallback) State mismatch on the persisted OAuth attempt." }
+                RestoredOAuthAuthorization.Failed
+            }
+
+            params.error != null -> {
+                appLogger.e(loggerTag) { "(onCallback) OAuth callback returned an error: ${params.describeError()}" }
+                RestoredOAuthAuthorization.Failed
+            }
+
+            params.code.isNullOrBlank() -> {
+                appLogger.e(loggerTag) { "(onCallback) OAuth callback missing both 'code' and 'error'." }
+                RestoredOAuthAuthorization.Failed
+            }
+
+            else -> {
+                appLogger.d(loggerTag) { "(onCallback) Resuming the OAuth attempt of a previous process." }
+                RestoredOAuthAuthorization.Success(
+                    code = params.code,
+                    codeVerifier = pending.codeVerifier,
+                    redirectUri = pending.redirectUri,
+                    loginContext = OAuthLoginContext(
+                        userId = pending.userId,
+                        shouldRememberUserSession = pending.shouldRememberUserSession
+                    )
+                )
+            }
+        }
+
+        restoredAuthorizationOutcome = outcome
+        restored.complete(outcome)
     }
 
-    private fun clear() {
-        codeVerifier = null
-        state = null
-        pendingCallback = null
-        leftAppDuringAttempt = false
+    /**
+     * Resolves [target] with [result] and discards it, unless a newer attempt has replaced it in
+     * the meantime (in which case the newer attempt and its persisted copy are left untouched).
+     */
+    private suspend fun finish(target: InFlightAttempt, result: OAuthCallbackResult) {
+        target.result.complete(result)
+        if (attempt !== target) return
+
+        attempt = null
+        pendingAuthorizationRepository.removePendingAuthorization()
     }
 
-    protected fun createRandomUrlSafeToken(): String {
-        val bytes = ByteArray(64)
-        SecureRandom().nextBytes(bytes)
-        return Base64.encodeToString(bytes, Base64.URL_SAFE or Base64.NO_WRAP or Base64.NO_PADDING)
-    }
+    private fun OAuthCallbackParams.describeError(): String =
+        errorDescription?.let { "$error ($it)" } ?: error.orEmpty()
 
-    protected fun createCodeChallenge(verifier: String): String {
-        val digest = MessageDigest.getInstance("SHA-256").digest(verifier.toByteArray(Charsets.UTF_8))
-        return Base64.encodeToString(digest, Base64.URL_SAFE or Base64.NO_WRAP or Base64.NO_PADDING)
-    }
+    /**
+     * The current time, in UNIX epoch seconds. Overridable for tests.
+     */
+    protected open fun currentEpochSeconds(): Long = System.currentTimeMillis() / 1000
+
+    /**
+     * What a subclass needs to build its authorization URL.
+     */
+    protected data class PkceAttempt(
+        val state: String,
+        val codeChallenge: String,
+        val redirectUri: String
+    )
 
     private companion object {
         const val CALLBACK_TIMEOUT_MINUTES = 5L
+        const val MISSING_CODE_ERROR = "missing_code"
+
+        /**
+         * How long a persisted attempt can still be resumed from a fresh process. The backend
+         * only accepts the `code` for 2 minutes, so anything older can't be exchanged anyway.
+         */
+        const val PENDING_AUTHORIZATION_MAX_AGE_SECONDS = 10 * 60L
     }
 }

@@ -9,6 +9,8 @@ android {
 }
 
 dependencies {
+    testImplementation(libs.bundles.test.implementation)
+
     api(projects.model)
     implementation(projects.core.common)
 

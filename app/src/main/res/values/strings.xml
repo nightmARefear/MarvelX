@@ -312,6 +312,15 @@
 
     <string name="screen_settings_section_label_privacy_settings">Privacy Settings</string>
     <string name="screen_settings_section_label_faq">Frequently Asked Questions (FAQ)</string>
+    <string name="screen_settings_section_label_network_inspector">Network Inspector (Chucker)</string>
+    <string name="screen_settings_network_inspector_dialog_title">Sensitive network data</string>
+    <string name="screen_settings_network_inspector_dialog_description">How Chucker captures credentials, tokens and OAuth/PKCE secrets (e.g., the token exchange\'s code_verifier and code). Applies to new requests.</string>
+    <string name="screen_settings_network_inspector_option_masked">Show masked</string>
+    <string name="screen_settings_network_inspector_option_masked_description">Capture every request, with sensitive values and credential headers masked.</string>
+    <string name="screen_settings_network_inspector_option_unmasked">Show unmasked</string>
+    <string name="screen_settings_network_inspector_option_unmasked_description">Capture every request as is. Secrets are stored on the device in plain text.</string>
+    <string name="screen_settings_network_inspector_option_hidden">Hide completely</string>
+    <string name="screen_settings_network_inspector_option_hidden_description">Don\'t capture token requests (code exchange, token refresh). Other requests are captured masked.</string>
 
     <string name="screen_settings_label_version">Version: %1$s</string>
 
@@ -337,6 +346,8 @@
     // Intro Loading Screen
     <string name="intro_loading_screen_label_loading_stage_refresh_access_token">Refreshing access token</string>
     <string name="intro_loading_screen_label_loading_stage_post_login_with_token">Setting up the application</string>
+    <string name="intro_loading_screen_label_loading_stage_complete_sign_in">Completing sign-in</string>
+    <string name="intro_loading_screen_error_sign_in_interrupted">Your sign-in was interrupted. Please sign in again.</string>
 
     // Home Screen
     <string name="screen_home_toolbar_title">Home Screen</string>
@@ -1082,6 +1093,7 @@
     <string name="content_description_person">person</string>
     <string name="content_description_privacy">privacy</string>
     <string name="content_description_faq">frequently asked questions</string>
+    <string name="content_description_network_inspector">network inspector</string>
     <string name="content_description_scan_qr_code">scan QR code</string>
     <string name="content_description_expand">expand</string>
     <string name="content_description_collapse">collapse</string>

@@ -5,7 +5,8 @@ internal enum class ProviderPath(private val path: String) {
     AUTHENTICATION_TOKENS("authentication_tokens"),
     SIGNATURE("signature"),
     CONSECUTIVE_FAILED_AUTHENTICATION("consecutive_failed_authentication"),
-    AUTO_LOGOUT_TIMESTAMP("auto_logout_timestamp");
+    AUTO_LOGOUT_TIMESTAMP("auto_logout_timestamp"),
+    PENDING_AUTHORIZATION("pending_authorization");
 
     val fileName = "$path.json"
 }

@@ -1,7 +1,5 @@
 package com.alexgreece45.marvelx.ui.screens.otp
 
-import android.net.Uri
-import androidx.browser.customtabs.CustomTabsIntent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -19,7 +17,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalAutofillManager
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -34,6 +31,7 @@ import com.alexgreece45.marvelx.ui.components.WrapButton
 import com.alexgreece45.marvelx.ui.components.effect.OneTimeLaunchedEffect
 import com.alexgreece45.marvelx.ui.components.error.ContentErrorScreen
 import com.alexgreece45.marvelx.ui.components.otpTextField.OtpTextField
+import com.alexgreece45.marvelx.ui.helper.LocalOAuthBrowserLauncher
 import com.alexgreece45.marvelx.util.SPACING_SMALL
 import com.alexgreece45.marvelx.util.SPACING_TINY
 import com.alexgreece45.marvelx.util.VSpacer
@@ -62,7 +60,7 @@ internal fun OtpScreen(
     val focusRequester = remember { FocusRequester() }
     val keyboardController = LocalSoftwareKeyboardController.current
     val autofillManager = LocalAutofillManager.current
-    val context = LocalContext.current
+    val oAuthBrowserLauncher = LocalOAuthBrowserLauncher.current
 
     OneTimeLaunchedEffect {
         onEventSent(
@@ -100,7 +98,7 @@ internal fun OtpScreen(
             }
 
             is OtpEffect.LaunchOAuthAuthorization -> {
-                CustomTabsIntent.Builder().build().launchUrl(context, Uri.parse(uiEffect.url))
+                oAuthBrowserLauncher?.launch(uiEffect.request)
             }
         }
     }

@@ -8,16 +8,19 @@ import androidx.datastore.dataStoreFile
 import androidx.datastore.tink.AeadSerializer
 import com.alexgreece45.marvelx.core.datastore.model.AuthenticationTokensEntity
 import com.alexgreece45.marvelx.core.datastore.model.ConsecutiveFailedAuthenticationEntity
+import com.alexgreece45.marvelx.core.datastore.model.PendingAuthorizationEntity
 import com.alexgreece45.marvelx.core.datastore.model.SignatureEntity
 import com.alexgreece45.marvelx.core.datastore.model.UserIdEntity
 import com.alexgreece45.marvelx.core.datastore.providers.factory.EncryptedDataStoreFactory
 import com.alexgreece45.marvelx.core.datastore.providers.model.AuthenticationTokensDataStore
 import com.alexgreece45.marvelx.core.datastore.providers.model.ConsecutiveFailedAuthenticationDataStore
+import com.alexgreece45.marvelx.core.datastore.providers.model.PendingAuthorizationDataStore
 import com.alexgreece45.marvelx.core.datastore.providers.model.ProviderPath
 import com.alexgreece45.marvelx.core.datastore.providers.model.SignatureDataStore
 import com.alexgreece45.marvelx.core.datastore.providers.model.UserIdDataStore
 import com.alexgreece45.marvelx.core.datastore.serializers.model.AuthenticationTokensSerializer
 import com.alexgreece45.marvelx.core.datastore.serializers.model.ConsecutiveFailedAuthenticationSerializer
+import com.alexgreece45.marvelx.core.datastore.serializers.model.PendingAuthorizationSerializer
 import com.alexgreece45.marvelx.core.datastore.serializers.model.SignatureSerializer
 import com.alexgreece45.marvelx.core.datastore.serializers.model.UserIdSerializer
 import com.google.crypto.tink.Aead
@@ -76,6 +79,18 @@ internal fun provideConsecutiveFailedAuthenticationDataStore(
     return encryptedDataStoreFactory.create(
         serializer = serializer,
         providerPath = ProviderPath.CONSECUTIVE_FAILED_AUTHENTICATION
+    )
+}
+
+@Single
+@PendingAuthorizationDataStore
+internal fun providePendingAuthorizationDataStore(
+    @PendingAuthorizationSerializer serializer: Serializer<PendingAuthorizationEntity?>,
+    encryptedDataStoreFactory: EncryptedDataStoreFactory
+): DataStore<PendingAuthorizationEntity?> {
+    return encryptedDataStoreFactory.create(
+        serializer = serializer,
+        providerPath = ProviderPath.PENDING_AUTHORIZATION
     )
 }
 

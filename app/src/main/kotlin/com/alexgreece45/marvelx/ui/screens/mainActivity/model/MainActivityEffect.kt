@@ -17,6 +17,12 @@ sealed class MainActivityEffect : BaseEffect {
 
         data class NavigateToSplashScreenWithSecurityViolation(val securityViolation: SecurityViolation) :
             Navigation()
+
+        /**
+         * Restarts the startup flow (splash → intro loading), e.g., so that a login whose redirect
+         * arrived after process death is completed even though a restored screen is showing.
+         */
+        data object NavigateToSplashScreen : Navigation()
     }
 
     data class ShowNotification(val notificationData: NotificationData) : MainActivityEffect()

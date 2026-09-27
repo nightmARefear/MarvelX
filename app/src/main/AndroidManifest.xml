@@ -52,6 +52,25 @@
                     android:scheme="${deeplinkScheme}" />
             </intent-filter>
 
+            <!--
+                OAuth redirect as a verified App Link: once the backend's
+                /.well-known/assetlinks.json lists this build's signing certificate, only this app
+                can receive it (unlike the custom scheme above). Scoped to the exact redirect path,
+                so no other web URL of the host is claimed. Used when
+                BuildConfig.OAUTH_HTTPS_REDIRECT_ENABLED is set.
+            -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                    android:host="${deeplinkHost}"
+                    android:path="/deeplink/oauth"
+                    android:scheme="https" />
+            </intent-filter>
+
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
