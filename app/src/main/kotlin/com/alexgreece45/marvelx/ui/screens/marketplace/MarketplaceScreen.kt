@@ -926,7 +926,9 @@ private fun ListingPreviewItem(
         if (isPromo) {
             Modifier.fillMaxWidth()
         } else {
-            Modifier
+            // A fixed width, since a LazyRow item would otherwise grow to fit its title on one line
+            // and push the image and price off-screen.
+            Modifier.width(ConstantsUi.LISTING_IMAGE_NORMAL_SIZE)
         }
 
     val imageModifier =
@@ -935,7 +937,7 @@ private fun ListingPreviewItem(
                 .fillMaxWidth()
                 .height(150.dp)
         } else {
-            Modifier.size(90.dp)
+            Modifier.size(ConstantsUi.LISTING_IMAGE_NORMAL_SIZE)
         }
 
     Column(
@@ -949,11 +951,16 @@ private fun ListingPreviewItem(
             contentScale = if (isPromo) ContentScale.Fit else ContentScale.Crop
         )
 
-        Text(text = listingPreviewUi.title)
+        Text(
+            text = listingPreviewUi.title,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis
+        )
 
         Text(
             text = listingPreviewUi.priceLabel,
             fontWeight = FontWeight.Bold,
+            maxLines = 1,
             style = MaterialTheme.typography.subtitle1
         )
     }

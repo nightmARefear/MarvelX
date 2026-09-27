@@ -159,7 +159,7 @@ sealed class Screen(
         const val NO_MASKED_EMAIL = "-1"
 
         /**
-         * @param maskedEmail The email the OTP was sent to, already masked (see `EmailMasker`).
+         * @param maskedEmail The email the OTP was sent to, already masked (see `String.maskEmail()`).
          * Never pass the full email, as it's kept in the back stack's saved state.
          */
         fun createNavRoute(
