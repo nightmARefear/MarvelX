@@ -14,16 +14,11 @@ import com.alexgreece45.marvelx.core.network.model.api.forgotPassword.email.Resp
 import com.alexgreece45.marvelx.core.network.model.api.forgotPassword.email.ResponseForgotPasswordValidateOtp
 import com.alexgreece45.marvelx.core.network.model.api.forgotPassword.phoneNumber.RequestForgotPasswordOtpBlockedPhoneNumber
 import com.alexgreece45.marvelx.core.network.model.api.forgotPassword.phoneNumber.ResponseForgotPasswordOtpBlockedPhoneNumber
-import com.alexgreece45.marvelx.core.network.model.api.jwtSensitiveUserData.RequestJwtSensitiveUserData
-import com.alexgreece45.marvelx.core.network.model.api.jwtSensitiveUserData.ResponseJwtSensitiveUserData
 import com.alexgreece45.marvelx.core.network.model.api.order.item.ResponseReturnPolicies
 import com.alexgreece45.marvelx.core.network.model.api.order.item.ResponseReturnPolicy
 import com.alexgreece45.marvelx.core.network.model.api.otp.OtpRequest
-import com.alexgreece45.marvelx.core.network.model.api.otp.OtpResponseSuccess
 import com.alexgreece45.marvelx.core.network.model.api.resendOtp.RequestResendOtp
 import com.alexgreece45.marvelx.core.network.model.api.resendOtp.ResponseResendOtpSuccess
-import com.alexgreece45.marvelx.core.network.model.api.sensitiveUserData.RequestSensitiveUserData
-import com.alexgreece45.marvelx.core.network.model.api.sensitiveUserData.ResponseSensitiveUserData
 import com.alexgreece45.marvelx.core.network.model.api.token.ResponseToken
 import com.alexgreece45.marvelx.core.network.model.api.user.BodyUserId
 import com.alexgreece45.marvelx.core.network.model.api.user.block.ResponseBlockedUser
@@ -79,13 +74,6 @@ internal class ApiClientImpl(
     override suspend fun postLogin(accessToken: String): Response<ResponsePostLogin> =
         apiService.postLogin(RequestPostLogin(accessToken))
 
-    override suspend fun grandNewAccessToken(
-        clientId: String,
-        codeVerifier: String,
-        code: String,
-        uri: String
-    ): Response<ResponseToken> = apiService.grandNewAccessToken(clientId, codeVerifier, code, uri)
-
     override suspend fun registerDevice(requestRegisterDevice: RequestRegisterDevice): ApiResult<String> =
         executeApiServiceCallNoTransformation { apiService.registerDevice(requestRegisterDevice) }
 
@@ -95,7 +83,7 @@ internal class ApiClientImpl(
     override suspend fun logout(clientId: String, refreshToken: String): ApiResult<String> =
         executeApiServiceCallNoTransformation { apiService.logout(clientId, refreshToken) }
 
-    override suspend fun validateOtp(otpRequest: OtpRequest): Response<OtpResponseSuccess> =
+    override suspend fun validateOtp(otpRequest: OtpRequest): Response<ResponseToken> =
         apiService.validateOtp(otpRequest)
 
     override suspend fun resendOtp(requestResendOtp: RequestResendOtp): Response<ResponseResendOtpSuccess> =
@@ -214,12 +202,6 @@ internal class ApiClientImpl(
 
     override suspend fun getFaqs(): ApiResult<ResponseFaqs> =
         executeApiServiceCall { apiService.getFaqs() }
-
-    override suspend fun getJwtForSensitiveUserData(requestJwtSensitiveUserData: RequestJwtSensitiveUserData): Response<ResponseJwtSensitiveUserData> =
-        apiService.getJwtForSensitiveUserData(requestJwtSensitiveUserData)
-
-    override suspend fun getSensitiveUserData(requestSensitiveUserData: RequestSensitiveUserData): Response<ResponseSensitiveUserData> =
-        apiService.getSensitiveUserData(requestSensitiveUserData)
 
     override suspend fun getImage(imageUrl: String): ApiResult<ResponseBody> {
         return executeApiServiceCall {

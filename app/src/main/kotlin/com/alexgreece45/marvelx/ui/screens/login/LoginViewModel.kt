@@ -14,6 +14,7 @@ import com.alexgreece45.marvelx.mvi.BaseState
 import com.alexgreece45.marvelx.mvi.BaseViewModel
 import com.alexgreece45.marvelx.ui.components.model.ErrorButtonLayout
 import com.alexgreece45.marvelx.ui.screens.login.model.LoginWithIntentWithGoogleResult
+import com.alexgreece45.marvelx.util.EmailMasker
 import com.alexgreece45.marvelx.util.Form
 import com.alexgreece45.marvelx.util.FormValidator
 import com.alexgreece45.marvelx.util.FormsValidationResult
@@ -102,7 +103,8 @@ sealed class LoginEffect : BaseEffect {
             val userId: String,
             val otpFlowType: String,
             val verificationStep: String,
-            val shouldRememberUserSession: Boolean
+            val shouldRememberUserSession: Boolean,
+            val maskedEmail: String?
         ) : Navigation()
 
         data object NavigateToSignupScreen : Navigation()
@@ -307,9 +309,13 @@ class LoginViewModel(
      * Logins the user.
      */
     private fun loginUser(isLoggedInWithFirebase: Boolean) {
+        // The email the OTP will be sent to. Captured here, as the field states get reset before
+        // navigating.
+        val email = currentState.email
+
         viewModelScope.launch {
             registerInteractor.login(
-                email = currentState.email,
+                email = email,
                 password = if (isLoggedInWithFirebase) "firebase" else SecurityUtil.getHashedPasswordFromString(
                     defaultDispatcher = defaultDispatcher,
                     password = currentState.password
@@ -357,7 +363,8 @@ class LoginViewModel(
                                             userId = loginResponseDomain.userId,
                                             otpFlowType = OtpFlowType.Register.key,
                                             verificationStep = loginResponseDomain.verificationStep.key,
-                                            shouldRememberUserSession = isRememberMeCheckboxChecked
+                                            shouldRememberUserSession = isRememberMeCheckboxChecked,
+                                            maskedEmail = EmailMasker.mask(email)
                                         )
                                     }
                                 }

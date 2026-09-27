@@ -12,13 +12,4 @@ internal class ConfigOauthLogicImpl : ConfigOauthLogic {
 
     override val clientId: String
         get() = "mobile"
-
-    override val codeChallengeMethod: String
-        get() = "S256"
-
-    override val authorizationPath: String
-        get() = "/api/private/marvelx/user/authorize"
-
-    override val redirectUri: String
-        get() = "${BuildConfig.DEEPLINK_SCHEME}://${BuildConfig.MARVELX_BACKEND_DOMAIN}/deeplink/oauth"
 }

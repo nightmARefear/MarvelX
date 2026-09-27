@@ -9,6 +9,7 @@ import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
 import com.alexgreece45.marvelx.mvi.BaseViewModel
+import com.alexgreece45.marvelx.util.EmailMasker
 import com.alexgreece45.marvelx.util.Form
 import com.alexgreece45.marvelx.util.FormValidationResult
 import com.alexgreece45.marvelx.util.FormValidator
@@ -40,7 +41,10 @@ sealed class ForgotPasswordEffect : BaseEffect {
     sealed class Navigation : ForgotPasswordEffect() {
         data object PopToLoginScreen : Navigation()
         data class NavigateToLoginScreenWithError(val errorMessage: String) : Navigation()
-        data class NavigateToOtpScreen(val requestIdEmail: String) : Navigation()
+        data class NavigateToOtpScreen(
+            val requestIdEmail: String,
+            val maskedEmail: String?
+        ) : Navigation()
     }
 }
 
@@ -76,9 +80,12 @@ class ForgotPasswordViewModel(
     private fun sendOtpToEmail() {
         setState { copy(isLoading = true) }
 
+        // The email the OTP will be sent to.
+        val email = currentState.email
+
         viewModelScope.launch {
             forgotPasswordInteractor.sendOtp(
-                data = currentState.email,
+                data = email,
                 verificationStep = VerificationStep.OtpEmail
             ).collect { partialState ->
                 when (partialState) {
@@ -94,7 +101,10 @@ class ForgotPasswordViewModel(
                     is ForgotPasswordSendOtpPartialState.Success -> {
                         setState { copy(isLoading = false) }
                         setEffect {
-                            ForgotPasswordEffect.Navigation.NavigateToOtpScreen(requestIdEmail = partialState.requestId)
+                            ForgotPasswordEffect.Navigation.NavigateToOtpScreen(
+                                requestIdEmail = partialState.requestId,
+                                maskedEmail = EmailMasker.mask(email)
+                            )
                         }
                     }
                 }

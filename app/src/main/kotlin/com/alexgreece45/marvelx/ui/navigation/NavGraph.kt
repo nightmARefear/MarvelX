@@ -192,7 +192,8 @@ internal fun NavGraph(navController: NavHostController) {
                                         userId = userId,
                                         otpFlowType = otpFlowType,
                                         verificationStep = verificationStep,
-                                        shouldRememberUserSession = shouldRememberUserSession
+                                        shouldRememberUserSession = shouldRememberUserSession,
+                                        maskedEmail = maskedEmail
                                     )
                                 )
                             }
@@ -282,7 +283,8 @@ internal fun NavGraph(navController: NavHostController) {
                                         userId = userId,
                                         otpFlowType = otpFlowType,
                                         verificationStep = verificationStep,
-                                        shouldRememberUserSession = shouldRememberUserSession
+                                        shouldRememberUserSession = shouldRememberUserSession,
+                                        maskedEmail = maskedEmail
                                     )
                                 )
                             }
@@ -324,7 +326,9 @@ internal fun NavGraph(navController: NavHostController) {
                     navBackStackEntry.arguments?.getBoolean(NavItem.ShouldRememberUserSession.key),
                 requestIdEmail = navBackStackEntry.arguments?.getString(NavItem.RequestIdEmail.key),
                 requestIdPhoneNumber =
-                    navBackStackEntry.arguments?.getString(NavItem.RequestIdPhoneNumber.key)
+                    navBackStackEntry.arguments?.getString(NavItem.RequestIdPhoneNumber.key),
+                maskedEmail = navBackStackEntry.arguments?.getString(NavItem.MaskedEmail.key)
+                    ?.takeUnless { it == Screen.OtpScreen.NO_MASKED_EMAIL }
             )
         }
 

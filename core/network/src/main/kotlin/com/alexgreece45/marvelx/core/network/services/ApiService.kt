@@ -14,15 +14,10 @@ import com.alexgreece45.marvelx.core.network.model.api.forgotPassword.email.Resp
 import com.alexgreece45.marvelx.core.network.model.api.forgotPassword.email.ResponseForgotPasswordValidateOtp
 import com.alexgreece45.marvelx.core.network.model.api.forgotPassword.phoneNumber.RequestForgotPasswordOtpBlockedPhoneNumber
 import com.alexgreece45.marvelx.core.network.model.api.forgotPassword.phoneNumber.ResponseForgotPasswordOtpBlockedPhoneNumber
-import com.alexgreece45.marvelx.core.network.model.api.jwtSensitiveUserData.RequestJwtSensitiveUserData
-import com.alexgreece45.marvelx.core.network.model.api.jwtSensitiveUserData.ResponseJwtSensitiveUserData
 import com.alexgreece45.marvelx.core.network.model.api.order.item.ResponseReturnPolicies
 import com.alexgreece45.marvelx.core.network.model.api.otp.OtpRequest
-import com.alexgreece45.marvelx.core.network.model.api.otp.OtpResponseSuccess
 import com.alexgreece45.marvelx.core.network.model.api.resendOtp.RequestResendOtp
 import com.alexgreece45.marvelx.core.network.model.api.resendOtp.ResponseResendOtpSuccess
-import com.alexgreece45.marvelx.core.network.model.api.sensitiveUserData.RequestSensitiveUserData
-import com.alexgreece45.marvelx.core.network.model.api.sensitiveUserData.ResponseSensitiveUserData
 import com.alexgreece45.marvelx.core.network.model.api.token.ResponseToken
 import com.alexgreece45.marvelx.core.network.model.api.user.BodyUserId
 import com.alexgreece45.marvelx.core.network.model.api.user.block.ResponseBlockedUser
@@ -84,16 +79,6 @@ internal interface ApiService {
     @POST("/api/private/marvelx/user/post_login")
     suspend fun postLogin(@Body requestPostLogin: RequestPostLogin): Response<ResponsePostLogin>
 
-    @POST("/api/private/marvelx/user/token")
-    @FormUrlEncoded
-    suspend fun grandNewAccessToken(
-        @Field("client_id") clientId: String,
-        @Field("code_verifier") codeVerifier: String,
-        @Field("code") code: String,
-        @Field("redirect_uri") redirectUri: String,
-        @Field("grant_type") grantType: String = "authorization_code"
-    ): Response<ResponseToken>
-
     @POST("/api/private/marvelx/device/register")
     suspend fun registerDevice(@Body requestRegisterDevice: RequestRegisterDevice): Response<Void>
 
@@ -108,7 +93,7 @@ internal interface ApiService {
     ): Response<Void>
 
     @POST("/api/private/marvelx/user/validate_otp")
-    suspend fun validateOtp(@Body otpRequest: OtpRequest): Response<OtpResponseSuccess>
+    suspend fun validateOtp(@Body otpRequest: OtpRequest): Response<ResponseToken>
 
     @POST("/api/private/marvelx/user/resend_otp")
     suspend fun resendOtp(@Body requestResendOtp: RequestResendOtp): Response<ResponseResendOtpSuccess>
@@ -239,12 +224,6 @@ internal interface ApiService {
      */
     @GET("/api/private/marvelx/faqs")
     suspend fun getFaqs(): Response<ResponseFaqs>
-
-    @POST("/api/private/marvelx/user/jwt_sensitive_data")
-    suspend fun getJwtForSensitiveUserData(@Body requestJwtSensitiveUserData: RequestJwtSensitiveUserData): Response<ResponseJwtSensitiveUserData>
-
-    @POST("/api/private/marvelx/user/sensitive_data")
-    suspend fun getSensitiveUserData(@Body requestSensitiveUserData: RequestSensitiveUserData): Response<ResponseSensitiveUserData>
 
     @GET
     @Streaming

@@ -2,15 +2,11 @@ package com.alexgreece45.marvelx.domain.interactors
 
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.core.common.logger.AppLogger
-import com.alexgreece45.marvelx.core.network.model.api.jwtSensitiveUserData.RequestJwtSensitiveUserData
 import com.alexgreece45.marvelx.core.network.model.api.user.signup.RequestUserSignup
-import com.alexgreece45.marvelx.data.repository.GetJwtForSensitiveUserDataRepositoryResponse
 import com.alexgreece45.marvelx.data.repository.LoginRepositoryResponse
 import com.alexgreece45.marvelx.data.repository.PostLoginWithTokenRepositoryResponse
 import com.alexgreece45.marvelx.data.repository.RegisterRepository
 import com.alexgreece45.marvelx.data.repository.SignupRepositoryPartialState
-import com.alexgreece45.marvelx.domain.model_api.jwtSensitiveUserData.JwtSensitiveUserDataDomain
-import com.alexgreece45.marvelx.domain.model_api.jwtSensitiveUserData.toJwtSensitiveUserDataDomain
 import com.alexgreece45.marvelx.domain.model_api.user.VerificationStep
 import com.alexgreece45.marvelx.domain.model_api.user.login.LoginResponseDomain
 import com.alexgreece45.marvelx.domain.model_api.user.login.toUserLoginResponseDomain
@@ -40,11 +36,6 @@ interface RegisterInteractor {
     ): Flow<LoginPartialState>
 
     suspend fun loginWithToken(): Flow<LoginWithTokenPartialState>
-
-    suspend fun getJwtForSensitiveUserData(
-        userId: String,
-        verificationStep: VerificationStep
-    ): Flow<GetJwtForSensitiveUserDataPartialState>
 }
 
 @Factory
@@ -79,8 +70,10 @@ internal class RegisterInteractorImpl(
                         }
 
                         val signupDomain = signupResponse.toSignupDomain()
+
+                        // Without a verification step, the tokens must be part of the response.
                         if (signupDomain.verificationStep is VerificationStep.None
-                            && signupDomain.tempAuthCode.isBlank()
+                            && signupDomain.authenticationTokens == null
                         ) {
                             emit(
                                 SignupPartialState.Failed(
@@ -205,59 +198,6 @@ internal class RegisterInteractorImpl(
                 }
             }
         }
-
-    override suspend fun getJwtForSensitiveUserData(
-        userId: String,
-        verificationStep: VerificationStep
-    ): Flow<GetJwtForSensitiveUserDataPartialState> = flow {
-        val genericErrorMessage = resourceProvider.getGenericErrorMessage()
-        val request =
-            RequestJwtSensitiveUserData(
-                userId = userId,
-                verificationStep = verificationStep.key
-            )
-
-        repository.getJwtForSensitiveUserData(request).collect {
-            when (it) {
-                is GetJwtForSensitiveUserDataRepositoryResponse.Failed -> {
-                    emit(
-                        GetJwtForSensitiveUserDataPartialState.Failed(
-                            errorMessage = it.responseUserError.errorMessage
-                        )
-                    )
-                }
-
-                is GetJwtForSensitiveUserDataRepositoryResponse.Success -> {
-                    it.response?.let { responseJwtSensitiveUserData ->
-                        emit(
-                            GetJwtForSensitiveUserDataPartialState.Success(
-                                jwtSensitiveUserDataDomain = responseJwtSensitiveUserData.toJwtSensitiveUserDataDomain()
-                            )
-                        )
-                    } ?: emit(
-                        GetJwtForSensitiveUserDataPartialState.Failed(
-                            errorMessage = genericErrorMessage
-                        )
-                    )
-                }
-            }
-        }
-    }.safeAsync {
-        logger.e { "(getJwtForSensitiveUserData) error: ${it.message.orEmpty()}" }
-        when (it) {
-            is IOException -> {
-                GetJwtForSensitiveUserDataPartialState.Failed(
-                    errorMessage = resourceProvider.getString(R.string.no_internet_connection_error_message)
-                )
-            }
-
-            else -> {
-                GetJwtForSensitiveUserDataPartialState.Failed(
-                    errorMessage = resourceProvider.getGenericErrorMessage()
-                )
-            }
-        }
-    }
 }
 
 sealed class SignupPartialState {
@@ -278,11 +218,4 @@ sealed class LoginWithTokenPartialState {
         LoginWithTokenPartialState()
 
     data class Failed(val errorMessage: String) : LoginWithTokenPartialState()
-}
-
-sealed class GetJwtForSensitiveUserDataPartialState {
-    data class Success(val jwtSensitiveUserDataDomain: JwtSensitiveUserDataDomain) :
-        GetJwtForSensitiveUserDataPartialState()
-
-    data class Failed(val errorMessage: String) : GetJwtForSensitiveUserDataPartialState()
 }

@@ -1,25 +1,19 @@
 package com.alexgreece45.marvelx.domain.interactors
 
-import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.controllers.RefreshTokenController
 import com.alexgreece45.marvelx.core.common.config.ConfigOauthLogic
 import com.alexgreece45.marvelx.core.common.extensions.safeAsync
 import com.alexgreece45.marvelx.core.common.logger.AppLogger
 import com.alexgreece45.marvelx.core.common.util.DateUtil
 import com.alexgreece45.marvelx.core.data.repositories.UserSessionRepository
-import com.alexgreece45.marvelx.core.network.model.api.sensitiveUserData.RequestSensitiveUserData
 import com.alexgreece45.marvelx.core.network.model.api.token.toModel
 import com.alexgreece45.marvelx.core.network.storage.SignatureStorage
 import com.alexgreece45.marvelx.data.repository.AutoLogoutRepository
-import com.alexgreece45.marvelx.data.repository.GetSensitiveUserDataRepositoryResponse
-import com.alexgreece45.marvelx.data.repository.GrandNewAccessTokenRepositoryResponse
 import com.alexgreece45.marvelx.data.repository.LoginRepository
 import com.alexgreece45.marvelx.data.repository.PostLoginRepositoryResponse
 import com.alexgreece45.marvelx.data.repository.RefreshTokenRepository
 import com.alexgreece45.marvelx.data.repository.TokenRefreshRepositoryResult
 import com.alexgreece45.marvelx.data.repository.UserRepository
-import com.alexgreece45.marvelx.domain.model_api.sensitiveUserData.SensitiveUserDataDomain
-import com.alexgreece45.marvelx.domain.model_api.sensitiveUserData.toSensitiveUserDataDomain
 import com.alexgreece45.marvelx.domain.usecases.InitListingEnumsUseCase
 import com.alexgreece45.marvelx.domain.usecases.RemoveUserCredentialsUseCase
 import com.alexgreece45.marvelx.model.model.AuthenticationTokens
@@ -41,19 +35,7 @@ interface LoginInteractor {
      */
     suspend fun postLogin(session: PostLoginSession): Flow<PostLoginPartialState>
 
-    /**
-     * Grants an access token for the OAuth 2.0 flow. It sends the [codeVerifier] and the [authCode]
-     * that was received from the browser-based authorization redirect. If the response is
-     * successful, then that means that the access token was successfully retrieved.
-     */
-    suspend fun grandNewAccessToken(
-        authCode: String,
-        codeVerifier: String
-    ): Flow<GrandNewAccessTokenPartialState>
-
     suspend fun refreshAccessToken(): Flow<RefreshAccessTokenPartialState>
-
-    suspend fun getSensitiveUserData(token: String): Flow<GetSensitiveUserDataPartialState>
 }
 
 @Factory
@@ -141,59 +123,6 @@ class LoginInteractorImpl(
         }
     }
 
-    override suspend fun grandNewAccessToken(
-        authCode: String,
-        codeVerifier: String
-    ): Flow<GrandNewAccessTokenPartialState> =
-        flow {
-            val genericErrorMessage = resourceProvider.getGenericErrorMessage()
-            loginRepository.grandNewAccessToken(
-                clientId = configOauthLogic.clientId,
-                code = authCode,
-                codeVerifier = codeVerifier,
-                uri = configOauthLogic.redirectUri
-            ).collect {
-                when (it) {
-                    is GrandNewAccessTokenRepositoryResponse.Failed -> {
-                        emit(
-                            GrandNewAccessTokenPartialState.Failed(
-                                errorMessage = genericErrorMessage
-                            )
-                        )
-                    }
-
-                    is GrandNewAccessTokenRepositoryResponse.Success -> {
-                        when (val response = it.response) {
-                            null -> {
-                                emit(
-                                    GrandNewAccessTokenPartialState.Failed(
-                                        errorMessage = genericErrorMessage
-                                    )
-                                )
-                            }
-
-                            else -> {
-                                emit(GrandNewAccessTokenPartialState.Success(response.toModel()))
-                            }
-                        }
-                    }
-                }
-            }
-        }.safeAsync {
-            appLogger.e(loggerTag) { "(grandNewAccessToken) error: ${it.message.orEmpty()}" }
-            when (it) {
-                is IOException -> GrandNewAccessTokenPartialState.Failed(
-                    errorMessage = resourceProvider.getNoInternetConnectionMessage()
-                )
-
-                else -> {
-                    GrandNewAccessTokenPartialState.Failed(
-                        errorMessage = resourceProvider.getGenericErrorMessage()
-                    )
-                }
-            }
-        }
-
     override suspend fun refreshAccessToken(): Flow<RefreshAccessTokenPartialState> = flow {
         val genericErrorMessage = resourceProvider.getGenericErrorMessage()
         val clientId = configOauthLogic.clientId
@@ -253,62 +182,6 @@ class LoginInteractorImpl(
             }
         }
     }
-
-    override suspend fun getSensitiveUserData(token: String): Flow<GetSensitiveUserDataPartialState> =
-        flow {
-            val request = RequestSensitiveUserData(token = token)
-
-            loginRepository.getSensitiveUserData(request).collect { repositoryResponse ->
-                when (repositoryResponse) {
-                    is GetSensitiveUserDataRepositoryResponse.Failed -> {
-                        emit(
-                            GetSensitiveUserDataPartialState.Failed(
-                                errorMessage = repositoryResponse.responseUserError.errorMessage
-                            )
-                        )
-                    }
-
-                    is GetSensitiveUserDataRepositoryResponse.Success -> {
-                        when (val responseSensitiveUserData = repositoryResponse.response) {
-                            null -> {
-                                emit(
-                                    GetSensitiveUserDataPartialState.Failed(
-                                        errorMessage = resourceProvider.getGenericErrorMessage()
-                                    )
-                                )
-                            }
-
-                            else -> {
-                                // If the OTP functionality is blocked, but there's no expiresIn info,
-                                // throw an "internal server error".
-                                if (responseSensitiveUserData.isOtpBlocked &&
-                                    responseSensitiveUserData.otpBlockExpiresIn == null
-                                ) {
-                                    emit(
-                                        GetSensitiveUserDataPartialState.Failed(
-                                            errorMessage = resourceProvider.getString(R.string.internal_server_error)
-                                        )
-                                    )
-                                    return@collect
-                                }
-
-                                emit(
-                                    GetSensitiveUserDataPartialState.Success(
-                                        sensitiveUserDataDomain = responseSensitiveUserData.toSensitiveUserDataDomain()
-                                    )
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-        }.safeAsync {
-            appLogger.e { "(getSensitiveUserData) error: ${it.message}" }
-            when (it) {
-                is IOException -> GetSensitiveUserDataPartialState.Failed(errorMessage = resourceProvider.getNoInternetConnectionMessage())
-                else -> GetSensitiveUserDataPartialState.Failed(errorMessage = resourceProvider.getGenericErrorMessage())
-            }
-        }
 }
 
 /**
@@ -337,13 +210,6 @@ sealed interface PostLoginPartialState {
     data class Failed(val errorMessage: String) : PostLoginPartialState
 }
 
-sealed class GrandNewAccessTokenPartialState {
-    data class Success(val authenticationTokens: AuthenticationTokens) :
-        GrandNewAccessTokenPartialState()
-
-    data class Failed(val errorMessage: String) : GrandNewAccessTokenPartialState()
-}
-
 sealed class RefreshAccessTokenPartialState {
     data object Success : RefreshAccessTokenPartialState()
     data class Failed(val errorMessage: String) : RefreshAccessTokenPartialState()
@@ -352,11 +218,4 @@ sealed class RefreshAccessTokenPartialState {
 sealed class LogoutPartialState {
     data object Success : LogoutPartialState()
     data class Failed(val errorMessage: String) : LogoutPartialState()
-}
-
-sealed class GetSensitiveUserDataPartialState {
-    data class Success(val sensitiveUserDataDomain: SensitiveUserDataDomain) :
-        GetSensitiveUserDataPartialState()
-
-    data class Failed(val errorMessage: String) : GetSensitiveUserDataPartialState()
 }

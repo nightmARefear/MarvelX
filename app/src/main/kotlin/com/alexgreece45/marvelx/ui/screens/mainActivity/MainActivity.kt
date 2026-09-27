@@ -518,11 +518,7 @@ internal class MainActivity : AppCompatActivity() {
 
             // External URL handling.
             it.data?.let { uri ->
-                if (uri.pathSegments.getOrNull(0) == "deeplink" && uri.pathSegments.getOrNull(1) == "oauth") {
-                    viewModel.setEvent(MainActivityEvent.OnOAuthCallbackReceived(uri))
-                } else {
-                    viewModel.setEvent(MainActivityEvent.OnDeepLinkReceived(uri))
-                }
+                viewModel.setEvent(MainActivityEvent.OnDeepLinkReceived(uri))
             }
         }
     }

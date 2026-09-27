@@ -1,7 +1,5 @@
 package com.alexgreece45.marvelx.ui.screens.signup
 
-import android.net.Uri
-import androidx.browser.customtabs.CustomTabsIntent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -25,7 +23,6 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.autofill.ContentType
 import androidx.compose.ui.focus.FocusDirection
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
@@ -60,7 +57,6 @@ internal fun SignUpScreen(
 ) {
     val focusManager = LocalFocusManager.current
     val keyboard = LocalSoftwareKeyboardController.current
-    val context = LocalContext.current
 
     ObserveUiEffect(flow = effect, tag = "SignupScreen") { uiEffect ->
         when (uiEffect) {
@@ -81,10 +77,6 @@ internal fun SignUpScreen(
 
             SignupEffect.OnDoneClick -> {
                 onEvent(SignupEvent.OnSignupButtonClick)
-            }
-
-            is SignupEffect.LaunchOAuthAuthorization -> {
-                CustomTabsIntent.Builder().build().launchUrl(context, Uri.parse(uiEffect.url))
             }
         }
     }
