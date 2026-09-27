@@ -61,7 +61,7 @@ class PushNotificationsController(
         if (!userRepository.isUserLoggedIn) return
 
         scope.launch {
-            val wasTokenUpdated = deviceController.registerOrUpdateDevice(token)
+            val wasTokenUpdated = deviceController.registerDevice(token)
             if (wasTokenUpdated) {
                 appLogger.d(loggerTag) { "(updateToken) FCM Token was successfully updated." }
             } else {

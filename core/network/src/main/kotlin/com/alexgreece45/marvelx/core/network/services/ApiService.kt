@@ -3,7 +3,6 @@ package com.alexgreece45.marvelx.core.network.services
 import com.alexgreece45.marvelx.core.network.model.api.character.CharacterDataWrapper
 import com.alexgreece45.marvelx.core.network.model.api.character.comic.ComicDataWrapper
 import com.alexgreece45.marvelx.core.network.model.api.device.RequestRegisterDevice
-import com.alexgreece45.marvelx.core.network.model.api.device.RequestUpdateDevice
 import com.alexgreece45.marvelx.core.network.model.api.faq.ResponseFaqs
 import com.alexgreece45.marvelx.core.network.model.api.forgotPassword.email.RequestForgotPasswordOtpBlockedEmail
 import com.alexgreece45.marvelx.core.network.model.api.forgotPassword.email.RequestForgotPasswordSendOtp
@@ -81,9 +80,6 @@ internal interface ApiService {
 
     @POST("/api/private/marvelx/device/register")
     suspend fun registerDevice(@Body requestRegisterDevice: RequestRegisterDevice): Response<Void>
-
-    @POST("/api/private/marvelx/device/update")
-    suspend fun updateDevice(@Body requestUpdateDevice: RequestUpdateDevice): Response<Void>
 
     @POST("/api/private/marvelx/user/logout")
     @FormUrlEncoded

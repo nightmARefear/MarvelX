@@ -32,6 +32,7 @@ import com.alexgreece45.marvelx.core.network.utils.MultipartBodyUtils
 import okhttp3.MultipartBody
 import org.koin.core.annotation.Single
 import java.math.BigDecimal
+import java.math.RoundingMode
 import kotlin.random.Random
 import kotlin.random.nextInt
 import kotlin.random.nextLong
@@ -291,12 +292,9 @@ internal class OrderClientImpl : OrderClient {
                 multipartBody = requestOrderItemReturn,
                 targetPartName = "returnMethod"
             )!!,
-            refundAmount = if (MultipartBodyUtils.getMultipartValueByName(
-                    multipartBody = requestOrderItemReturn,
-                    targetPartName = "requestRefund"
-                )!! == "true"
-            ) {
-                orderItem.price
+            returnShippingFee = OrderClientConstants.RETURN_SHIPPING_FEE,
+            refundAmount = if (requestRefund) {
+                OrderClientConstants.refundAmountOf(orderItem.price)
             } else null,
             submittedAt = DateUtil.getCurrentLocalDate().minusDays(1).toString()
         )
@@ -345,7 +343,17 @@ internal class OrderClientImpl : OrderClient {
 var submittedOrderItemReturn: ResponseOrderItemReturn? = null
 
 private object OrderClientConstants {
+    /** The item's share of the order's delivery fee; a single-item order paid 6.50. */
+    const val RETURN_SHIPPING_FEE = "6.50"
+
     private val responseOrderItem: ResponseOrderItem = getOrderItemDetails("1").body
+
+    /** Mirrors the backend: the refund is the item's price minus the return shipping fee, never below zero. */
+    fun refundAmountOf(price: String): String =
+        (BigDecimal(price) - BigDecimal(RETURN_SHIPPING_FEE))
+            .max(BigDecimal.ZERO)
+            .setScale(2, RoundingMode.HALF_UP)
+            .toPlainString()
     val responseOrderItemReturns: HashMap<String, ResponseOrderItemReturn> =
         hashMapOf<String, ResponseOrderItemReturn>().apply {
             putAll(
@@ -367,6 +375,8 @@ private object OrderClientConstants {
                         returnStatus = OrderItemReturnStatus.AVAILABLE.key,
                         returnUntilDate = DateUtil.getCurrentLocalDate().plusDays(12).toString(),
                         refundStatus = OrderItemRefundStatus.AVAILABLE.key,
+                        returnShippingFee = RETURN_SHIPPING_FEE,
+                        refundAmount = refundAmountOf(responseOrderItem.price),
                         returnReason = null,
                         description = null,
                         attachedImageUrls = listOf(),
@@ -382,7 +392,9 @@ private object OrderClientConstants {
                         description = "The item that I received was in really bad shape. I want my money back!",
                         attachedImageUrls = listOf(),
                         condition = OrderItemReturnCondition.PACKAGE_OPENED.key,
-                        sellerMessage = "The courier must have messed up the package."
+                        sellerMessage = "The courier must have messed up the package.",
+                        returnShippingFee = RETURN_SHIPPING_FEE,
+                        refundAmount = refundAmountOf(responseOrderItem.price)
                     ),
                     "RET-1003" to ResponseOrderItemReturn(
                         orderItemReturnId = "RET-1003",

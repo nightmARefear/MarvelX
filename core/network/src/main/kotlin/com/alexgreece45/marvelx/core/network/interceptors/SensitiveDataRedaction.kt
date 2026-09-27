@@ -1,0 +1,53 @@
+package com.alexgreece45.marvelx.core.network.interceptors
+
+/**
+ * Form-encoded fields (`key=value`) whose values must never reach the logs. Form bodies are only
+ * used by the token refresh and logout requests.
+ */
+private val sensitiveFormFields = listOf(
+    "access_token",
+    "refresh_token",
+    "password"
+)
+
+/**
+ * JSON properties whose string values must never reach the logs. `code` is deliberately absent:
+ * in JSON bodies it's a listing enum / status code.
+ */
+private val sensitiveJsonProperties = listOf(
+    // Tokens.
+    "access_token",
+    "accessToken", // `post_login` request.
+    "refresh_token",
+    "refreshToken",
+    "temp_auth_code", // Still returned by `validate_otp` for older app versions.
+    "tempAuthCode", // Still returned by `signup` for older app versions.
+    "token",
+    "fcmToken",
+    // Request-signing (HMAC) key of the `post_login` response.
+    "key",
+    // Credentials.
+    "password",
+    "newPassword",
+    "otp",
+    // Payment card.
+    "cardNumber",
+    "cvv"
+)
+
+private val sensitiveFormValue =
+    Regex("""(?<![\w-])(${sensitiveFormFields.joinToString("|")})=[^&\s]*""")
+
+private val sensitiveJsonValue =
+    Regex(""""(${sensitiveJsonProperties.joinToString("|")})"\s*:\s*"[^"]*"""")
+
+private const val REDACTED = "██"
+
+/**
+ * Returns this (logged) text with the values of credentials, tokens, and payment card data
+ * replaced, whether they appear as form-encoded fields or as JSON string properties.
+ */
+internal fun String.redactSensitiveData(): String =
+    this
+        .replace(sensitiveFormValue) { "${it.groupValues[1]}=$REDACTED" }
+        .replace(sensitiveJsonValue) { "\"${it.groupValues[1]}\":\"$REDACTED\"" }

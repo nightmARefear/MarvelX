@@ -7,7 +7,6 @@ import com.alexgreece45.marvelx.core.network.model.api.character.CharacterDataWr
 import com.alexgreece45.marvelx.core.network.model.api.character.comic.ComicDataContainer
 import com.alexgreece45.marvelx.core.network.model.api.character.comic.ComicDataWrapper
 import com.alexgreece45.marvelx.core.network.model.api.device.RequestRegisterDevice
-import com.alexgreece45.marvelx.core.network.model.api.device.RequestUpdateDevice
 import com.alexgreece45.marvelx.core.network.model.api.faq.ResponseFaqs
 import com.alexgreece45.marvelx.core.network.model.api.forgotPassword.email.RequestForgotPasswordOtpBlockedEmail
 import com.alexgreece45.marvelx.core.network.model.api.forgotPassword.email.RequestForgotPasswordSendOtp
@@ -288,9 +287,6 @@ internal class ApiClientImpl(
         )
 
     override suspend fun registerDevice(requestRegisterDevice: RequestRegisterDevice): ApiResult<String> =
-        ApiResult.Success("")
-
-    override suspend fun updateDevice(requestUpdateDevice: RequestUpdateDevice): ApiResult<String> =
         ApiResult.Success("")
 
     override suspend fun logout(clientId: String, refreshToken: String): ApiResult<String> =

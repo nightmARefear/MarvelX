@@ -4,13 +4,17 @@ import com.alexgreece45.marvelx.core.data.model.order.item.OrderItemReturnState.
 import com.alexgreece45.marvelx.core.data.model.order.item.OrderItemReturnState.Existing
 import com.alexgreece45.marvelx.core.data.model.order.item.refund.OrderItemRefundStatus
 import com.alexgreece45.marvelx.core.network.model.api.order.item.returnRequest.ResponseOrderItemReturn
+import java.math.BigDecimal
 import java.time.LocalDate
 
 sealed interface OrderItemReturnState {
     data class Available(
         val orderItem: OrderItemData,
         val returnUntilDate: LocalDate,
-        val refundStatus: OrderItemRefundStatus
+        val refundStatus: OrderItemRefundStatus,
+        val returnShippingFee: BigDecimal,
+        /** Decided by the backend: the item's price minus the return shipping fee. */
+        val refundAmount: BigDecimal?
     ) : OrderItemReturnState
 
     data class Existing(val data: OrderItemReturn) : OrderItemReturnState
@@ -22,7 +26,9 @@ fun ResponseOrderItemReturn.toDataState(): OrderItemReturnState {
         OrderItemReturnStatus.AVAILABLE -> Available(
             orderItem = this.orderItem.toData(),
             returnUntilDate = LocalDate.parse(returnUntilDate),
-            refundStatus = OrderItemRefundStatus.entries.first { it.key == refundStatus }
+            refundStatus = OrderItemRefundStatus.entries.first { it.key == refundStatus },
+            returnShippingFee = returnShippingFee?.toBigDecimal() ?: BigDecimal.ZERO,
+            refundAmount = refundAmount?.toBigDecimal()
         )
 
         OrderItemReturnStatus.FINAL_SALE, OrderItemReturnStatus.EXPIRED -> throw IllegalStateException(

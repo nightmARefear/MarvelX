@@ -9,13 +9,13 @@ import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
 import com.alexgreece45.marvelx.mvi.BaseViewModel
-import com.alexgreece45.marvelx.util.EmailMasker
 import com.alexgreece45.marvelx.util.Form
 import com.alexgreece45.marvelx.util.FormValidationResult
 import com.alexgreece45.marvelx.util.FormValidator
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.Rule
 import com.alexgreece45.marvelx.util.constants.ConstantsInputField
+import com.alexgreece45.marvelx.util.extensions.maskEmail
 import kotlinx.coroutines.launch
 import org.koin.android.annotation.KoinViewModel
 
@@ -103,7 +103,7 @@ class ForgotPasswordViewModel(
                         setEffect {
                             ForgotPasswordEffect.Navigation.NavigateToOtpScreen(
                                 requestIdEmail = partialState.requestId,
-                                maskedEmail = EmailMasker.mask(email)
+                                maskedEmail = email.maskEmail()
                             )
                         }
                     }

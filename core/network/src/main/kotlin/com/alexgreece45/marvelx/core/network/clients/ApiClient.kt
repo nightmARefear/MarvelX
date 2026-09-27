@@ -3,7 +3,6 @@ package com.alexgreece45.marvelx.core.network.clients
 import com.alexgreece45.marvelx.core.network.model.api.character.CharacterDataWrapper
 import com.alexgreece45.marvelx.core.network.model.api.character.comic.ComicDataWrapper
 import com.alexgreece45.marvelx.core.network.model.api.device.RequestRegisterDevice
-import com.alexgreece45.marvelx.core.network.model.api.device.RequestUpdateDevice
 import com.alexgreece45.marvelx.core.network.model.api.faq.ResponseFaqs
 import com.alexgreece45.marvelx.core.network.model.api.forgotPassword.email.RequestForgotPasswordOtpBlockedEmail
 import com.alexgreece45.marvelx.core.network.model.api.forgotPassword.email.RequestForgotPasswordSendOtp
@@ -50,7 +49,6 @@ interface ApiClient {
     suspend fun postLogin(accessToken: String): Response<ResponsePostLogin>
 
     suspend fun registerDevice(requestRegisterDevice: RequestRegisterDevice): ApiResult<String>
-    suspend fun updateDevice(requestUpdateDevice: RequestUpdateDevice): ApiResult<String>
     suspend fun logout(clientId: String, refreshToken: String): ApiResult<String>
     suspend fun validateOtp(otpRequest: OtpRequest): Response<ResponseToken>
     suspend fun resendOtp(requestResendOtp: RequestResendOtp): Response<ResponseResendOtpSuccess>

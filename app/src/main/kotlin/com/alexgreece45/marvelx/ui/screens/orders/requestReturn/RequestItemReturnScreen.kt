@@ -135,7 +135,6 @@ import com.alexgreece45.marvelx.util.constants.ConstantsUi
 import com.alexgreece45.marvelx.util.extensions.hideIfVisible
 import com.alexgreece45.marvelx.util.extensions.showIfHidden
 import com.alexgreece45.marvelx.util.extensions.throttledClickable
-import com.alexgreece45.marvelx.util.extensions.withEuroSymbol
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.emptyFlow
@@ -354,6 +353,8 @@ internal fun RequestItemReturnScreen(
                                                     returnUntilDate = returnState.returnUntilDate,
                                                     returnUntilRemainingDays = returnState.returnUntilRemainingDays,
                                                     isRequestRefundAvailable = returnState.isRequestRefundAvailable,
+                                                    returnShippingFee = returnState.returnShippingFee,
+                                                    refundAmount = returnState.refundAmount,
                                                     onEvent = onEvent
                                                 )
                                             }
@@ -474,6 +475,8 @@ private fun WizardContent(
     returnUntilDate: LocalDateUi,
     returnUntilRemainingDays: Long,
     isRequestRefundAvailable: Boolean,
+    returnShippingFee: BigDecimalUi,
+    refundAmount: BigDecimalUi?,
     onEvent: (RequestItemReturnContract.Event) -> Unit
 ) {
     Column(
@@ -560,6 +563,8 @@ private fun WizardContent(
                         orderItem = orderItem,
                         returnReason = returnReason,
                         isRefundRequested = state.isRequestRefundChecked,
+                        returnShippingFee = returnShippingFee,
+                        refundAmount = refundAmount,
                         returnCondition = returnCondition,
                         attachedImagesCount = state.attachedImages.size,
                         returnMethods = state.returnMethods,
@@ -755,6 +760,8 @@ private fun WizardScreenOverview(
     orderItem: OrderItemUi,
     returnReason: OrderItemReturnReasonUi,
     isRefundRequested: Boolean,
+    returnShippingFee: BigDecimalUi,
+    refundAmount: BigDecimalUi?,
     returnCondition: OrderItemReturnConditionUi,
     attachedImagesCount: Int,
     returnMethods: ImmutableList<OrderItemReturnMethodUi>,
@@ -822,30 +829,33 @@ private fun WizardScreenOverview(
                 ) {
                     OverviewSectionExpectedRefundBoxRowItem(
                         title = stringResource(R.string.screen_request_item_overview_refund_box_subtotal_label),
-                        description = "130.58".withEuroSymbol()
+                        description = orderItem.price.label
                     )
 
                     OverviewSectionExpectedRefundBoxRowItem(
                         title = stringResource(R.string.screen_request_item_overview_refund_box_return_shipping_label),
-                        description = "-2.7".withEuroSymbol()
+                        description = "-${returnShippingFee.label}"
                     )
 
-                    WrapHorizontalDivider(modifier = Modifier.fillMaxWidth())
+                    // The backend decides the refund amount; older responses may not include it yet.
+                    refundAmount?.let {
+                        WrapHorizontalDivider(modifier = Modifier.fillMaxWidth())
 
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = stringResource(R.string.screen_request_item_overview_refund_box_total_refund_label),
-                            style = MaterialTheme.typography.h5
-                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = stringResource(R.string.screen_request_item_overview_refund_box_total_refund_label),
+                                style = MaterialTheme.typography.h5
+                            )
 
-                        Text(
-                            text = "133.28".withEuroSymbol(),
-                            style = MaterialTheme.typography.h5
-                        )
+                            Text(
+                                text = refundAmount.label,
+                                style = MaterialTheme.typography.h5
+                            )
+                        }
                     }
                 }
             },
@@ -1351,7 +1361,13 @@ private fun ScreenPreview() {
                     ),
                     returnUntilDate = DateUtil.getCurrentLocalDate()
                         .let { LocalDateUi(value = it, label = it.defaultFormat()) },
-                    isRequestRefundAvailable = true
+                    isRequestRefundAvailable = true,
+                    returnShippingFee = BigDecimal("6.50").let {
+                        BigDecimalUi(value = it, label = it.formatPrice(2))
+                    },
+                    refundAmount = BigDecimal("43.50").let {
+                        BigDecimalUi(value = it, label = it.formatPrice(2))
+                    }
                 ),
                 wizardMode = RequestItemReturnWizardMode.Create,
                 wizardStep = RequestItemReturnWizardStep.OVERVIEW,

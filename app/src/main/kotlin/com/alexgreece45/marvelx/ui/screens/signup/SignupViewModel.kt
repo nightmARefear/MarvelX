@@ -19,12 +19,12 @@ import com.alexgreece45.marvelx.mvi.BaseState
 import com.alexgreece45.marvelx.mvi.BaseViewModel
 import com.alexgreece45.marvelx.ui.helper.FieldValidationRules
 import com.alexgreece45.marvelx.ui.model.Gender
-import com.alexgreece45.marvelx.util.EmailMasker
 import com.alexgreece45.marvelx.util.Form
 import com.alexgreece45.marvelx.util.FormValidator
 import com.alexgreece45.marvelx.util.FormsValidationResult
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.SecurityUtil
+import com.alexgreece45.marvelx.util.extensions.maskEmail
 import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.launch
 import org.koin.android.annotation.KoinViewModel
@@ -431,7 +431,7 @@ internal class SignupViewModel(
                                                     userId = signupResponseDomain.userId,
                                                     verificationStep = signupResponseDomain.verificationStep.key,
                                                     shouldRememberUserSession = true,
-                                                    maskedEmail = EmailMasker.mask(email)
+                                                    maskedEmail = email.maskEmail()
                                                 )
                                             }
                                         }
@@ -442,7 +442,7 @@ internal class SignupViewModel(
                                                     userId = signupResponseDomain.userId,
                                                     verificationStep = signupResponseDomain.verificationStep.key,
                                                     shouldRememberUserSession = true,
-                                                    maskedEmail = EmailMasker.mask(email)
+                                                    maskedEmail = email.maskEmail()
                                                 )
                                             }
                                         }

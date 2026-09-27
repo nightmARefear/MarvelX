@@ -50,7 +50,7 @@ internal class RequestSignerImpl(
             )
         }.orEmpty()
 
-        logger.d(loggerTag) { "(createSessionSignature) xAuthSignature: $xAuthSignature" }
+        logger.d(loggerTag) { "(createSessionSignature) Signature created: ${xAuthSignature.isNotEmpty()}" }
 
         return requestBuilder
             .addHeader(

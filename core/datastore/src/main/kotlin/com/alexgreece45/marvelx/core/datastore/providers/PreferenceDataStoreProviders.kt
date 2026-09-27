@@ -9,6 +9,8 @@ import com.alexgreece45.marvelx.core.datastore.providers.model.AutoLogoutPrefere
 import com.alexgreece45.marvelx.core.datastore.providers.model.AutoLogoutPreferencesKeys
 import com.alexgreece45.marvelx.core.datastore.providers.model.FcmTokenPreferences
 import com.alexgreece45.marvelx.core.datastore.providers.model.FcmTokenPreferencesKeys
+import com.alexgreece45.marvelx.core.datastore.providers.model.NetworkInspectorPreferences
+import com.alexgreece45.marvelx.core.datastore.providers.model.NetworkInspectorPreferencesKeys
 import org.koin.core.annotation.Single
 
 @Single
@@ -29,6 +31,16 @@ internal fun provideFcmTokenPreferencesDataStore(
     providePreferencesDataStore(
         context = context,
         fileName = FcmTokenPreferencesKeys.DATA_STORE_FILE_NAME
+    )
+
+@Single
+@NetworkInspectorPreferences
+internal fun provideNetworkInspectorPreferencesDataStore(
+    context: Context
+): DataStore<Preferences> =
+    providePreferencesDataStore(
+        context = context,
+        fileName = NetworkInspectorPreferencesKeys.DATA_STORE_FILE_NAME
     )
 
 private fun providePreferencesDataStore(
