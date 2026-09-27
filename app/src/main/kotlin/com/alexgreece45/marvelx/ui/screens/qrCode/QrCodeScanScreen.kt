@@ -26,6 +26,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -90,7 +91,9 @@ fun QrCodeScanScreen(
         isLoading = false,
         showToolbar = true,
         onBack = { onEventSent(QrCodeScanContract.Event.OnBack) },
-        navigableAction = ScreenNavigableAction.Closeable { onEventSent(QrCodeScanContract.Event.OnBack) }
+        navigableAction = ScreenNavigableAction.Closeable(testTag = QrCodeScanTestTags.CLOSE_BUTTON) {
+            onEventSent(QrCodeScanContract.Event.OnBack)
+        }
     ) {
         Column(
             modifier = Modifier.fillMaxSize(),
@@ -277,7 +280,10 @@ private fun PermissionRationaleScreen(openAppSettings: () -> Unit) {
             text = stringResource(R.string.qr_code_screen_label_camera_permission_not_granted),
             style = MaterialTheme.typography.h6
         )
-        WrapButton(onClick = openAppSettings) {
+        WrapButton(
+            onClick = openAppSettings,
+            modifier = Modifier.testTag(QrCodeScanTestTags.OPEN_APP_SETTINGS_BUTTON)
+        ) {
             Text(text = stringResource(R.string.qr_code_screen_label_button_open_app_settings))
         }
     }

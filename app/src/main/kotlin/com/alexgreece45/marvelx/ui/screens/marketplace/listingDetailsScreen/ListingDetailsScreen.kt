@@ -30,6 +30,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -124,6 +125,7 @@ internal fun ListingDetailsScreen(
     ContentScreen(
         isLoading = state.isLoading,
         navigableAction = ScreenNavigableAction.Backable(
+            testTag = ListingDetailsTestTags.BACK_BUTTON,
             onBack = {
                 onEvent(
                     ListingDetailsContract.Event.OnBack
@@ -173,6 +175,7 @@ internal fun ListingDetailsScreen(
                 GenericErrorScreen(
                     errorMessage = stringResource(R.string.screen_listing_details_error_loading_listing),
                     modifier = Modifier.fillMaxSize(),
+                    buttonTestTag = ListingDetailsTestTags.ERROR_RETRY_BUTTON,
                     onErrorButtonClick = { onEvent(ListingDetailsContract.Event.OnErrorRetryButtonClicked) }
                 )
                 return@ContentScreen
@@ -286,6 +289,7 @@ private fun ListingView(
                             statusLabel
                         ),
                         textStyle = LocalTextStyle.current,
+                        modifier = Modifier.testTag(ListingDetailsTestTags.ORDER_ITEM_STATUS_LINK),
                         clickableStrings = listOf(
                             ClickableString(
                                 text = stringResource(if (listing.canEdit) R.string.screen_listing_details_seller_status_container_body_clickable else R.string.screen_listing_details_buyer_status_container_body_clickable),
@@ -389,7 +393,9 @@ private fun ListingDetailsSection(listingDetails: ListingDetailsDomain) {
 @Composable
 private fun SellerInfoSection(profileImageUrl: String, fullName: String, onClick: () -> Unit) {
     Row(
-        modifier = Modifier.clickableNoRipple(onClick = onClick),
+        modifier = Modifier
+            .testTag(ListingDetailsTestTags.SELLER_INFO_SECTION)
+            .clickableNoRipple(onClick = onClick),
         horizontalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -684,6 +690,7 @@ private fun getToolbarActions(
                         contentDescription = R.string.screen_listing_details_toolbar_action_label_edit_listing,
                         enabled = isListingActive
                     ),
+                    testTag = ListingDetailsTestTags.EDIT_BUTTON,
                     onClick = { onToolbarActionButtonEvent(ListingDetailsContract.Event.ToolbarActionButton.OnEditClicked) }
                 )
             )
@@ -700,6 +707,7 @@ private fun getToolbarActions(
                             contentDescription = R.string.screen_listing_details_toolbar_action_label_unfavorite_listing,
                             tint = MaterialTheme.customColors.genericRed
                         ),
+                        testTag = ListingDetailsTestTags.FAVORITE_BUTTON,
                         onClick = { onToolbarActionButtonEvent(ListingDetailsContract.Event.ToolbarActionButton.OnFavoriteClicked) }
                     )
                 )
@@ -712,6 +720,7 @@ private fun getToolbarActions(
                             iconResource = R.drawable.ic_favorite_empty,
                             contentDescription = R.string.screen_listing_details_toolbar_action_label_favorite_listing
                         ),
+                        testTag = ListingDetailsTestTags.FAVORITE_BUTTON,
                         onClick = { onToolbarActionButtonEvent(ListingDetailsContract.Event.ToolbarActionButton.OnFavoriteClicked) }
                     )
                 )
@@ -727,6 +736,7 @@ private fun getToolbarActions(
                     contentDescription = R.string.screen_listing_details_toolbar_action_label_share_listing,
                     enabled = isListingActive
                 ),
+                testTag = ListingDetailsTestTags.SHARE_BUTTON,
                 onClick = { onToolbarActionButtonEvent(ListingDetailsContract.Event.ToolbarActionButton.OnShareClicked) }
             )
         )
@@ -758,7 +768,9 @@ private fun StickyBottomButton(
             if (canEdit) return
             WrapButton(
                 onClick = onClick,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag(ListingDetailsTestTags.STICKY_BOTTOM_BUTTON),
                 enabled = !buttonLoading,
                 colors = buttonColors
             ) {
@@ -776,7 +788,9 @@ private fun StickyBottomButton(
         ListingStatusUi.Reserved, ListingStatusUi.Sold -> {
             WrapButton(
                 onClick = onClick,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag(ListingDetailsTestTags.STICKY_BOTTOM_BUTTON),
                 colors = buttonColors
             ) {
                 Text(text = stringResource(if (canEdit) R.string.screen_listing_details_sticky_bottom_button_manage_order_item else R.string.screen_listing_details_sticky_bottom_button_view_order_item_details))

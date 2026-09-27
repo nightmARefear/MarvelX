@@ -41,6 +41,7 @@ import androidx.compose.ui.platform.LocalAutofillManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentType
@@ -116,7 +117,7 @@ fun LoginScreen(
 
     ContentScreen(
         isLoading = state.isLoading,
-        navigableAction = ScreenNavigableAction.Backable {
+        navigableAction = ScreenNavigableAction.Backable(testTag = LoginTestTags.BACK_BUTTON) {
             onEventSent(LoginEvent.OnBack)
         },
         onBack = {
@@ -146,7 +147,9 @@ fun LoginScreen(
                             }
                         )
                     ),
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag(LoginTestTags.SIGNUP_TEXT)
                 )
             }
         }
@@ -164,7 +167,8 @@ fun LoginScreen(
                 },
                 modifier = Modifier
                     .semantics { contentType = ContentType.EmailAddress }
-                    .fillMaxWidth(),
+                    .fillMaxWidth()
+                    .testTag(LoginTestTags.EMAIL_TEXT_FIELD),
                 label = stringResource(R.string.generic_label_email),
                 leadingIcon = {
                     Icon(
@@ -196,7 +200,8 @@ fun LoginScreen(
                 },
                 modifier = Modifier
                     .semantics { contentType = ContentType.Password }
-                    .fillMaxWidth(),
+                    .fillMaxWidth()
+                    .testTag(LoginTestTags.PASSWORD_TEXT_FIELD),
                 label = stringResource(R.string.generic_label_password),
                 leadingIcon = {
                     Icon(
@@ -205,7 +210,10 @@ fun LoginScreen(
                     )
                 },
                 trailingIcon = {
-                    IconButton(onClick = { onEventSent(LoginEvent.OnPasswordVisibilityIconClick) }) {
+                    IconButton(
+                        onClick = { onEventSent(LoginEvent.OnPasswordVisibilityIconClick) },
+                        modifier = Modifier.testTag(LoginTestTags.PASSWORD_VISIBILITY_BUTTON)
+                    ) {
                         if (state.isPasswordVisible) {
                             Icon(
                                 imageVector = Icons.Filled.VisibilityOff,
@@ -240,7 +248,9 @@ fun LoginScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Row(
-                    modifier = Modifier.clickableNoRipple { onEventSent(LoginEvent.OnRememberMeCheckboxClick) },
+                    modifier = Modifier
+                        .testTag(LoginTestTags.REMEMBER_ME_CHECKBOX)
+                        .clickableNoRipple { onEventSent(LoginEvent.OnRememberMeCheckboxClick) },
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Checkbox(
@@ -255,7 +265,8 @@ fun LoginScreen(
                 }
 
                 TextButton(
-                    onClick = { onEventSent(LoginEvent.OnForgotPasswordButtonClick) }
+                    onClick = { onEventSent(LoginEvent.OnForgotPasswordButtonClick) },
+                    modifier = Modifier.testTag(LoginTestTags.FORGOT_PASSWORD_BUTTON)
                 ) {
                     Text(
                         text = stringResource(R.string.login_screen_forgot_password_button),
@@ -268,7 +279,9 @@ fun LoginScreen(
             // Login button.
             WrapButton(
                 onClick = { onEventSent(LoginEvent.OnLoginButtonClick) },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag(LoginTestTags.SUBMIT_BUTTON),
                 enabled = state.isLoginButtonEnabled
             ) {
                 Text(
@@ -373,7 +386,9 @@ private fun LoginWithGoogle(onLoginWithGoogleResult: (LoginWithIntentWithGoogleR
                     }
                 }
             },
-            modifier = Modifier.align(Alignment.CenterHorizontally),
+            modifier = Modifier
+                .align(Alignment.CenterHorizontally)
+                .testTag(LoginTestTags.GOOGLE_SIGN_IN_BUTTON),
             shape = RoundedCornerShape(25.dp),
             border = BorderStroke(lineWidth, MaterialTheme.colors.primary)
         ) {

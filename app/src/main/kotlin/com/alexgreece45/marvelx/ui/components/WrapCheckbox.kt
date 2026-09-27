@@ -15,10 +15,11 @@ fun WrapCheckbox(
     label: String,
     checked: Boolean,
     onCheckedChange: () -> Unit,
-    enabled: Boolean = true
+    enabled: Boolean = true,
+    modifier: Modifier = Modifier
 ) {
     Row(
-        modifier = Modifier.clickableNoRipple(role = Role.Checkbox, onClick = onCheckedChange),
+        modifier = modifier.clickableNoRipple(role = Role.Checkbox, onClick = onCheckedChange),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Checkbox(

@@ -39,6 +39,7 @@ import com.alexgreece45.marvelx.util.extensions.throttledClickable
  * @param throttleClicks Whether the clicks are executed with a delay in-between them.
  * @param showRipple Whether to show the ripple effect when the header is clicked.
  * @param enabled Whether this section is clickable. To define an action, set [onClick].
+ * @param modifier The modifier to be applied to the header container (e.g., a test tag).
  * @param onClick Call to be invoked when the header is clicked. If [enabled] is `false`, then this
  * will have no effect.
  */
@@ -54,15 +55,16 @@ fun SectionHeader(
     throttleClicks: Boolean = true,
     showRipple: Boolean = true,
     enabled: Boolean = true,
+    modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
     val localView = LocalView.current
     val headerShape = MaterialTheme.shapes.medium
 
     /**
-     * The modifier to apply to the header.
+     * The click modifier to apply to the header.
      */
-    val modifier = remember {
+    val clickModifier = remember {
         mutableStateOf(
             if (throttleClicks) {
                 Modifier.throttledClickable(
@@ -87,7 +89,8 @@ fun SectionHeader(
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .then(modifier.value),
+            .then(modifier)
+            .then(clickModifier.value),
         shape = headerShape,
         color = backgroundColor
     ) {

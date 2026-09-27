@@ -25,6 +25,7 @@ import androidx.compose.ui.autofill.ContentType
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentType
 import androidx.compose.ui.semantics.semantics
@@ -83,7 +84,10 @@ internal fun SignUpScreen(
 
     ContentScreen(
         isLoading = state.isLoading,
-        navigableAction = ScreenNavigableAction.Backable(onBack = { onEvent(SignupEvent.OnBack) }),
+        navigableAction = ScreenNavigableAction.Backable(
+            testTag = SignupTestTags.BACK_BUTTON,
+            onBack = { onEvent(SignupEvent.OnBack) }
+        ),
         onBack = { onEvent(SignupEvent.OnBack) },
         showToolbar = true,
         toolbarTitle = stringResource(R.string.sign_up_screen_toolbar_title)
@@ -117,7 +121,9 @@ internal fun SignUpScreen(
                     onValueChange = { newValue ->
                         onEvent(SignupEvent.FieldValueChange.FirstName(firstName = newValue))
                     },
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier
+                        .weight(1f)
+                        .testTag(SignupTestTags.FIRST_NAME_TEXT_FIELD),
                     label = stringResource(R.string.generic_label_first_name),
                     errorText = state.firstNameValidationResult.messages.firstOrNull()
                         .orEmpty(),
@@ -139,7 +145,9 @@ internal fun SignUpScreen(
                     onValueChange = { newValue ->
                         onEvent(SignupEvent.FieldValueChange.LastName(lastName = newValue))
                     },
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier
+                        .weight(1f)
+                        .testTag(SignupTestTags.LAST_NAME_TEXT_FIELD),
                     label = stringResource(R.string.generic_label_last_name),
                     errorText = state.lastNameValidationResult.messages.firstOrNull()
                         .orEmpty(),
@@ -160,14 +168,18 @@ internal fun SignUpScreen(
             ExposedDropdownMenu(
                 label = stringResource(R.string.generic_label_gender),
                 expanded = state.isGenderDropdownMenuVisible,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag(SignupTestTags.GENDER_DROPDOWN),
                 value = state.gender?.label?.let { stringResource(it) },
                 onDismissRequest = { onEvent(SignupEvent.GenderDropdownMenu.OnDismiss) },
                 onExpandedChange = { onEvent(SignupEvent.GenderDropdownMenu.OnClick) }
             ) {
                 Gender.asList().forEach { gender ->
                     DropdownMenuItem(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag(SignupTestTags.genderOption(gender.key)),
                         onClick = {
                             onEvent(
                                 SignupEvent.FieldValueChange.GenderDropDown(
@@ -196,7 +208,8 @@ internal fun SignUpScreen(
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .semantics { contentType = ContentType.EmailAddress },
+                    .semantics { contentType = ContentType.EmailAddress }
+                    .testTag(SignupTestTags.EMAIL_TEXT_FIELD),
                 label = stringResource(R.string.generic_label_email),
                 errorText = state.emailValidationResult.messages.firstOrNull().orEmpty(),
                 isError = !state.emailValidationResult.isValid &&
@@ -224,10 +237,14 @@ internal fun SignUpScreen(
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .semantics { contentType = ContentType.NewPassword },
+                    .semantics { contentType = ContentType.NewPassword }
+                    .testTag(SignupTestTags.PASSWORD_TEXT_FIELD),
                 label = stringResource(R.string.generic_label_password),
                 trailingIcon = {
-                    IconButton(onClick = { onEvent(SignupEvent.OnPasswordVisibilityIconClick) }) {
+                    IconButton(
+                        onClick = { onEvent(SignupEvent.OnPasswordVisibilityIconClick) },
+                        modifier = Modifier.testTag(SignupTestTags.PASSWORD_VISIBILITY_BUTTON)
+                    ) {
                         if (state.isPasswordVisible) {
                             Icon(
                                 imageVector = Icons.Filled.VisibilityOff,
@@ -257,7 +274,9 @@ internal fun SignUpScreen(
 
             // Signup button
             WrapButton(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag(SignupTestTags.SUBMIT_BUTTON),
                 enabled = state.signupButton,
                 onClick = { onEvent(SignupEvent.OnSignupButtonClick) }
             ) {

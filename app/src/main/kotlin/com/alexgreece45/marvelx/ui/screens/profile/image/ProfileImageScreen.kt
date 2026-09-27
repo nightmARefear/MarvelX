@@ -53,6 +53,7 @@ fun ProfileImageScreen(
         isLoading = state.isLoading,
         showToolbar = true,
         navigableAction = ScreenNavigableAction.Closeable(
+            testTag = ProfileImageTestTags.CLOSE_BUTTON,
             onClose = {
                 onEventSent(
                     ProfileImageContract.Event.OnBack

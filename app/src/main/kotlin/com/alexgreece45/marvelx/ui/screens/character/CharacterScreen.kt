@@ -31,6 +31,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -82,7 +83,7 @@ fun CharacterScreen(
 
     ContentScreen(
         isLoading = state.isLoading,
-        navigableAction = ScreenNavigableAction.Backable {
+        navigableAction = ScreenNavigableAction.Backable(testTag = CharacterTestTags.BACK_BUTTON) {
             onEventSent(CharacterEvent.OnBackClick)
         },
         showToolbar = true,
@@ -109,7 +110,8 @@ fun CharacterScreen(
                                 tint = MaterialTheme.customColors.genericRed
                             )
                         }
-                    }
+                    },
+                    testTag = CharacterTestTags.FAVORITE_BUTTON
                 ) {
                     onEventSent(CharacterEvent.OnFavoriteClick)
                 }
@@ -124,6 +126,7 @@ fun CharacterScreen(
                 item {
                     LazyItemContentErrorScreen(
                         errorMessage = error.errorMessage,
+                        retryTestTag = CharacterTestTags.ERROR_RETRY_BUTTON,
                         onRetryClick = { error.onRetryClick.invoke() })
                 }
                 return@LazyColumn
@@ -145,10 +148,12 @@ fun CharacterScreen(
                         title = stringResource(R.string.character_screen_row_comic_toolbar_title),
                         items = state.comics,
                         itemKey = { comic -> comic.id },
+                        arrowRightTestTag = CharacterTestTags.ALL_COMICS_BUTTON,
                         onArrowRightClick = { onEventSent(CharacterEvent.OnArrowRightClick) }
                     ) { comic ->
                         ComicItem(
                             comic = comic,
+                            testTag = CharacterTestTags.comicItem(comic.id),
                             onClick = {
                                 onEventSent(
                                     CharacterEvent.OnComicClick(
@@ -216,6 +221,7 @@ fun <T> LazyRowTemplate(
     title: String,
     items: List<T>,
     itemKey: ((item: T) -> Any)? = null,
+    arrowRightTestTag: String? = null,
     onArrowRightClick: () -> Unit,
     content: @Composable (T) -> Unit,
 ) {
@@ -230,7 +236,8 @@ fun <T> LazyRowTemplate(
         )
 
         IconButton(
-            onClick = onArrowRightClick
+            onClick = onArrowRightClick,
+            modifier = arrowRightTestTag?.let { Modifier.testTag(it) } ?: Modifier
         ) {
             Icon(
                 painter = painterResource(R.drawable.ic_arrow_right),
@@ -254,6 +261,7 @@ fun <T> LazyRowTemplate(
 private fun ComicItem(
     backgroundColor: Color = Color.Transparent,
     comic: ComicDomain,
+    testTag: String,
     onClick: () -> Unit
 ) {
     Box(
@@ -265,6 +273,7 @@ private fun ComicItem(
                 .width(120.dp)
                 .aspectRatio(ratio = 0.66f)
                 .clip(RoundedCornerShape(SPACING_SMALL.dp))
+                .testTag(testTag)
                 .clickable {
                     onClick()
                 },

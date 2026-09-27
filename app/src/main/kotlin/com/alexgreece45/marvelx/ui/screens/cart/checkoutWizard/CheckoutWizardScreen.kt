@@ -15,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -82,6 +83,7 @@ internal fun CheckoutWizardScreen(
         navigableAction = when (state.wizardStep) {
             CheckoutWizardStep.SHIPPING_DETAILS -> {
                 ScreenNavigableAction.Closeable(
+                    testTag = CheckoutWizardTestTags.CLOSE_BUTTON,
                     onClose = {
                         onEvent(CheckoutWizardContract.Event.OnCloseButtonClicked)
                     }
@@ -91,6 +93,7 @@ internal fun CheckoutWizardScreen(
             CheckoutWizardStep.PAYMENT_DETAILS,
             CheckoutWizardStep.OVERVIEW -> {
                 ScreenNavigableAction.Backable(
+                    testTag = CheckoutWizardTestTags.BACK_BUTTON,
                     onBack = {
                         onEvent(CheckoutWizardContract.Event.OnBackButtonClicked)
                     }
@@ -108,7 +111,8 @@ internal fun CheckoutWizardScreen(
                     onClick = { onEvent(CheckoutWizardContract.Event.OnStickyBottomButtonClicked) },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(DEFAULT_SCREEN_PADDING),
+                        .padding(DEFAULT_SCREEN_PADDING)
+                        .testTag(CheckoutWizardTestTags.NEXT_BUTTON),
                     enabled = state.stickyBottomButtonEnabled
                 ) {
                     Text(text = stringResource(R.string.screen_checkout_wizard_sticky_bottom_button_next))

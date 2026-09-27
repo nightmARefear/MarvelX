@@ -19,6 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
@@ -78,6 +79,7 @@ internal fun InboxScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(paddingValues),
+                    buttonTestTag = InboxTestTags.ERROR_RETRY_BUTTON,
                     onErrorButtonClick = { onEvent(InboxContract.Event.OnErrorButtonClicked) }
                 )
             }
@@ -94,6 +96,7 @@ internal fun InboxScreen(
                             modifier = Modifier
                                 .fillMaxSize()
                                 .padding(paddingValues),
+                            buttonTestTag = InboxTestTags.EMPTY_INBOX_REFRESH_BUTTON,
                             onButtonClick = { onEvent(InboxContract.Event.OnRefresh) }
                         )
                     } else {
@@ -136,6 +139,7 @@ private fun ConversationRow(
             R.string.screen_inbox_content_description_avatar,
             conversation.participant.fullName
         ),
+        modifier = Modifier.testTag(InboxTestTags.conversationRow(conversation.conversationId)),
         onClick = onClick
     ) {
         Column(

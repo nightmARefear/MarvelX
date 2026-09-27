@@ -27,6 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
@@ -102,7 +103,7 @@ fun AllCharacterComicsScreen(
     ) {
         ContentScreen(
             isLoading = state.isLoading,
-            navigableAction = ScreenNavigableAction.Backable {
+            navigableAction = ScreenNavigableAction.Backable(testTag = AllCharacterComicsTestTags.BACK_BUTTON) {
                 onEventSent(
                     AllCharacterComicsEvent.OnBackClick
                 )
@@ -119,7 +120,10 @@ fun AllCharacterComicsScreen(
             ) {
                 state.error?.let {
                     item {
-                        LazyItemContentErrorScreen(errorMessage = it.errorMessage) {
+                        LazyItemContentErrorScreen(
+                            errorMessage = it.errorMessage,
+                            retryTestTag = AllCharacterComicsTestTags.ERROR_RETRY_BUTTON
+                        ) {
                             it.onRetryClick()
                         }
                     }
@@ -127,7 +131,10 @@ fun AllCharacterComicsScreen(
 
                 if (!state.hasInternetConnection) {
                     item {
-                        LazyItemContentErrorScreen(errorMessage = stringResource(R.string.no_internet_connection_error_message)) {
+                        LazyItemContentErrorScreen(
+                            errorMessage = stringResource(R.string.no_internet_connection_error_message),
+                            retryTestTag = AllCharacterComicsTestTags.NO_INTERNET_RETRY_BUTTON
+                        ) {
                             onEventSent(AllCharacterComicsEvent.Init(characterId = characterId))
                         }
                     }
@@ -143,6 +150,7 @@ fun AllCharacterComicsScreen(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
+                            .testTag(AllCharacterComicsTestTags.SORT_DROPDOWN)
                             // Disables the on tap ripple effect for both single and long clicks. It also removes the background color.
                             .clickable(
                                 interactionSource = remember { MutableInteractionSource() },
@@ -174,7 +182,10 @@ fun AllCharacterComicsScreen(
                         comicDomain.id
                     }
                 ) { index, comicDomain ->
-                    ComicItem(comic = comicDomain) {
+                    ComicItem(
+                        comic = comicDomain,
+                        testTag = AllCharacterComicsTestTags.comicItem(comicDomain.id)
+                    ) {
                         onEventSent(AllCharacterComicsEvent.OnComicClick(comicId = comicDomain.id))
                     }
 
@@ -189,6 +200,7 @@ fun AllCharacterComicsScreen(
 @Composable
 private fun ComicItem(
     comic: ComicDomain,
+    testTag: String,
     onClick: () -> Unit
 ) {
     val context = LocalContext.current
@@ -196,6 +208,7 @@ private fun ComicItem(
     Card(
         modifier = Modifier
             .fillMaxWidth()
+            .testTag(testTag)
             .clickable(onClick = onClick),
     ) {
         Row(

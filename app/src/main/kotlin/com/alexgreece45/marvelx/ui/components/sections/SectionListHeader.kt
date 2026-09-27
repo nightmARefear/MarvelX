@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -48,6 +49,7 @@ fun SectionListHeader(
                         NavigateIcon()
                     }
                 },
+                modifier = sectionHeaderData.testTag?.let { Modifier.testTag(it) } ?: Modifier,
                 onClick = sectionHeaderData.onClick
             )
         }

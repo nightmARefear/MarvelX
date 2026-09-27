@@ -37,6 +37,7 @@ import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -240,6 +241,7 @@ fun ProfileScreen(
                         iconResource = R.drawable.ic_settings,
                         contentDescription = R.string.content_description_settings,
                     ),
+                    testTag = ProfileTestTags.SETTINGS_BUTTON,
                     onClick = {
                         onEventSent(ProfileContract.Event.OnSettingsIconButtonClicked)
                     }
@@ -351,9 +353,15 @@ private fun CroppedImage(
         isLoading = isLoading,
         showToolbar = true,
         toolbarTitle = stringResource(R.string.profile_screen_cropped_cropped_image_toolbar_title),
-        navigableAction = ScreenNavigableAction.Closeable(onClose = onCloseClicked),
+        navigableAction = ScreenNavigableAction.Closeable(
+            testTag = ProfileTestTags.CROPPED_IMAGE_CLOSE_BUTTON,
+            onClose = onCloseClicked
+        ),
         toolbarActionsContent = {
-            WrapTextButton(onClick = onSaveClicked) {
+            WrapTextButton(
+                onClick = onSaveClicked,
+                modifier = Modifier.testTag(ProfileTestTags.CROPPED_IMAGE_SAVE_BUTTON)
+            ) {
                 Text(
                     text = stringResource(R.string.profile_screen_cropped_cropped_image_label_button_save),
                     style = MaterialTheme.typography.h6
@@ -397,11 +405,13 @@ private fun ProfileBanner(
     ) {
         // Profile image.
         Box(
-            modifier = Modifier.throttledClickable(
-                view = LocalView.current,
-                showRipple = false,
-                onClick = { onProfileImageEventSent(ProfileContract.Event.ProfileImage.OnClicked) }
-            )
+            modifier = Modifier
+                .testTag(ProfileTestTags.PROFILE_IMAGE)
+                .throttledClickable(
+                    view = LocalView.current,
+                    showRipple = false,
+                    onClick = { onProfileImageEventSent(ProfileContract.Event.ProfileImage.OnClicked) }
+                )
         ) {
             // TODO: Reload image after profile image upload.
             WrapAsyncImage(
@@ -449,11 +459,13 @@ private fun ProfileBanner(
 
         // See your profile text button.
         Row(
-            modifier = Modifier.throttledClickable(
-                view = LocalView.current,
-                onClick = onSeeYourProfileClicked,
-                showRipple = false
-            ),
+            modifier = Modifier
+                .testTag(ProfileTestTags.SEE_YOUR_PROFILE_BUTTON)
+                .throttledClickable(
+                    view = LocalView.current,
+                    onClick = onSeeYourProfileClicked,
+                    showRipple = false
+                ),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center
         ) {

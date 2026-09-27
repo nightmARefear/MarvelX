@@ -37,11 +37,13 @@ fun LoadingChip(
     isLoading: Boolean,
     colors: ChipColors,
     leadingIconData: IconData,
+    modifier: Modifier = Modifier,
 ) {
     WrapChip(
         onClick = {
             if (!isLoading) onClick()
         },
+        modifier = modifier,
         colors = colors,
         leadingIcon = {
             if (isLoading) {

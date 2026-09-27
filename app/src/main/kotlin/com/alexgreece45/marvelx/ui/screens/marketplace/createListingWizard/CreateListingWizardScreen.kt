@@ -8,6 +8,7 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alexgreece45.marvelx.R
@@ -72,6 +73,7 @@ internal fun CreateListingWizardScreen(
             CreateListingWizardStep.ADVANCED_DETAILS,
             CreateListingWizardStep.OVERVIEW -> {
                 Backable(
+                    testTag = CreateListingWizardTestTags.BACK_BUTTON,
                     onBack = {
                         onEvent(CreateListingWizardContract.Event.OnBackButtonClicked)
                     }
@@ -87,7 +89,9 @@ internal fun CreateListingWizardScreen(
         stickyBottom = {
             WrapButton(
                 onClick = { onEvent(CreateListingWizardContract.Event.OnStickyBottomButtonClicked) },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag(CreateListingWizardTestTags.STICKY_BOTTOM_BUTTON),
                 enabled = state.isStickyBottomButtonEnabled
             ) {
                 Text(

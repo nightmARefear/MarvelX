@@ -13,6 +13,7 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -55,6 +56,7 @@ internal fun EditProfileDetailsScreen(
     ContentScreen(
         isLoading = state.isLoading,
         navigableAction = ScreenNavigableAction.Backable(
+            testTag = EditProfileDetailsTestTags.BACK_BUTTON,
             onBack = {
                 onEventSent(
                     EditProfileDetailsContract.Event.OnBackClicked
@@ -71,7 +73,9 @@ internal fun EditProfileDetailsScreen(
         stickyBottom = {
             WrapButton(
                 onClick = { onEventSent(EditProfileDetailsContract.Event.OnSaveChangesButtonClicked) },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag(EditProfileDetailsTestTags.SAVE_CHANGES_BUTTON),
                 enabled = state.isSaveChangesButtonEnabled
             ) {
                 Text(
@@ -105,12 +109,16 @@ internal fun EditProfileDetailsScreen(
                     state.profileDetailsUi?.let { profileDetailsUi ->
                         ProfileDetailsItem(
                             editProfileDetailsItemUi = profileDetailsUi.firstName,
+                            fieldTestTag = EditProfileDetailsTestTags.FIRST_NAME_TEXT_FIELD,
+                            resetTestTag = EditProfileDetailsTestTags.FIRST_NAME_RESET_BUTTON,
                             onEventSent = onEventSent,
                             shimmer = state.isLoading
                         )
 
                         ProfileDetailsItem(
                             editProfileDetailsItemUi = profileDetailsUi.lastName,
+                            fieldTestTag = EditProfileDetailsTestTags.LAST_NAME_TEXT_FIELD,
+                            resetTestTag = EditProfileDetailsTestTags.LAST_NAME_RESET_BUTTON,
                             onEventSent = onEventSent,
                             shimmer = state.isLoading
                         )
@@ -118,7 +126,9 @@ internal fun EditProfileDetailsScreen(
                         ExposedDropdownMenu(
                             label = stringResource(R.string.generic_label_gender),
                             expanded = state.isGenderDropDownExpanded,
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .testTag(EditProfileDetailsTestTags.GENDER_DROPDOWN),
                             value = stringResource(profileDetailsUi.gender.currentValue.label),
                             onDismissRequest = { onEventSent(EditProfileDetailsContract.Event.GenderField.OnDismiss) },
                             onExpandedChange = { onEventSent(EditProfileDetailsContract.Event.GenderField.OnClick) },
@@ -132,7 +142,9 @@ internal fun EditProfileDetailsScreen(
                                             )
                                         )
                                     },
-                                    modifier = Modifier.fillMaxWidth()
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .testTag(EditProfileDetailsTestTags.genderOption(gender.key))
                                 ) {
                                     Text(
                                         text = stringResource(gender.label)
@@ -144,6 +156,8 @@ internal fun EditProfileDetailsScreen(
 
                         ProfileDetailsItem(
                             editProfileDetailsItemUi = profileDetailsUi.email,
+                            fieldTestTag = EditProfileDetailsTestTags.EMAIL_TEXT_FIELD,
+                            resetTestTag = EditProfileDetailsTestTags.EMAIL_RESET_BUTTON,
                             onEventSent = onEventSent,
                             shimmer = state.isLoading
                         )
@@ -174,6 +188,8 @@ internal fun EditProfileDetailsScreen(
 @Composable
 private fun <T : Any> ProfileDetailsItem(
     editProfileDetailsItemUi: EditProfileDetailsItemUi<T>,
+    fieldTestTag: String,
+    resetTestTag: String,
     onEventSent: (event: EditProfileDetailsContract.Event) -> Unit,
     shimmer: Boolean
 ) {
@@ -188,11 +204,15 @@ private fun <T : Any> ProfileDetailsItem(
         },
         modifier = Modifier
             .fillMaxWidth()
+            .testTag(fieldTestTag)
 //            .shimmer(customShimmer = shimmerInstance)
         ,
         label = stringResource(editProfileDetailsItemUi.label),
         trailingIcon = {
-            ThrottledIconButton(onClick = { onEventSent(editProfileDetailsItemUi.onResetIconClicked) }) {
+            ThrottledIconButton(
+                onClick = { onEventSent(editProfileDetailsItemUi.onResetIconClicked) },
+                modifier = Modifier.testTag(resetTestTag)
+            ) {
                 Icon(
                     painter = painterResource(R.drawable.ic_reset),
                     contentDescription = stringResource(R.string.content_description_ic_reset)

@@ -16,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -72,6 +73,7 @@ fun ProfileDetailsStatsScreen(
         isLoading = state.isLoading,
         onBack = { onEventSent(ProfileDetailsStatsContract.Event.OnBackClicked) },
         navigableAction = ScreenNavigableAction.Backable(
+            testTag = ProfileDetailsStatsTestTags.BACK_BUTTON,
             onBack = { onEventSent(ProfileDetailsStatsContract.Event.OnBackClicked) }
         ),
         showToolbar = true,
@@ -132,6 +134,7 @@ fun DataTile(profileDetailsStatsItem: ProfileDetailsStatsItem, onClicked: () -> 
     Card(
         modifier = Modifier
             .fillMaxWidth()
+            .testTag(ProfileDetailsStatsTestTags.itemTile(profileDetailsStatsItem.id))
             .clickableNoRipple(onClick = onClicked),
         shape = MaterialTheme.shapes.large
     ) {

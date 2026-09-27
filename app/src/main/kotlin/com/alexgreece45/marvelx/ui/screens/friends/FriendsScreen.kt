@@ -25,6 +25,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -78,6 +79,7 @@ fun FriendsScreen(
     ContentScreen(
         isLoading = false,
         navigableAction = ScreenNavigableAction.Backable(
+            testTag = FriendsTestTags.BACK_BUTTON,
             onBack = {
                 onEventSent(FriendsContract.Event.OnBackClicked)
             }
@@ -107,7 +109,9 @@ fun FriendsScreen(
                     Tab(
                         selected = index == state.selectedTabIndex,
                         onClick = { onEventSent(FriendsContract.Event.OnTabClicked(index)) },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag(FriendsTestTags.tab(index))
                     ) {
                         Row(
                             modifier = Modifier
@@ -168,7 +172,10 @@ fun FriendsScreen(
                                 subtitle = error.subtitle
                             )
 
-                            WrapOutlinedButton(onClick = error.primaryButtonOnClicked) {
+                            WrapOutlinedButton(
+                                onClick = error.primaryButtonOnClicked,
+                                modifier = Modifier.testTag(FriendsTestTags.ERROR_RETRY_BUTTON)
+                            ) {
                                 Text(
                                     text = stringResource(R.string.generic_retry_button)
                                 )
@@ -186,6 +193,7 @@ fun FriendsScreen(
                                 key = { it.userId.value }
                             ) { friend ->
                                 FriendTile(
+                                    userId = friend.userId.value,
                                     fullName = friend.fullName,
                                     profileImageUrl = friend.profileImageUrl,
                                     onClick = {
@@ -213,6 +221,7 @@ fun FriendsScreen(
                                 key = { it.userId.value }
                             ) { incomingFriendRequest ->
                                 IncomingFriendRequestTile(
+                                    userId = incomingFriendRequest.userId.value,
                                     fullName = incomingFriendRequest.fullName,
                                     profileImageUrl = incomingFriendRequest.profileImageUrl,
                                     receivedAt = incomingFriendRequest.receivedAtFormatted,
@@ -248,6 +257,7 @@ fun FriendsScreen(
                                 key = { it.userId.value }
                             ) { blockedUser ->
                                 BlockTile(
+                                    userId = blockedUser.userId.value,
                                     fullName = blockedUser.fullName,
                                     profileImageUrl = blockedUser.profileImageUrl,
                                     onUnblockClicked = {
@@ -341,11 +351,12 @@ private fun GenericTile(
     fullName: String,
     profileImageUrl: String,
     profileImageSize: Dp = ConstantsUi.GENERIC_IMAGE_TILE_SIZE,
+    modifier: Modifier = Modifier,
     onClick: (() -> Unit)?,
     content: @Composable () -> Unit
 ) {
     Card(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .clickableNoRipple(onClick = onClick ?: {}, enabled = onClick != null),
         shape = MaterialTheme.shapes.large
@@ -395,6 +406,7 @@ private fun FullName(fullName: String, modifier: Modifier = Modifier) {
  */
 @Composable
 private fun FriendTile(
+    userId: Any,
     fullName: String,
     profileImageUrl: String,
     onClick: () -> Unit,
@@ -403,6 +415,7 @@ private fun FriendTile(
     GenericTile(
         fullName = fullName,
         profileImageUrl = profileImageUrl,
+        modifier = Modifier.testTag(FriendsTestTags.friendTile(userId)),
         onClick = onClick
     ) {
         Row(
@@ -417,6 +430,7 @@ private fun FriendTile(
 
             WrapButton(
                 onClick = onRemoveClicked,
+                modifier = Modifier.testTag(FriendsTestTags.removeFriendButton(userId)),
                 colors = ButtonDefaults.buttonColors(
                     contentColor = MaterialTheme.customColors.buttonContentWhite,
                     backgroundColor = MaterialTheme.customColors.buttonBackgroundNegative
@@ -430,6 +444,7 @@ private fun FriendTile(
 
 @Composable
 private fun IncomingFriendRequestTile(
+    userId: Any,
     fullName: String,
     profileImageUrl: String,
     receivedAt: String,
@@ -441,6 +456,7 @@ private fun IncomingFriendRequestTile(
         fullName = fullName,
         profileImageUrl = profileImageUrl,
         profileImageSize = (ConstantsUi.GENERIC_IMAGE_TILE_SIZE.value * 1.5).dp,
+        modifier = Modifier.testTag(FriendsTestTags.requestTile(userId)),
         onClick = onClick
     ) {
         Column(
@@ -470,7 +486,9 @@ private fun IncomingFriendRequestTile(
             ) {
                 WrapButton(
                     onClick = onAcceptClicked,
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier
+                        .weight(1f)
+                        .testTag(FriendsTestTags.acceptRequestButton(userId)),
                     colors = ButtonDefaults.buttonColors(
                         contentColor = MaterialTheme.customColors.buttonContentWhite,
                         backgroundColor = MaterialTheme.customColors.buttonBackgroundPositive
@@ -484,7 +502,9 @@ private fun IncomingFriendRequestTile(
 
                 WrapButton(
                     onClick = onDeclineClicked,
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier
+                        .weight(1f)
+                        .testTag(FriendsTestTags.declineRequestButton(userId)),
                     colors = ButtonDefaults.buttonColors(
                         contentColor = MaterialTheme.customColors.buttonContentWhite,
                         backgroundColor = MaterialTheme.customColors.buttonBackgroundNegative
@@ -502,6 +522,7 @@ private fun IncomingFriendRequestTile(
 
 @Composable
 private fun BlockTile(
+    userId: Any,
     fullName: String,
     profileImageUrl: String,
     onUnblockClicked: () -> Unit
@@ -523,6 +544,7 @@ private fun BlockTile(
 
             WrapButton(
                 onClick = onUnblockClicked,
+                modifier = Modifier.testTag(FriendsTestTags.unblockButton(userId))
             ) {
                 Text(text = stringResource(id = R.string.screen_friends_tab_blocked_button_positive))
             }

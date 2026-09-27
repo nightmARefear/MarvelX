@@ -18,6 +18,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalAutofillManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -98,7 +99,7 @@ internal fun OtpScreen(
     ContentScreen(
         isLoading = state.isLoading,
         navigableAction = if (!state.isLoading) {
-            ScreenNavigableAction.Backable {
+            ScreenNavigableAction.Backable(testTag = OtpTestTags.BACK_BUTTON) {
                 onEventSent(OtpEvent.OnBackClick)
             }
         } else ScreenNavigableAction.None,
@@ -157,7 +158,8 @@ internal fun OtpScreen(
                 OtpTextField(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .focusRequester(focusRequester),
+                        .focusRequester(focusRequester)
+                        .testTag(OtpTestTags.OTP_TEXT_FIELD),
                     enabled = state.otpFieldEnabled,
                     otp = state.otp,
                     onValueChange = { value, otpInputFilled ->
@@ -199,6 +201,7 @@ internal fun OtpScreen(
                     // Resend OTP button.
                     Button(
                         onClick = { onEventSent(OtpEvent.OnResendOtpButtonClick) },
+                        modifier = Modifier.testTag(OtpTestTags.RESEND_OTP_BUTTON),
                         enabled = state.isResendOtpButtonEnabled
                     ) {
                         Text(
@@ -218,7 +221,9 @@ internal fun OtpScreen(
             // "Verify" button.
             WrapButton(
                 onClick = { onEventSent(OtpEvent.OnVerifyButtonClicked) },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag(OtpTestTags.VERIFY_BUTTON),
                 enabled = state.isVerifyButtonEnabled
             ) {
                 Text(

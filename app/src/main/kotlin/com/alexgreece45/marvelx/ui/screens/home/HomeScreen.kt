@@ -27,6 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -90,14 +91,18 @@ internal fun HomeScreen(
                 verticalArrangement = Arrangement.spacedBy(SPACING_TINY.dp)
             ) {
                 WrapButton(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag(HomeTestTags.SIGNUP_BUTTON),
                     onClick = { onEventSent(HomeEvent.OnSignupButtonClicked) }
                 ) {
                     Text(text = stringResource(R.string.screen_home_signup_button))
                 }
 
                 WrapTextButton(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag(HomeTestTags.LOGIN_BUTTON),
                     onClick = { onEventSent(HomeEvent.OnLoginButtonClicked) }
                 ) {
                     Text(text = stringResource(R.string.screen_home_login_button))

@@ -22,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
@@ -71,6 +72,7 @@ fun ChangePasswordScreen(
     ContentScreen(
         isLoading = state.isLoading,
         navigableAction = ScreenNavigableAction.Backable(
+            testTag = ChangePasswordTestTags.BACK_BUTTON,
             onBack = { onEvent(ChangePasswordContract.Event.OnBackClicked) }
         ),
         onBack = { onEvent(ChangePasswordContract.Event.OnBackClicked) },
@@ -82,7 +84,9 @@ fun ChangePasswordScreen(
                     keyboardController?.hide()
                     onEvent(ChangePasswordContract.Event.OnSubmitClicked)
                 },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag(ChangePasswordTestTags.SUBMIT_BUTTON),
                 enabled = state.isSubmitEnabled
             ) {
                 Text(text = stringResource(R.string.change_password_screen_button_sticky))
@@ -107,6 +111,8 @@ fun ChangePasswordScreen(
                 label = stringResource(R.string.screen_change_password_input_label_new_password),
                 errorText = state.passwordValidation.message,
                 isVisible = state.isPasswordVisible,
+                fieldTestTag = ChangePasswordTestTags.PASSWORD_TEXT_FIELD,
+                visibilityTestTag = ChangePasswordTestTags.PASSWORD_VISIBILITY_BUTTON,
                 imeAction = ImeAction.Next,
                 onValueChange = { onEvent(ChangePasswordContract.Event.OnPasswordChanged(it)) },
                 onToggleVisibility = { onEvent(ChangePasswordContract.Event.OnTogglePasswordVisibility) }
@@ -123,6 +129,8 @@ fun ChangePasswordScreen(
                 label = stringResource(R.string.screen_change_password_input_label_confirm_password),
                 errorText = state.confirmPasswordValidation.message,
                 isVisible = state.isConfirmPasswordVisible,
+                fieldTestTag = ChangePasswordTestTags.CONFIRM_PASSWORD_TEXT_FIELD,
+                visibilityTestTag = ChangePasswordTestTags.CONFIRM_PASSWORD_VISIBILITY_BUTTON,
                 imeAction = ImeAction.Done,
                 onValueChange = { onEvent(ChangePasswordContract.Event.OnConfirmPasswordChanged(it)) },
                 onToggleVisibility = { onEvent(ChangePasswordContract.Event.OnToggleConfirmPasswordVisibility) },
@@ -153,6 +161,8 @@ private fun PasswordField(
     label: String,
     errorText: String,
     isVisible: Boolean,
+    fieldTestTag: String,
+    visibilityTestTag: String,
     imeAction: ImeAction,
     onValueChange: (String) -> Unit,
     onToggleVisibility: () -> Unit,
@@ -161,7 +171,9 @@ private fun PasswordField(
     OutlinedTextFieldValidation(
         value = value,
         onValueChange = onValueChange,
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag(fieldTestTag),
         label = label,
         errorText = errorText,
         isError = value.isNotEmpty() && errorText.isNotBlank(),
@@ -172,7 +184,10 @@ private fun PasswordField(
         ),
         keyboardActions = KeyboardActions(onDone = { onDone?.invoke() }),
         trailingIcon = {
-            WrapTextButton(onClick = onToggleVisibility) {
+            WrapTextButton(
+                onClick = onToggleVisibility,
+                modifier = Modifier.testTag(visibilityTestTag)
+            ) {
                 Text(
                     text = stringResource(
                         if (isVisible) {

@@ -21,6 +21,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -81,6 +82,7 @@ internal fun OrderItemManagementScreen(
     ContentScreen(
         isLoading = state.uiState.isLoading,
         navigableAction = ScreenNavigableAction.Backable(
+            testTag = OrderItemManagementTestTags.BACK_BUTTON,
             onBack = {
                 onEvent(OrderItemManagementContract.Event.OnBack)
             }
@@ -105,6 +107,7 @@ internal fun OrderItemManagementScreen(
                             state.orderId.value,
                             state.orderItemId.value
                         ),
+                        buttonTestTag = OrderItemManagementTestTags.ERROR_RETRY_BUTTON,
                         onErrorButtonClick = {
                             onEvent(OrderItemManagementContract.Event.OnErrorButtonClicked)
                         }
@@ -221,7 +224,9 @@ private fun MessageBuyerSection(onClick: () -> Unit) {
 
         WrapButton(
             onClick = onClick,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag(OrderItemManagementTestTags.MESSAGE_BUYER_BUTTON)
         ) {
             Icon(
                 painter = painterResource(R.drawable.ic_chat),
@@ -256,7 +261,9 @@ private fun ShippingActionSection(
 
             WrapButton(
                 onClick = onMarkAsShippedClicked,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag(OrderItemManagementTestTags.MARK_AS_SHIPPED_BUTTON)
             ) {
                 Text(text = stringResource(R.string.screen_order_item_management_button_mark_as_shipped))
             }
@@ -302,6 +309,7 @@ private fun ReturnRequestSection(
             backgroundColor = colors.backgroundColor,
             modifier = Modifier
                 .fillMaxWidth()
+                .testTag(OrderItemManagementTestTags.RETURN_CARD)
                 .clickableNoRipple(onClick = onClick),
             outlineColor = colors.outlineColor,
             icon = {

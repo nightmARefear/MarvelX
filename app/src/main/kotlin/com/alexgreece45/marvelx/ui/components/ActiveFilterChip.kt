@@ -17,6 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.res.painterResource
@@ -43,7 +44,8 @@ fun ActiveFilterChip(
     label: String,
     onRemoveClick: () -> Unit,
     modifier: Modifier = Modifier,
-    iconContentDescription: String? = null
+    iconContentDescription: String? = null,
+    removeButtonTestTag: String? = null
 ) {
     Row(
         modifier = modifier
@@ -69,6 +71,7 @@ fun ActiveFilterChip(
             contentDescription = iconContentDescription,
             modifier = Modifier
                 .size(18.dp)
+                .then(removeButtonTestTag?.let { Modifier.testTag(it) } ?: Modifier)
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = ripple(bounded = false, radius = 12.dp),

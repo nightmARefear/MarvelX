@@ -11,6 +11,7 @@ import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarNavigationPayload
 import com.alexgreece45.marvelx.core.network.managers.model.LogoutReason
 import com.alexgreece45.marvelx.ui.components.BottomBarItem
+import com.alexgreece45.marvelx.ui.components.BottomNavigationTestTags
 import com.alexgreece45.marvelx.ui.components.BottomNavigationBarData
 import com.alexgreece45.marvelx.ui.components.IconData
 import com.alexgreece45.marvelx.data.repository.chat.ChatRepository
@@ -780,7 +781,8 @@ private val rootBottomBarItem = BottomBarItem(
     iconData = IconData(
         iconResource = R.drawable.ic_marketplace,
         contentDescription = R.string.bottom_navigation_label_marketplace
-    )
+    ),
+    testTag = BottomNavigationTestTags.MARKETPLACE_ITEM
 )
 
 /**
@@ -795,7 +797,8 @@ private fun getBottomNavigationItems(unreadMessages: Int): List<BottomBarItem> =
             iconResource = R.drawable.ic_chat,
             contentDescription = R.string.bottom_navigation_label_inbox
         ),
-        badgeCount = unreadMessages
+        badgeCount = unreadMessages,
+        testTag = BottomNavigationTestTags.INBOX_ITEM
     ),
     BottomBarItem(
         route = FavoriteListingsRoute,
@@ -803,7 +806,8 @@ private fun getBottomNavigationItems(unreadMessages: Int): List<BottomBarItem> =
         iconData = IconData(
             iconResource = R.drawable.ic_favorite_filled,
             contentDescription = R.string.bottom_navigation_label_favorites
-        )
+        ),
+        testTag = BottomNavigationTestTags.FAVORITES_ITEM
     ),
     BottomBarItem(
         route = CartRoute,
@@ -811,7 +815,8 @@ private fun getBottomNavigationItems(unreadMessages: Int): List<BottomBarItem> =
         iconData = IconData(
             iconResource = R.drawable.ic_cart,
             contentDescription = R.string.bottom_navigation_label_cart
-        )
+        ),
+        testTag = BottomNavigationTestTags.CART_ITEM
     ),
     BottomBarItem(
         route = ProfileRoute(),
@@ -819,6 +824,7 @@ private fun getBottomNavigationItems(unreadMessages: Int): List<BottomBarItem> =
         iconData = IconData(
             iconResource = R.drawable.ic_person,
             contentDescription = R.string.bottom_navigation_label_profile
-        )
+        ),
+        testTag = BottomNavigationTestTags.PROFILE_ITEM
     )
 )

@@ -53,7 +53,7 @@ fun ComicScreen(
         onBack = {
             onEventSent(ComicContract.Event.OnBackClicked)
         },
-        navigableAction = ScreenNavigableAction.Backable {
+        navigableAction = ScreenNavigableAction.Backable(testTag = ComicTestTags.BACK_BUTTON) {
             onEventSent(ComicContract.Event.OnBackClicked)
         },
         showToolbar = true,

@@ -13,6 +13,7 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -67,6 +68,9 @@ internal fun CheckoutShippingDetailsScreen(
                 WizardTextInputField(
                     label = stringResource(R.string.screen_checkout_shipping_details_label_first_name),
                     placeholder = stringResource(R.string.screen_checkout_shipping_details_placeholder_first_name),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag(CheckoutShippingDetailsTestTags.FIRST_NAME_TEXT_FIELD),
                     wizardInputField = state.firstName,
                     onValueChanged = {
                         onEvent(CheckoutShippingDetailsContract.Event.OnFirstNameChanged(it))
@@ -76,6 +80,9 @@ internal fun CheckoutShippingDetailsScreen(
                 WizardTextInputField(
                     label = stringResource(R.string.screen_checkout_shipping_details_label_last_name),
                     placeholder = stringResource(R.string.screen_checkout_shipping_details_placeholder_last_name),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag(CheckoutShippingDetailsTestTags.LAST_NAME_TEXT_FIELD),
                     wizardInputField = state.lastName,
                     onValueChanged = {
                         onEvent(CheckoutShippingDetailsContract.Event.OnLastNameChanged(it))
@@ -85,6 +92,9 @@ internal fun CheckoutShippingDetailsScreen(
                 WizardTextInputField(
                     label = stringResource(R.string.screen_checkout_shipping_details_label_street_address),
                     placeholder = stringResource(R.string.screen_checkout_shipping_details_placeholder_street_address),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag(CheckoutShippingDetailsTestTags.STREET_ADDRESS_TEXT_FIELD),
                     wizardInputField = state.streetAddress,
                     onValueChanged = {
                         onEvent(CheckoutShippingDetailsContract.Event.OnStreetAddressChanged(it))
@@ -94,6 +104,9 @@ internal fun CheckoutShippingDetailsScreen(
                 WizardTextInputField(
                     label = stringResource(R.string.screen_checkout_shipping_details_label_city),
                     placeholder = stringResource(R.string.screen_checkout_shipping_details_placeholder_city),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag(CheckoutShippingDetailsTestTags.CITY_TEXT_FIELD),
                     wizardInputField = state.city,
                     onValueChanged = {
                         onEvent(CheckoutShippingDetailsContract.Event.OnCityChanged(it))
@@ -103,6 +116,9 @@ internal fun CheckoutShippingDetailsScreen(
                 WizardTextInputField(
                     label = stringResource(R.string.screen_checkout_shipping_details_label_zip_code),
                     placeholder = stringResource(R.string.screen_checkout_shipping_details_placeholder_zip_code),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag(CheckoutShippingDetailsTestTags.ZIP_CODE_TEXT_FIELD),
                     wizardInputField = state.zipCode,
                     onValueChanged = {
                         onEvent(CheckoutShippingDetailsContract.Event.OnZipCodeChanged(it))
@@ -115,7 +131,9 @@ internal fun CheckoutShippingDetailsScreen(
                 ExposedDropdownMenu(
                     label = stringResource(R.string.screen_checkout_shipping_details_label_floor_number),
                     expanded = state.floorNumber.isExpanded,
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag(CheckoutShippingDetailsTestTags.FLOOR_NUMBER_DROPDOWN),
                     placeholder = stringResource(R.string.screen_checkout_shipping_details_placeholder_floor_number),
                     value = state.floorNumber.value?.label,
                     onDismissRequest = {
@@ -127,6 +145,9 @@ internal fun CheckoutShippingDetailsScreen(
                 ) {
                     state.floorNumbers.forEach { floorNumber ->
                         DropdownMenuItem(
+                            modifier = Modifier.testTag(
+                                CheckoutShippingDetailsTestTags.floorNumberOption(floorNumber.code)
+                            ),
                             onClick = {
                                 onEvent(
                                     CheckoutShippingDetailsContract.Event.FloorNumber.OnItemSelected(
@@ -143,7 +164,9 @@ internal fun CheckoutShippingDetailsScreen(
                 ExposedDropdownMenu(
                     label = stringResource(R.string.screen_checkout_shipping_details_label_location_type),
                     expanded = state.locationType.isExpanded,
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag(CheckoutShippingDetailsTestTags.LOCATION_TYPE_DROPDOWN),
                     placeholder = stringResource(R.string.screen_checkout_shipping_details_placeholder_location_type),
                     value = state.locationType.value?.label,
                     onDismissRequest = {
@@ -155,6 +178,9 @@ internal fun CheckoutShippingDetailsScreen(
                 ) {
                     state.locationTypes.forEach { locationType ->
                         DropdownMenuItem(
+                            modifier = Modifier.testTag(
+                                CheckoutShippingDetailsTestTags.locationTypeOption(locationType.code)
+                            ),
                             onClick = {
                                 onEvent(
                                     CheckoutShippingDetailsContract.Event.LocationType.OnItemSelected(

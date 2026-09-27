@@ -24,6 +24,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -122,7 +123,9 @@ fun OrdersScreen(
                                             )
                                         )
                                     },
-                                    modifier = Modifier.fillMaxWidth(),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .testTag(OrdersTestTags.VIEW_ORDER_DETAILS_BUTTON),
                                     colors = ButtonDefaults.buttonColors(
                                         backgroundColor = MaterialTheme.customColors.buttonBackgroundNegative,
                                         contentColor = MaterialTheme.customColors.buttonContentWhite
@@ -146,6 +149,7 @@ fun OrdersScreen(
         ContentScreen(
             isLoading = state.uiState is UiState.Loading,
             navigableAction = ScreenNavigableAction.Backable(
+                testTag = OrdersTestTags.BACK_BUTTON,
                 onBack = {
                     onEvent(OrdersContract.Event.OnBackClicked)
                 }
@@ -166,6 +170,7 @@ fun OrdersScreen(
                         item(key = "errorView") {
                             LazyItemContentErrorScreen(
                                 errorMessage = stringResource(R.string.screen_orders_error_loading_orders),
+                                retryTestTag = OrdersTestTags.ERROR_RETRY_BUTTON,
                                 onRetryClick = {
                                     onEvent(OrdersContract.Event.OnErrorButtonClicked)
                                 }
@@ -178,6 +183,7 @@ fun OrdersScreen(
                                 GenericLazyItemInfoScreen(
                                     title = stringResource(R.string.screen_orders_empty_orders_found_title),
                                     buttonLabel = stringResource(R.string.screen_orders_empty_orders_found_button),
+                                    buttonTestTag = OrdersTestTags.EMPTY_ORDERS_BUTTON,
                                     onButtonClicked = { onEvent(OrdersContract.Event.OnEmptyOrdersButtonClicked) }
                                 )
                             }
@@ -222,7 +228,9 @@ private fun OrderCard( // TODO: Fix issue where if the data is refreshed and the
 ) {
     Card(
         onClick = onClicked,
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag(OrdersTestTags.orderCard(order.orderId))
     ) {
         Column(
             modifier = Modifier
@@ -249,6 +257,7 @@ private fun OrderCard( // TODO: Fix issue where if the data is refreshed and the
 
                     WrapChip(
                         onClick = onStatusChipClicked,
+                        modifier = Modifier.testTag(OrdersTestTags.orderStatusChip(order.orderId)),
                         colors = ChipDefaults.chipColors(
                             backgroundColor = order.status.backgroundColor
                         ),

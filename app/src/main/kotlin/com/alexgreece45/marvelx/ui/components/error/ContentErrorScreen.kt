@@ -15,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -67,6 +68,7 @@ fun ContentErrorScreen(
         isLoading = false,
         navigableAction = onClose?.let {
             ScreenNavigableAction.Closeable(
+                testTag = ContentErrorTestTags.CLOSE_BUTTON,
                 onClose = onClose
             )
         } ?: ScreenNavigableAction.None,
@@ -77,7 +79,9 @@ fun ContentErrorScreen(
                     is ErrorButtonLayout.Single -> {
                         WrapButton(
                             onClick = errorButtonLayout.onPrimaryButtonClicked,
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .testTag(ContentErrorTestTags.PRIMARY_BUTTON),
                             enabled = true
                         ) {
                             Text(
@@ -91,7 +95,9 @@ fun ContentErrorScreen(
                     is ErrorButtonLayout.Double -> {
                         WrapButton(
                             onClick = errorButtonLayout.onPrimaryButtonClicked,
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .testTag(ContentErrorTestTags.PRIMARY_BUTTON),
                             enabled = true
                         ) {
                             Text(
@@ -101,7 +107,10 @@ fun ContentErrorScreen(
                             )
                         }
 
-                        WrapOutlinedButton(onClick = errorButtonLayout.onSecondaryButtonClicked) {
+                        WrapOutlinedButton(
+                            onClick = errorButtonLayout.onSecondaryButtonClicked,
+                            modifier = Modifier.testTag(ContentErrorTestTags.SECONDARY_BUTTON)
+                        ) {
                             Text(
                                 text = errorButtonLayout.secondaryButtonLabel.ifBlank {
                                     stringResource(R.string.generic_retry_button)

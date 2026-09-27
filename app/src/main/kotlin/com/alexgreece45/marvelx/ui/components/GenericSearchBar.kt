@@ -13,6 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
@@ -33,6 +34,7 @@ fun GenericSearchBar(
     modifier: Modifier = Modifier,
     backgroundColor: Color = MaterialTheme.colors.surface,
     textColor: Color = contentColorFor(backgroundColor),
+    deleteButtonTestTag: String? = null,
     onValueChange: (String) -> Unit,
     onDeleteIconClicked: () -> Unit
 ) {
@@ -61,7 +63,8 @@ fun GenericSearchBar(
             {
                 val circleBackgroundColor = MaterialTheme.colors.background
                 IconButton(
-                    onClick = onDeleteIconClicked
+                    onClick = onDeleteIconClicked,
+                    modifier = deleteButtonTestTag?.let { Modifier.testTag(it) } ?: Modifier
                 ) {
                     Icon(
                         modifier = Modifier

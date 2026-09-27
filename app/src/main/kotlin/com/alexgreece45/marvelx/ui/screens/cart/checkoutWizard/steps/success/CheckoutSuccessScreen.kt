@@ -13,6 +13,7 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -51,11 +52,14 @@ internal fun CheckoutSuccessScreen(
 
     ContentScreen(
         isLoading = state.isLoading,
-        navigableAction = ScreenNavigableAction.Closeable(onClose = {
-            onEvent(
-                CheckoutSuccessContract.Event.OnBack
-            )
-        }),
+        navigableAction = ScreenNavigableAction.Closeable(
+            testTag = CheckoutSuccessTestTags.CLOSE_BUTTON,
+            onClose = {
+                onEvent(
+                    CheckoutSuccessContract.Event.OnBack
+                )
+            }
+        ),
         onBack = { onEvent(CheckoutSuccessContract.Event.OnBack) },
         showToolbar = true,
         stickyBottom = {
@@ -64,14 +68,18 @@ internal fun CheckoutSuccessScreen(
             ) {
                 WrapOutlinedButton(
                     onClick = { onEvent(CheckoutSuccessContract.Event.OnViewOrderDetailsButtonClicked) },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag(CheckoutSuccessTestTags.VIEW_ORDER_DETAILS_BUTTON)
                 ) {
                     Text(text = stringResource(R.string.screen_checkout_success_view_order_details_button))
                 }
 
                 WrapButton(
                     onClick = { onEvent(CheckoutSuccessContract.Event.OnContinueShoppingButtonClicked) },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag(CheckoutSuccessTestTags.CONTINUE_SHOPPING_BUTTON)
                 ) {
                     Text(text = stringResource(R.string.screen_checkout_success_continue_shopping_button))
                 }
