@@ -67,12 +67,9 @@ internal class MarvelXBackendRequestTransformerImpl(
             "/api/private/marvelx/user/login",
             "/api/private/marvelx/user/post_login",
             "/api/private/marvelx/user/logout",
-            "/api/private/marvelx/user/authorize",
             "/api/private/marvelx/user/validate_otp",
             "/api/private/marvelx/user/resend_otp",
             "/api/private/marvelx/user/forgot_password/send_otp",
-            "/api/private/marvelx/user/forgot_password/validate_otp",
-            "/api/private/marvelx/user/jwt_sensitive_data",
-            "/api/private/marvelx/user/sensitive_data"
+            "/api/private/marvelx/user/forgot_password/validate_otp"
         )
 }

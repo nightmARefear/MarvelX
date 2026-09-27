@@ -18,15 +18,10 @@ import com.alexgreece45.marvelx.core.network.model.api.forgotPassword.email.Resp
 import com.alexgreece45.marvelx.core.network.model.api.forgotPassword.email.ResponseForgotPasswordValidateOtp
 import com.alexgreece45.marvelx.core.network.model.api.forgotPassword.phoneNumber.RequestForgotPasswordOtpBlockedPhoneNumber
 import com.alexgreece45.marvelx.core.network.model.api.forgotPassword.phoneNumber.ResponseForgotPasswordOtpBlockedPhoneNumber
-import com.alexgreece45.marvelx.core.network.model.api.jwtSensitiveUserData.RequestJwtSensitiveUserData
-import com.alexgreece45.marvelx.core.network.model.api.jwtSensitiveUserData.ResponseJwtSensitiveUserData
 import com.alexgreece45.marvelx.core.network.model.api.order.item.ResponseReturnPolicies
 import com.alexgreece45.marvelx.core.network.model.api.otp.OtpRequest
-import com.alexgreece45.marvelx.core.network.model.api.otp.OtpResponseSuccess
 import com.alexgreece45.marvelx.core.network.model.api.resendOtp.RequestResendOtp
 import com.alexgreece45.marvelx.core.network.model.api.resendOtp.ResponseResendOtpSuccess
-import com.alexgreece45.marvelx.core.network.model.api.sensitiveUserData.RequestSensitiveUserData
-import com.alexgreece45.marvelx.core.network.model.api.sensitiveUserData.ResponseSensitiveUserData
 import com.alexgreece45.marvelx.core.network.model.api.token.ResponseToken
 import com.alexgreece45.marvelx.core.network.model.api.user.block.ResponseBlockedUser
 import com.alexgreece45.marvelx.core.network.model.api.user.friend.ResponseFriend
@@ -259,7 +254,7 @@ internal class ApiClientImpl(
             ResponseSignup(
                 verificationStep = verificationStep,
                 userId = currentUserId,
-                tempAuthCode = "tempAuthCode"
+                tokens = TokenConstants.responseToken
             )
         )
 
@@ -271,7 +266,6 @@ internal class ApiClientImpl(
                 userId = currentUserId
             )
         )
-
 
     override suspend fun loginWithToken(): Response<ResponseLoginWithToken> =
         Response.success(
@@ -293,16 +287,6 @@ internal class ApiClientImpl(
             )
         )
 
-    override suspend fun grandNewAccessToken(
-        clientId: String,
-        codeVerifier: String,
-        code: String,
-        uri: String
-    ): Response<ResponseToken> = Response.success(
-        200,
-        TokenConstants.responseToken
-    )
-
     override suspend fun registerDevice(requestRegisterDevice: RequestRegisterDevice): ApiResult<String> =
         ApiResult.Success("")
 
@@ -312,10 +296,10 @@ internal class ApiClientImpl(
     override suspend fun logout(clientId: String, refreshToken: String): ApiResult<String> =
         ApiResult.Success("")
 
-    override suspend fun validateOtp(otpRequest: OtpRequest): Response<OtpResponseSuccess> =
+    override suspend fun validateOtp(otpRequest: OtpRequest): Response<ResponseToken> =
         Response.success(
             200,
-            OtpResponseSuccess(tempAuthCode = "")
+            TokenConstants.responseToken
         )
 
     override suspend fun resendOtp(requestResendOtp: RequestResendOtp): Response<ResponseResendOtpSuccess> =
@@ -404,25 +388,6 @@ internal class ApiClientImpl(
             body = gson.fromJson(
                 readFileContents("mock_faqs.json"),
                 ResponseFaqs::class.java
-            )
-        )
-
-    override suspend fun getJwtForSensitiveUserData(requestJwtSensitiveUserData: RequestJwtSensitiveUserData): Response<ResponseJwtSensitiveUserData> =
-        Response.success(
-            200,
-            ResponseJwtSensitiveUserData("TOKEN")
-        )
-
-    override suspend fun getSensitiveUserData(requestSensitiveUserData: RequestSensitiveUserData): Response<ResponseSensitiveUserData> =
-        Response.success(
-            200,
-            ResponseSensitiveUserData(
-                type = "email",
-                data = basicProfileDetails.email,
-                otpInterval = 300L,
-                isOtpBlocked = false,
-                isResendOtpBlocked = false,
-                otpBlockExpiresIn = null
             )
         )
 

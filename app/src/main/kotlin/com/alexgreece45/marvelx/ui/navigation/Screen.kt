@@ -1,5 +1,6 @@
 package com.alexgreece45.marvelx.ui.navigation
 
+import android.net.Uri
 import androidx.navigation.NamedNavArgument
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
@@ -147,19 +148,30 @@ sealed class Screen(
             NavItem.VerificationStep,
             NavItem.ShouldRememberUserSession,
             NavItem.RequestIdEmail,
-            NavItem.RequestIdPhoneNumber
+            NavItem.RequestIdPhoneNumber,
+            NavItem.MaskedEmail
         ),
         isIncludedInAutoLogout = false
     ) {
+        /**
+         * The [NavItem.MaskedEmail] value when there's no masked email to display.
+         */
+        const val NO_MASKED_EMAIL = "-1"
+
+        /**
+         * @param maskedEmail The email the OTP was sent to, already masked (see `EmailMasker`).
+         * Never pass the full email, as it's kept in the back stack's saved state.
+         */
         fun createNavRoute(
             userId: String? = "",
             otpFlowType: String,
             verificationStep: String,
             shouldRememberUserSession: Boolean,
             requestIdEmail: String = "-1",
-            requestIdPhoneNumber: String = "-1"
+            requestIdPhoneNumber: String = "-1",
+            maskedEmail: String? = null
         ): String =
-            "$baseRoute/$userId/$otpFlowType/$verificationStep/$shouldRememberUserSession/$requestIdEmail/$requestIdPhoneNumber"
+            "$baseRoute/$userId/$otpFlowType/$verificationStep/$shouldRememberUserSession/$requestIdEmail/$requestIdPhoneNumber/${Uri.encode(maskedEmail ?: NO_MASKED_EMAIL)}"
     }
 
     // Main screens --> Bottom Navigation
@@ -297,6 +309,7 @@ enum class NavItem(val key: String, val type: NavType<*>) {
     ShouldRememberUserSession(key = NavItemKey.shouldRememberUserSession, type = NavType.BoolType),
     RequestIdEmail(key = NavItemKey.requestIdEmail, type = NavType.StringType),
     RequestIdPhoneNumber(key = NavItemKey.requestIdPhoneNumber, type = NavType.StringType),
+    MaskedEmail(key = NavItemKey.maskedEmail, type = NavType.StringType),
     FullName(key = NavItemKey.fullName, type = NavType.StringType),
     TabIndex(key = NavItemKey.tabIndex, type = NavType.IntType),
     PreviousScreenRoute(key = NavItemKey.previousScreenRoute, type = NavType.StringType),
@@ -344,6 +357,7 @@ private object NavItemKey {
     const val shouldRememberUserSession = "shouldRememberUserSession"
     const val requestIdEmail = "requestIdEmail"
     const val requestIdPhoneNumber = "requestIdPhoneNumber"
+    const val maskedEmail = "maskedEmail"
     const val fullName = "fullName"
     const val tabIndex = "tabIndex"
     const val listingId = "listingId"

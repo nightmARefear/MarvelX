@@ -3,10 +3,10 @@ package com.alexgreece45.marvelx.data.repository
 import com.alexgreece45.marvelx.core.network.clients.ApiClient
 import com.alexgreece45.marvelx.core.network.model.api.otp.OtpRequest
 import com.alexgreece45.marvelx.core.network.model.api.otp.OtpResponseError
-import com.alexgreece45.marvelx.core.network.model.api.otp.OtpResponseSuccess
 import com.alexgreece45.marvelx.core.network.model.api.resendOtp.RequestResendOtp
 import com.alexgreece45.marvelx.core.network.model.api.resendOtp.ResponseResendOtpFailed
 import com.alexgreece45.marvelx.core.network.model.api.resendOtp.ResponseResendOtpSuccess
+import com.alexgreece45.marvelx.core.network.model.api.token.ResponseToken
 import com.google.gson.Gson
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -76,7 +76,7 @@ class OtpRepositoryImpl(
 }
 
 sealed class ValidateOtpRepositoryResponse {
-    data class Success(val response: OtpResponseSuccess?) : ValidateOtpRepositoryResponse()
+    data class Success(val response: ResponseToken?) : ValidateOtpRepositoryResponse()
     data class Failed(val otpResponseError: OtpResponseError) : ValidateOtpRepositoryResponse()
 }
 

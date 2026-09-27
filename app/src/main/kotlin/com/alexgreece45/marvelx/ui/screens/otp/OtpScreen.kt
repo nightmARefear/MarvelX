@@ -1,7 +1,5 @@
 package com.alexgreece45.marvelx.ui.screens.otp
 
-import android.net.Uri
-import androidx.browser.customtabs.CustomTabsIntent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -19,7 +17,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalAutofillManager
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -28,6 +25,7 @@ import androidx.compose.ui.unit.sp
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.common_ui.util.ObserveUiEffect
 import com.alexgreece45.marvelx.core.common.util.flows.single_observer_flow.SingleObserverFlow
+import com.alexgreece45.marvelx.domain.model_api.user.VerificationStep
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
 import com.alexgreece45.marvelx.ui.components.WrapButton
@@ -57,12 +55,12 @@ internal fun OtpScreen(
     verificationStep: String?,
     shouldRememberUserSession: Boolean?,
     requestIdEmail: String?,
-    requestIdPhoneNumber: String?
+    requestIdPhoneNumber: String?,
+    maskedEmail: String?
 ) {
     val focusRequester = remember { FocusRequester() }
     val keyboardController = LocalSoftwareKeyboardController.current
     val autofillManager = LocalAutofillManager.current
-    val context = LocalContext.current
 
     OneTimeLaunchedEffect {
         onEventSent(
@@ -72,7 +70,8 @@ internal fun OtpScreen(
                 verificationStep = verificationStep,
                 shouldRememberUserSession = shouldRememberUserSession,
                 requestIdEmail = requestIdEmail,
-                requestIdPhoneNumber = requestIdPhoneNumber
+                requestIdPhoneNumber = requestIdPhoneNumber,
+                maskedEmail = maskedEmail
             )
         )
     }
@@ -80,11 +79,6 @@ internal fun OtpScreen(
     ObserveUiEffect(flow = effect, tag = "OtpScreen") { uiEffect ->
         when (uiEffect) {
             is OtpEffect.Navigation -> onNavigationEffect(uiEffect)
-
-            OtpEffect.OnUserSensitiveDataReceived -> {
-                // Requests focus for OTP field.
-                focusRequester.requestFocus()
-            }
 
             OtpEffect.OtpFieldRequestFocus -> {
                 focusRequester.requestFocus()
@@ -97,10 +91,6 @@ internal fun OtpScreen(
 
             OtpEffect.SaveAutoFilledData -> {
                 autofillManager?.commit()
-            }
-
-            is OtpEffect.LaunchOAuthAuthorization -> {
-                CustomTabsIntent.Builder().build().launchUrl(context, Uri.parse(uiEffect.url))
             }
         }
     }
@@ -129,13 +119,26 @@ internal fun OtpScreen(
 
                 VSpacer.Large()
 
-                state.sensitiveUserData?.let { sensitiveUserData ->
-                    // Where the OTP has been sent to.
+                // Where the OTP has been sent to, in every flow. The address is shown when it's known
+                // (only for emails, as it's never passed for phone numbers).
+                val otpDestinationLabel = when (state.verificationStep) {
+                    VerificationStep.OtpEmail -> R.string.email
+                    VerificationStep.OtpPhoneNumber -> R.string.phone_number
+                    VerificationStep.None, is VerificationStep.Invalid -> null
+                }
+                otpDestinationLabel?.let {
                     Text(
-                        text = stringResource(
-                            R.string.otp_screen_input_field_label,
-                            stringResource(sensitiveUserData.otpPreferredCommunicationType.label),
-                            sensitiveUserData.maskedData
+                        text = state.maskedEmail
+                            ?.takeIf { state.verificationStep is VerificationStep.OtpEmail }
+                            ?.let { maskedEmail ->
+                                stringResource(
+                                    R.string.otp_screen_input_field_label,
+                                    stringResource(otpDestinationLabel),
+                                    maskedEmail
+                                )
+                            } ?: stringResource(
+                            R.string.otp_screen_input_field_label_without_destination,
+                            stringResource(otpDestinationLabel)
                         ),
                         textAlign = TextAlign.Center,
                         style = MaterialTheme.typography.h6.copy(fontSize = 18.sp)

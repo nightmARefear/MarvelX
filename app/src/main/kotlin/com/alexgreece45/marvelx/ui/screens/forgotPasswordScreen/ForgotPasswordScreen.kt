@@ -59,7 +59,8 @@ fun ForgotPasswordScreen(
                         otpFlowType = OtpFlowType.ForgotPassword.Email.key,
                         verificationStep = VerificationStep.OtpEmail.key,
                         shouldRememberUserSession = false,
-                        requestIdEmail = effect.requestIdEmail
+                        requestIdEmail = effect.requestIdEmail,
+                        maskedEmail = effect.maskedEmail
                     )
                 )
             }

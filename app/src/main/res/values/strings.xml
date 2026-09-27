@@ -428,6 +428,7 @@
 
     <string name="otp_screen_title">Verification Code</string>
     <string name="otp_screen_input_field_label">Enter the code that was sent to your %1$s: %2$s</string>
+    <string name="otp_screen_input_field_label_without_destination">Enter the code that was sent to your %1$s.</string>
     <string name="otp_screen_not_receive_otp_label">Didn\'t receive an OTP code?</string>
 
     <string name="otp_screen_generic_error_title">OTP Generic Error</string>

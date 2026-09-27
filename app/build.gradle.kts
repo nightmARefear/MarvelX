@@ -239,9 +239,6 @@ dependencies {
     // Bouncycastle. Contains Blake2 algorithm.
     implementation(libs.bouncycastle.bcprov)
 
-    // Custom Tabs (PKCE authorization browser redirect).
-    implementation(libs.androidx.browser)
-
     // Firebase.
     implementation(libs.androidx.credentials)
     implementation(libs.androidx.credentials.play.services.auth)

@@ -2,12 +2,9 @@ package com.alexgreece45.marvelx.ui.screens.signup
 
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.controllers.OAuthAuthorizationController
-import com.alexgreece45.marvelx.controllers.OAuthCallbackResult
 import com.alexgreece45.marvelx.core.common.dispatchers.model.DefaultDispatcher
 import com.alexgreece45.marvelx.core.network.model.api.user.signup.RequestUserSignup
 import com.alexgreece45.marvelx.data.repository.AutoLogoutRepository
-import com.alexgreece45.marvelx.domain.interactors.GrandNewAccessTokenPartialState
 import com.alexgreece45.marvelx.domain.interactors.LoginInteractor
 import com.alexgreece45.marvelx.domain.interactors.PostLoginPartialState
 import com.alexgreece45.marvelx.domain.interactors.PostLoginSession
@@ -15,12 +12,14 @@ import com.alexgreece45.marvelx.domain.interactors.RegisterInteractor
 import com.alexgreece45.marvelx.domain.interactors.SignupPartialState
 import com.alexgreece45.marvelx.domain.model_api.otp.OtpFlowType
 import com.alexgreece45.marvelx.domain.model_api.user.VerificationStep
+import com.alexgreece45.marvelx.model.model.AuthenticationTokens
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
 import com.alexgreece45.marvelx.mvi.BaseViewModel
 import com.alexgreece45.marvelx.ui.helper.FieldValidationRules
 import com.alexgreece45.marvelx.ui.model.Gender
+import com.alexgreece45.marvelx.util.EmailMasker
 import com.alexgreece45.marvelx.util.Form
 import com.alexgreece45.marvelx.util.FormValidator
 import com.alexgreece45.marvelx.util.FormsValidationResult
@@ -112,7 +111,8 @@ sealed class SignupEffect : BaseEffect {
             val userId: String,
             val otpFlowType: String = OtpFlowType.Register.key,
             val verificationStep: String,
-            val shouldRememberUserSession: Boolean
+            val shouldRememberUserSession: Boolean,
+            val maskedEmail: String?
         ) : Navigation()
     }
 
@@ -121,12 +121,6 @@ sealed class SignupEffect : BaseEffect {
     data object CloseKeyboardAndRemoveFocus : SignupEffect()
 
     data object OnDoneClick : SignupEffect()
-
-    /**
-     * Opens [url] (the OAuth 2.0 + PKCE authorization request) in a Custom Tab. The result of the
-     * flow arrives asynchronously via the app's deep link handling, not through this effect.
-     */
-    data class LaunchOAuthAuthorization(val url: String) : SignupEffect()
 }
 
 @KoinViewModel
@@ -137,8 +131,7 @@ internal class SignupViewModel(
     private val loginInteractor: LoginInteractor,
     private val fieldValidationRules: FieldValidationRules,
     @DefaultDispatcher private val defaultDispatcher: CoroutineContext,
-    private val autoLogoutRepository: AutoLogoutRepository,
-    private val oAuthAuthorizationController: OAuthAuthorizationController
+    private val autoLogoutRepository: AutoLogoutRepository
 ) : BaseViewModel<SignupEvent, SignupState, SignupEffect>() {
 
     override fun setInitialState(): SignupState =
@@ -380,6 +373,10 @@ internal class SignupViewModel(
 
             // TODO: get user's ip address, and device info.
 
+            // The email the OTP will be sent to. Captured here, as the field states get reset before
+            // navigating.
+            val email = currentState.email
+
             viewModelScope.launch {
                 registerInteractor.signup(requestUserSignup = getUserSignupRequest())
                     .collect { userPartialStatePostSignUp ->
@@ -410,9 +407,21 @@ internal class SignupViewModel(
                                         }
 
                                         VerificationStep.None -> {
+                                            // No verification step: the tokens are part of the
+                                            // signup response.
+                                            val authenticationTokens = signupResponseDomain.authenticationTokens
+                                            if (authenticationTokens == null) {
+                                                setEffect {
+                                                    SignupEffect.ShowAlertDialogError(
+                                                        errorMessage = resourceProvider.getGenericErrorMessage()
+                                                    )
+                                                }
+                                                return@collect
+                                            }
+
                                             postSuccessfulSignup(
                                                 userId = signupResponseDomain.userId,
-                                                tempAuthCode = signupResponseDomain.tempAuthCode
+                                                authenticationTokens = authenticationTokens
                                             )
                                         }
 
@@ -421,7 +430,8 @@ internal class SignupViewModel(
                                                 SignupEffect.Navigation.NavigateToOtpScreen(
                                                     userId = signupResponseDomain.userId,
                                                     verificationStep = signupResponseDomain.verificationStep.key,
-                                                    shouldRememberUserSession = true
+                                                    shouldRememberUserSession = true,
+                                                    maskedEmail = EmailMasker.mask(email)
                                                 )
                                             }
                                         }
@@ -431,7 +441,8 @@ internal class SignupViewModel(
                                                 SignupEffect.Navigation.NavigateToOtpScreen(
                                                     userId = signupResponseDomain.userId,
                                                     verificationStep = signupResponseDomain.verificationStep.key,
-                                                    shouldRememberUserSession = true
+                                                    shouldRememberUserSession = true,
+                                                    maskedEmail = EmailMasker.mask(email)
                                                 )
                                             }
                                         }
@@ -457,78 +468,33 @@ internal class SignupViewModel(
      * The operations to perform after successful signup, and when the [VerificationStep] is
      * [VerificationStep.None].
      *
-     * It retrieves the user tokens, signing data, and logins the user.
+     * It retrieves the signing data with the [authenticationTokens] from the signup response, stores
+     * the user session, and logins the user.
      */
-    private fun postSuccessfulSignup(userId: String, tempAuthCode: String) {
-        val url = oAuthAuthorizationController.buildAuthorizationUrl(tempAuthCode)
-        setEffect {
-            SignupEffect.LaunchOAuthAuthorization(url)
-        }
-
+    private fun postSuccessfulSignup(userId: String, authenticationTokens: AuthenticationTokens) {
         viewModelScope.launch {
-            when (val result = oAuthAuthorizationController.awaitCallback()) {
-                is OAuthCallbackResult.Success -> {
-                    getAccessToken(
-                        userId = userId,
-                        authCode = result.code,
-                        codeVerifier = result.codeVerifier
-                    )
-                }
+            loginInteractor.postLogin(
+                PostLoginSession.New(
+                    userId = userId,
+                    authenticationTokens = authenticationTokens
+                )
+            ).collect { postLoginPartialState ->
+                when (postLoginPartialState) {
+                    PostLoginPartialState.Success -> {
+                        // ONLY for signup, set the remember user session to `true` by default.
+                        autoLogoutRepository.setRememberUserSession(true)
 
-                is OAuthCallbackResult.ServerError,
-                OAuthCallbackResult.StateMismatch,
-                OAuthCallbackResult.Timeout,
-                OAuthCallbackResult.Cancelled -> {
-                    setEffect {
-                        SignupEffect.ShowAlertDialogError(
-                            errorMessage = resourceProvider.getGenericErrorMessage()
-                        )
+                        setEffect {
+                            SignupEffect.Navigation.NavigateToDashboardScreen
+                        }
                     }
-                }
-            }
-        }
-    }
 
-    private fun getAccessToken(userId: String, authCode: String, codeVerifier: String) {
-        viewModelScope.launch {
-            loginInteractor.grandNewAccessToken(authCode = authCode, codeVerifier = codeVerifier).collect {
-                when (it) {
-                    is GrandNewAccessTokenPartialState.Failed -> {
+                    is PostLoginPartialState.Failed -> {
                         setEffect {
                             SignupEffect.ShowAlertDialogError(
                                 errorMessage = resourceProvider.getGenericErrorMessage()
                             )
                         }
-                    }
-
-                    is GrandNewAccessTokenPartialState.Success -> {
-                        // Retrieve sign data, and store the user session.
-                        loginInteractor.postLogin(
-                            PostLoginSession.New(
-                                userId = userId,
-                                authenticationTokens = it.authenticationTokens
-                            )
-                        )
-                            .collect { postLoginPartialState ->
-                                when (postLoginPartialState) {
-                                    PostLoginPartialState.Success -> {
-                                        // ONLY for signup, set the remember user session to `true` by default.
-                                        autoLogoutRepository.setRememberUserSession(true)
-
-                                        setEffect {
-                                            SignupEffect.Navigation.NavigateToDashboardScreen
-                                        }
-                                    }
-
-                                    is PostLoginPartialState.Failed -> {
-                                        setEffect {
-                                            SignupEffect.ShowAlertDialogError(
-                                                errorMessage = resourceProvider.getGenericErrorMessage()
-                                            )
-                                        }
-                                    }
-                                }
-                            }
                     }
                 }
             }

@@ -3,32 +3,26 @@ package com.alexgreece45.marvelx.ui.screens.otp
 import androidx.core.text.isDigitsOnly
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
-import com.alexgreece45.marvelx.controllers.OAuthAuthorizationController
-import com.alexgreece45.marvelx.controllers.OAuthCallbackResult
 import com.alexgreece45.marvelx.controllers.TimerController
 import com.alexgreece45.marvelx.controllers.TimerStatus
 import com.alexgreece45.marvelx.data.repository.AutoLogoutRepository
 import com.alexgreece45.marvelx.domain.interactors.ForgotPasswordInteractor
 import com.alexgreece45.marvelx.domain.interactors.ForgotPasswordValidateOtpPartialState
-import com.alexgreece45.marvelx.domain.interactors.GetJwtForSensitiveUserDataPartialState
-import com.alexgreece45.marvelx.domain.interactors.GetSensitiveUserDataPartialState
-import com.alexgreece45.marvelx.domain.interactors.GrandNewAccessTokenPartialState
 import com.alexgreece45.marvelx.domain.interactors.LoginInteractor
 import com.alexgreece45.marvelx.domain.interactors.OtpInteractor
 import com.alexgreece45.marvelx.domain.interactors.PostLoginPartialState
 import com.alexgreece45.marvelx.domain.interactors.PostLoginSession
-import com.alexgreece45.marvelx.domain.interactors.RegisterInteractor
 import com.alexgreece45.marvelx.domain.interactors.ResendOtpPartialState
 import com.alexgreece45.marvelx.domain.interactors.ValidateOtpPartialState
 import com.alexgreece45.marvelx.domain.model_api.otp.OtpErrorCause
 import com.alexgreece45.marvelx.domain.model_api.otp.OtpFlowType
 import com.alexgreece45.marvelx.domain.model_api.resendOtp.ResendOtpErrorCause
-import com.alexgreece45.marvelx.domain.model_api.sensitiveUserData.SensitiveUserDataDomain
 import com.alexgreece45.marvelx.domain.model_api.user.VerificationStep
 import com.alexgreece45.marvelx.mvi.BaseEffect
 import com.alexgreece45.marvelx.mvi.BaseEvent
 import com.alexgreece45.marvelx.mvi.BaseState
 import com.alexgreece45.marvelx.mvi.BaseViewModel
+import com.alexgreece45.marvelx.model.model.AuthenticationTokens
 import com.alexgreece45.marvelx.ui.components.model.ErrorButtonLayout
 import com.alexgreece45.marvelx.util.FormsValidationResult
 import com.alexgreece45.marvelx.util.ResourceProvider
@@ -46,23 +40,6 @@ private sealed class OtpScreenErrorCodes(val code: String) {
         data object NullableFields : InitViewChecks("OTP_1001")
         data object InvalidOtpFlowType : InitViewChecks("OTP_1002")
         data object InvalidVerificationStep : InitViewChecks("OTP_1003")
-    }
-
-    sealed class RetrieveJwt(code: String) : OtpScreenErrorCodes(code) {
-        data object GenericError : RetrieveJwt("OTP_1004")
-    }
-
-    sealed class GetSensitiveUserData(code: String) : OtpScreenErrorCodes(code) {
-        data object GenericError : GetSensitiveUserData("OTP_1005")
-        data object OtpBlocksExpiresInNull : GetSensitiveUserData("OTP_1006")
-    }
-
-    sealed class GrandNewAccessToken(code: String) : OtpScreenErrorCodes(code) {
-        data object GenericError : GrandNewAccessToken("OTP_1007")
-    }
-
-    sealed class OAuthAuthorization(code: String) : OtpScreenErrorCodes(code) {
-        data object Cancelled : OAuthAuthorization("OTP_1012")
     }
 
     sealed class PostLogin(code: String) : OtpScreenErrorCodes(code) {
@@ -90,7 +67,12 @@ internal sealed class OtpEvent : BaseEvent {
         val verificationStep: String?,
         val shouldRememberUserSession: Boolean?,
         val requestIdEmail: String?,
-        val requestIdPhoneNumber: String?
+        val requestIdPhoneNumber: String?,
+
+        /**
+         * The (already masked) email the OTP was sent to, if known.
+         */
+        val maskedEmail: String?
     ) : OtpEvent()
 
     data class OnOtpFieldValueChange(val otp: String) : OtpEvent()
@@ -138,11 +120,15 @@ internal data class OtpState(
     val shouldRememberUserSession: Boolean = false,
 
     /**
+     * The masked email the OTP was sent to. If `null`, the address isn't known (e.g., when logging
+     * in with the stored token), or the OTP wasn't sent to an email.
+     */
+    val maskedEmail: String? = null,
+
+    /**
      * The OTP that the user has entered in the TextField.
      * */
     val otp: String = "",
-
-    val sensitiveUserData: SensitiveUserDataDomain? = null,
 
     /**
      * The amount of remaining time, as a [String], until the OTP functionality is enabled so that
@@ -181,27 +167,18 @@ internal sealed class OtpEffect : BaseEffect {
         data object NavigateToDashboardScreen : Navigation()
     }
 
-    data object OnUserSensitiveDataReceived : OtpEffect()
-
     data object SaveAutoFilledData : OtpEffect()
 
-    /**
-     * Opens [url] (the OAuth 2.0 + PKCE authorization request) in a Custom Tab. The result of the
-     * flow arrives asynchronously via the app's deep link handling, not through this effect.
-     */
-    data class LaunchOAuthAuthorization(val url: String) : OtpEffect()
 }
 
 @KoinViewModel
 internal class OtpViewModel(
     private val otpInteractor: OtpInteractor,
     private val loginInteractor: LoginInteractor,
-    private val registerInteractor: RegisterInteractor,
     private val forgotPasswordInteractor: ForgotPasswordInteractor,
     private val resourceProvider: ResourceProvider,
     private val timerController: TimerController,
     private val autoLogoutRepository: AutoLogoutRepository,
-    private val oAuthAuthorizationController: OAuthAuthorizationController,
 ) : BaseViewModel<OtpEvent, OtpState, OtpEffect>() {
 
     /**
@@ -247,12 +224,6 @@ internal class OtpViewModel(
      * ```
      */
     private var countdownJob: Job? = null
-
-    /**
-     * Tracks the coroutine suspended in [OAuthAuthorizationController.awaitCallback] so it gets
-     * cancelled (rather than leaking until its own timeout) if the screen is torn down first.
-     */
-    private var oAuthCallbackJob: Job? = null
 
     override fun setInitialState(): OtpState = OtpState(
         otpFlowType = OtpFlowType.Invalid("")
@@ -313,7 +284,8 @@ internal class OtpViewModel(
                             userId = event.userId,
                             verificationStep = finalVerificationStep,
                             otpFlowType = finalOtpFlowType,
-                            shouldRememberUserSession = event.shouldRememberUserSession
+                            shouldRememberUserSession = event.shouldRememberUserSession,
+                            maskedEmail = event.maskedEmail
                         )
                     }
 
@@ -322,7 +294,8 @@ internal class OtpViewModel(
                             verificationStep = finalVerificationStep,
                             otpFlowType = finalOtpFlowType,
                             requestIdEmail = event.requestIdEmail.orEmpty(),
-                            requestIdPhoneNumber = event.requestIdPhoneNumber.orEmpty()
+                            requestIdPhoneNumber = event.requestIdPhoneNumber.orEmpty(),
+                            maskedEmail = event.maskedEmail
                         )
                     }
 
@@ -385,7 +358,8 @@ internal class OtpViewModel(
         userId: String?,
         verificationStep: VerificationStep,
         otpFlowType: OtpFlowType,
-        shouldRememberUserSession: Boolean?
+        shouldRememberUserSession: Boolean?,
+        maskedEmail: String?
     ) {
         if (userId == null || shouldRememberUserSession == null) {
             showGenericErrorViewWithErrorCode(
@@ -395,21 +369,21 @@ internal class OtpViewModel(
             return
         }
 
+        // The OTP has already been sent by the login/signup call, so the user can enter it straight
+        // away.
         setState {
             copy(
+                isLoading = false,
                 userId = userId,
                 verificationStep = verificationStep,
                 otpFlowType = otpFlowType,
-                shouldRememberUserSession = shouldRememberUserSession
+                shouldRememberUserSession = shouldRememberUserSession,
+                maskedEmail = maskedEmail
             )
         }
-
-        // Get JWT for retrieving sensitive user data (i.e., the preferred
-        // medium of communication for the OTP).
-        retrieveJwt(
-            userId = currentState.userId,
-            verificationStep = currentState.verificationStep
-        )
+        setEffect {
+            OtpEffect.OtpFieldRequestFocus
+        }
     }
 
     /**
@@ -419,14 +393,16 @@ internal class OtpViewModel(
         verificationStep: VerificationStep,
         otpFlowType: OtpFlowType,
         requestIdEmail: String,
-        requestIdPhoneNumber: String
+        requestIdPhoneNumber: String,
+        maskedEmail: String?
     ) {
         setState {
             copy(
                 requestIdEmail = requestIdEmail,
                 requestIdPhoneNumber = requestIdPhoneNumber,
                 verificationStep = verificationStep,
-                otpFlowType = otpFlowType
+                otpFlowType = otpFlowType,
+                maskedEmail = maskedEmail
             )
         }
 
@@ -640,8 +616,7 @@ internal class OtpViewModel(
                 .collect { validateOtpPartialState ->
                     when (validateOtpPartialState) {
                         is ValidateOtpPartialState.Success -> {
-                            // Retrieve authorization code.
-                            getAuthorizationCode(validateOtpPartialState.otpDomain.tempAuthCode)
+                            completeLogin(validateOtpPartialState.authenticationTokens)
                         }
 
                         is ValidateOtpPartialState.Failed -> {
@@ -700,237 +675,38 @@ internal class OtpViewModel(
     }
 
     /**
-     * Opens the OAuth 2.0 + PKCE authorization request in a Custom Tab and suspends until the
-     * browser redirects back into the app with an authorization code (caught as a deep link).
+     * Completes the login with the [authenticationTokens] that the server returned for the
+     * validated OTP: retrieves the signing data and stores the user session, then navigates to the
+     * dashboard.
      */
-    private fun getAuthorizationCode(tempAuthCode: String) {
-        val url = oAuthAuthorizationController.buildAuthorizationUrl(tempAuthCode)
-        setEffect {
-            OtpEffect.LaunchOAuthAuthorization(url)
-        }
-
-        oAuthCallbackJob?.cancel()
-        oAuthCallbackJob = viewModelScope.launch {
-            when (val result = oAuthAuthorizationController.awaitCallback()) {
-                is OAuthCallbackResult.Success -> {
-                    grandNewAccessToken(authCode = result.code, codeVerifier = result.codeVerifier)
-                }
-
-                is OAuthCallbackResult.ServerError,
-                OAuthCallbackResult.StateMismatch,
-                OAuthCallbackResult.Timeout -> {
-                    showGenericErrorViewWithErrorCode(
-                        errorCode = OtpScreenErrorCodes.GrandNewAccessToken.GenericError,
-                        otpFlowType = OtpFlowType.Register
-                    )
-                }
-
-                // The user returned from the browser without completing the authorization.
-                OAuthCallbackResult.Cancelled -> {
-                    showGenericErrorViewWithErrorCode(
-                        errorCode = OtpScreenErrorCodes.OAuthAuthorization.Cancelled,
-                        otpFlowType = OtpFlowType.Register
-                    )
-                }
-            }
-        }
-    }
-
-    /**
-     * Retrieves the access token.
-     */
-    private fun grandNewAccessToken(authCode: String, codeVerifier: String) {
+    private fun completeLogin(authenticationTokens: AuthenticationTokens) {
         viewModelScope.launch {
-            loginInteractor.grandNewAccessToken(authCode = authCode, codeVerifier = codeVerifier)
-                .collect { accessTokenPartialState ->
-                    when (accessTokenPartialState) {
-                        is GrandNewAccessTokenPartialState.Failed -> {
-                            showGenericErrorViewWithErrorCode(
-                                errorCode = OtpScreenErrorCodes.GrandNewAccessToken.GenericError,
-                                otpFlowType = OtpFlowType.Register
-                            )
+            loginInteractor.postLogin(
+                PostLoginSession.New(
+                    userId = currentState.userId,
+                    authenticationTokens = authenticationTokens
+                )
+            ).collect { postLoginPartialState ->
+                when (postLoginPartialState) {
+                    PostLoginPartialState.Success -> {
+                        // Show autofill data save prompt (it saves the data from the login screen).
+                        setEffect {
+                            OtpEffect.SaveAutoFilledData
                         }
 
-                        is GrandNewAccessTokenPartialState.Success -> {
-                            // Token was successfully generated (in the server) and retrieved (in the client).
+                        // Save remember user session flag.
+                        autoLogoutRepository.setRememberUserSession(currentState.shouldRememberUserSession)
 
-                            // Retrieve signing data, and store the user session.
-                            loginInteractor.postLogin(
-                                PostLoginSession.New(
-                                    userId = currentState.userId,
-                                    authenticationTokens = accessTokenPartialState.authenticationTokens
-                                )
-                            )
-                                .collect { postLoginPartialState ->
-                                    when (postLoginPartialState) {
-                                        PostLoginPartialState.Success -> {
-                                            // Show autofill data save prompt (it saves the data from the login screen).
-                                            setEffect {
-                                                OtpEffect.SaveAutoFilledData
-                                            }
-
-                                            // Save remember user session flag.
-                                            autoLogoutRepository.setRememberUserSession(currentState.shouldRememberUserSession)
-
-                                            setEffect {
-                                                OtpEffect.Navigation.NavigateToDashboardScreen
-                                            }
-                                        }
-
-                                        is PostLoginPartialState.Failed -> {
-                                            showGenericErrorViewWithErrorCode(
-                                                errorCode = OtpScreenErrorCodes.PostLogin.GenericError,
-                                                otpFlowType = OtpFlowType.Register
-                                            )
-                                        }
-                                    }
-                                }
+                        setEffect {
+                            OtpEffect.Navigation.NavigateToDashboardScreen
                         }
                     }
-                }
-        }
-    }
 
-    /** Retrieves the JWT that will be used later for retrieving the user's
-     * OTP preferred medium of communication (i.e., email or phone number).
-     * This operation is required, as we are accessing sensitive user data.
-     *
-     * ### Note: The JWT is valid for a short period of time for security reasons (~1 minute).
-     */
-    private fun retrieveJwt(userId: String, verificationStep: VerificationStep) {
-        setState {
-            copy(
-                isLoading = true
-            )
-        }
-        viewModelScope.launch {
-            registerInteractor.getJwtForSensitiveUserData(
-                userId = userId,
-                verificationStep = verificationStep
-            ).collect {
-                when (it) {
-                    is GetJwtForSensitiveUserDataPartialState.Failed -> {
+                    is PostLoginPartialState.Failed -> {
                         showGenericErrorViewWithErrorCode(
-                            errorCode = OtpScreenErrorCodes.RetrieveJwt.GenericError,
+                            errorCode = OtpScreenErrorCodes.PostLogin.GenericError,
                             otpFlowType = OtpFlowType.Register
                         )
-                    }
-
-                    is GetJwtForSensitiveUserDataPartialState.Success -> {
-                        getSensitiveUserData(it.jwtSensitiveUserDataDomain.token)
-                    }
-                }
-            }
-        }
-    }
-
-    /**
-     * Retrieves the user's preferred medium of communication for sending OTPs.
-     */
-    private fun getSensitiveUserData(token: String) {
-        countdownJob?.cancel()
-        countdownJob = viewModelScope.launch {
-            loginInteractor.getSensitiveUserData(token = token).collect {
-                when (it) {
-                    is GetSensitiveUserDataPartialState.Failed -> {
-                        showGenericErrorViewWithErrorCode(
-                            errorCode = OtpScreenErrorCodes.GetSensitiveUserData.GenericError,
-                            otpFlowType = OtpFlowType.Register
-                        )
-                    }
-
-                    is GetSensitiveUserDataPartialState.Success -> {
-                        val sensitiveUserDataDomain = it.sensitiveUserDataDomain
-                        if (sensitiveUserDataDomain.isOtpBlocked.not()) {
-                            // OTP functionality isn't blocked.
-
-                            setState {
-                                copy(
-                                    isLoading = false,
-                                    sensitiveUserData = sensitiveUserDataDomain
-                                )
-                            }
-
-                            // Block "Resend OTP functionality."
-                            timerController.startCountdown(sensitiveUserDataDomain.otpInterval)
-                                .collect { timerStatus ->
-                                    when (timerStatus) {
-                                        TimerStatus.Completed -> {
-                                            setState {
-                                                copy(
-                                                    otpBlockRemainingTime = null,
-                                                    isResendOtpButtonEnabled = true
-                                                )
-                                            }
-                                            setEffect {
-                                                OtpEffect.OtpFieldRequestFocus
-                                            }
-                                        }
-
-                                        is TimerStatus.Ticking -> {
-                                            setState {
-                                                copy(
-                                                    otpBlockRemainingTime = timerStatus.remainingTime,
-                                                    isResendOtpButtonEnabled = false
-                                                )
-                                            }
-                                            setEffect {
-                                                OtpEffect.OtpFieldRequestFocus
-                                            }
-                                        }
-                                    }
-                                }
-                            return@collect
-                        }
-
-                        // OTP functionality is blocked.
-
-                        if (sensitiveUserDataDomain.otpBlockExpiresIn == null) {
-                            showGenericErrorViewWithErrorCode(
-                                errorCode = OtpScreenErrorCodes.GetSensitiveUserData.OtpBlocksExpiresInNull,
-                                otpFlowType = OtpFlowType.Register
-                            )
-                            return@collect
-                        }
-
-                        setState {
-                            copy(
-                                isLoading = false,
-                                otpFieldEnabled = !sensitiveUserDataDomain.isOtpBlocked,
-                                isResendOtpButtonEnabled = false,
-                                sensitiveUserData = it.sensitiveUserDataDomain
-                            )
-                        }
-                        timerController.startCountdown(duration = sensitiveUserDataDomain.otpBlockExpiresIn)
-                            .collect { timerStatus ->
-                                when (timerStatus) {
-                                    TimerStatus.Completed -> {
-                                        setState {
-                                            copy(
-                                                errorMessage = null,
-                                                otpBlockRemainingTime = null,
-                                                otpFieldEnabled = true,
-                                                isResendOtpButtonEnabled = true
-                                            )
-                                        }
-                                        setEffect {
-                                            OtpEffect.OtpFieldRequestFocus
-                                        }
-                                    }
-
-                                    is TimerStatus.Ticking -> {
-                                        setState {
-                                            copy(
-                                                errorMessage = resourceProvider.getString(
-                                                    OtpErrorCause.Blocked.cause,
-                                                    timerStatus.remainingTime
-                                                ),
-                                                otpBlockRemainingTime = timerStatus.remainingTime
-                                            )
-                                        }
-                                    }
-                                }
-                            }
                     }
                 }
             }

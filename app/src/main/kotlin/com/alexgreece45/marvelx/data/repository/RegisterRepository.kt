@@ -1,8 +1,6 @@
 package com.alexgreece45.marvelx.data.repository
 
 import com.alexgreece45.marvelx.core.network.clients.ApiClient
-import com.alexgreece45.marvelx.core.network.model.api.jwtSensitiveUserData.RequestJwtSensitiveUserData
-import com.alexgreece45.marvelx.core.network.model.api.jwtSensitiveUserData.ResponseJwtSensitiveUserData
 import com.alexgreece45.marvelx.core.network.model.api.user.ResponseUserError
 import com.alexgreece45.marvelx.core.network.model.api.user.login.RequestUserLogin
 import com.alexgreece45.marvelx.core.network.model.api.user.login.ResponseLogin
@@ -23,12 +21,6 @@ interface RegisterRepository {
 
     suspend fun loginWithToken(): Flow<PostLoginWithTokenRepositoryResponse>
     suspend fun postSignup(requestUserSignup: RequestUserSignup): Flow<SignupRepositoryPartialState>
-
-    /**
-     * Call that retrieves a JWT for accessing sensitive user data (i.e., email, or phone number).
-     * This call must be exclusively used in OtpViewModel.
-     */
-    suspend fun getJwtForSensitiveUserData(requestJwtSensitiveUserData: RequestJwtSensitiveUserData): Flow<GetJwtForSensitiveUserDataRepositoryResponse>
 }
 
 @Single
@@ -104,25 +96,6 @@ internal class RegisterRepositoryImpl(
                 }
             }
         }
-
-    override suspend fun getJwtForSensitiveUserData(requestJwtSensitiveUserData: RequestJwtSensitiveUserData): Flow<GetJwtForSensitiveUserDataRepositoryResponse> =
-        flow {
-            apiClient.getJwtForSensitiveUserData(requestJwtSensitiveUserData).let { response ->
-                if (response.isSuccessful) {
-                    emit(
-                        GetJwtForSensitiveUserDataRepositoryResponse.Success(
-                            response = response.body()
-                        )
-                    )
-                } else {
-                    emit(
-                        GetJwtForSensitiveUserDataRepositoryResponse.Failed(
-                            responseUserError = parseUserError(response)
-                        )
-                    )
-                }
-            }
-        }
 }
 
 sealed class LoginRepositoryResponse {
@@ -145,12 +118,4 @@ sealed class SignupRepositoryPartialState {
 
     data class Failed(val responseUserError: ResponseUserError) :
         SignupRepositoryPartialState()
-}
-
-sealed class GetJwtForSensitiveUserDataRepositoryResponse {
-    data class Success(val response: ResponseJwtSensitiveUserData?) :
-        GetJwtForSensitiveUserDataRepositoryResponse()
-
-    data class Failed(val responseUserError: ResponseUserError) :
-        GetJwtForSensitiveUserDataRepositoryResponse()
 }
