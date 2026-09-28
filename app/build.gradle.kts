@@ -50,6 +50,10 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+
+        // Feature flags, read through `ConfigFeatureFlags`. Override per build type to disable a feature there.
+        buildConfigField("boolean", "FEATURE_TRANSACTIONS_ENABLED", "true")
+        buildConfigField("boolean", "FEATURE_NOTIFICATIONS_BUTTON_ENABLED", "true")
     }
 
     buildTypes {

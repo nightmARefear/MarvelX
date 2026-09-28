@@ -6,6 +6,7 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.navOptions
+import com.alexgreece45.marvelx.configuration.ConfigFeatureFlags
 import com.alexgreece45.marvelx.domain.interactors.notification.NotificationInteractor
 import com.alexgreece45.marvelx.ui.components.BottomNavigationBarData
 import com.alexgreece45.marvelx.ui.screens.marketplace.MarketplaceScreen
@@ -58,6 +59,7 @@ internal fun NavGraphBuilder.marketplaceScreen(
             bottomNavigationBarData = bottomNavigationBarData,
             notificationsUnreadCount = koinInject<NotificationInteractor>().unreadCount
                 .collectAsStateWithLifecycle().value,
+            isNotificationsButtonEnabled = koinInject<ConfigFeatureFlags>().isNotificationsButtonEnabled,
             snackbarEvents = viewModel.snackbarEffects,
             messageBannerEvents = viewModel.messageBannerEvents
         )

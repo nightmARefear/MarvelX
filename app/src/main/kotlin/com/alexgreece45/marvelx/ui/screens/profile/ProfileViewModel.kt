@@ -8,6 +8,7 @@ import com.alexgreece45.marvelx.common_ui.imageValidator.model.ImageValidationCo
 import com.alexgreece45.marvelx.common_ui.imageValidator.model.ImageValidationError
 import com.alexgreece45.marvelx.common_ui.imageValidator.model.SingleImageValidationResult
 import com.alexgreece45.marvelx.common_ui.snackbar.delegate.SnackbarDelegate
+import com.alexgreece45.marvelx.configuration.ConfigFeatureFlags
 import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarActionData
 import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarActionType
 import com.alexgreece45.marvelx.common_ui.snackbar.model.SnackbarNavigationPayload
@@ -44,6 +45,7 @@ class ProfileViewModel(
     private val configLogic: ConfigLogic,
     private val userSessionRepository: UserSessionRepository,
     private val imageValidator: ImageValidator,
+    private val configFeatureFlags: ConfigFeatureFlags,
     snackbarDelegate: SnackbarDelegate,
 ) : BaseViewModel<ProfileContract.Event, ProfileContract.State, ProfileContract.Effect>(),
     SnackbarDelegate by snackbarDelegate {
@@ -311,7 +313,7 @@ class ProfileViewModel(
         setState {
             copy(
                 isLoading = false,
-                sections = listOf(
+                sections = listOfNotNull(
                     SectionHeaderData(
                         title = resourceProvider.getString(R.string.profile_screen_section_label_scan_qr_code),
                         iconData = IconData(
@@ -354,20 +356,22 @@ class ProfileViewModel(
                             }
                         }
                     ),
-                    SectionHeaderData(
-                        title = resourceProvider.getString(R.string.profile_screen_section_label_transactions),
-                        iconData = IconData(
-                            iconResource = UiThemeDrawable.ic_money_bag,
-                            contentDescription = R.string.screen_profile_content_description_transactions_icon
-                        ),
-                        isNavigable = true,
-                        testTag = ProfileTestTags.TRANSACTIONS_SECTION,
-                        onClick = {
-                            setEffect {
-                                ProfileContract.Effect.Navigation.NavigateToTransactionsScreen
+                    if (configFeatureFlags.isTransactionsEnabled) {
+                        SectionHeaderData(
+                            title = resourceProvider.getString(R.string.profile_screen_section_label_transactions),
+                            iconData = IconData(
+                                iconResource = UiThemeDrawable.ic_money_bag,
+                                contentDescription = R.string.screen_profile_content_description_transactions_icon
+                            ),
+                            isNavigable = true,
+                            testTag = ProfileTestTags.TRANSACTIONS_SECTION,
+                            onClick = {
+                                setEffect {
+                                    ProfileContract.Effect.Navigation.NavigateToTransactionsScreen
+                                }
                             }
-                        }
-                    ),
+                        )
+                    } else null,
                     SectionHeaderData(
                         title = resourceProvider.getString(R.string.profile_screen_section_label_my_listings),
                         iconData = IconData(

@@ -187,6 +187,7 @@ internal fun MarketplaceScreen(
     snackbarEvents: SingleObserverFlow<SnackbarEvent>,
     messageBannerEvents: SingleObserverFlow<MessageBannerEvent>,
     notificationsUnreadCount: Int = 0,
+    isNotificationsButtonEnabled: Boolean = true,
 ) {
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
@@ -331,7 +332,7 @@ internal fun MarketplaceScreen(
             ),
             showToolbar = true,
             toolbarTitle = stringResource(if (state.mode == MarketplaceMode.DISCOVER) R.string.screen_marketplace_discover_toolbar_title else R.string.screen_marketplace_search_toolbar_title),
-            toolbarActions = if (state.mode != MarketplaceMode.DISCOVER) null else listOf(
+            toolbarActions = if (state.mode != MarketplaceMode.DISCOVER || !isNotificationsButtonEnabled) null else listOf(
                 ToolbarAction(
                     label = stringResource(R.string.screen_marketplace_toolbar_action_notifications),
                     order = 1,
