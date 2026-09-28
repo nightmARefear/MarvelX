@@ -10,7 +10,8 @@ data class OrderItemReturnEligibilityData(
     val returnUntilDate: LocalDate,
 
     val refundUntilDate: LocalDate,
-    val refundStatus: OrderItemRefundStatus?
+    val refundStatus: OrderItemRefundStatus?,
+    val refundRequested: Boolean?
 )
 
 fun ResponseOrderItemReturnEligibility.toData(): OrderItemReturnEligibilityData =
@@ -20,5 +21,6 @@ fun ResponseOrderItemReturnEligibility.toData(): OrderItemReturnEligibilityData 
         refundUntilDate = LocalDate.parse(refundUntilDate),
         // Read from refundStatus itself: looking it up with the returnStatus key threw for "refunded" /
         // "item_replaced", which broke Tracking History for every approved return.
-        refundStatus = refundStatus?.let { key -> OrderItemRefundStatus.entries.first { it.key == key } }
+        refundStatus = refundStatus?.let { key -> OrderItemRefundStatus.entries.first { it.key == key } },
+        refundRequested = refundRequested
     )

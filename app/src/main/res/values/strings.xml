@@ -362,13 +362,6 @@
     <string name="screen_home_signup_button">Create an account</string>
     <string name="screen_home_hero_title">MarvelX</string>
     <string name="screen_home_hero_tagline">The marketplace for Marvel fans — buy, sell and trade collectibles with people who love them as much as you do.</string>
-    <string name="screen_home_features_title">Why MarvelX</string>
-    <string name="screen_home_feature_marketplace_title">A marketplace built for fans</string>
-    <string name="screen_home_feature_marketplace_description">Browse apparel, drinkware, collectibles, comics and cards listed by other collectors.</string>
-    <string name="screen_home_feature_secure_title">Secure checkout, easy returns</string>
-    <string name="screen_home_feature_secure_description">Pay safely, track every item to your door, and request a return in a couple of taps.</string>
-    <string name="screen_home_feature_chat_title">Talk to sellers directly</string>
-    <string name="screen_home_feature_chat_description">Message the seller about an order, or any collector about anything, without leaving the app.</string>
 
     // Login Screen
     <string name="login_screen_toolbar_title">Login</string>

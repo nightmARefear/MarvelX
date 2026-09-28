@@ -8,5 +8,6 @@ data class OrderItemReturnEligibilityDomain(
     val returnUntilDate: LocalDate,
 
     val refundUntilDate: LocalDate,
-    val refundStatus: OrderItemRefundStatusDomain?
+    val refundStatus: OrderItemRefundStatusDomain?,
+    val refundRequested: Boolean?
 )

@@ -250,6 +250,7 @@ internal fun OrderItemTrackingHistoryScreen(
                                         returnStatus = returnEligibility.returnStatus,
                                         refundStatus = returnEligibility.refundStatus,
                                         refundUntilDateLabel = returnEligibility.refundUntilDate.label,
+                                        refundRequested = returnEligibility.refundRequested,
                                         onReturnActionButtonClicked = {
                                             onEvent(OrderItemTrackingHistoryContract.Event.OnReturnActionButtonClicked)
                                         },
@@ -595,6 +596,7 @@ private fun PostDeliverySection(
     returnUntilDateLabel: String,
     refundStatus: OrderItemRefundStatusDomain?,
     refundUntilDateLabel: String,
+    refundRequested: Boolean?,
     onReturnActionButtonClicked: () -> Unit,
     onRefundActionButtonClicked: () -> Unit,
 ) {
@@ -604,8 +606,18 @@ private fun PostDeliverySection(
         trackingId = trackingId
     )
 
+    // Once the seller decides, show only the card for what the buyer asked for: the refund card for a refund,
+    // the return card for a replacement. A rejection sets both statuses to rejected, so it relies on
+    // refundRequested (null, from a backend without the field, falls back to the return card).
+    val isRefundOutcome = when (returnStatus) {
+        OrderItemReturnStatusDomain.REFUNDED -> true
+        OrderItemReturnStatusDomain.ITEM_REPLACED -> false
+        OrderItemReturnStatusDomain.REJECTED -> refundRequested == true
+        else -> null
+    }
+
     if (refundStatus?.isProcessingStatus() == false || refundStatus != OrderItemRefundStatusDomain.REJECTED) {
-        if (returnStatus != null) {
+        if (returnStatus != null && isRefundOutcome != true) {
             ReturnCard(
                 returnStatus = returnStatus,
                 returnUntilDateLabel = returnUntilDateLabel,
@@ -615,7 +627,7 @@ private fun PostDeliverySection(
     }
 
     if (returnStatus?.isProcessingStatus() == false || returnStatus != OrderItemReturnStatusDomain.REJECTED) {
-        if (refundStatus != null) {
+        if (refundStatus != null && isRefundOutcome != false) {
             RefundCard(
                 refundStatus = refundStatus,
                 refundUntilDateLabel = refundUntilDateLabel,
@@ -1219,7 +1231,8 @@ private fun OrderItemTrackingHistoryScreenDeliveredPreview() {
                             returnStatus = OrderItemReturnStatusDomain.AVAILABLE,
                             returnUntilDate = returnUntilDate.toLocalDate(),
                             refundStatus = OrderItemRefundStatusDomain.REJECTED,
-                            refundUntilDate = refundUntilDate.toLocalDate()
+                            refundUntilDate = refundUntilDate.toLocalDate(),
+                            refundRequested = null
                         ).toUi()
                     )
                 ),

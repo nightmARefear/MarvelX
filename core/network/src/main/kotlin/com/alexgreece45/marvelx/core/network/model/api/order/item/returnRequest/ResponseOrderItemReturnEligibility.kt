@@ -7,5 +7,8 @@ data class ResponseOrderItemReturnEligibility(
     @SerializedName("returnUntilDate") val returnUntilDate: String,
 
     @SerializedName("refundStatus") val refundStatus: String? = null,
-    @SerializedName("refundUntilDate") val refundUntilDate: String
+    @SerializedName("refundUntilDate") val refundUntilDate: String,
+
+    // Whether the buyer's return request asked for a refund (false = replacement); null when no return was requested.
+    @SerializedName("refundRequested") val refundRequested: Boolean? = null
 )

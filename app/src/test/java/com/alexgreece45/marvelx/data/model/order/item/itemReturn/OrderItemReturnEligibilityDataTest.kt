@@ -69,22 +69,47 @@ class OrderItemReturnEligibilityDataTest {
         assertEquals(expected(returnStatus = null, refundStatus = null), result)
     }
 
+    @Test
+    fun `GIVEN a rejected refund request WHEN toData THEN refundRequested is kept`() {
+        // GIVEN
+        val response = response(returnStatus = "rejected", refundStatus = "rejected", refundRequested = true)
+
+        // WHEN
+        val result = response.toData()
+
+        // THEN
+        assertEquals(
+            expected(
+                returnStatus = OrderItemReturnStatus.REJECTED,
+                refundStatus = OrderItemRefundStatus.REJECTED,
+                refundRequested = true
+            ),
+            result
+        )
+    }
+
     // Helpers.
 
-    private fun response(returnStatus: String?, refundStatus: String?) =
+    private fun response(returnStatus: String?, refundStatus: String?, refundRequested: Boolean? = null) =
         ResponseOrderItemReturnEligibility(
             returnStatus = returnStatus,
             returnUntilDate = TestConstants.RETURN_UNTIL_DATE,
             refundStatus = refundStatus,
-            refundUntilDate = TestConstants.REFUND_UNTIL_DATE
+            refundUntilDate = TestConstants.REFUND_UNTIL_DATE,
+            refundRequested = refundRequested
         )
 
-    private fun expected(returnStatus: OrderItemReturnStatus?, refundStatus: OrderItemRefundStatus?) =
+    private fun expected(
+        returnStatus: OrderItemReturnStatus?,
+        refundStatus: OrderItemRefundStatus?,
+        refundRequested: Boolean? = null
+    ) =
         OrderItemReturnEligibilityData(
             returnStatus = returnStatus,
             returnUntilDate = LocalDate.parse(TestConstants.RETURN_UNTIL_DATE),
             refundUntilDate = LocalDate.parse(TestConstants.REFUND_UNTIL_DATE),
-            refundStatus = refundStatus
+            refundStatus = refundStatus,
+            refundRequested = refundRequested
         )
 
     private object TestConstants {

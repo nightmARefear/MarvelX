@@ -9,5 +9,6 @@ fun OrderItemReturnEligibilityData.toDomain(): OrderItemReturnEligibilityDomain 
         returnStatus = returnStatus?.toDomain(),
         returnUntilDate = returnUntilDate,
         refundUntilDate = refundUntilDate,
-        refundStatus = refundStatus?.toDomain()
+        refundStatus = refundStatus?.toDomain(),
+        refundRequested = refundRequested
     )

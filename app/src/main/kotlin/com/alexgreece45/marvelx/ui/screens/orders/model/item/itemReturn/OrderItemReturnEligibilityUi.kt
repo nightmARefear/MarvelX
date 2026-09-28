@@ -12,7 +12,9 @@ data class OrderItemReturnEligibilityUi(
     val returnUntilDate: LocalDateUi,
 
     val refundStatus: OrderItemRefundStatusDomain?,
-    val refundUntilDate: LocalDateUi
+    val refundUntilDate: LocalDateUi,
+
+    val refundRequested: Boolean?
 ) {
     val isRequestRefundAvailable: Boolean get() = refundStatus == OrderItemRefundStatusDomain.AVAILABLE
 }
@@ -28,5 +30,6 @@ fun OrderItemReturnEligibilityDomain.toUi(): OrderItemReturnEligibilityUi =
         refundUntilDate = LocalDateUi(
             value = refundUntilDate,
             label = refundUntilDate.defaultFormat()
-        )
+        ),
+        refundRequested = refundRequested
     )
