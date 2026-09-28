@@ -39,6 +39,8 @@
 
     <string name="screen_listing_details_success_adding_to_cart">Successfully added to cart</string>
     <string name="screen_listing_details_success_removing_from_cart">Successfully removed from cart</string>
+    <string name="screen_listing_details_success_adding_to_favorites">Successfully added to favorites</string>
+    <string name="screen_listing_details_success_removing_from_favorites">Successfully removed from favorites</string>
 
     <string name="screen_listing_details_error_loading_listing">An error occurred whilst loading this listing.</string>
     <string name="screen_listing_details_error_adding_to_favorites">An error occurred whilst adding this listing to your favorites.</string>

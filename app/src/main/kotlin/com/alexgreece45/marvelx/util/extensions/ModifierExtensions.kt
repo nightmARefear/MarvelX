@@ -127,7 +127,7 @@ fun Modifier.throttledClickable(
             role = if (isIcon) role ?: Role.Button else role,
             onClick = {
                 val currentTimeMillis = System.currentTimeMillis()
-                if (currentTimeMillis - lastClickedMillis.load() > THROTTLE_CLICKABLE_DEFAULT_DELAY) {
+                if (currentTimeMillis - lastClickedMillis.load() > delay) {
                     lastClickedMillis.store(currentTimeMillis)
                     onClick()
                 }

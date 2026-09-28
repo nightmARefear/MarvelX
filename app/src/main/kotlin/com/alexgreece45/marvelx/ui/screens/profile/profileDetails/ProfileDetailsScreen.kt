@@ -68,10 +68,10 @@ import com.alexgreece45.marvelx.ui.components.WrapAsyncImage
 import com.alexgreece45.marvelx.ui.components.WrapHorizontalDivider
 import com.alexgreece45.marvelx.ui.components.WrapModalBottomSheetLayout
 import com.alexgreece45.marvelx.ui.components.chips.AddFriendChip
-import com.alexgreece45.marvelx.ui.components.chips.MessageChip
 import com.alexgreece45.marvelx.ui.components.chips.CancelRequestChip
 import com.alexgreece45.marvelx.ui.components.chips.FriendsChip
 import com.alexgreece45.marvelx.ui.components.chips.IncomingFriendRequestChip
+import com.alexgreece45.marvelx.ui.components.chips.MessageChip
 import com.alexgreece45.marvelx.ui.components.enforceMaxBrightness
 import com.alexgreece45.marvelx.ui.components.error.ContentErrorScreen
 import com.alexgreece45.marvelx.ui.components.modalBottomSheetContents.ModalBottomSheetContentItems
@@ -410,45 +410,61 @@ internal fun ProfileDetailsScreen(
                             if (profileDetails.isDifferentUser) {
                                 WrapHorizontalDivider()
 
-                                MessageChip(
-                                    onClick = { onEventSent(ProfileDetailsContract.Event.ProfileBanner.OnMessageClicked) },
-                                    modifier = Modifier.testTag(ProfileDetailsTestTags.MESSAGE_CHIP)
-                                )
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    when (profileDetails.relationshipStatus) {
+                                        null -> {}
 
-                                when (profileDetails.relationshipStatus) {
-                                    null -> {}
+                                        RelationshipStatusDomain.None -> {
+                                            AddFriendChip(
+                                                onClick = { onEventSent(ProfileDetailsContract.Event.ProfileBanner.OnRelationshipStatusChipClicked) },
+                                                isLoading = state.isRelationshipStatusChipLoading,
+                                                modifier = Modifier
+                                                    .weight(1f)
+                                                    .testTag(ProfileDetailsTestTags.RELATIONSHIP_STATUS_CHIP)
+                                            )
+                                        }
 
-                                    RelationshipStatusDomain.None -> {
-                                        AddFriendChip(
-                                            onClick = { onEventSent(ProfileDetailsContract.Event.ProfileBanner.OnRelationshipStatusChipClicked) },
-                                            isLoading = state.isRelationshipStatusChipLoading,
-                                            modifier = Modifier.testTag(ProfileDetailsTestTags.RELATIONSHIP_STATUS_CHIP)
-                                        )
+                                        RelationshipStatusDomain.PendingFriendRequestSender -> {
+                                            CancelRequestChip(
+                                                onClick = { onEventSent(ProfileDetailsContract.Event.ProfileBanner.OnRelationshipStatusChipClicked) },
+                                                isLoading = state.isRelationshipStatusChipLoading,
+                                                modifier = Modifier
+                                                    .weight(1f)
+                                                    .testTag(ProfileDetailsTestTags.RELATIONSHIP_STATUS_CHIP)
+                                            )
+                                        }
+
+                                        RelationshipStatusDomain.PendingFriendRequestReceiver -> {
+                                            IncomingFriendRequestChip(
+                                                onClick = { onEventSent(ProfileDetailsContract.Event.ProfileBanner.OnRelationshipStatusChipClicked) },
+                                                isLoading = state.isRelationshipStatusChipLoading,
+                                                modifier = Modifier
+                                                    .weight(1f)
+                                                    .testTag(ProfileDetailsTestTags.RELATIONSHIP_STATUS_CHIP)
+                                            )
+                                        }
+
+                                        RelationshipStatusDomain.Friends -> {
+                                            FriendsChip(
+                                                onClick = { onEventSent(ProfileDetailsContract.Event.ProfileBanner.OnRelationshipStatusChipClicked) },
+                                                isLoading = state.isRelationshipStatusChipLoading,
+                                                modifier = Modifier
+                                                    .weight(1f)
+                                                    .testTag(ProfileDetailsTestTags.RELATIONSHIP_STATUS_CHIP)
+                                            )
+                                        }
                                     }
 
-                                    RelationshipStatusDomain.PendingFriendRequestSender -> {
-                                        CancelRequestChip(
-                                            onClick = { onEventSent(ProfileDetailsContract.Event.ProfileBanner.OnRelationshipStatusChipClicked) },
-                                            isLoading = state.isRelationshipStatusChipLoading,
-                                            modifier = Modifier.testTag(ProfileDetailsTestTags.RELATIONSHIP_STATUS_CHIP)
-                                        )
-                                    }
-
-                                    RelationshipStatusDomain.PendingFriendRequestReceiver -> {
-                                        IncomingFriendRequestChip(
-                                            onClick = { onEventSent(ProfileDetailsContract.Event.ProfileBanner.OnRelationshipStatusChipClicked) },
-                                            isLoading = state.isRelationshipStatusChipLoading,
-                                            modifier = Modifier.testTag(ProfileDetailsTestTags.RELATIONSHIP_STATUS_CHIP)
-                                        )
-                                    }
-
-                                    RelationshipStatusDomain.Friends -> {
-                                        FriendsChip(
-                                            onClick = { onEventSent(ProfileDetailsContract.Event.ProfileBanner.OnRelationshipStatusChipClicked) },
-                                            isLoading = state.isRelationshipStatusChipLoading,
-                                            modifier = Modifier.testTag(ProfileDetailsTestTags.RELATIONSHIP_STATUS_CHIP)
-                                        )
-                                    }
+                                    MessageChip(
+                                        onClick = { onEventSent(ProfileDetailsContract.Event.ProfileBanner.OnMessageClicked) },
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .testTag(ProfileDetailsTestTags.MESSAGE_CHIP)
+                                    )
                                 }
                             }
                         }

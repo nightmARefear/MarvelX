@@ -29,16 +29,22 @@ import com.alexgreece45.marvelx.core.network.model.order.item.OrderItemReturnSta
 import com.alexgreece45.marvelx.core.network.model.order.item.OrderItemStatus
 import com.alexgreece45.marvelx.core.network.model.order.item.refund.OrderItemRefundStatus
 import com.alexgreece45.marvelx.core.network.utils.MultipartBodyUtils
+import kotlinx.coroutines.delay
 import okhttp3.MultipartBody
 import org.koin.core.annotation.Single
 import java.math.BigDecimal
 import java.math.RoundingMode
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.random.Random
 import kotlin.random.nextInt
 import kotlin.random.nextLong
+import kotlin.time.Duration.Companion.seconds
 
 @Single
 internal class OrderClientImpl : OrderClient {
+
+    // Remembers "Mark as Shipped" so a re-fetched order item stays shipped.
+    private val shippedOrderItemIds: MutableSet<String> = ConcurrentHashMap.newKeySet()
 
     override suspend fun getOrders(): ApiResult<List<ResponseOrderPreview>> {
         return ApiResult.Success(
@@ -160,7 +166,22 @@ internal class OrderClientImpl : OrderClient {
         orderId: String,
         orderItemId: String
     ): ApiResult<ResponseOrderItem> {
-        return OrderClientConstants.getOrderItemDetails(orderItemId = orderItemId)
+        val orderItem = OrderClientConstants.getOrderItemDetails(orderItemId = orderItemId).body
+        return ApiResult.Success(
+            if (orderItemId in shippedOrderItemIds) orderItem.copy(status = OrderItemStatus.Shipped.code) else orderItem
+        )
+    }
+
+    override suspend fun markOrderItemAsShipped(
+        orderId: String,
+        orderItemId: String
+    ): ApiResult<ResponseOrderItem> {
+        delay(1.seconds)
+        // Mirrors the backend's 409: only a `processing` item can be shipped.
+        if (!shippedOrderItemIds.add(orderItemId)) {
+            return ApiResult.Failed("Order item $orderItemId is not in processing status.")
+        }
+        return getOrderItemDetails(orderId = orderId, orderItemId = orderItemId)
     }
 
     override suspend fun getOrderItemTrackingHistory(

@@ -20,6 +20,11 @@ interface OrderClient {
         orderItemId: String
     ): ApiResult<ResponseOrderItem>
 
+    suspend fun markOrderItemAsShipped(
+        orderId: String,
+        orderItemId: String
+    ): ApiResult<ResponseOrderItem>
+
     suspend fun getOrderItemTrackingHistory(
         orderId: String,
         orderItemId: String

@@ -221,8 +221,8 @@ sealed class Screen(
         baseRoute = "profileImageScreen",
         navArgs = listOf(NavItem.ProfileImageUrl)
     ) {
-        fun createNavRoute(userId: String): String =
-            "$baseRoute/$userId"
+        fun createNavRoute(profileImageUrl: String): String =
+            "$baseRoute/$profileImageUrl"
     }
 
     /**

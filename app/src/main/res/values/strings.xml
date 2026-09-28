@@ -701,6 +701,7 @@
     <string name="screen_order_item_management_status_courier_managed_description">This item has already been dispatched. The courier reports every status from here on.</string>
 
     <string name="screen_order_item_management_toast_message_status_updated">Successfully updated the order item status</string>
+    <string name="screen_order_item_management_toast_message_error_marking_as_shipped">Couldn\'t mark the item as shipped. Please try again.</string>
 
     <string name="screen_order_item_management_error_label_fetching_data">An error occurred whilst loading the details for the order %1$s and item %2$s.</string>
 

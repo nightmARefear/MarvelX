@@ -27,6 +27,7 @@ import okhttp3.MultipartBody
 import org.koin.core.annotation.Single
 import java.time.Instant
 import java.time.LocalDate
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.random.Random
 import kotlin.random.nextInt
 import kotlin.time.Duration.Companion.milliseconds
@@ -36,6 +37,10 @@ import kotlin.time.Duration.Companion.seconds
 internal class ListingClientImpl(
     private val listingService: ListingService
 ) : ListingClient {
+
+    // Remembers favorite/cart toggles so a re-fetched listing keeps them instead of re-rolling.
+    private val favoriteStates = ConcurrentHashMap<String, Boolean>()
+    private val cartStates = ConcurrentHashMap<String, Boolean>()
 
     override suspend fun getListingCategories(): ApiResult<List<ResponseListingCategory>> {
         return ApiResult.Success(
@@ -755,8 +760,8 @@ internal class ListingClientImpl(
                 finalSale = Random.nextBoolean(),
                 postedAt = DateUtil.getUTCInstant().toString(),
                 updatedAt = null,
-                favorite = Random.nextBoolean(),
-                cart = Random.nextBoolean()
+                favorite = favoriteStates.getOrPut(listingId) { Random.nextBoolean() },
+                cart = cartStates.getOrPut(listingId) { Random.nextBoolean() }
             )
         )
     }
@@ -1034,11 +1039,13 @@ internal class ListingClientImpl(
 
     override suspend fun addToFavorites(listingId: String): ApiResult<String> {
         delay(1.5.seconds)
+        favoriteStates[listingId] = true
         return ApiResult.Success("")
     }
 
     override suspend fun removeFromFavorites(listingId: String): ApiResult<String> {
         delay(1.5.seconds)
+        favoriteStates[listingId] = false
         return ApiResult.Success("")
     }
 
@@ -1081,11 +1088,13 @@ internal class ListingClientImpl(
 
     override suspend fun addCartItem(listingId: String): ApiResult<String> {
         delay(1.5.seconds)
+        cartStates[listingId] = true
         return ApiResult.Success("")
     }
 
     override suspend fun deleteCartItem(listingId: String): ApiResult<String> {
         delay(1.5.seconds)
+        cartStates[listingId] = false
         return ApiResult.Success("")
     }
 

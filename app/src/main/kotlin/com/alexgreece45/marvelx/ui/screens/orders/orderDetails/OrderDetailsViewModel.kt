@@ -17,7 +17,6 @@ import com.alexgreece45.marvelx.ui.screens.orders.orderDetails.model.OrderDetail
 import com.alexgreece45.marvelx.ui.screens.orders.orderDetails.model.OrderDetailsContract
 import com.alexgreece45.marvelx.ui.screens.orders.orderDetails.navigation.OrderDetailsRoute
 import com.alexgreece45.marvelx.util.ResourceProvider
-import com.alexgreece45.marvelx.util.extensions.toSafeUrlEncoding
 import com.alexgreece45.marvelx.util.extensions.toUrlEncoding
 import kotlinx.coroutines.launch
 import org.koin.android.annotation.KoinViewModel
@@ -90,7 +89,7 @@ internal class OrderDetailsViewModel(
                     orderId = currentState.orderId.value,
                     orderItemId = orderItemId.value,
                     orderItemTitle = title,
-                    orderItemCoverImageUrl = coverImageUrl.toSafeUrlEncoding(""),
+                    orderItemCoverImageUrl = coverImageUrl,
                     orderItemPriceLabel = price.label,
                     sellerUserId = sellerUserId
                 )

@@ -24,6 +24,11 @@ interface OrderInteractor {
         orderItemId: OrderId
     ): InteractorPartialState<OrderItemDomain>
 
+    suspend fun markOrderItemAsShipped(
+        orderId: OrderId,
+        orderItemId: OrderId
+    ): InteractorPartialState<OrderItemDomain>
+
     suspend fun getOrderItemTrackingHistory(
         orderId: OrderIdDomain,
         orderItemId: OrderIdDomain
@@ -60,6 +65,16 @@ internal class OrderInteractorImpl(
     ): InteractorPartialState<OrderItemDomain> {
         return handleRepositoryResultNoFlow(
             repositoryResult = orderRepository.getOrderItemDetails(orderId, orderItemId),
+            transformation = { this.toDomain() }
+        )
+    }
+
+    override suspend fun markOrderItemAsShipped(
+        orderId: OrderId,
+        orderItemId: OrderId
+    ): InteractorPartialState<OrderItemDomain> {
+        return handleRepositoryResultNoFlow(
+            repositoryResult = orderRepository.markOrderItemAsShipped(orderId, orderItemId),
             transformation = { this.toDomain() }
         )
     }

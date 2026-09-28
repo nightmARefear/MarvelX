@@ -145,6 +145,7 @@ internal fun ListingDetailsScreen(
                     listingStatus = status,
                     canEditListing = canEdit,
                     isListingFavorite = favorite,
+                    isFavoriteButtonLoading = state.isFavoriteButtonLoading,
                     onToolbarActionButtonEvent = onEvent
                 )
             }
@@ -675,6 +676,7 @@ private fun getToolbarActions(
     listingStatus: ListingStatusUi,
     canEditListing: Boolean,
     isListingFavorite: Boolean,
+    isFavoriteButtonLoading: Boolean,
     onToolbarActionButtonEvent: (ListingDetailsContract.Event.ToolbarActionButton) -> Unit
 ): List<ToolbarAction> {
     val isListingActive = listingStatus == ListingStatusUi.Active
@@ -705,7 +707,8 @@ private fun getToolbarActions(
                         iconData = IconData(
                             iconResource = R.drawable.ic_favorite_filled,
                             contentDescription = R.string.screen_listing_details_toolbar_action_label_unfavorite_listing,
-                            tint = MaterialTheme.customColors.genericRed
+                            tint = MaterialTheme.customColors.genericRed,
+                            enabled = !isFavoriteButtonLoading
                         ),
                         testTag = ListingDetailsTestTags.FAVORITE_BUTTON,
                         onClick = { onToolbarActionButtonEvent(ListingDetailsContract.Event.ToolbarActionButton.OnFavoriteClicked) }
@@ -718,7 +721,8 @@ private fun getToolbarActions(
                         order = 1,
                         iconData = IconData(
                             iconResource = R.drawable.ic_favorite_empty,
-                            contentDescription = R.string.screen_listing_details_toolbar_action_label_favorite_listing
+                            contentDescription = R.string.screen_listing_details_toolbar_action_label_favorite_listing,
+                            enabled = !isFavoriteButtonLoading
                         ),
                         testTag = ListingDetailsTestTags.FAVORITE_BUTTON,
                         onClick = { onToolbarActionButtonEvent(ListingDetailsContract.Event.ToolbarActionButton.OnFavoriteClicked) }

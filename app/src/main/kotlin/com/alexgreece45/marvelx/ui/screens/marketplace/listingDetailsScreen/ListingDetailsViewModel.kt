@@ -132,15 +132,17 @@ internal class ListingDetailsViewModel(
             )
         }
         viewModelScope.launch {
+            // Update the current listing, not the snapshot, so changes made during the call survive.
             if (listing.favorite) {
                 val wasRemoved = listingInteractor.removeFromFavorites(listing.listingId)
                 if (wasRemoved) {
                     setState {
                         copy(
                             isFavoriteButtonLoading = false,
-                            listing = listing.copy(favorite = false)
+                            listing = this.listing?.copy(favorite = false)
                         )
                     }
+                    showSuccessSnackbar(message = resourceProvider.getString(R.string.screen_listing_details_success_removing_from_favorites))
                 } else {
                     setState {
                         copy(
@@ -157,9 +159,10 @@ internal class ListingDetailsViewModel(
                     setState {
                         copy(
                             isFavoriteButtonLoading = false,
-                            listing = listing.copy(favorite = true)
+                            listing = this.listing?.copy(favorite = true)
                         )
                     }
+                    showSuccessSnackbar(message = resourceProvider.getString(R.string.screen_listing_details_success_adding_to_favorites))
                 } else {
                     setState {
                         copy(
@@ -244,12 +247,13 @@ internal class ListingDetailsViewModel(
     }
 
     private fun onStickyBottomButtonClicked() {
-        val orderItem = currentState.listingOrderItem?.copy() ?: return
         val (isInCart, listingId) = (currentState.listing?.cart to currentState.listing?.listingId)
         if (isInCart == null || listingId == null) return
 
         val orderIds = currentState.listing?.orderIds
         if (orderIds != null) {
+            // Only ordered listings have an order item; add/remove to cart must not depend on it.
+            val orderItem = currentState.listingOrderItem?.copy() ?: return
             if (currentState.listing?.canEdit == true) {
                 setEffect {
                     ListingDetailsContract.Effect.Navigation.NavigateToOrderItemManagementScreen(

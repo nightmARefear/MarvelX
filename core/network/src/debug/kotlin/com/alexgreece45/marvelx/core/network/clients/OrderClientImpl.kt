@@ -35,6 +35,18 @@ internal class OrderClientImpl(
         return executeApiServiceCall { orderService.getOrderItemDetails(orderId, orderItemId) }
     }
 
+    override suspend fun markOrderItemAsShipped(
+        orderId: String,
+        orderItemId: String
+    ): ApiResult<ResponseOrderItem> {
+        return executeApiServiceCall {
+            orderService.markOrderItemAsShipped(
+                orderId = orderId,
+                orderItemId = orderItemId
+            )
+        }
+    }
+
     override suspend fun getOrderItemTrackingHistory(
         orderId: String,
         orderItemId: String

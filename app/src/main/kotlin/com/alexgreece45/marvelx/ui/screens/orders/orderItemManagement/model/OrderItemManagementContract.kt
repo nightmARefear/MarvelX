@@ -31,6 +31,8 @@ internal interface OrderItemManagementContract {
         // Set only when a return request already exists for this order item (any status). Null
         // means either it's still loading or there is no return to display.
         val existingReturnStatus: OrderItemReturnStatusUi? = null,
+
+        val isMarkAsShippedLoading: Boolean = false,
     ) : BaseState {
         /**
          * Dispatch is the only transition the seller owns; everything past it is reported by the

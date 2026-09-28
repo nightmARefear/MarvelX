@@ -15,7 +15,6 @@ import com.alexgreece45.marvelx.domain.helper.InteractorPartialState
 import com.alexgreece45.marvelx.domain.interactors.order.OrderInteractor
 import com.alexgreece45.marvelx.mvi.BaseViewModel
 import com.alexgreece45.marvelx.ui.model_generic.UiState
-import com.alexgreece45.marvelx.ui.screens.orders.model.item.OrderItemStatusUi
 import com.alexgreece45.marvelx.ui.screens.orders.model.item.toUi
 import com.alexgreece45.marvelx.ui.screens.orders.orderItemManagement.model.OrderItemManagementContract
 import com.alexgreece45.marvelx.ui.screens.orders.orderItemManagement.navigation.OrderItemManagementRoute
@@ -109,22 +108,66 @@ internal class OrderItemManagementViewModel(
         }
     }
 
-    // TODO: Apply the new status through the backend once an order item status endpoint exists.
-    //  Until then the transition only lives in this screen's state and is lost on reload.
+    // Backend contract: docs/backend-specs/order-item-mark-as-shipped.md
     private fun onMarkAsShippedClicked() {
-        val currentData = (currentState.uiState as? UiState.Success)?.data ?: return
-        if (currentData.status != OrderItemStatusUi.Processing) return
+        if (currentState.isMarkAsShippedLoading || !currentState.isMarkAsShippedAvailable) return
 
         setState {
-            copy(uiState = UiState.Success(currentData.copy(status = OrderItemStatusUi.Shipped)))
+            copy(isMarkAsShippedLoading = true)
         }
-
-        setEffect {
-            OrderItemManagementContract.Effect.ShowToast(
-                message = resourceProvider.getString(
-                    R.string.screen_order_item_management_toast_message_status_updated
+        viewModelScope.launch {
+            when (
+                val partialState = orderInteractor.markOrderItemAsShipped(
+                    orderId = currentState.orderId,
+                    orderItemId = currentState.orderItemId
                 )
-            )
+            ) {
+                is InteractorPartialState.Success -> {
+                    val orderItemUi = partialState.data.toUi(priceScale = configPriceLogic.priceScale)
+                    setState {
+                        copy(
+                            isMarkAsShippedLoading = false,
+                            uiState = UiState.Success(orderItemUi)
+                        )
+                    }
+                    setEffect {
+                        OrderItemManagementContract.Effect.ShowToast(
+                            message = resourceProvider.getString(
+                                R.string.screen_order_item_management_toast_message_status_updated
+                            )
+                        )
+                    }
+                }
+
+                // The backend rejects anything but a `processing` item (e.g. it was already
+                // shipped by a lost earlier call), so reload to show the real status.
+                is InteractorPartialState.Failed,
+                is InteractorPartialState.Error -> {
+                    appLogger.e(loggerTag) { "Failed to mark order item as shipped for orderId=${currentState.orderId.value}, orderItemId=${currentState.orderItemId.value}" }
+                    setState {
+                        copy(isMarkAsShippedLoading = false)
+                    }
+                    setEffect {
+                        OrderItemManagementContract.Effect.ShowToast(
+                            message = resourceProvider.getString(
+                                R.string.screen_order_item_management_toast_message_error_marking_as_shipped
+                            )
+                        )
+                    }
+                    getOrderItemDetails()
+                }
+
+                InteractorPartialState.NoInternetConnection -> {
+                    setState {
+                        copy(isMarkAsShippedLoading = false)
+                    }
+                    setEffect {
+                        OrderItemManagementContract.Effect.ShowToast(
+                            message = resourceProvider.getNoInternetConnectionMessage()
+                        )
+                    }
+                }
+            }
         }
     }
 

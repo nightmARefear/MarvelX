@@ -35,6 +35,12 @@ internal interface OrderService {
         @Path(value = "orderItemId") orderItemId: String,
     ): Response<ResponseOrderItem>
 
+    @PATCH("/api/private/marvelx/orders/{orderId}/{orderItemId}/ship")
+    suspend fun markOrderItemAsShipped(
+        @Path(value = "orderId") orderId: String,
+        @Path(value = "orderItemId") orderItemId: String,
+    ): Response<ResponseOrderItem>
+
     @GET("/api/private/marvelx/orders/{orderId}/{orderItemId}/return-eligibility")
     suspend fun getOrderItemReturnEligibility(
         @Path(value = "orderId") orderId: String,

@@ -4,6 +4,7 @@ import com.alexgreece45.marvelx.core.network.model.api.order.RequestPlaceOrder
 import com.alexgreece45.marvelx.core.network.model.api.order.ResponseOrder
 import com.alexgreece45.marvelx.core.network.model.api.order.ResponseOrderId
 import com.alexgreece45.marvelx.core.network.model.api.order.ResponseOrderPreview
+import com.alexgreece45.marvelx.core.network.model.api.order.item.ResponseOrderItem
 import com.alexgreece45.marvelx.core.network.model.api.order.item.ResponseOrderItemTrackingHistory
 import com.alexgreece45.marvelx.core.network.model.generic.ApiResult
 import com.alexgreece45.marvelx.core.network.services.OrderService
@@ -21,6 +22,18 @@ internal class OrderClientImpl(
 
     override suspend fun getOrderDetails(orderId: String): ApiResult<ResponseOrder> {
         return executeApiServiceCall { orderService.getOrderDetails(orderId) }
+    }
+
+    override suspend fun markOrderItemAsShipped(
+        orderId: String,
+        orderItemId: String
+    ): ApiResult<ResponseOrderItem> {
+        return executeApiServiceCall {
+            orderService.markOrderItemAsShipped(
+                orderId = orderId,
+                orderItemId = orderItemId
+            )
+        }
     }
 
     override suspend fun getOrderItemTrackingHistory(

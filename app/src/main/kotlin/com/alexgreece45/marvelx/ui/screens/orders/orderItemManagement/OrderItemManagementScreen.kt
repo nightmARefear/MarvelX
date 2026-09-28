@@ -13,8 +13,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.ContentAlpha
 import androidx.compose.material.Icon
+import androidx.compose.material.LocalContentColor
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -142,6 +144,7 @@ internal fun OrderItemManagementScreen(
 
                         ShippingActionSection(
                             isMarkAsShippedAvailable = state.isMarkAsShippedAvailable,
+                            isMarkAsShippedLoading = state.isMarkAsShippedLoading,
                             onMarkAsShippedClicked = {
                                 onEvent(OrderItemManagementContract.Event.OnMarkAsShippedClicked)
                             }
@@ -249,6 +252,7 @@ private fun MessageBuyerSection(onClick: () -> Unit) {
 @Composable
 private fun ShippingActionSection(
     isMarkAsShippedAvailable: Boolean,
+    isMarkAsShippedLoading: Boolean,
     onMarkAsShippedClicked: () -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(SPACING_MEDIUM.dp)) {
@@ -263,9 +267,17 @@ private fun ShippingActionSection(
                 onClick = onMarkAsShippedClicked,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .testTag(OrderItemManagementTestTags.MARK_AS_SHIPPED_BUTTON)
+                    .testTag(OrderItemManagementTestTags.MARK_AS_SHIPPED_BUTTON),
+                enabled = !isMarkAsShippedLoading
             ) {
-                Text(text = stringResource(R.string.screen_order_item_management_button_mark_as_shipped))
+                if (isMarkAsShippedLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(ConstantsUi.MIN_ICON_SIZE),
+                        color = LocalContentColor.current
+                    )
+                } else {
+                    Text(text = stringResource(R.string.screen_order_item_management_button_mark_as_shipped))
+                }
             }
         } else {
             InfoContainer(

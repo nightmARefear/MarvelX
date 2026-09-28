@@ -26,6 +26,11 @@ interface OrderRepository {
         orderItemId: OrderId
     ): RepositoryResult<OrderItemData>
 
+    suspend fun markOrderItemAsShipped(
+        orderId: OrderId,
+        orderItemId: OrderId
+    ): RepositoryResult<OrderItemData>
+
     suspend fun getOrderItemTrackingHistory(
         orderId: OrderId,
         orderItemId: OrderId
@@ -65,6 +70,17 @@ internal class OrderRepositoryImpl(
     ): RepositoryResult<OrderItemData> {
         return handleApiResultNoFlow(
             apiCall = { orderClient.getOrderItemDetails(orderId.value, orderItemId.value) },
+            transformation = { this.toData() },
+            ioDispatcher = ioDispatcher
+        )
+    }
+
+    override suspend fun markOrderItemAsShipped(
+        orderId: OrderId,
+        orderItemId: OrderId
+    ): RepositoryResult<OrderItemData> {
+        return handleApiResultNoFlow(
+            apiCall = { orderClient.markOrderItemAsShipped(orderId.value, orderItemId.value) },
             transformation = { this.toData() },
             ioDispatcher = ioDispatcher
         )

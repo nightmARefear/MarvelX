@@ -61,6 +61,7 @@ class SettingsViewModel(
                                 iconResource = R.drawable.ic_privacy,
                                 contentDescription = R.string.content_description_privacy
                             ),
+                            testTag = SettingsTestTags.PRIVACY_SETTINGS_SECTION,
                             onClick = {
                                 setEffect {
                                     SettingsContract.Effect.Navigation.NavigateToPrivacySettingsScreen
@@ -75,6 +76,8 @@ class SettingsViewModel(
                                 iconResource = R.drawable.ic_faq,
                                 contentDescription = R.string.content_description_faq
                             ),
+                            testTag = SettingsTestTags.FAQ_SECTION,
+
                             onClick = {
                                 setEffect {
                                     SettingsContract.Effect.Navigation.NavigateToFaqScreen
@@ -105,6 +108,8 @@ class SettingsViewModel(
                                 contentDescription = R.string.content_description_ic_logout
                             ),
                             isNavigable = false,
+                            testTag = SettingsTestTags.LOGOUT_SECTION,
+
                             onClick = {
                                 sessionManager.triggerLogout(LogoutReason.USER_TRIGGERED)
                             }
