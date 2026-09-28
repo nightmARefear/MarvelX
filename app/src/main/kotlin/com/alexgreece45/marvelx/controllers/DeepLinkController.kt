@@ -168,12 +168,12 @@ class DeepLinkControllerImpl(
         screenRoute: String,
         deepLinkMap: Map<NavDeepLinkItem, String>
     ): CreateDeepLinkActionResult {
-        val screen = Screen.matchDeepLinkScreenRoute(screenRoute)
-        if (screen == null) {
+        val deepLinkArgKeys = getDeepLinkArgKeys(screenRoute)
+        if (deepLinkArgKeys == null) {
             appLogger.e(loggerTag) { "(createDeepLinkAction) The provided $screenRoute does not match a deep-link supported screen." }
             return (CreateDeepLinkActionResult.Failed)
         }
-        val doDeepLinkArgsMatch = Screen.doDeepLinkArgsMatch(screen, deepLinkMap.keys.toList())
+        val doDeepLinkArgsMatch = deepLinkMap.keys.map { it.key } == deepLinkArgKeys
         if (!doDeepLinkArgsMatch) {
             appLogger.e(loggerTag) { "(createDeepLinkAction) The provided deep-link arguments do not match the ones of $screenRoute." }
             return (CreateDeepLinkActionResult.Failed)
@@ -209,11 +209,23 @@ class DeepLinkControllerImpl(
     }
 
     /**
+     * Returns the deep link argument keys, in URI order, of the deep-link supported screen named
+     * [screenRoute], or `null` if there's none. Type-safe routes aren't [Screen]s, so the ones that
+     * web links and QR codes open are listed here.
+     */
+    private fun getDeepLinkArgKeys(screenRoute: String): List<String>? =
+        Screen.matchDeepLinkScreenRoute(screenRoute)?.deepLinkArgs?.map { it.key }
+            ?: when (screenRoute) {
+                DeepLinkWebUrl.ListingDetails.screenBaseRoute -> listOf(NavDeepLinkItem.ListingId.key)
+                else -> null
+            }
+
+    /**
      * Validates the given [deepLinkAction] based on whether the screen route matches a deep-link
      * supported screen and the arguments' names are exactly the same.
      */
     private fun validateDeepLinkAction(deepLinkAction: DeepLinkAction): ValidateDeepLinkActionResult {
-        return when (val screen = Screen.matchDeepLinkScreenRoute(deepLinkAction.screenRoute)) {
+        return when (val deepLinkArgKeys = getDeepLinkArgKeys(deepLinkAction.screenRoute)) {
             null -> {
                 appLogger.e(loggerTag) { "(handleDeepLinkAction) No deep link supported screen name \"${deepLinkAction.screenRoute}\" was found." }
                 ValidateDeepLinkActionResult.Failed
@@ -221,7 +233,7 @@ class DeepLinkControllerImpl(
 
             else -> {
                 // Check if the required data is present.
-                if (deepLinkAction.data.keys.toList() == screen.deepLinkArgs.map { it.key }) {
+                if (deepLinkAction.data.keys.toList() == deepLinkArgKeys) {
                     ValidateDeepLinkActionResult.Success(deepLinkAction)
                 } else {
                     appLogger.e(loggerTag) { "(handleDeepLinkAction) Data is missing from the deep link." }

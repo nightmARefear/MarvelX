@@ -19,7 +19,7 @@ private const val screenName = "listingDetailsScreen"
 
 @Serializable
 internal data class ListingDetailsRoute(
-    val listingId: String? = ""
+    val listingId: String
 )
 
 fun NavController.navigateToListingDetailsScreen(

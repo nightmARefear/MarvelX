@@ -476,7 +476,8 @@ private fun ColumnScope.ApparelDetailsSubSection(listingDetails: ListingDetailsD
         ),
         iconData = IconData(
             iconResource = R.drawable.ic_listing_size,
-            contentDescription = R.string.screen_listing_details_content_description_apparel_size
+            contentDescription = R.string.screen_listing_details_content_description_apparel_size,
+            tint = MaterialTheme.customColors.white
         )
     )
 
@@ -542,7 +543,7 @@ private fun ColumnScope.CollectibleDetailsSubSection(collectibleDetailsDomain: L
     DetailsSubSectionItem(
         label = stringResource(
             R.string.screen_listing_details_listing_details_label_collectible_scale,
-            collectibleDetailsDomain.scale
+            collectibleDetailsDomain.scale.label
         ),
         iconData = IconData(
             iconResource = R.drawable.ic_listing_collectible_scale,
@@ -553,7 +554,7 @@ private fun ColumnScope.CollectibleDetailsSubSection(collectibleDetailsDomain: L
     DetailsSubSectionItem(
         label = stringResource(
             R.string.screen_listing_details_listing_details_label_box_condition,
-            collectibleDetailsDomain.boxCondition
+            collectibleDetailsDomain.boxCondition.label
         ),
         iconData = IconData(
             iconResource = R.drawable.ic_listing_quality,
@@ -631,7 +632,8 @@ private fun ColumnScope.ComicDetailsSubSection(comicDetailsDomain: ListingDetail
         label = comicDetailsDomain.publisher,
         iconData = IconData(
             iconResource = R.drawable.ic_person,
-            contentDescription = R.string.screen_listing_details_content_description_person
+            contentDescription = R.string.screen_listing_details_content_description_person,
+            tint = MaterialTheme.customColors.white
         )
     )
 
@@ -639,7 +641,8 @@ private fun ColumnScope.ComicDetailsSubSection(comicDetailsDomain: ListingDetail
         label = comicDetailsDomain.year.toString(),
         iconData = IconData(
             iconResource = R.drawable.ic_listing_year,
-            contentDescription = R.string.screen_listing_details_content_description_calendar
+            contentDescription = R.string.screen_listing_details_content_description_calendar,
+            tint = MaterialTheme.customColors.white
         )
     )
 }
