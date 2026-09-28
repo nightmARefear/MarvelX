@@ -88,6 +88,9 @@ internal class MarketplaceViewModel(
             MarketplaceContract.Event.Init -> init()
             MarketplaceContract.Event.OnBackClicked -> onBackClicked()
             MarketplaceContract.Event.OnRefresh -> onRefresh()
+            MarketplaceContract.Event.OnNotificationsClicked -> setEffect {
+                MarketplaceContract.Effect.Navigation.GoToNotificationsScreen
+            }
             is MarketplaceContract.Event.OnPromoCarouselScrolled -> onPromoCarouselScrolled(
                 newIndex = event.newIndex,
                 scrollMillis = DateUtil.getEpochMillis()

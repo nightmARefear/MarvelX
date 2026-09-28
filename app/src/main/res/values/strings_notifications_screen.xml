@@ -1,0 +1,12 @@
+<resources>
+
+    <string name="screen_notifications_toolbar_title">Notifications</string>
+    <string name="screen_notifications_toolbar_action_mark_all_as_read">Mark all as read</string>
+
+    <string name="screen_notifications_empty">You have no notifications yet.</string>
+
+    <string name="screen_notifications_error_loading">An error occurred whilst loading your notifications.</string>
+    <string name="screen_notifications_error_loading_more">An error occurred whilst loading more notifications.</string>
+    <string name="screen_notifications_error_marking_all_as_read">An error occurred whilst marking your notifications as read.</string>
+
+</resources>

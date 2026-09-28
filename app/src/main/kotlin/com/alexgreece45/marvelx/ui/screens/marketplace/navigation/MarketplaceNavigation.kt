@@ -6,12 +6,14 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.navOptions
+import com.alexgreece45.marvelx.domain.interactors.notification.NotificationInteractor
 import com.alexgreece45.marvelx.ui.components.BottomNavigationBarData
 import com.alexgreece45.marvelx.ui.screens.marketplace.MarketplaceScreen
 import com.alexgreece45.marvelx.ui.screens.marketplace.MarketplaceViewModel
 import com.alexgreece45.marvelx.ui.screens.marketplace.model.MarketplaceContract
 import kotlinx.serialization.Serializable
 import org.koin.androidx.compose.koinViewModel
+import org.koin.compose.koinInject
 
 @Serializable
 internal data object MarketplaceRoute
@@ -33,6 +35,7 @@ internal fun NavGraphBuilder.marketplaceScreen(
     navigateToListingDetailsScreen: (String) -> Unit,
     navigateToFavoritesScreen: () -> Unit,
     navigateToCartScreen: () -> Unit,
+    navigateToNotificationsScreen: () -> Unit,
     bottomNavigationBarData: @Composable () -> BottomNavigationBarData
 ) {
     composable<MarketplaceRoute> {
@@ -49,9 +52,12 @@ internal fun NavGraphBuilder.marketplaceScreen(
 
                     MarketplaceContract.Effect.Navigation.GoToFavoritesScreen -> navigateToFavoritesScreen()
                     MarketplaceContract.Effect.Navigation.GoToCartScreen -> navigateToCartScreen()
+                    MarketplaceContract.Effect.Navigation.GoToNotificationsScreen -> navigateToNotificationsScreen()
                 }
             },
             bottomNavigationBarData = bottomNavigationBarData,
+            notificationsUnreadCount = koinInject<NotificationInteractor>().unreadCount
+                .collectAsStateWithLifecycle().value,
             snackbarEvents = viewModel.snackbarEffects,
             messageBannerEvents = viewModel.messageBannerEvents
         )

@@ -14,6 +14,7 @@ import com.alexgreece45.marvelx.ui.navigation.Screen
 import com.alexgreece45.marvelx.ui.navigation.getBottomNavigationBarData
 import com.alexgreece45.marvelx.ui.screens.profile.ProfileScreen
 import com.alexgreece45.marvelx.ui.screens.profile.ProfileViewModel
+import com.alexgreece45.marvelx.ui.screens.orders.transactions.navigation.navigateToTransactionsScreen
 import com.alexgreece45.marvelx.ui.screens.profile.model.ProfileContract
 import kotlinx.serialization.Serializable
 import org.koin.androidx.compose.koinViewModel
@@ -93,6 +94,10 @@ internal fun NavGraphBuilder.profileScreen(
 
                     ProfileContract.Effect.Navigation.NavigateToOrdersScreen -> {
                         rootNavController.navigate(Screen.OrdersScreen.route)
+                    }
+
+                    ProfileContract.Effect.Navigation.NavigateToTransactionsScreen -> {
+                        rootNavController.navigateToTransactionsScreen()
                     }
                 }
             },

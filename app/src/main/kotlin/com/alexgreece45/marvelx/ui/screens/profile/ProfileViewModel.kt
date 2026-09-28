@@ -2,6 +2,7 @@ package com.alexgreece45.marvelx.ui.screens.profile
 
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.ui_theme.theme.import_aliases.UiThemeDrawable
 import com.alexgreece45.marvelx.common_ui.imageValidator.ImageValidator
 import com.alexgreece45.marvelx.common_ui.imageValidator.model.ImageValidationConfig
 import com.alexgreece45.marvelx.common_ui.imageValidator.model.ImageValidationError
@@ -350,6 +351,20 @@ class ProfileViewModel(
                         onClick = {
                             setEffect {
                                 ProfileContract.Effect.Navigation.NavigateToOrdersScreen
+                            }
+                        }
+                    ),
+                    SectionHeaderData(
+                        title = resourceProvider.getString(R.string.profile_screen_section_label_transactions),
+                        iconData = IconData(
+                            iconResource = UiThemeDrawable.ic_money_bag,
+                            contentDescription = R.string.screen_profile_content_description_transactions_icon
+                        ),
+                        isNavigable = true,
+                        testTag = ProfileTestTags.TRANSACTIONS_SECTION,
+                        onClick = {
+                            setEffect {
+                                ProfileContract.Effect.Navigation.NavigateToTransactionsScreen
                             }
                         }
                     ),

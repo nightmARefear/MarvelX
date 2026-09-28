@@ -7,6 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import com.alexgreece45.marvelx.R
 import com.alexgreece45.marvelx.core.data.model.order.item.OrderItemReturnStatus
+import com.alexgreece45.marvelx.domain.model_api.order.item.itemReturn.OrderItemReturnStatusDomain
 import com.alexgreece45.marvelx.ui_theme.theme.values.StatusContainerColors
 import com.alexgreece45.marvelx.ui_theme.theme.values.customColors
 
@@ -135,4 +136,15 @@ internal fun OrderItemReturnStatus.toUi(): OrderItemReturnStatusUi =
         OrderItemReturnStatus.PENDING -> OrderItemReturnStatusUi.PENDING
         OrderItemReturnStatus.ITEM_REPLACED -> OrderItemReturnStatusUi.ITEM_REPLACED
         OrderItemReturnStatus.REFUNDED -> OrderItemReturnStatusUi.REFUNDED
+    }
+
+internal fun OrderItemReturnStatusDomain.toUi(): OrderItemReturnStatusUi =
+    when (this) {
+        OrderItemReturnStatusDomain.AVAILABLE -> OrderItemReturnStatusUi.AVAILABLE
+        OrderItemReturnStatusDomain.EXPIRED -> OrderItemReturnStatusUi.EXPIRED
+        OrderItemReturnStatusDomain.FINAL_SALE -> OrderItemReturnStatusUi.FINAL_SALE
+        OrderItemReturnStatusDomain.REJECTED -> OrderItemReturnStatusUi.REJECTED
+        OrderItemReturnStatusDomain.PENDING -> OrderItemReturnStatusUi.PENDING
+        OrderItemReturnStatusDomain.ITEM_REPLACED -> OrderItemReturnStatusUi.ITEM_REPLACED
+        OrderItemReturnStatusDomain.REFUNDED -> OrderItemReturnStatusUi.REFUNDED
     }

@@ -14,11 +14,14 @@ sealed class NotificationChannelData(val id: String, val name: String) {
 
     data object Chat : NotificationChannelData(id = "Chat", name = "Chat Notifications")
 
+    data object Order : NotificationChannelData(id = "Order", name = "Order Notifications")
+
     companion object {
         fun getAllChannels(): List<NotificationChannelData> = listOf(
             FriendRequest,
             Listing,
-            Chat
+            Chat,
+            Order
         )
     }
 }

@@ -18,6 +18,7 @@ import com.alexgreece45.marvelx.core.network.model.api.order.item.returnRequest.
 import com.alexgreece45.marvelx.core.network.model.api.order.item.returnRequest.ResponseOrderItemReturnEligibility
 import com.alexgreece45.marvelx.core.network.model.api.order.item.returnRequest.ResponseOrderItemReturnId
 import com.alexgreece45.marvelx.core.network.model.api.order.tracking.ResponseOrderTrackingHistoryItem
+import com.alexgreece45.marvelx.core.network.model.api.order.transaction.ResponseTransaction
 import com.alexgreece45.marvelx.core.network.model.api.order.tracking.ResponseOrderTrackingInfo
 import com.alexgreece45.marvelx.core.network.model.generic.ApiResult
 import com.alexgreece45.marvelx.core.network.model.order.OrderCourier
@@ -257,6 +258,20 @@ internal class OrderClientImpl : OrderClient {
         ResponseOrderId("A10001")
     )
 
+    override suspend fun getPurchases(page: Int): ApiResult<List<ResponseTransaction>> {
+        delay(1.seconds)
+        return ApiResult.Success(
+            OrderClientConstants.getTransactionsPage(page = page, pageCount = 3, isSale = false)
+        )
+    }
+
+    override suspend fun getSales(page: Int): ApiResult<List<ResponseTransaction>> {
+        delay(1.seconds)
+        return ApiResult.Success(
+            OrderClientConstants.getTransactionsPage(page = page, pageCount = 2, isSale = true)
+        )
+    }
+
     override suspend fun getOrderItemReturn(
         orderId: String,
         orderItemId: String
@@ -448,5 +463,50 @@ private object OrderClientConstants {
                 price = Random.nextDouble(5.0, 100.0).toString()
             )
         )
+    }
+
+    private const val TRANSACTIONS_PAGE_SIZE = 20
+
+    private val transactionReturnStatuses = listOf(
+        null,
+        null,
+        OrderItemReturnStatus.PENDING,
+        null,
+        OrderItemReturnStatus.REJECTED,
+        OrderItemReturnStatus.ITEM_REPLACED,
+        null,
+        OrderItemReturnStatus.REFUNDED,
+    )
+
+    /**
+     * Deterministic transaction pages: [pageCount] full pages, then an empty list (end of list).
+     */
+    fun getTransactionsPage(page: Int, pageCount: Int, isSale: Boolean): List<ResponseTransaction> {
+        if (page !in 1..pageCount) return emptyList()
+
+        val now = DateUtil.getUTCInstant()
+        return (0 until TRANSACTIONS_PAGE_SIZE).map { indexInPage ->
+            val index = (page - 1) * TRANSACTIONS_PAGE_SIZE + indexInPage
+            val orderItemId = (if (isSale) 500 else 100) + index
+            val status = OrderItemStatus.entries[index % OrderItemStatus.entries.size]
+            // Returns only exist once an item has been delivered.
+            val returnStatus = transactionReturnStatuses[index % transactionReturnStatuses.size]
+                ?.takeIf { status == OrderItemStatus.Delivered }
+            val price = BigDecimal(10 + index * 7).setScale(2, RoundingMode.HALF_UP)
+
+            ResponseTransaction(
+                orderId = (orderItemId / 3).toString(),
+                orderItemId = orderItemId.toString(),
+                listingId = (1000 + orderItemId).toString(),
+                title = if (isSale) "Sold item #$orderItemId" else "Purchased item #$orderItemId",
+                coverImageUrl = "https://backend.alexandrosvoliotis.com/api/private/marvelx/user/${index % 4 + 1}/profile-image",
+                price = price.toPlainString(),
+                date = now.minusDays(index.toLong()).toString(),
+                status = status.code,
+                returnStatus = returnStatus?.key,
+                refundAmount = price.takeIf { returnStatus == OrderItemReturnStatus.REFUNDED }?.toPlainString(),
+                counterpartyUserId = (index % 9 + 2).toString()
+            )
+        }
     }
 }

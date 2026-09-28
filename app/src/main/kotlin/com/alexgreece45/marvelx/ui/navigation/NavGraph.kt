@@ -67,6 +67,8 @@ import com.alexgreece45.marvelx.ui.screens.orders.orderDetails.navigation.naviga
 import com.alexgreece45.marvelx.ui.screens.orders.orderDetails.navigation.orderDetailsScreen
 import com.alexgreece45.marvelx.ui.screens.orders.orderItemManagement.navigation.navigateToOrderItemManagementScreen
 import com.alexgreece45.marvelx.ui.screens.orders.orderItemManagement.navigation.orderItemManagementScreen
+import com.alexgreece45.marvelx.ui.screens.orders.transactions.navigation.transactionsScreen
+import com.alexgreece45.marvelx.ui.screens.notifications.navigation.notificationsScreen
 import com.alexgreece45.marvelx.ui.screens.orders.orderItemTrackingHistory.navigation.navigateToOrderItemTrackingHistoryScreen
 import com.alexgreece45.marvelx.ui.screens.orders.orderItemTrackingHistory.navigation.orderItemTrackingHistoryScreen
 import com.alexgreece45.marvelx.ui.screens.orders.requestReturn.navigation.requestItemReturnScreen
@@ -483,6 +485,8 @@ internal fun NavGraph(navController: NavHostController) {
         orderItemTrackingHistoryScreen(navController = navController)
 
         orderItemManagementScreen(navController = navController)
+        transactionsScreen(navController = navController)
+        notificationsScreen(navController = navController)
 
         conversationScreen(navController = navController)
 

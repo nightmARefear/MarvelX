@@ -500,6 +500,8 @@ data class ToolbarAction(
     val order: Int,
     val iconData: IconData,
     val testTag: String? = null,
+    /** Shown as a badge on the icon when greater than zero. */
+    val badgeCount: Int = 0,
     val onClick: () -> Unit
 )
 
@@ -742,14 +744,27 @@ private fun Toolbar(
                     ) {
                         val iconTintAlpha =
                             if (toolbarAction.iconData.enabled) LocalContentAlpha.current else ContentAlpha.disabled
-                        Icon(
-                            painter = painterResource(toolbarAction.iconData.iconResource),
-                            contentDescription = stringResource(toolbarAction.iconData.contentDescription),
-                            modifier = Modifier.size(ConstantsUi.MIN_ICON_SIZE),
-                            // TODO: To be reviewed.
-                            tint = toolbarAction.iconData.tint?.copy(alpha = iconTintAlpha)
-                                ?: LocalContentColor.current.copy(alpha = iconTintAlpha)
-                        )
+                        BadgedBox(
+                            badge = {
+                                if (toolbarAction.badgeCount > 0) {
+                                    Badge(backgroundColor = MaterialTheme.customColors.genericRed) {
+                                        Text(
+                                            text = toolbarAction.badgeCount.coerceAtMost(99).toString(),
+                                            color = MaterialTheme.customColors.white
+                                        )
+                                    }
+                                }
+                            }
+                        ) {
+                            Icon(
+                                painter = painterResource(toolbarAction.iconData.iconResource),
+                                contentDescription = stringResource(toolbarAction.iconData.contentDescription),
+                                modifier = Modifier.size(ConstantsUi.MIN_ICON_SIZE),
+                                // TODO: To be reviewed.
+                                tint = toolbarAction.iconData.tint?.copy(alpha = iconTintAlpha)
+                                    ?: LocalContentColor.current.copy(alpha = iconTintAlpha)
+                            )
+                        }
                     }
                 }
             }

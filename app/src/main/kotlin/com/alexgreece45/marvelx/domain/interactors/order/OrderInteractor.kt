@@ -13,6 +13,8 @@ import com.alexgreece45.marvelx.domain.model_api.order.item.OrderItemTrackingHis
 import com.alexgreece45.marvelx.domain.model_api.order.item.toDomain
 import com.alexgreece45.marvelx.domain.model_api.order.toData
 import com.alexgreece45.marvelx.domain.model_api.order.toDomain
+import com.alexgreece45.marvelx.domain.model_api.order.transaction.TransactionDomain
+import com.alexgreece45.marvelx.domain.model_api.order.transaction.toDomain
 import org.koin.core.annotation.Factory
 
 interface OrderInteractor {
@@ -38,6 +40,9 @@ interface OrderInteractor {
         listingIds: List<String>,
         placeOrderCheckoutDetails: PlaceOrderCheckoutDetails
     ): InteractorPartialState<OrderIdDomain>
+
+    suspend fun getPurchases(page: Int): InteractorPartialState<List<TransactionDomain>>
+    suspend fun getSales(page: Int): InteractorPartialState<List<TransactionDomain>>
 }
 
 @Factory
@@ -102,6 +107,20 @@ internal class OrderInteractorImpl(
                 placeOrderCheckoutDetails = placeOrderCheckoutDetails
             ),
             transformation = { this.toDomain() }
+        )
+    }
+
+    override suspend fun getPurchases(page: Int): InteractorPartialState<List<TransactionDomain>> {
+        return handleRepositoryResultNoFlow(
+            repositoryResult = orderRepository.getPurchases(page),
+            transformation = { this.map { it.toDomain() } }
+        )
+    }
+
+    override suspend fun getSales(page: Int): InteractorPartialState<List<TransactionDomain>> {
+        return handleRepositoryResultNoFlow(
+            repositoryResult = orderRepository.getSales(page),
+            transformation = { this.map { it.toDomain() } }
         )
     }
 }

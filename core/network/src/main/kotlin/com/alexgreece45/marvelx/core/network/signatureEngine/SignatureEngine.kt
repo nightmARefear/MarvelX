@@ -61,16 +61,17 @@ internal class SignatureEngineImpl(
         timestamp: Long,
         signature: Signature
     ): String {
-        var pathAndParameters = requestUrl.pathSegments.joinToString(separator = ":")
+        // Mirrors the backend's SignatureUtil.isSignatureValid exactly: it takes the raw wire URL
+        // (`req.originalUrl`: percent-encoded path + query, unnormalised), replaces EVERY "/" with ":"
+        // (the query too, since OkHttp leaves "/" unencoded in query values), then strips one
+        // leading ":". Signing the decoded URL broke any value with a space, '&', '+' or a non-ASCII
+        // character, e.g. searching "the amazing" got a 401.
+        // TODO: Change in future to support "|" separator. Temporary solution since backend cannot implement this change yet.
+        val encodedQuery = requestUrl.encodedQuery?.let { query -> "?$query" }.orEmpty()
+        var pathAndParameters = (requestUrl.encodedPath + encodedQuery).replace("/", ":")
         if (pathAndParameters.startsWith(":")) {
-            pathAndParameters = pathAndParameters.replaceFirst(":", "")
+            pathAndParameters = pathAndParameters.substring(1)
         }
-
-        val queryParameters = when (val query = requestUrl.query) {
-            null -> ""
-            else -> "?$query"
-        }
-        pathAndParameters += queryParameters // TODO: Change in future to support "|" separator. Temporary solution since backend cannot implement this change yet.
 
         val headerSeparator = "\n"
         var headers = requestHeaders.toMultimap().toList()

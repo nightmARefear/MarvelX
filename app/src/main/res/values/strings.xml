@@ -191,6 +191,7 @@
     <string name="profile_screen_section_label_scan_qr_code">Scan QR Code</string>
     <string name="profile_screen_section_label_friends">Friends</string>
     <string name="profile_screen_section_label_orders">Orders</string>
+    <string name="profile_screen_section_label_transactions">Transactions</string>
     <string name="profile_screen_section_label_my_listings">My Listings</string>
     <string name="profile_screen_section_label_logout">Logout</string>
 
@@ -220,6 +221,7 @@
     <string name="screen_profile_error_image_crop_reading">An error occurred whilst reading the cropped image.</string>
 
     <string name="screen_profile_content_description_orders_icon">Orders Icon</string>
+    <string name="screen_profile_content_description_transactions_icon">Transactions Icon</string>
 
     // Profile Image Screen
     <string name="profile_image_screen_toolbar_title">Profile Image of %1$s</string>

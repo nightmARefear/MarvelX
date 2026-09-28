@@ -187,15 +187,17 @@ class CheckoutShippingDetailsViewModel(
     }
 
     private fun onZipCodeChanged(newZipCode: String) {
+        // The number keyboard doesn't stop hardware keyboards or pastes; keep digits only.
+        val filteredNewZipCode = newZipCode.filter(Char::isDigit)
         setState {
             copy(
                 zipCode = zipCode.copy(
-                    integerValue = newZipCode,
-                    integerValidationResult = formValidator.validateForm(Form(mapOf(zipCode.validationRules to newZipCode)))
+                    integerValue = filteredNewZipCode,
+                    integerValidationResult = formValidator.validateForm(Form(mapOf(zipCode.validationRules to filteredNewZipCode)))
                 )
             )
         }
-        orderCheckoutController.setZipCode(newZipCode)
+        orderCheckoutController.setZipCode(filteredNewZipCode)
         validateAllFields()
     }
 

@@ -116,7 +116,9 @@ class CheckoutPaymentDetailsViewModel(
     }
 
     private fun onCardNumberChanged(newCardNumber: String) {
-        val filteredNewCardNumber = newCardNumber.take(16)
+        // The number keyboard doesn't stop hardware keyboards or pastes, and the backend rejects
+        // any non-digit ("Invalid card details"), so keep digits only.
+        val filteredNewCardNumber = newCardNumber.filter(Char::isDigit).take(16)
         setState {
             copy(
                 cardNumberField = cardNumberField.copy(
@@ -130,7 +132,7 @@ class CheckoutPaymentDetailsViewModel(
     }
 
     private fun onExpirationDateChanged(newExpirationDate: String) {
-        val filteredNewExpirationDate = newExpirationDate.take(4)
+        val filteredNewExpirationDate = newExpirationDate.filter(Char::isDigit).take(4)
         setState {
             copy(
                 expirationDateField = expirationDateField.copy(
@@ -144,7 +146,7 @@ class CheckoutPaymentDetailsViewModel(
     }
 
     private fun onCvvChanged(newCvv: String) {
-        val filteredNewCvv = newCvv.take(3)
+        val filteredNewCvv = newCvv.filter(Char::isDigit).take(3)
         setState {
             copy(
                 cvvField = cvvField.copy(

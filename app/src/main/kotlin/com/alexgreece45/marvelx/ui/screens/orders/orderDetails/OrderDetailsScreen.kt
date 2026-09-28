@@ -38,6 +38,7 @@ import com.alexgreece45.marvelx.common_ui.util.ObserveUiEffect
 import com.alexgreece45.marvelx.core.common.util.flows.single_observer_flow.SingleObserverFlow
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.LazyItemContentErrorScreen
+import com.alexgreece45.marvelx.ui.screens.orders.components.OrderItemStatusChip
 import com.alexgreece45.marvelx.ui.components.ModalBottomSheetContent
 import com.alexgreece45.marvelx.ui.components.ScreenNavigableAction
 import com.alexgreece45.marvelx.ui.components.WrapModalBottomSheetLayout
@@ -255,40 +256,6 @@ private fun OrderItemCard(
         enabled = false,
         onClicked = {}
     )
-}
-
-@Composable
-private fun OrderItemStatusChip(status: OrderItemStatusUi) {
-    val statusContentColor = status.contentColor
-    Card(
-        backgroundColor = status.backgroundColor,
-        contentColor = statusContentColor,
-        shape = MaterialTheme.customShapes.chipCornerShape
-    ) {
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(SPACING_TINY.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(SPACING_TINY.dp)
-        ) {
-            if (status == OrderItemStatusUi.Delivered) {
-                Image(
-                    painter = painterResource(R.drawable.ic_check),
-                    contentDescription = null,
-                    modifier = Modifier.size(ConstantsUi.MIN_ICON_SIZE),
-                    colorFilter = ColorFilter.tint(statusContentColor)
-                )
-            } else {
-                Canvas(modifier = Modifier.size(6.dp)) {
-                    drawCircle(color = statusContentColor)
-                }
-            }
-
-            Text(
-                text = stringResource(status.labelResId),
-                style = MaterialTheme.typography.subtitle1.copy(fontWeight = FontWeight.Medium)
-            )
-        }
-    }
 }
 
 @OptIn(ExperimentalMaterialApi::class)

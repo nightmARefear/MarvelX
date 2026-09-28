@@ -11,6 +11,7 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.alexgreece45.marvelx.common_ui.extensions.clickableNoRipple
@@ -53,7 +54,9 @@ fun UserTile(
                     .circularImageWithBorder(
                         borderWidth = ConstantsUi.IMAGE_BORDER_WIDTH,
                         borderColor = MaterialTheme.customColors.genericRed
-                    )
+                    ),
+                // Same as the seller image on Listing Details: fill the circle instead of letterboxing.
+                contentScale = ContentScale.Crop
             )
 
             content()

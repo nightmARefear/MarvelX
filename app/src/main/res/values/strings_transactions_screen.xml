@@ -1,0 +1,16 @@
+<resources>
+
+    <string name="screen_transactions_toolbar_title">Transactions</string>
+
+    <string name="screen_transactions_tab_purchases">Purchases</string>
+    <string name="screen_transactions_tab_sales">Sales</string>
+
+    <string name="screen_transactions_label_order_date">Order %1$s · %2$s</string>
+    <string name="screen_transactions_label_refunded_amount">Refunded %1$s</string>
+
+    <string name="screen_transactions_empty_purchases">You haven\'t bought anything yet.</string>
+    <string name="screen_transactions_empty_sales">You haven\'t sold anything yet.</string>
+
+    <string name="screen_transactions_error_loading">An error occurred whilst loading your transactions.</string>
+    <string name="screen_transactions_error_loading_more">An error occurred whilst loading more transactions.</string>
+</resources>

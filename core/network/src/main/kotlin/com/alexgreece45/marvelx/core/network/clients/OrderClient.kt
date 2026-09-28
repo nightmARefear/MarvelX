@@ -9,6 +9,7 @@ import com.alexgreece45.marvelx.core.network.model.api.order.item.ResponseOrderI
 import com.alexgreece45.marvelx.core.network.model.api.order.item.returnRequest.RequestOrderItemReturnResponse
 import com.alexgreece45.marvelx.core.network.model.api.order.item.returnRequest.ResponseOrderItemReturn
 import com.alexgreece45.marvelx.core.network.model.api.order.item.returnRequest.ResponseOrderItemReturnId
+import com.alexgreece45.marvelx.core.network.model.api.order.transaction.ResponseTransaction
 import com.alexgreece45.marvelx.core.network.model.generic.ApiResult
 import okhttp3.MultipartBody
 
@@ -31,6 +32,9 @@ interface OrderClient {
     ): ApiResult<ResponseOrderItemTrackingHistory>
 
     suspend fun placeOrder(requestPlaceOrder: RequestPlaceOrder): ApiResult<ResponseOrderId>
+
+    suspend fun getPurchases(page: Int): ApiResult<List<ResponseTransaction>>
+    suspend fun getSales(page: Int): ApiResult<List<ResponseTransaction>>
 
     suspend fun getOrderItemReturn(
         orderId: String,

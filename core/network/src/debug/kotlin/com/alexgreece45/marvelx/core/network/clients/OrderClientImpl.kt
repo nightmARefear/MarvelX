@@ -9,6 +9,7 @@ import com.alexgreece45.marvelx.core.network.model.api.order.item.ResponseOrderI
 import com.alexgreece45.marvelx.core.network.model.api.order.item.returnRequest.RequestOrderItemReturnResponse
 import com.alexgreece45.marvelx.core.network.model.api.order.item.returnRequest.ResponseOrderItemReturn
 import com.alexgreece45.marvelx.core.network.model.api.order.item.returnRequest.ResponseOrderItemReturnId
+import com.alexgreece45.marvelx.core.network.model.api.order.transaction.ResponseTransaction
 import com.alexgreece45.marvelx.core.network.model.generic.ApiResult
 import com.alexgreece45.marvelx.core.network.services.OrderService
 import com.alexgreece45.marvelx.core.network.util.executeApiServiceCall
@@ -63,6 +64,14 @@ internal class OrderClientImpl(
         return executeApiServiceCall {
             orderService.placeOrder(requestPlaceOrder)
         }
+    }
+
+    override suspend fun getPurchases(page: Int): ApiResult<List<ResponseTransaction>> {
+        return executeApiServiceCall { orderService.getPurchases(page) }
+    }
+
+    override suspend fun getSales(page: Int): ApiResult<List<ResponseTransaction>> {
+        return executeApiServiceCall { orderService.getSales(page) }
     }
 
     override suspend fun getOrderItemReturn(

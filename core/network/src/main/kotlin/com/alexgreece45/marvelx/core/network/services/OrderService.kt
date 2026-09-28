@@ -10,6 +10,7 @@ import com.alexgreece45.marvelx.core.network.model.api.order.item.returnRequest.
 import com.alexgreece45.marvelx.core.network.model.api.order.item.returnRequest.ResponseOrderItemReturn
 import com.alexgreece45.marvelx.core.network.model.api.order.item.returnRequest.ResponseOrderItemReturnEligibility
 import com.alexgreece45.marvelx.core.network.model.api.order.item.returnRequest.ResponseOrderItemReturnId
+import com.alexgreece45.marvelx.core.network.model.api.order.transaction.ResponseTransaction
 import okhttp3.MultipartBody
 import retrofit2.Response
 import retrofit2.http.Body
@@ -17,6 +18,7 @@ import retrofit2.http.GET
 import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.Path
+import retrofit2.http.Query
 
 internal interface OrderService {
 
@@ -70,6 +72,14 @@ internal interface OrderService {
     suspend fun getOrderItemReturnById(
         @Path(value = "orderItemReturnId") orderItemReturnId: String
     ): Response<ResponseOrderItemReturn>
+
+    // Transactions: docs/backend-specs/transactions.md
+
+    @GET("/api/private/marvelx/transactions/purchases")
+    suspend fun getPurchases(@Query("page") page: Int): Response<List<ResponseTransaction>>
+
+    @GET("/api/private/marvelx/transactions/sales")
+    suspend fun getSales(@Query("page") page: Int): Response<List<ResponseTransaction>>
 
     @PATCH("/api/private/marvelx/return-requests/{orderItemReturnId}/respond")
     suspend fun respondToOrderItemReturn(

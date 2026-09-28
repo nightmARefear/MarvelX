@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.navigation
+import com.alexgreece45.marvelx.ui.screens.notifications.navigation.navigateToNotificationsScreen
 import com.alexgreece45.marvelx.ui.components.BottomNavigationBarData
 import com.alexgreece45.marvelx.ui.navigation.Screen
 import com.alexgreece45.marvelx.ui.screens.favoriteListings.navigation.navigateToFavoriteListingsScreen
@@ -30,6 +31,7 @@ fun NavGraphBuilder.marketplaceGraph(
             navigateToListingDetailsScreen = navController::navigateToListingDetailsScreen,
             navigateToFavoritesScreen = navController::navigateToFavoriteListingsScreen,
             navigateToCartScreen = navController::navigateToCartScreen,
+            navigateToNotificationsScreen = navController::navigateToNotificationsScreen,
             bottomNavigationBarData = bottomNavigationBarData,
         )
 

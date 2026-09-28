@@ -21,6 +21,7 @@ import com.alexgreece45.marvelx.core.network.model.api.verification_step.Respons
 import com.alexgreece45.marvelx.core.network.services.ApiService
 import com.alexgreece45.marvelx.core.network.services.ChatService
 import com.alexgreece45.marvelx.core.network.services.ListingService
+import com.alexgreece45.marvelx.core.network.services.NotificationService
 import com.alexgreece45.marvelx.core.network.services.OrderService
 import com.alexgreece45.marvelx.core.network.services.RefreshTokenService
 import com.alexgreece45.marvelx.core.network.typeAdapters.InstantTypeAdapter
@@ -266,3 +267,7 @@ internal fun provideOrderService(@BackendRetrofit retrofit: Retrofit): OrderServ
 @Single
 internal fun provideChatService(@BackendRetrofit retrofit: Retrofit): ChatService =
     retrofit.create(ChatService::class.java)
+
+@Single
+internal fun provideNotificationService(@BackendRetrofit retrofit: Retrofit): NotificationService =
+    retrofit.create(NotificationService::class.java)

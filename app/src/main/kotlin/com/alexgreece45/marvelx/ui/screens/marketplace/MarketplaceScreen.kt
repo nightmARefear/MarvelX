@@ -107,6 +107,8 @@ import com.alexgreece45.marvelx.data.model.marketplace.listing.EnumGeneric
 import com.alexgreece45.marvelx.domain.model_api.marketplace.listing.ListingDetailsDomain
 import com.alexgreece45.marvelx.ui.components.ActiveFilterChip
 import com.alexgreece45.marvelx.ui.components.BottomNavigationBarData
+import com.alexgreece45.marvelx.ui.components.IconData
+import com.alexgreece45.marvelx.ui.components.ToolbarAction
 import com.alexgreece45.marvelx.ui.components.ClickableIconData
 import com.alexgreece45.marvelx.ui.components.ContentScreen
 import com.alexgreece45.marvelx.ui.components.GenericErrorScreen
@@ -184,6 +186,7 @@ internal fun MarketplaceScreen(
     bottomNavigationBarData: @Composable () -> BottomNavigationBarData,
     snackbarEvents: SingleObserverFlow<SnackbarEvent>,
     messageBannerEvents: SingleObserverFlow<MessageBannerEvent>,
+    notificationsUnreadCount: Int = 0,
 ) {
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
@@ -328,6 +331,19 @@ internal fun MarketplaceScreen(
             ),
             showToolbar = true,
             toolbarTitle = stringResource(if (state.mode == MarketplaceMode.DISCOVER) R.string.screen_marketplace_discover_toolbar_title else R.string.screen_marketplace_search_toolbar_title),
+            toolbarActions = if (state.mode != MarketplaceMode.DISCOVER) null else listOf(
+                ToolbarAction(
+                    label = stringResource(R.string.screen_marketplace_toolbar_action_notifications),
+                    order = 1,
+                    iconData = IconData(
+                        iconResource = R.drawable.ic_notifications,
+                        contentDescription = R.string.screen_marketplace_toolbar_action_notifications
+                    ),
+                    testTag = MarketplaceTestTags.NOTIFICATIONS_BUTTON,
+                    badgeCount = notificationsUnreadCount,
+                    onClick = { onEvent(MarketplaceContract.Event.OnNotificationsClicked) }
+                )
+            ),
             bottomNavigationBarData = bottomNavigationBarData(),
             snackbarEvents = snackbarEvents,
             messageBannerEvents = messageBannerEvents

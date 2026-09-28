@@ -17,15 +17,6 @@ import com.alexgreece45.marvelx.ui.screens.mainActivity.MainActivity
  * is preserved, otherwise not.
  */
 fun NavController.openDeepLinkAction(deepLinkAction: DeepLinkAction) {
-    val deepLinkRequest = NavDeepLinkRequest.Builder
-        .fromUri(
-            generateComposableDeepLinkUri(
-                deepLinkAction.screenRoute,
-                generateComposableArguments(deepLinkAction.data)
-            )
-        )
-        .build()
-
     val navOptions = navOptions {
         popUpTo(graph.startDestinationId) {
             saveState = true
@@ -33,8 +24,26 @@ fun NavController.openDeepLinkAction(deepLinkAction: DeepLinkAction) {
         launchSingleTop = true
         restoreState = true
     }
-    navigate(deepLinkRequest, navOptions)
+    navigate(deepLinkAction.toNavDeepLinkRequest(), navOptions)
 }
+
+/**
+ * Opens the given deep link action on top of the current back stack, so back returns to the
+ * current screen (e.g. the notifications inbox). Pushes use [openDeepLinkAction] instead.
+ */
+fun NavController.openDeepLinkActionKeepingBackStack(deepLinkAction: DeepLinkAction) {
+    navigate(deepLinkAction.toNavDeepLinkRequest(), navOptions { launchSingleTop = true })
+}
+
+private fun DeepLinkAction.toNavDeepLinkRequest(): NavDeepLinkRequest =
+    NavDeepLinkRequest.Builder
+        .fromUri(
+            generateComposableDeepLinkUri(
+                screenRoute,
+                generateComposableArguments(data)
+            )
+        )
+        .build()
 
 /**
  * Generates a new [Intent] based on the given data.

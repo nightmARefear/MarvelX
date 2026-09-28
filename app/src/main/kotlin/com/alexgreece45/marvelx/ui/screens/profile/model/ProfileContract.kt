@@ -128,6 +128,7 @@ sealed interface ProfileContract {
             data object NavigateToFriendsScreen : Navigation()
             data object NavigateToMyListingsScreen : Navigation()
             data object NavigateToOrdersScreen : Navigation()
+            data object NavigateToTransactionsScreen : Navigation()
 
             data class NavigateToProfileImageScreen(val profileImageUrl: String) : Navigation()
             data class NavigateToProfileDetailsScreen(val userId: String) : Navigation()

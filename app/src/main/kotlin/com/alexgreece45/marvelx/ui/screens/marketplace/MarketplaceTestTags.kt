@@ -8,6 +8,9 @@ internal object MarketplaceTestTags {
     // MarketplaceContract.Event.OnBackClicked (search mode only)
     const val BACK_BUTTON = "marketplace_back_button"
 
+    // MarketplaceContract.Event.OnNotificationsClicked (toolbar bell, DISCOVER mode only)
+    const val NOTIFICATIONS_BUTTON = "marketplace_notifications_button"
+
     // MarketplaceContract.Event.OnErrorButtonClicked
     const val ERROR_RETRY_BUTTON = "marketplace_error_retry_button"
 

@@ -6,6 +6,8 @@ import com.alexgreece45.marvelx.core.data.helper.handleApiResultNoFlow
 import com.alexgreece45.marvelx.core.data.model.order.OrderId
 import com.alexgreece45.marvelx.core.data.model.order.item.OrderItemData
 import com.alexgreece45.marvelx.core.data.model.order.item.toData
+import com.alexgreece45.marvelx.core.data.model.order.transaction.TransactionData
+import com.alexgreece45.marvelx.core.data.model.order.transaction.toData
 import com.alexgreece45.marvelx.core.network.clients.OrderClient
 import com.alexgreece45.marvelx.core.network.model.api.order.RequestPlaceOrder
 import com.alexgreece45.marvelx.data.model.order.OrderData
@@ -40,6 +42,9 @@ interface OrderRepository {
         listingIds: List<String>,
         placeOrderCheckoutDetails: PlaceOrderCheckoutDetails
     ): RepositoryResult<OrderId>
+
+    suspend fun getPurchases(page: Int): RepositoryResult<List<TransactionData>>
+    suspend fun getSales(page: Int): RepositoryResult<List<TransactionData>>
 }
 
 @Single
@@ -108,6 +113,22 @@ internal class OrderRepositoryImpl(
         return handleApiResultNoFlow(
             apiCall = { orderClient.placeOrder(request) },
             transformation = { OrderId(this.orderId) },
+            ioDispatcher = ioDispatcher
+        )
+    }
+
+    override suspend fun getPurchases(page: Int): RepositoryResult<List<TransactionData>> {
+        return handleApiResultNoFlow(
+            apiCall = { orderClient.getPurchases(page) },
+            transformation = { this.map { it.toData() } },
+            ioDispatcher = ioDispatcher
+        )
+    }
+
+    override suspend fun getSales(page: Int): RepositoryResult<List<TransactionData>> {
+        return handleApiResultNoFlow(
+            apiCall = { orderClient.getSales(page) },
+            transformation = { this.map { it.toData() } },
             ioDispatcher = ioDispatcher
         )
     }

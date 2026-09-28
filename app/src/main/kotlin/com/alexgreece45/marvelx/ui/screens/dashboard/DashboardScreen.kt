@@ -21,6 +21,7 @@ import com.alexgreece45.marvelx.ui.screens.chat.inbox.navigation.inboxScreen
 import com.alexgreece45.marvelx.ui.screens.character.navigation.navigateToCharacterScreen
 import com.alexgreece45.marvelx.ui.screens.dashboard.model.DashboardContract
 import com.alexgreece45.marvelx.ui.screens.marketplace.listingDetailsScreen.navigation.navigateToListingDetailsScreen
+import com.alexgreece45.marvelx.ui.screens.notifications.navigation.navigateToNotificationsScreen
 import com.alexgreece45.marvelx.ui.screens.marketplace.navigation.MarketplaceRoute
 import com.alexgreece45.marvelx.ui.screens.marketplace.navigation.marketplaceScreen
 import com.alexgreece45.marvelx.ui.screens.profile.navigation.profileScreen
@@ -56,6 +57,7 @@ fun DashboardScreen(
             navigateToListingDetailsScreen = rootNavController::navigateToListingDetailsScreen,
             navigateToFavoritesScreen = dashboardNavController::navigateToFavoriteListingsScreen,
             navigateToCartScreen = dashboardNavController::navigateToCartScreen,
+            navigateToNotificationsScreen = rootNavController::navigateToNotificationsScreen,
             bottomNavigationBarData = { getBottomNavigationBarData(dashboardNavController) },
         )
 

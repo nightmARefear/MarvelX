@@ -15,8 +15,10 @@ data class OrderItemReturnEligibilityData(
 
 fun ResponseOrderItemReturnEligibility.toData(): OrderItemReturnEligibilityData =
     OrderItemReturnEligibilityData(
-        returnStatus = OrderItemReturnStatus.entries.first { it.key == returnStatus },
+        returnStatus = returnStatus?.let { key -> OrderItemReturnStatus.entries.first { it.key == key } },
         returnUntilDate = LocalDate.parse(returnUntilDate),
         refundUntilDate = LocalDate.parse(refundUntilDate),
-        refundStatus = OrderItemRefundStatus.entries.first { it.key == returnStatus }
+        // Read from refundStatus itself: looking it up with the returnStatus key threw for "refunded" /
+        // "item_replaced", which broke Tracking History for every approved return.
+        refundStatus = refundStatus?.let { key -> OrderItemRefundStatus.entries.first { it.key == key } }
     )

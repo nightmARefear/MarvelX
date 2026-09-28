@@ -86,6 +86,8 @@ import com.alexgreece45.marvelx.ui.screens.marketplace.listingDetailsScreen.navi
 import com.alexgreece45.marvelx.ui.screens.marketplace.navigation.MarketplaceRoute
 import com.alexgreece45.marvelx.ui.screens.orders.orderDetails.navigation.OrderDetailsRoute
 import com.alexgreece45.marvelx.ui.screens.orders.orderItemManagement.navigation.OrderItemManagementRoute
+import com.alexgreece45.marvelx.ui.screens.orders.transactions.navigation.TransactionsRoute
+import com.alexgreece45.marvelx.ui.screens.notifications.navigation.NotificationsRoute
 import com.alexgreece45.marvelx.ui.screens.orders.orderItemTrackingHistory.navigation.OrderItemTrackingHistoryRoute
 import com.alexgreece45.marvelx.ui.screens.orders.requestReturn.navigation.RequestItemReturnRoute
 import com.alexgreece45.marvelx.ui.screens.orders.requestReturn.navigation.navigateToRequestItemReturnScreen
@@ -418,6 +420,7 @@ internal class MainActivity : AppCompatActivity() {
                             NotificationChannelType.IncomingFriendRequest -> NotificationCompat.PRIORITY_HIGH
                             NotificationChannelType.ListingPurchase -> NotificationCompat.PRIORITY_MAX
                             NotificationChannelType.NewMessage -> NotificationCompat.PRIORITY_HIGH
+                            NotificationChannelType.OrderStatusChanged -> NotificationCompat.PRIORITY_HIGH
                         }
                     )
                 }
@@ -543,6 +546,8 @@ internal class MainActivity : AppCompatActivity() {
         OrderDetailsRoute::class,
         OrderItemTrackingHistoryRoute::class,
         OrderItemManagementRoute::class,
+        TransactionsRoute::class,
+        NotificationsRoute::class,
         RequestItemReturnRoute::class,
         AllCharactersRoute::class,
         ComicRoute::class,

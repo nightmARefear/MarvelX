@@ -4,6 +4,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
+import androidx.navigation.navDeepLink
+import com.alexgreece45.marvelx.ui.helper.getDeepLinkBasePath
 import com.alexgreece45.marvelx.ui.screens.chat.conversation.navigation.navigateToOrderItemConversationScreen
 import com.alexgreece45.marvelx.ui.screens.orders.orderItemManagement.OrderItemManagementScreen
 import com.alexgreece45.marvelx.ui.screens.orders.orderItemManagement.OrderItemManagementViewModel
@@ -31,7 +33,14 @@ internal fun NavController.navigateToOrderItemManagementScreen(
 internal fun NavGraphBuilder.orderItemManagementScreen(
     navController: NavController
 ) {
-    composable<OrderItemManagementRoute> {
+    composable<OrderItemManagementRoute>(
+        // Opened by the seller's `ListingPurchase` push and inbox entry.
+        deepLinks = listOf(
+            navDeepLink<OrderItemManagementRoute>(
+                getDeepLinkBasePath(screenName = OrderItemManagementRoute::class.simpleName.orEmpty())
+            )
+        )
+    ) {
         val viewModel = koinViewModel<OrderItemManagementViewModel>()
 
         OrderItemManagementScreen(

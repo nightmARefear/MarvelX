@@ -20,6 +20,7 @@ import com.alexgreece45.marvelx.data.repository.AutoLogoutRepository
 import com.alexgreece45.marvelx.data.repository.UserRepository
 import com.alexgreece45.marvelx.domain.usecases.LogoutUseCase
 import com.alexgreece45.marvelx.mvi.BaseViewModel
+import com.alexgreece45.marvelx.domain.interactors.notification.NotificationInteractor
 import com.alexgreece45.marvelx.notifications.PushNotificationsController
 import com.alexgreece45.marvelx.ui.navigation.Screen
 import com.alexgreece45.marvelx.ui.screens.mainActivity.model.MainActivityEffect
@@ -55,6 +56,7 @@ class MainActivityViewModel :
     private val deviceController: DeviceController by inject()
     private val gson: Gson by inject()
     private val pushNotificationsController: PushNotificationsController by inject()
+    private val notificationInteractor: NotificationInteractor by inject()
     private val logoutUseCase: LogoutUseCase by inject()
     private val sessionManager: SessionManager by inject()
     private val autoLogoutRepository: AutoLogoutRepository by inject()
@@ -84,6 +86,8 @@ class MainActivityViewModel :
                 websocketController.onAppForegroundChanged(isForeground = true)
 
                 if (!userRepository.isUserLoggedIn) return // TODO: To be reviewed.
+
+                refreshNotificationsUnreadCount()
 
                 viewModelScope.launch {
                     if (autoLogoutRepository.getRememberUserSession()) {
@@ -196,6 +200,7 @@ class MainActivityViewModel :
             userRepository.getUserLoggedInFlow().collect { isUserLoggedIn ->
                 if (isUserLoggedIn) {
                     registerDevice()
+                    refreshNotificationsUnreadCount()
                     websocketController.connect()
                 } else {
                     websocketController.disconnect()
@@ -227,7 +232,15 @@ class MainActivityViewModel :
                             notificationData = notification
                         )
                     }
+                    // The backend stores every push in the inbox, so the bell badge is stale now.
+                    refreshNotificationsUnreadCount()
                 }
+        }
+    }
+
+    private fun refreshNotificationsUnreadCount() {
+        viewModelScope.launch {
+            notificationInteractor.refreshUnreadCount()
         }
     }
 

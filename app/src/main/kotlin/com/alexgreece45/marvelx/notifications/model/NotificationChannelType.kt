@@ -36,15 +36,30 @@ sealed class NotificationChannelType(val type: String, val channelData: Notifica
         channelData = NotificationChannelData.Chat
     )
 
+    /**
+     * The buyer's order status changed as a whole (e.g. partially shipped -> shipped).
+     */
+    data object OrderStatusChanged : NotificationChannelType(
+        type = "OrderStatusChanged",
+        channelData = NotificationChannelData.Order
+    )
+
     companion object {
         private fun getAllTypes(): List<NotificationChannelType> = listOf(
             IncomingFriendRequest,
             AcceptFriendRequest,
             ListingPurchase,
-            NewMessage
+            NewMessage,
+            OrderStatusChanged
         )
 
         fun getChannelByType(channelType: String): NotificationChannelType =
             getAllTypes().first { it.type == channelType }
+
+        /**
+         * Like [getChannelByType], but returns `null` for a type this app version doesn't know.
+         */
+        fun findChannelByType(channelType: String): NotificationChannelType? =
+            getAllTypes().firstOrNull { it.type == channelType }
     }
 }

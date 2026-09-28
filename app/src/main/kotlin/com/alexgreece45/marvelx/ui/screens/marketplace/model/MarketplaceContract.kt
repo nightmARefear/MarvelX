@@ -13,6 +13,7 @@ internal sealed interface MarketplaceContract {
         data object Init : Event
         data object OnBackClicked : Event
         data object OnRefresh : Event
+        data object OnNotificationsClicked : Event
         data class OnPromoCarouselScrolled(val newIndex: Int) : Event
         data class OnCategoryClicked(val categoryCode: String) : Event
 
@@ -113,6 +114,7 @@ internal sealed interface MarketplaceContract {
             data class GoToListingDetailsScreen(val listingId: String) : Navigation
             data object GoToFavoritesScreen : Navigation
             data object GoToCartScreen : Navigation
+            data object GoToNotificationsScreen : Navigation
         }
 
         sealed interface Share : Effect {

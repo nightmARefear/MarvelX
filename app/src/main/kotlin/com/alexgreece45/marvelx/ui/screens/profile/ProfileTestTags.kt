@@ -19,6 +19,9 @@ internal object ProfileTestTags {
     // Section: Orders; navigates to the Orders screen
     const val ORDERS_SECTION = "profile_orders_section"
 
+    // Section: Transactions; navigates to the Transactions screen
+    const val TRANSACTIONS_SECTION = "profile_transactions_section"
+
     // Section: My listings; navigates to the My Listings screen
     const val MY_LISTINGS_SECTION = "profile_my_listings_section"
 
