@@ -199,6 +199,7 @@ internal class ListingRepositoryImpl(
                 add(MultipartItem.Text("details", gson.toJson(createListingData.details)))
                 add(MultipartItem.Text("condition_code", createListingData.conditionCode))
                 add(MultipartItem.Text("price", createListingData.price.toPlainString()))
+                add(MultipartItem.Text("final_sale", createListingData.finalSale.toString()))
             }
         )
 

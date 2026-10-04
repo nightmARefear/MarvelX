@@ -26,4 +26,7 @@ internal object ListingDetailsTestTags {
 
     // ListingDetailsContract.Event.OnSellerInfoClicked
     const val SELLER_INFO_SECTION = "listing_details_seller_info_section"
+
+    // Non-interactive; the `Final Sale` / `Not Final Sale` row in the details section
+    const val FINAL_SALE_ITEM = "listing_details_final_sale_item"
 }

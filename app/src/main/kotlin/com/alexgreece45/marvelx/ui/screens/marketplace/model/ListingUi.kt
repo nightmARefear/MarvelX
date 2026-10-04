@@ -26,6 +26,7 @@ data class ListingUi(
     val imageUrls: List<String>,
     val selectedImageIndex: Int = 0,
     val details: ListingDetailsDomain,
+    val finalSale: Boolean,
     val postedAt: InstantUi,
     val updatedAt: InstantUi?,
     val favorite: Boolean,

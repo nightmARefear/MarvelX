@@ -28,6 +28,8 @@
     <string name="screen_listing_details_listing_details_label_not_dishwasher_safe">Not Dishwasher Safe</string>
     <string name="screen_listing_details_listing_details_label_framed">Framed</string>
     <string name="screen_listing_details_listing_details_label_not_framed">Not Framed</string>
+    <string name="screen_listing_details_listing_details_label_final_sale">Final Sale</string>
+    <string name="screen_listing_details_listing_details_label_not_final_sale">Not Final Sale</string>
     
     <string name="screen_listing_details_buyer_status_container_title">You bought this item</string>
     <string name="screen_listing_details_buyer_status_container_body">Order item %1$s is currently %2$s. Click here to track it.</string>

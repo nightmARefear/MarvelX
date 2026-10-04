@@ -68,6 +68,7 @@ class ListingUiMapper(
                     coverImageUrl = coverImageUrl,
                     imageUrls = imageUrls,
                     details = details,
+                    finalSale = finalSale,
                     postedAt = InstantUi(
                         value = postedAt,
                         label = postedAt.toListingFormat()

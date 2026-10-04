@@ -115,6 +115,7 @@ sealed interface CreateListingAdvancedDetailsContract {
         }
 
         data class OnPriceChanged(val newPrice: String) : Event
+        data object OnFinalSaleCheckboxChanged : Event
     }
 
     data class State(
@@ -130,6 +131,7 @@ sealed interface CreateListingAdvancedDetailsContract {
         val listingDetails: ListingDetailsUi? = null,
         val condition: WizardInputFieldUi.Enum = WizardInputFieldUi.Enum(),
         val price: PriceField = PriceField(),
+        val finalSale: Boolean = false,
     ) : BaseState
 
 

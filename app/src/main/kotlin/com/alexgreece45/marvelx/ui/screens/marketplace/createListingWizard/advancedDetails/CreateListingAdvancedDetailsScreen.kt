@@ -31,6 +31,7 @@ import com.alexgreece45.marvelx.ui.components.WrapCheckbox
 import com.alexgreece45.marvelx.ui.screens.marketplace.components.WizardTextInputField
 import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.advancedDetails.model.CreateListingAdvancedDetailsContract
 import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.advancedDetails.model.CreateListingAdvancedDetailsScreenData
+import com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.model.CreateListingWizardMode
 import com.alexgreece45.marvelx.ui.screens.marketplace.model.ListingDetailsUi
 import com.alexgreece45.marvelx.util.SPACING_MEDIUM
 import com.alexgreece45.marvelx.util.VSpacer
@@ -390,6 +391,20 @@ internal fun CreateListingAdvancedDetailsScreen(
                 },
                 canEdit = state.wizardMode.canEdit
             )
+
+            // Final sale can only be set on creation (the update call doesn't accept it).
+            if (state.wizardMode == CreateListingWizardMode.CREATE) {
+                VSpacer.Medium()
+
+                WrapCheckbox(
+                    label = stringResource(R.string.screen_create_listing_advanced_details_label_final_sale),
+                    checked = state.finalSale,
+                    onCheckedChange = {
+                        onEvent(CreateListingAdvancedDetailsContract.Event.OnFinalSaleCheckboxChanged)
+                    },
+                    modifier = Modifier.testTag(CreateListingAdvancedDetailsTestTags.FINAL_SALE_CHECKBOX)
+                )
+            }
         }
     }
 }

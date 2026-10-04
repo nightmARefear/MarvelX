@@ -15,6 +15,7 @@ import com.alexgreece45.marvelx.ui.screens.myListings.model.MyListingsContract
 import com.alexgreece45.marvelx.ui.screens.myListings.model.toUi
 import com.alexgreece45.marvelx.util.ResourceProvider
 import com.alexgreece45.marvelx.util.extensions.model.ShareContentUrlData
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch

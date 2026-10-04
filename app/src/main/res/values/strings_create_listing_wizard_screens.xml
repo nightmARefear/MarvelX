@@ -68,6 +68,7 @@
     <string name="screen_create_listing_advanced_details_label_grade">Grade</string>
     <string name="screen_create_listing_advanced_details_label_rarity">Rarity</string>
     <string name="screen_create_listing_advanced_details_label_variant">Variant</string>
+    <string name="screen_create_listing_advanced_details_label_final_sale">Final sale (no returns or refunds)</string>
 
     <string name="screen_create_listing_advanced_details_placeholder_price">Price of listing</string>
     <string name="screen_create_listing_advanced_details_placeholder_color">Enter the color</string>

@@ -27,6 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -379,7 +380,8 @@ private fun GenericTile(
                     .circularImageWithBorder(
                         borderWidth = ConstantsUi.IMAGE_BORDER_WIDTH,
                         borderColor = MaterialTheme.customColors.genericRed
-                    )
+                    ),
+                contentScale = ContentScale.Crop
             )
 
             content()
@@ -406,7 +408,7 @@ private fun FullName(fullName: String, modifier: Modifier = Modifier) {
  */
 @Composable
 private fun FriendTile(
-    userId: Any,
+    userId: String,
     fullName: String,
     profileImageUrl: String,
     onClick: () -> Unit,
@@ -455,7 +457,6 @@ private fun IncomingFriendRequestTile(
     GenericTile(
         fullName = fullName,
         profileImageUrl = profileImageUrl,
-        profileImageSize = (ConstantsUi.GENERIC_IMAGE_TILE_SIZE.value * 1.5).dp,
         modifier = Modifier.testTag(FriendsTestTags.requestTile(userId)),
         onClick = onClick
     ) {

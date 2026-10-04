@@ -871,7 +871,7 @@
       "object": "CreateListingAdvancedDetailsTestTags",
       "package": "com.alexgreece45.marvelx.ui.screens.marketplace.createListingWizard.advancedDetails",
       "file": "app/src/main/kotlin/com/alexgreece45/marvelx/ui/screens/marketplace/createListingWizard/advancedDetails/CreateListingAdvancedDetailsTestTags.kt",
-      "tagCount": 32,
+      "tagCount": 33,
       "tags": [
         {
           "name": "CONDITION_DROPDOWN",
@@ -884,6 +884,12 @@
           "kind": "static",
           "tag": "create_listing_advanced_details_price_text_field",
           "handles": "Event.OnPriceChanged"
+        },
+        {
+          "name": "FINAL_SALE_CHECKBOX",
+          "kind": "static",
+          "tag": "create_listing_advanced_details_final_sale_checkbox",
+          "handles": "Event.OnFinalSaleCheckboxChanged (create mode only)"
         },
         {
           "name": "APPAREL_SIZE_DROPDOWN",
@@ -1184,7 +1190,7 @@
       "object": "ListingDetailsTestTags",
       "package": "com.alexgreece45.marvelx.ui.screens.marketplace.listingDetailsScreen",
       "file": "app/src/main/kotlin/com/alexgreece45/marvelx/ui/screens/marketplace/listingDetailsScreen/ListingDetailsTestTags.kt",
-      "tagCount": 8,
+      "tagCount": 9,
       "tags": [
         {
           "name": "BACK_BUTTON",
@@ -1233,6 +1239,12 @@
           "kind": "static",
           "tag": "listing_details_seller_info_section",
           "handles": "ListingDetailsContract.Event.OnSellerInfoClicked"
+        },
+        {
+          "name": "FINAL_SALE_ITEM",
+          "kind": "static",
+          "tag": "listing_details_final_sale_item",
+          "handles": "None (non-interactive); the `Final Sale` / `Not Final Sale` row in the details section"
         }
       ]
     },

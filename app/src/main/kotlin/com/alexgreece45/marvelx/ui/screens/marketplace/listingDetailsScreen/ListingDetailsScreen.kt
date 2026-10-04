@@ -317,7 +317,10 @@ private fun ListingView(
 
         VSpacer.Medium()
 
-        ListingDetailsSection(listing.details)
+        ListingDetailsSection(
+            listingDetails = listing.details,
+            finalSale = listing.finalSale
+        )
 
         VSpacer.Medium()
 
@@ -365,7 +368,7 @@ private fun DateSection(
 }
 
 @Composable
-private fun ListingDetailsSection(listingDetails: ListingDetailsDomain) {
+private fun ListingDetailsSection(listingDetails: ListingDetailsDomain, finalSale: Boolean) {
     Column(
         verticalArrangement = Arrangement.spacedBy(SPACING_SMALL.dp)
     ) {
@@ -388,6 +391,8 @@ private fun ListingDetailsSection(listingDetails: ListingDetailsDomain) {
             is ListingDetailsDomain.ComicDetailsDomain -> ComicDetailsSubSection(listingDetails)
             is ListingDetailsDomain.CardDetailsDomain -> CardDetailsSubSection(listingDetails)
         }
+
+        FinalSaleSubSection(finalSale)
     }
 }
 
@@ -429,9 +434,11 @@ private fun SellerInfoSection(profileImageUrl: String, fullName: String, onClick
 @Composable
 private fun DetailsSubSectionItem(
     label: String,
-    iconData: IconData
+    iconData: IconData,
+    modifier: Modifier = Modifier
 ) {
     Row(
+        modifier = modifier,
         horizontalArrangement = Arrangement.spacedBy(SPACING_TINY.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -611,6 +618,33 @@ private fun ColumnScope.AccessoryDetailsSubSection(accessoryDetailsDomain: Listi
             contentDescription = R.string.screen_listing_details_content_description_color_palette
         )
     )
+}
+
+@Composable
+private fun ColumnScope.FinalSaleSubSection(finalSale: Boolean) {
+    val modifier = Modifier.testTag(ListingDetailsTestTags.FINAL_SALE_ITEM)
+
+    if (finalSale) {
+        DetailsSubSectionItem(
+            label = stringResource(R.string.screen_listing_details_listing_details_label_final_sale),
+            iconData = IconData(
+                iconResource = R.drawable.ic_check,
+                contentDescription = R.string.screen_listing_details_content_description_checkmark,
+                tint = MaterialTheme.customColors.greenCheckmark
+            ),
+            modifier = modifier
+        )
+    } else {
+        DetailsSubSectionItem(
+            label = stringResource(R.string.screen_listing_details_listing_details_label_not_final_sale),
+            iconData = IconData(
+                iconResource = R.drawable.ic_close,
+                contentDescription = R.string.screen_listing_details_content_description_not_applicable,
+                tint = MaterialTheme.customColors.genericRed
+            ),
+            modifier = modifier
+        )
+    }
 }
 
 @Composable
@@ -879,6 +913,7 @@ private fun ListingDetailsScreenPreview() {
                              label = "Holographic"
                          )
                      ),*/
+                    finalSale = true,
                     postedAt = InstantUi(
                         value = postedAt,
                         label = postedAt.toListingFormat()

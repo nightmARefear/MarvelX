@@ -18,6 +18,8 @@ interface ConfigFeatureFlags {
      * Whether the Marketplace toolbar shows the notifications button.
      */
     val isNotificationsButtonEnabled: Boolean
+
+    val isNetworkInspectorEnabled: Boolean
 }
 
 @Single(binds = [ConfigFeatureFlags::class])
@@ -28,4 +30,7 @@ internal class ConfigFeatureFlagsImpl : ConfigFeatureFlags {
 
     override val isNotificationsButtonEnabled: Boolean
         get() = BuildConfig.FEATURE_NOTIFICATIONS_BUTTON_ENABLED
+
+    override val isNetworkInspectorEnabled: Boolean
+        get() = BuildConfig.FEATURE_NETWORK_INSPECTOR_ENABLED
 }

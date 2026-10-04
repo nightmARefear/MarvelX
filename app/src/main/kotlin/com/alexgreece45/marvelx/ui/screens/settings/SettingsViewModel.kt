@@ -3,6 +3,7 @@ package com.alexgreece45.marvelx.ui.screens.settings
 import androidx.lifecycle.viewModelScope
 import com.alexgreece45.marvelx.BuildConfig
 import com.alexgreece45.marvelx.R
+import com.alexgreece45.marvelx.configuration.ConfigFeatureFlags
 import com.alexgreece45.marvelx.core.common.config.ConfigLogic
 import com.alexgreece45.marvelx.core.common.config.model.AppBuildType
 import com.alexgreece45.marvelx.core.network.managers.SessionManager
@@ -23,6 +24,7 @@ class SettingsViewModel(
     private val sessionManager: SessionManager,
     private val configLogic: ConfigLogic,
     private val networkInspectorRepository: NetworkInspectorRepository,
+    private val configFeatureFlags: ConfigFeatureFlags
 ) : BaseViewModel<SettingsContract.Event, SettingsContract.State, SettingsContract.Effect>() {
 
     /**
@@ -85,7 +87,7 @@ class SettingsViewModel(
                             }
                         )
                     )
-                    if (isNetworkInspectorAvailable) {
+                    if (isNetworkInspectorAvailable && configFeatureFlags.isNetworkInspectorEnabled) {
                         add(
                             SectionHeaderData(
                                 title = resourceProvider.getString(R.string.screen_settings_section_label_network_inspector),

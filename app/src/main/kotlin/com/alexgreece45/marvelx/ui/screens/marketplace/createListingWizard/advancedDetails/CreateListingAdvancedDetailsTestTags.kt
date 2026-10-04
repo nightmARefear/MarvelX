@@ -12,6 +12,9 @@ internal object CreateListingAdvancedDetailsTestTags {
     // Event.OnPriceChanged
     const val PRICE_TEXT_FIELD = "create_listing_advanced_details_price_text_field"
 
+    // Event.OnFinalSaleCheckboxChanged (create mode only)
+    const val FINAL_SALE_CHECKBOX = "create_listing_advanced_details_final_sale_checkbox"
+
     // ListingDetailsEvents.Apparel.OnSizeDropDownClicked / OnSizeDropDownOnDismissed
     const val APPAREL_SIZE_DROPDOWN = "create_listing_advanced_details_apparel_size_dropdown"
 

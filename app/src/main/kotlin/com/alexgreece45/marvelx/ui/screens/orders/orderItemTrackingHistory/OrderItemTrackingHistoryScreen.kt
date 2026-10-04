@@ -616,8 +616,15 @@ private fun PostDeliverySection(
         else -> null
     }
 
+    // Once either request is submitted, the other side's window card (available / expired / final sale) must not
+    // offer a second request next to it.
+    val hasReturnRequest = returnStatus?.isProcessingStatus() == true || returnStatus == OrderItemReturnStatusDomain.REJECTED
+    val hasRefundRequest = refundStatus?.isProcessingStatus() == true || refundStatus == OrderItemRefundStatusDomain.REJECTED
+    val showReturnCard = hasReturnRequest || !hasRefundRequest
+    val showRefundCard = hasRefundRequest || !hasReturnRequest
+
     if (refundStatus?.isProcessingStatus() == false || refundStatus != OrderItemRefundStatusDomain.REJECTED) {
-        if (returnStatus != null && isRefundOutcome != true) {
+        if (returnStatus != null && isRefundOutcome != true && showReturnCard) {
             ReturnCard(
                 returnStatus = returnStatus,
                 returnUntilDateLabel = returnUntilDateLabel,
@@ -627,7 +634,7 @@ private fun PostDeliverySection(
     }
 
     if (returnStatus?.isProcessingStatus() == false || returnStatus != OrderItemReturnStatusDomain.REJECTED) {
-        if (refundStatus != null && isRefundOutcome != false) {
+        if (refundStatus != null && isRefundOutcome != false && showRefundCard) {
             RefundCard(
                 refundStatus = refundStatus,
                 refundUntilDateLabel = refundUntilDateLabel,

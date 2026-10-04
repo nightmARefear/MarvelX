@@ -79,6 +79,12 @@ class CreateListingWizardController {
         )
     }
 
+    fun setFinalSale(finalSale: Boolean) {
+        _createListingUi = _createListingUi.copy(
+            finalSale = finalSale
+        )
+    }
+
     fun setUpdateListing(listingUi: ListingUi) {
         _updateListingUi = listingUi
     }

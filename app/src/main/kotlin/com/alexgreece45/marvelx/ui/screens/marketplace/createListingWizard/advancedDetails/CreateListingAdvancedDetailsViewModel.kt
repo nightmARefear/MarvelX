@@ -51,6 +51,8 @@ class CreateListingAdvancedDetailsViewModel(
                 onPriceChanged(event.newPrice)
             }
 
+            CreateListingAdvancedDetailsContract.Event.OnFinalSaleCheckboxChanged -> onFinalSaleCheckboxChanged()
+
             is CreateListingAdvancedDetailsContract.Event.ListingDetailsEvents -> {
                 handleListingDetailsEvents(event)
             }
@@ -221,6 +223,18 @@ class CreateListingAdvancedDetailsViewModel(
         createListingWizardController.setPrice(newPrice.toBigDecimalOrNull())
 
         validateAllFields()
+    }
+
+    private fun onFinalSaleCheckboxChanged() {
+        if (currentState.wizardMode == CreateListingWizardMode.UPDATE) return
+
+        setState {
+            copy(
+                finalSale = !finalSale
+            )
+        }
+
+        createListingWizardController.setFinalSale(currentState.finalSale)
     }
 
     private fun handleListingDetailsEvents(event: CreateListingAdvancedDetailsContract.Event.ListingDetailsEvents) {

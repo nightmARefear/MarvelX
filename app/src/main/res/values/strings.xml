@@ -293,7 +293,7 @@
     <string name="edit_profile_details_screen_header_title">Edit Profile Details</string>
     <string name="edit_profile_details_screen_button_label_save_changes">Save changes</string>
     <string name="edit_profile_details_screen_success_updating_profile_details">Your profile details have been successfully updated.</string>
-    <string name="edit_profile_details_screen_alert_dialog_unsaved_changes_title">Unsaved changed</string>
+    <string name="edit_profile_details_screen_alert_dialog_unsaved_changes_title">Unsaved changes</string>
     <string name="edit_profile_details_screen_alert_dialog_unsaved_changes_subtitle">If you exit your changes will be lost. Are you sure that you want to exit?</string>
     <string name="edit_profile_details_screen_error_loading_profile_details">Error loading profile details</string>
     <string name="edit_profile_details_screen_error_updating_profile_details">Error updating profile details</string>
