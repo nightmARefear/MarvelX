@@ -110,7 +110,7 @@ import com.alexgreece45.marvelx.ui.components.sections.SectionHeaderRow
 import com.alexgreece45.marvelx.ui.components.sections.SectionHeaderTitle
 import com.alexgreece45.marvelx.ui.model_generic.BigDecimalUi
 import com.alexgreece45.marvelx.ui.model_generic.InputFieldUi
-import com.alexgreece45.marvelx.ui.model_generic.LocalDateUi
+import com.alexgreece45.marvelx.ui.model_generic.InstantUi
 import com.alexgreece45.marvelx.ui.model_generic.UiState
 import com.alexgreece45.marvelx.ui.screens.orders.components.OrderIdsLabel
 import com.alexgreece45.marvelx.ui.screens.orders.requestReturn.components.ExistingReturnContent
@@ -481,7 +481,7 @@ internal fun RequestItemReturnScreen(
 private fun WizardContent(
     state: RequestItemReturnContract.State,
     orderItem: OrderItemUi,
-    returnUntilDate: LocalDateUi,
+    returnUntilDate: InstantUi,
     returnUntilRemainingDays: Long,
     isRequestRefundAvailable: Boolean,
     returnShippingFee: BigDecimalUi,
@@ -597,7 +597,7 @@ private fun WizardScreenReturnReason(
     orderId: OrderIdDomain,
     orderItem: OrderItemUi,
     returnUntilRemainingDays: Long,
-    returnUntilDate: LocalDateUi,
+    returnUntilDate: InstantUi,
     returnReasons: List<OrderItemReturnReasonUi>,
     selectedReturnReason: OrderItemReturnReasonUi?,
     returnReasonOtherTextField: InputFieldUi.Text,
@@ -1385,8 +1385,8 @@ private fun ScreenPreview() {
                             )
                         },
                     ),
-                    returnUntilDate = DateUtil.getCurrentLocalDate()
-                        .let { LocalDateUi(value = it, label = it.defaultFormat()) },
+                    returnUntilDate = DateUtil.getUTCInstant()
+                        .let { InstantUi(value = it, label = it.defaultFormat()) },
                     isRequestRefundAvailable = true,
                     returnShippingFee = BigDecimal("6.50").let {
                         BigDecimalUi(value = it, label = it.formatPrice(2))

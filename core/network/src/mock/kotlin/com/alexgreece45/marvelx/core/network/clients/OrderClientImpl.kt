@@ -203,9 +203,8 @@ internal class OrderClientImpl : OrderClient {
 
         val returnStatus = OrderItemReturnStatus.entries.random()
 
-        val returnUntilDate =
-            delivered?.toLocalDate()?.plusDays(30L)?.toString() ?: estimatedDeliveryTo.toLocalDate()
-                .plusDays(30L).toString()
+        // UTC instant, like the backend: delivered (or expected) instant + 30 days.
+        val returnUntilDate = (delivered ?: estimatedDeliveryTo).plusDays(30L).toString()
 
         return ApiResult.Success(
             ResponseOrderItemTrackingHistory(
@@ -308,7 +307,7 @@ internal class OrderClientImpl : OrderClient {
             orderItemReturnId = orderItemReturnId,
             orderItem = orderItem,
             returnStatus = OrderItemReturnStatus.PENDING.key,
-            returnUntilDate = DateUtil.getCurrentLocalDate().plusDays(15).toString(),
+            returnUntilDate = DateUtil.getUTCInstant().plusDays(15L).toString(),
             refundStatus = if (requestRefund) OrderItemRefundStatus.PENDING.key else OrderItemRefundStatus.AVAILABLE.key,
             returnReason = MultipartBodyUtils.getMultipartValueByName(
                 multipartBody = requestOrderItemReturn,
@@ -379,8 +378,8 @@ internal class OrderClientImpl : OrderClient {
 var submittedOrderItemReturn: ResponseOrderItemReturn? = null
 
 private object OrderClientConstants {
-    /** The item's share of the order's delivery fee; a single-item order paid 6.50. */
-    const val RETURN_SHIPPING_FEE = "6.50"
+    /** Mirrors the backend: a flat return fee (BASE_SHIPPING) per returned item. */
+    const val RETURN_SHIPPING_FEE = "5.00"
 
     private val responseOrderItem: ResponseOrderItem = getOrderItemDetails("1").body
 
@@ -398,7 +397,7 @@ private object OrderClientConstants {
                         orderItemReturnId = "RET-1000",
                         orderItem = responseOrderItem,
                         returnStatus = OrderItemReturnStatus.PENDING.key,
-                        returnUntilDate = DateUtil.getCurrentLocalDate().plusDays(10).toString(),
+                        returnUntilDate = DateUtil.getUTCInstant().plusDays(10L).toString(),
                         refundStatus = OrderItemRefundStatus.AVAILABLE.key,
                         returnReason = OrderItemReturnReason.NOT_AS_DESCRIBED.key,
                         description = "The item looks nothing like the photos!",
@@ -409,7 +408,7 @@ private object OrderClientConstants {
                         orderItemReturnId = "RET-1001",
                         orderItem = responseOrderItem,
                         returnStatus = OrderItemReturnStatus.AVAILABLE.key,
-                        returnUntilDate = DateUtil.getCurrentLocalDate().plusDays(12).toString(),
+                        returnUntilDate = DateUtil.getUTCInstant().plusDays(12L).toString(),
                         refundStatus = OrderItemRefundStatus.AVAILABLE.key,
                         returnShippingFee = RETURN_SHIPPING_FEE,
                         refundAmount = refundAmountOf(responseOrderItem.price),
@@ -422,7 +421,7 @@ private object OrderClientConstants {
                         orderItemReturnId = "RET-1002",
                         orderItem = responseOrderItem,
                         returnStatus = OrderItemReturnStatus.REFUNDED.key,
-                        returnUntilDate = DateUtil.getCurrentLocalDate().plusDays(8).toString(),
+                        returnUntilDate = DateUtil.getUTCInstant().plusDays(8L).toString(),
                         refundStatus = OrderItemRefundStatus.ACCEPTED.key,
                         returnReason = OrderItemReturnReason.DEFECTIVE.key,
                         description = "The item that I received was in really bad shape. I want my money back!",
@@ -436,7 +435,7 @@ private object OrderClientConstants {
                         orderItemReturnId = "RET-1003",
                         orderItem = responseOrderItem,
                         returnStatus = OrderItemReturnStatus.PENDING.key,
-                        returnUntilDate = DateUtil.getCurrentLocalDate().plusDays(5).toString(),
+                        returnUntilDate = DateUtil.getUTCInstant().plusDays(5L).toString(),
                         refundStatus = OrderItemRefundStatus.AVAILABLE.key,
                         returnReason = OrderItemReturnReason.WRONG_ITEM.key,// requestOrderItemReturn.reason,
                         description = "RETURN_DESCRIPTION",//requestOrderItemReturn.description,

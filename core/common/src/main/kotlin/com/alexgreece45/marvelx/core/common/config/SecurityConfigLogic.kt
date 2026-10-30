@@ -11,6 +11,11 @@ interface SecurityConfigLogic {
     val useNetworkLogger: Boolean
 
     /**
+     * Defines whether the OkHttp clients pin the backend certificates.
+     */
+    val useCertificatePinning: Boolean
+
+    /**
      * Contains all the header names, in lowercase, that are used in the session signature
      * generation.
      */

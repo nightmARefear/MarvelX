@@ -109,13 +109,15 @@ internal fun provideOkHttpClient(
     okHttpClient.readTimeout(configLogic.backendTimeoutData.readTimeout, TimeUnit.SECONDS)
 
     // Adds certificate pins.
-    val certificatePinner = CertificatePinner.Builder()
-        .add(
-            pattern = configLogic.backendDomain,
-            pins = arrayOf("sha256/${configLogic.backendDomainPin}")
-        )
-        .build()
-    okHttpClient.certificatePinner(certificatePinner)
+    if (securityConfigLogic.useCertificatePinning) {
+        val certificatePinner = CertificatePinner.Builder()
+            .add(
+                pattern = configLogic.backendDomain,
+                pins = arrayOf("sha256/${configLogic.backendDomainPin}")
+            )
+            .build()
+        okHttpClient.certificatePinner(certificatePinner)
+    }
 
     // Add authenticator.
     okHttpClient.authenticator(apiAuthenticator)
@@ -154,13 +156,15 @@ internal fun provideOkHttpClientForRefreshTokenClient(
     okHttpClient.readTimeout(configLogic.backendTimeoutData.readTimeout, TimeUnit.SECONDS)
 
     // Adds certificate pins.
-    val certificatePinner = CertificatePinner.Builder()
-        .add(
-            pattern = configLogic.backendDomain,
-            pins = arrayOf("sha256/${configLogic.backendDomainPin}")
-        )
-        .build()
-    okHttpClient.certificatePinner(certificatePinner)
+    if (securityConfigLogic.useCertificatePinning) {
+        val certificatePinner = CertificatePinner.Builder()
+            .add(
+                pattern = configLogic.backendDomain,
+                pins = arrayOf("sha256/${configLogic.backendDomainPin}")
+            )
+            .build()
+        okHttpClient.certificatePinner(certificatePinner)
+    }
 
     // Add authenticator.
     okHttpClient.authenticator(refreshTokenAuthenticator)
@@ -201,13 +205,15 @@ internal fun provideOkHttpClientForWebsocketClient(
     okHttpClient.pingInterval(Duration.ofSeconds(30))
 
     // Add certificate pins.
-    val certificatePinner = CertificatePinner.Builder()
-        .add(
-            pattern = websocketConfigLogic.domain,
-            pins = arrayOf("sha256/${websocketConfigLogic.domainPin}")
-        )
-        .build()
-    okHttpClient.certificatePinner(certificatePinner)
+    if (securityConfigLogic.useCertificatePinning) {
+        val certificatePinner = CertificatePinner.Builder()
+            .add(
+                pattern = websocketConfigLogic.domain,
+                pins = arrayOf("sha256/${websocketConfigLogic.domainPin}")
+            )
+            .build()
+        okHttpClient.certificatePinner(certificatePinner)
+    }
 
     // Add interceptors.
     if (securityConfigLogic.useNetworkLogger) {

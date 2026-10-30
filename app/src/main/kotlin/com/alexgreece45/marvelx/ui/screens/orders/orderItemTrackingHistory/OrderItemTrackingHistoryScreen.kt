@@ -1236,9 +1236,9 @@ private fun OrderItemTrackingHistoryScreenDeliveredPreview() {
                         ).toUi(),
                         returnEligibility = OrderItemReturnEligibilityDomain(
                             returnStatus = OrderItemReturnStatusDomain.AVAILABLE,
-                            returnUntilDate = returnUntilDate.toLocalDate(),
+                            returnUntilDate = returnUntilDate,
                             refundStatus = OrderItemRefundStatusDomain.REJECTED,
-                            refundUntilDate = refundUntilDate.toLocalDate(),
+                            refundUntilDate = refundUntilDate,
                             refundRequested = null
                         ).toUi()
                     )

@@ -5,12 +5,13 @@ import com.alexgreece45.marvelx.core.data.model.order.item.OrderItemReturnState.
 import com.alexgreece45.marvelx.core.data.model.order.item.refund.OrderItemRefundStatus
 import com.alexgreece45.marvelx.core.network.model.api.order.item.returnRequest.ResponseOrderItemReturn
 import java.math.BigDecimal
-import java.time.LocalDate
+import java.time.Instant
 
 sealed interface OrderItemReturnState {
     data class Available(
         val orderItem: OrderItemData,
-        val returnUntilDate: LocalDate,
+        /** UTC instant; format it in the local zone. */
+        val returnUntilDate: Instant,
         val refundStatus: OrderItemRefundStatus,
         val returnShippingFee: BigDecimal,
         /** Decided by the backend: the item's price minus the return shipping fee. */
@@ -25,7 +26,7 @@ fun ResponseOrderItemReturn.toDataState(): OrderItemReturnState {
     return when (returnStatus) {
         OrderItemReturnStatus.AVAILABLE -> Available(
             orderItem = this.orderItem.toData(),
-            returnUntilDate = LocalDate.parse(returnUntilDate),
+            returnUntilDate = Instant.parse(returnUntilDate),
             refundStatus = OrderItemRefundStatus.entries.first { it.key == refundStatus },
             returnShippingFee = returnShippingFee?.toBigDecimal() ?: BigDecimal.ZERO,
             refundAmount = refundAmount?.toBigDecimal()

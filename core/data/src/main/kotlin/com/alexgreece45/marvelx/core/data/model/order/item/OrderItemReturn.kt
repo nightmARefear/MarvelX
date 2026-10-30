@@ -5,6 +5,7 @@ import com.alexgreece45.marvelx.core.data.model.order.item.refund.OrderItemRefun
 import com.alexgreece45.marvelx.core.network.model.api.order.item.returnRequest.ResponseOrderItemReturn
 import kotlinx.collections.immutable.ImmutableList
 import java.math.BigDecimal
+import java.time.Instant
 import java.time.LocalDate
 
 data class OrderItemReturn(
@@ -12,7 +13,7 @@ data class OrderItemReturn(
     val orderItem: OrderItemData,
 
     val returnStatus: OrderItemReturnStatus,
-    val returnUntilDate: LocalDate,
+    val returnUntilDate: Instant,
     val isRequestRefundAvailable: Boolean,
     val returnShippingFee: BigDecimal,
     val refundAmount: BigDecimal?,
@@ -33,7 +34,7 @@ fun ResponseOrderItemReturn.toData(): OrderItemReturn =
         orderItemReturnId = OrderItemReturnId(orderItemReturnId),
         orderItem = orderItem.toData(),
         returnStatus = OrderItemReturnStatus.entries.first { it.key == returnStatus },
-        returnUntilDate = LocalDate.parse(returnUntilDate),
+        returnUntilDate = Instant.parse(returnUntilDate),
         isRequestRefundAvailable = OrderItemRefundStatus.entries.first { it.key == refundStatus } == OrderItemRefundStatus.AVAILABLE,
         returnShippingFee = returnShippingFee?.toBigDecimal() ?: BigDecimal.ZERO,
         refundAmount = refundAmount?.toBigDecimal(),

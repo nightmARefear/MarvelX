@@ -14,6 +14,10 @@ internal class SecurityConfigLogicImpl(
     override val useNetworkLogger: Boolean
         get() = configLogic.appBuildType !is AppBuildType.RELEASE
 
+    // Off in debug/mock so a proxy (e.g. Proxyman) can intercept the traffic.
+    override val useCertificatePinning: Boolean
+        get() = configLogic.appBuildType is AppBuildType.RELEASE
+
     override val sessionSignatureHeaders: List<String>
         get() = listOf(ConstantsSecurity.HeaderName.UserAgent).map { it.name.lowercase() }
 

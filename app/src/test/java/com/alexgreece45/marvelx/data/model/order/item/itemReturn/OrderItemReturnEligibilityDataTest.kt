@@ -5,7 +5,7 @@ import com.alexgreece45.marvelx.core.data.model.order.item.refund.OrderItemRefun
 import com.alexgreece45.marvelx.core.network.model.api.order.item.returnRequest.ResponseOrderItemReturnEligibility
 import org.junit.Assert.assertEquals
 import org.junit.Test
-import java.time.LocalDate
+import java.time.Instant
 
 class OrderItemReturnEligibilityDataTest {
 
@@ -106,14 +106,14 @@ class OrderItemReturnEligibilityDataTest {
     ) =
         OrderItemReturnEligibilityData(
             returnStatus = returnStatus,
-            returnUntilDate = LocalDate.parse(TestConstants.RETURN_UNTIL_DATE),
-            refundUntilDate = LocalDate.parse(TestConstants.REFUND_UNTIL_DATE),
+            returnUntilDate = Instant.parse(TestConstants.RETURN_UNTIL_DATE),
+            refundUntilDate = Instant.parse(TestConstants.REFUND_UNTIL_DATE),
             refundStatus = refundStatus,
             refundRequested = refundRequested
         )
 
     private object TestConstants {
-        const val RETURN_UNTIL_DATE = "2026-10-30"
-        const val REFUND_UNTIL_DATE = "2026-10-30"
+        const val RETURN_UNTIL_DATE = "2026-10-30T10:15:00Z"
+        const val REFUND_UNTIL_DATE = "2026-10-30T10:15:00Z"
     }
 }
